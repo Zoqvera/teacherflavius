@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Acesso por senha - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260429-4"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      font-family: Georgia, serif;
+      color: #f1f5f9;
+    }
+    .box {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 28px;
+      backdrop-filter: blur(12px);
+    }
+    .header { text-align: center; margin-bottom: 24px; }
+    .badge {
+      display: inline-block;
+      background: linear-gradient(90deg,#818cf8,#a78bfa);
+      color: #fff;
+      font-size: 11px;
+      font-family: monospace;
+      letter-spacing: 3px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 32px; margin-bottom: 8px; }
+    p { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+    form { margin-top: 22px; }
+    label {
+      display: block;
+      margin: 14px 0 7px;
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    input {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px solid rgba(148,163,184,.28);
+      border-radius: 12px;
+      background: rgba(15,23,42,.72);
+      color: #f8fafc;
+      font: inherit;
+      outline: none;
+    }
+    input:focus {
+      border-color: #818cf8;
+      box-shadow: 0 0 0 3px rgba(129,140,248,.14);
+    }
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 78px; }
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      width: auto;
+      min-height: 34px;
+      margin: 0;
+      padding: 7px 9px;
+      background: transparent;
+      border: 0;
+      color: #a5b4fc;
+      font: 700 12px Georgia, serif;
+      cursor: pointer;
+    }
+    button.submit, a.btn {
+      width: 100%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 48px;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-family: Georgia, serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    button.submit {
+      margin-top: 20px;
+      background: linear-gradient(90deg,#818cf8,#a78bfa);
+      color: #fff;
+      cursor: pointer;
+    }
+    button.submit:disabled { opacity: .65; cursor: wait; }
+    .secondary {
+      margin-top: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(129,140,248,0.35) !important;
+      color: #cbd5e1;
+    }
+    .note {
+      margin-top: 16px;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.55;
+      text-align: center;
+    }
+    .error {
+      min-height: 20px;
+      margin-top: 13px;
+      color: #fca5a5;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+    @media (max-width: 520px) {
+      .box { padding: 24px 20px; }
+      h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="box">
+    <div class="header">
+      <div><span class="badge">TEACHER FLÁVIO</span></div>
+      <h1>Entrar com e-mail e senha</h1>
+      <p>Use o mesmo e-mail e a mesma senha já cadastrados no site.</p>
+    </div>
+
+    <form id="passwordLoginForm" novalidate>
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required>
+
+      <label for="password">Senha</label>
+      <div class="password-wrap">
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button id="togglePassword" class="toggle-password" type="button" aria-label="Mostrar senha">MOSTRAR</button>
+      </div>
+
+      <button id="submitButton" class="submit" type="submit">ENTRAR</button>
+      <div id="loginError" class="error" role="alert" aria-live="polite"></div>
+    </form>
+
+    <p class="note">Este acesso usa exclusivamente uma conta já existente. Nenhuma nova matrícula ou novo cadastro é criado ao entrar.</p>
+    <a class="btn secondary" href="/">VOLTAR AO INÍCIO</a>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // Esta rota é uma exceção controlada para o usuário já existente da Amanda.
+      // O e-mail não é exposto no código; a autorização final é feita pelo UUID já cadastrado.
+      const ALLOWED_USER_ID = "b6a3e909-e395-424a-a4eb-3a448f188e97";
+      const form = document.getElementById("passwordLoginForm");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const submitButton = document.getElementById("submitButton");
+      const loginError = document.getElementById("loginError");
+      const togglePassword = document.getElementById("togglePassword");
+
+      function safeNext() {
+        const params = new URLSearchParams(window.location.search);
+        const value = String(params.get("next") || "/area-do-estudante/").trim();
+        if (!value.startsWith("/") || value.startsWith("//")) return "/area-do-estudante/";
+        return value;
+      }
+
+      function getClient() {
+        const config = window.SUPABASE_CONFIG;
+        if (!window.supabase || !window.supabase.createClient || !config || !config.url || !config.anonKey) return null;
+        if (!window.teacherFlavioPasswordLoginClient) {
+          window.teacherFlavioPasswordLoginClient = window.supabase.createClient(config.url, config.anonKey);
+        }
+        return window.teacherFlavioPasswordLoginClient;
+      }
+
+      function setBusy(busy) {
+        emailInput.disabled = busy;
+        passwordInput.disabled = busy;
+        submitButton.disabled = busy;
+        submitButton.textContent = busy ? "ENTRANDO..." : "ENTRAR";
+      }
+
+      async function signOutLocally(client) {
+        try { await client.auth.signOut({ scope: "local" }); } catch (_) {}
+      }
+
+      async function validateExistingEnrollment(client, user) {
+        if (!user || user.id !== ALLOWED_USER_ID) return false;
+
+        const result = await client
+          .from("profiles")
+          .select("id,enrolled,archived,profile_completed")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (result.error || !result.data) return false;
+        return result.data.id === ALLOWED_USER_ID &&
+          result.data.enrolled === true &&
+          result.data.archived !== true &&
+          result.data.profile_completed === true;
+      }
+
+      async function handleExistingSession(client) {
+        const response = await client.auth.getUser();
+        const user = response && response.data ? response.data.user : null;
+        if (!user) return;
+
+        if (await validateExistingEnrollment(client, user)) {
+          window.location.replace(safeNext());
+          return;
+        }
+
+        await signOutLocally(client);
+      }
+
+      togglePassword.addEventListener("click", function () {
+        const showing = passwordInput.type === "text";
+        passwordInput.type = showing ? "password" : "text";
+        togglePassword.textContent = showing ? "MOSTRAR" : "OCULTAR";
+        togglePassword.setAttribute("aria-label", showing ? "Mostrar senha" : "Ocultar senha");
+        passwordInput.focus();
+      });
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        loginError.textContent = "";
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        if (!email || !password) {
+          loginError.textContent = "Informe seu e-mail e sua senha.";
+          return;
+        }
+
+        const client = getClient();
+        if (!client) {
+          loginError.textContent = "Não foi possível carregar a autenticação. Atualize a página e tente novamente.";
+          return;
+        }
+
+        setBusy(true);
+        try {
+          const response = await client.auth.signInWithPassword({ email: email, password: password });
+          if (response.error) throw response.error;
+
+          const userResponse = await client.auth.getUser();
+          const user = userResponse && userResponse.data ? userResponse.data.user : null;
+          if (!(await validateExistingEnrollment(client, user))) {
+            await signOutLocally(client);
+            throw new Error("unauthorized_existing_account");
+          }
+
+          window.location.replace(safeNext());
+        } catch (_) {
+          loginError.textContent = "E-mail ou senha incorretos, ou esta conta não está autorizada para este acesso.";
+          setBusy(false);
+          passwordInput.value = "";
+          passwordInput.focus();
+        }
+      });
+
+      const client = getClient();
+      if (client) {
+        handleExistingSession(client).catch(function () {});
+      } else {
+        loginError.textContent = "Não foi possível carregar a autenticação. Atualize a página e tente novamente.";
+      }
+    })();
+  </script>
+</body>
+</html>
