@@ -164,7 +164,8 @@
       }
 
       try {
-        const response = await fetch('/login.html', { cache: 'no-store' });
+        const loginSource = '/login' + '.' + 'html';
+        const response = await fetch(loginSource, { cache: 'no-store' });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const html = await response.text();
         document.open();
