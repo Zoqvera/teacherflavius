@@ -2,6 +2,7 @@
   "use strict";
 
   const ROUTES = {
+    "/acesso-por-senha/": "/acesso-por-senha/index.html",
     "/aulas-de-gramatica-interface-do-professor/": "/aulas-de-gramatica-interface-do-professor.html",
     "/aulas-de-gramatica/": "/aulas-de-gramatica.html",
     "/cadastro/": "/cadastro.html",
@@ -56,10 +57,7 @@
 
   async function load() {
     const source = ROUTES[routeKey(window.location.pathname)];
-    if (!source) {
-      document.body.innerHTML = "<p style='font-family:sans-serif;padding:24px'>Página não encontrada.</p>";
-      return;
-    }
+    if (!source) return;
 
     try {
       const response = await fetch(source, { cache: "no-store" });
@@ -71,8 +69,7 @@
       document.write(html);
       document.close();
     } catch (error) {
-      console.error("Não foi possível carregar a rota limpa:", error);
-      document.body.innerHTML = "<p style='font-family:sans-serif;padding:24px'>Não foi possível carregar esta página.</p>";
+      console.error("Não foi possível recuperar a rota limpa:", error);
     }
   }
 
