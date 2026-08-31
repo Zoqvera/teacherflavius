@@ -171,10 +171,8 @@
       const togglePassword = document.getElementById("togglePassword");
 
       function safeNext() {
-        const params = new URLSearchParams(window.location.search);
-        const value = String(params.get("next") || "/area-do-estudante/").trim();
-        if (!value.startsWith("/") || value.startsWith("//")) return "/area-do-estudante/";
-        return value;
+        // Este acesso é dedicado ao aluno; após autenticar, sempre abre a Área do Estudante.
+        return "/area-do-estudante/";
       }
 
       function getClient() {
