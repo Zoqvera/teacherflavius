@@ -65,13 +65,14 @@
     .btn{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:14px 22px;border-radius:999px;font-weight:900;text-align:center;text-decoration:none;transition:transform .18s ease,background .18s ease}.btn:hover{transform:translateY(-2px)}.btn-primary{background:var(--green);color:#fff;box-shadow:0 14px 34px rgba(22,140,77,.34)}.btn-primary:hover{background:var(--green2)}.btn-light{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff}.actions{display:flex;flex-wrap:wrap;gap:12px}
     .section{padding:72px 0;background:var(--paper);color:var(--text)}.section.alt{background:#eef3f9}.section-head{max-width:800px;margin:0 auto 34px;text-align:center}.section-head h2{margin-bottom:12px;color:var(--navy);font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(2rem,5vw,3.4rem);line-height:1.08;letter-spacing:-.03em}.section-head p{color:var(--muted);font-size:1.06rem}.grid{display:grid;grid-template-columns:1fr;gap:15px}.card{padding:24px;border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:0 9px 28px rgba(2,16,43,.055)}.card h3{margin-bottom:8px;color:var(--navy);font-size:1.08rem}.card p{margin-bottom:0;color:var(--muted)}
     .steps{counter-reset:step;display:grid;gap:15px}.step{position:relative;padding:24px 24px 24px 72px;border:1px solid var(--line);border-radius:20px;background:#fff}.step::before{counter-increment:step;content:counter(step);position:absolute;left:22px;top:22px;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;font-weight:900}.step h3{margin-bottom:6px;color:var(--navy)}.step p{margin-bottom:0;color:var(--muted)}
+    .levels-path{display:grid;gap:14px;margin:0;padding:0;list-style:none}.level-stage{position:relative;overflow:hidden;padding:26px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:0 10px 30px rgba(2,16,43,.06)}.level-stage::before{content:"";position:absolute;inset:0 auto 0 0;width:6px;background:var(--navy2)}.level-stage:nth-child(2)::before{background:#116cba}.level-stage:nth-child(3)::before{background:var(--green)}.level-index{display:inline-grid;place-items:center;width:34px;height:34px;margin-bottom:18px;border-radius:50%;background:#eef3f9;color:var(--navy);font-size:.78rem;font-weight:900}.level-stage h3{margin-bottom:6px;color:var(--navy);font-size:1.2rem}.level-duration{margin:0;color:var(--navy);font-size:clamp(2.2rem,5vw,3.45rem);font-weight:900;line-height:1;letter-spacing:-.045em}.level-duration span{font-size:.95rem;letter-spacing:0;text-transform:uppercase}.level-note{margin:12px 0 0;color:var(--muted);font-size:.94rem}.levels-total{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;padding:24px 28px;border-radius:22px;background:linear-gradient(135deg,#010918,var(--navy2));color:#fff;box-shadow:var(--shadow)}.levels-total-copy{margin:0}.levels-total-copy strong{display:block;font-size:1.15rem}.levels-total-copy span{color:rgba(255,255,255,.72)}.levels-total-time{margin:0;font-size:clamp(2.5rem,7vw,4.4rem);font-weight:900;line-height:1;letter-spacing:-.05em}.levels-total-time small{font-size:1rem;letter-spacing:0;text-transform:uppercase}
     .teacher{display:grid;gap:28px;align-items:center}.teacher-copy h2{color:var(--navy);font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(2rem,5vw,3.3rem);line-height:1.08}.credentials{display:grid;gap:8px;margin:20px 0 0;padding:0;list-style:none}.credentials li{font-weight:800}.credentials li::before{content:"✓";margin-right:9px;color:var(--green)}.portrait img{display:block;width:100%;max-width:390px;margin:0 auto;border-radius:28px;box-shadow:var(--shadow)}
     .comparison{overflow:auto;border:1px solid var(--line);border-radius:20px;background:#fff}.comparison table{width:100%;min-width:660px;border-collapse:collapse}.comparison th,.comparison td{padding:16px 18px;border-bottom:1px solid var(--line);text-align:left}.comparison th{background:#f0f5fa;color:var(--navy)}.comparison tr:last-child td{border-bottom:0}.yes{font-weight:900;color:#0d7540}
     .faq-list{display:grid;gap:12px;max-width:900px;margin:0 auto}.faq-item{padding:22px 24px;border:1px solid var(--line);border-radius:18px;background:#fff}.faq-item h3{margin-bottom:7px;color:var(--navy);font-size:1.08rem}.faq-item p{margin-bottom:0;color:var(--muted)}
     .cta{padding:76px 0 92px;text-align:center}.cta-card{padding:44px 28px;border-radius:30px;background:linear-gradient(135deg,#010918,var(--navy2));color:#fff;box-shadow:var(--shadow)}.cta-card h2{max-width:780px;margin:0 auto 12px;font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(2rem,5vw,3.5rem);line-height:1.08}.cta-card p{max-width:680px;margin:0 auto 24px;color:rgba(255,255,255,.8)}.back-link{display:inline-block;margin-top:18px;color:rgba(255,255,255,.72);font-weight:800;text-underline-offset:4px}
     .btn:focus-visible,.nav-link:focus-visible,.brand:focus-visible{outline:4px solid var(--gold);outline-offset:4px}
-    @media(min-width:760px){.hero-grid{grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr)}.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.teacher{grid-template-columns:1fr .72fr}}
-    @media(max-width:520px){.shell{width:min(100% - 24px,1120px)}.topbar{padding:14px 0}.brand{font-size:.9rem}.nav-link{padding:8px 10px;font-size:.74rem}.hero{padding-top:102px}.hero h1{font-size:clamp(2.05rem,10vw,2.55rem)}.actions{display:grid}.btn{width:100%}.hero-card{padding:22px}.section{padding:58px 0}}
+    @media(min-width:760px){.hero-grid{grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr)}.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.levels-path{grid-template-columns:1fr 1fr 2fr}.teacher{grid-template-columns:1fr .72fr}}
+    @media(max-width:520px){.shell{width:min(100% - 24px,1120px)}.topbar{padding:14px 0}.brand{font-size:.9rem}.nav-link{padding:8px 10px;font-size:.74rem}.hero{padding-top:102px}.hero h1{font-size:clamp(2.05rem,10vw,2.55rem)}.actions{display:grid}.btn{width:100%}.hero-card{padding:22px}.section{padding:58px 0}.levels-total{display:block;text-align:center}.levels-total-time{margin-top:14px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
   </style>
 </head>
@@ -142,6 +143,40 @@
           <article class="card"><h3>Material de apoio</h3><p>Recursos complementares para revisar e continuar estudando fora do horário da aula.</p></article>
           <article class="card"><h3>Cronograma de estudos</h3><p>Uma orientação prática para distribuir os estudos e manter regularidade.</p></article>
           <article class="card"><h3>Aula experimental</h3><p>Você pode experimentar o formato gratuitamente antes de decidir pela matrícula.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="levels-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Duração e progressão</p>
+          <h2 id="levels-title">Um percurso de 24 meses do nível iniciante ao avançado.</h2>
+          <p>A duração é organizada em três etapas, permitindo visualizar com clareza o caminho completo do curso.</p>
+        </div>
+        <ol class="levels-path" aria-label="Níveis e duração do curso">
+          <li class="level-stage">
+            <span class="level-index" aria-hidden="true">01</span>
+            <h3>Iniciante</h3>
+            <p class="level-duration">6 <span>meses</span></p>
+            <p class="level-note">Primeira etapa do percurso.</p>
+          </li>
+          <li class="level-stage">
+            <span class="level-index" aria-hidden="true">02</span>
+            <h3>Intermediário</h3>
+            <p class="level-duration">6 <span>meses</span></p>
+            <p class="level-note">Segunda etapa do percurso.</p>
+          </li>
+          <li class="level-stage">
+            <span class="level-index" aria-hidden="true">03</span>
+            <h3>Avançado</h3>
+            <p class="level-duration">12 <span>meses</span></p>
+            <p class="level-note">Etapa mais longa, correspondente à metade do percurso completo.</p>
+          </li>
+        </ol>
+        <div class="levels-total" aria-label="Tempo total do curso: 24 meses">
+          <p class="levels-total-copy"><strong>Tempo total do início ao fim</strong><span>Iniciante + Intermediário + Avançado</span></p>
+          <p class="levels-total-time">24 <small>meses</small></p>
         </div>
       </div>
     </section>
