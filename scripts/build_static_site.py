@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -11,6 +12,11 @@ RESPONSIVE_COMPAT_HREF = "/responsive_compat.css?v=20260820-1"
 RESPONSIVE_COMPAT_LINK = f'  <link rel="stylesheet" href="{RESPONSIVE_COMPAT_HREF}">'
 ERROR_MONITOR_SRC = "/error_monitor.js?v=20260820-1"
 VIEWPORT_META = '  <meta name="viewport" content="width=device-width, initial-scale=1.0">'
+CLEAN_ROUTE_LOADER = ROOT / "clean_route_loader.js"
+CLEAN_ROUTE_PAIR_RE = re.compile(
+    r'^\s*"(?P<route>/[^"]+/)"\s*:\s*"(?P<source>/[^"]+\.html)"\s*,?\s*$',
+    re.MULTILINE,
+)
 
 BLOCKED_TOP_LEVEL = {
     ".git",
@@ -84,6 +90,50 @@ def inject_site_baseline(html: str, relative: Path) -> tuple[str, bool]:
     return f"{prefix}{separator}{injected}\n{suffix}", True
 
 
+def ensure_root_base(html: str) -> str:
+    if re.search(r"<base\s", html, re.IGNORECASE):
+        return html
+    head = re.search(r"<head(?:\s[^>]*)?>", html, re.IGNORECASE)
+    if not head:
+        return html
+    return f'{html[:head.end()]}\n  <base href="/">{html[head.end():]}'
+
+
+def materialize_clean_route_aliases() -> int:
+    if not CLEAN_ROUTE_LOADER.is_file():
+        raise SystemExit("Missing clean_route_loader.js used to build clean route aliases")
+
+    loader = CLEAN_ROUTE_LOADER.read_text(encoding="utf-8")
+    pairs = list(CLEAN_ROUTE_PAIR_RE.finditer(loader))
+    if not pairs:
+        raise SystemExit("No clean route aliases found in clean_route_loader.js")
+
+    created = 0
+    for match in pairs:
+        route = match.group("route")
+        source_relative = Path(match.group("source").lstrip("/"))
+        target_relative = Path(route.strip("/")) / "index.html"
+
+        if source_relative == target_relative:
+            continue
+
+        source = PUBLISH / source_relative
+        target = PUBLISH / target_relative
+        if not source.is_file():
+            raise SystemExit(
+                f"Clean route source is missing: {source_relative.as_posix()} for {route}"
+            )
+        if target.is_file():
+            continue
+
+        target.parent.mkdir(parents=True, exist_ok=True)
+        html = source.read_text(encoding="utf-8")
+        target.write_text(ensure_root_base(html), encoding="utf-8")
+        created += 1
+
+    return created
+
+
 def main() -> None:
     if PUBLISH.exists():
         shutil.rmtree(PUBLISH)
@@ -109,6 +159,8 @@ def main() -> None:
                 destination.write_text(html, encoding="utf-8")
                 enhanced_html += 1
 
+    clean_route_aliases = materialize_clean_route_aliases()
+
     headers = ROOT / "netlify" / "_headers"
     if not headers.is_file():
         raise SystemExit("Missing shared hosting headers at netlify/_headers")
@@ -120,6 +172,9 @@ def main() -> None:
         PUBLISH / "robots.txt",
         PUBLISH / "sitemap.xml",
         PUBLISH / "error_monitor.js",
+        PUBLISH / "quero-conhecer" / "index.html",
+        PUBLISH / "cadastro" / "index.html",
+        PUBLISH / "meu-progresso" / "index.html",
     ]
     missing = [str(path.relative_to(ROOT)) for path in required if not path.is_file()]
     if missing:
@@ -140,7 +195,8 @@ def main() -> None:
 
     print(
         f"Static publish directory ready: {copied} public files + _headers; "
-        f"site baseline enhanced {enhanced_html} HTML files"
+        f"site baseline enhanced {enhanced_html} HTML files; "
+        f"materialized {clean_route_aliases} clean route aliases"
     )
 
 
