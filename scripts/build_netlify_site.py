@@ -29,6 +29,7 @@ BLOCKED_TOP_LEVEL = {
 }
 
 SKIP_NAMES = {"CNAME", ".nojekyll"}
+PUBLIC_SPECIAL_NAMES = {"_redirects"}
 
 PUBLIC_SUFFIXES = {
     ".html", ".htm",
@@ -60,7 +61,7 @@ def is_public(path: Path) -> bool:
         return False
     if any(part.startswith(".") for part in path.parts):
         return False
-    return path.suffix.lower() in PUBLIC_SUFFIXES
+    return path.name in PUBLIC_SPECIAL_NAMES or path.suffix.lower() in PUBLIC_SUFFIXES
 
 
 def standardize_whatsapp_links(html: str) -> str:
@@ -126,7 +127,14 @@ def main() -> None:
         raise SystemExit("Missing netlify/_headers")
     shutil.copy2(headers, PUBLISH / "_headers")
 
-    required = [PUBLISH / "index.html", PUBLISH / "404.html", PUBLISH / "robots.txt", PUBLISH / "sitemap.xml", PUBLISH / "error_monitor.js"]
+    required = [
+        PUBLISH / "index.html",
+        PUBLISH / "404.html",
+        PUBLISH / "robots.txt",
+        PUBLISH / "sitemap.xml",
+        PUBLISH / "error_monitor.js",
+        PUBLISH / "_redirects",
+    ]
     missing = [str(path.relative_to(ROOT)) for path in required if not path.is_file()]
     if missing:
         raise SystemExit(f"Netlify build missing required public files: {', '.join(missing)}")
