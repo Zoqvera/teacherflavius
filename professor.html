@@ -14,6 +14,25 @@
     .menu-grid.reorder-enabled .menu-button:active { cursor:grabbing; }
     .menu-button.dragging { opacity:.45; transform:scale(.98); border-color:rgba(129,140,248,.75); }
     .menu-button.drag-over { border-color:rgba(110,231,183,.75); background:rgba(110,231,183,.08); }
+    .birthday-card { margin:0 0 24px; padding:20px; border:1px solid rgba(129,140,248,.32); border-radius:18px; background:linear-gradient(145deg,rgba(17,24,39,.92),rgba(30,27,75,.82)); box-shadow:0 16px 42px rgba(0,0,0,.20); }
+    .birthday-card-header { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; }
+    .birthday-card-title { display:flex; align-items:center; gap:10px; margin:0; color:#f8fafc; font-size:17px; line-height:1.3; }
+    .birthday-card-badge { padding:4px 9px; border-radius:999px; background:rgba(129,140,248,.15); border:1px solid rgba(129,140,248,.28); color:#c7d2fe; font:700 10px monospace; letter-spacing:1.2px; white-space:nowrap; }
+    .birthday-card-status { margin:0; color:#94a3b8; font-size:13px; line-height:1.5; }
+    .birthday-card-list { display:grid; gap:9px; margin:14px 0 0; padding:0; list-style:none; }
+    .birthday-card-item { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:11px 12px; border-radius:12px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); }
+    .birthday-card-name { min-width:0; color:#f8fafc; font-size:14px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .birthday-card-meta { flex:0 0 auto; text-align:right; }
+    .birthday-card-date { display:block; color:#cbd5e1; font-size:13px; }
+    .birthday-card-countdown { display:block; margin-top:2px; color:#a5b4fc; font-size:11px; font-weight:700; }
+    .birthday-card-item.is-today { border-color:rgba(167,139,250,.48); background:rgba(124,58,237,.14); }
+    .birthday-card-item.is-today .birthday-card-countdown { color:#ddd6fe; }
+    @media(max-width:560px){
+      .birthday-card { padding:17px 15px; }
+      .birthday-card-header { align-items:flex-start; }
+      .birthday-card-item { align-items:flex-start; }
+      .birthday-card-name { white-space:normal; }
+    }
   </style>
 </head>
 <body class="auth-checking">
@@ -21,6 +40,16 @@
     <div class="top-links"><a class="top-link" href="/">HOME</a><a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a></div>
     <div class="header"><div><span class="badge">TEACHER FLÁVIO</span></div><h1>Área do Professor</h1><div id="adminStatus" class="status">Verificando credenciais de professor...</div></div>
     <div class="divider"></div>
+
+    <section id="upcomingBirthdaysCard" class="birthday-card" aria-labelledby="upcomingBirthdaysTitle">
+      <div class="birthday-card-header">
+        <h2 id="upcomingBirthdaysTitle" class="birthday-card-title"><span aria-hidden="true">🎂</span> PRÓXIMOS ANIVERSÁRIOS</h2>
+        <span class="birthday-card-badge">ALUNOS ATIVOS</span>
+      </div>
+      <p id="upcomingBirthdaysStatus" class="birthday-card-status">Carregando próximos aniversários...</p>
+      <ul id="upcomingBirthdaysList" class="birthday-card-list" hidden></ul>
+    </section>
+
     <p class="reorder-help">Arraste os cards para reorganizar a Área do Professor. A ordem fica salva neste navegador.</p>
     <div id="professorMenuGrid" class="menu-grid reorder-enabled">
       <a class="menu-button" href="/perfil-dos-alunos/" draggable="true" data-card-id="alunos"><span><span class="icon">🪪</span>ALUNOS</span><span class="arrow">›</span></a>
@@ -54,6 +83,162 @@
       function clearDragOverState(){ getCards().forEach(function(card){card.classList.remove("drag-over");}); }
       function setupDragging(){ getCards().forEach(function(card){card.addEventListener("dragstart",function(event){draggedCard=card;dragStarted=true;card.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",card.dataset.cardId);});card.addEventListener("dragend",function(){if(draggedCard)draggedCard.classList.remove("dragging");draggedCard=null;clearDragOverState();saveOrder();setTimeout(function(){dragStarted=false;},0);});card.addEventListener("click",function(event){if(dragStarted){event.preventDefault();event.stopPropagation();}});});grid.addEventListener("dragover",function(event){event.preventDefault();if(!draggedCard)return;const target=getInsertionTarget(event.clientY);clearDragOverState();if(target){target.classList.add("drag-over");grid.insertBefore(draggedCard,target);}else{grid.appendChild(draggedCard);}});grid.addEventListener("drop",function(event){event.preventDefault();clearDragOverState();saveOrder();}); }
       applySavedOrder(); setupDragging();
+    })();
+  </script>
+  <script>
+    (function () {
+      "use strict";
+
+      const status = document.getElementById("upcomingBirthdaysStatus");
+      const list = document.getElementById("upcomingBirthdaysList");
+      const DAY_MS = 86400000;
+
+      function sleep(ms) { return new Promise(function(resolve){ setTimeout(resolve, ms); }); }
+
+      async function waitForAuth() {
+        for (let attempt = 0; attempt < 40; attempt++) {
+          if (window.Auth && Auth.getClient && Auth.getSession) return true;
+          await sleep(100);
+        }
+        return false;
+      }
+
+      function saoPauloTodayParts() {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Sao_Paulo",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).formatToParts(new Date());
+        const map = {};
+        parts.forEach(function(part){ map[part.type] = Number(part.value); });
+        return { year: map.year, month: map.month, day: map.day };
+      }
+
+      function nextBirthday(dateOfBirth, today) {
+        const value = String(dateOfBirth || "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+        const month = Number(value.slice(5, 7));
+        const day = Number(value.slice(8, 10));
+        const todayUtc = Date.UTC(today.year, today.month - 1, today.day);
+
+        function candidateForYear(year) {
+          let candidateDay = day;
+          if (month === 2 && day === 29) {
+            const leap = new Date(Date.UTC(year, 1, 29)).getUTCDate() === 29;
+            if (!leap) candidateDay = 28;
+          }
+          return Date.UTC(year, month - 1, candidateDay);
+        }
+
+        let nextUtc = candidateForYear(today.year);
+        if (nextUtc < todayUtc) nextUtc = candidateForYear(today.year + 1);
+        return {
+          month: new Date(nextUtc).getUTCMonth() + 1,
+          day: new Date(nextUtc).getUTCDate(),
+          daysUntil: Math.round((nextUtc - todayUtc) / DAY_MS)
+        };
+      }
+
+      function formatDate(month, day) {
+        return String(day).padStart(2, "0") + "/" + String(month).padStart(2, "0");
+      }
+
+      function countdownText(days) {
+        if (days === 0) return "HOJE";
+        if (days === 1) return "AMANHÃ";
+        return "EM " + days + " DIAS";
+      }
+
+      function render(students) {
+        list.innerHTML = "";
+        if (!students.length) {
+          status.textContent = "Nenhum aluno ativo possui data de nascimento cadastrada.";
+          list.hidden = true;
+          return;
+        }
+
+        const upcoming = students
+          .map(function(student){
+            return { student: student, next: nextBirthday(student.date_of_birth, saoPauloTodayParts()) };
+          })
+          .filter(function(item){ return !!item.next; })
+          .sort(function(a, b){
+            if (a.next.daysUntil !== b.next.daysUntil) return a.next.daysUntil - b.next.daysUntil;
+            return String(a.student.name || a.student.email || "").localeCompare(String(b.student.name || b.student.email || ""), "pt-BR");
+          })
+          .slice(0, 5);
+
+        if (!upcoming.length) {
+          status.textContent = "Nenhuma data de aniversário válida encontrada.";
+          list.hidden = true;
+          return;
+        }
+
+        upcoming.forEach(function(item){
+          const li = document.createElement("li");
+          li.className = "birthday-card-item" + (item.next.daysUntil === 0 ? " is-today" : "");
+
+          const name = document.createElement("span");
+          name.className = "birthday-card-name";
+          name.textContent = item.student.name || item.student.email || "Aluno";
+
+          const meta = document.createElement("span");
+          meta.className = "birthday-card-meta";
+
+          const date = document.createElement("span");
+          date.className = "birthday-card-date";
+          date.textContent = formatDate(item.next.month, item.next.day);
+
+          const countdown = document.createElement("span");
+          countdown.className = "birthday-card-countdown";
+          countdown.textContent = countdownText(item.next.daysUntil);
+
+          meta.appendChild(date);
+          meta.appendChild(countdown);
+          li.appendChild(name);
+          li.appendChild(meta);
+          list.appendChild(li);
+        });
+
+        status.textContent = "Os 5 aniversários mais próximos entre os alunos ativos.";
+        list.hidden = false;
+      }
+
+      async function initializeBirthdaysCard() {
+        try {
+          if (!(await waitForAuth())) throw new Error("Autenticação indisponível.");
+          const session = await Auth.getSession();
+          const client = Auth.getClient();
+          if (!session || !session.user || !client) throw new Error("Sessão não encontrada.");
+
+          const adminResponse = await client.rpc("is_teacher_admin");
+          if (adminResponse.error || adminResponse.data !== true) {
+            status.textContent = "Acesso restrito ao professor.";
+            return;
+          }
+
+          const response = await client
+            .from("profiles")
+            .select("name,email,date_of_birth")
+            .eq("enrolled", true)
+            .eq("archived", false)
+            .not("date_of_birth", "is", null);
+
+          if (response.error) throw response.error;
+          render(response.data || []);
+        } catch (error) {
+          console.warn("Não foi possível carregar próximos aniversários:", error && error.message ? error.message : error);
+          status.textContent = "Não foi possível carregar os próximos aniversários.";
+          list.hidden = true;
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initializeBirthdaysCard, { once:true });
+      } else {
+        initializeBirthdaysCard();
+      }
     })();
   </script>
   <script src="professor_home.js?v=20260715-1"></script>
