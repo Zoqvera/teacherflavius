@@ -135,6 +135,43 @@
     document.body.appendChild(floatingWhatsapp);
   }
 
+  function standardizeWhatsappLinks(root) {
+    var target = root && root.querySelectorAll ? root : document;
+    var whatsappMessage = "Olá, Teacher! Vim pelo site e gostaria de conversar sobre as aulas de inglês.";
+    target.querySelectorAll('a[href*="wa.me/"], a[href*="api.whatsapp.com/"]').forEach(function (link) {
+      try {
+        var url = new URL(link.getAttribute("href"), window.location.href);
+        var number = "";
+        if (url.hostname === "wa.me") {
+          number = url.pathname.replace(/\D/g, "");
+        } else if (url.hostname === "api.whatsapp.com") {
+          number = (url.searchParams.get("phone") || "").replace(/\D/g, "");
+        }
+        if (!number) return;
+        link.href = "https://wa.me/" + number + "?text=" + encodeURIComponent(whatsappMessage);
+      } catch (error) {
+        // Keep the original link if parsing fails.
+      }
+    });
+  }
+
+  function installWhatsappLinkStandardizer() {
+    standardizeWhatsappLinks(document);
+    var observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        mutation.addedNodes.forEach(function (node) {
+          if (!node || node.nodeType !== 1) return;
+          if (node.matches && node.matches('a[href*="wa.me/"], a[href*="api.whatsapp.com/"]')) {
+            standardizeWhatsappLinks(node.parentNode || document);
+            return;
+          }
+          standardizeWhatsappLinks(node);
+        });
+      });
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+  }
+
   function loadScript(id, src, callback) {
     var existing = document.getElementById(id);
     if (existing) {
@@ -212,6 +249,7 @@
   function loadFooterCore() {
     loadScript("teacher-flavius-site-footer-core", "/site_footer_core.js?v=20260820-privacy-1", function () {
       removeEnrollmentLinks(document);
+      standardizeWhatsappLinks(document);
     });
   }
 
@@ -233,6 +271,8 @@
     loadMobileTopNavigation();
     if (isPublicMarketingPage()) removeEnrollmentLinks(document);
     else installEnrollmentLinkGuard();
+    standardizeWhatsappLinks(document);
+    installWhatsappLinkStandardizer();
     installWhatsappFloat();
   }
 
