@@ -9,14 +9,9 @@
   <script src="/supabase_config.js?v=20260430-3"></script>
   <script src="/auth.js?v=20260430-3"></script>
   <script src="https://sdk.mercadopago.com/js/v2"></script>
-  <link rel="stylesheet" href="/pagamento/style.css?v=20260814-1">
-  <style>
-    .payment-help-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:16px}
-    .payment-help-actions .secondary-button{width:auto;min-height:44px;margin:0;padding:11px 16px}
-    @media(max-width:560px){.payment-help-actions{display:grid}.payment-help-actions .secondary-button,.payment-help-actions a{width:100%}}
-  </style>
+  <link rel="stylesheet" href="/pagamento/style.css?v=20260901-1">
 </head>
-<body class="auth-checking">
+<body class="auth-checking payment-page">
   <main class="payment-shell">
     <nav class="payment-nav" aria-label="Navegação da página de pagamento">
       <a href="/area-do-estudante/">← Área do Estudante</a>
@@ -30,7 +25,13 @@
         <p>O pagamento é processado pelo Mercado Pago.</p>
       </div>
       <div class="payment-security" aria-label="Informações de segurança">
-        <strong>Ambiente protegido</strong>
+        <span class="payment-security__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>
+        </span>
+        <span>
+          <strong>Ambiente protegido</strong>
+          <span>Processamento seguro pelo Mercado Pago</span>
+        </span>
       </div>
     </header>
 
@@ -61,7 +62,9 @@
     </section>
 
     <section id="paymentSuccess" class="payment-success" hidden aria-labelledby="paymentSuccessTitle">
-      <div class="success-icon" aria-hidden="true">✓</div>
+      <div class="success-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+      </div>
       <h2 id="paymentSuccessTitle">Mensalidades em dia</h2>
       <p id="paymentSuccessDescription">Não há nenhuma mensalidade pendente nesta conta.</p>
       <a href="/area-do-estudante/">VOLTAR À ÁREA DO ESTUDANTE</a>
@@ -77,7 +80,7 @@
     </section>
   </main>
 
-  <script src="/pagamento/app.js?v=20260819-1"></script>
+  <script src="/pagamento/app.js?v=20260901-1"></script>
   <script>
     (function(){
       const button=document.getElementById('verifyPaymentButton');
