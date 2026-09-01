@@ -8,42 +8,13 @@
   <script src="supabase_config.js?v=20260430-1"></script>
   <script src="auth.js?v=20260430-1"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260430-1">
-  <style>
-    .class-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 20px;
-      backdrop-filter: blur(12px);
-      margin-bottom: 14px;
-    }
-    .class-card h2 {
-      color: #f1f5f9;
-      font-size: 22px;
-      margin-bottom: 10px;
-    }
-    .class-card p {
-      color: #cbd5e1;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 6px;
-    }
-    .class-card b { color: #f1f5f9; }
-    .empty-panel {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 20px;
-      color: #94a3b8;
-      line-height: 1.6;
-    }
-  </style>
+  <link rel="stylesheet" href="minha_turma.css?v=20260901-1">
 </head>
-<body class="auth-checking">
+<body class="auth-checking my-class-page">
   <div class="container">
     <div class="top-links">
-      <a class="top-link" href="area_do_estudante.html">ÁREA DO ESTUDANTE</a>
-      <a class="top-link" href="index.html">HOME</a>
+      <a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a>
+      <a class="top-link" href="/">HOME</a>
     </div>
 
     <div class="header">
@@ -54,11 +25,12 @@
 
     <div class="divider"></div>
 
-    <div id="studentClassContent" class="empty-panel">Carregando turma...</div>
+    <main id="studentClassContent" class="empty-panel" aria-live="polite">Carregando turma...</main>
   </div>
 
-  <script src="minha_turma.js?v=20260501-1"></script>
+  <script src="minha_turma.js?v=20260901-1"></script>
   <script src="animated_cards.js?v=20260430-1"></script>
-  <script defer src="/site_footer.js?v=20260814-1"></script>
+  <script defer src="/mobile_top_navigation.js?v=20260820-close-1"></script>
+  <script defer src="/site_footer.js?v=20260820-ux-3"></script>
 </body>
 </html>
