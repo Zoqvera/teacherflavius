@@ -33,7 +33,7 @@
     if (path.indexOf("/recursos") === 0) return "geo_content";
     if (path.indexOf("/sobre") === 0) return "authority";
     if (isSalesPage()) return "marketing";
-    if (path === "/" || path === "/index.html") return "marketing_home";
+    if (path === "/") return "marketing_home";
     return "other";
   }
 
