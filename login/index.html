@@ -14,9 +14,10 @@
         if (!response.ok) throw new Error('HTTP ' + response.status);
 
         let html = await response.text();
+        html = html.replace('<head>', '<head>\n  <base href="/">');
         html = html.replace(
-          '<head>',
-          '<head>\n  <base href="/">\n  <link rel="stylesheet" href="/login/login_visual.css?v=20260901-1">'
+          '</style>',
+          '</style>\n  <link rel="stylesheet" href="/login/login_visual.css?v=20260901-1">'
         );
         html = html.replace('<body>', '<body class="login-page">');
 
