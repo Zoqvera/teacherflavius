@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -11,6 +12,9 @@ RESPONSIVE_COMPAT_HREF = "/responsive_compat.css?v=20260820-1"
 RESPONSIVE_COMPAT_LINK = f'  <link rel="stylesheet" href="{RESPONSIVE_COMPAT_HREF}">'
 ERROR_MONITOR_SRC = "/error_monitor.js?v=20260820-1"
 VIEWPORT_META = '  <meta name="viewport" content="width=device-width, initial-scale=1.0">'
+STANDARD_WHATSAPP_URL = "https://wa.me/5534998349756?text=Ol%C3%A1%2C%20Teacher%21%20Vim%20pelo%20site%20e%20gostaria%20de%20conversar%20sobre%20as%20aulas%20de%20ingl%C3%AAs."
+WA_ME_RE = re.compile(r'https://wa\.me/5534998349756(?:\?[^"\']*)?', re.IGNORECASE)
+API_WHATSAPP_RE = re.compile(r'https://api\.whatsapp\.com/send\?[^"\']*phone=5534998349756[^"\']*', re.IGNORECASE)
 
 BLOCKED_TOP_LEVEL = {
     ".git",
@@ -59,6 +63,11 @@ def is_public(path: Path) -> bool:
     return path.suffix.lower() in PUBLIC_SUFFIXES
 
 
+def standardize_whatsapp_links(html: str) -> str:
+    html = WA_ME_RE.sub(STANDARD_WHATSAPP_URL, html)
+    return API_WHATSAPP_RE.sub(STANDARD_WHATSAPP_URL, html)
+
+
 def inject_site_baseline(html: str, relative: Path) -> tuple[str, bool]:
     closing_head = html.lower().find("</head>")
     if closing_head < 0:
@@ -104,9 +113,12 @@ def main() -> None:
 
         if relative.suffix.lower() in {".html", ".htm"}:
             html = destination.read_text(encoding="utf-8")
+            original_html = html
+            html = standardize_whatsapp_links(html)
             html, enhanced = inject_site_baseline(html, relative)
-            if enhanced:
+            if html != original_html:
                 destination.write_text(html, encoding="utf-8")
+            if enhanced:
                 enhanced_html += 1
 
     headers = ROOT / "netlify" / "_headers"
