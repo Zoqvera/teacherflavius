@@ -1,0 +1,76 @@
+@import url('/brand_palette.css?v=20260820-3');
+
+/* Complete Cadastro / onboarding — Teacher Flávio Design System v1 */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:dark;background:var(--tf-navy-950)}
+body.enrollment-onboarding{min-height:100vh;margin:0;padding:clamp(22px,4vw,48px) 16px 64px;background:linear-gradient(145deg,var(--tf-navy-950) 0%,var(--tf-navy-900) 46%,var(--tf-blue-800) 76%,var(--tf-blue-700) 100%);color:var(--tf-slate-100);font-family:var(--tf-font-body);-webkit-font-smoothing:antialiased}
+.enrollment-shell{width:min(100%,940px);margin:0 auto}
+.enrollment-card{width:100%;padding:clamp(22px,4vw,38px);border:1px solid rgba(78,154,236,.25);border-radius:var(--tf-radius-xl);background:linear-gradient(155deg,rgba(3,26,63,.88),rgba(10,41,86,.70));box-shadow:var(--tf-shadow-lg)}
+.enrollment-header{text-align:center;margin:0 auto 28px;max-width:700px}
+.enrollment-badge{display:inline-flex;align-items:center;justify-content:center;min-height:28px;margin-bottom:14px;padding:5px 14px;border-radius:var(--tf-radius-pill);background:linear-gradient(135deg,var(--tf-blue-700),var(--tf-blue-300));box-shadow:0 10px 26px rgba(9,104,188,.24);color:var(--tf-white);font:800 11px/1 var(--tf-font-display);letter-spacing:.13em}
+.enrollment-header h1{margin:0;color:var(--tf-slate-50);font:800 clamp(2rem,5vw,2.7rem)/1.08 var(--tf-font-display);letter-spacing:-.025em}
+.enrollment-header .intro{max-width:650px;margin:12px auto 0;color:var(--tf-slate-300);font-size:15px;line-height:1.7}
+.onboarding-progress{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 24px}
+.progress-step{display:flex;align-items:center;gap:9px;min-height:50px;padding:10px 12px;border:1px solid rgba(78,154,236,.18);border-radius:14px;background:rgba(2,16,43,.44);color:var(--tf-slate-400);font-size:12px;font-weight:700}
+.progress-step strong{display:grid;place-items:center;width:26px;height:26px;flex:0 0 26px;border-radius:50%;background:rgba(78,154,236,.12);color:var(--tf-blue-100);font:800 11px/1 var(--tf-font-display)}
+.progress-step.is-done{color:var(--tf-slate-200)}
+.progress-step.is-done strong{background:rgba(34,197,94,.14);color:#bbf7d0}
+.progress-step.is-current{border-color:rgba(78,154,236,.46);background:rgba(9,104,188,.16);color:var(--tf-white)}
+.progress-step.is-current strong{background:var(--tf-blue-500);color:#fff}
+.account-note{display:flex;align-items:flex-start;gap:11px;margin:0 0 24px;padding:14px 16px;border:1px solid rgba(78,154,236,.26);border-radius:var(--tf-radius-md);background:rgba(9,104,188,.10);color:var(--tf-blue-100);font-size:13px;line-height:1.55}
+.account-note svg{width:20px;height:20px;flex:0 0 20px;margin-top:1px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.form-section{padding:22px;border:1px solid rgba(78,154,236,.18);border-radius:var(--tf-radius-lg);background:rgba(2,16,43,.42)}
+.form-section+.form-section{margin-top:18px}
+.section-heading{margin:0 0 18px}
+.section-heading h2{margin:0;color:var(--tf-slate-50);font:800 18px/1.25 var(--tf-font-display)}
+.section-heading p{margin:6px 0 0;color:var(--tf-slate-400);font-size:13px;line-height:1.55}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 16px}
+.field{min-width:0}
+.field.full{grid-column:1/-1}
+label.field-label{display:block;margin:0 0 7px;color:var(--tf-slate-200);font-size:13px;font-weight:700}
+.enrollment-onboarding input[type='text'],.enrollment-onboarding input[type='email'],.enrollment-onboarding input[type='tel']{width:100%;min-height:50px;margin:0;padding:12px 14px;border:1px solid rgba(78,154,236,.24);border-radius:var(--tf-radius-sm);background:rgba(2,16,43,.58);color:var(--tf-slate-50);font:500 15px/1.4 var(--tf-font-body);outline:none;transition:border-color var(--tf-motion-fast) var(--tf-ease),box-shadow var(--tf-motion-fast) var(--tf-ease),background-color var(--tf-motion-fast) var(--tf-ease)}
+.enrollment-onboarding input::placeholder{color:var(--tf-slate-500)}
+.enrollment-onboarding input:hover:not([readonly]){border-color:rgba(78,154,236,.42)}
+.enrollment-onboarding input:focus-visible{border-color:var(--tf-blue-300);box-shadow:var(--tf-shadow-focus);outline:0}
+.enrollment-onboarding input[readonly]{color:var(--tf-slate-400);background:rgba(2,16,43,.34);cursor:not-allowed}
+.field-note{margin:7px 0 0;color:var(--tf-slate-400);font-size:12px;line-height:1.5}
+.availability-block{margin:0}
+.availability-scroll{width:100%;overflow-x:auto;padding:3px 3px 10px;overscroll-behavior-inline:contain;scrollbar-color:rgba(78,154,236,.42) rgba(2,16,43,.28)}
+.availability-scroll:focus-visible{outline:3px solid var(--tf-blue-300);outline-offset:3px;border-radius:12px}
+.availability-grid{width:100%;min-width:590px;display:grid;grid-template-columns:104px repeat(5,minmax(76px,1fr));gap:8px;align-items:center}
+.grid-head{padding:8px 4px;color:var(--tf-blue-100);text-align:center;font:800 12px/1.2 var(--tf-font-display);white-space:nowrap}
+.time-label{padding:7px 4px;color:var(--tf-slate-200);font-size:12px;font-weight:700;white-space:nowrap}
+.slot{position:relative;display:flex;justify-content:center;align-items:center;min-height:44px;cursor:pointer}
+.slot input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.slot-box{display:inline-grid;place-items:center;width:34px;height:34px;border:2px solid rgba(148,163,184,.42);border-radius:9px;background:rgba(255,255,255,.025);transition:transform var(--tf-motion-fast) var(--tf-ease),border-color var(--tf-motion-fast) var(--tf-ease),background-color var(--tf-motion-fast) var(--tf-ease),box-shadow var(--tf-motion-fast) var(--tf-ease)}
+.slot:hover .slot-box{border-color:rgba(78,154,236,.72);background:rgba(9,104,188,.10)}
+.slot input:focus-visible+.slot-box{outline:3px solid var(--tf-blue-300);outline-offset:3px}
+.slot input:checked+.slot-box{border-color:var(--tf-blue-300);background:linear-gradient(135deg,var(--tf-blue-700),var(--tf-blue-500));box-shadow:0 0 0 4px rgba(78,154,236,.14)}
+.slot input:checked+.slot-box::after{content:'✓';color:#fff;font:900 18px/1 var(--tf-font-display)}
+.mobile-scroll-hint{display:none;margin:10px 0 0;color:var(--tf-slate-500);font-size:11px;line-height:1.4;text-align:center}
+.message{min-height:20px;margin:16px 0 0;color:#fecaca;font-size:13px;line-height:1.5;text-align:center}
+#submitButton{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:52px;margin-top:16px;padding:13px 18px;border:1px solid rgba(78,154,236,.55);border-radius:var(--tf-radius-sm);background:linear-gradient(135deg,var(--tf-blue-700),var(--tf-blue-500));color:#fff;font:800 14px/1.2 var(--tf-font-display);letter-spacing:.02em;cursor:pointer;box-shadow:0 12px 30px rgba(9,104,188,.24);transition:transform var(--tf-motion-fast) var(--tf-ease),box-shadow var(--tf-motion-fast) var(--tf-ease),filter var(--tf-motion-fast) var(--tf-ease)}
+#submitButton:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 16px 38px rgba(9,104,188,.34)}
+#submitButton:active:not(:disabled){transform:translateY(0) scale(.995)}
+#submitButton:focus-visible{outline:3px solid var(--tf-blue-300);outline-offset:3px}
+#submitButton:disabled{opacity:.62;cursor:wait;transform:none;filter:saturate(.7)}
+
+/* Tela pública de cadastro indisponível */
+body.registration-closed{min-height:100vh;margin:0;padding:32px 16px 56px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--tf-navy-950),var(--tf-navy-900) 50%,var(--tf-blue-800));color:var(--tf-slate-100);font-family:var(--tf-font-body)}
+.registration-closed .closed-card{width:min(100%,500px);padding:clamp(24px,5vw,36px);border:1px solid rgba(78,154,236,.24);border-radius:var(--tf-radius-xl);background:linear-gradient(155deg,rgba(3,26,63,.90),rgba(10,41,86,.72));box-shadow:var(--tf-shadow-lg);text-align:center}
+.registration-closed h1{margin:0;color:var(--tf-slate-50);font:800 clamp(1.9rem,7vw,2.45rem)/1.1 var(--tf-font-display)}
+.registration-closed .closed-subtitle{margin:10px 0 0;color:var(--tf-slate-300);font-size:14px;line-height:1.6}
+.closed-notice{display:flex;align-items:flex-start;gap:11px;margin:22px 0 0;padding:14px 15px;border:1px solid rgba(78,154,236,.24);border-radius:var(--tf-radius-md);background:rgba(9,104,188,.10);color:var(--tf-blue-100);font-size:13px;line-height:1.55;text-align:left}
+.closed-notice svg{width:20px;height:20px;flex:0 0 20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.closed-links{display:grid;gap:10px;margin-top:20px}
+.closed-links a{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:11px 16px;border-radius:var(--tf-radius-sm);font:800 13px/1.2 var(--tf-font-display);text-decoration:none;transition:transform var(--tf-motion-fast) var(--tf-ease),background-color var(--tf-motion-fast) var(--tf-ease),border-color var(--tf-motion-fast) var(--tf-ease)}
+.closed-links .primary-link{border:1px solid rgba(78,154,236,.50);background:linear-gradient(135deg,var(--tf-blue-700),var(--tf-blue-500));color:#fff}
+.closed-links .secondary-link{border:1px solid rgba(78,154,236,.28);background:rgba(5,66,136,.12);color:var(--tf-blue-100)}
+.closed-links a:hover{transform:translateY(-2px)}
+.closed-links a:active{transform:translateY(0)}
+.closed-links a:focus-visible{outline:3px solid var(--tf-blue-300);outline-offset:3px}
+
+@media(max-width:719px){body.enrollment-onboarding{padding:18px 12px 42px}.enrollment-card{padding:19px 15px;border-radius:var(--tf-radius-lg)}.onboarding-progress{grid-template-columns:1fr}.progress-step{min-height:44px}.form-section{padding:17px 14px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.availability-scroll{margin-inline:-2px}.mobile-scroll-hint{display:block}#submitButton:hover:not(:disabled){transform:none}}
+@media(max-width:380px){body.enrollment-onboarding{padding-inline:8px}.enrollment-card{padding-inline:12px}.form-section{padding-inline:11px}}
+@media(prefers-reduced-motion:reduce){.enrollment-onboarding *,body.registration-closed *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
