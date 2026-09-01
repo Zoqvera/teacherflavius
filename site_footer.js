@@ -149,11 +149,8 @@
       try {
         var url = new URL(link.getAttribute("href"), window.location.href);
         var number = "";
-        if (url.hostname === "wa.me") {
-          number = url.pathname.replace(/\D/g, "");
-        } else if (url.hostname === "api.whatsapp.com") {
-          number = (url.searchParams.get("phone") || "").replace(/\D/g, "");
-        }
+        if (url.hostname === "wa.me") number = url.pathname.replace(/\D/g, "");
+        else if (url.hostname === "api.whatsapp.com") number = (url.searchParams.get("phone") || "").replace(/\D/g, "");
         if (!number) return;
         link.href = "https://wa.me/" + number + "?text=" + encodeURIComponent(whatsappMessage);
       } catch (error) {
@@ -203,6 +200,10 @@
     stylesheet.rel = "stylesheet";
     stylesheet.href = href;
     document.head.appendChild(stylesheet);
+  }
+
+  function loadWhatsappLeadForm() {
+    loadScript("teacher-flavius-whatsapp-lead-form", "/whatsapp_lead_form.js?v=20260901-1");
   }
 
   function loadAccessibility() {
@@ -292,6 +293,9 @@
     else window.setTimeout(loadPublicPageScripts, 0);
   }
 
+  // This must be registered before privacy/analytics so non-floating WhatsApp
+  // clicks are intercepted before they can be counted as leads.
+  loadWhatsappLeadForm();
   loadPrivacy();
 
   if (document.readyState === "loading") {
