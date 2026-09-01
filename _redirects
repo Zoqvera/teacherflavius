@@ -1,0 +1,7 @@
+# Cloudflare Workers Static Assets redirects.
+# Keep legacy public URLs as permanent redirects to their canonical routes.
+/quero_conhecer.html /curso-de-ingles-online/ 301
+/quero_conhecer /curso-de-ingles-online/ 301
+/quero_conhecer/ /curso-de-ingles-online/ 301
+/quero-conhecer /curso-de-ingles-online/ 301
+/quero-conhecer/ /curso-de-ingles-online/ 301
