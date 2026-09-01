@@ -9,8 +9,12 @@
     (async function () {
       const response = await fetch('/turmas.html', { cache: 'no-store' });
       const html = await response.text();
+      const enhancedHtml = html
+        .replace('<head>', '<head>\n  <base href="/">')
+        .replace('</head>', '  <link rel="stylesheet" href="/turmas/turmas_visual.css?v=20260901-1">\n</head>')
+        .replace('</body>', '  <script src="/turmas/turmas_visual.js?v=20260901-1"><\/script>\n</body>');
       document.open();
-      document.write(html.replace('<head>', '<head>\n  <base href="/">'));
+      document.write(enhancedHtml);
       document.close();
     })();
   </script>
