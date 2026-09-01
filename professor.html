@@ -8,32 +8,6 @@
   <script src="supabase_config.js?v=20260715-1"></script>
   <script src="auth.js?v=20260730-1"></script>
   <link rel="stylesheet" href="professor.css?v=20260820-1">
-  <style>
-    .reorder-help { color:#94a3b8; font-size:13px; line-height:1.5; text-align:center; margin:-4px 0 18px; }
-    .menu-grid.reorder-enabled .menu-button { cursor:grab; user-select:none; }
-    .menu-grid.reorder-enabled .menu-button:active { cursor:grabbing; }
-    .menu-button.dragging { opacity:.45; transform:scale(.98); border-color:rgba(129,140,248,.75); }
-    .menu-button.drag-over { border-color:rgba(110,231,183,.75); background:rgba(110,231,183,.08); }
-    .birthday-card { margin:0 0 24px; padding:20px; border:1px solid rgba(129,140,248,.32); border-radius:18px; background:linear-gradient(145deg,rgba(17,24,39,.92),rgba(30,27,75,.82)); box-shadow:0 16px 42px rgba(0,0,0,.20); }
-    .birthday-card-header { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; }
-    .birthday-card-title { display:flex; align-items:center; gap:10px; margin:0; color:#f8fafc; font-size:17px; line-height:1.3; }
-    .birthday-card-badge { padding:4px 9px; border-radius:999px; background:rgba(129,140,248,.15); border:1px solid rgba(129,140,248,.28); color:#c7d2fe; font:700 10px monospace; letter-spacing:1.2px; white-space:nowrap; }
-    .birthday-card-status { margin:0; color:#94a3b8; font-size:13px; line-height:1.5; }
-    .birthday-card-list { display:grid; gap:9px; margin:14px 0 0; padding:0; list-style:none; }
-    .birthday-card-item { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:11px 12px; border-radius:12px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); }
-    .birthday-card-name { min-width:0; color:#f8fafc; font-size:14px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .birthday-card-meta { flex:0 0 auto; text-align:right; }
-    .birthday-card-date { display:block; color:#cbd5e1; font-size:13px; }
-    .birthday-card-countdown { display:block; margin-top:2px; color:#a5b4fc; font-size:11px; font-weight:700; }
-    .birthday-card-item.is-today { border-color:rgba(167,139,250,.48); background:rgba(124,58,237,.14); }
-    .birthday-card-item.is-today .birthday-card-countdown { color:#ddd6fe; }
-    @media(max-width:560px){
-      .birthday-card { padding:17px 15px; }
-      .birthday-card-header { align-items:flex-start; }
-      .birthday-card-item { align-items:flex-start; }
-      .birthday-card-name { white-space:normal; }
-    }
-  </style>
   <link rel="stylesheet" href="/professor/professor_visual.css?v=20260901-1">
 </head>
 <body class="auth-checking">
@@ -44,7 +18,7 @@
 
     <section id="upcomingBirthdaysCard" class="birthday-card" aria-labelledby="upcomingBirthdaysTitle">
       <div class="birthday-card-header">
-        <h2 id="upcomingBirthdaysTitle" class="birthday-card-title"><span aria-hidden="true">🎂</span> PRÓXIMOS ANIVERSÁRIOS</h2>
+        <h2 id="upcomingBirthdaysTitle" class="birthday-card-title"><span aria-hidden="true"></span> PRÓXIMOS ANIVERSÁRIOS</h2>
         <span class="birthday-card-badge">ALUNOS ATIVOS</span>
       </div>
       <p id="upcomingBirthdaysStatus" class="birthday-card-status">Carregando próximos aniversários...</p>
@@ -53,22 +27,22 @@
 
     <p class="reorder-help">Arraste os cards para reorganizar a Área do Professor. A ordem fica salva neste navegador.</p>
     <div id="professorMenuGrid" class="menu-grid reorder-enabled">
-      <a class="menu-button" href="/perfil-dos-alunos/" draggable="true" data-card-id="alunos"><span><span class="icon">🪪</span>ALUNOS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/alunos-arquivados/" draggable="true" data-card-id="alunos-arquivados"><span><span class="icon">🗄️</span>ALUNOS ARQUIVADOS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/radar-de-alunos/" draggable="true" data-card-id="radar-de-alunos"><span><span class="icon">🎯</span>RADAR DE ALUNOS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/planos-semanais/" draggable="true" data-card-id="planos-semanais"><span><span class="icon">📅</span>PLANOS SEMANAIS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/mensalidades/" draggable="true" data-card-id="mensalidades"><span><span class="icon">💳</span>CONTROLE DE MENSALIDADES</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/turmas/" draggable="true" data-card-id="turmas"><span><span class="icon">🏫</span>TURMAS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/reposicoes-admin/" draggable="true" data-card-id="reposicoes"><span><span class="icon">📅</span>AGENDA DE REPOSIÇÕES</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="quadro-de-turmas.html" draggable="true" data-card-id="quadro-de-turmas"><span><span class="icon">📊</span>QUADRO DE TURMAS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/criar-exercicio/" draggable="true" data-card-id="criar-exercicio"><span><span class="icon">➕</span>CRIAR EXERCÍCIO</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/integracao-google-forms/" draggable="true" data-card-id="integracao-google-forms"><span><span class="icon">🔗</span>INTEGRAÇÃO GOOGLE FORMS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="aulas-de-gramatica-interface-do-professor.html" draggable="true" data-card-id="aulas-de-gramatica"><span><span class="icon">📚</span>AULAS DE GRAMÁTICA</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/exercicios-dos-alunos/" draggable="true" data-card-id="exercicios-dos-alunos"><span><span class="icon">📝</span>EXERCÍCIOS FEITOS PELOS ALUNOS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/monitoramento-de-erros/" draggable="true" data-card-id="monitoramento-de-erros"><span><span class="icon">🚨</span>MONITORAMENTO DE ERROS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/solicitacoes-de-privacidade/" draggable="true" data-card-id="solicitacoes-de-privacidade"><span><span class="icon">🛡️</span>SOLICITAÇÕES DE PRIVACIDADE</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/retencao-de-dados/" draggable="true" data-card-id="retencao-de-dados"><span><span class="icon">⏳</span>RETENÇÃO DE DADOS</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="/relatorios/" draggable="true" data-card-id="relatorios"><span><span class="icon">📋</span>RELATÓRIOS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/perfil-dos-alunos/" draggable="true" data-card-id="alunos"><span><span class="icon" aria-hidden="true"></span>ALUNOS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/alunos-arquivados/" draggable="true" data-card-id="alunos-arquivados"><span><span class="icon" aria-hidden="true"></span>ALUNOS ARQUIVADOS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/radar-de-alunos/" draggable="true" data-card-id="radar-de-alunos"><span><span class="icon" aria-hidden="true"></span>RADAR DE ALUNOS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/planos-semanais/" draggable="true" data-card-id="planos-semanais"><span><span class="icon" aria-hidden="true"></span>PLANOS SEMANAIS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/mensalidades/" draggable="true" data-card-id="mensalidades"><span><span class="icon" aria-hidden="true"></span>CONTROLE DE MENSALIDADES</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/turmas/" draggable="true" data-card-id="turmas"><span><span class="icon" aria-hidden="true"></span>TURMAS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/reposicoes-admin/" draggable="true" data-card-id="reposicoes"><span><span class="icon" aria-hidden="true"></span>AGENDA DE REPOSIÇÕES</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="quadro-de-turmas.html" draggable="true" data-card-id="quadro-de-turmas"><span><span class="icon" aria-hidden="true"></span>QUADRO DE TURMAS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/criar-exercicio/" draggable="true" data-card-id="criar-exercicio"><span><span class="icon" aria-hidden="true"></span>CRIAR EXERCÍCIO</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/integracao-google-forms/" draggable="true" data-card-id="integracao-google-forms"><span><span class="icon" aria-hidden="true"></span>INTEGRAÇÃO GOOGLE FORMS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="aulas-de-gramatica-interface-do-professor.html" draggable="true" data-card-id="aulas-de-gramatica"><span><span class="icon" aria-hidden="true"></span>AULAS DE GRAMÁTICA</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/exercicios-dos-alunos/" draggable="true" data-card-id="exercicios-dos-alunos"><span><span class="icon" aria-hidden="true"></span>EXERCÍCIOS FEITOS PELOS ALUNOS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/monitoramento-de-erros/" draggable="true" data-card-id="monitoramento-de-erros"><span><span class="icon" aria-hidden="true"></span>MONITORAMENTO DE ERROS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/solicitacoes-de-privacidade/" draggable="true" data-card-id="solicitacoes-de-privacidade"><span><span class="icon" aria-hidden="true"></span>SOLICITAÇÕES DE PRIVACIDADE</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/retencao-de-dados/" draggable="true" data-card-id="retencao-de-dados"><span><span class="icon" aria-hidden="true"></span>RETENÇÃO DE DADOS</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/relatorios/" draggable="true" data-card-id="relatorios"><span><span class="icon" aria-hidden="true"></span>RELATÓRIOS</span><span class="arrow">›</span></a>
     </div>
   </div>
   <script>
