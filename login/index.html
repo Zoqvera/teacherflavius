@@ -9,96 +9,30 @@
     (async function () {
       "use strict";
 
-      const params = new URLSearchParams(window.location.search);
-      const passwordAccessMode = params.get("password_access") === "1";
-      const allowedUserId = "b6a3e909-e395-424a-a4eb-3a448f188e97";
-
-      function safeNext() {
-        const value = String(params.get("next") || "/area-do-estudante/").trim();
-        if (!value.startsWith("/") || value.startsWith("//")) return "/area-do-estudante/";
-        return value;
-      }
-
-      function passwordCss() {
-        return [
-          "#googleLoginButton[hidden]{display:none!important}",
-          "#passwordAccessForm{margin-top:18px}",
-          "#passwordAccessForm label{display:block;margin:14px 0 7px;color:#cbd5e1;font-size:13px;font-weight:700}",
-          "#passwordAccessForm input{width:100%;min-height:48px;padding:12px 14px;border:1px solid rgba(148,163,184,.28);border-radius:12px;background:rgba(15,23,42,.72);color:#f8fafc;font:inherit;outline:none}",
-          "#passwordAccessForm input:focus{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.14)}",
-          ".password-field{position:relative}",
-          ".password-field input{padding-right:82px!important}",
-          "#toggleExistingPassword{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:auto;min-height:34px;margin:0;padding:7px 9px;background:transparent;border:0;color:#a5b4fc;font:700 12px Georgia,serif;cursor:pointer}",
-          "#passwordAccessSubmit{margin-top:20px;background:linear-gradient(90deg,#818cf8,#a78bfa)}",
-          ".existing-account-note{margin:14px 0 0;color:#64748b;font-size:12px;line-height:1.55;text-align:center}"
-        ].join("");
-      }
-
-      function passwordFormMarkup() {
-        return [
-          '<button id="googleLoginButton" class="google-button" type="button" hidden aria-hidden="true" tabindex="-1"><span class="google-g">G</span> CONTINUAR COM GOOGLE</button>',
-          '<form id="passwordAccessForm" novalidate>',
-          '<label for="existingEmail">E-mail</label>',
-          '<input id="existingEmail" name="email" type="email" autocomplete="username" inputmode="email" required>',
-          '<label for="existingPassword">Senha</label>',
-          '<div class="password-field">',
-          '<input id="existingPassword" name="password" type="password" autocomplete="current-password" required>',
-          '<button id="toggleExistingPassword" type="button" aria-label="Mostrar senha">MOSTRAR</button>',
-          '</div>',
-          '<button id="passwordAccessSubmit" type="submit">ENTRAR</button>',
-          '</form>',
-          '<p class="existing-account-note">Este acesso apenas autentica a conta existente. Nenhum novo cadastro ou nova matrícula é criado.</p>'
-        ].join("");
-      }
-
-      function passwordScript() {
-        return '<script>(function(){"use strict";'+
-          'const ALLOWED_USER_ID='+JSON.stringify(allowedUserId)+';'+
-          'const form=document.getElementById("passwordAccessForm");'+
-          'const emailInput=document.getElementById("existingEmail");'+
-          'const passwordInput=document.getElementById("existingPassword");'+
-          'const submitButton=document.getElementById("passwordAccessSubmit");'+
-          'const toggleButton=document.getElementById("toggleExistingPassword");'+
-          'const loginError=document.getElementById("loginError");'+
-          'const nextPath='+JSON.stringify(safeNext())+';'+
-          'function setBusy(busy){emailInput.disabled=busy;passwordInput.disabled=busy;submitButton.disabled=busy;submitButton.textContent=busy?"ENTRANDO...":"ENTRAR";}'+
-          'async function signOutLocal(client){try{await client.auth.signOut({scope:"local"});}catch(_){}}'+
-          'async function validate(client,user){if(!user||user.id!==ALLOWED_USER_ID)return false;const result=await client.from("profiles").select("id,enrolled,archived,profile_completed").eq("id",user.id).maybeSingle();if(result.error||!result.data)return false;return result.data.id===ALLOWED_USER_ID&&result.data.enrolled===true&&result.data.archived!==true&&result.data.profile_completed===true;}'+
-          'toggleButton.addEventListener("click",function(){const showing=passwordInput.type==="text";passwordInput.type=showing?"password":"text";toggleButton.textContent=showing?"MOSTRAR":"OCULTAR";toggleButton.setAttribute("aria-label",showing?"Mostrar senha":"Ocultar senha");passwordInput.focus();});'+
-          'form.addEventListener("submit",async function(event){event.preventDefault();loginError.textContent="";const email=emailInput.value.trim();const password=passwordInput.value;if(!email||!password){loginError.textContent="Informe seu e-mail e sua senha.";return;}if(!window.Auth||!Auth.isConfigured||!Auth.isConfigured()){loginError.textContent="Não foi possível carregar a autenticação. Atualize a página e tente novamente.";return;}setBusy(true);try{await Auth.signIn(email,password);const user=await Auth.getUser();const client=Auth.getClient();if(!(await validate(client,user))){await signOutLocal(client);throw new Error("unauthorized_existing_account");}window.location.replace(nextPath);}catch(_){loginError.textContent="E-mail ou senha incorretos, ou esta conta não está autorizada para este acesso.";setBusy(false);passwordInput.value="";passwordInput.focus();}});'+
-          '})();<\/script>';
-      }
-
-      function transformForPasswordAccess(html) {
-        let transformed = html;
-        transformed = transformed.replace('<title>Login - Teacher Flávio</title>', '<title>Acesso por senha - Teacher Flávio</title>\n  <meta name="robots" content="noindex, nofollow, noarchive">');
-        transformed = transformed.replace('</style>', passwordCss() + '</style>');
-        transformed = transformed.replace('<h1>Entrar</h1>', '<h1>Entrar com e-mail e senha</h1>');
-        transformed = transformed.replace('<p>Entre com sua conta Google para acessar o curso.</p>', '<p>Use o mesmo e-mail e a mesma senha que já estão cadastrados no site.</p>');
-        transformed = transformed.replace('<button id="googleLoginButton" class="google-button" type="button"><span class="google-g">G</span> CONTINUAR COM GOOGLE</button>', passwordFormMarkup());
-        transformed = transformed.replace('<p class="login-note">Se já houver uma matrícula associada a você, seus dados e histórico serão preservados.</p>', '');
-        transformed = transformed.replace('</body>', passwordScript() + '</body>');
-        return transformed;
-      }
-
       try {
-        const loginSource = '/login' + '.' + 'html';
-        const response = await fetch(loginSource, { cache: 'no-store' });
+        const response = await fetch('/login.html', { cache: 'no-store' });
         if (!response.ok) throw new Error('HTTP ' + response.status);
+
         let html = await response.text();
-        html = html.replace('<head>', '<head>\n  <base href="/">');
-        if (passwordAccessMode) html = transformForPasswordAccess(html);
+        html = html.replace(
+          '<head>',
+          '<head>\n  <base href="/">\n  <link rel="stylesheet" href="/login/login_visual.css?v=20260901-1">'
+        );
+        html = html.replace('<body>', '<body class="login-page">');
+
         document.open();
         document.write(html);
         document.close();
       } catch (error) {
         console.error("Não foi possível carregar o login:", error);
-        document.body.innerHTML = "<p style='font-family:sans-serif;padding:24px'>Não foi possível carregar a página de login.</p>";
+        document.body.className = "login-page";
+        document.body.innerHTML = '<main class="box"><div class="header"><div><span class="badge">TEACHER FLÁVIO</span></div><h1>Não foi possível carregar o login</h1><p>Atualize a página e tente novamente.</p></div><div class="links"><a class="btn secondary" href="/">VOLTAR AO INÍCIO</a></div></main>';
       }
     })();
   </script>
+  <link rel="stylesheet" href="/login/login_visual.css?v=20260901-1">
 </head>
-<body>
+<body class="login-page">
   <p>Carregando login...</p>
 </body>
 </html>
