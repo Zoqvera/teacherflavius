@@ -22,6 +22,8 @@
       path === "/quero-conhecer" ||
       path === "/quero-conhecer/" ||
       path.indexOf("/curso-de-ingles-online") === 0 ||
+      path.indexOf("/sobre") === 0 ||
+      path.indexOf("/recursos") === 0 ||
       path.indexOf("/landing-page") === 0;
   }
 
@@ -212,7 +214,7 @@
   }
 
   function loadAnalytics() {
-    loadScript("teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260901-1", loadAnalyticsCore);
+    loadScript("teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260901-2", loadAnalyticsCore);
   }
 
   function disableAnalytics() {
