@@ -216,6 +216,48 @@
     }
   }
 
+  const STANDARD_WHATSAPP_MESSAGE = "Olá, Teacher! Vim pelo site e gostaria de conversar sobre as aulas de inglês.";
+
+  function standardizeWhatsappLinks(root) {
+    const target = root && root.querySelectorAll ? root : document;
+    target.querySelectorAll('a[href*="wa.me/"], a[href*="api.whatsapp.com/"]').forEach(function (link) {
+      try {
+        const url = new URL(link.getAttribute("href"), window.location.href);
+        let number = "";
+        if (url.hostname === "wa.me") {
+          number = url.pathname.replace(/\D/g, "");
+        } else if (url.hostname === "api.whatsapp.com") {
+          number = (url.searchParams.get("phone") || "").replace(/\D/g, "");
+        }
+        if (!number) return;
+        link.href = "https://wa.me/" + number + "?text=" + encodeURIComponent(STANDARD_WHATSAPP_MESSAGE);
+      } catch (error) {}
+    });
+  }
+
+  function installWhatsappStandardizer() {
+    standardizeWhatsappLinks(document);
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        mutation.addedNodes.forEach(function (node) {
+          if (!node || node.nodeType !== 1) return;
+          if (node.matches && node.matches('a[href*="wa.me/"], a[href*="api.whatsapp.com/"]')) {
+            standardizeWhatsappLinks(node.parentNode || document);
+          } else {
+            standardizeWhatsappLinks(node);
+          }
+        });
+      });
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", installWhatsappStandardizer, { once: true });
+  } else {
+    installWhatsappStandardizer();
+  }
+
   window.TeacherFlaviusErrorMonitor = {
     capture: capture,
     captureException: captureException,
