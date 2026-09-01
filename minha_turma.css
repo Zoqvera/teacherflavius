@@ -1,0 +1,315 @@
+/* Minha Turma — visual audit 2026-09-01
+   Componentes locais sobre o Teacher Flávio Design System v1. */
+
+.my-class-page {
+  align-items: flex-start;
+  padding-top: clamp(24px, 5vw, 48px);
+}
+
+.my-class-page .container {
+  max-width: 980px;
+}
+
+.my-class-page .header {
+  margin-bottom: 20px;
+}
+
+.my-class-page .header h1 {
+  font-size: clamp(2rem, 5vw, 2.7rem);
+  line-height: 1.08;
+}
+
+.my-class-page .status {
+  width: fit-content;
+  max-width: 100%;
+  margin: 12px auto 0;
+  padding: 7px 12px;
+  border: 1px solid rgba(78, 154, 236, .20);
+  border-radius: var(--tf-radius-pill);
+  background: rgba(5, 66, 136, .12);
+  color: var(--tf-slate-400);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.my-class-page .divider {
+  margin-bottom: 28px;
+}
+
+.class-content {
+  display: grid;
+  gap: 18px;
+}
+
+.class-card {
+  overflow: hidden;
+  border: 1px solid rgba(78, 154, 236, .26);
+  border-radius: var(--tf-radius-xl);
+  background: linear-gradient(145deg, rgba(3, 26, 63, .84), rgba(10, 41, 86, .70));
+  box-shadow: var(--tf-shadow-md);
+}
+
+.class-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: clamp(20px, 4vw, 28px);
+  border-bottom: 1px solid rgba(78, 154, 236, .16);
+  background: rgba(5, 66, 136, .12);
+}
+
+.class-card-heading {
+  min-width: 0;
+}
+
+.class-eyebrow {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--tf-blue-300);
+  font-family: var(--tf-font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.class-card h2 {
+  margin: 0;
+  color: var(--tf-slate-50);
+  font-family: var(--tf-font-display);
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+  overflow-wrap: anywhere;
+}
+
+.class-header-icon,
+.resource-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--tf-blue-100);
+  background: linear-gradient(135deg, rgba(5, 66, 136, .96), rgba(78, 154, 236, .86));
+  box-shadow: 0 10px 24px rgba(9, 104, 188, .22);
+}
+
+.class-header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+}
+
+.tf-icon-svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.class-header-icon .tf-icon-svg {
+  width: 27px;
+  height: 27px;
+}
+
+.class-card-body {
+  padding: clamp(20px, 4vw, 28px);
+}
+
+.class-meta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 0;
+}
+
+.class-meta-item {
+  min-width: 0;
+  padding: 14px 15px;
+  border: 1px solid rgba(78, 154, 236, .14);
+  border-radius: var(--tf-radius-md);
+  background: rgba(2, 16, 43, .34);
+}
+
+.class-meta-item dt {
+  margin: 0 0 5px;
+  color: var(--tf-slate-400);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.class-meta-item dd {
+  margin: 0;
+  color: var(--tf-slate-100);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.class-resources {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(78, 154, 236, .16);
+}
+
+.class-resources-head {
+  margin-bottom: 14px;
+}
+
+.class-resources-head h3 {
+  margin: 0 0 4px;
+  color: var(--tf-slate-50);
+  font-family: var(--tf-font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.class-resources-head p {
+  margin: 0;
+  color: var(--tf-slate-400);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.resource-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 72px;
+  padding: 13px 15px;
+  border: 1px solid rgba(78, 154, 236, .22);
+  border-radius: var(--tf-radius-md);
+  background: rgba(5, 66, 136, .14);
+  color: var(--tf-slate-100);
+  font-family: var(--tf-font-display);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-decoration: none;
+  transition:
+    transform var(--tf-motion-normal) var(--tf-ease),
+    border-color var(--tf-motion-normal) var(--tf-ease),
+    background-color var(--tf-motion-normal) var(--tf-ease),
+    box-shadow var(--tf-motion-normal) var(--tf-ease);
+}
+
+.resource-card-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.resource-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.resource-icon .tf-icon-svg {
+  width: 21px;
+  height: 21px;
+}
+
+.resource-arrow {
+  flex: 0 0 auto;
+  color: var(--tf-blue-300);
+  font-size: 21px;
+  transition: transform var(--tf-motion-fast) var(--tf-ease), color var(--tf-motion-fast) var(--tf-ease);
+}
+
+.resource-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(78, 154, 236, .56);
+  background: rgba(5, 66, 136, .28);
+  box-shadow: var(--tf-shadow-sm);
+}
+
+.resource-card:hover .resource-arrow {
+  transform: translateX(3px);
+  color: var(--tf-blue-100);
+}
+
+.resource-card:active {
+  transform: translateY(0) scale(.99);
+}
+
+.resources-empty {
+  margin: 0;
+  padding: 14px 15px;
+  border: 1px dashed rgba(78, 154, 236, .22);
+  border-radius: var(--tf-radius-md);
+  color: var(--tf-slate-400);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.empty-panel {
+  padding: clamp(22px, 4vw, 28px);
+  border: 1px solid rgba(78, 154, 236, .22);
+  border-radius: var(--tf-radius-xl);
+  background: rgba(3, 26, 63, .72);
+  color: var(--tf-slate-300);
+  box-shadow: var(--tf-shadow-md);
+  font-size: 14px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .class-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resource-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .my-class-page .container {
+    max-width: 1040px;
+  }
+}
+
+@media (max-width: 639px) {
+  .my-class-page {
+    padding: 20px 14px 36px;
+  }
+
+  .class-card-header {
+    align-items: flex-start;
+  }
+
+  .class-header-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .resource-card:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resource-card,
+  .resource-arrow {
+    transition: none;
+  }
+}
