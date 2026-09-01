@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
-Allow: /quero_conhecer
 
 Disallow: /matricula/
 Disallow: /matricula.html

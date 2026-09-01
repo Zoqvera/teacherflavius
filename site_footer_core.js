@@ -14,6 +14,9 @@
       path === "/quero_conhecer.html" ||
       path === "/quero-conhecer" ||
       path === "/quero-conhecer/" ||
+      path.indexOf("/curso-de-ingles-online") === 0 ||
+      path.indexOf("/recursos") === 0 ||
+      path.indexOf("/sobre") === 0 ||
       path.indexOf("/landing-page") === 0;
   }
 
@@ -87,19 +90,20 @@
       '  <div class="tf-site-footer__grid">',
       '    <section class="tf-site-footer__brand" aria-labelledby="tf-footer-title">',
       '      <h2 class="tf-site-footer__title" id="tf-footer-title">Teacher Flávio</h2>',
-      '      <p class="tf-site-footer__description">Aulas ao vivo</p>',
+      '      <p class="tf-site-footer__description">Aulas de inglês online e ao vivo, com prática orientada, grupos pequenos e acompanhamento.</p>',
       '      <div class="tf-site-footer__credentials" aria-label="Credenciais profissionais">',
       '        <div class="tf-site-footer__credential"><strong>15+</strong><span>anos ensinando idiomas</span></div>',
       '        <div class="tf-site-footer__credential"><strong>PhD</strong><span>Doutor em Linguística</span></div>',
-      '        <div class="tf-site-footer__credential"><strong>Cambridge</strong><span>certificação internacional</span></div>',
+      '        <div class="tf-site-footer__credential"><strong>CELTA</strong><span>certificação de ensino de inglês</span></div>',
       '      </div>',
       '    </section>',
       '    <nav aria-label="Links do rodapé">',
       '      <h2 class="tf-site-footer__heading">Acesso rápido</h2>',
       '      <div class="tf-site-footer__links">',
       '        <a class="tf-site-footer__link" href="/">Início</a>',
-      '        <a class="tf-site-footer__link" href="/quero_conhecer.html">Conheça as aulas</a>',
-      '        <a class="tf-site-footer__link" href="/matricula/">Faça sua inscrição</a>',
+      '        <a class="tf-site-footer__link" href="/curso-de-ingles-online/">Curso de inglês</a>',
+      '        <a class="tf-site-footer__link" href="/recursos/">Recursos gratuitos</a>',
+      '        <a class="tf-site-footer__link" href="/sobre/">Sobre o Teacher Flávio</a>',
       '        <a class="tf-site-footer__link" href="/area-do-estudante/">Área do Estudante</a>',
       '        <a class="tf-site-footer__link" href="https://www.instagram.com/teacher.flavius" target="_blank" rel="noopener noreferrer">Instagram</a>',
       '      </div>',
