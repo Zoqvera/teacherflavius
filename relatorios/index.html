@@ -9,7 +9,7 @@
   <style>
     body { min-height: 100vh; }
     .reports-shell { width: 100%; max-width: 1180px; margin: 0 auto; }
-    .report-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 20px; }
+    .report-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0 0 20px; }
     .report-tab { min-height: 64px; padding: 14px 18px; border: 1.5px solid rgba(129,140,248,0.32); border-radius: 16px; background: rgba(255,255,255,0.04); color: #cbd5e1; font: inherit; text-align: left; cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
     .report-tab:hover { transform: translateY(-2px); border-color: rgba(129,140,248,0.65); }
     .report-tab.active { border-color: rgba(129,140,248,0.85); background: rgba(129,140,248,0.12); color: #f8fafc; }
@@ -65,11 +65,16 @@
         <strong>🪑 Turmas com vagas disponíveis</strong>
         <span>Turmas QUARTETO com vagas, considerando a exceção de 5 alunos na quinta-feira às 21h.</span>
       </button>
+      <button class="report-tab" type="button" data-target="acquisitionFrame" role="tab" aria-selected="false">
+        <strong>🤖 Aquisição e IA</strong>
+        <span>ChatGPT, Google, Instagram, acesso direto, leads no WhatsApp e taxa de conversão.</span>
+      </button>
     </div>
     <section class="report-panel">
       <iframe id="syncFrame" class="report-frame" src="about:blank" data-embed-src="/relatorios.html?v=20260820-reports-theme-1" title="Relatórios de sincronização"></iframe>
       <iframe id="accessFrame" class="report-frame" src="about:blank" data-embed-src="/acessos_dos_alunos.html?v=20260820-reports-theme-1" title="Acessos dos alunos" hidden></iframe>
       <iframe id="vacancyFrame" class="report-frame" src="about:blank" data-embed-src="/relatorios_vagas_turmas.html?v=20260820-reports-theme-1" title="Turmas com vagas disponíveis" hidden></iframe>
+      <iframe id="acquisitionFrame" class="report-frame" src="about:blank" data-embed-src="/marketing_acquisition.html?v=20260901-1" title="Aquisição e inteligência artificial" hidden></iframe>
     </section>
   </div>
   <script>

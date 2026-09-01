@@ -175,7 +175,7 @@
   }
 
   function loadAnalytics() {
-    loadScript("teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260820-1", loadAnalyticsCore);
+    loadScript("teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260901-1", loadAnalyticsCore);
   }
 
   function disableAnalytics() {
