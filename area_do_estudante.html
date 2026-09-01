@@ -8,32 +8,9 @@
   <script src="supabase_config.js?v=20260430-3"></script>
   <script src="auth.js?v=20260430-3"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260430-3">
-  <style>
-    .dashboard-intro{max-width:720px;margin:0 auto 24px;color:#94a3b8;text-align:center;font-size:15px;line-height:1.6}
-    .menu-groups{display:grid;gap:22px}
-    .menu-group{padding:18px;border:1px solid rgba(255,255,255,.10);border-radius:22px;background:rgba(255,255,255,.035)}
-    .menu-group .menu-grid{margin:0}
-    .menu-group.single .menu-grid{grid-template-columns:1fr}
-    .group-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:0 2px 14px}
-    .group-heading h2{margin:0;color:#f8fafc;font-size:16px;letter-spacing:.02em}
-    .group-heading p{margin:0;color:#64748b;font-size:12px;text-align:right}
-    .priority-group{border-color:rgba(129,140,248,.32);background:linear-gradient(145deg,rgba(99,102,241,.12),rgba(255,255,255,.035))}
-    .priority-grid{display:grid;grid-template-columns:1fr;gap:12px}
-    .priority-card{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:96px;padding:20px;border:1.5px solid rgba(129,140,248,.42);border-radius:18px;background:rgba(15,23,42,.72);color:#fff;text-decoration:none;box-shadow:0 14px 34px rgba(0,0,0,.18);transition:transform .18s ease,border-color .18s ease,background .18s ease}
-    .priority-card:hover{transform:translateY(-2px);border-color:rgba(165,180,252,.82);background:rgba(30,41,59,.92)}
-    .priority-card strong{display:block;margin-bottom:5px;font-size:17px}.priority-card small{display:block;color:#94a3b8;font-size:13px;line-height:1.45}.priority-icon{font-size:28px;flex-shrink:0}
-    .secondary-group .menu-button{opacity:.94}
-    .support-links{display:grid;grid-template-columns:1fr;gap:10px}
-    .support-link{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(255,255,255,.025);color:#cbd5e1;text-decoration:none;font-size:14px;font-weight:700}
-    .support-link:hover{background:rgba(255,255,255,.06)}
-    .overdue-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,.78);backdrop-filter:blur(7px)}
-    .overdue-modal[hidden]{display:none}.overdue-dialog{width:min(100%,520px);padding:28px;border:1.5px solid rgba(248,113,113,.70);border-radius:22px;background:#2b1015;box-shadow:0 24px 70px rgba(0,0,0,.45);text-align:center}.overdue-icon{display:flex;align-items:center;justify-content:center;width:58px;height:58px;margin:0 auto 16px;border-radius:50%;background:rgba(248,113,113,.16);font-size:30px}.overdue-title{margin-bottom:12px;color:#fecaca;font-size:22px;line-height:1.35}.overdue-text{color:#f8fafc;font-size:17px;line-height:1.6}.overdue-activity-link{display:block;margin:18px 0;padding:13px 16px;border:1px solid rgba(248,113,113,.55);border-radius:12px;background:rgba(127,29,29,.48);color:#fff;font-weight:bold;text-decoration:none}.overdue-activity-link:hover{background:rgba(153,27,27,.72)}.overdue-close{border:1px solid rgba(255,255,255,.24);border-radius:10px;background:transparent;color:#cbd5e1;padding:9px 16px;font-family:Georgia,serif;cursor:pointer}
-    @media(min-width:720px){.priority-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.support-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:560px){.group-heading{display:block}.group-heading p{margin-top:4px;text-align:left}.priority-card:hover{transform:none}}
-    @media(prefers-reduced-motion:reduce){.priority-card{transition:none}}
-  </style>
+  <link rel="stylesheet" href="area_do_estudante.css?v=20260901-1">
 </head>
-<body class="auth-checking">
+<body class="auth-checking student-dashboard">
   <div class="container">
     <div class="top-links">
       <a class="top-link" href="/">HOME</a>
@@ -51,7 +28,15 @@
     <div class="menu-groups">
       <section id="professorAreaSection" class="menu-group single" aria-label="Área do professor" hidden>
         <div class="menu-grid">
-          <a class="menu-button" href="/professor.html"><span><span class="icon">👨‍🏫</span>ÁREA DO PROFESSOR</span><span class="arrow">›</span></a>
+          <a class="menu-button" href="/professor.html">
+            <span class="menu-label">
+              <span class="icon" aria-hidden="true">
+                <svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M20 7h-7"/><path d="M20 11h-7"/><path d="M20 15h-5"/><circle cx="6" cy="7" r="3"/><path d="M2 20v-2a4 4 0 0 1 4-4h1a4 4 0 0 1 4 4v2"/></svg>
+              </span>
+              ÁREA DO PROFESSOR
+            </span>
+            <span class="arrow" aria-hidden="true">›</span>
+          </a>
         </div>
       </section>
 
@@ -63,11 +48,15 @@
         <div class="priority-grid">
           <a class="priority-card" href="/minha-semana/">
             <span><strong>MINHA SEMANA</strong><small>Veja aulas, atividades e o que fazer agora.</small></span>
-            <span class="priority-icon" aria-hidden="true">📅</span>
+            <span class="priority-icon" aria-hidden="true">
+              <svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="m9 15 2 2 4-4"/></svg>
+            </span>
           </a>
           <a class="priority-card" href="/exercicios-diarios/">
             <span><strong>PORTAL DE EXERCÍCIOS</strong><small>Acesse e conclua suas atividades.</small></span>
-            <span class="priority-icon" aria-hidden="true">📝</span>
+            <span class="priority-icon" aria-hidden="true">
+              <svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
+            </span>
           </a>
         </div>
       </section>
@@ -78,10 +67,18 @@
           <p>Ferramentas para desenvolver seu inglês</p>
         </div>
         <div class="menu-grid">
-          <a class="menu-button" href="/roteiro-de-estudos/"><span><span class="icon">🗺️</span>ROTEIRO DE ESTUDOS</span><span class="arrow">›</span></a>
-          <a class="menu-button" href="/flashcards/"><span><span class="icon">🧠</span>FLASHCARDS</span><span class="arrow">›</span></a>
-          <a class="menu-button" href="/aulas-de-gramatica/"><span><span class="icon">📚</span>AULAS DE GRAMÁTICA</span><span class="arrow">›</span></a>
-          <a class="menu-button" href="/meu-progresso/"><span><span class="icon">📊</span>MEU PROGRESSO</span><span class="arrow">›</span></a>
+          <a class="menu-button" href="/roteiro-de-estudos/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><path d="M9 3v15"/><path d="M15 6v15"/></svg></span>ROTEIRO DE ESTUDOS</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
+          <a class="menu-button" href="/flashcards/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M9.5 4A3.5 3.5 0 0 0 6 7.5c0 .6.15 1.16.42 1.65A3.5 3.5 0 0 0 8 15.8V19a2 2 0 0 0 2 2h2V6a2 2 0 0 0-2-2Z"/><path d="M14.5 4A3.5 3.5 0 0 1 18 7.5c0 .6-.15 1.16-.42 1.65A3.5 3.5 0 0 1 16 15.8V19a2 2 0 0 1-2 2h-2V6a2 2 0 0 1 2-2Z"/></svg></span>FLASHCARDS</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
+          <a class="menu-button" href="/aulas-de-gramatica/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M2 5.5A2.5 2.5 0 0 1 4.5 3H10a2 2 0 0 1 2 2v16a3 3 0 0 0-3-3H2Z"/><path d="M22 5.5A2.5 2.5 0 0 0 19.5 3H14a2 2 0 0 0-2 2v16a3 3 0 0 1 3-3h7Z"/></svg></span>AULAS DE GRAMÁTICA</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
+          <a class="menu-button" href="/meu-progresso/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span>MEU PROGRESSO</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
         </div>
       </section>
 
@@ -91,11 +88,21 @@
           <p>Turma, presença, horários e pagamentos</p>
         </div>
         <div class="menu-grid">
-          <a class="menu-button" href="/minha-turma/"><span><span class="icon">👥</span>MINHA TURMA</span><span class="arrow">›</span></a>
-          <a class="menu-button" href="/frequencia/"><span><span class="icon">✅</span>FREQUÊNCIA</span><span class="arrow">›</span></a>
-          <a class="menu-button" href="/horarios-disponiveis/"><span><span class="icon">🕒</span>HORÁRIOS DISPONÍVEIS</span><span class="arrow">›</span></a>
-          <a class="menu-button" href="/reposicoes/"><span><span class="icon">🔁</span>REPOSIÇÕES DE AULA</span><span class="arrow">›</span></a>
-          <a class="menu-button" href="/pagamento/"><span><span class="icon">💳</span>MENSALIDADES</span><span class="arrow">›</span></a>
+          <a class="menu-button" href="/minha-turma/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>MINHA TURMA</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
+          <a class="menu-button" href="/frequencia/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.3 4.7-5"/></svg></span>FREQUÊNCIA</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
+          <a class="menu-button" href="/horarios-disponiveis/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>HORÁRIOS DISPONÍVEIS</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
+          <a class="menu-button" href="/reposicoes/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M18.4 9A7 7 0 0 0 6.3 5.3L4 7"/><path d="M5.6 15A7 7 0 0 0 17.7 18.7L20 17"/></svg></span>REPOSIÇÕES DE AULA</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
+          <a class="menu-button" href="/pagamento/">
+            <span class="menu-label"><span class="icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h3"/></svg></span>MENSALIDADES</span><span class="arrow" aria-hidden="true">›</span>
+          </a>
         </div>
       </section>
 
@@ -105,8 +112,12 @@
           <p>Itens de consulta menos frequente</p>
         </div>
         <div class="support-links">
-          <a id="guiaDoEstudanteLink" class="support-link" href="/guia-do-estudante/"><span>📘 Guia do estudante</span><span>›</span></a>
-          <a class="support-link" href="/perfil/"><span>👤 Meu perfil</span><span>›</span></a>
+          <a id="guiaDoEstudanteLink" class="support-link" href="/guia-do-estudante/">
+            <span><span class="support-icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M2 5.5A2.5 2.5 0 0 1 4.5 3H10a2 2 0 0 1 2 2v16a3 3 0 0 0-3-3H2Z"/><path d="M22 5.5A2.5 2.5 0 0 0 19.5 3H14a2 2 0 0 0-2 2v16a3 3 0 0 1 3-3h7Z"/></svg></span>Guia do estudante</span><span class="support-arrow" aria-hidden="true">›</span>
+          </a>
+          <a class="support-link" href="/perfil/">
+            <span><span class="support-icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Meu perfil</span><span class="support-arrow" aria-hidden="true">›</span>
+          </a>
         </div>
       </section>
     </div>
@@ -114,7 +125,7 @@
 
   <div id="overdueModal" class="overdue-modal" hidden role="dialog" aria-modal="true" aria-labelledby="overdueTitle">
     <div class="overdue-dialog">
-      <div class="overdue-icon" aria-hidden="true">⚠️</div>
+      <div class="overdue-icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M10.3 2.9 1.8 17a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 2.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
       <h2 id="overdueTitle" class="overdue-title">VOCÊ TEM ATIVIDADES ATRASADAS.</h2>
       <p class="overdue-text">FAÇA A ATIVIDADE:</p>
       <a id="overdueActivityLink" class="overdue-activity-link" href="/exercicios-diarios/">Abrir atividade pendente</a>
