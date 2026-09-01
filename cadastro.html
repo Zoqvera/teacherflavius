@@ -3,38 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#02102B" />
   <title>Cadastro - Teacher Flávio</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); display: flex; align-items: center; justify-content: center; padding: 32px 16px; font-family: Georgia, serif; color: #f1f5f9; }
-    .box { width: 100%; max-width: 460px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 28px; backdrop-filter: blur(12px); }
-    .header { text-align: center; margin-bottom: 24px; }
-    .badge { display: inline-block; background: linear-gradient(90deg,#818cf8,#a78bfa); color: #fff; font-size: 11px; font-family: monospace; letter-spacing: 3px; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; }
-    h1 { font-size: 32px; margin-bottom: 8px; }
-    p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin-bottom: 14px; }
-    .notice { color: #cbd5e1; background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.22); border-radius: 12px; padding: 13px 14px; font-size: 14px; line-height: 1.5; margin-bottom: 14px; }
-    a.btn { width: 100%; display: inline-flex; justify-content: center; align-items: center; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(90deg,#818cf8,#a78bfa); color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; font-family: Georgia, serif; text-decoration: none; margin-top: 6px; }
-    .secondary { background: rgba(255,255,255,0.05) !important; border: 1.5px solid rgba(129,140,248,0.35) !important; color: #cbd5e1 !important; }
-    .links { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
-  </style>
+  <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20260901-1" />
 </head>
-<body>
-  <div class="box">
-    <div class="header">
-      <div><span class="badge">TEACHER FLÁVIO</span></div>
-      <h1>Criar conta</h1>
-      <p>Novas matrículas estão indisponíveis no momento.</p>
+<body class="registration-closed">
+  <main class="closed-card" aria-labelledby="closedRegistrationTitle">
+    <div><span class="enrollment-badge">TEACHER FLÁVIO</span></div>
+    <h1 id="closedRegistrationTitle">Criar conta</h1>
+    <p class="closed-subtitle">Novas matrículas estão indisponíveis no momento.</p>
+
+    <div class="closed-notice">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+      <span>O acesso ao site permanece disponível normalmente para alunos já matriculados.</span>
     </div>
 
-    <div class="notice">
-      O acesso ao site permanece disponível para alunos já matriculados.
+    <div class="closed-links">
+      <a class="primary-link" href="/login/">JÁ SOU MATRICULADO</a>
+      <a class="secondary-link" href="/">VOLTAR AO INÍCIO</a>
     </div>
-
-    <div class="links">
-      <a class="btn secondary" href="/login/">JÁ SOU MATRICULADO</a>
-      <a class="btn secondary" href="/">VOLTAR AO INÍCIO</a>
-    </div>
-  </div>
+  </main>
   <script defer src="/site_footer.js?v=20260819-2"></script>
 </body>
 </html>
