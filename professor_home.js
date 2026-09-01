@@ -119,7 +119,7 @@ function ensureAcquisitionDashboardCard() {
   card.href = "/marketing_acquisition/";
   card.draggable = true;
   card.dataset.cardId = "marketing-acquisition";
-  card.innerHTML = '<span><span class="icon">📈</span>AQUISIÇÃO E IA</span><span class="arrow">›</span>';
+  card.innerHTML = '<span><span class="icon" aria-hidden="true"></span>AQUISIÇÃO E IA</span><span class="arrow">›</span>';
 
   const reportsCard = grid.querySelector('[data-card-id="relatorios"]');
   if (reportsCard) {
