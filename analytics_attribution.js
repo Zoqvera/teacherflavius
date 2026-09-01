@@ -23,11 +23,27 @@
     return currentPath().indexOf("/curso-de-ingles-online") === 0;
   }
 
+  function isContentPage() {
+    var path = currentPath();
+    return path.indexOf("/recursos") === 0 || path.indexOf("/sobre") === 0;
+  }
+
+  function siteArea() {
+    var path = currentPath();
+    if (path.indexOf("/recursos") === 0) return "geo_content";
+    if (path.indexOf("/sobre") === 0) return "authority";
+    if (isSalesPage()) return "marketing";
+    if (path === "/" || path === "/index.html") return "marketing_home";
+    return "other";
+  }
+
   function isAcquisitionPage() {
     var path = currentPath();
     return path === "/" ||
       path === "/index.html" ||
       path.indexOf("/curso-de-ingles-online") === 0 ||
+      path.indexOf("/sobre") === 0 ||
+      path.indexOf("/recursos") === 0 ||
       path.indexOf("/quero-conhecer") === 0 ||
       path.indexOf("/quero_conhecer") === 0 ||
       path.indexOf("/landing-page") === 0;
@@ -225,7 +241,9 @@
       cro_experiment: variant ? EXPERIMENT_NAME : "none",
       cro_variant: variant || "not_exposed",
       traffic_channel: acquisition.traffic_channel,
-      ai_assistant: aiReferral || "not_set"
+      ai_assistant: aiReferral || "not_set",
+      site_area: siteArea(),
+      geo_content: isContentPage() ? "yes" : "no"
     };
   }
 
@@ -237,7 +255,6 @@
   function wrappedGtag(command, eventName, params) {
     if (command === "event" && typeof eventName === "string") {
       var enriched = Object.assign({}, attributionParams(), params || {});
-      if (isSalesPage()) enriched.site_area = "marketing";
       return forward("event", eventName, enriched);
     }
     return forward.apply(null, arguments);
@@ -295,7 +312,8 @@
     getVariant: getVariant,
     getParams: attributionParams,
     ai_assistant: aiReferral || "not_set",
-    acquisition: acquisition
+    acquisition: acquisition,
+    site_area: siteArea()
   };
 
   sendFirstPartyEvent("page_view");
