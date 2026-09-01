@@ -7,6 +7,11 @@
     return (window.location.pathname || "/").toLowerCase();
   }
 
+  function isGeoContentPage() {
+    var path = currentPath();
+    return path.indexOf("/sobre") === 0 || path.indexOf("/recursos") === 0;
+  }
+
   function isPublicMarketingPage() {
     var path = currentPath();
     return path === "/" ||
@@ -256,6 +261,10 @@
   }
 
   function loadPublicPageScripts() {
+    if (isGeoContentPage()) {
+      loadScript("teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1");
+      return;
+    }
     loadScript("teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1", loadFooterCore);
   }
 
