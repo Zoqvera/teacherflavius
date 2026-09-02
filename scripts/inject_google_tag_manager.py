@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PUBLISH = ROOT / "_site"
+DEFAULT_SITE_ROOT = ROOT / "_site"
 GTM_CONTAINER_ID = "GTM-K2NWR2NK"
 
 HEAD_OPEN_RE = re.compile(r"<head(?:\s[^>]*)?>", re.IGNORECASE)
@@ -27,6 +28,24 @@ GTM_BODY_SNIPPET = f"""<!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={GTM_CONTAINER_ID}"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->"""
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Inject and validate Google Tag Manager in static HTML documents."
+    )
+    parser.add_argument(
+        "--site-root",
+        type=Path,
+        default=DEFAULT_SITE_ROOT,
+        help="Directory containing HTML documents. Defaults to _site.",
+    )
+    return parser.parse_args()
+
+
+def resolve_site_root(site_root: Path) -> Path:
+    resolved = site_root if site_root.is_absolute() else ROOT / site_root
+    return resolved.resolve()
 
 
 def insert_after_opening_tag(html: str, tag_re: re.Pattern[str], snippet: str) -> str:
@@ -74,14 +93,22 @@ def validate_gtm(html: str, relative: Path) -> None:
         raise SystemExit(f"Google Tag Manager noscript snippet is outside <body> in {relative.as_posix()}")
 
 
+def iter_html_documents(site_root: Path):
+    for path in sorted(site_root.rglob("*.html")):
+        if path.is_file():
+            yield path
+
+
 def main() -> None:
-    if not PUBLISH.is_dir():
-        raise SystemExit("Run scripts/build_static_site.py before Google Tag Manager injection")
+    args = parse_args()
+    site_root = resolve_site_root(args.site_root)
+    if not site_root.is_dir():
+        raise SystemExit(f"Site root does not exist: {site_root}")
 
     injected = 0
     documents = 0
-    for path in sorted(PUBLISH.rglob("*.html")):
-        relative = path.relative_to(PUBLISH)
+    for path in iter_html_documents(site_root):
+        relative = path.relative_to(site_root)
         html = path.read_text(encoding="utf-8")
         if not HTML_OPEN_RE.search(html):
             continue
@@ -94,7 +121,7 @@ def main() -> None:
             injected += 1
 
     if documents == 0:
-        raise SystemExit("No HTML documents found in static publish directory")
+        raise SystemExit(f"No HTML documents found in site root: {site_root}")
 
     print(
         f"Google Tag Manager {GTM_CONTAINER_ID} validated in {documents} HTML documents; "

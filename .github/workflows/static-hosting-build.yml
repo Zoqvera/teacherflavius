@@ -44,7 +44,18 @@ jobs:
         run: python3 scripts/build_static_site.py
 
       - name: Inject and validate Google Tag Manager
-        run: python3 scripts/inject_google_tag_manager.py
+        run: |
+          python3 scripts/inject_google_tag_manager.py
+          grep -q 'GTM-K2NWR2NK' _site/index.html
+          grep -q 'googletagmanager.com/ns.html?id=GTM-K2NWR2NK' _site/index.html
+
+      - name: Validate GitHub Pages source compatibility
+        run: |
+          tmp_dir="$(mktemp -d)"
+          cp -R . "$tmp_dir/site"
+          rm -rf "$tmp_dir/site/_site" "$tmp_dir/site/.git"
+          python3 "$tmp_dir/site/scripts/inject_google_tag_manager.py" --site-root "$tmp_dir/site"
+          grep -q 'GTM-K2NWR2NK' "$tmp_dir/site/index.html"
 
       - name: Validate publish output
         run: |
