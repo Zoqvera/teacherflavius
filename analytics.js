@@ -124,6 +124,7 @@
 
     function track(eventName, params) {
       const payload = Object.assign({}, baseParams(), params || {});
+      payload.send_to = MEASUREMENT_ID;
       gtag("event", eventName, payload);
     }
 
