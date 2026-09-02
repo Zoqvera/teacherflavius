@@ -4,16 +4,18 @@
   if (window.__teacherFlaviusStudentBirthdaysLoaded) return;
   window.__teacherFlaviusStudentBirthdaysLoaded = true;
 
-  function sleep(ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  const AUTH_WAIT_OPTIONS = Object.freeze({
+    maxAttempts: 30,
+    delayMs: 100
+  });
+
+  function authResourcesAreReady() {
+    return !!(window.Auth && Auth.getClient && Auth.getSession);
   }
 
   async function waitForAuth() {
-    for (let attempt = 0; attempt < 30; attempt++) {
-      if (window.Auth && Auth.getClient && Auth.getSession) return true;
-      await sleep(100);
-    }
-    return !!(window.Auth && Auth.getClient && Auth.getSession);
+    if (!window.ResourceWaiter) return false;
+    return window.ResourceWaiter.waitUntil(authResourcesAreReady, AUTH_WAIT_OPTIONS);
   }
 
   function isLoginOrOnboardingPage() {
