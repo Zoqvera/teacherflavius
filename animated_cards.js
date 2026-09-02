@@ -1,6 +1,8 @@
 (function () {
   var classTypeCache = null;
   var classTypeLoading = false;
+  var classTypeWaitPending = false;
+  const CLASS_TYPE_RETRY_DELAY_MS = 250;
 
   function injectBackground() {
     if (!document.getElementById("particles")) {
@@ -166,13 +168,47 @@
     });
   }
 
+  function classTypeDependenciesReady() {
+    return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
+  }
+
+  async function waitForClassTypeDependencies() {
+    const waiter = window.ResourceWaiter;
+    if (waiter && typeof waiter.waitUntil === "function") {
+      return waiter.waitUntil(classTypeDependenciesReady, {
+        maxAttempts: null,
+        delayMs: CLASS_TYPE_RETRY_DELAY_MS
+      });
+    }
+
+    await new Promise(function (resolve) {
+      window.setTimeout(resolve, CLASS_TYPE_RETRY_DELAY_MS);
+    });
+    return classTypeDependenciesReady();
+  }
+
   async function loadClassTypeBadges() {
     if (!isClassBoardPage() || classTypeCache || classTypeLoading) {
       annotateClassTypeBadges();
       return;
     }
-    if (!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured())) {
-      setTimeout(loadClassTypeBadges, 250);
+
+    if (!classTypeDependenciesReady()) {
+      if (classTypeWaitPending) return;
+
+      classTypeWaitPending = true;
+      let dependenciesReady = false;
+      try {
+        dependenciesReady = await waitForClassTypeDependencies();
+        if (dependenciesReady) {
+          await loadClassTypeBadges();
+          return;
+        }
+      } finally {
+        classTypeWaitPending = false;
+      }
+
+      loadClassTypeBadges();
       return;
     }
 

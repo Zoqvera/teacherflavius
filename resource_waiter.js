@@ -17,6 +17,11 @@
     return number;
   }
 
+  function normalizeMaxAttempts(value) {
+    if (value === null) return null;
+    return normalizePositiveInteger(value, DEFAULT_MAX_ATTEMPTS);
+  }
+
   function normalizeScriptTimeout(value) {
     if (value === null) return null;
     return normalizePositiveInteger(value, DEFAULT_SCRIPT_TIMEOUT_MS);
@@ -26,14 +31,25 @@
     return settings.finalCheck !== false;
   }
 
+  async function waitIndefinitely(predicate, delayMs) {
+    while (true) {
+      if (predicate()) return true;
+      await sleep(delayMs);
+    }
+  }
+
   async function waitUntil(predicate, options) {
     if (typeof predicate !== "function") {
       throw new TypeError("ResourceWaiter.waitUntil requer uma função de verificação.");
     }
 
     const settings = options || {};
-    const maxAttempts = normalizePositiveInteger(settings.maxAttempts, DEFAULT_MAX_ATTEMPTS);
+    const maxAttempts = normalizeMaxAttempts(settings.maxAttempts);
     const delayMs = normalizePositiveInteger(settings.delayMs, DEFAULT_DELAY_MS);
+
+    if (maxAttempts === null) {
+      return waitIndefinitely(predicate, delayMs);
+    }
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       if (predicate()) return true;
