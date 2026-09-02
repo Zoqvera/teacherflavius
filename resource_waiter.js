@@ -17,6 +17,11 @@
     return number;
   }
 
+  function normalizeScriptTimeout(value) {
+    if (value === null) return null;
+    return normalizePositiveInteger(value, DEFAULT_SCRIPT_TIMEOUT_MS);
+  }
+
   function shouldRunFinalCheck(settings) {
     return settings.finalCheck !== false;
   }
@@ -40,10 +45,8 @@
 
   function loadScript(options) {
     const settings = options || {};
-    const timeoutMs = normalizePositiveInteger(
-      settings.timeoutMs,
-      DEFAULT_SCRIPT_TIMEOUT_MS
-    );
+    const timeoutMs = normalizeScriptTimeout(settings.timeoutMs);
+    const resolveOnError = settings.resolveOnError !== false;
 
     return new Promise(function (resolve) {
       if (settings.isReady()) {
@@ -68,8 +71,12 @@
       }
 
       script.addEventListener("load", finish, { once: true });
-      script.addEventListener("error", finish, { once: true });
-      window.setTimeout(finish, timeoutMs);
+      if (resolveOnError) {
+        script.addEventListener("error", finish, { once: true });
+      }
+      if (timeoutMs !== null) {
+        window.setTimeout(finish, timeoutMs);
+      }
     });
   }
 

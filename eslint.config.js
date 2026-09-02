@@ -10,6 +10,7 @@ module.exports = [
       "student_access_tracker.js",
       "student_birthdays.js",
       "student_payment_notice.js",
+      "global_logout.js",
       "student_access_service.js",
       "student_access_renderer.js",
       "auth.js",
