@@ -18,6 +18,8 @@ module.exports = [
       "student_payment_notice_presenter.js",
       "student_payment_notice_renderer.js",
       "student_payment_notice.js",
+      "student_payment_notice_loader.js",
+      "site_footer_core.js",
       "global_logout.js",
       "student_access_service.js",
       "student_access_renderer.js",

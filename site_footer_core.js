@@ -1,64 +1,31 @@
 (function () {
   "use strict";
 
-  var FOOTER_ID = "teacher-flavius-site-footer";
-  var STYLE_ID = "teacher-flavius-site-footer-styles";
-  var PAYMENT_NOTICE_SCRIPT_ID = "teacher-flavius-payment-notice-script";
-  var SUPABASE_AUTH_STORAGE_KEY = "sb-wnigzpvgsbpjdxvjzugt-auth-token";
-  var paymentNoticeScheduled = false;
+  const FOOTER_ID = "teacher-flavius-site-footer";
+  const STYLE_ID = "teacher-flavius-site-footer-styles";
+  const PAYMENT_NOTICE_LOADER_SCRIPT_ID = "teacher-flavius-payment-notice-loader-script";
+  const PAYMENT_NOTICE_LOADER_SCRIPT_SRC = "/student_payment_notice_loader.js?v=20260902-1";
 
-  function isPublicMarketingPage() {
-    var path = (window.location.pathname || "/").toLowerCase();
-    return path === "/" ||
-      path === "/index.html" ||
-      path === "/quero_conhecer" ||
-      path === "/quero_conhecer.html" ||
-      path === "/quero-conhecer" ||
-      path === "/quero-conhecer/" ||
-      path.indexOf("/curso-de-ingles-online") === 0 ||
-      path.indexOf("/recursos") === 0 ||
-      path.indexOf("/sobre") === 0 ||
-      path.indexOf("/landing-page") === 0;
-  }
+  function loadBehaviorScript(id, src) {
+    if (!document.body || document.getElementById(id)) return;
 
-  function hasCachedSupabaseSession() {
-    try {
-      return !!(window.localStorage && window.localStorage.getItem(SUPABASE_AUTH_STORAGE_KEY));
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function appendStudentPaymentNoticeScript() {
-    if (!document.body || document.getElementById(PAYMENT_NOTICE_SCRIPT_ID)) return;
-    var script = document.createElement("script");
-    script.id = PAYMENT_NOTICE_SCRIPT_ID;
-    script.src = "/student_payment_notice.js?v=20260819-1";
+    const script = document.createElement("script");
+    script.id = id;
+    script.src = src;
     script.async = true;
     document.body.appendChild(script);
   }
 
-  function loadStudentPaymentNotice() {
-    if (paymentNoticeScheduled || document.getElementById(PAYMENT_NOTICE_SCRIPT_ID)) return;
-
-    if (isPublicMarketingPage()) {
-      if (!hasCachedSupabaseSession()) return;
-      paymentNoticeScheduled = true;
-      if ("requestIdleCallback" in window) window.requestIdleCallback(appendStudentPaymentNoticeScript, { timeout: 1800 });
-      else window.setTimeout(appendStudentPaymentNoticeScript, 600);
-      return;
-    }
-
-    paymentNoticeScheduled = true;
-    appendStudentPaymentNoticeScript();
+  function loadPaymentNoticeBehavior() {
+    loadBehaviorScript(PAYMENT_NOTICE_LOADER_SCRIPT_ID, PAYMENT_NOTICE_LOADER_SCRIPT_SRC);
   }
 
   function installStyles() {
     if (document.getElementById(STYLE_ID)) return;
-    var style = document.createElement("style");
+    const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = [
-      ".tf-site-footer,.tf-site-footer *{box-sizing:border-box}",
+      "#" + FOOTER_ID + ", #" + FOOTER_ID + " *{box-sizing:border-box}",
       ".tf-footer-flex-host{flex-direction:column!important}",
       ".tf-site-footer{width:100%;align-self:stretch;margin-top:clamp(48px,8vw,88px);color:#e2e8f0;background:linear-gradient(145deg,#070d1c 0%,#111b38 58%,#172554 100%);border-top:1px solid rgba(129,140,248,.4);box-shadow:0 -18px 50px rgba(2,6,23,.24);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:left;position:relative;z-index:1;overflow:hidden}",
       ".tf-site-footer::before{content:'';position:absolute;width:360px;height:360px;top:-250px;right:-100px;border-radius:50%;background:rgba(129,140,248,.14);filter:blur(4px);pointer-events:none}",
@@ -92,7 +59,7 @@
   }
 
   function buildFooter() {
-    var footer = document.createElement("footer");
+    const footer = document.createElement("footer");
     footer.id = FOOTER_ID;
     footer.className = "tf-site-footer";
     footer.setAttribute("aria-label", "Informações institucionais do Teacher Flávio");
@@ -139,17 +106,22 @@
   function mountFooter() {
     if (!document.body) return;
     if (document.getElementById(FOOTER_ID)) {
-      loadStudentPaymentNotice();
+      loadPaymentNoticeBehavior();
       return;
     }
 
     installStyles();
-    var bodyStyle = window.getComputedStyle(document.body);
-    if (bodyStyle.display.indexOf("flex") !== -1 && bodyStyle.flexDirection.indexOf("row") === 0) document.body.classList.add("tf-footer-flex-host");
+    const bodyStyle = window.getComputedStyle(document.body);
+    if (bodyStyle.display.indexOf("flex") !== -1 && bodyStyle.flexDirection.indexOf("row") === 0) {
+      document.body.classList.add("tf-footer-flex-host");
+    }
     document.body.appendChild(buildFooter());
-    loadStudentPaymentNotice();
+    loadPaymentNoticeBehavior();
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mountFooter, { once: true });
-  else mountFooter();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountFooter, { once: true });
+  } else {
+    mountFooter();
+  }
 })();
