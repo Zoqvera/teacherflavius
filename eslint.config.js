@@ -22,6 +22,8 @@ module.exports = [
       "site_footer_renderer.js",
       "site_footer_core.js",
       "site_whatsapp.js",
+      "site_page_context.js",
+      "site_branding.js",
       "site_footer.js",
       "global_logout.js",
       "student_access_service.js",

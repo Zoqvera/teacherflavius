@@ -2,84 +2,14 @@
   "use strict";
 
   var GOOGLE_MEASUREMENT_ID = "G-11V3W5B6TG";
-
-  function currentPath() {
-    return (window.location.pathname || "/").toLowerCase();
-  }
-
-  function isHomePage() {
-    var path = currentPath();
-    return path === "/" || path === "/index.html";
-  }
-
-  function isGeoContentPage() {
-    var path = currentPath();
-    return path.indexOf("/sobre") === 0 || path.indexOf("/recursos") === 0;
-  }
-
-  function isPublicMarketingPage() {
-    var path = currentPath();
-    return path === "/" ||
-      path === "/index.html" ||
-      path === "/privacidade" ||
-      path === "/privacidade/" ||
-      path === "/cookies" ||
-      path === "/cookies/" ||
-      path === "/termos" ||
-      path === "/termos/" ||
-      path === "/quero_conhecer" ||
-      path === "/quero_conhecer.html" ||
-      path === "/quero-conhecer" ||
-      path === "/quero-conhecer/" ||
-      path.indexOf("/curso-de-ingles-online") === 0 ||
-      path.indexOf("/sobre") === 0 ||
-      path.indexOf("/recursos") === 0 ||
-      path.indexOf("/landing-page") === 0;
-  }
-
-  function installBrandPalette() {
-    var root = document.documentElement;
-    var path = currentPath();
-
-    root.classList.add("tf-brand-palette");
-    if (path === "/" || path === "/index.html") root.classList.add("tf-brand-home");
-    if (
-      path === "/quero_conhecer" ||
-      path === "/quero_conhecer.html" ||
-      path === "/quero-conhecer" ||
-      path === "/quero-conhecer/" ||
-      path.indexOf("/curso-de-ingles-online") === 0 ||
-      path.indexOf("/landing-page") === 0
-    ) root.classList.add("tf-brand-sales");
-
-    var themeColor = document.querySelector('meta[name="theme-color"]');
-    if (themeColor) themeColor.setAttribute("content", "#02102B");
-
-    var palette = document.getElementById("teacher-flavius-brand-palette");
-    if (!palette) {
-      palette = document.createElement("link");
-      palette.id = "teacher-flavius-brand-palette";
-      palette.rel = "stylesheet";
-      document.head.appendChild(palette);
-    }
-    palette.href = "/brand_palette.css?v=20260820-3";
-
-    if (document.body) {
-      var bodyColor = window.getComputedStyle(document.body).color || "";
-      var rgb = bodyColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-      if (rgb) {
-        var luminance = (Number(rgb[1]) * 0.2126) + (Number(rgb[2]) * 0.7152) + (Number(rgb[3]) * 0.0722);
-        if (luminance >= 150) root.classList.add("tf-brand-dark-page");
-      }
-    }
-  }
+  var LEGACY_HTML_EXTENSION = ".html";
 
   function isEnrollmentLink(value) {
     if (!value) return false;
     try {
       var url = new URL(value, window.location.href);
       return url.origin === window.location.origin &&
-        (url.pathname === "/matricula/" || url.pathname === "/matricula.html");
+        (url.pathname === "/matricula/" || url.pathname === "/matricula" + LEGACY_HTML_EXTENSION);
     } catch (error) {
       return false;
     }
@@ -140,7 +70,7 @@
   }
 
   function initializeWhatsappUi() {
-    var watchDynamicLinks = !isPublicMarketingPage();
+    var watchDynamicLinks = !window.SitePageContext.isPublicMarketingPage();
     loadScript("teacher-flavius-site-whatsapp", "/site_whatsapp.js?v=20260902-1", function () {
       if (!window.SiteWhatsapp) return;
       window.SiteWhatsapp.initialize({ watchDynamicLinks: watchDynamicLinks });
@@ -207,11 +137,11 @@
   }
 
   function loadPublicPageScripts() {
-    if (currentPath() === "/") {
+    if (window.SitePageContext.currentPath() === "/") {
       loadFooterCore();
       return;
     }
-    if (isGeoContentPage()) {
+    if (window.SitePageContext.isGeoContentPage()) {
       loadScript("teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1");
       return;
     }
@@ -227,10 +157,10 @@
   }
 
   function initializeUi() {
-    installBrandPalette();
+    window.SiteBranding.install();
     loadAccessibility();
-    if (!isHomePage()) loadMobileTopNavigation();
-    if (isPublicMarketingPage()) removeEnrollmentLinks(document);
+    if (!window.SitePageContext.isHomePage()) loadMobileTopNavigation();
+    if (window.SitePageContext.isPublicMarketingPage()) removeEnrollmentLinks(document);
     else installEnrollmentLinkGuard();
     initializeWhatsappUi();
   }
@@ -240,16 +170,28 @@
     else window.setTimeout(loadPublicPageScripts, 0);
   }
 
+  function initializePageRuntime() {
+    if (!window.SitePageContext || !window.SiteBranding) return;
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initializeUi, { once: true });
+    } else {
+      initializeUi();
+    }
+
+    if (window.SitePageContext.isPublicMarketingPage()) schedulePublicScripts();
+    else loadPortalScripts();
+  }
+
+  function loadSiteFoundations() {
+    loadScript("teacher-flavius-site-page-context", "/site_page_context.js?v=20260902-1", function () {
+      if (!window.SitePageContext) return;
+      loadScript("teacher-flavius-site-branding", "/site_branding.js?v=20260902-1", initializePageRuntime);
+    });
+  }
+
   // Keep the compatibility bootstrap available for browsers that cached older pages.
   loadWhatsappLeadForm();
   loadPrivacy();
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initializeUi, { once: true });
-  } else {
-    initializeUi();
-  }
-
-  if (isPublicMarketingPage()) schedulePublicScripts();
-  else loadPortalScripts();
+  loadSiteFoundations();
 })();
