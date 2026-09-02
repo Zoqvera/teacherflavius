@@ -8,49 +8,68 @@
     onboarding: "/complete-cadastro/",
     profile: "/perfil/"
   });
-  const AUTH_INFRASTRUCTURE_SRC = "/auth_infrastructure.js?v=20260902-1";
-  const AUTH_INFRASTRUCTURE_SELECTOR = 'script[src^="/auth_infrastructure.js"]';
+  const MODULES = Object.freeze({
+    infrastructure: Object.freeze({
+      globalName: "AuthInfrastructure",
+      selector: 'script[src^="/auth_infrastructure.js"]',
+      src: "/auth_infrastructure.js?v=20260902-1",
+      missingMessage: "A infraestrutura de autenticação não foi inicializada.",
+      loadErrorMessage: "Não foi possível carregar a infraestrutura de autenticação."
+    }),
+    studentProfileService: Object.freeze({
+      globalName: "StudentProfileService",
+      selector: 'script[src^="/student_profile_service.js"]',
+      src: "/student_profile_service.js?v=20260902-1",
+      missingMessage: "O serviço de perfil do aluno não foi inicializado.",
+      loadErrorMessage: "Não foi possível carregar o serviço de perfil do aluno."
+    })
+  });
   const ENROLLMENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const ENROLLMENT_CODE_LENGTH = 5;
-  const AVAILABILITY_DAYS = Object.freeze(["seg", "ter", "qua", "qui", "sex"]);
-  const AVAILABILITY_HOURS = Object.freeze(["09", "10", "12", "13", "15", "17", "18", "20", "21"]);
   const GOOGLE_PROVIDER = "google";
 
-  let infrastructurePromise = null;
+  const modulePromises = {};
+  let studentProfileService = null;
 
-  function getAuthInfrastructure() {
-    if (window.AuthInfrastructure) return Promise.resolve(window.AuthInfrastructure);
-    if (infrastructurePromise) return infrastructurePromise;
+  function loadGlobalModule(config) {
+    const existingModule = window[config.globalName];
+    if (existingModule) return Promise.resolve(existingModule);
+    if (modulePromises[config.globalName]) return modulePromises[config.globalName];
 
-    infrastructurePromise = new Promise(function (resolve, reject) {
-      function resolveInfrastructure() {
-        if (!window.AuthInfrastructure) {
-          reject(new Error("A infraestrutura de autenticação não foi inicializada."));
+    modulePromises[config.globalName] = new Promise(function (resolve, reject) {
+      function resolveModule() {
+        const loadedModule = window[config.globalName];
+        if (!loadedModule) {
+          reject(new Error(config.missingMessage));
           return;
         }
-        resolve(window.AuthInfrastructure);
+        resolve(loadedModule);
       }
 
-      const existingScript = document.querySelector(AUTH_INFRASTRUCTURE_SELECTOR);
+      function rejectModule() {
+        reject(new Error(config.loadErrorMessage));
+      }
+
+      const existingScript = document.querySelector(config.selector);
       if (existingScript) {
-        existingScript.addEventListener("load", resolveInfrastructure, { once: true });
-        existingScript.addEventListener("error", function () {
-          reject(new Error("Não foi possível carregar a infraestrutura de autenticação."));
-        }, { once: true });
+        existingScript.addEventListener("load", resolveModule, { once: true });
+        existingScript.addEventListener("error", rejectModule, { once: true });
         return;
       }
 
       const script = document.createElement("script");
-      script.src = AUTH_INFRASTRUCTURE_SRC;
+      script.src = config.src;
       script.async = true;
-      script.addEventListener("load", resolveInfrastructure, { once: true });
-      script.addEventListener("error", function () {
-        reject(new Error("Não foi possível carregar a infraestrutura de autenticação."));
-      }, { once: true });
+      script.addEventListener("load", resolveModule, { once: true });
+      script.addEventListener("error", rejectModule, { once: true });
       document.head.appendChild(script);
     });
 
-    return infrastructurePromise;
+    return modulePromises[config.globalName];
+  }
+
+  function getAuthInfrastructure() {
+    return loadGlobalModule(MODULES.infrastructure);
   }
 
   function initializeAuthInfrastructure() {
@@ -139,111 +158,6 @@
     return code;
   }
 
-  function normalizeDigits(value) {
-    return String(value || "").replace(/\D/g, "");
-  }
-
-  function normalizeCpf(cpf) {
-    return normalizeDigits(cpf);
-  }
-
-  function normalizeWhatsapp(whatsapp) {
-    return normalizeDigits(whatsapp);
-  }
-
-  function normalizePixKey(pixKey) {
-    return String(pixKey || "").trim();
-  }
-
-  function normalizeAvailability(availability) {
-    const normalized = {};
-    AVAILABILITY_DAYS.forEach(function (day) {
-      const selected = Array.isArray(availability && availability[day]) ? availability[day] : [];
-      normalized[day] = selected.filter(function (hour) {
-        return AVAILABILITY_HOURS.includes(hour);
-      });
-    });
-    return normalized;
-  }
-
-  function countAvailabilitySlots(availability) {
-    return Object.keys(availability || {}).reduce(function (total, day) {
-      return total + (Array.isArray(availability[day]) ? availability[day].length : 0);
-    }, 0);
-  }
-
-  function availabilityToProfileColumns(availability) {
-    const columns = {};
-    AVAILABILITY_DAYS.forEach(function (day) {
-      AVAILABILITY_HOURS.forEach(function (hour) {
-        columns["availability_" + day + "_" + hour] = Array.isArray(availability[day]) && availability[day].includes(hour);
-      });
-    });
-    return columns;
-  }
-
-  function normalizeStudentInput(data) {
-    const source = data || {};
-    return {
-      name: source.name || "",
-      email: source.email || "",
-      password: source.password || "",
-      cpf: normalizeCpf(source.cpf),
-      whatsapp: normalizeWhatsapp(source.whatsapp),
-      pixKey: normalizePixKey(source.pix_key),
-      availability: normalizeAvailability(source.availability)
-    };
-  }
-
-  function validateStudentInput(input, requiredFieldsMessage, options) {
-    const settings = options || {};
-    const hasRequiredIdentity = input.name && input.cpf && input.whatsapp && input.pixKey;
-    const hasEnrollmentCredentials = !settings.requireEnrollmentCredentials || (input.email && input.password);
-
-    if (!hasRequiredIdentity || !hasEnrollmentCredentials) throw new Error(requiredFieldsMessage);
-    if (input.cpf.length !== 11) throw new Error("CPF inválido. Informe 11 dígitos.");
-    if (input.whatsapp.length < 10) throw new Error("WhatsApp inválido.");
-    if (countAvailabilitySlots(input.availability) === 0) {
-      throw new Error("Selecione pelo menos um horário disponível para aulas durante a semana.");
-    }
-  }
-
-  function buildProfilePayload(options) {
-    const input = options.input;
-    return Object.assign({
-      id: options.userId,
-      name: input.name,
-      email: options.email || "",
-      cpf: input.cpf,
-      whatsapp: input.whatsapp,
-      pix_key: input.pixKey,
-      availability: input.availability,
-      enrollment_code: options.enrollmentCode || "",
-      enrolled: options.enrolled === true,
-      profile_completed: true
-    }, availabilityToProfileColumns(input.availability));
-  }
-
-  function buildUserMetadata(input, enrollmentCode, enrolled) {
-    return {
-      name: input.name,
-      cpf: input.cpf,
-      whatsapp: input.whatsapp,
-      pix_key: input.pixKey,
-      availability: input.availability,
-      enrollment_code: enrollmentCode || "",
-      enrolled: enrolled === true,
-      profile_completed: true
-    };
-  }
-
-  async function updateAuthMetadata(client, input, enrollmentCode, enrolled) {
-    const response = await client.auth.updateUser({
-      data: buildUserMetadata(input, enrollmentCode, enrolled)
-    });
-    if (response.error) throw response.error;
-  }
-
   async function getSession() {
     const client = getClient();
     if (!client) return null;
@@ -258,25 +172,46 @@
     return response && response.data ? response.data.user : null;
   }
 
+  function getStudentProfileService() {
+    if (studentProfileService) return Promise.resolve(studentProfileService);
+
+    return loadGlobalModule(MODULES.studentProfileService).then(function (serviceModule) {
+      if (!studentProfileService) {
+        studentProfileService = serviceModule.create({
+          getClient: getClient,
+          requireClient: requireClient,
+          getUser: getUser,
+          getRedirectUrl: getRedirectUrl,
+          generateEnrollmentCode: generateEnrollmentCode
+        });
+      }
+      return studentProfileService;
+    });
+  }
+
   async function ensureProfileForUser(user) {
-    const client = getClient();
-    if (!client || !user) return null;
+    const service = await getStudentProfileService();
+    return service.ensureProfileForUser(user);
+  }
 
-    const existing = await client.from("profiles").select("*").eq("id", user.id).maybeSingle();
-    if (existing.error) throw existing.error;
-    if (existing.data) return existing.data;
+  async function enrollStudent(data) {
+    const service = await getStudentProfileService();
+    return service.enrollStudent(data);
+  }
 
-    const metadata = user.user_metadata || {};
-    const payload = {
-      id: user.id,
-      name: metadata.full_name || metadata.name || metadata.user_name || "",
-      email: user.email || "",
-      enrolled: false,
-      profile_completed: false
-    };
-    const created = await client.from("profiles").insert(payload).select().single();
-    if (created.error) throw created.error;
-    return created.data;
+  async function getProfile() {
+    const service = await getStudentProfileService();
+    return service.getProfile();
+  }
+
+  async function updateProfile(data) {
+    const service = await getStudentProfileService();
+    return service.updateProfile(data);
+  }
+
+  async function completeProfile(data) {
+    const service = await getStudentProfileService();
+    return service.completeProfile(data);
   }
 
   async function requireAuth(options) {
@@ -324,40 +259,6 @@
       });
     }
     return response.data;
-  }
-
-  async function enrollStudent(data) {
-    const client = requireClient();
-    const input = normalizeStudentInput(data);
-    validateStudentInput(input, "Preencha todos os campos da matrícula.", { requireEnrollmentCredentials: true });
-
-    const enrollmentCode = generateEnrollmentCode();
-    const enrollmentMetadata = buildUserMetadata(input, enrollmentCode, true);
-    const response = await client.auth.signUp({
-      email: input.email,
-      password: input.password,
-      options: { data: enrollmentMetadata, emailRedirectTo: getRedirectUrl() }
-    });
-    if (response.error) throw response.error;
-
-    if (response.data && response.data.user) {
-      const profilePayload = buildProfilePayload({
-        userId: response.data.user.id,
-        email: input.email,
-        input: input,
-        enrollmentCode: enrollmentCode,
-        enrolled: true
-      });
-      const profileResponse = await client.from("profiles").upsert(profilePayload).select().single();
-      if (profileResponse.error) {
-        console.warn("Não foi possível atualizar profiles com os dados de matrícula:", profileResponse.error.message);
-      }
-    }
-
-    return {
-      user: response.data ? response.data.user : null,
-      enrollment_code: enrollmentCode
-    };
   }
 
   async function signIn(email, password) {
@@ -411,79 +312,6 @@
     const response = await client.auth.signOut({ scope: "local" });
     if (response.error) throw response.error;
     window.location.replace(PATHS.login + "?logged_out=1");
-  }
-
-  async function getProfile() {
-    const client = getClient();
-    const user = await getUser();
-    if (!client || !user) return null;
-
-    const response = await client.from("profiles").select("*").eq("id", user.id).maybeSingle();
-    const metadata = user.user_metadata || {};
-    const fallbackProfile = {
-      id: user.id,
-      name: metadata.full_name || metadata.name || "",
-      email: user.email,
-      cpf: metadata.cpf || "",
-      whatsapp: metadata.whatsapp || "",
-      pix_key: metadata.pix_key || "",
-      availability: metadata.availability || {},
-      enrollment_code: metadata.enrollment_code || "",
-      enrolled: metadata.enrolled || false,
-      profile_completed: metadata.profile_completed || false
-    };
-    if (response.error || !response.data) return fallbackProfile;
-    return Object.assign({}, fallbackProfile, response.data);
-  }
-
-  async function updateProfile(data) {
-    const client = getClient();
-    const user = await getUser();
-    if (!client || !user) throw new Error("Usuário não autenticado.");
-
-    const input = normalizeStudentInput(data);
-    validateStudentInput(input, "Preencha nome, CPF, WhatsApp e chave PIX.");
-
-    const currentProfile = await getProfile();
-    const enrollmentCode = currentProfile && currentProfile.enrollment_code || "";
-    const enrolled = currentProfile && currentProfile.enrolled === true;
-    const profilePayload = buildProfilePayload({
-      userId: user.id,
-      email: user.email,
-      input: input,
-      enrollmentCode: enrollmentCode,
-      enrolled: enrolled
-    });
-
-    const profileResponse = await client.from("profiles").upsert(profilePayload).select().single();
-    if (profileResponse.error) throw profileResponse.error;
-    await updateAuthMetadata(client, input, enrollmentCode, enrolled);
-    return profileResponse.data;
-  }
-
-  async function completeProfile(data) {
-    const client = getClient();
-    const user = await getUser();
-    if (!client || !user) throw new Error("Sua sessão expirou. Entre novamente.");
-
-    const input = normalizeStudentInput(data);
-    validateStudentInput(input, "Preencha todos os campos obrigatórios.");
-
-    const current = await ensureProfileForUser(user);
-    const enrollmentCode = current.enrollment_code || "";
-    const enrolled = current.enrolled === true;
-    const payload = buildProfilePayload({
-      userId: user.id,
-      email: user.email || current.email || "",
-      input: input,
-      enrollmentCode: enrollmentCode,
-      enrolled: enrolled
-    });
-
-    const saved = await client.from("profiles").upsert(payload).select().single();
-    if (saved.error) throw saved.error;
-    await updateAuthMetadata(client, input, enrollmentCode, enrolled);
-    return saved.data;
   }
 
   async function saveActivityResult(result) {
