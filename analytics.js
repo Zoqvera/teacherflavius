@@ -53,6 +53,14 @@
     return window.gtag;
   }
 
+  function isTagAssistantDebugSession() {
+    try {
+      return new URLSearchParams(window.location.search).has("_dbg");
+    } catch (_error) {
+      return false;
+    }
+  }
+
   function loadModule(module, onComplete) {
     if (window[module.globalName]) {
       onComplete();
@@ -108,6 +116,7 @@
     const utils = requireGlobal("TeacherAnalyticsUtils");
     const acquisition = requireGlobal("TeacherAnalyticsAcquisition").capture();
     const gtag = ensureGtagTransport();
+    const debugSession = isTagAssistantDebugSession();
 
     function baseParams() {
       return {
@@ -125,6 +134,7 @@
     function track(eventName, params) {
       const payload = Object.assign({}, baseParams(), params || {});
       payload.send_to = MEASUREMENT_ID;
+      if (debugSession) payload.debug_mode = true;
       gtag("event", eventName, payload);
     }
 
