@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="supabase_config.js?v=20260429-9"></script>
   <script src="auth.js?v=20260818-google-auth-1"></script>
+  <script src="/student_profile_optional.js?v=20260902-1"></script>
   <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20260901-1" />
 </head>
 <body class="enrollment-onboarding">
@@ -15,26 +16,26 @@
     <section class="enrollment-card" aria-labelledby="onboardingTitle">
       <header class="enrollment-header">
         <div><span class="enrollment-badge">TEACHER FLÁVIO</span></div>
-        <h1 id="onboardingTitle">Complete seu cadastro</h1>
-        <p class="intro">Seu login Google foi criado. Antes de continuar, informe os dados usados no cadastro de estudante.</p>
+        <h1 id="onboardingTitle">Só mais alguns dados</h1>
+        <p class="intro">Confirme as informações essenciais para liberar sua Área do Estudante. Os demais dados podem ser preenchidos depois.</p>
       </header>
 
       <div class="onboarding-progress" aria-label="Etapas de acesso">
         <div class="progress-step is-done"><strong aria-hidden="true">✓</strong><span>Conta Google</span></div>
-        <div class="progress-step is-current"><strong aria-hidden="true">2</strong><span>Seus dados</span></div>
-        <div class="progress-step"><strong aria-hidden="true">3</strong><span>Disponibilidade</span></div>
+        <div class="progress-step is-current"><strong aria-hidden="true">2</strong><span>Dados essenciais</span></div>
+        <div class="progress-step"><strong aria-hidden="true">3</strong><span>Acesso liberado</span></div>
       </div>
 
       <div class="account-note">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
-        <span>Você não precisa criar uma senha. Nos próximos acessos, poderá entrar diretamente com sua conta Google.</span>
+        <span>Você não precisa criar uma senha. Disponibilidade de horários e chave PIX poderão ser informadas depois, em <strong>Meu Perfil</strong>, sem bloquear seu primeiro acesso.</span>
       </div>
 
       <form id="completeProfileForm">
         <section class="form-section" aria-labelledby="personalDataTitle">
           <div class="section-heading">
             <h2 id="personalDataTitle">Dados do estudante</h2>
-            <p>Confira suas informações pessoais antes de concluir o acesso.</p>
+            <p>Preencha apenas o necessário para identificar sua matrícula e manter seu contato atualizado.</p>
           </div>
 
           <div class="form-grid">
@@ -56,70 +57,42 @@
 
             <div class="field">
               <label class="field-label" for="cpf">CPF</label>
-              <input id="cpf" type="text" inputmode="numeric" maxlength="14" required />
+              <input id="cpf" type="text" inputmode="numeric" maxlength="14" autocomplete="off" required />
             </div>
 
-            <div class="field">
+            <div class="field full">
               <label class="field-label" for="whatsapp">WhatsApp</label>
               <input id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" required />
             </div>
-
-            <div class="field">
-              <label class="field-label" for="pixKey">Chave PIX</label>
-              <input id="pixKey" type="text" aria-describedby="pixKeyNote" required />
-              <div id="pixKeyNote" class="field-note">Usada apenas caso o professor precise fazer um reembolso.</div>
-            </div>
           </div>
-        </section>
-
-        <section class="form-section availability-block" aria-labelledby="availabilityTitle">
-          <div class="section-heading">
-            <h2 id="availabilityTitle">Disponibilidade para aulas</h2>
-            <p>Marque todos os dias e horários, de segunda a sexta, em que você estará disponível para fazer aulas de inglês.</p>
-          </div>
-          <div class="availability-scroll" tabindex="0" aria-label="Tabela de dias e horários disponíveis para aulas">
-            <div class="availability-grid" id="availabilityGrid"></div>
-          </div>
-          <p class="mobile-scroll-hint">Deslize horizontalmente para ver todos os dias.</p>
         </section>
 
         <div id="message" class="message" role="alert" aria-live="polite"></div>
-        <button id="submitButton" type="submit">CONCLUIR CADASTRO</button>
+        <button id="submitButton" type="submit">ENTRAR NA ÁREA DO ESTUDANTE</button>
       </form>
     </section>
   </main>
 
   <script>
-    const availabilityDays = [
-      { key: "seg", label: "Seg", full: "Segunda" },
-      { key: "ter", label: "Ter", full: "Terça" },
-      { key: "qua", label: "Qua", full: "Quarta" },
-      { key: "qui", label: "Qui", full: "Quinta" },
-      { key: "sex", label: "Sex", full: "Sexta" }
-    ];
-    const availabilityHours = [
-      { key: "09", label: "9h - 10h" }, { key: "10", label: "10h - 11h" },
-      { key: "12", label: "12h - 13h" }, { key: "13", label: "13h - 14h" },
-      { key: "15", label: "15h - 16h" }, { key: "17", label: "17h - 18h" },
-      { key: "18", label: "18h - 19h" }, { key: "20", label: "20h - 21h" },
-      { key: "21", label: "21h - 22h" }
-    ];
-
     function onlyDigits(value) { return String(value || "").replace(/\D/g, ""); }
+
     function formatCpf(value) {
       const digits = onlyDigits(value).slice(0, 11);
       return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     }
+
     function formatBirthDateInput(value) {
       const digits = onlyDigits(value).slice(0, 8);
       if (digits.length <= 2) return digits;
       if (digits.length <= 4) return digits.slice(0, 2) + "/" + digits.slice(2);
       return digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4);
     }
+
     function formatBirthDateFromIso(value) {
       const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
       return match ? match[3] + "/" + match[2] + "/" + match[1] : "";
     }
+
     function parseBirthDate(value) {
       const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(value || "").trim());
       if (!match) throw new Error("Informe a data de nascimento no formato DD/MM/AAAA.");
@@ -139,35 +112,10 @@
       if (iso > todayIso) throw new Error("A data de nascimento não pode estar no futuro.");
       return iso;
     }
+
     function getNextPath() {
       const params = new URLSearchParams(window.location.search);
       return Auth.normalizeNextPath(params.get("next"), "/area-do-estudante/");
-    }
-    function buildAvailabilityGrid() {
-      const grid = document.getElementById("availabilityGrid");
-      grid.innerHTML = '<div></div>' + availabilityDays.map(day => `<div class="grid-head">${day.label}</div>`).join("");
-      availabilityHours.forEach(hour => {
-        grid.insertAdjacentHTML("beforeend", `<div class="time-label">${hour.label}</div>`);
-        availabilityDays.forEach(day => {
-          const id = `availability_${day.key}_${hour.key}`;
-          grid.insertAdjacentHTML("beforeend", `<label class="slot" for="${id}" title="${day.full}, ${hour.label}"><input type="checkbox" id="${id}" name="availability" data-day="${day.key}" data-hour="${hour.key}" aria-label="${day.full}, ${hour.label}" /><span class="slot-box"></span></label>`);
-        });
-      });
-    }
-    function getAvailability() {
-      const availability = { seg: [], ter: [], qua: [], qui: [], sex: [] };
-      document.querySelectorAll('input[name="availability"]:checked').forEach(input => availability[input.dataset.day].push(input.dataset.hour));
-      return availability;
-    }
-    function setAvailability(availability) {
-      document.querySelectorAll('input[name="availability"]').forEach(input => input.checked = false);
-      availabilityDays.forEach(day => {
-        const hours = Array.isArray(availability && availability[day.key]) ? availability[day.key] : [];
-        hours.forEach(hour => {
-          const input = document.getElementById(`availability_${day.key}_${hour}`);
-          if (input) input.checked = true;
-        });
-      });
     }
 
     async function initialize() {
@@ -183,19 +131,19 @@
       document.getElementById("birthDate").value = formatBirthDateFromIso(profile.date_of_birth || "");
       document.getElementById("cpf").value = formatCpf(profile.cpf || "");
       document.getElementById("whatsapp").value = profile.whatsapp || "";
-      document.getElementById("pixKey").value = profile.pix_key || "";
-      setAvailability(profile.availability || {});
     }
 
     document.getElementById("cpf").addEventListener("input", function () { this.value = formatCpf(this.value); });
     document.getElementById("birthDate").addEventListener("input", function () { this.value = formatBirthDateInput(this.value); });
+
     document.getElementById("completeProfileForm").addEventListener("submit", async function (event) {
       event.preventDefault();
       const message = document.getElementById("message");
       const button = document.getElementById("submitButton");
       message.textContent = "";
       button.disabled = true;
-      button.textContent = "SALVANDO...";
+      button.textContent = "LIBERANDO ACESSO...";
+
       try {
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
         const user = await Auth.getUser();
@@ -212,19 +160,17 @@
         await Auth.completeProfile({
           name: document.getElementById("name").value.trim(),
           cpf: document.getElementById("cpf").value.trim(),
-          whatsapp: document.getElementById("whatsapp").value.trim(),
-          pix_key: document.getElementById("pixKey").value.trim(),
-          availability: getAvailability()
+          whatsapp: document.getElementById("whatsapp").value.trim()
         });
+
         window.location.replace(getNextPath());
       } catch (error) {
         message.textContent = error.message || "Não foi possível concluir o cadastro.";
         button.disabled = false;
-        button.textContent = "CONCLUIR CADASTRO";
+        button.textContent = "ENTRAR NA ÁREA DO ESTUDANTE";
       }
     });
 
-    buildAvailabilityGrid();
     initialize();
   </script>
   <script defer src="/site_footer.js?v=20260819-4"></script>

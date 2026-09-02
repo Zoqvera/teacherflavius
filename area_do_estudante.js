@@ -7,7 +7,7 @@ const PROFESSOR_EMAIL = "flaviofreitas@ufu.br";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function redirectToLogin() {
-  window.location.href = "login.html?next=" + encodeURIComponent("area_do_estudante.html");
+  window.location.href = "/login/?next=" + encodeURIComponent("/area-do-estudante/");
 }
 
 function sleep(ms) {
@@ -111,6 +111,27 @@ function updateProfessorAreaVisibility() {
   professorSection.hidden = !isProfessorSession();
 }
 
+function countAvailabilitySlots(profile) {
+  const availability = profile && profile.availability && typeof profile.availability === "object"
+    ? profile.availability
+    : {};
+
+  return Object.keys(availability).reduce(function (total, day) {
+    return total + (Array.isArray(availability[day]) ? availability[day].length : 0);
+  }, 0);
+}
+
+function updateProfileSetupPrompt(profile) {
+  const prompt = document.getElementById("profileSetupPrompt");
+  if (!prompt) return;
+  prompt.hidden = isProfessorSession() || countAvailabilitySlots(profile) > 0;
+}
+
+function hideProfileSetupPrompt() {
+  const prompt = document.getElementById("profileSetupPrompt");
+  if (prompt) prompt.hidden = true;
+}
+
 function closeOverdueModal() {
   const modal = document.getElementById("overdueModal");
   if (modal) modal.hidden = true;
@@ -160,6 +181,7 @@ async function guardStudentArea() {
 
   if (isProfessorSession()) {
     closeOverdueModal();
+    hideProfileSetupPrompt();
   }
 
   document.body.classList.remove("auth-checking");
@@ -268,14 +290,17 @@ async function updateStatus() {
 
   if (isProfessorSession()) {
     closeOverdueModal();
+    hideProfileSetupPrompt();
     return;
   }
 
   try {
     const profile = await Auth.getProfile();
+    updateProfileSetupPrompt(profile);
     await showOverdueActivityIfNeeded(profile);
   } catch (error) {
     console.error("Não foi possível carregar o ciclo semanal do aluno:", error);
+    hideProfileSetupPrompt();
     closeOverdueModal();
   }
 }

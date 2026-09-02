@@ -9,6 +9,7 @@
   <script src="auth.js?v=20260430-3"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260430-3">
   <link rel="stylesheet" href="area_do_estudante.css?v=20260901-1">
+  <link rel="stylesheet" href="/profile_completion_prompt.css?v=20260902-1">
 </head>
 <body class="auth-checking student-dashboard">
   <div class="container">
@@ -24,6 +25,17 @@
     </div>
     <p class="dashboard-intro">Comece pelo que precisa da sua atenção agora. Os demais recursos ficam organizados por objetivo.</p>
     <div class="divider"></div>
+
+    <section id="profileSetupPrompt" class="profile-setup-prompt" aria-labelledby="profileSetupTitle" hidden>
+      <span class="profile-setup-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </span>
+      <div class="profile-setup-copy">
+        <strong id="profileSetupTitle">Informe sua disponibilidade quando puder</strong>
+        <span>Isso ajuda a organizar turmas, horários e reposições. Você pode alterar esses dados a qualquer momento.</span>
+      </div>
+      <a class="profile-setup-action" href="/perfil/#disponibilidade">INFORMAR HORÁRIOS</a>
+    </section>
 
     <div class="menu-groups">
       <section id="professorAreaSection" class="menu-group single" aria-label="Área do professor" hidden>
@@ -133,7 +145,7 @@
     </div>
   </div>
 
-  <script src="area_do_estudante.js?v=20260807-2"></script>
+  <script src="area_do_estudante.js?v=20260902-1"></script>
   <script src="animated_cards.js?v=20260430-3"></script>
   <script defer src="/mobile_top_navigation.js?v=20260820-close-1"></script>
   <script defer src="/site_footer.js?v=20260820-ux-3"></script>
