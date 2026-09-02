@@ -24,6 +24,7 @@ module.exports = [
       "site_whatsapp.js",
       "site_page_context.js",
       "site_branding.js",
+      "site_enrollment_guard.js",
       "site_footer.js",
       "global_logout.js",
       "student_access_service.js",
