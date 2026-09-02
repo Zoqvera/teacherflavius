@@ -3,6 +3,7 @@
 
   const GOOGLE_MEASUREMENT_ID = "G-11V3W5B6TG";
   const PUBLIC_SCRIPTS_IDLE_TIMEOUT_MS = 1200;
+  const SITE_ASSET_LOADER_SRC = "/site_asset_loader.js?v=20260902-1";
   const SCRIPT_ASSETS = Object.freeze({
     whatsappLeadForm: Object.freeze({
       id: "teacher-flavius-whatsapp-lead-form",
@@ -82,38 +83,12 @@
     })
   });
 
-  function loadScript(id, src, callback) {
-    var existing = document.getElementById(id);
-    if (existing) {
-      if (callback) callback();
-      return;
-    }
-    var script = document.createElement("script");
-    script.id = id;
-    script.src = src;
-    script.async = false;
-    if (callback) {
-      script.onload = callback;
-      script.onerror = callback;
-    }
-    document.head.appendChild(script);
-  }
-
   function loadScriptAsset(asset, callback) {
-    loadScript(asset.id, asset.src, callback);
-  }
-
-  function loadStylesheet(id, href) {
-    if (document.getElementById(id)) return;
-    var stylesheet = document.createElement("link");
-    stylesheet.id = id;
-    stylesheet.rel = "stylesheet";
-    stylesheet.href = href;
-    document.head.appendChild(stylesheet);
+    window.SiteAssetLoader.loadScriptAsset(asset, callback);
   }
 
   function loadStylesheetAsset(asset) {
-    loadStylesheet(asset.id, asset.href);
+    window.SiteAssetLoader.loadStylesheetAsset(asset);
   }
 
   function loadWhatsappLeadForm() {
@@ -138,7 +113,7 @@
   }
 
   function initializeWhatsappUi() {
-    var watchDynamicLinks = !window.SitePageContext.isPublicMarketingPage();
+    const watchDynamicLinks = !window.SitePageContext.isPublicMarketingPage();
     loadScriptAsset(SCRIPT_ASSETS.siteWhatsapp, function () {
       if (!window.SiteWhatsapp) return;
       window.SiteWhatsapp.initialize({ watchDynamicLinks: watchDynamicLinks });
@@ -235,8 +210,30 @@
     });
   }
 
-  // Keep the compatibility bootstrap available for browsers that cached older pages.
-  loadWhatsappLeadForm();
-  initializePrivacyAnalytics();
-  loadSiteFoundations();
+  function initializeFooterRuntime() {
+    if (!window.SiteAssetLoader) return;
+
+    // Keep the compatibility bootstrap available for browsers that cached older pages.
+    loadWhatsappLeadForm();
+    initializePrivacyAnalytics();
+    loadSiteFoundations();
+  }
+
+  function bootstrapAssetLoader() {
+    if (window.SiteAssetLoader) {
+      initializeFooterRuntime();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = SITE_ASSET_LOADER_SRC;
+    script.async = false;
+    script.addEventListener("load", initializeFooterRuntime, { once: true });
+    script.addEventListener("error", function () {
+      console.warn("Não foi possível carregar a infraestrutura de assets do site.");
+    }, { once: true });
+    document.head.appendChild(script);
+  }
+
+  bootstrapAssetLoader();
 })();

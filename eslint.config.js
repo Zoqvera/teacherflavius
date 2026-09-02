@@ -26,6 +26,7 @@ module.exports = [
       "site_branding.js",
       "site_enrollment_guard.js",
       "site_privacy_analytics.js",
+      "site_asset_loader.js",
       "site_footer.js",
       "global_logout.js",
       "student_access_service.js",
