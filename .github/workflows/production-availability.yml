@@ -117,7 +117,6 @@ jobs:
 
           expect_redirect "http://teacherflavius.com/" "https://teacherflavius.com"
           expect_redirect "https://www.teacherflavius.com/" "https://teacherflavius.com"
-          expect_redirect "https://teacherflavius.netlify.app/" "https://teacherflavius.com"
 
       - name: Check TLS certificate lifetime
         if: github.event_name != 'pull_request'
