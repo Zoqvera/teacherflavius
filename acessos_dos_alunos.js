@@ -1,19 +1,15 @@
 (function () {
   "use strict";
 
-  const RESOURCE_MAX_ATTEMPTS = 15;
-  const RESOURCE_RETRY_DELAY_MS = 150;
+  const RESOURCE_WAIT_OPTIONS = Object.freeze({
+    maxAttempts: 15,
+    delayMs: 150
+  });
   const state = {
     session: null,
     accessService: null,
     renderer: null
   };
-
-  function sleep(ms) {
-    return new Promise(function (resolve) {
-      window.setTimeout(resolve, ms);
-    });
-  }
 
   function resourcesAreReady() {
     return !!(
@@ -23,14 +19,6 @@
       window.SUPABASE_CONFIG &&
       window.Auth.isConfigured()
     );
-  }
-
-  async function waitForResources() {
-    for (let attempt = 0; attempt < RESOURCE_MAX_ATTEMPTS; attempt += 1) {
-      if (resourcesAreReady()) return true;
-      await sleep(RESOURCE_RETRY_DELAY_MS);
-    }
-    return resourcesAreReady();
   }
 
   function createAccessService() {
@@ -98,7 +86,7 @@
   }
 
   async function initializeDashboard() {
-    const ready = await waitForResources();
+    const ready = await window.ResourceWaiter.waitUntil(resourcesAreReady, RESOURCE_WAIT_OPTIONS);
 
     if (!ready) {
       const status = document.getElementById("accessStatus");
