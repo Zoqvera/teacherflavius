@@ -9,12 +9,18 @@
     (async function () {
       const response = await fetch('/radar_alunos.html', { cache: 'no-store' });
       const html = await response.text();
+      const enhancedHtml = html
+        .replace('<html lang="pt-BR">', '<html lang="pt-BR" class="tf-brand-palette">')
+        .replace('</head>', '  <link rel="stylesheet" href="/radar-de-alunos/radar_visual.css?v=20260901-1">\n</head>')
+        .replace('</body>', '  <script src="/radar-de-alunos/radar_visual.js?v=20260901-1"><\/script>\n</body>');
       document.open();
-      document.write(html.replace('<head>', '<head>\n  <base href="/">'));
+      document.write(enhancedHtml);
       document.close();
     })();
   </script>
 </head>
-<body><p>Carregando Radar de Alunos...</p>  <script defer src="/site_footer.js?v=20260814-1"></script>
+<body>
+  <p>Carregando Radar de Alunos...</p>
+  <script defer src="/site_footer.js?v=20260814-1"></script>
 </body>
 </html>
