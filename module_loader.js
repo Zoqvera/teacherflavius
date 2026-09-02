@@ -1,6 +1,7 @@
 (function () {
   "use strict";
 
+  const EXISTING_SCRIPT_CHECK_DELAY_MS = 0;
   const modulePromises = {};
 
   function validateConfig(config) {
@@ -22,33 +23,89 @@
     return config.loadErrorMessage || ("Não foi possível carregar o módulo " + config.globalName + ".");
   }
 
+  function scriptRequestCompleted(script) {
+    const readyState = String(script && script.readyState || "").toLowerCase();
+    if (readyState === "loaded" || readyState === "complete") return true;
+
+    const performanceApi = window.performance;
+    if (!script || !script.src || !performanceApi || typeof performanceApi.getEntriesByName !== "function") {
+      return false;
+    }
+
+    return performanceApi.getEntriesByName(script.src).some(function (entry) {
+      return !entry.initiatorType || entry.initiatorType === "script";
+    });
+  }
+
   function createModulePromise(config) {
     return new Promise(function (resolve, reject) {
+      let script = null;
+      let settled = false;
+      let inspectionTimer = null;
+
+      function cleanup() {
+        if (inspectionTimer !== null) {
+          window.clearTimeout(inspectionTimer);
+          inspectionTimer = null;
+        }
+        if (!script) return;
+        script.removeEventListener("load", resolveModule);
+        script.removeEventListener("error", rejectModule);
+      }
+
+      function rejectWith(message) {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error(message));
+      }
+
       function resolveModule() {
+        if (settled) return;
         const loadedModule = getLoadedModule(config.globalName);
         if (!loadedModule) {
-          reject(new Error(getMissingModuleMessage(config)));
+          rejectWith(getMissingModuleMessage(config));
           return;
         }
+        settled = true;
+        cleanup();
         resolve(loadedModule);
       }
 
       function rejectModule() {
-        reject(new Error(getLoadErrorMessage(config)));
+        rejectWith(getLoadErrorMessage(config));
       }
 
-      const existingScript = document.querySelector(config.selector);
-      if (existingScript) {
-        existingScript.addEventListener("load", resolveModule, { once: true });
-        existingScript.addEventListener("error", rejectModule, { once: true });
+      function observeScript() {
+        script.addEventListener("load", resolveModule, { once: true });
+        script.addEventListener("error", rejectModule, { once: true });
+      }
+
+      function inspectExistingScript() {
+        inspectionTimer = window.setTimeout(function () {
+          inspectionTimer = null;
+          if (settled) return;
+          if (getLoadedModule(config.globalName)) {
+            resolveModule();
+            return;
+          }
+          if (scriptRequestCompleted(script)) {
+            rejectWith(getMissingModuleMessage(config));
+          }
+        }, EXISTING_SCRIPT_CHECK_DELAY_MS);
+      }
+
+      script = document.querySelector(config.selector);
+      if (script) {
+        observeScript();
+        inspectExistingScript();
         return;
       }
 
-      const script = document.createElement("script");
+      script = document.createElement("script");
       script.src = config.src;
       script.async = true;
-      script.addEventListener("load", resolveModule, { once: true });
-      script.addEventListener("error", rejectModule, { once: true });
+      observeScript();
       document.head.appendChild(script);
     });
   }
