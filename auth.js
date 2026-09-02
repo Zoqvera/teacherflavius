@@ -8,6 +8,10 @@
     onboarding: "/complete-cadastro/",
     profile: "/perfil/"
   });
+  const MODULE_LOADER = Object.freeze({
+    selector: 'script[src^="/module_loader.js"]',
+    src: "/module_loader.js?v=20260902-1"
+  });
   const MODULES = Object.freeze({
     infrastructure: Object.freeze({
       globalName: "AuthInfrastructure",
@@ -41,46 +45,50 @@
   const ENROLLMENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const ENROLLMENT_CODE_LENGTH = 5;
 
-  const modulePromises = {};
+  let moduleLoaderPromise = null;
   let authSessionService = null;
   let studentProfileService = null;
   let activityProgressService = null;
 
-  function loadGlobalModule(config) {
-    const existingModule = window[config.globalName];
-    if (existingModule) return Promise.resolve(existingModule);
-    if (modulePromises[config.globalName]) return modulePromises[config.globalName];
+  function getModuleLoader() {
+    if (window.ModuleLoader) return Promise.resolve(window.ModuleLoader);
+    if (moduleLoaderPromise) return moduleLoaderPromise;
 
-    modulePromises[config.globalName] = new Promise(function (resolve, reject) {
-      function resolveModule() {
-        const loadedModule = window[config.globalName];
-        if (!loadedModule) {
-          reject(new Error(config.missingMessage));
+    moduleLoaderPromise = new Promise(function (resolve, reject) {
+      function resolveLoader() {
+        if (!window.ModuleLoader) {
+          reject(new Error("O carregador de módulos não foi inicializado."));
           return;
         }
-        resolve(loadedModule);
+        resolve(window.ModuleLoader);
       }
 
-      function rejectModule() {
-        reject(new Error(config.loadErrorMessage));
+      function rejectLoader() {
+        reject(new Error("Não foi possível carregar o carregador de módulos."));
       }
 
-      const existingScript = document.querySelector(config.selector);
+      const existingScript = document.querySelector(MODULE_LOADER.selector);
       if (existingScript) {
-        existingScript.addEventListener("load", resolveModule, { once: true });
-        existingScript.addEventListener("error", rejectModule, { once: true });
+        existingScript.addEventListener("load", resolveLoader, { once: true });
+        existingScript.addEventListener("error", rejectLoader, { once: true });
         return;
       }
 
       const script = document.createElement("script");
-      script.src = config.src;
+      script.src = MODULE_LOADER.src;
       script.async = true;
-      script.addEventListener("load", resolveModule, { once: true });
-      script.addEventListener("error", rejectModule, { once: true });
+      script.addEventListener("load", resolveLoader, { once: true });
+      script.addEventListener("error", rejectLoader, { once: true });
       document.head.appendChild(script);
     });
 
-    return modulePromises[config.globalName];
+    return moduleLoaderPromise;
+  }
+
+  function loadGlobalModule(config) {
+    return getModuleLoader().then(function (moduleLoader) {
+      return moduleLoader.loadGlobalModule(config);
+    });
   }
 
   function getAuthInfrastructure() {
