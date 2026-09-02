@@ -1,0 +1,30 @@
+name: Clean Code
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  javascript-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install quality tooling
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Check JavaScript syntax and lint
+        run: npm run quality
