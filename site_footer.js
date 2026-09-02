@@ -7,6 +7,11 @@
     return (window.location.pathname || "/").toLowerCase();
   }
 
+  function isHomePage() {
+    var path = currentPath();
+    return path === "/" || path === "/index.html";
+  }
+
   function isGeoContentPage() {
     var path = currentPath();
     return path.indexOf("/sobre") === 0 || path.indexOf("/recursos") === 0;
@@ -280,11 +285,11 @@
   function initializeUi() {
     installBrandPalette();
     loadAccessibility();
-    loadMobileTopNavigation();
+    if (!isHomePage()) loadMobileTopNavigation();
     if (isPublicMarketingPage()) removeEnrollmentLinks(document);
     else installEnrollmentLinkGuard();
     standardizeWhatsappLinks(document);
-    installWhatsappLinkStandardizer();
+    if (!isPublicMarketingPage()) installWhatsappLinkStandardizer();
     installWhatsappFloat();
   }
 
