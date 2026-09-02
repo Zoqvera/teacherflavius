@@ -27,6 +27,13 @@
       missingMessage: "O serviço de sessão não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de sessão."
     }),
+    authGuardService: Object.freeze({
+      globalName: "AuthGuardService",
+      selector: 'script[src^="/auth_guard_service.js"]',
+      src: "/auth_guard_service.js?v=20260902-1",
+      missingMessage: "O serviço de guarda de autenticação não foi inicializado.",
+      loadErrorMessage: "Não foi possível carregar o serviço de guarda de autenticação."
+    }),
     studentProfileService: Object.freeze({
       globalName: "StudentProfileService",
       selector: 'script[src^="/student_profile_service.js"]',
@@ -47,6 +54,7 @@
 
   let moduleLoaderPromise = null;
   let authSessionService = null;
+  let authGuardService = null;
   let studentProfileService = null;
   let activityProgressService = null;
 
@@ -151,10 +159,6 @@
     return text;
   }
 
-  function getCurrentPath() {
-    return normalizeNextPath(window.location.pathname + window.location.search, PATHS.studentArea);
-  }
-
   function getRedirectUrl() {
     return APP_ORIGIN + PATHS.login;
   }
@@ -166,10 +170,6 @@
 
   function getGoogleLinkRedirectUrl() {
     return APP_ORIGIN + PATHS.profile + "?google_linked=1";
-  }
-
-  function isOnOnboardingPage() {
-    return window.location.pathname === PATHS.onboarding;
   }
 
   function generateEnrollmentCode() {
@@ -239,6 +239,26 @@
     });
   }
 
+  function getAuthGuardService() {
+    if (authGuardService) return Promise.resolve(authGuardService);
+
+    return loadGlobalModule(MODULES.authGuardService).then(function (serviceModule) {
+      if (!authGuardService) {
+        authGuardService = serviceModule.create({
+          isConfigured: isConfigured,
+          showConfigWarning: showConfigWarning,
+          getSession: getSession,
+          ensureProfileForUser: ensureProfileForUser,
+          normalizeNextPath: normalizeNextPath,
+          loginPath: PATHS.login,
+          onboardingPath: PATHS.onboarding,
+          studentAreaPath: PATHS.studentArea
+        });
+      }
+      return authGuardService;
+    });
+  }
+
   async function ensureProfileForUser(user) {
     const service = await getStudentProfileService();
     return service.ensureProfileForUser(user);
@@ -275,30 +295,8 @@
   }
 
   async function requireAuth(options) {
-    const settings = options || {};
-    if (!isConfigured()) {
-      showConfigWarning();
-      return null;
-    }
-
-    const session = await getSession();
-    if (!session) {
-      window.location.href = PATHS.login + "?next=" + encodeURIComponent(getCurrentPath());
-      return null;
-    }
-
-    if (!settings.skipProfileCheck && !isOnOnboardingPage()) {
-      try {
-        const profile = await ensureProfileForUser(session.user);
-        if (!profile || profile.profile_completed !== true) {
-          window.location.replace(PATHS.onboarding + "?next=" + encodeURIComponent(getCurrentPath()));
-          return null;
-        }
-      } catch (error) {
-        console.error("Não foi possível verificar o cadastro do usuário:", error);
-      }
-    }
-    return session.user;
+    const service = await getAuthGuardService();
+    return service.requireAuth(options);
   }
 
   async function signUp(name, email, password) {
