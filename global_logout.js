@@ -1,9 +1,15 @@
 (function () {
+  "use strict";
+
   if (window.teacherFlavioGlobalLogoutLoaded) return;
   window.teacherFlavioGlobalLogoutLoaded = true;
 
   const BUTTON_ID = "globalLogoutButton";
   const STYLE_ID = "globalLogoutStyles";
+  const SCRIPT_LOAD_OPTIONS = Object.freeze({
+    timeoutMs: null,
+    resolveOnError: false
+  });
 
   function loadMobileTopNavigation() {
     if (window.__teacherFlaviusMobileTopNavigationLoaded) return;
@@ -14,36 +20,18 @@
     document.head.appendChild(script);
   }
 
-  function once(callback) {
-    let called = false;
-    return function () {
-      if (called) return;
-      called = true;
-      callback();
-    };
-  }
-
   function loadScript(options, callback) {
-    if (options.isReady()) {
-      callback();
-      return;
-    }
+    if (!window.ResourceWaiter || typeof window.ResourceWaiter.loadScript !== "function") return;
 
-    const done = once(function () {
-      if (options.isReady()) callback();
+    window.ResourceWaiter.loadScript({
+      selector: options.selector,
+      src: options.src,
+      isReady: options.isReady,
+      timeoutMs: SCRIPT_LOAD_OPTIONS.timeoutMs,
+      resolveOnError: SCRIPT_LOAD_OPTIONS.resolveOnError
+    }).then(function (ready) {
+      if (ready) callback();
     });
-    let script = document.querySelector(options.selector);
-
-    if (script) {
-      script.addEventListener("load", done, { once: true });
-      return;
-    }
-
-    script = document.createElement("script");
-    script.src = options.src;
-    script.defer = true;
-    script.addEventListener("load", done, { once: true });
-    document.head.appendChild(script);
   }
 
   function ensureAuthentication(callback) {
