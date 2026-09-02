@@ -9,8 +9,11 @@
     (async function () {
       const response = await fetch('/criar_exercicio.html', { cache: 'no-store' });
       const html = await response.text();
+      const enhancedHtml = html
+        .replace('<head>', '<head>\n  <base href="/">\n  <link rel="stylesheet" href="/criar-exercicio/criar_exercicio_visual.css?v=20260901-1">')
+        .replace('</body>', '  <script src="/criar-exercicio/criar_exercicio_visual.js?v=20260901-1"><\/script>\n</body>');
       document.open();
-      document.write(html.replace('<head>', '<head>\n  <base href="/">'));
+      document.write(enhancedHtml);
       document.close();
     })();
   </script>

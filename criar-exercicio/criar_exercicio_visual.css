@@ -1,0 +1,304 @@
+@import url('/brand_palette.css?v=20260820-3');
+
+html.tf-brand-palette body {
+  background: linear-gradient(145deg, #020817 0%, #031a3f 52%, #02102b 100%);
+  color: #eaf3ff;
+  font-family: 'Open Sans', system-ui, sans-serif;
+}
+
+html.tf-brand-palette .container {
+  width: min(1080px, calc(100% - 28px));
+  margin: 0 auto;
+}
+
+html.tf-brand-palette .header h1,
+html.tf-brand-palette .form-panel h2,
+html.tf-brand-palette .panel h2,
+html.tf-brand-palette .exercise-card strong,
+html.tf-brand-palette .form-panel button,
+html.tf-brand-palette .delete-exercise-button {
+  font-family: 'Montserrat', system-ui, sans-serif;
+}
+
+html.tf-brand-palette .form-panel,
+html.tf-brand-palette .panel {
+  background: linear-gradient(180deg, rgba(10,41,86,.76), rgba(3,26,63,.9));
+  border: 1px solid rgba(78,154,236,.18);
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.18);
+}
+
+html.tf-brand-palette .form-panel {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+html.tf-brand-palette .form-panel h2,
+html.tf-brand-palette .panel h2 {
+  margin-top: 0;
+  color: #f8fbff;
+  letter-spacing: -.02em;
+}
+
+html.tf-brand-palette .form-panel label {
+  color: #d7e7fb;
+  font-weight: 700;
+  margin-top: 16px;
+}
+
+html.tf-brand-palette .form-panel input {
+  min-height: 46px;
+  background: rgba(2,16,43,.72);
+  border: 1px solid rgba(191,219,254,.22);
+  border-radius: 12px;
+  color: #f8fbff;
+  font-family: 'Open Sans', system-ui, sans-serif;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+html.tf-brand-palette .form-panel input:hover {
+  border-color: rgba(78,154,236,.46);
+}
+
+html.tf-brand-palette .form-panel input:focus {
+  outline: none;
+  border-color: #4e9aec;
+  box-shadow: 0 0 0 3px rgba(78,154,236,.18);
+  background: rgba(2,16,43,.92);
+}
+
+html.tf-brand-palette .field-help {
+  margin: 10px 0 2px;
+  padding: 11px 13px;
+  border-left: 3px solid #4e9aec;
+  border-radius: 0 10px 10px 0;
+  background: rgba(78,154,236,.08);
+  color: #bcd0e8;
+}
+
+html.tf-brand-palette .schedule-grid {
+  gap: 14px;
+}
+
+/* Ação administrativa: salvar/publicar. A classe legada delete-button é ignorada aqui. */
+html.tf-brand-palette #createExerciseForm > button[type='submit'] {
+  min-height: 46px;
+  margin-top: 18px;
+  padding: 11px 18px;
+  border: 1px solid #0968bc !important;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #0968bc, #054288) !important;
+  color: #fff !important;
+  font-weight: 800;
+  letter-spacing: .02em;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(5,66,136,.24);
+  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+
+html.tf-brand-palette #createExerciseForm > button[type='submit']:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 13px 28px rgba(5,66,136,.30);
+}
+
+html.tf-brand-palette #createExerciseForm > button[type='submit']:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+html.tf-brand-palette #createExerciseForm > button[type='submit']:disabled {
+  opacity: .58;
+  cursor: wait;
+}
+
+html.tf-brand-palette #createExerciseMessage {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(191,219,254,.12);
+  background: rgba(2,16,43,.36);
+  color: #cbdcf0;
+}
+
+html.tf-brand-palette #createExerciseMessage.tf-success {
+  border-color: rgba(34,197,94,.34);
+  background: rgba(34,197,94,.09);
+  color: #bbf7d0;
+}
+
+html.tf-brand-palette #createExerciseMessage.error,
+html.tf-brand-palette #createExerciseMessage.tf-error {
+  border-color: rgba(239,68,68,.38);
+  background: rgba(239,68,68,.09);
+  color: #fecaca;
+}
+
+html.tf-brand-palette #teacherExercisesList:not(.empty):not(.error) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+}
+
+html.tf-brand-palette .exercise-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 17px;
+  background: rgba(2,16,43,.50);
+  border: 1px solid rgba(191,219,254,.13);
+  border-left: 4px solid #4e9aec;
+  border-radius: 16px;
+}
+
+html.tf-brand-palette .exercise-card.tf-status-published { border-left-color: #22c55e; }
+html.tf-brand-palette .exercise-card.tf-status-scheduled { border-left-color: #f59e0b; }
+html.tf-brand-palette .exercise-card.tf-status-inactive { border-left-color: #64748b; }
+
+html.tf-brand-palette .exercise-card strong {
+  padding-right: 86px;
+  color: #f8fbff;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+html.tf-brand-palette .exercise-card p {
+  color: #bfd0e5;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+html.tf-brand-palette .exercise-card a {
+  color: #80bfff !important;
+  overflow-wrap: anywhere;
+  text-underline-offset: 3px;
+}
+
+html.tf-brand-palette .tf-publication-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+html.tf-brand-palette .tf-publication-badge.published {
+  background: rgba(34,197,94,.13);
+  color: #bbf7d0;
+  border: 1px solid rgba(34,197,94,.32);
+}
+
+html.tf-brand-palette .tf-publication-badge.scheduled {
+  background: rgba(245,158,11,.13);
+  color: #fde68a;
+  border: 1px solid rgba(245,158,11,.34);
+}
+
+html.tf-brand-palette .tf-publication-badge.inactive {
+  background: rgba(100,116,139,.16);
+  color: #cbd5e1;
+  border: 1px solid rgba(148,163,184,.24);
+}
+
+/* Ação realmente destrutiva. */
+html.tf-brand-palette .delete-exercise-button {
+  min-height: 44px;
+  margin-top: auto;
+  padding: 10px 13px;
+  border: 1px solid rgba(239,68,68,.58) !important;
+  border-radius: 11px;
+  background: rgba(239,68,68,.10) !important;
+  color: #fecaca !important;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease;
+}
+
+html.tf-brand-palette .delete-exercise-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(239,68,68,.18) !important;
+  border-color: rgba(239,68,68,.82) !important;
+}
+
+html.tf-brand-palette .delete-exercise-button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+html.tf-brand-palette .empty,
+html.tf-brand-palette #teacherExercisesList.error {
+  border-radius: 14px;
+  border: 1px dashed rgba(191,219,254,.16);
+  background: rgba(2,16,43,.30);
+  color: #aebfd5;
+}
+
+html.tf-brand-palette #teacherExercisesList.error {
+  padding: 16px;
+  border-color: rgba(239,68,68,.34);
+  color: #fecaca;
+}
+
+html.tf-brand-palette :focus-visible {
+  outline: 3px solid rgba(78,154,236,.58);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  html.tf-brand-palette #teacherExercisesList:not(.empty):not(.error) {
+    grid-template-columns: 1fr;
+  }
+
+  html.tf-brand-palette .exercise-card strong {
+    padding-right: 0;
+    padding-top: 32px;
+  }
+}
+
+@media (max-width: 639px) {
+  html.tf-brand-palette .container {
+    width: min(100% - 20px, 1080px);
+  }
+
+  html.tf-brand-palette .form-panel,
+  html.tf-brand-palette .panel {
+    border-radius: 16px;
+  }
+
+  html.tf-brand-palette .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html.tf-brand-palette #createExerciseForm > button[type='submit'],
+  html.tf-brand-palette .delete-exercise-button {
+    width: 100%;
+  }
+}
+
+@media (hover: none) {
+  html.tf-brand-palette #createExerciseForm > button[type='submit']:hover:not(:disabled),
+  html.tf-brand-palette .delete-exercise-button:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.tf-brand-palette *,
+  html.tf-brand-palette *::before,
+  html.tf-brand-palette *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
