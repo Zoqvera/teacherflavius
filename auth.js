@@ -123,33 +123,24 @@
       });
   }
 
+  function getSupabaseClientService() {
+    const service = window.SupabaseClientService;
+    if (!service) {
+      throw new Error("O serviço do cliente Supabase não foi inicializado.");
+    }
+    return service;
+  }
+
   function isConfigured() {
-    return !!(
-      window.SUPABASE_CONFIG &&
-      window.SUPABASE_CONFIG.url &&
-      window.SUPABASE_CONFIG.anonKey &&
-      !window.SUPABASE_CONFIG.url.includes("COLE_AQUI") &&
-      !window.SUPABASE_CONFIG.anonKey.includes("COLE_AQUI")
-    );
+    return getSupabaseClientService().isConfigured();
   }
 
   function getClient() {
-    if (!isConfigured()) return null;
-    if (!window.supabase || !window.supabase.createClient) return null;
-
-    if (!window.teacherFlavioSupabase) {
-      window.teacherFlavioSupabase = window.supabase.createClient(
-        window.SUPABASE_CONFIG.url,
-        window.SUPABASE_CONFIG.anonKey
-      );
-    }
-    return window.teacherFlavioSupabase;
+    return getSupabaseClientService().getClient();
   }
 
   function requireClient() {
-    const client = getClient();
-    if (!client) throw new Error("Supabase não configurado.");
-    return client;
+    return getSupabaseClientService().requireClient();
   }
 
   function normalizeNextPath(value, fallback) {
