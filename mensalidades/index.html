@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <link rel="canonical" href="https://teacherflavius.com/mensalidades/">
+  <base href="/">
 <!-- Google Consent Mode default -->
 <script>
 window.dataLayer = window.dataLayer || [];
@@ -25,28 +27,631 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Controle de Mensalidades - Teacher Flávio</title>
-  <link rel="canonical" href="/mensalidades/">
-  <script>
-    (async function () {
-      const response = await fetch('/mensalidades.html', { cache: 'no-store' });
-      const html = await response.text();
-      const enhancedHtml = html
-        .replace('<head>', '<head>\n  <base href="/">\n  <link rel="canonical" href="/mensalidades/">')
-        .replace('href="/professor.html"', 'href="/professor/"')
-        .replace('</head>', '  <link rel="stylesheet" href="/mensalidades/mensalidades_visual.css?v=20260901-1">\n</head>')
-        .replace('</body>', '<script src="/mensalidades/mensalidades_visual.js?v=20260901-1"><\/script>\n</body>');
-      document.open();
-      document.write(enhancedHtml);
-      document.close();
-    })();
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="supabase_config.js?v=20260715-1"></script>
+    <script src="/module_loader.js?v=20260902-2"></script>
+<script src="auth.js?v=20260715-1"></script>
+  <link rel="stylesheet" href="professor.css?v=20260715-1">
+  <style>
+    .container { max-width: 1240px; }
+
+    .finance-layout {
+      display: grid;
+      gap: 22px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .summary-card,
+    .finance-panel {
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(129,140,248,0.25);
+      box-shadow: 0 18px 48px rgba(0,0,0,0.15);
+      backdrop-filter: blur(12px);
+    }
+
+    .summary-card {
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .summary-card span {
+      color: #94a3b8;
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .summary-card strong {
+      color: #f8fafc;
+      display: block;
+      font-size: clamp(24px, 4vw, 34px);
+      line-height: 1;
+    }
+
+    .summary-card.received { border-color: rgba(52,211,153,0.35); }
+    .summary-card.due-soon { border-color: rgba(251,191,36,0.35); }
+    .summary-card.overdue { border-color: rgba(248,113,113,0.38); }
+
+    .finance-panel {
+      border-radius: 22px;
+      padding: 22px;
+    }
+
+    .panel-header {
+      align-items: flex-start;
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .panel-header h2 {
+      color: #f1f5f9;
+      font-size: 22px;
+      margin: 0 0 6px;
+    }
+
+    .panel-header p {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .configured-count {
+      background: rgba(129,140,248,0.14);
+      border: 1px solid rgba(129,140,248,0.32);
+      border-radius: 999px;
+      color: #c4b5fd;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 8px 12px;
+    }
+
+    .finance-controls {
+      display: grid;
+      grid-template-columns: 180px minmax(200px, 1fr) 180px auto auto;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .control-group label,
+    .form-field label {
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .finance-input,
+    .finance-select,
+    .finance-textarea {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      color: #f8fafc;
+      font-family: Georgia, serif;
+      font-size: 14px;
+      min-height: 44px;
+      padding: 10px 12px;
+      width: 100%;
+    }
+
+    .finance-select option { color: #0f172a; }
+    .finance-textarea { min-height: 92px; resize: vertical; }
+
+    .finance-button,
+    .table-action {
+      background: rgba(129,140,248,0.14);
+      border: 1px solid rgba(129,140,248,0.38);
+      border-radius: 11px;
+      color: #c4b5fd;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0.02em;
+      min-height: 42px;
+      padding: 10px 13px;
+    }
+
+    .finance-controls .finance-button {
+      align-self: end;
+      white-space: nowrap;
+    }
+
+    .finance-button:hover,
+    .table-action:hover { background: rgba(129,140,248,0.24); }
+    .finance-button:disabled,
+    .table-action:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    .finance-button.primary,
+    .table-action.success {
+      background: rgba(16,185,129,0.14);
+      border-color: rgba(52,211,153,0.45);
+      color: #a7f3d0;
+    }
+
+    .table-action.danger {
+      background: rgba(239,68,68,0.12);
+      border-color: rgba(248,113,113,0.42);
+      color: #fca5a5;
+    }
+
+    .data-table-wrap {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      overflow-x: auto;
+    }
+
+    .data-table {
+      border-collapse: collapse;
+      min-width: 980px;
+      width: 100%;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 14px 13px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .data-table th {
+      background: rgba(15,23,42,0.62);
+      color: #94a3b8;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      position: sticky;
+      text-transform: uppercase;
+      top: 0;
+      z-index: 1;
+    }
+
+    .data-table td {
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    .data-table tbody tr:hover { background: rgba(129,140,248,0.05); }
+    .data-table tbody tr:last-child td { border-bottom: 0; }
+
+    .data-table td strong {
+      color: #f1f5f9;
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .data-table td small {
+      color: #64748b;
+      display: block;
+      font-size: 11px;
+    }
+
+    .status-pill {
+      border: 1px solid;
+      border-radius: 999px;
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 6px 9px;
+      white-space: nowrap;
+    }
+
+    .status-paid {
+      background: rgba(16,185,129,0.12);
+      border-color: rgba(52,211,153,0.38);
+      color: #a7f3d0;
+    }
+
+    .status-due-soon {
+      background: rgba(245,158,11,0.12);
+      border-color: rgba(251,191,36,0.4);
+      color: #fde68a;
+    }
+
+    .status-overdue {
+      background: rgba(239,68,68,0.12);
+      border-color: rgba(248,113,113,0.4);
+      color: #fca5a5;
+    }
+
+    .status-open {
+      background: rgba(59,130,246,0.12);
+      border-color: rgba(96,165,250,0.38);
+      color: #bfdbfe;
+    }
+
+    .table-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+    .table-action { font-size: 10px; min-height: 34px; padding: 7px 9px; }
+
+    .empty-state {
+      color: #94a3b8;
+      font-size: 14px;
+      padding: 26px 14px 8px;
+      text-align: center;
+    }
+
+    .page-message,
+    .form-message {
+      border: 1px solid rgba(129,140,248,0.28);
+      border-radius: 12px;
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 11px 13px;
+    }
+
+    .page-message { margin-bottom: 18px; }
+    .page-message.info,
+    .form-message.info { background: rgba(59,130,246,0.10); color: #bfdbfe; }
+    .page-message.success,
+    .form-message.success { background: rgba(16,185,129,0.10); color: #a7f3d0; }
+    .page-message.error,
+    .form-message.error { background: rgba(239,68,68,0.10); color: #fca5a5; }
+
+    .modal-backdrop {
+      align-items: center;
+      background: rgba(2,6,23,0.82);
+      display: none;
+      inset: 0;
+      justify-content: center;
+      padding: 18px;
+      position: fixed;
+      z-index: 10000;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal-box {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 22px;
+      box-shadow: 0 28px 80px rgba(0,0,0,0.48);
+      max-height: 90vh;
+      max-width: 620px;
+      overflow: auto;
+      padding: 22px;
+      width: 100%;
+    }
+
+    .modal-box.wide { max-width: 920px; }
+
+    .modal-header {
+      align-items: flex-start;
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .modal-header h2 { color: #f8fafc; font-size: 22px; margin: 0 0 5px; }
+    .modal-header p { color: #94a3b8; font-size: 13px; margin: 0; }
+
+    .modal-close {
+      align-items: center;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 11px;
+      color: #cbd5e1;
+      cursor: pointer;
+      display: inline-flex;
+      flex-shrink: 0;
+      font-size: 21px;
+      height: 38px;
+      justify-content: center;
+      width: 38px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .form-field { display: flex; flex-direction: column; gap: 7px; }
+    .form-field.full { grid-column: 1 / -1; }
+
+    .checkbox-field {
+      align-items: center;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      color: #cbd5e1;
+      display: flex;
+      gap: 10px;
+      min-height: 44px;
+      padding: 10px 12px;
+    }
+
+    .checkbox-field input { accent-color: #818cf8; height: 18px; width: 18px; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 960px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .finance-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .finance-controls .finance-button { width: 100%; }
+    }
+
+    @media (max-width: 620px) {
+      .summary-grid,
+      .finance-controls,
+      .form-grid { grid-template-columns: 1fr; }
+      .finance-panel { padding: 16px; }
+      .panel-header { flex-direction: column; }
+      .form-field.full { grid-column: auto; }
+      .modal-actions { flex-direction: column-reverse; }
+      .modal-actions .finance-button { width: 100%; }
+    }
+  </style>
+  <link rel="stylesheet" href="/mensalidades/mensalidades_visual.css?v=20260901-1">
 </head>
-<body>
+<body class="auth-checking">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-  <p>Carregando controle de mensalidades...</p>
+  <div class="container">
+    <div class="top-links">
+      <a class="top-link" href="/">HOME</a>
+      <a class="top-link" href="/professor/">ÁREA DO PROFESSOR</a>
+    </div>
+
+    <div class="header">
+      <div><span class="badge">TEACHER FLÁVIO</span></div>
+      <h1>Controle de Mensalidades</h1>
+      <div id="adminStatus" class="status">Verificando acesso administrativo...</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <main id="financialContent" class="finance-layout">
+      <div id="pageMessage" class="page-message" hidden></div>
+
+      <section class="summary-grid" aria-label="Resumo financeiro do mês">
+        <article class="summary-card received">
+          <span>Recebido no mês</span>
+          <strong id="summaryReceived">R$ 0,00</strong>
+        </article>
+        <article class="summary-card">
+          <span>Mensalidades pagas</span>
+          <strong id="summaryPaid">0</strong>
+        </article>
+        <article class="summary-card due-soon">
+          <span>A vencer em 7 dias</span>
+          <strong id="summaryDueSoon">0</strong>
+        </article>
+        <article class="summary-card overdue">
+          <span>Mensalidades atrasadas</span>
+          <strong id="summaryOverdue">0</strong>
+        </article>
+      </section>
+
+      <section class="finance-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Mensalidades do mês</h2>
+            <p>Consulte o mês selecionado e todas as mensalidades anteriores que ainda estão pendentes.</p>
+          </div>
+        </div>
+
+        <div class="finance-controls">
+          <div class="control-group">
+            <label for="referenceMonth">Mês de referência</label>
+            <input id="referenceMonth" class="finance-input" type="month">
+          </div>
+          <div class="control-group">
+            <label for="studentSearch">Buscar aluno</label>
+            <input id="studentSearch" class="finance-input" type="search" placeholder="Nome ou e-mail">
+          </div>
+          <div class="control-group">
+            <label for="statusFilter">Status</label>
+            <select id="statusFilter" class="finance-select">
+              <option value="all">Todos</option>
+              <option value="paid">Pagos</option>
+              <option value="due_soon">A vencer</option>
+              <option value="open">Em aberto</option>
+              <option value="overdue">Atrasados</option>
+            </select>
+          </div>
+          <button id="refreshMonthButton" class="finance-button primary" type="button">GERAR / ATUALIZAR</button>
+          <button id="exportButton" class="finance-button" type="button" disabled>BAIXAR EXCEL</button>
+        </div>
+
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Aluno</th>
+                <th>Mensalidade</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Pagamento</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tuitionTableBody"></tbody>
+          </table>
+        </div>
+        <p id="tuitionEmptyState" class="empty-state" hidden></p>
+      </section>
+
+      <section class="finance-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Configuração por aluno</h2>
+            <p>Defina o valor mensal, o dia de vencimento e quando a cobrança começa.</p>
+          </div>
+          <span id="configuredStudentsCount" class="configured-count">0 configurados</span>
+        </div>
+
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Aluno</th>
+                <th>Valor mensal</th>
+                <th>Vencimento</th>
+                <th>Início</th>
+                <th>Situação</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody id="billingStudentsBody"></tbody>
+          </table>
+        </div>
+        <p id="billingStudentsEmpty" class="empty-state" hidden></p>
+      </section>
+    </main>
+  </div>
+
+  <div id="settingsModal" class="modal-backdrop">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="settingsTitle">Configurar mensalidade</h2>
+          <p id="settingsStudentName"></p>
+        </div>
+        <button class="modal-close" type="button" data-close-modal="settingsModal" aria-label="Fechar">×</button>
+      </div>
+
+      <form id="settingsForm">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="monthlyFee">Valor mensal (R$)</label>
+            <input id="monthlyFee" class="finance-input" type="number" min="0.01" step="0.01" required>
+          </div>
+          <div class="form-field">
+            <label for="dueDay">Dia do vencimento</label>
+            <input id="dueDay" class="finance-input" type="number" min="1" max="31" step="1" required>
+          </div>
+          <div class="form-field">
+            <label for="billingStartMonth">Início da cobrança</label>
+            <input id="billingStartMonth" class="finance-input" type="month" required>
+          </div>
+          <div class="form-field">
+            <label>Situação da cobrança</label>
+            <label class="checkbox-field">
+              <input id="billingActive" type="checkbox">
+              Cobrança mensal ativa
+            </label>
+          </div>
+          <div class="form-field full">
+            <label for="billingNotes">Observações administrativas</label>
+            <textarea id="billingNotes" class="finance-textarea" placeholder="Informação opcional"></textarea>
+          </div>
+        </div>
+        <p id="settingsMessage" class="form-message" hidden></p>
+        <div class="modal-actions">
+          <button class="finance-button" type="button" data-close-modal="settingsModal">CANCELAR</button>
+          <button id="saveSettingsButton" class="finance-button primary" type="submit">SALVAR CONFIGURAÇÃO</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="paymentModal" class="modal-backdrop">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="paymentTitle">Registrar pagamento</h2>
+          <p><strong id="paymentStudentName"></strong><br><span id="paymentReference"></span></p>
+        </div>
+        <button class="modal-close" type="button" data-close-modal="paymentModal" aria-label="Fechar">×</button>
+      </div>
+
+      <form id="paymentForm">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="paymentDate">Data do pagamento</label>
+            <input id="paymentDate" class="finance-input" type="date" required>
+          </div>
+          <div class="form-field">
+            <label for="amountPaid">Valor pago (R$)</label>
+            <input id="amountPaid" class="finance-input" type="number" min="0.01" step="0.01" required>
+          </div>
+          <div class="form-field full">
+            <label for="paymentMethod">Forma de pagamento</label>
+            <select id="paymentMethod" class="finance-select" required>
+              <option value="pix">PIX</option>
+              <option value="cash">Dinheiro</option>
+              <option value="bank_transfer">Transferência bancária</option>
+              <option value="card">Cartão</option>
+              <option value="other">Outro</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label for="paymentNotes">Observações</label>
+            <textarea id="paymentNotes" class="finance-textarea" placeholder="Informação opcional"></textarea>
+          </div>
+        </div>
+        <p id="paymentMessage" class="form-message" hidden></p>
+        <div class="modal-actions">
+          <button class="finance-button" type="button" data-close-modal="paymentModal">CANCELAR</button>
+          <button id="savePaymentButton" class="finance-button primary" type="submit">REGISTRAR PAGAMENTO</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="historyModal" class="modal-backdrop">
+    <div class="modal-box wide" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="historyTitle">Histórico de mensalidades</h2>
+          <p id="historyStudentName"></p>
+        </div>
+        <button class="modal-close" type="button" data-close-modal="historyModal" aria-label="Fechar">×</button>
+      </div>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mensalidade</th>
+              <th>Vencimento</th>
+              <th>Valor devido</th>
+              <th>Pagamento</th>
+              <th>Valor pago</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+      <p id="historyEmpty" class="empty-state"></p>
+    </div>
+  </div>
+
+  <script src="mensalidades.js?v=20260819-1"></script>
+  <script src="animated_cards.js?v=20260715-1"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script defer src="/site_footer.js?v=20260814-1"></script>
+  <script src="/mensalidades/mensalidades_visual.js?v=20260901-1"></script>
 </body>
 </html>
