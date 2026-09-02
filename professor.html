@@ -58,6 +58,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <a class="menu-button" href="/relatorios/" draggable="true" data-card-id="relatorios"><span><span class="icon" aria-hidden="true"></span>RELATÓRIOS</span><span class="arrow">›</span></a>
     </div>
   </div>
+  <script src="/resource_waiter.js?v=20260902-2"></script>
   <script>
     (function () {
       const STORAGE_KEY = "teacherFlavius.professorCardOrder.v1";
@@ -80,15 +81,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const status = document.getElementById("upcomingBirthdaysStatus");
       const list = document.getElementById("upcomingBirthdaysList");
       const DAY_MS = 86400000;
+      const AUTH_MAX_ATTEMPTS = 40;
+      const AUTH_RETRY_DELAY_MS = 100;
 
-      function sleep(ms) { return new Promise(function(resolve){ setTimeout(resolve, ms); }); }
+      function authResourcesAreReady() {
+        return !!(
+          window.Auth &&
+          typeof window.Auth.getClient === "function" &&
+          typeof window.Auth.getSession === "function"
+        );
+      }
 
-      async function waitForAuth() {
-        for (let attempt = 0; attempt < 40; attempt++) {
-          if (window.Auth && Auth.getClient && Auth.getSession) return true;
-          await sleep(100);
-        }
-        return false;
+      function waitForAuth() {
+        if (!window.ResourceWaiter) return Promise.resolve(false);
+
+        return window.ResourceWaiter.waitUntil(authResourcesAreReady, {
+          maxAttempts: AUTH_MAX_ATTEMPTS,
+          delayMs: AUTH_RETRY_DELAY_MS,
+          finalCheck: false
+        });
       }
 
       function saoPauloTodayParts() {
@@ -196,8 +207,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       async function initializeBirthdaysCard() {
         try {
           if (!(await waitForAuth())) throw new Error("Autenticação indisponível.");
-          const session = await Auth.getSession();
-          const client = Auth.getClient();
+          const session = await window.Auth.getSession();
+          const client = window.Auth.getClient();
           if (!session || !session.user || !client) throw new Error("Sessão não encontrada.");
 
           const adminResponse = await client.rpc("is_teacher_admin");
@@ -229,7 +240,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
     })();
   </script>
-  <script src="professor_home.js?v=20260715-1"></script>
+  <script src="professor_home.js?v=20260902-1"></script>
   <script src="/professor/professor_icons.js?v=20260901-1"></script>
   <script src="animated_cards.js?v=20260715-1"></script>
   <script defer src="/site_footer.js?v=20260820-desktop-menu-1"></script>

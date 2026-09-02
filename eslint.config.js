@@ -4,6 +4,7 @@ module.exports = [
       "accessibility.js",
       "area_do_estudante.js",
       "acessos_dos_alunos.js",
+      "professor_home.js",
       "resource_waiter.js",
       "student_access_service.js",
       "student_access_renderer.js",
