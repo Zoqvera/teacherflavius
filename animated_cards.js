@@ -11,6 +11,23 @@
     src: "/global_logout.js?v=20260716-1"
   });
 
+  const FEATURE_MODULES = Object.freeze([
+    Object.freeze({
+      globalName: "AnimatedCardsVisuals",
+      selector: 'script[src^="/animated_cards_visuals.js"]',
+      src: "/animated_cards_visuals.js?v=20260902-1",
+      missingMessage: "O módulo visual dos cards não foi inicializado.",
+      loadErrorMessage: "Não foi possível carregar o módulo visual dos cards."
+    }),
+    Object.freeze({
+      globalName: "ClassTypeBadges",
+      selector: 'script[src^="/class_type_badges.js"]',
+      src: "/class_type_badges.js?v=20260902-1",
+      missingMessage: "O módulo de etiquetas de turma não foi inicializado.",
+      loadErrorMessage: "Não foi possível carregar o módulo de etiquetas de turma."
+    })
+  ]);
+
   function appendScriptOnce(config) {
     if (document.querySelector(config.selector)) return;
 
@@ -25,6 +42,17 @@
     if (!window.teacherFlavioGlobalLogoutLoaded) {
       appendScriptOnce(GLOBAL_LOGOUT_SCRIPT);
     }
+  }
+
+  function loadFeatureModules() {
+    const moduleLoader = window.ModuleLoader;
+    if (!moduleLoader || typeof moduleLoader.loadGlobalModule !== "function") {
+      return Promise.reject(new Error("O carregador de módulos não está disponível para os cards animados."));
+    }
+
+    return Promise.all(FEATURE_MODULES.map(function (config) {
+      return moduleLoader.loadGlobalModule(config);
+    }));
   }
 
   function initializeModule(globalName) {
@@ -56,8 +84,15 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  function initialize() {
+  async function initialize() {
     loadSharedExtensions();
+
+    try {
+      await loadFeatureModules();
+    } catch (error) {
+      console.warn("Não foi possível carregar todos os módulos dos cards animados:", error);
+    }
+
     initializeFeatures();
     observeDynamicContent();
   }
