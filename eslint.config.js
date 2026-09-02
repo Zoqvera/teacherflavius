@@ -5,6 +5,7 @@ module.exports = [
       "area_do_estudante.js",
       "acessos_dos_alunos.js",
       "auth.js",
+      "auth_infrastructure.js",
       "google_auth_ui.js"
     ],
     languageOptions: {
