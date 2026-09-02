@@ -30,6 +30,7 @@
 
     cards.forEach(function (card) {
       const done = card.classList.contains('done');
+      const stateKey = done ? 'done' : 'open';
       const heading = card.querySelector('h2');
       const title = heading ? heading.textContent.trim() : 'Lição de gramática';
 
@@ -39,7 +40,8 @@
         state.className = 'lesson-state';
         heading.parentNode.insertBefore(state, heading);
       }
-      if (state) {
+      if (state && state.dataset.visualState !== stateKey) {
+        state.dataset.visualState = stateKey;
         state.innerHTML = (done ? iconCheck() : iconBook()) + '<span>' + (done ? 'Concluída' : 'Em estudo') + '</span>';
       }
 
@@ -47,7 +49,10 @@
 
       const exercise = card.querySelector('.exercise-link');
       if (exercise) {
-        exercise.innerHTML = iconBook() + '<span>ABRIR EXERCÍCIOS</span>';
+        if (exercise.dataset.visualEnhanced !== 'true') {
+          exercise.dataset.visualEnhanced = 'true';
+          exercise.innerHTML = iconBook() + '<span>ABRIR EXERCÍCIOS</span>';
+        }
         exercise.setAttribute('aria-label', 'Abrir exercícios de ' + title + ' em nova aba');
       }
 
@@ -78,19 +83,13 @@
     const total = cards.length;
     const done = cards.filter(function (card) { return card.classList.contains('done'); }).length;
     const percent = total ? Math.round((done / total) * 100) : 0;
+    const nextText = total ? (done + ' de ' + total + ' aulas concluídas') : 'Nenhuma aula disponível no momento';
 
-    if (!total) {
-      text.textContent = 'Nenhuma aula disponível no momento';
-    } else if (done === total) {
-      text.textContent = done + ' de ' + total + ' aulas concluídas';
-    } else {
-      text.textContent = done + ' de ' + total + ' aulas concluídas';
-    }
-
+    if (text.textContent !== nextText) text.textContent = nextText;
     track.setAttribute('aria-valuemax', String(total));
     track.setAttribute('aria-valuenow', String(done));
     track.setAttribute('aria-valuetext', done + ' de ' + total + ' aulas concluídas');
-    fill.style.width = percent + '%';
+    if (fill.style.width !== percent + '%') fill.style.width = percent + '%';
     panel.classList.toggle('is-complete', total > 0 && done === total);
   }
 
@@ -98,8 +97,13 @@
     const grid = document.getElementById('grammarLessons');
     if (!grid) return;
 
-    const observer = new MutationObserver(function () {
-      updateLessonPresentation();
+    const observer = new MutationObserver(function (mutations) {
+      const relevant = mutations.some(function (mutation) {
+        if (mutation.type === 'attributes') return mutation.target.classList && mutation.target.classList.contains('grammar-card');
+        if (mutation.type === 'childList') return mutation.target === grid;
+        return false;
+      });
+      if (relevant) updateLessonPresentation();
     });
 
     observer.observe(grid, {
@@ -112,17 +116,15 @@
 
   function enhanceLoadingState() {
     const grid = document.getElementById('grammarLessons');
-    if (grid) {
-      grid.setAttribute('aria-live', 'polite');
-      grid.setAttribute('aria-busy', 'true');
-    }
+    if (!grid) return;
+
+    grid.setAttribute('aria-live', 'polite');
+    grid.setAttribute('aria-busy', 'true');
 
     const observer = new MutationObserver(function () {
-      if (!grid) return;
-      const hasRenderedState = grid.children.length > 0;
-      if (hasRenderedState) grid.setAttribute('aria-busy', 'false');
+      if (grid.children.length > 0) grid.setAttribute('aria-busy', 'false');
     });
-    if (grid) observer.observe(grid, { childList: true });
+    observer.observe(grid, { childList: true });
   }
 
   function init() {
