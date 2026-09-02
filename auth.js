@@ -1,37 +1,50 @@
 (function () {
-  function loadAnimatedCardsAssets() {
-    function inject() {
-      if (!document.querySelector('link[href^="animated_cards.css"]')) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "animated_cards.css?v=20260429-6";
-        document.head.appendChild(link);
-      }
-      if (!document.querySelector('script[src^="animated_cards.js"]')) {
-        const script = document.createElement("script");
-        script.src = "animated_cards.js?v=20260716-logout-1";
-        script.defer = true;
-        document.body.appendChild(script);
-      }
+  "use strict";
+
+  const APP_ORIGIN = "https://teacherflavius.com";
+  const PATHS = Object.freeze({
+    studentArea: "/area-do-estudante/",
+    login: "/login/",
+    onboarding: "/complete-cadastro/",
+    profile: "/perfil/"
+  });
+  const ENROLLMENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const ENROLLMENT_CODE_LENGTH = 5;
+  const AVAILABILITY_DAYS = Object.freeze(["seg", "ter", "qua", "qui", "sex"]);
+  const AVAILABILITY_HOURS = Object.freeze(["09", "10", "12", "13", "15", "17", "18", "20", "21"]);
+  const GOOGLE_PROVIDER = "google";
+
+  function runWhenDomReady(callback) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", callback, { once: true });
+      return;
     }
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
-    else inject();
+    callback();
   }
 
-  function loadStudentAccessTracker() {
-    function inject() {
-      if (document.querySelector('script[src^="/student_access_tracker.js"]')) return;
-      const script = document.createElement("script");
-      script.src = "/student_access_tracker.js?v=20260730-2";
-      script.defer = true;
-      document.body.appendChild(script);
-    }
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
-    else inject();
+  function appendStylesheetOnce(selector, href) {
+    if (document.querySelector(selector)) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
   }
 
-  loadAnimatedCardsAssets();
-  loadStudentAccessTracker();
+  function appendScriptOnce(selector, src) {
+    if (document.querySelector(selector)) return;
+    const script = document.createElement("script");
+    script.src = src;
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
+  function loadSharedAssets() {
+    runWhenDomReady(function () {
+      appendStylesheetOnce('link[href^="animated_cards.css"]', "animated_cards.css?v=20260429-6");
+      appendScriptOnce('script[src^="animated_cards.js"]', "animated_cards.js?v=20260716-logout-1");
+      appendScriptOnce('script[src^="/student_access_tracker.js"]', "/student_access_tracker.js?v=20260730-2");
+    });
+  }
 
   function isConfigured() {
     return !!(
@@ -46,6 +59,7 @@
   function getClient() {
     if (!isConfigured()) return null;
     if (!window.supabase || !window.supabase.createClient) return null;
+
     if (!window.teacherFlavioSupabase) {
       window.teacherFlavioSupabase = window.supabase.createClient(
         window.SUPABASE_CONFIG.url,
@@ -55,31 +69,51 @@
     return window.teacherFlavioSupabase;
   }
 
-  function getRedirectUrl() { return "https://teacherflavius.com/login/"; }
+  function requireClient() {
+    const client = getClient();
+    if (!client) throw new Error("Supabase não configurado.");
+    return client;
+  }
 
   function normalizeNextPath(value, fallback) {
-    const safeFallback = fallback || "/area-do-estudante/";
+    const safeFallback = fallback || PATHS.studentArea;
     const text = String(value || "").trim();
     if (!text || !text.startsWith("/") || text.startsWith("//")) return safeFallback;
     return text;
   }
 
   function getCurrentPath() {
-    return normalizeNextPath(window.location.pathname + window.location.search, "/area-do-estudante/");
+    return normalizeNextPath(window.location.pathname + window.location.search, PATHS.studentArea);
+  }
+
+  function getRedirectUrl() {
+    return APP_ORIGIN + PATHS.login;
   }
 
   function getGoogleRedirectUrl(nextPath) {
-    const next = normalizeNextPath(nextPath, "/area-do-estudante/");
-    return "https://teacherflavius.com/login/?oauth=google&next=" + encodeURIComponent(next);
+    const next = normalizeNextPath(nextPath, PATHS.studentArea);
+    return APP_ORIGIN + PATHS.login + "?oauth=google&next=" + encodeURIComponent(next);
   }
 
-  function getGoogleLinkRedirectUrl() { return "https://teacherflavius.com/perfil/?google_linked=1"; }
-  function isOnOnboardingPage() { return window.location.pathname === "/complete-cadastro/" || window.location.pathname.endsWith("/complete-cadastro.html"); }
-  function isOnLoginPage() { return window.location.pathname === "/login/" || window.location.pathname.endsWith("/login.html"); }
-  function isOnProfilePage() { return window.location.pathname === "/perfil/" || window.location.pathname.endsWith("/perfil.html"); }
+  function getGoogleLinkRedirectUrl() {
+    return APP_ORIGIN + PATHS.profile + "?google_linked=1";
+  }
+
+  function isOnOnboardingPage() {
+    return window.location.pathname === PATHS.onboarding;
+  }
+
+  function isOnLoginPage() {
+    return window.location.pathname === PATHS.login;
+  }
+
+  function isOnProfilePage() {
+    return window.location.pathname === PATHS.profile;
+  }
 
   function showConfigWarning() {
     if (document.getElementById("supabase-config-warning")) return;
+
     const warning = document.createElement("div");
     warning.id = "supabase-config-warning";
     warning.style.position = "fixed";
@@ -100,23 +134,37 @@
   }
 
   function generateEnrollmentCode() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
-    for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    for (let index = 0; index < ENROLLMENT_CODE_LENGTH; index += 1) {
+      const randomIndex = Math.floor(Math.random() * ENROLLMENT_CODE_ALPHABET.length);
+      code += ENROLLMENT_CODE_ALPHABET[randomIndex];
+    }
     return code;
   }
 
-  function normalizeCpf(cpf) { return String(cpf || "").replace(/\D/g, ""); }
-  function normalizeWhatsapp(whatsapp) { return String(whatsapp || "").replace(/\D/g, ""); }
-  function normalizePixKey(pixKey) { return String(pixKey || "").trim(); }
+  function normalizeDigits(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function normalizeCpf(cpf) {
+    return normalizeDigits(cpf);
+  }
+
+  function normalizeWhatsapp(whatsapp) {
+    return normalizeDigits(whatsapp);
+  }
+
+  function normalizePixKey(pixKey) {
+    return String(pixKey || "").trim();
+  }
 
   function normalizeAvailability(availability) {
-    const days = ["seg", "ter", "qua", "qui", "sex"];
-    const hours = ["09", "10", "12", "13", "15", "17", "18", "20", "21"];
     const normalized = {};
-    days.forEach(function (day) {
+    AVAILABILITY_DAYS.forEach(function (day) {
       const selected = Array.isArray(availability && availability[day]) ? availability[day] : [];
-      normalized[day] = selected.filter(function (hour) { return hours.includes(hour); });
+      normalized[day] = selected.filter(function (hour) {
+        return AVAILABILITY_HOURS.includes(hour);
+      });
     });
     return normalized;
   }
@@ -128,15 +176,75 @@
   }
 
   function availabilityToProfileColumns(availability) {
-    const days = ["seg", "ter", "qua", "qui", "sex"];
-    const hours = ["09", "10", "12", "13", "15", "17", "18", "20", "21"];
     const columns = {};
-    days.forEach(function (day) {
-      hours.forEach(function (hour) {
+    AVAILABILITY_DAYS.forEach(function (day) {
+      AVAILABILITY_HOURS.forEach(function (hour) {
         columns["availability_" + day + "_" + hour] = Array.isArray(availability[day]) && availability[day].includes(hour);
       });
     });
     return columns;
+  }
+
+  function normalizeStudentInput(data) {
+    const source = data || {};
+    return {
+      name: source.name || "",
+      email: source.email || "",
+      password: source.password || "",
+      cpf: normalizeCpf(source.cpf),
+      whatsapp: normalizeWhatsapp(source.whatsapp),
+      pixKey: normalizePixKey(source.pix_key),
+      availability: normalizeAvailability(source.availability)
+    };
+  }
+
+  function validateStudentInput(input, requiredFieldsMessage, options) {
+    const settings = options || {};
+    const hasRequiredIdentity = input.name && input.cpf && input.whatsapp && input.pixKey;
+    const hasEnrollmentCredentials = !settings.requireEnrollmentCredentials || (input.email && input.password);
+
+    if (!hasRequiredIdentity || !hasEnrollmentCredentials) throw new Error(requiredFieldsMessage);
+    if (input.cpf.length !== 11) throw new Error("CPF inválido. Informe 11 dígitos.");
+    if (input.whatsapp.length < 10) throw new Error("WhatsApp inválido.");
+    if (countAvailabilitySlots(input.availability) === 0) {
+      throw new Error("Selecione pelo menos um horário disponível para aulas durante a semana.");
+    }
+  }
+
+  function buildProfilePayload(options) {
+    const input = options.input;
+    return Object.assign({
+      id: options.userId,
+      name: input.name,
+      email: options.email || "",
+      cpf: input.cpf,
+      whatsapp: input.whatsapp,
+      pix_key: input.pixKey,
+      availability: input.availability,
+      enrollment_code: options.enrollmentCode || "",
+      enrolled: options.enrolled === true,
+      profile_completed: true
+    }, availabilityToProfileColumns(input.availability));
+  }
+
+  function buildUserMetadata(input, enrollmentCode, enrolled) {
+    return {
+      name: input.name,
+      cpf: input.cpf,
+      whatsapp: input.whatsapp,
+      pix_key: input.pixKey,
+      availability: input.availability,
+      enrollment_code: enrollmentCode || "",
+      enrolled: enrolled === true,
+      profile_completed: true
+    };
+  }
+
+  async function updateAuthMetadata(client, input, enrollmentCode, enrolled) {
+    const response = await client.auth.updateUser({
+      data: buildUserMetadata(input, enrollmentCode, enrolled)
+    });
+    if (response.error) throw response.error;
   }
 
   async function getSession() {
@@ -156,9 +264,11 @@
   async function ensureProfileForUser(user) {
     const client = getClient();
     if (!client || !user) return null;
+
     const existing = await client.from("profiles").select("*").eq("id", user.id).maybeSingle();
     if (existing.error) throw existing.error;
     if (existing.data) return existing.data;
+
     const metadata = user.user_metadata || {};
     const payload = {
       id: user.id,
@@ -178,16 +288,18 @@
       showConfigWarning();
       return null;
     }
+
     const session = await getSession();
     if (!session) {
-      window.location.href = "/login/?next=" + encodeURIComponent(getCurrentPath());
+      window.location.href = PATHS.login + "?next=" + encodeURIComponent(getCurrentPath());
       return null;
     }
+
     if (!settings.skipProfileCheck && !isOnOnboardingPage()) {
       try {
         const profile = await ensureProfileForUser(session.user);
         if (!profile || profile.profile_completed !== true) {
-          window.location.replace("/complete-cadastro/?next=" + encodeURIComponent(getCurrentPath()));
+          window.location.replace(PATHS.onboarding + "?next=" + encodeURIComponent(getCurrentPath()));
           return null;
         }
       } catch (error) {
@@ -198,8 +310,7 @@
   }
 
   async function signUp(name, email, password) {
-    const client = getClient();
-    if (!client) throw new Error("Supabase não configurado.");
+    const client = requireClient();
     const response = await client.auth.signUp({
       email: email,
       password: password,
@@ -207,72 +318,61 @@
     });
     if (response.error) throw response.error;
     if (response.data && response.data.user) {
-      await client.from("profiles").upsert({ id: response.data.user.id, name: name, email: email, profile_completed: true });
+      await client.from("profiles").upsert({
+        id: response.data.user.id,
+        name: name,
+        email: email,
+        profile_completed: true
+      });
     }
     return response.data;
   }
 
   async function enrollStudent(data) {
-    const client = getClient();
-    if (!client) throw new Error("Supabase não configurado.");
+    const client = requireClient();
+    const input = normalizeStudentInput(data);
+    validateStudentInput(input, "Preencha todos os campos da matrícula.", { requireEnrollmentCredentials: true });
+
     const enrollmentCode = generateEnrollmentCode();
-    const cleanCpf = normalizeCpf(data.cpf);
-    const cleanWhatsapp = normalizeWhatsapp(data.whatsapp);
-    const pixKey = normalizePixKey(data.pix_key);
-    const availability = normalizeAvailability(data.availability);
-    const availabilityColumns = availabilityToProfileColumns(availability);
-    if (!data.name || !data.email || !data.password || !cleanCpf || !cleanWhatsapp || !pixKey) throw new Error("Preencha todos os campos da matrícula.");
-    if (cleanCpf.length !== 11) throw new Error("CPF inválido. Informe 11 dígitos.");
-    if (cleanWhatsapp.length < 10) throw new Error("WhatsApp inválido.");
-    if (countAvailabilitySlots(availability) === 0) throw new Error("Selecione pelo menos um horário disponível para aulas durante a semana.");
-    const enrollmentMetadata = {
-      name: data.name,
-      cpf: cleanCpf,
-      whatsapp: cleanWhatsapp,
-      pix_key: pixKey,
-      availability: availability,
-      enrollment_code: enrollmentCode,
-      enrolled: true,
-      profile_completed: true
-    };
+    const enrollmentMetadata = buildUserMetadata(input, enrollmentCode, true);
     const response = await client.auth.signUp({
-      email: data.email,
-      password: data.password,
+      email: input.email,
+      password: input.password,
       options: { data: enrollmentMetadata, emailRedirectTo: getRedirectUrl() }
     });
     if (response.error) throw response.error;
+
     if (response.data && response.data.user) {
-      const profilePayload = Object.assign({
-        id: response.data.user.id,
-        name: data.name,
-        email: data.email,
-        cpf: cleanCpf,
-        whatsapp: cleanWhatsapp,
-        pix_key: pixKey,
-        availability: availability,
-        enrollment_code: enrollmentCode,
-        enrolled: true,
-        profile_completed: true
-      }, availabilityColumns);
+      const profilePayload = buildProfilePayload({
+        userId: response.data.user.id,
+        email: input.email,
+        input: input,
+        enrollmentCode: enrollmentCode,
+        enrolled: true
+      });
       const profileResponse = await client.from("profiles").upsert(profilePayload).select().single();
-      if (profileResponse.error) console.warn("Não foi possível atualizar profiles com os dados de matrícula:", profileResponse.error.message);
+      if (profileResponse.error) {
+        console.warn("Não foi possível atualizar profiles com os dados de matrícula:", profileResponse.error.message);
+      }
     }
-    return { user: response.data ? response.data.user : null, enrollment_code: enrollmentCode };
+
+    return {
+      user: response.data ? response.data.user : null,
+      enrollment_code: enrollmentCode
+    };
   }
 
   async function signIn(email, password) {
-    const client = getClient();
-    if (!client) throw new Error("Supabase não configurado.");
+    const client = requireClient();
     const response = await client.auth.signInWithPassword({ email: email, password: password });
     if (response.error) throw response.error;
     return response.data;
   }
 
   async function signInWithGoogle(nextPath) {
-    const client = getClient();
-    if (!client) throw new Error("Supabase não configurado.");
+    const client = requireClient();
     const response = await client.auth.signInWithOAuth({
-      provider: "google",
+      provider: GOOGLE_PROVIDER,
       options: {
         redirectTo: getGoogleRedirectUrl(nextPath),
         queryParams: { prompt: "select_account" }
@@ -286,8 +386,9 @@
     const client = getClient();
     const user = await getUser();
     if (!client || !user) throw new Error("Entre na sua conta antes de vincular o Google.");
+
     const response = await client.auth.linkIdentity({
-      provider: "google",
+      provider: GOOGLE_PROVIDER,
       options: { redirectTo: getGoogleLinkRedirectUrl() }
     });
     if (response.error) throw response.error;
@@ -305,18 +406,20 @@
   async function signOut() {
     const client = getClient();
     if (!client) {
-      window.location.replace("/login/?logged_out=1");
+      window.location.replace(PATHS.login + "?logged_out=1");
       return;
     }
+
     const response = await client.auth.signOut({ scope: "local" });
     if (response.error) throw response.error;
-    window.location.replace("/login/?logged_out=1");
+    window.location.replace(PATHS.login + "?logged_out=1");
   }
 
   async function getProfile() {
     const client = getClient();
     const user = await getUser();
     if (!client || !user) return null;
+
     const response = await client.from("profiles").select("*").eq("id", user.id).maybeSingle();
     const metadata = user.user_metadata || {};
     const fallbackProfile = {
@@ -339,41 +442,24 @@
     const client = getClient();
     const user = await getUser();
     if (!client || !user) throw new Error("Usuário não autenticado.");
-    const cleanCpf = normalizeCpf(data.cpf);
-    const cleanWhatsapp = normalizeWhatsapp(data.whatsapp);
-    const pixKey = normalizePixKey(data.pix_key);
-    const availability = normalizeAvailability(data.availability);
-    const availabilityColumns = availabilityToProfileColumns(availability);
-    if (!data.name || !cleanCpf || !cleanWhatsapp || !pixKey) throw new Error("Preencha nome, CPF, WhatsApp e chave PIX.");
-    if (cleanCpf.length !== 11) throw new Error("CPF inválido. Informe 11 dígitos.");
-    if (cleanWhatsapp.length < 10) throw new Error("WhatsApp inválido.");
-    if (countAvailabilitySlots(availability) === 0) throw new Error("Selecione pelo menos um horário disponível para aulas durante a semana.");
+
+    const input = normalizeStudentInput(data);
+    validateStudentInput(input, "Preencha nome, CPF, WhatsApp e chave PIX.");
+
     const currentProfile = await getProfile();
-    const profilePayload = Object.assign({
-      id: user.id,
-      name: data.name,
+    const enrollmentCode = currentProfile && currentProfile.enrollment_code || "";
+    const enrolled = currentProfile && currentProfile.enrolled === true;
+    const profilePayload = buildProfilePayload({
+      userId: user.id,
       email: user.email,
-      cpf: cleanCpf,
-      whatsapp: cleanWhatsapp,
-      pix_key: pixKey,
-      availability: availability,
-      enrollment_code: currentProfile && currentProfile.enrollment_code || "",
-      enrolled: currentProfile && currentProfile.enrolled === true,
-      profile_completed: true
-    }, availabilityColumns);
+      input: input,
+      enrollmentCode: enrollmentCode,
+      enrolled: enrolled
+    });
+
     const profileResponse = await client.from("profiles").upsert(profilePayload).select().single();
     if (profileResponse.error) throw profileResponse.error;
-    const metadataResponse = await client.auth.updateUser({ data: {
-      name: data.name,
-      cpf: cleanCpf,
-      whatsapp: cleanWhatsapp,
-      pix_key: pixKey,
-      availability: availability,
-      enrollment_code: profilePayload.enrollment_code,
-      enrolled: profilePayload.enrolled,
-      profile_completed: true
-    }});
-    if (metadataResponse.error) throw metadataResponse.error;
+    await updateAuthMetadata(client, input, enrollmentCode, enrolled);
     return profileResponse.data;
   }
 
@@ -381,41 +467,24 @@
     const client = getClient();
     const user = await getUser();
     if (!client || !user) throw new Error("Sua sessão expirou. Entre novamente.");
-    const cleanCpf = normalizeCpf(data.cpf);
-    const cleanWhatsapp = normalizeWhatsapp(data.whatsapp);
-    const pixKey = normalizePixKey(data.pix_key);
-    const availability = normalizeAvailability(data.availability);
-    const availabilityColumns = availabilityToProfileColumns(availability);
-    if (!data.name || !cleanCpf || !cleanWhatsapp || !pixKey) throw new Error("Preencha todos os campos obrigatórios.");
-    if (cleanCpf.length !== 11) throw new Error("CPF inválido. Informe 11 dígitos.");
-    if (cleanWhatsapp.length < 10) throw new Error("WhatsApp inválido.");
-    if (countAvailabilitySlots(availability) === 0) throw new Error("Selecione pelo menos um horário disponível para aulas durante a semana.");
+
+    const input = normalizeStudentInput(data);
+    validateStudentInput(input, "Preencha todos os campos obrigatórios.");
+
     const current = await ensureProfileForUser(user);
-    const payload = Object.assign({
-      id: user.id,
-      name: data.name,
+    const enrollmentCode = current.enrollment_code || "";
+    const enrolled = current.enrolled === true;
+    const payload = buildProfilePayload({
+      userId: user.id,
       email: user.email || current.email || "",
-      cpf: cleanCpf,
-      whatsapp: cleanWhatsapp,
-      pix_key: pixKey,
-      availability: availability,
-      enrollment_code: current.enrollment_code || "",
-      enrolled: current.enrolled === true,
-      profile_completed: true
-    }, availabilityColumns);
+      input: input,
+      enrollmentCode: enrollmentCode,
+      enrolled: enrolled
+    });
+
     const saved = await client.from("profiles").upsert(payload).select().single();
     if (saved.error) throw saved.error;
-    const metadataResponse = await client.auth.updateUser({ data: {
-      name: data.name,
-      cpf: cleanCpf,
-      whatsapp: cleanWhatsapp,
-      pix_key: pixKey,
-      availability: availability,
-      enrollment_code: payload.enrollment_code,
-      enrolled: payload.enrolled,
-      profile_completed: true
-    }});
-    if (metadataResponse.error) throw metadataResponse.error;
+    await updateAuthMetadata(client, input, enrollmentCode, enrolled);
     return saved.data;
   }
 
@@ -423,6 +492,7 @@
     const client = getClient();
     const user = await getUser();
     if (!client || !user) return null;
+
     const payload = {
       user_id: user.id,
       activity_type: result.activity_type || result.type || "activity",
@@ -444,7 +514,12 @@
     const client = getClient();
     const user = await getUser();
     if (!client || !user) return [];
-    const response = await client.from("activity_results").select("*").eq("user_id", user.id).order("completed_at", { ascending: false });
+
+    const response = await client
+      .from("activity_results")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("completed_at", { ascending: false });
     if (response.error) return [];
     return response.data || [];
   }
@@ -460,15 +535,17 @@
   async function finishGoogleLogin() {
     if (!isOnLoginPage()) return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("oauth") !== "google") return;
+    if (params.get("oauth") !== GOOGLE_PROVIDER) return;
+
     const errorBox = document.getElementById("error");
     try {
       const session = await getSession();
       if (!session || !session.user) throw new Error("Não foi possível concluir o login com Google.");
+
       const profile = await ensureProfileForUser(session.user);
-      const next = normalizeNextPath(params.get("next"), "/area-do-estudante/");
+      const next = normalizeNextPath(params.get("next"), PATHS.studentArea);
       if (!profile || profile.profile_completed !== true) {
-        window.location.replace("/complete-cadastro/?next=" + encodeURIComponent(next));
+        window.location.replace(PATHS.onboarding + "?next=" + encodeURIComponent(next));
         return;
       }
       window.location.replace(next);
@@ -481,20 +558,23 @@
     if (!isOnLoginPage()) return;
     const form = document.getElementById("loginForm");
     if (!form || document.getElementById("googleLoginBlock")) return;
+
     injectGoogleStyles();
     const block = document.createElement("div");
     block.id = "googleLoginBlock";
     block.className = "google-auth-block";
     block.innerHTML = `<button id="googleLoginButton" class="google-auth-button" type="button"><span class="google-auth-g">G</span> CONTINUAR COM GOOGLE</button><div class="google-auth-note">Alunos atuais: para preservar todo o histórico, entre primeiro com seu e-mail e senha e vincule o Google em Meu Perfil.</div><div class="google-auth-divider"><span>OU</span></div>`;
     form.parentNode.insertBefore(block, form);
+
     const button = document.getElementById("googleLoginButton");
     button.addEventListener("click", async function () {
       const params = new URLSearchParams(window.location.search);
-      const next = normalizeNextPath(params.get("next"), "/area-do-estudante/");
+      const next = normalizeNextPath(params.get("next"), PATHS.studentArea);
       button.disabled = true;
       button.textContent = "ABRINDO GOOGLE...";
-      try { await signInWithGoogle(next); }
-      catch (error) {
+      try {
+        await signInWithGoogle(next);
+      } catch (error) {
         button.disabled = false;
         button.innerHTML = '<span class="google-auth-g">G</span> CONTINUAR COM GOOGLE';
         const errorBox = document.getElementById("error");
@@ -508,21 +588,29 @@
     if (!isOnProfilePage()) return;
     const container = document.querySelector(".container");
     if (!container || document.getElementById("googleIdentityCard")) return;
+
     injectGoogleStyles();
     const firstCard = container.querySelector(".card");
     const card = document.createElement("div");
     card.id = "googleIdentityCard";
     card.className = "card";
     card.innerHTML = `<h2>Formas de acesso</h2><p id="googleIdentityStatus" class="google-link-status">Verificando sua conta Google...</p><button id="linkGoogleButton" type="button" class="primary" hidden>VINCULAR CONTA GOOGLE</button><div id="googleIdentityMessage" class="message"></div>`;
-    if (firstCard) container.insertBefore(card, firstCard); else container.appendChild(card);
+    if (firstCard) container.insertBefore(card, firstCard);
+    else container.appendChild(card);
+
     const status = document.getElementById("googleIdentityStatus");
     const button = document.getElementById("linkGoogleButton");
     const message = document.getElementById("googleIdentityMessage");
+
     try {
       const session = await getSession();
       if (!session) return;
+
       const identities = await getUserIdentities();
-      const googleIdentity = identities.find(function (identity) { return identity.provider === "google"; });
+      const googleIdentity = identities.find(function (identity) {
+        return identity.provider === GOOGLE_PROVIDER;
+      });
+
       if (googleIdentity) {
         status.classList.add("google-link-success");
         status.textContent = "✓ Conta Google vinculada. Você pode entrar com Google ou com seu login atual.";
@@ -531,6 +619,7 @@
         status.textContent = "Sua conta ainda não está vinculada ao Google.";
         button.hidden = false;
       }
+
       const params = new URLSearchParams(window.location.search);
       if (params.get("google_linked") === "1" && googleIdentity) {
         message.className = "message success";
@@ -541,13 +630,15 @@
       message.className = "message error";
       message.textContent = error.message || "Tente novamente.";
     }
+
     button.addEventListener("click", async function () {
       button.disabled = true;
       button.textContent = "ABRINDO GOOGLE...";
       message.className = "message";
       message.textContent = "";
-      try { await linkGoogleIdentity(); }
-      catch (error) {
+      try {
+        await linkGoogleIdentity();
+      } catch (error) {
         button.disabled = false;
         button.textContent = "VINCULAR CONTA GOOGLE";
         message.className = "message error";
@@ -584,6 +675,7 @@
     setupGoogleLoginUi();
     setupProfileIdentityUi();
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setupGoogleAuthUi);
-  else setupGoogleAuthUi();
+
+  loadSharedAssets();
+  runWhenDomReady(setupGoogleAuthUi);
 })();
