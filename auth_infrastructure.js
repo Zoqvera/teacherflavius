@@ -15,6 +15,14 @@
     infrastructureCss: "/auth_infrastructure.css?v=20260902-1"
   });
 
+  const RESOURCE_WAITER_MODULE = Object.freeze({
+    globalName: "ResourceWaiter",
+    selector: 'script[src^="/resource_waiter.js"]',
+    src: "/resource_waiter.js?v=20260902-1",
+    missingMessage: "O helper de espera de recursos não foi inicializado.",
+    loadErrorMessage: "Não foi possível carregar o helper de espera de recursos."
+  });
+
   function runWhenDomReady(callback) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", callback, { once: true });
@@ -41,11 +49,29 @@
     document.body.appendChild(script);
   }
 
+  function loadResourceWaiter() {
+    const moduleLoader = window.ModuleLoader;
+    if (!moduleLoader || typeof moduleLoader.loadGlobalModule !== "function") {
+      return Promise.reject(new Error("O carregador de módulos não está disponível para o rastreamento de acesso."));
+    }
+    return moduleLoader.loadGlobalModule(RESOURCE_WAITER_MODULE);
+  }
+
+  function loadAccessTracker() {
+    loadResourceWaiter()
+      .then(function () {
+        appendScriptOnce('script[src^="/student_access_tracker.js"]', ASSETS.accessTrackerJs);
+      })
+      .catch(function (error) {
+        console.warn("Não foi possível inicializar o rastreamento de acesso:", error);
+      });
+  }
+
   function loadSharedAssets() {
     runWhenDomReady(function () {
       appendStylesheetOnce('link[href^="animated_cards.css"]', ASSETS.animatedCardsCss);
       appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
-      appendScriptOnce('script[src^="/student_access_tracker.js"]', ASSETS.accessTrackerJs);
+      loadAccessTracker();
     });
   }
 
