@@ -1,7 +1,76 @@
 (function () {
   "use strict";
 
-  var GOOGLE_MEASUREMENT_ID = "G-11V3W5B6TG";
+  const GOOGLE_MEASUREMENT_ID = "G-11V3W5B6TG";
+  const PUBLIC_SCRIPTS_IDLE_TIMEOUT_MS = 1200;
+  const SCRIPT_ASSETS = Object.freeze({
+    whatsappLeadForm: Object.freeze({
+      id: "teacher-flavius-whatsapp-lead-form",
+      src: "/whatsapp_lead_form.js?v=20260902-direct-2"
+    }),
+    siteWhatsapp: Object.freeze({
+      id: "teacher-flavius-site-whatsapp",
+      src: "/site_whatsapp.js?v=20260902-1"
+    }),
+    accessibility: Object.freeze({
+      id: "teacher-flavius-accessibility",
+      src: "/accessibility.js?v=20260820-1"
+    }),
+    cro: Object.freeze({
+      id: "teacher-flavius-cro",
+      src: "/cro.js?v=20260820-1"
+    }),
+    analytics: Object.freeze({
+      id: "teacher-flavius-analytics",
+      src: "/analytics.js?v=20260820-1"
+    }),
+    analyticsAttribution: Object.freeze({
+      id: "teacher-flavius-analytics-attribution",
+      src: "/analytics_attribution.js?v=20260902-leadfix-1"
+    }),
+    privacyConsent: Object.freeze({
+      id: "teacher-flavius-privacy-consent",
+      src: "/privacy_consent.js?v=20260820-2"
+    }),
+    mobileTopNavigation: Object.freeze({
+      id: "teacher-flavius-mobile-top-navigation",
+      src: "/mobile_top_navigation.js?v=20260820-desktop-menu-1"
+    }),
+    footerCore: Object.freeze({
+      id: "teacher-flavius-site-footer-core",
+      src: "/site_footer_core.js?v=20260820-privacy-1"
+    }),
+    cleanUrls: Object.freeze({
+      id: "teacher-flavius-clean-urls",
+      src: "/clean_urls.js?v=20260819-1"
+    }),
+    googleOnlyAccess: Object.freeze({
+      id: "teacher-flavius-google-only-access",
+      src: "/google_only_access.js?v=20260819-1"
+    }),
+    studentBirthdays: Object.freeze({
+      id: "teacher-flavius-student-birthdays",
+      src: "/student_birthdays.js?v=20260819-1"
+    }),
+    sitePageContext: Object.freeze({
+      id: "teacher-flavius-site-page-context",
+      src: "/site_page_context.js?v=20260902-1"
+    }),
+    siteBranding: Object.freeze({
+      id: "teacher-flavius-site-branding",
+      src: "/site_branding.js?v=20260902-1"
+    }),
+    siteEnrollmentGuard: Object.freeze({
+      id: "teacher-flavius-site-enrollment-guard",
+      src: "/site_enrollment_guard.js?v=20260902-1"
+    })
+  });
+  const STYLESHEET_ASSETS = Object.freeze({
+    accessibility: Object.freeze({
+      id: "teacher-flavius-accessibility-styles",
+      href: "/accessibility.css?v=20260820-1"
+    })
+  });
 
   function loadScript(id, src, callback) {
     var existing = document.getElementById(id);
@@ -20,6 +89,10 @@
     document.head.appendChild(script);
   }
 
+  function loadScriptAsset(asset, callback) {
+    loadScript(asset.id, asset.src, callback);
+  }
+
   function loadStylesheet(id, href) {
     if (document.getElementById(id)) return;
     var stylesheet = document.createElement("link");
@@ -29,13 +102,17 @@
     document.head.appendChild(stylesheet);
   }
 
+  function loadStylesheetAsset(asset) {
+    loadStylesheet(asset.id, asset.href);
+  }
+
   function loadWhatsappLeadForm() {
-    loadScript("teacher-flavius-whatsapp-lead-form", "/whatsapp_lead_form.js?v=20260902-direct-2");
+    loadScriptAsset(SCRIPT_ASSETS.whatsappLeadForm);
   }
 
   function initializeWhatsappUi() {
     var watchDynamicLinks = !window.SitePageContext.isPublicMarketingPage();
-    loadScript("teacher-flavius-site-whatsapp", "/site_whatsapp.js?v=20260902-1", function () {
+    loadScriptAsset(SCRIPT_ASSETS.siteWhatsapp, function () {
       if (!window.SiteWhatsapp) return;
       window.SiteWhatsapp.initialize({ watchDynamicLinks: watchDynamicLinks });
     });
@@ -57,20 +134,20 @@
   }
 
   function loadAccessibility() {
-    loadStylesheet("teacher-flavius-accessibility-styles", "/accessibility.css?v=20260820-1");
-    loadScript("teacher-flavius-accessibility", "/accessibility.js?v=20260820-1");
+    loadStylesheetAsset(STYLESHEET_ASSETS.accessibility);
+    loadScriptAsset(SCRIPT_ASSETS.accessibility);
   }
 
   function loadCro() {
-    loadScript("teacher-flavius-cro", "/cro.js?v=20260820-1");
+    loadScriptAsset(SCRIPT_ASSETS.cro);
   }
 
   function loadAnalyticsCore() {
-    loadScript("teacher-flavius-analytics", "/analytics.js?v=20260820-1", loadCro);
+    loadScriptAsset(SCRIPT_ASSETS.analytics, loadCro);
   }
 
   function loadAnalytics() {
-    loadScript("teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260902-leadfix-1", loadAnalyticsCore);
+    loadScriptAsset(SCRIPT_ASSETS.analyticsAttribution, loadAnalyticsCore);
   }
 
   function disableAnalytics() {
@@ -97,15 +174,15 @@
 
   function loadPrivacy() {
     window.addEventListener("tf:privacy-consent-changed", applyPrivacyChoice);
-    loadScript("teacher-flavius-privacy-consent", "/privacy_consent.js?v=20260820-2", applyPrivacyChoice);
+    loadScriptAsset(SCRIPT_ASSETS.privacyConsent, applyPrivacyChoice);
   }
 
   function loadMobileTopNavigation() {
-    loadScript("teacher-flavius-mobile-top-navigation", "/mobile_top_navigation.js?v=20260820-desktop-menu-1");
+    loadScriptAsset(SCRIPT_ASSETS.mobileTopNavigation);
   }
 
   function loadFooterCore() {
-    loadScript("teacher-flavius-site-footer-core", "/site_footer_core.js?v=20260820-privacy-1", function () {
+    loadScriptAsset(SCRIPT_ASSETS.footerCore, function () {
       refreshEnrollmentLinks();
       refreshWhatsappLinks();
     });
@@ -117,16 +194,16 @@
       return;
     }
     if (window.SitePageContext.isGeoContentPage()) {
-      loadScript("teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1");
+      loadScriptAsset(SCRIPT_ASSETS.cleanUrls);
       return;
     }
-    loadScript("teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1", loadFooterCore);
+    loadScriptAsset(SCRIPT_ASSETS.cleanUrls, loadFooterCore);
   }
 
   function loadPortalScripts() {
-    loadScript("teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1", function () {
-      loadScript("teacher-flavius-google-only-access", "/google_only_access.js?v=20260819-1", function () {
-        loadScript("teacher-flavius-student-birthdays", "/student_birthdays.js?v=20260819-1", loadFooterCore);
+    loadScriptAsset(SCRIPT_ASSETS.cleanUrls, function () {
+      loadScriptAsset(SCRIPT_ASSETS.googleOnlyAccess, function () {
+        loadScriptAsset(SCRIPT_ASSETS.studentBirthdays, loadFooterCore);
       });
     });
   }
@@ -140,8 +217,11 @@
   }
 
   function schedulePublicScripts() {
-    if ("requestIdleCallback" in window) window.requestIdleCallback(loadPublicPageScripts, { timeout: 1200 });
-    else window.setTimeout(loadPublicPageScripts, 0);
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(loadPublicPageScripts, { timeout: PUBLIC_SCRIPTS_IDLE_TIMEOUT_MS });
+      return;
+    }
+    window.setTimeout(loadPublicPageScripts, 0);
   }
 
   function initializePageRuntime() {
@@ -158,15 +238,11 @@
   }
 
   function loadSiteFoundations() {
-    loadScript("teacher-flavius-site-page-context", "/site_page_context.js?v=20260902-1", function () {
+    loadScriptAsset(SCRIPT_ASSETS.sitePageContext, function () {
       if (!window.SitePageContext) return;
-      loadScript("teacher-flavius-site-branding", "/site_branding.js?v=20260902-1", function () {
+      loadScriptAsset(SCRIPT_ASSETS.siteBranding, function () {
         if (!window.SiteBranding) return;
-        loadScript(
-          "teacher-flavius-site-enrollment-guard",
-          "/site_enrollment_guard.js?v=20260902-1",
-          initializePageRuntime
-        );
+        loadScriptAsset(SCRIPT_ASSETS.siteEnrollmentGuard, initializePageRuntime);
       });
     });
   }
