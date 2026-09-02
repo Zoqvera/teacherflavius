@@ -126,7 +126,7 @@
       '    </section>',
       '  </div>',
       '  <div class="tf-site-footer__bottom">',
-      '    <p>&copy; <span data-tf-footer-year></span> Teacher Flávio. Todos os direitos reservados.<br>Flávio de Sousa Freitas · Bacharel em Tradução, Mestre e Doutor em Linguística.</p>',
+      '    <p>&copy; <span data-tf-footer-year></span> Teacher Flávio. Todos os direitos reservados.<br>Flávio de Sousa Freitas · Bacharel em Tradução, Mestre e Doutor em Linguística.<br>Desenvolvido por <a href="https://zoqvera.com" target="_blank" rel="noopener noreferrer">Zoqvera</a>.</p>',
       '    <p class="tf-site-footer__legal"><a href="/privacidade/">Privacidade</a><a href="/cookies/">Cookies</a><a href="/termos/">Termos de Uso</a><a href="#" data-tf-open-privacy>Preferências de privacidade</a></p>',
       '  </div>',
       '</div>'
