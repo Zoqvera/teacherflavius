@@ -1,0 +1,349 @@
+@import url('/brand_palette.css');
+
+html.tf-brand-palette body {
+  align-items: flex-start;
+}
+
+html.tf-brand-palette .container {
+  width: min(100%, 1040px);
+  max-width: 1040px;
+  padding-bottom: 48px;
+}
+
+html.tf-brand-palette .header {
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+html.tf-brand-palette .header h1 {
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: -0.035em;
+}
+
+html.tf-brand-palette .grammar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+html.tf-brand-palette .grammar-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.15), rgba(15, 23, 42, 0.72));
+  box-shadow: var(--tf-shadow-sm, 0 8px 24px rgba(0,0,0,.16));
+}
+
+html.tf-brand-palette .grammar-progress-copy {
+  min-width: 0;
+}
+
+html.tf-brand-palette .grammar-progress-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--tf-text-muted, #94a3b8);
+  font: 700 11px/1.3 'Montserrat', sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+html.tf-brand-palette .grammar-progress-copy strong {
+  display: block;
+  color: var(--tf-text, #f8fafc);
+  font: 700 18px/1.3 'Montserrat', sans-serif;
+}
+
+html.tf-brand-palette .grammar-progress-track {
+  width: min(260px, 32vw);
+  min-width: 150px;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+html.tf-brand-palette .grammar-progress-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #3b82f6;
+  transition: width 180ms ease;
+}
+
+html.tf-brand-palette .grammar-progress.is-complete {
+  border-color: rgba(52, 211, 153, 0.28);
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.12), rgba(15, 23, 42, 0.72));
+}
+
+html.tf-brand-palette .grammar-progress.is-complete .grammar-progress-fill {
+  background: #10b981;
+}
+
+html.tf-brand-palette .grammar-card {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow: var(--tf-shadow-sm, 0 8px 24px rgba(0,0,0,.16));
+  backdrop-filter: blur(12px);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+html.tf-brand-palette .grammar-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #2563eb;
+  opacity: .72;
+}
+
+html.tf-brand-palette .grammar-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(96, 165, 250, 0.34);
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: var(--tf-shadow-md, 0 14px 34px rgba(0,0,0,.22));
+}
+
+html.tf-brand-palette .grammar-card.done {
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(6, 78, 59, 0.12);
+}
+
+html.tf-brand-palette .grammar-card.done::before {
+  background: #10b981;
+  opacity: 1;
+}
+
+html.tf-brand-palette .lesson-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  margin-bottom: 9px;
+  padding: 4px 9px;
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.11);
+  color: #bfdbfe;
+  font: 700 10px/1 'Montserrat', sans-serif;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+html.tf-brand-palette .grammar-card.done .lesson-state {
+  border-color: rgba(52, 211, 153, 0.28);
+  background: rgba(16, 185, 129, 0.11);
+  color: #a7f3d0;
+}
+
+html.tf-brand-palette .lesson-state svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+html.tf-brand-palette .grammar-card h2 {
+  margin: 0 0 14px;
+  color: var(--tf-text, #f8fafc);
+  font: 700 18px/1.35 'Montserrat', sans-serif;
+  letter-spacing: -0.018em;
+}
+
+html.tf-brand-palette .video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 14px;
+  background: #020617;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+}
+
+html.tf-brand-palette .video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+html.tf-brand-palette .exercise-link,
+html.tf-brand-palette .completion-button {
+  min-height: 44px;
+  border-radius: 12px;
+  font: 700 12px/1.2 'Montserrat', sans-serif;
+  letter-spacing: .04em;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, color 140ms ease, opacity 140ms ease;
+}
+
+html.tf-brand-palette .exercise-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid rgba(96, 165, 250, 0.42);
+  background: rgba(37, 99, 235, 0.14);
+  color: #dbeafe;
+  text-decoration: none;
+}
+
+html.tf-brand-palette .exercise-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.72);
+  background: rgba(37, 99, 235, 0.22);
+  color: #eff6ff;
+}
+
+html.tf-brand-palette .exercise-link svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+html.tf-brand-palette .completion-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.13);
+}
+
+html.tf-brand-palette .completion-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 13px;
+  border: 1px solid rgba(96, 165, 250, 0.38);
+  background: rgba(37, 99, 235, 0.12);
+  color: #dbeafe;
+  cursor: pointer;
+}
+
+html.tf-brand-palette .completion-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.68);
+  background: rgba(37, 99, 235, 0.2);
+}
+
+html.tf-brand-palette .grammar-card.done .completion-button {
+  border-color: rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.08);
+  color: #cbd5e1;
+}
+
+html.tf-brand-palette .completion-button:disabled {
+  opacity: .58;
+  cursor: wait;
+  transform: none;
+}
+
+html.tf-brand-palette .completion-status {
+  min-width: 76px;
+  color: var(--tf-text-muted, #94a3b8);
+  font: 600 11px/1.35 'Open Sans', sans-serif;
+  text-align: right;
+}
+
+html.tf-brand-palette .completion-status.saved {
+  color: #6ee7b7;
+}
+
+html.tf-brand-palette .completion-status.error {
+  color: #fca5a5;
+}
+
+html.tf-brand-palette .empty,
+html.tf-brand-palette .error {
+  grid-column: 1 / -1;
+  padding: 24px;
+  border: 1px dashed rgba(148, 163, 184, 0.24);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.56);
+  color: var(--tf-text-muted, #94a3b8);
+  font: 400 14px/1.6 'Open Sans', sans-serif;
+  text-align: center;
+}
+
+html.tf-brand-palette .error {
+  border-style: solid;
+  border-color: rgba(248, 113, 113, 0.25);
+  background: rgba(127, 29, 29, 0.09);
+  color: #fca5a5;
+}
+
+html.tf-brand-palette .exercise-link:focus-visible,
+html.tf-brand-palette .completion-button:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.45);
+  outline-offset: 3px;
+}
+
+@media (max-width: 899px) {
+  html.tf-brand-palette .grammar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html.tf-brand-palette .grammar-card {
+    max-width: 760px;
+    width: 100%;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 639px) {
+  html.tf-brand-palette .grammar-progress {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  html.tf-brand-palette .grammar-progress-track {
+    width: 100%;
+    min-width: 0;
+  }
+
+  html.tf-brand-palette .grammar-card {
+    padding: 15px;
+    border-radius: 16px;
+  }
+
+  html.tf-brand-palette .grammar-card h2 {
+    font-size: 17px;
+  }
+
+  html.tf-brand-palette .completion-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  html.tf-brand-palette .completion-status {
+    min-width: 0;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.tf-brand-palette .grammar-card,
+  html.tf-brand-palette .exercise-link,
+  html.tf-brand-palette .completion-button,
+  html.tf-brand-palette .grammar-progress-fill {
+    transition: none;
+  }
+}
