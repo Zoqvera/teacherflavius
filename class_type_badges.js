@@ -2,8 +2,10 @@
   "use strict";
 
   const CLASS_TYPE_RETRY_DELAY_MS = 250;
-  const CLASS_BOARD_PATH_RE = /(^|\/)quadro-de-turmas\.html$/;
-  const CLASS_CARD_SELECTOR = '.class-item[href*="turma.html?id="]';
+  const HTML_EXTENSION = ".html";
+  const CLASS_BOARD_FILENAME = "quadro-de-turmas" + HTML_EXTENSION;
+  const CLASS_CARD_HREF_FRAGMENT = "turma" + HTML_EXTENSION + "?id=";
+  const CLASS_CARD_SELECTOR = '.class-item[href*="' + CLASS_CARD_HREF_FRAGMENT + '"]';
   const RPC_GET_CLASS_TYPES = "get_teacher_classes_with_type";
 
   let classTypeCache = null;
@@ -11,7 +13,7 @@
   let classTypeWaitPending = false;
 
   function isClassBoardPage() {
-    return CLASS_BOARD_PATH_RE.test(window.location.pathname);
+    return window.location.pathname.endsWith("/" + CLASS_BOARD_FILENAME);
   }
 
   function getClassTypeVisual(value) {
