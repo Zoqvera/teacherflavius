@@ -2,8 +2,8 @@
   "name": "teacherflavius",
   "private": true,
   "scripts": {
-    "lint": "eslint accessibility.js area_do_estudante.js acessos_dos_alunos.js auth.js auth_infrastructure.js google_auth_ui.js student_profile_service.js",
-    "check:js": "node --check accessibility.js && node --check area_do_estudante.js && node --check acessos_dos_alunos.js && node --check auth.js && node --check auth_infrastructure.js && node --check google_auth_ui.js && node --check student_profile_service.js",
+    "lint": "eslint accessibility.js area_do_estudante.js acessos_dos_alunos.js auth.js auth_infrastructure.js google_auth_ui.js student_profile_service.js activity_progress_service.js",
+    "check:js": "node --check accessibility.js && node --check area_do_estudante.js && node --check acessos_dos_alunos.js && node --check auth.js && node --check auth_infrastructure.js && node --check google_auth_ui.js && node --check student_profile_service.js && node --check activity_progress_service.js",
     "quality": "npm run check:js && npm run lint"
   },
   "devDependencies": {
