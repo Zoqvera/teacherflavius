@@ -11,6 +11,7 @@ module.exports = [
       "google_auth_ui.js",
       "student_profile_service.js",
       "student_enrollment_service.js",
+      "student_data_utils.js",
       "activity_progress_service.js",
       "module_loader.js",
       "supabase_client_service.js"
