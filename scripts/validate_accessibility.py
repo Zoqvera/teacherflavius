@@ -22,6 +22,13 @@ MAIN_REQUIRED = {
 }
 
 
+def is_fully_hidden_iframe(data: dict[str, str]) -> bool:
+    style = data.get("style", "").replace(" ", "").lower()
+    is_zero_sized = data.get("width") == "0" and data.get("height") == "0"
+    is_hidden_by_style = "display:none" in style and "visibility:hidden" in style
+    return data.get("aria-hidden", "").lower() == "true" or (is_zero_sized and is_hidden_by_style)
+
+
 class AuditParser(HTMLParser):
     def __init__(self, path: Path) -> None:
         super().__init__(convert_charrefs=True)
@@ -55,8 +62,10 @@ class AuditParser(HTMLParser):
             self.controls.append((tag, data, line))
         if tag == "img" and "alt" not in data:
             self.errors.append(f"L{line}: <img> sem atributo alt")
-        if tag == "iframe" and not (data.get("title") or data.get("aria-label") or data.get("aria-labelledby")):
-            self.errors.append(f"L{line}: <iframe> sem título acessível")
+        if tag == "iframe" and not is_fully_hidden_iframe(data):
+            has_accessible_name = data.get("title") or data.get("aria-label") or data.get("aria-labelledby")
+            if not has_accessible_name:
+                self.errors.append(f"L{line}: <iframe> sem título acessível")
         tabindex = data.get("tabindex", "").strip()
         if tabindex.lstrip("+").isdigit() and int(tabindex) > 0:
             self.errors.append(f"L{line}: tabindex positivo ({tabindex}) não é permitido")
