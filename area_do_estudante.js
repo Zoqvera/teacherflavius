@@ -127,6 +127,11 @@ function updateProfileSetupPrompt(profile) {
   prompt.hidden = isProfessorSession() || countAvailabilitySlots(profile) > 0;
 }
 
+function hideProfileSetupPrompt() {
+  const prompt = document.getElementById("profileSetupPrompt");
+  if (prompt) prompt.hidden = true;
+}
+
 function closeOverdueModal() {
   const modal = document.getElementById("overdueModal");
   if (modal) modal.hidden = true;
@@ -176,7 +181,7 @@ async function guardStudentArea() {
 
   if (isProfessorSession()) {
     closeOverdueModal();
-    updateProfileSetupPrompt(null);
+    hideProfileSetupPrompt();
   }
 
   document.body.classList.remove("auth-checking");
@@ -285,7 +290,7 @@ async function updateStatus() {
 
   if (isProfessorSession()) {
     closeOverdueModal();
-    updateProfileSetupPrompt(null);
+    hideProfileSetupPrompt();
     return;
   }
 
@@ -295,7 +300,7 @@ async function updateStatus() {
     await showOverdueActivityIfNeeded(profile);
   } catch (error) {
     console.error("Não foi possível carregar o ciclo semanal do aluno:", error);
-    updateProfileSetupPrompt(null);
+    hideProfileSetupPrompt();
     closeOverdueModal();
   }
 }
