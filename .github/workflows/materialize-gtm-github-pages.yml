@@ -7,6 +7,7 @@ on:
     paths:
       - "**/*.html"
       - "scripts/inject_auth_module_loader.py"
+      - "scripts/inject_site_privacy_analytics.py"
       - "scripts/inject_google_tag_manager.py"
       - ".github/workflows/materialize-gtm-github-pages.yml"
 
@@ -23,9 +24,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Materialize auth bootstrap and GTM
+      - name: Materialize auth bootstrap, privacy analytics and GTM
         run: |
           python3 scripts/inject_auth_module_loader.py --site-root .
+          python3 scripts/inject_site_privacy_analytics.py --site-root .
           python3 scripts/inject_google_tag_manager.py --site-root .
 
       - name: Commit generated HTML changes
