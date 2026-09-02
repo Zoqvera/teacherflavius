@@ -7,6 +7,7 @@ module.exports = [
       "auth.js",
       "auth_guard_service.js",
       "auth_infrastructure.js",
+      "auth_navigation_service.js",
       "auth_session_service.js",
       "google_auth_ui.js",
       "student_profile_service.js",
