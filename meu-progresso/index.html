@@ -14,7 +14,7 @@
         const html = await response.text();
         const enhancedHtml = html
           .replace('<head>', '<head>\n  <base href="/">\n  <link rel="stylesheet" href="/meu-progresso/meu_progresso_visual.css?v=20260902-1">')
-          .replace('</body>', '  <script src="/meu-progresso/meu_progresso_visual.js?v=20260902-1"><\\/script>\n</body>');
+          .replace('</body>', '  <script src="/meu-progresso/meu_progresso_visual.js?v=20260902-1"><\/script>\n</body>');
         document.open();
         document.write(enhancedHtml);
         document.close();
