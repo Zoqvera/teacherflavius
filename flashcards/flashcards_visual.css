@@ -1,0 +1,571 @@
+@import url('/brand_palette.css?v=20260820-3');
+
+html.tf-brand-palette {
+  background: #07111f;
+}
+
+html.tf-brand-palette body {
+  min-height: 100vh;
+  padding: 32px 16px 64px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(37, 99, 235, .12), transparent 34rem),
+    linear-gradient(180deg, #081421 0%, #0b1726 48%, #08131f 100%);
+  color: #e8eef7;
+  font-family: 'Open Sans', Arial, sans-serif;
+}
+
+html.tf-brand-palette .app-shell {
+  max-width: 1120px;
+}
+
+html.tf-brand-palette h1,
+html.tf-brand-palette h2,
+html.tf-brand-palette h3,
+html.tf-brand-palette h4,
+html.tf-brand-palette .button,
+html.tf-brand-palette .badge,
+html.tf-brand-palette .eyebrow,
+html.tf-brand-palette .count-pill,
+html.tf-brand-palette .card-number,
+html.tf-brand-palette .card-label,
+html.tf-brand-palette .deck-state-badge,
+html.tf-brand-palette .practice-history-heading strong {
+  font-family: 'Montserrat', Arial, sans-serif;
+}
+
+html.tf-brand-palette .top-links {
+  gap: 8px;
+  margin-bottom: 26px;
+}
+
+html.tf-brand-palette .top-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 15px;
+  border: 1px solid rgba(96, 165, 250, .25);
+  background: rgba(15, 35, 58, .72);
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+html.tf-brand-palette .top-link:hover {
+  border-color: rgba(96, 165, 250, .52);
+  background: rgba(30, 64, 175, .18);
+}
+
+html.tf-brand-palette .page-header {
+  margin-bottom: 30px;
+}
+
+html.tf-brand-palette .badge {
+  background: rgba(37, 99, 235, .16);
+  border: 1px solid rgba(96, 165, 250, .34);
+  color: #dbeafe;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+
+html.tf-brand-palette .page-header h1 {
+  color: #f8fbff;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+}
+
+html.tf-brand-palette .status,
+html.tf-brand-palette .lead,
+html.tf-brand-palette .deck-description,
+html.tf-brand-palette .cards-heading p,
+html.tf-brand-palette .study-summary p {
+  color: #a9b8ca;
+}
+
+html.tf-brand-palette .divider {
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, .33), transparent);
+}
+
+html.tf-brand-palette .message {
+  border-color: rgba(96, 165, 250, .36);
+  background: rgba(37, 99, 235, .10);
+  color: #dbeafe;
+}
+
+html.tf-brand-palette .message.error {
+  border-color: rgba(248, 113, 113, .42);
+  background: rgba(127, 29, 29, .16);
+  color: #fecaca;
+}
+
+html.tf-brand-palette .message.success {
+  border-color: rgba(74, 222, 128, .35);
+  background: rgba(20, 83, 45, .20);
+  color: #bbf7d0;
+}
+
+html.tf-brand-palette .view-heading {
+  align-items: center;
+}
+
+html.tf-brand-palette .eyebrow {
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+html.tf-brand-palette h2 {
+  color: #f8fbff;
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+
+html.tf-brand-palette h3,
+html.tf-brand-palette h4 {
+  color: #edf5ff;
+}
+
+html.tf-brand-palette .button {
+  min-height: 44px;
+  border-radius: 11px;
+  padding: 11px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+html.tf-brand-palette .button-primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(37, 99, 235, .16);
+}
+
+html.tf-brand-palette .button-primary:hover:not(:disabled) {
+  border-color: #3b82f6;
+  background: #1d4ed8;
+}
+
+html.tf-brand-palette .button-secondary {
+  border-color: rgba(96, 165, 250, .38);
+  background: rgba(37, 99, 235, .10);
+  color: #dbeafe;
+}
+
+html.tf-brand-palette .button-secondary:hover:not(:disabled) {
+  border-color: rgba(96, 165, 250, .62);
+  background: rgba(37, 99, 235, .17);
+}
+
+html.tf-brand-palette .button-ghost {
+  border-color: rgba(148, 163, 184, .22);
+  background: rgba(15, 23, 42, .42);
+  color: #cbd5e1;
+}
+
+html.tf-brand-palette .button-ghost:hover:not(:disabled) {
+  border-color: rgba(148, 163, 184, .40);
+  background: rgba(51, 65, 85, .34);
+}
+
+html.tf-brand-palette .button:focus-visible,
+html.tf-brand-palette input:focus-visible,
+html.tf-brand-palette textarea:focus-visible,
+html.tf-brand-palette select:focus-visible,
+html.tf-brand-palette .icon-button:focus-visible,
+html.tf-brand-palette .remove-card-button:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, .38);
+  outline-offset: 2px;
+}
+
+html.tf-brand-palette .button:disabled {
+  opacity: .5;
+}
+
+html.tf-brand-palette .section-title-row {
+  gap: 9px;
+}
+
+html.tf-brand-palette .section-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa;
+}
+
+html.tf-brand-palette .section-icon svg,
+html.tf-brand-palette .icon-button svg,
+html.tf-brand-palette .summary-icon svg,
+html.tf-brand-palette .deck-state-badge svg {
+  width: 100%;
+  height: 100%;
+}
+
+html.tf-brand-palette .deck-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+html.tf-brand-palette .deck-card {
+  position: relative;
+  min-height: 215px;
+  padding: 20px;
+  border-color: rgba(148, 163, 184, .15);
+  background: rgba(13, 30, 49, .78);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .15);
+}
+
+html.tf-brand-palette .deck-card:hover {
+  border-color: rgba(96, 165, 250, .38);
+}
+
+html.tf-brand-palette .deck-card.is-due {
+  border-color: rgba(245, 158, 11, .34);
+  background: linear-gradient(180deg, rgba(120, 53, 15, .08), rgba(13, 30, 49, .80));
+}
+
+html.tf-brand-palette .deck-card.is-current {
+  border-color: rgba(74, 222, 128, .24);
+}
+
+html.tf-brand-palette .deck-card-top {
+  min-height: 44px;
+}
+
+html.tf-brand-palette .deck-card h4 {
+  padding-right: 4px;
+  font-weight: 750;
+}
+
+html.tf-brand-palette .deck-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+  color: #91a3b8;
+}
+
+html.tf-brand-palette .deck-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin-top: 2px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .025em;
+}
+
+html.tf-brand-palette .deck-state-badge svg {
+  width: 13px;
+  height: 13px;
+}
+
+html.tf-brand-palette .deck-state-badge.is-due {
+  border: 1px solid rgba(245, 158, 11, .32);
+  background: rgba(120, 53, 15, .18);
+  color: #fde68a;
+}
+
+html.tf-brand-palette .deck-state-badge.is-current {
+  border: 1px solid rgba(74, 222, 128, .28);
+  background: rgba(20, 83, 45, .18);
+  color: #bbf7d0;
+}
+
+html.tf-brand-palette .deck-actions {
+  margin-top: 4px;
+}
+
+html.tf-brand-palette .deck-actions .button {
+  min-height: 44px;
+}
+
+html.tf-brand-palette .icon-button,
+html.tf-brand-palette .remove-card-button {
+  min-width: 44px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-color: rgba(248, 113, 113, .34);
+  background: rgba(127, 29, 29, .14);
+  color: #fecaca;
+}
+
+html.tf-brand-palette .icon-button svg,
+html.tf-brand-palette .remove-card-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+html.tf-brand-palette .empty-state {
+  border-color: rgba(148, 163, 184, .22);
+  background: rgba(15, 23, 42, .28);
+  color: #94a3b8;
+}
+
+html.tf-brand-palette .student-search span,
+html.tf-brand-palette .field > span,
+html.tf-brand-palette .study-translation-field span {
+  color: #cbd5e1;
+}
+
+html.tf-brand-palette input,
+html.tf-brand-palette textarea,
+html.tf-brand-palette select {
+  min-height: 44px;
+  border-color: rgba(148, 163, 184, .24);
+  background: rgba(7, 18, 31, .76);
+  color: #f1f5f9;
+  font-family: 'Open Sans', Arial, sans-serif;
+}
+
+html.tf-brand-palette .student-group {
+  border-color: rgba(148, 163, 184, .16);
+  background: rgba(13, 30, 49, .66);
+}
+
+html.tf-brand-palette .student-deck-count,
+html.tf-brand-palette .count-pill,
+html.tf-brand-palette .card-number {
+  color: #bfdbfe;
+  border-color: rgba(96, 165, 250, .26);
+  background: rgba(37, 99, 235, .10);
+}
+
+html.tf-brand-palette .practice-history {
+  border-color: rgba(96, 165, 250, .16);
+  background: rgba(7, 18, 31, .48);
+}
+
+html.tf-brand-palette .practice-history-heading strong {
+  color: #bbf7d0;
+}
+
+html.tf-brand-palette .practice-day {
+  border-color: rgba(148, 163, 184, .16);
+  background: rgba(255, 255, 255, .018);
+  color: #718096;
+}
+
+html.tf-brand-palette .practice-day.practiced {
+  border-color: rgba(74, 222, 128, .42);
+  background: rgba(20, 83, 45, .24);
+  color: #bbf7d0;
+  box-shadow: inset 0 -2px 0 rgba(74, 222, 128, .24);
+}
+
+html.tf-brand-palette .panel {
+  border-color: rgba(148, 163, 184, .16);
+  background: rgba(10, 26, 43, .88);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .18);
+}
+
+html.tf-brand-palette .count-pill {
+  border-width: 1px;
+  border-style: solid;
+}
+
+html.tf-brand-palette .card-editor-row {
+  grid-template-columns: 44px 1fr 44px;
+  border-color: rgba(148, 163, 184, .15);
+  background: rgba(7, 18, 31, .48);
+}
+
+html.tf-brand-palette .card-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
+html.tf-brand-palette .study-panel {
+  max-width: 800px;
+}
+
+html.tf-brand-palette .progress-track {
+  height: 8px;
+  background: rgba(148, 163, 184, .12);
+}
+
+html.tf-brand-palette .progress-track span {
+  background: #3b82f6;
+}
+
+html.tf-brand-palette .study-card {
+  border-color: rgba(96, 165, 250, .24);
+  background: rgba(7, 18, 31, .64);
+}
+
+html.tf-brand-palette .card-label {
+  color: #60a5fa;
+  font-weight: 800;
+}
+
+html.tf-brand-palette .study-word {
+  color: #f8fbff;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+
+html.tf-brand-palette .answer-feedback {
+  border-color: rgba(148, 163, 184, .16);
+}
+
+html.tf-brand-palette .answer-result.correct {
+  color: #86efac;
+}
+
+html.tf-brand-palette .answer-result.review {
+  color: #fde68a;
+}
+
+html.tf-brand-palette .grade-wrong {
+  border-color: rgba(248, 113, 113, .42);
+  background: rgba(127, 29, 29, .18);
+  color: #fecaca;
+}
+
+html.tf-brand-palette .grade-button[data-grade='hard'] {
+  border-color: rgba(245, 158, 11, .36);
+  background: rgba(120, 53, 15, .16);
+  color: #fde68a;
+}
+
+html.tf-brand-palette .grade-button[data-grade='good'] {
+  border-color: rgba(96, 165, 250, .42);
+  background: rgba(37, 99, 235, .13);
+  color: #dbeafe;
+}
+
+html.tf-brand-palette .grade-right {
+  border-color: rgba(74, 222, 128, .36);
+  background: rgba(20, 83, 45, .18);
+  color: #bbf7d0;
+}
+
+html.tf-brand-palette .self-grade .button {
+  min-height: 48px;
+}
+
+html.tf-brand-palette .study-navigation .button {
+  min-height: 46px;
+}
+
+html.tf-brand-palette .summary-icon {
+  width: 54px;
+  height: 54px;
+  display: inline-flex;
+  color: #86efac;
+}
+
+html.tf-brand-palette .study-summary h3 {
+  color: #f8fbff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html.tf-brand-palette .deck-card:hover {
+    transform: translateY(-2px);
+  }
+
+  html.tf-brand-palette .button:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 899px) {
+  html.tf-brand-palette .deck-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html.tf-brand-palette .student-directory {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 639px) {
+  html.tf-brand-palette body {
+    padding: 22px 12px 42px;
+  }
+
+  html.tf-brand-palette .page-header {
+    margin-bottom: 24px;
+  }
+
+  html.tf-brand-palette .view-heading {
+    align-items: stretch;
+  }
+
+  html.tf-brand-palette .deck-card {
+    min-height: 0;
+    padding: 17px;
+  }
+
+  html.tf-brand-palette .deck-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  html.tf-brand-palette .deck-actions .button {
+    width: 100%;
+  }
+
+  html.tf-brand-palette .card-editor-row {
+    grid-template-columns: 36px 1fr;
+    padding: 15px;
+  }
+
+  html.tf-brand-palette .remove-card-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  html.tf-brand-palette .self-grade,
+  html.tf-brand-palette .summary-actions,
+  html.tf-brand-palette .editor-actions {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 390px) {
+  html.tf-brand-palette .top-links {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  html.tf-brand-palette .top-link {
+    width: 100%;
+  }
+
+  html.tf-brand-palette .study-navigation {
+    grid-template-columns: 1fr;
+  }
+
+  html.tf-brand-palette #shuffleButton {
+    grid-row: auto;
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.tf-brand-palette *,
+  html.tf-brand-palette *::before,
+  html.tf-brand-palette *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
