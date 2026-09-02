@@ -5,3 +5,7 @@
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), usb=()
   Content-Security-Policy-Report-Only: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self' https://*.mercadopago.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://sdk.mercadopago.com https://www.googletagmanager.com https://www.google-analytics.com https://accounts.google.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://i.ytimg.com https://*.ytimg.com https://www.google-analytics.com https://www.googletagmanager.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.mercadopago.com https://*.google-analytics.com https://www.google-analytics.com https://www.googletagmanager.com https://*.googleapis.com; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://docs.google.com https://accounts.google.com https://*.mercadopago.com; media-src 'self' data: blob: https:; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests; report-uri https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/csp-report
+
+/health.json
+  Cache-Control: no-store, max-age=0
+  Netlify-CDN-Cache-Control: no-store
