@@ -58,9 +58,9 @@
     await logCurrentPage();
   }
 
-  window.StudentAccessTracker = Object.freeze({
+  window.StudentAccessTracker = {
     logCurrentPage: logCurrentPage
-  });
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", startTracking, { once: true });
