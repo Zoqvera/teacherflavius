@@ -32,6 +32,10 @@
       id: "teacher-flavius-privacy-consent",
       src: "/privacy_consent.js?v=20260820-2"
     }),
+    sitePrivacyAnalytics: Object.freeze({
+      id: "teacher-flavius-site-privacy-analytics",
+      src: "/site_privacy_analytics.js?v=20260902-1"
+    }),
     mobileTopNavigation: Object.freeze({
       id: "teacher-flavius-mobile-top-navigation",
       src: "/mobile_top_navigation.js?v=20260820-desktop-menu-1"
@@ -64,6 +68,12 @@
       id: "teacher-flavius-site-enrollment-guard",
       src: "/site_enrollment_guard.js?v=20260902-1"
     })
+  });
+  const PRIVACY_ANALYTICS_ASSETS = Object.freeze({
+    privacyConsent: SCRIPT_ASSETS.privacyConsent,
+    analyticsAttribution: SCRIPT_ASSETS.analyticsAttribution,
+    analytics: SCRIPT_ASSETS.analytics,
+    cro: SCRIPT_ASSETS.cro
   });
   const STYLESHEET_ASSETS = Object.freeze({
     accessibility: Object.freeze({
@@ -110,6 +120,23 @@
     loadScriptAsset(SCRIPT_ASSETS.whatsappLeadForm);
   }
 
+  function configurePrivacyAnalytics() {
+    if (!window.SitePrivacyAnalytics) return;
+    window.SitePrivacyAnalytics.initialize({
+      measurementId: GOOGLE_MEASUREMENT_ID,
+      loadScriptAsset: loadScriptAsset,
+      assets: PRIVACY_ANALYTICS_ASSETS
+    });
+  }
+
+  function initializePrivacyAnalytics() {
+    if (window.SitePrivacyAnalytics) {
+      configurePrivacyAnalytics();
+      return;
+    }
+    loadScriptAsset(SCRIPT_ASSETS.sitePrivacyAnalytics, configurePrivacyAnalytics);
+  }
+
   function initializeWhatsappUi() {
     var watchDynamicLinks = !window.SitePageContext.isPublicMarketingPage();
     loadScriptAsset(SCRIPT_ASSETS.siteWhatsapp, function () {
@@ -136,45 +163,6 @@
   function loadAccessibility() {
     loadStylesheetAsset(STYLESHEET_ASSETS.accessibility);
     loadScriptAsset(SCRIPT_ASSETS.accessibility);
-  }
-
-  function loadCro() {
-    loadScriptAsset(SCRIPT_ASSETS.cro);
-  }
-
-  function loadAnalyticsCore() {
-    loadScriptAsset(SCRIPT_ASSETS.analytics, loadCro);
-  }
-
-  function loadAnalytics() {
-    loadScriptAsset(SCRIPT_ASSETS.analyticsAttribution, loadAnalyticsCore);
-  }
-
-  function disableAnalytics() {
-    window["ga-disable-" + GOOGLE_MEASUREMENT_ID] = true;
-    if (typeof window.gtag === "function") {
-      window.gtag("consent", "update", {
-        analytics_storage: "denied",
-        ad_storage: "denied",
-        ad_user_data: "denied",
-        ad_personalization: "denied"
-      });
-    }
-  }
-
-  function applyPrivacyChoice() {
-    var privacy = window.TeacherFlaviusPrivacy;
-    if (privacy && typeof privacy.hasAnalyticsConsent === "function" && privacy.hasAnalyticsConsent()) {
-      window["ga-disable-" + GOOGLE_MEASUREMENT_ID] = false;
-      loadAnalytics();
-    } else {
-      disableAnalytics();
-    }
-  }
-
-  function loadPrivacy() {
-    window.addEventListener("tf:privacy-consent-changed", applyPrivacyChoice);
-    loadScriptAsset(SCRIPT_ASSETS.privacyConsent, applyPrivacyChoice);
   }
 
   function loadMobileTopNavigation() {
@@ -249,6 +237,6 @@
 
   // Keep the compatibility bootstrap available for browsers that cached older pages.
   loadWhatsappLeadForm();
-  loadPrivacy();
+  initializePrivacyAnalytics();
   loadSiteFoundations();
 })();
