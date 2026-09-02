@@ -15,7 +15,12 @@ module.exports = [
       "student_data_utils.js",
       "activity_progress_service.js",
       "module_loader.js",
-      "supabase_client_service.js"
+      "supabase_client_service.js",
+      "analytics.js",
+      "analytics_utils.js",
+      "analytics_acquisition.js",
+      "analytics_forms.js",
+      "analytics_payments.js"
     ],
     languageOptions: {
       ecmaVersion: "latest",

@@ -20,6 +20,10 @@ AUTH_SCRIPT_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?auth\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
+ANALYTICS_SCRIPT_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?analytics\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
 SUPABASE_CLIENT_SERVICE_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?supabase_client_service\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
@@ -34,6 +38,22 @@ STUDENT_DATA_UTILS_RE = re.compile(
 )
 STUDENT_ENROLLMENT_SERVICE_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?student_enrollment_service\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
+ANALYTICS_UTILS_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?analytics_utils\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
+ANALYTICS_ACQUISITION_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?analytics_acquisition\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
+ANALYTICS_FORMS_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?analytics_forms\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
+ANALYTICS_PAYMENTS_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?analytics_payments\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
 AUTH_DEPENDENCIES = (
@@ -56,6 +76,20 @@ AUTH_DEPENDENCIES = (
         "Student enrollment service",
         STUDENT_ENROLLMENT_SERVICE_RE,
         "/student_enrollment_service.js?v=20260902-1",
+    ),
+)
+ANALYTICS_DEPENDENCIES = (
+    ("Analytics utilities", ANALYTICS_UTILS_RE, "/analytics_utils.js?v=20260902-1"),
+    (
+        "Analytics acquisition",
+        ANALYTICS_ACQUISITION_RE,
+        "/analytics_acquisition.js?v=20260902-1",
+    ),
+    ("Analytics forms", ANALYTICS_FORMS_RE, "/analytics_forms.js?v=20260902-1"),
+    (
+        "Analytics payments",
+        ANALYTICS_PAYMENTS_RE,
+        "/analytics_payments.js?v=20260902-1",
     ),
 )
 CLEAN_ROUTE_PAIR_RE = re.compile(
@@ -115,33 +149,41 @@ def standardize_whatsapp_links(html: str) -> str:
     return API_WHATSAPP_RE.sub(STANDARD_WHATSAPP_URL, html)
 
 
-def inject_script_before_auth(
+def inject_script_before_target(
     html: str,
+    target_re: re.Pattern[str],
     dependency_re: re.Pattern[str],
     dependency_src: str,
 ) -> tuple[str, bool]:
     if dependency_re.search(html):
         return html, False
 
-    auth_script = AUTH_SCRIPT_RE.search(html)
-    if not auth_script:
+    target_script = target_re.search(html)
+    if not target_script:
         return html, False
 
-    line_start = html.rfind("\n", 0, auth_script.start()) + 1
-    indentation_match = re.match(r"[ \t]*", html[line_start:auth_script.start()])
+    line_start = html.rfind("\n", 0, target_script.start()) + 1
+    indentation_match = re.match(r"[ \t]*", html[line_start:target_script.start()])
     indentation = indentation_match.group(0) if indentation_match else ""
     script = f'{indentation}<script src="{dependency_src}"></script>\n'
-    return f"{html[:auth_script.start()]}{script}{html[auth_script.start():]}", True
+    return f"{html[:target_script.start()]}{script}{html[target_script.start():]}", True
 
 
-def inject_auth_dependencies(html: str) -> tuple[str, int]:
+def inject_dependencies(
+    html: str,
+    target_re: re.Pattern[str],
+    dependencies: tuple[tuple[str, re.Pattern[str], str], ...],
+) -> tuple[str, int]:
     injections = 0
-
-    for _, dependency_re, dependency_src in AUTH_DEPENDENCIES:
-        html, injected = inject_script_before_auth(html, dependency_re, dependency_src)
+    for _, dependency_re, dependency_src in dependencies:
+        html, injected = inject_script_before_target(
+            html,
+            target_re,
+            dependency_re,
+            dependency_src,
+        )
         if injected:
             injections += 1
-
     return html, injections
 
 
@@ -214,25 +256,27 @@ def materialize_clean_route_aliases() -> int:
     return created
 
 
-def validate_auth_dependency_order() -> None:
+def validate_dependency_order(
+    target_re: re.Pattern[str],
+    dependencies: tuple[tuple[str, re.Pattern[str], str], ...],
+    target_name: str,
+) -> None:
     invalid: list[str] = []
 
     for path in PUBLISH.rglob("*.html"):
         html = path.read_text(encoding="utf-8")
-        auth_script = AUTH_SCRIPT_RE.search(html)
-        if not auth_script:
+        target_script = target_re.search(html)
+        if not target_script:
             continue
 
-        for dependency_name, dependency_re, _ in AUTH_DEPENDENCIES:
+        for dependency_name, dependency_re, _ in dependencies:
             dependency = dependency_re.search(html)
-            if not dependency or dependency.start() > auth_script.start():
-                invalid.append(
-                    f"{path.relative_to(PUBLISH)} ({dependency_name})"
-                )
+            if not dependency or dependency.start() > target_script.start():
+                invalid.append(f"{path.relative_to(PUBLISH)} ({dependency_name})")
 
     if invalid:
         joined = ", ".join(invalid)
-        raise SystemExit("Auth dependencies must load before auth.js in: " + joined)
+        raise SystemExit(f"Dependencies must load before {target_name} in: " + joined)
 
 
 def main() -> None:
@@ -242,7 +286,7 @@ def main() -> None:
 
     copied = 0
     enhanced_html = 0
-    auth_dependency_injections = 0
+    dependency_injections = 0
     for relative in tracked_files():
         if not is_public(relative):
             continue
@@ -258,16 +302,26 @@ def main() -> None:
             html = destination.read_text(encoding="utf-8")
             original_html = html
             html = standardize_whatsapp_links(html)
-            html, dependency_injections = inject_auth_dependencies(html)
+            html, auth_injections = inject_dependencies(
+                html,
+                AUTH_SCRIPT_RE,
+                AUTH_DEPENDENCIES,
+            )
+            html, analytics_injections = inject_dependencies(
+                html,
+                ANALYTICS_SCRIPT_RE,
+                ANALYTICS_DEPENDENCIES,
+            )
             html, enhanced = inject_site_baseline(html, relative)
             if html != original_html:
                 destination.write_text(html, encoding="utf-8")
-            auth_dependency_injections += dependency_injections
+            dependency_injections += auth_injections + analytics_injections
             if enhanced:
                 enhanced_html += 1
 
     clean_route_aliases = materialize_clean_route_aliases()
-    validate_auth_dependency_order()
+    validate_dependency_order(AUTH_SCRIPT_RE, AUTH_DEPENDENCIES, "auth.js")
+    validate_dependency_order(ANALYTICS_SCRIPT_RE, ANALYTICS_DEPENDENCIES, "analytics.js")
 
     headers = ROOT / "netlify" / "_headers"
     if not headers.is_file():
@@ -284,6 +338,11 @@ def main() -> None:
         PUBLISH / "auth_navigation_service.js",
         PUBLISH / "student_data_utils.js",
         PUBLISH / "student_enrollment_service.js",
+        PUBLISH / "analytics.js",
+        PUBLISH / "analytics_utils.js",
+        PUBLISH / "analytics_acquisition.js",
+        PUBLISH / "analytics_forms.js",
+        PUBLISH / "analytics_payments.js",
         PUBLISH / "quero-conhecer" / "index.html",
         PUBLISH / "cadastro" / "index.html",
         PUBLISH / "meu-progresso" / "index.html",
@@ -308,7 +367,7 @@ def main() -> None:
     print(
         f"Static publish directory ready: {copied} public files + _headers; "
         f"site baseline enhanced {enhanced_html} HTML files; "
-        f"injected {auth_dependency_injections} auth dependency scripts; "
+        f"injected {dependency_injections} dependency scripts; "
         f"materialized {clean_route_aliases} clean route aliases"
     )
 
