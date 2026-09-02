@@ -1,5 +1,5 @@
 [build]
-  command = "python3 scripts/build_static_site.py"
+  command = "python3 scripts/build_static_site.py && python3 scripts/postprocess_production.py"
   publish = "_site"
 
 [build.processing]
@@ -7,3 +7,17 @@
 
 [build.processing.html]
   pretty_urls = true
+
+# Mantém o hostname padrão do Netlify fora do índice e preserva o domínio canônico.
+# Branch deploys (por exemplo, main--teacherflavius.netlify.app) não são afetados.
+[[redirects]]
+  from = "https://teacherflavius.netlify.app/*"
+  to = "https://teacherflavius.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://teacherflavius.netlify.app/*"
+  to = "https://teacherflavius.com/:splat"
+  status = 301
+  force = true
