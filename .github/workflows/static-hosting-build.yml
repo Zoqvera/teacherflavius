@@ -10,6 +10,7 @@ on:
       - "**/*.xml"
       - "**/*.txt"
       - "scripts/build_static_site.py"
+      - "scripts/inject_google_tag_manager.py"
       - "netlify/_headers"
       - "netlify.toml"
       - ".github/workflows/static-hosting-build.yml"
@@ -24,6 +25,7 @@ on:
       - "**/*.xml"
       - "**/*.txt"
       - "scripts/build_static_site.py"
+      - "scripts/inject_google_tag_manager.py"
       - "netlify/_headers"
       - "netlify.toml"
       - ".github/workflows/static-hosting-build.yml"
@@ -40,6 +42,9 @@ jobs:
 
       - name: Build static site
         run: python3 scripts/build_static_site.py
+
+      - name: Inject and validate Google Tag Manager
+        run: python3 scripts/inject_google_tag_manager.py
 
       - name: Validate publish output
         run: |
