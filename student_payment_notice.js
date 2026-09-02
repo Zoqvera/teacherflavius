@@ -6,32 +6,14 @@
   var STYLE_ID = "tf-tuition-payment-notice-styles";
   var PAYMENT_PATH = "/pagamento/";
   var PAYMENT_WAITING_STATUSES = ["created", "pending", "authorized", "in_process", "in_mediation"];
+  const SCRIPT_LOAD_TIMEOUT_MS = 6000;
 
   function loadScript(selector, src, isReady) {
-    return new Promise(function (resolve) {
-      if (isReady()) {
-        resolve(true);
-        return;
-      }
-
-      var settled = false;
-      var script = document.querySelector(selector);
-      var finish = function () {
-        if (settled) return;
-        settled = true;
-        resolve(!!isReady());
-      };
-
-      if (!script) {
-        script = document.createElement("script");
-        script.src = src;
-        script.defer = true;
-        document.head.appendChild(script);
-      }
-
-      script.addEventListener("load", finish, { once: true });
-      script.addEventListener("error", finish, { once: true });
-      window.setTimeout(finish, 6000);
+    return window.ResourceWaiter.loadScript({
+      selector: selector,
+      src: src,
+      isReady: isReady,
+      timeoutMs: SCRIPT_LOAD_TIMEOUT_MS
     });
   }
 
