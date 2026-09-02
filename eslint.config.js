@@ -8,6 +8,8 @@ module.exports = [
       "resource_waiter.js",
       "animated_cards.js",
       "animated_cards_visuals.js",
+      "class_type_service.js",
+      "class_type_badge_renderer.js",
       "class_type_badges.js",
       "google_only_access.js",
       "student_access_tracker.js",
