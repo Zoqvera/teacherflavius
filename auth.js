@@ -16,6 +16,13 @@
       missingMessage: "A infraestrutura de autenticação não foi inicializada.",
       loadErrorMessage: "Não foi possível carregar a infraestrutura de autenticação."
     }),
+    authSessionService: Object.freeze({
+      globalName: "AuthSessionService",
+      selector: 'script[src^="/auth_session_service.js"]',
+      src: "/auth_session_service.js?v=20260902-1",
+      missingMessage: "O serviço de sessão não foi inicializado.",
+      loadErrorMessage: "Não foi possível carregar o serviço de sessão."
+    }),
     studentProfileService: Object.freeze({
       globalName: "StudentProfileService",
       selector: 'script[src^="/student_profile_service.js"]',
@@ -33,9 +40,9 @@
   });
   const ENROLLMENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const ENROLLMENT_CODE_LENGTH = 5;
-  const GOOGLE_PROVIDER = "google";
 
   const modulePromises = {};
+  let authSessionService = null;
   let studentProfileService = null;
   let activityProgressService = null;
 
@@ -166,18 +173,31 @@
     return code;
   }
 
+  function getAuthSessionService() {
+    if (authSessionService) return Promise.resolve(authSessionService);
+
+    return loadGlobalModule(MODULES.authSessionService).then(function (serviceModule) {
+      if (!authSessionService) {
+        authSessionService = serviceModule.create({
+          getClient: getClient,
+          requireClient: requireClient,
+          getGoogleRedirectUrl: getGoogleRedirectUrl,
+          getGoogleLinkRedirectUrl: getGoogleLinkRedirectUrl,
+          loginPath: PATHS.login
+        });
+      }
+      return authSessionService;
+    });
+  }
+
   async function getSession() {
-    const client = getClient();
-    if (!client) return null;
-    const response = await client.auth.getSession();
-    return response && response.data ? response.data.session : null;
+    const service = await getAuthSessionService();
+    return service.getSession();
   }
 
   async function getUser() {
-    const client = getClient();
-    if (!client) return null;
-    const response = await client.auth.getUser();
-    return response && response.data ? response.data.user : null;
+    const service = await getAuthSessionService();
+    return service.getUser();
   }
 
   function getStudentProfileService() {
@@ -294,56 +314,28 @@
   }
 
   async function signIn(email, password) {
-    const client = requireClient();
-    const response = await client.auth.signInWithPassword({ email: email, password: password });
-    if (response.error) throw response.error;
-    return response.data;
+    const service = await getAuthSessionService();
+    return service.signIn(email, password);
   }
 
   async function signInWithGoogle(nextPath) {
-    const client = requireClient();
-    const response = await client.auth.signInWithOAuth({
-      provider: GOOGLE_PROVIDER,
-      options: {
-        redirectTo: getGoogleRedirectUrl(nextPath),
-        queryParams: { prompt: "select_account" }
-      }
-    });
-    if (response.error) throw response.error;
-    return response.data;
+    const service = await getAuthSessionService();
+    return service.signInWithGoogle(nextPath);
   }
 
   async function linkGoogleIdentity() {
-    const client = getClient();
-    const user = await getUser();
-    if (!client || !user) throw new Error("Entre na sua conta antes de vincular o Google.");
-
-    const response = await client.auth.linkIdentity({
-      provider: GOOGLE_PROVIDER,
-      options: { redirectTo: getGoogleLinkRedirectUrl() }
-    });
-    if (response.error) throw response.error;
-    return response.data;
+    const service = await getAuthSessionService();
+    return service.linkGoogleIdentity();
   }
 
   async function getUserIdentities() {
-    const client = getClient();
-    if (!client) return [];
-    const response = await client.auth.getUserIdentities();
-    if (response.error) throw response.error;
-    return response.data && Array.isArray(response.data.identities) ? response.data.identities : [];
+    const service = await getAuthSessionService();
+    return service.getUserIdentities();
   }
 
   async function signOut() {
-    const client = getClient();
-    if (!client) {
-      window.location.replace(PATHS.login + "?logged_out=1");
-      return;
-    }
-
-    const response = await client.auth.signOut({ scope: "local" });
-    if (response.error) throw response.error;
-    window.location.replace(PATHS.login + "?logged_out=1");
+    const service = await getAuthSessionService();
+    return service.signOut();
   }
 
   window.Auth = {
