@@ -24,6 +24,10 @@ SUPABASE_CLIENT_SERVICE_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?supabase_client_service\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
+AUTH_NAVIGATION_SERVICE_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?auth_navigation_service\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
 STUDENT_DATA_UTILS_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?student_data_utils\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
@@ -37,6 +41,11 @@ AUTH_DEPENDENCIES = (
         "Supabase client service",
         SUPABASE_CLIENT_SERVICE_RE,
         "/supabase_client_service.js?v=20260902-1",
+    ),
+    (
+        "Auth navigation service",
+        AUTH_NAVIGATION_SERVICE_RE,
+        "/auth_navigation_service.js?v=20260902-1",
     ),
     (
         "Student data utilities",
@@ -272,6 +281,7 @@ def main() -> None:
         PUBLISH / "sitemap.xml",
         PUBLISH / "error_monitor.js",
         PUBLISH / "supabase_client_service.js",
+        PUBLISH / "auth_navigation_service.js",
         PUBLISH / "student_data_utils.js",
         PUBLISH / "student_enrollment_service.js",
         PUBLISH / "quero-conhecer" / "index.html",
