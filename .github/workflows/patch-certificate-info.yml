@@ -1,0 +1,67 @@
+name: Patch certificate information
+
+on:
+  push:
+    paths:
+      - ".github/workflows/patch-certificate-info.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Insert certificate information in public course funnel
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("curso-de-ingles-online/index.html")
+          html = path.read_text(encoding="utf-8")
+
+          old_card = '''          <article class="card"><h3>Aula experimental</h3><p>Você pode experimentar o formato gratuitamente antes de decidir pela matrícula.</p></article>'''
+          new_cards = '''          <article class="card"><h3>Aula experimental</h3><p>Você pode experimentar o formato gratuitamente antes de decidir pela matrícula.</p></article>
+          <article class="card"><h3>Certificado por módulo</h3><p>Ao final de cada módulo, o aluno pode receber um certificado de conclusão após realizar uma avaliação final correspondente ao nível de proficiência alcançado.</p></article>'''
+          if old_card not in html:
+              raise SystemExit("Expected included-section anchor was not found")
+          html = html.replace(old_card, new_cards, 1)
+
+          old_row = '''              <tr><td>Aula experimental</td><td class="yes">Gratuita</td></tr>
+              <tr><td>Investimento mensal</td><td class="yes">R$ 99,90</td></tr>'''
+          new_row = '''              <tr><td>Aula experimental</td><td class="yes">Gratuita</td></tr>
+              <tr><td>Certificado ao final de cada módulo</td><td class="yes">Após avaliação final</td></tr>
+              <tr><td>Investimento mensal</td><td class="yes">R$ 99,90</td></tr>'''
+          if old_row not in html:
+              raise SystemExit("Expected comparison-table anchor was not found")
+          html = html.replace(old_row, new_row, 1)
+
+          old_faq = '''          <article class="faq-item"><h3>Existe material para estudar fora das aulas?</h3><p>Sim. Há material de apoio e cronograma de estudos para ajudar a manter continuidade entre os encontros.</p></article>
+          <article class="faq-item"><h3>Quanto custa o curso de inglês online?</h3><p>O investimento atual é de R$ 99,90 por mês, sujeito à disponibilidade de vagas nas turmas.</p></article>'''
+          new_faq = '''          <article class="faq-item"><h3>Existe material para estudar fora das aulas?</h3><p>Sim. Há material de apoio e cronograma de estudos para ajudar a manter continuidade entre os encontros.</p></article>
+          <article class="faq-item"><h3>O curso oferece certificado?</h3><p>Sim. Ao final de cada módulo, o aluno pode receber um certificado de conclusão. A emissão ocorre após a realização de uma avaliação final com conteúdos e competências correspondentes ao nível de proficiência alcançado.</p></article>
+          <article class="faq-item"><h3>Quanto custa o curso de inglês online?</h3><p>O investimento atual é de R$ 99,90 por mês, sujeito à disponibilidade de vagas nas turmas.</p></article>'''
+          if old_faq not in html:
+              raise SystemExit("Expected FAQ anchor was not found")
+          html = html.replace(old_faq, new_faq, 1)
+
+          path.write_text(html, encoding="utf-8")
+
+      - name: Commit public certificate information
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- curso-de-ingles-online/index.html; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.name "Zoqvera Development Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add curso-de-ingles-online/index.html
+          git commit -m "feat: explain certificate requirements in course funnel"
+          git push origin HEAD:main
