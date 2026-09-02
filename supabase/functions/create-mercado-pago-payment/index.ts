@@ -370,7 +370,7 @@ Deno.serve(async (request: Request) => {
 
   const { data: tuition, error: tuitionError } = await supabaseAdmin
     .from("monthly_tuition")
-    .select("id, student_id, reference_month, due_date, amount_due, payment_date")
+    .select("id, student_id, reference_month, due_date, amount_due, payment_date, is_exempt")
     .eq("id", tuitionId)
     .eq("student_id", user.id)
     .maybeSingle();
@@ -386,6 +386,13 @@ Deno.serve(async (request: Request) => {
 
   if (tuition.payment_date) {
     return jsonResponse(request, { error: "Esta mensalidade já está paga.", code: "already_paid" }, 409);
+  }
+
+  if (tuition.is_exempt === true) {
+    return jsonResponse(request, {
+      error: "Esta mensalidade está isenta e não precisa ser paga.",
+      code: "tuition_exempt",
+    }, 409);
   }
 
   const amount = Number(tuition.amount_due);

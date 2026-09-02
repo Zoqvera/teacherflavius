@@ -14,6 +14,7 @@ const paymentMethodLabels = {
 
 const statusMetadata = {
   paid: { label: "Pago", className: "status-paid" },
+  exempt: { label: "Isento", className: "status-exempt" },
   due_soon: { label: "A vencer", className: "status-due-soon" },
   overdue: { label: "Atrasado", className: "status-overdue" },
   open: { label: "Em aberto", className: "status-open" }
@@ -189,6 +190,7 @@ function updateSummaryCards() {
 
   document.getElementById("summaryReceived").textContent = formatCurrency(received);
   document.getElementById("summaryPaid").textContent = String(counts.paid || 0);
+  document.getElementById("summaryExempt").textContent = String(counts.exempt || 0);
   document.getElementById("summaryDueSoon").textContent = String(counts.due_soon || 0);
   document.getElementById("summaryOverdue").textContent = String(counts.overdue || 0);
 }
@@ -204,6 +206,29 @@ function getFilteredTuition() {
     const matchesStatus = status === "all" || item.payment_status === status;
     return matchesSearch && matchesStatus;
   });
+}
+
+function getPaymentDescription(item) {
+  if (item.payment_status === "exempt") {
+    return item.payment_notes
+      ? "Isenta · " + escapeHtml(item.payment_notes)
+      : "Isenta";
+  }
+  if (!item.payment_date) return "—";
+  return formatDate(item.payment_date) + " · " +
+    escapeHtml(paymentMethodLabels[item.payment_method] || item.payment_method || "");
+}
+
+function getTuitionActions(item) {
+  const tuitionId = escapeHtml(item.tuition_id);
+  if (item.payment_status === "paid") {
+    return '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + tuitionId + '">ESTORNAR</button>';
+  }
+  if (item.payment_status === "exempt") {
+    return '<button class="table-action" type="button" data-action="remove-exemption" data-tuition-id="' + tuitionId + '">REMOVER ISENÇÃO</button>';
+  }
+  return '<button class="table-action success" type="button" data-action="pay" data-tuition-id="' + tuitionId + '">REGISTRAR</button>' +
+    '<button class="table-action" type="button" data-action="exempt" data-tuition-id="' + tuitionId + '">ISENTAR</button>';
 }
 
 function renderTuitionTable() {
@@ -223,12 +248,8 @@ function renderTuitionTable() {
   empty.hidden = true;
   body.innerHTML = filtered.map(function (item) {
     const status = getStatusMeta(item.payment_status);
-    const paymentDescription = item.payment_date
-      ? formatDate(item.payment_date) + " · " + escapeHtml(paymentMethodLabels[item.payment_method] || item.payment_method || "")
-      : "—";
-    const primaryAction = item.payment_status === "paid"
-      ? '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + escapeHtml(item.tuition_id) + '">ESTORNAR</button>'
-      : '<button class="table-action success" type="button" data-action="pay" data-tuition-id="' + escapeHtml(item.tuition_id) + '">REGISTRAR</button>';
+    const paymentDescription = getPaymentDescription(item);
+    const tuitionActions = getTuitionActions(item);
 
     return '<tr>' +
       '<td><strong>' + escapeHtml(item.student_name || "Aluno") + '</strong><small>' + escapeHtml(item.student_email || "") + '</small></td>' +
@@ -237,7 +258,7 @@ function renderTuitionTable() {
       '<td>' + escapeHtml(formatCurrency(item.amount_due)) + '</td>' +
       '<td>' + paymentDescription + '</td>' +
       '<td><span class="status-pill ' + status.className + '">' + status.label + '</span></td>' +
-      '<td><div class="table-actions">' + primaryAction +
+      '<td><div class="table-actions">' + tuitionActions +
         '<button class="table-action" type="button" data-action="history" data-student-id="' + escapeHtml(item.student_id) + '">HISTÓRICO</button>' +
       '</div></td>' +
     '</tr>';
@@ -398,6 +419,44 @@ async function registerPayment(event) {
   }
 }
 
+async function exemptTuition(tuitionId) {
+  const reason = window.prompt("Motivo da isenção (opcional). Clique em Cancelar para desistir:", "");
+  if (reason === null) return;
+  if (!window.confirm("Confirma a isenção desta mensalidade? O valor não será contabilizado como recebimento.")) return;
+
+  try {
+    setPageMessage("Registrando isenção...", "info");
+    const response = await Auth.getClient().rpc("mark_tuition_exempt", {
+      target_tuition_id: tuitionId,
+      target_reason: reason.trim()
+    });
+    if (response.error) throw response.error;
+    await loadSelectedMonth({ generate: false });
+    setPageMessage("Mensalidade marcada como ISENTA. O valor foi excluído dos recebimentos do mês.", "success");
+  } catch (error) {
+    setPageMessage("Não foi possível aplicar a isenção: " + (error.message || "erro desconhecido"), "error");
+  }
+}
+
+async function removeTuitionExemption(tuitionId) {
+  const reason = window.prompt("Motivo da remoção da isenção (opcional). Clique em Cancelar para desistir:", "");
+  if (reason === null) return;
+  if (!window.confirm("Confirma a remoção da isenção? A mensalidade voltará a ficar em aberto.")) return;
+
+  try {
+    setPageMessage("Removendo isenção...", "info");
+    const response = await Auth.getClient().rpc("reverse_tuition_exemption", {
+      target_tuition_id: tuitionId,
+      target_reason: reason.trim()
+    });
+    if (response.error) throw response.error;
+    await loadSelectedMonth({ generate: false });
+    setPageMessage("Isenção removida. A mensalidade voltou a ficar em aberto.", "success");
+  } catch (error) {
+    setPageMessage("Não foi possível remover a isenção: " + (error.message || "erro desconhecido"), "error");
+  }
+}
+
 async function reversePayment(tuitionId) {
   const reason = window.prompt("Motivo do estorno (opcional). Clique em Cancelar para desistir:", "");
   if (reason === null) return;
@@ -495,6 +554,8 @@ function handleTuitionTableClick(event) {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
   if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);
+  if (button.dataset.action === "exempt") exemptTuition(button.dataset.tuitionId);
+  if (button.dataset.action === "remove-exemption") removeTuitionExemption(button.dataset.tuitionId);
   if (button.dataset.action === "reverse") reversePayment(button.dataset.tuitionId);
   if (button.dataset.action === "history") openHistoryModal(button.dataset.studentId);
 }
