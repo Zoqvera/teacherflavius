@@ -12,12 +12,20 @@
     return (window.location.pathname || "/").toLowerCase();
   }
 
+  function getLegacyHtmlBasePath(path) {
+    const extensionSeparator = path.lastIndexOf(".");
+    if (extensionSeparator < 0 || path.slice(extensionSeparator + 1) !== "html") return null;
+    return path.slice(0, extensionSeparator);
+  }
+
   function isPublicMarketingPage() {
     const path = currentPath();
+    const legacyBasePath = getLegacyHtmlBasePath(path);
+
     return path === "/" ||
-      path === "/index.html" ||
+      legacyBasePath === "/index" ||
       path === "/quero_conhecer" ||
-      path === "/quero_conhecer.html" ||
+      legacyBasePath === "/quero_conhecer" ||
       path === "/quero-conhecer" ||
       path === "/quero-conhecer/" ||
       path.indexOf("/curso-de-ingles-online") === 0 ||
