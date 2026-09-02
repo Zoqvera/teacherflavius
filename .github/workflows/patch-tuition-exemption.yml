@@ -1,4 +1,4 @@
-name: Patch tuition exemption UI
+name: Materialize tuition exemption clean route
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  patch:
+  materialize:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,178 +19,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch admin UI and Mercado Pago guard
+      - name: Materialize mensalidades clean route
+        run: python3 scripts/materialize_clean_route_aliases.py --site-root .
+
+      - name: Validate exemption UI on clean route
         shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
+          grep -q 'summaryExempt' mensalidades/index.html
+          grep -q 'value="exempt"' mensalidades/index.html
+          grep -q 'mensalidades.js?v=20260902-exempt-1' mensalidades/index.html
 
-          def replace_once(text, old, new, label):
-              if old not in text:
-                  raise SystemExit(f"Expected snippet not found: {label}")
-              return text.replace(old, new, 1)
-
-          js_path = Path("mensalidades.js")
-          js = js_path.read_text(encoding="utf-8")
-
-          js = replace_once(
-              js,
-              '  paid: { label: "Pago", className: "status-paid" },\n',
-              '  paid: { label: "Pago", className: "status-paid" },\n  exempt: { label: "Isento", className: "status-exempt" },\n',
-              "status metadata",
-          )
-
-          js = replace_once(
-              js,
-              '  document.getElementById("summaryPaid").textContent = String(counts.paid || 0);\n',
-              '  document.getElementById("summaryPaid").textContent = String(counts.paid || 0);\n  document.getElementById("summaryExempt").textContent = String(counts.exempt || 0);\n',
-              "summary exempt count",
-          )
-
-          helper_code = '''function getPaymentDescription(item) {
-            if (item.payment_status === "exempt") {
-              return item.payment_notes
-                ? "Isenta · " + escapeHtml(item.payment_notes)
-                : "Isenta";
-            }
-            if (!item.payment_date) return "—";
-            return formatDate(item.payment_date) + " · " +
-              escapeHtml(paymentMethodLabels[item.payment_method] || item.payment_method || "");
-          }
-
-          function getTuitionActions(item) {
-            const tuitionId = escapeHtml(item.tuition_id);
-            if (item.payment_status === "paid") {
-              return '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + tuitionId + '">ESTORNAR</button>';
-            }
-            if (item.payment_status === "exempt") {
-              return '<button class="table-action" type="button" data-action="remove-exemption" data-tuition-id="' + tuitionId + '">REMOVER ISENÇÃO</button>';
-            }
-            return '<button class="table-action success" type="button" data-action="pay" data-tuition-id="' + tuitionId + '">REGISTRAR</button>' +
-              '<button class="table-action" type="button" data-action="exempt" data-tuition-id="' + tuitionId + '">ISENTAR</button>';
-          }
-
-          '''
-          js = replace_once(js, "function renderTuitionTable() {", helper_code + "function renderTuitionTable() {", "tuition helpers")
-
-          action_start = js.find("    const paymentDescription = item.payment_date")
-          action_end = js.find("\n\n    return '<tr>' +", action_start)
-          if action_start < 0 or action_end < 0:
-              raise SystemExit("Expected tuition action block not found")
-          js = js[:action_start] + '''    const paymentDescription = getPaymentDescription(item);
-              const tuitionActions = getTuitionActions(item);''' + js[action_end:]
-          js = replace_once(js, "'<td><div class=\"table-actions\">' + primaryAction +", "'<td><div class=\"table-actions\">' + tuitionActions +", "tuition actions output")
-
-          exemption_functions = '''async function exemptTuition(tuitionId) {
-            const reason = window.prompt("Motivo da isenção (opcional). Clique em Cancelar para desistir:", "");
-            if (reason === null) return;
-            if (!window.confirm("Confirma a isenção desta mensalidade? O valor não será contabilizado como recebimento.")) return;
-
-            try {
-              setPageMessage("Registrando isenção...", "info");
-              const response = await Auth.getClient().rpc("mark_tuition_exempt", {
-                target_tuition_id: tuitionId,
-                target_reason: reason.trim()
-              });
-              if (response.error) throw response.error;
-              await loadSelectedMonth({ generate: false });
-              setPageMessage("Mensalidade marcada como ISENTA. O valor foi excluído dos recebimentos do mês.", "success");
-            } catch (error) {
-              setPageMessage("Não foi possível aplicar a isenção: " + (error.message || "erro desconhecido"), "error");
-            }
-          }
-
-          async function removeTuitionExemption(tuitionId) {
-            const reason = window.prompt("Motivo da remoção da isenção (opcional). Clique em Cancelar para desistir:", "");
-            if (reason === null) return;
-            if (!window.confirm("Confirma a remoção da isenção? A mensalidade voltará a ficar em aberto.")) return;
-
-            try {
-              setPageMessage("Removendo isenção...", "info");
-              const response = await Auth.getClient().rpc("reverse_tuition_exemption", {
-                target_tuition_id: tuitionId,
-                target_reason: reason.trim()
-              });
-              if (response.error) throw response.error;
-              await loadSelectedMonth({ generate: false });
-              setPageMessage("Isenção removida. A mensalidade voltou a ficar em aberto.", "success");
-            } catch (error) {
-              setPageMessage("Não foi possível remover a isenção: " + (error.message || "erro desconhecido"), "error");
-            }
-          }
-
-          '''
-          js = replace_once(js, "async function reversePayment(tuitionId) {", exemption_functions + "async function reversePayment(tuitionId) {", "exemption actions")
-
-          js = replace_once(
-              js,
-              '  if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);\n',
-              '  if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);\n  if (button.dataset.action === "exempt") exemptTuition(button.dataset.tuitionId);\n  if (button.dataset.action === "remove-exemption") removeTuitionExemption(button.dataset.tuitionId);\n',
-              "table click exemption actions",
-          )
-          js_path.write_text(js, encoding="utf-8")
-
-          html_path = Path("mensalidades.html")
-          html = html_path.read_text(encoding="utf-8")
-          html = replace_once(html, "grid-template-columns: repeat(4, minmax(0, 1fr));", "grid-template-columns: repeat(5, minmax(0, 1fr));", "summary grid")
-          html = replace_once(
-              html,
-              "    .summary-card.received { border-color: rgba(52,211,153,0.35); }\n",
-              "    .summary-card.received { border-color: rgba(52,211,153,0.35); }\n    .summary-card.exempt { border-color: rgba(167,139,250,0.42); }\n",
-              "summary exempt style",
-          )
-          html = replace_once(
-              html,
-              "    .status-due-soon {\n",
-              "    .status-exempt {\n      background: rgba(139,92,246,0.12);\n      border-color: rgba(167,139,250,0.42);\n      color: #ddd6fe;\n    }\n\n    .status-due-soon {\n",
-              "exempt status style",
-          )
-          html = replace_once(
-              html,
-              '          <strong id="summaryPaid">0</strong>\n        </article>\n',
-              '          <strong id="summaryPaid">0</strong>\n        </article>\n        <article class="summary-card exempt">\n          <span>Mensalidades isentas</span>\n          <strong id="summaryExempt">0</strong>\n        </article>\n',
-              "summary exempt card",
-          )
-          html = replace_once(
-              html,
-              '              <option value="paid">Pagos</option>\n',
-              '              <option value="paid">Pagos</option>\n              <option value="exempt">Isentos</option>\n',
-              "exempt filter",
-          )
-          html = replace_once(html, 'mensalidades.js?v=20260819-1', 'mensalidades.js?v=20260902-exempt-1', "mensalidades cache bust")
-          html_path.write_text(html, encoding="utf-8")
-
-          edge_path = Path("supabase/functions/create-mercado-pago-payment/index.ts")
-          edge = edge_path.read_text(encoding="utf-8")
-          edge = replace_once(
-              edge,
-              '.select("id, student_id, reference_month, due_date, amount_due, payment_date")',
-              '.select("id, student_id, reference_month, due_date, amount_due, payment_date, is_exempt")',
-              "Mercado Pago tuition select",
-          )
-          edge = replace_once(
-              edge,
-              '  const amount = Number(tuition.amount_due);\n',
-              '  if (tuition.is_exempt === true) {\n    return jsonResponse(request, {\n      error: "Esta mensalidade está isenta e não precisa ser paga.",\n      code: "tuition_exempt",\n    }, 409);\n  }\n\n  const amount = Number(tuition.amount_due);\n',
-              "Mercado Pago exempt guard",
-          )
-          edge_path.write_text(edge, encoding="utf-8")
-          PY
-
-      - name: Validate patched files
+      - name: Commit generated route
         shell: bash
         run: |
-          node --check mensalidades.js
-          grep -q 'value="exempt"' mensalidades.html
-          grep -q 'summaryExempt' mensalidades.html
-          grep -q 'data-action="exempt"' mensalidades.js
-          grep -q 'tuition.is_exempt === true' supabase/functions/create-mercado-pago-payment/index.ts
-
-      - name: Commit patch
-        shell: bash
-        run: |
+          if git diff --quiet -- mensalidades/index.html; then
+            echo "Clean route is already materialized."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mensalidades.js mensalidades.html supabase/functions/create-mercado-pago-payment/index.ts
-          git commit -m "feat: support exempt tuition payments"
+          git add mensalidades/index.html
+          git commit -m "chore: materialize tuition exemption route"
           git push origin HEAD:main
