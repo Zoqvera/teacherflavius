@@ -43,7 +43,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 14px;
     }
 
@@ -78,6 +78,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
 
     .summary-card.received { border-color: rgba(52,211,153,0.35); }
+    .summary-card.exempt { border-color: rgba(167,139,250,0.42); }
     .summary-card.due-soon { border-color: rgba(251,191,36,0.35); }
     .summary-card.overdue { border-color: rgba(248,113,113,0.38); }
 
@@ -261,6 +262,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       color: #a7f3d0;
     }
 
+    .status-exempt {
+      background: rgba(139,92,246,0.12);
+      border-color: rgba(167,139,250,0.42);
+      color: #ddd6fe;
+    }
+
     .status-due-soon {
       background: rgba(245,158,11,0.12);
       border-color: rgba(251,191,36,0.4);
@@ -441,6 +448,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <span>Mensalidades pagas</span>
           <strong id="summaryPaid">0</strong>
         </article>
+        <article class="summary-card exempt">
+          <span>Mensalidades isentas</span>
+          <strong id="summaryExempt">0</strong>
+        </article>
         <article class="summary-card due-soon">
           <span>A vencer em 7 dias</span>
           <strong id="summaryDueSoon">0</strong>
@@ -473,6 +484,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <select id="statusFilter" class="finance-select">
               <option value="all">Todos</option>
               <option value="paid">Pagos</option>
+              <option value="exempt">Isentos</option>
               <option value="due_soon">A vencer</option>
               <option value="open">Em aberto</option>
               <option value="overdue">Atrasados</option>
@@ -648,7 +660,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
-  <script src="mensalidades.js?v=20260819-1"></script>
+  <script src="mensalidades.js?v=20260902-exempt-1"></script>
   <script src="animated_cards.js?v=20260715-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script defer src="/site_footer.js?v=20260814-1"></script>
