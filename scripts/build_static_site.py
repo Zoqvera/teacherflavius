@@ -24,6 +24,10 @@ ANALYTICS_SCRIPT_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?analytics\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
+SITE_FOOTER_SCRIPT_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
 RESOURCE_WAITER_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?resource_waiter\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
@@ -62,11 +66,6 @@ ANALYTICS_PAYMENTS_RE = re.compile(
 )
 AUTH_DEPENDENCIES = (
     (
-        "Resource waiter",
-        RESOURCE_WAITER_RE,
-        "/resource_waiter.js?v=20260902-2",
-    ),
-    (
         "Supabase client service",
         SUPABASE_CLIENT_SERVICE_RE,
         "/supabase_client_service.js?v=20260902-1",
@@ -100,6 +99,9 @@ ANALYTICS_DEPENDENCIES = (
         ANALYTICS_PAYMENTS_RE,
         "/analytics_payments.js?v=20260902-1",
     ),
+)
+PORTAL_HELPER_DEPENDENCIES = (
+    ("Resource waiter", RESOURCE_WAITER_RE, "/resource_waiter.js?v=20260902-2"),
 )
 CLEAN_ROUTE_PAIR_RE = re.compile(
     r'^\s*"(?P<route>/[^"]+/)"\s*:\s*"(?P<source>/[^"]+\.html)"\s*,?\s*$',
@@ -321,16 +323,28 @@ def main() -> None:
                 ANALYTICS_SCRIPT_RE,
                 ANALYTICS_DEPENDENCIES,
             )
+            html, portal_helper_injections = inject_dependencies(
+                html,
+                SITE_FOOTER_SCRIPT_RE,
+                PORTAL_HELPER_DEPENDENCIES,
+            )
             html, enhanced = inject_site_baseline(html, relative)
             if html != original_html:
                 destination.write_text(html, encoding="utf-8")
-            dependency_injections += auth_injections + analytics_injections
+            dependency_injections += (
+                auth_injections + analytics_injections + portal_helper_injections
+            )
             if enhanced:
                 enhanced_html += 1
 
     clean_route_aliases = materialize_clean_route_aliases()
     validate_dependency_order(AUTH_SCRIPT_RE, AUTH_DEPENDENCIES, "auth.js")
     validate_dependency_order(ANALYTICS_SCRIPT_RE, ANALYTICS_DEPENDENCIES, "analytics.js")
+    validate_dependency_order(
+        SITE_FOOTER_SCRIPT_RE,
+        PORTAL_HELPER_DEPENDENCIES,
+        "site_footer.js",
+    )
 
     headers = ROOT / "netlify" / "_headers"
     if not headers.is_file():
