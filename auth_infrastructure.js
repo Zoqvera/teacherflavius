@@ -57,6 +57,17 @@
     return moduleLoader.loadGlobalModule(RESOURCE_WAITER_MODULE);
   }
 
+  function loadAnimatedCards() {
+    loadResourceWaiter()
+      .then(function () {
+        appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
+      })
+      .catch(function (error) {
+        console.warn("Não foi possível preparar o helper de recursos para os assets compartilhados:", error);
+        appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
+      });
+  }
+
   function loadAccessTracker() {
     loadResourceWaiter()
       .then(function () {
@@ -70,7 +81,7 @@
   function loadSharedAssets() {
     runWhenDomReady(function () {
       appendStylesheetOnce('link[href^="animated_cards.css"]', ASSETS.animatedCardsCss);
-      appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
+      loadAnimatedCards();
       loadAccessTracker();
     });
   }
