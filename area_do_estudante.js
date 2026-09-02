@@ -21,22 +21,15 @@
     window.location.href = LOGIN_PATH + "?next=" + next;
   }
 
-  function sleep(milliseconds) {
-    return new Promise(function (resolve) {
-      window.setTimeout(resolve, milliseconds);
-    });
-  }
-
   function authResourcesAreReady() {
     return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
   }
 
-  async function waitForAuthResources() {
-    for (let attempt = 0; attempt < AUTH_RESOURCE_MAX_ATTEMPTS; attempt += 1) {
-      if (authResourcesAreReady()) return true;
-      await sleep(AUTH_RESOURCE_RETRY_DELAY_MS);
-    }
-    return authResourcesAreReady();
+  function waitForAuthResources() {
+    return window.ResourceWaiter.waitUntil(authResourcesAreReady, {
+      maxAttempts: AUTH_RESOURCE_MAX_ATTEMPTS,
+      delayMs: AUTH_RESOURCE_RETRY_DELAY_MS
+    });
   }
 
   function extractActivityNumber(title) {
