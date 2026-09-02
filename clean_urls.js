@@ -90,7 +90,7 @@
   function cleanInternalUrl(value) {
     if (!value) return null;
     let url;
-    try { url = new URL(value, window.location.href); } catch (error) { return null; }
+    try { url = new URL(value, document.baseURI || window.location.href); } catch (error) { return null; }
     if (url.origin !== window.location.origin) return null;
 
     const clean = cleanPath(url.pathname);
