@@ -16,6 +16,10 @@
     return number;
   }
 
+  function shouldRunFinalCheck(settings) {
+    return settings.finalCheck !== false;
+  }
+
   async function waitUntil(predicate, options) {
     if (typeof predicate !== "function") {
       throw new TypeError("ResourceWaiter.waitUntil requer uma função de verificação.");
@@ -30,7 +34,7 @@
       await sleep(delayMs);
     }
 
-    return !!predicate();
+    return shouldRunFinalCheck(settings) ? !!predicate() : false;
   }
 
   window.ResourceWaiter = Object.freeze({
