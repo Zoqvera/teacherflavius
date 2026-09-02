@@ -8,7 +8,34 @@
   <script>
     (async function () {
       const response = await fetch('/perfil.html', { cache: 'no-store' });
-      const html = await response.text();
+      let html = await response.text();
+
+      html = html
+        .replace(
+          '<script src="auth.js?v=20260819-1"></script>',
+          '<script src="auth.js?v=20260819-1"></script>\n  <script src="/student_profile_optional.js?v=20260902-1"></script>'
+        )
+        .replace(
+          '<label for="pixKey">Chave PIX</label>',
+          '<label for="pixKey">Chave PIX <span style="color:#94a3b8;font-weight:normal">(opcional)</span></label>'
+        )
+        .replace(
+          '<input id="pixKey" type="text" required />',
+          '<input id="pixKey" type="text" />'
+        )
+        .replace(
+          'A chave PIX é usada apenas em situações em que o professor precise fazer reembolso de algum valor para o aluno.',
+          'Opcional. Informe apenas se quiser deixar uma chave disponível para eventuais reembolsos.'
+        )
+        .replace(
+          '<div class="availability-block">',
+          '<div id="disponibilidade" class="availability-block">'
+        )
+        .replace(
+          'Marque todos os dias e horários, de segunda a sexta, em que você estará disponível para fazer aulas de inglês.',
+          'Informe os dias e horários em que você costuma estar disponível. Você pode alterar essa informação quando quiser.'
+        );
+
       document.open();
       document.write(html.replace('<head>', '<head>\n  <base href="/">'));
       document.close();
