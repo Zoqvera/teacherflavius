@@ -11,6 +11,7 @@ on:
       - "**/*.txt"
       - "scripts/build_static_site.py"
       - "scripts/inject_auth_module_loader.py"
+      - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_privacy_analytics.py"
       - "scripts/inject_google_tag_manager.py"
       - "netlify/_headers"
@@ -28,6 +29,7 @@ on:
       - "**/*.txt"
       - "scripts/build_static_site.py"
       - "scripts/inject_auth_module_loader.py"
+      - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_privacy_analytics.py"
       - "scripts/inject_google_tag_manager.py"
       - "netlify/_headers"
@@ -46,6 +48,25 @@ jobs:
 
       - name: Build static site
         run: python3 scripts/build_static_site.py
+
+      - name: Ensure site asset loader precedes footer
+        run: |
+          python3 scripts/inject_site_asset_loader.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          footer_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
+          loader_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_asset_loader\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
+          for path in Path('_site').rglob('*.html'):
+              html = path.read_text(encoding='utf-8')
+              footer = footer_re.search(html)
+              if not footer:
+                  continue
+              loader = loader_re.search(html)
+              if not loader or loader.start() > footer.start():
+                  raise SystemExit(f'Invalid site asset loader bootstrap order in {path}')
+          PY
 
       - name: Ensure privacy analytics precedes footer
         run: |
@@ -97,9 +118,11 @@ jobs:
           cp -R . "$tmp_dir/site"
           rm -rf "$tmp_dir/site/_site" "$tmp_dir/site/.git"
           python3 "$tmp_dir/site/scripts/inject_auth_module_loader.py" --site-root "$tmp_dir/site"
+          python3 "$tmp_dir/site/scripts/inject_site_asset_loader.py" --site-root "$tmp_dir/site"
           python3 "$tmp_dir/site/scripts/inject_site_privacy_analytics.py" --site-root "$tmp_dir/site"
           python3 "$tmp_dir/site/scripts/inject_google_tag_manager.py" --site-root "$tmp_dir/site"
           grep -q '/module_loader.js?v=20260902-2' "$tmp_dir/site/login.html"
+          grep -q '/site_asset_loader.js?v=20260902-1' "$tmp_dir/site/index.html"
           grep -q '/site_privacy_analytics.js?v=20260902-1' "$tmp_dir/site/index.html"
           grep -q 'GTM-K2NWR2NK' "$tmp_dir/site/index.html"
 
@@ -111,6 +134,7 @@ jobs:
           test -f _site/sitemap.xml
           test -f _site/error_monitor.js
           test -f _site/responsive_compat.css
+          test -f _site/site_asset_loader.js
           test -f _site/site_privacy_analytics.js
           test -f _site/_headers
           if find _site -type f \( -name '*.md' -o -name '*.sql' -o -name '*.py' -o -name '*.yml' -o -name '*.yaml' -o -name '*.toml' \) | grep -q .; then
