@@ -1,0 +1,278 @@
+name: Patch tuition exemption UI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/patch-tuition-exemption.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch admin UI and Mercado Pago guard
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f"Expected snippet not found: {label}")
+              return text.replace(old, new, 1)
+
+          js_path = Path("mensalidades.js")
+          js = js_path.read_text(encoding="utf-8")
+
+          js = replace_once(
+              js,
+              '''const statusMetadata = {
+            paid: { label: "Pago", className: "status-paid" },
+            due_soon: { label: "A vencer", className: "status-due-soon" },
+            overdue: { label: "Atrasado", className: "status-overdue" },
+            open: { label: "Em aberto", className: "status-open" }
+          };''',
+              '''const statusMetadata = {
+            paid: { label: "Pago", className: "status-paid" },
+            exempt: { label: "Isento", className: "status-exempt" },
+            due_soon: { label: "A vencer", className: "status-due-soon" },
+            overdue: { label: "Atrasado", className: "status-overdue" },
+            open: { label: "Em aberto", className: "status-open" }
+          };''',
+              "status metadata",
+          )
+
+          js = replace_once(
+              js,
+              '''  document.getElementById("summaryPaid").textContent = String(counts.paid || 0);
+            document.getElementById("summaryDueSoon").textContent = String(counts.due_soon || 0);''',
+              '''  document.getElementById("summaryPaid").textContent = String(counts.paid || 0);
+            document.getElementById("summaryExempt").textContent = String(counts.exempt || 0);
+            document.getElementById("summaryDueSoon").textContent = String(counts.due_soon || 0);''',
+              "summary exempt count",
+          )
+
+          js = replace_once(
+              js,
+              '''function renderTuitionTable() {
+            const body = document.getElementById("tuitionTableBody");''',
+              '''function getPaymentDescription(item) {
+            if (item.payment_status === "exempt") {
+              return item.payment_notes
+                ? "Isenta · " + escapeHtml(item.payment_notes)
+                : "Isenta";
+            }
+            if (!item.payment_date) return "—";
+            return formatDate(item.payment_date) + " · " +
+              escapeHtml(paymentMethodLabels[item.payment_method] || item.payment_method || "");
+          }
+
+          function getTuitionActions(item) {
+            const tuitionId = escapeHtml(item.tuition_id);
+            if (item.payment_status === "paid") {
+              return '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + tuitionId + '">ESTORNAR</button>';
+            }
+            if (item.payment_status === "exempt") {
+              return '<button class="table-action" type="button" data-action="remove-exemption" data-tuition-id="' + tuitionId + '">REMOVER ISENÇÃO</button>';
+            }
+            return '<button class="table-action success" type="button" data-action="pay" data-tuition-id="' + tuitionId + '">REGISTRAR</button>' +
+              '<button class="table-action" type="button" data-action="exempt" data-tuition-id="' + tuitionId + '">ISENTAR</button>';
+          }
+
+          function renderTuitionTable() {
+            const body = document.getElementById("tuitionTableBody");''',
+              "tuition render helpers",
+          )
+
+          js = replace_once(
+              js,
+              '''    const paymentDescription = item.payment_date
+                ? formatDate(item.payment_date) + " · " + escapeHtml(paymentMethodLabels[item.payment_method] || item.payment_method || "")
+                : "—";
+              const primaryAction = item.payment_status === "paid"
+                ? '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + escapeHtml(item.tuition_id) + '">ESTORNAR</button>'
+                : '<button class="table-action success" type="button" data-action="pay" data-tuition-id="' + escapeHtml(item.tuition_id) + '">REGISTRAR</button>';''',
+              '''    const paymentDescription = getPaymentDescription(item);
+              const tuitionActions = getTuitionActions(item);''',
+              "tuition row actions",
+          )
+
+          js = replace_once(
+              js,
+              '''      '<td><div class="table-actions">' + primaryAction +
+                    '<button class="table-action" type="button" data-action="history" data-student-id="' + escapeHtml(item.student_id) + '">HISTÓRICO</button>' +''',
+              '''      '<td><div class="table-actions">' + tuitionActions +
+                    '<button class="table-action" type="button" data-action="history" data-student-id="' + escapeHtml(item.student_id) + '">HISTÓRICO</button>' +''',
+              "tuition actions output",
+          )
+
+          js = replace_once(
+              js,
+              '''async function reversePayment(tuitionId) {''',
+              '''async function exemptTuition(tuitionId) {
+            const reason = window.prompt("Motivo da isenção (opcional). Clique em Cancelar para desistir:", "");
+            if (reason === null) return;
+            if (!window.confirm("Confirma a isenção desta mensalidade? O valor não será contabilizado como recebimento.")) return;
+
+            try {
+              setPageMessage("Registrando isenção...", "info");
+              const response = await Auth.getClient().rpc("mark_tuition_exempt", {
+                target_tuition_id: tuitionId,
+                target_reason: reason.trim()
+              });
+              if (response.error) throw response.error;
+              await loadSelectedMonth({ generate: false });
+              setPageMessage("Mensalidade marcada como ISENTA. O valor foi excluído dos recebimentos do mês.", "success");
+            } catch (error) {
+              setPageMessage("Não foi possível aplicar a isenção: " + (error.message || "erro desconhecido"), "error");
+            }
+          }
+
+          async function removeTuitionExemption(tuitionId) {
+            const reason = window.prompt("Motivo da remoção da isenção (opcional). Clique em Cancelar para desistir:", "");
+            if (reason === null) return;
+            if (!window.confirm("Confirma a remoção da isenção? A mensalidade voltará a ficar em aberto.")) return;
+
+            try {
+              setPageMessage("Removendo isenção...", "info");
+              const response = await Auth.getClient().rpc("reverse_tuition_exemption", {
+                target_tuition_id: tuitionId,
+                target_reason: reason.trim()
+              });
+              if (response.error) throw response.error;
+              await loadSelectedMonth({ generate: false });
+              setPageMessage("Isenção removida. A mensalidade voltou a ficar em aberto.", "success");
+            } catch (error) {
+              setPageMessage("Não foi possível remover a isenção: " + (error.message || "erro desconhecido"), "error");
+            }
+          }
+
+          async function reversePayment(tuitionId) {''',
+              "exemption actions",
+          )
+
+          js = replace_once(
+              js,
+              '''  if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);
+            if (button.dataset.action === "reverse") reversePayment(button.dataset.tuitionId);
+            if (button.dataset.action === "history") openHistoryModal(button.dataset.studentId);''',
+              '''  if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);
+            if (button.dataset.action === "exempt") exemptTuition(button.dataset.tuitionId);
+            if (button.dataset.action === "remove-exemption") removeTuitionExemption(button.dataset.tuitionId);
+            if (button.dataset.action === "reverse") reversePayment(button.dataset.tuitionId);
+            if (button.dataset.action === "history") openHistoryModal(button.dataset.studentId);''',
+              "table click exemption actions",
+          )
+
+          js_path.write_text(js, encoding="utf-8")
+
+          html_path = Path("mensalidades.html")
+          html = html_path.read_text(encoding="utf-8")
+          html = replace_once(html, "grid-template-columns: repeat(4, minmax(0, 1fr));", "grid-template-columns: repeat(5, minmax(0, 1fr));", "summary grid")
+          html = replace_once(
+              html,
+              '''    .summary-card.received { border-color: rgba(52,211,153,0.35); }
+              .summary-card.due-soon { border-color: rgba(251,191,36,0.35); }''',
+              '''    .summary-card.received { border-color: rgba(52,211,153,0.35); }
+              .summary-card.exempt { border-color: rgba(167,139,250,0.42); }
+              .summary-card.due-soon { border-color: rgba(251,191,36,0.35); }''',
+              "summary exempt style",
+          )
+          html = replace_once(
+              html,
+              '''    .status-due-soon {''',
+              '''    .status-exempt {
+                background: rgba(139,92,246,0.12);
+                border-color: rgba(167,139,250,0.42);
+                color: #ddd6fe;
+              }
+
+              .status-due-soon {''',
+              "exempt status style",
+          )
+          html = replace_once(
+              html,
+              '''        <article class="summary-card">
+                    <span>Mensalidades pagas</span>
+                    <strong id="summaryPaid">0</strong>
+                  </article>
+                  <article class="summary-card due-soon">''',
+              '''        <article class="summary-card">
+                    <span>Mensalidades pagas</span>
+                    <strong id="summaryPaid">0</strong>
+                  </article>
+                  <article class="summary-card exempt">
+                    <span>Mensalidades isentas</span>
+                    <strong id="summaryExempt">0</strong>
+                  </article>
+                  <article class="summary-card due-soon">''',
+              "summary exempt card",
+          )
+          html = replace_once(
+              html,
+              '''              <option value="paid">Pagos</option>
+                        <option value="due_soon">A vencer</option>''',
+              '''              <option value="paid">Pagos</option>
+                        <option value="exempt">Isentos</option>
+                        <option value="due_soon">A vencer</option>''',
+              "exempt filter",
+          )
+          html = replace_once(html, 'mensalidades.js?v=20260819-1', 'mensalidades.js?v=20260902-exempt-1', "mensalidades cache bust")
+          html_path.write_text(html, encoding="utf-8")
+
+          edge_path = Path("supabase/functions/create-mercado-pago-payment/index.ts")
+          edge = edge_path.read_text(encoding="utf-8")
+          edge = replace_once(
+              edge,
+              '.select("id, student_id, reference_month, due_date, amount_due, payment_date")',
+              '.select("id, student_id, reference_month, due_date, amount_due, payment_date, is_exempt")',
+              "Mercado Pago tuition select",
+          )
+          edge = replace_once(
+              edge,
+              '''  if (tuition.payment_date) {
+                return jsonResponse(request, { error: "Esta mensalidade já está paga.", code: "already_paid" }, 409);
+              }
+
+              const amount = Number(tuition.amount_due);''',
+              '''  if (tuition.payment_date) {
+                return jsonResponse(request, { error: "Esta mensalidade já está paga.", code: "already_paid" }, 409);
+              }
+
+              if (tuition.is_exempt === true) {
+                return jsonResponse(request, {
+                  error: "Esta mensalidade está isenta e não precisa ser paga.",
+                  code: "tuition_exempt",
+                }, 409);
+              }
+
+              const amount = Number(tuition.amount_due);''',
+              "Mercado Pago exempt guard",
+          )
+          edge_path.write_text(edge, encoding="utf-8")
+          PY
+
+      - name: Validate patched files
+        shell: bash
+        run: |
+          node --check mensalidades.js
+          grep -q 'value="exempt"' mensalidades.html
+          grep -q 'tuition.is_exempt === true' supabase/functions/create-mercado-pago-payment/index.ts
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mensalidades.js mensalidades.html supabase/functions/create-mercado-pago-payment/index.ts
+          git commit -m "feat: support exempt tuition payments"
+          git push origin HEAD:main
