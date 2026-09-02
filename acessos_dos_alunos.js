@@ -74,7 +74,8 @@
   }
 
   function redirectToLogin() {
-    window.location.href = "/login.html?next=" + encodeURIComponent("acessos_dos_alunos.html");
+    const nextPath = window.Auth.normalizeNextPath(window.location.pathname, "/professor/");
+    window.location.href = "/login/?next=" + encodeURIComponent(nextPath);
   }
 
   function bindDashboardEvents() {
