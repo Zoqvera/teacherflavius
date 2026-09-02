@@ -35,37 +35,19 @@ jobs:
 
           js = replace_once(
               js,
-              '''const statusMetadata = {
-            paid: { label: "Pago", className: "status-paid" },
-            due_soon: { label: "A vencer", className: "status-due-soon" },
-            overdue: { label: "Atrasado", className: "status-overdue" },
-            open: { label: "Em aberto", className: "status-open" }
-          };''',
-              '''const statusMetadata = {
-            paid: { label: "Pago", className: "status-paid" },
-            exempt: { label: "Isento", className: "status-exempt" },
-            due_soon: { label: "A vencer", className: "status-due-soon" },
-            overdue: { label: "Atrasado", className: "status-overdue" },
-            open: { label: "Em aberto", className: "status-open" }
-          };''',
+              '  paid: { label: "Pago", className: "status-paid" },\n',
+              '  paid: { label: "Pago", className: "status-paid" },\n  exempt: { label: "Isento", className: "status-exempt" },\n',
               "status metadata",
           )
 
           js = replace_once(
               js,
-              '''  document.getElementById("summaryPaid").textContent = String(counts.paid || 0);
-            document.getElementById("summaryDueSoon").textContent = String(counts.due_soon || 0);''',
-              '''  document.getElementById("summaryPaid").textContent = String(counts.paid || 0);
-            document.getElementById("summaryExempt").textContent = String(counts.exempt || 0);
-            document.getElementById("summaryDueSoon").textContent = String(counts.due_soon || 0);''',
+              '  document.getElementById("summaryPaid").textContent = String(counts.paid || 0);\n',
+              '  document.getElementById("summaryPaid").textContent = String(counts.paid || 0);\n  document.getElementById("summaryExempt").textContent = String(counts.exempt || 0);\n',
               "summary exempt count",
           )
 
-          js = replace_once(
-              js,
-              '''function renderTuitionTable() {
-            const body = document.getElementById("tuitionTableBody");''',
-              '''function getPaymentDescription(item) {
+          helper_code = '''function getPaymentDescription(item) {
             if (item.payment_status === "exempt") {
               return item.payment_notes
                 ? "Isenta · " + escapeHtml(item.payment_notes)
@@ -88,37 +70,18 @@ jobs:
               '<button class="table-action" type="button" data-action="exempt" data-tuition-id="' + tuitionId + '">ISENTAR</button>';
           }
 
-          function renderTuitionTable() {
-            const body = document.getElementById("tuitionTableBody");''',
-              "tuition render helpers",
-          )
+          '''
+          js = replace_once(js, "function renderTuitionTable() {", helper_code + "function renderTuitionTable() {", "tuition helpers")
 
-          js = replace_once(
-              js,
-              '''    const paymentDescription = item.payment_date
-                ? formatDate(item.payment_date) + " · " + escapeHtml(paymentMethodLabels[item.payment_method] || item.payment_method || "")
-                : "—";
-              const primaryAction = item.payment_status === "paid"
-                ? '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + escapeHtml(item.tuition_id) + '">ESTORNAR</button>'
-                : '<button class="table-action success" type="button" data-action="pay" data-tuition-id="' + escapeHtml(item.tuition_id) + '">REGISTRAR</button>';''',
-              '''    const paymentDescription = getPaymentDescription(item);
-              const tuitionActions = getTuitionActions(item);''',
-              "tuition row actions",
-          )
+          action_start = js.find("    const paymentDescription = item.payment_date")
+          action_end = js.find("\n\n    return '<tr>' +", action_start)
+          if action_start < 0 or action_end < 0:
+              raise SystemExit("Expected tuition action block not found")
+          js = js[:action_start] + '''    const paymentDescription = getPaymentDescription(item);
+              const tuitionActions = getTuitionActions(item);''' + js[action_end:]
+          js = replace_once(js, "'<td><div class=\"table-actions\">' + primaryAction +", "'<td><div class=\"table-actions\">' + tuitionActions +", "tuition actions output")
 
-          js = replace_once(
-              js,
-              '''      '<td><div class="table-actions">' + primaryAction +
-                    '<button class="table-action" type="button" data-action="history" data-student-id="' + escapeHtml(item.student_id) + '">HISTÓRICO</button>' +''',
-              '''      '<td><div class="table-actions">' + tuitionActions +
-                    '<button class="table-action" type="button" data-action="history" data-student-id="' + escapeHtml(item.student_id) + '">HISTÓRICO</button>' +''',
-              "tuition actions output",
-          )
-
-          js = replace_once(
-              js,
-              '''async function reversePayment(tuitionId) {''',
-              '''async function exemptTuition(tuitionId) {
+          exemption_functions = '''async function exemptTuition(tuitionId) {
             const reason = window.prompt("Motivo da isenção (opcional). Clique em Cancelar para desistir:", "");
             if (reason === null) return;
             if (!window.confirm("Confirma a isenção desta mensalidade? O valor não será contabilizado como recebimento.")) return;
@@ -156,23 +119,15 @@ jobs:
             }
           }
 
-          async function reversePayment(tuitionId) {''',
-              "exemption actions",
-          )
+          '''
+          js = replace_once(js, "async function reversePayment(tuitionId) {", exemption_functions + "async function reversePayment(tuitionId) {", "exemption actions")
 
           js = replace_once(
               js,
-              '''  if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);
-            if (button.dataset.action === "reverse") reversePayment(button.dataset.tuitionId);
-            if (button.dataset.action === "history") openHistoryModal(button.dataset.studentId);''',
-              '''  if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);
-            if (button.dataset.action === "exempt") exemptTuition(button.dataset.tuitionId);
-            if (button.dataset.action === "remove-exemption") removeTuitionExemption(button.dataset.tuitionId);
-            if (button.dataset.action === "reverse") reversePayment(button.dataset.tuitionId);
-            if (button.dataset.action === "history") openHistoryModal(button.dataset.studentId);''',
+              '  if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);\n',
+              '  if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);\n  if (button.dataset.action === "exempt") exemptTuition(button.dataset.tuitionId);\n  if (button.dataset.action === "remove-exemption") removeTuitionExemption(button.dataset.tuitionId);\n',
               "table click exemption actions",
           )
-
           js_path.write_text(js, encoding="utf-8")
 
           html_path = Path("mensalidades.html")
@@ -180,50 +135,26 @@ jobs:
           html = replace_once(html, "grid-template-columns: repeat(4, minmax(0, 1fr));", "grid-template-columns: repeat(5, minmax(0, 1fr));", "summary grid")
           html = replace_once(
               html,
-              '''    .summary-card.received { border-color: rgba(52,211,153,0.35); }
-              .summary-card.due-soon { border-color: rgba(251,191,36,0.35); }''',
-              '''    .summary-card.received { border-color: rgba(52,211,153,0.35); }
-              .summary-card.exempt { border-color: rgba(167,139,250,0.42); }
-              .summary-card.due-soon { border-color: rgba(251,191,36,0.35); }''',
+              "    .summary-card.received { border-color: rgba(52,211,153,0.35); }\n",
+              "    .summary-card.received { border-color: rgba(52,211,153,0.35); }\n    .summary-card.exempt { border-color: rgba(167,139,250,0.42); }\n",
               "summary exempt style",
           )
           html = replace_once(
               html,
-              '''    .status-due-soon {''',
-              '''    .status-exempt {
-                background: rgba(139,92,246,0.12);
-                border-color: rgba(167,139,250,0.42);
-                color: #ddd6fe;
-              }
-
-              .status-due-soon {''',
+              "    .status-due-soon {\n",
+              "    .status-exempt {\n      background: rgba(139,92,246,0.12);\n      border-color: rgba(167,139,250,0.42);\n      color: #ddd6fe;\n    }\n\n    .status-due-soon {\n",
               "exempt status style",
           )
           html = replace_once(
               html,
-              '''        <article class="summary-card">
-                    <span>Mensalidades pagas</span>
-                    <strong id="summaryPaid">0</strong>
-                  </article>
-                  <article class="summary-card due-soon">''',
-              '''        <article class="summary-card">
-                    <span>Mensalidades pagas</span>
-                    <strong id="summaryPaid">0</strong>
-                  </article>
-                  <article class="summary-card exempt">
-                    <span>Mensalidades isentas</span>
-                    <strong id="summaryExempt">0</strong>
-                  </article>
-                  <article class="summary-card due-soon">''',
+              '          <strong id="summaryPaid">0</strong>\n        </article>\n',
+              '          <strong id="summaryPaid">0</strong>\n        </article>\n        <article class="summary-card exempt">\n          <span>Mensalidades isentas</span>\n          <strong id="summaryExempt">0</strong>\n        </article>\n',
               "summary exempt card",
           )
           html = replace_once(
               html,
-              '''              <option value="paid">Pagos</option>
-                        <option value="due_soon">A vencer</option>''',
-              '''              <option value="paid">Pagos</option>
-                        <option value="exempt">Isentos</option>
-                        <option value="due_soon">A vencer</option>''',
+              '              <option value="paid">Pagos</option>\n',
+              '              <option value="paid">Pagos</option>\n              <option value="exempt">Isentos</option>\n',
               "exempt filter",
           )
           html = replace_once(html, 'mensalidades.js?v=20260819-1', 'mensalidades.js?v=20260902-exempt-1', "mensalidades cache bust")
@@ -239,23 +170,8 @@ jobs:
           )
           edge = replace_once(
               edge,
-              '''  if (tuition.payment_date) {
-                return jsonResponse(request, { error: "Esta mensalidade já está paga.", code: "already_paid" }, 409);
-              }
-
-              const amount = Number(tuition.amount_due);''',
-              '''  if (tuition.payment_date) {
-                return jsonResponse(request, { error: "Esta mensalidade já está paga.", code: "already_paid" }, 409);
-              }
-
-              if (tuition.is_exempt === true) {
-                return jsonResponse(request, {
-                  error: "Esta mensalidade está isenta e não precisa ser paga.",
-                  code: "tuition_exempt",
-                }, 409);
-              }
-
-              const amount = Number(tuition.amount_due);''',
+              '  const amount = Number(tuition.amount_due);\n',
+              '  if (tuition.is_exempt === true) {\n    return jsonResponse(request, {\n      error: "Esta mensalidade está isenta e não precisa ser paga.",\n      code: "tuition_exempt",\n    }, 409);\n  }\n\n  const amount = Number(tuition.amount_due);\n',
               "Mercado Pago exempt guard",
           )
           edge_path.write_text(edge, encoding="utf-8")
@@ -266,6 +182,8 @@ jobs:
         run: |
           node --check mensalidades.js
           grep -q 'value="exempt"' mensalidades.html
+          grep -q 'summaryExempt' mensalidades.html
+          grep -q 'data-action="exempt"' mensalidades.js
           grep -q 'tuition.is_exempt === true' supabase/functions/create-mercado-pago-payment/index.ts
 
       - name: Commit patch
