@@ -2,42 +2,6 @@
   "use strict";
 
   var GOOGLE_MEASUREMENT_ID = "G-11V3W5B6TG";
-  var LEGACY_HTML_EXTENSION = ".html";
-
-  function isEnrollmentLink(value) {
-    if (!value) return false;
-    try {
-      var url = new URL(value, window.location.href);
-      return url.origin === window.location.origin &&
-        (url.pathname === "/matricula/" || url.pathname === "/matricula" + LEGACY_HTML_EXTENSION);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function removeEnrollmentLinks(root) {
-    var target = root && root.querySelectorAll ? root : document;
-    target.querySelectorAll("a[href]").forEach(function (link) {
-      if (isEnrollmentLink(link.getAttribute("href"))) link.remove();
-    });
-  }
-
-  function installEnrollmentLinkGuard() {
-    removeEnrollmentLinks(document);
-    var observer = new MutationObserver(function (mutations) {
-      mutations.forEach(function (mutation) {
-        mutation.addedNodes.forEach(function (node) {
-          if (!node || node.nodeType !== 1) return;
-          if (node.matches && node.matches("a[href]") && isEnrollmentLink(node.getAttribute("href"))) {
-            node.remove();
-            return;
-          }
-          removeEnrollmentLinks(node);
-        });
-      });
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-  }
 
   function loadScript(id, src, callback) {
     var existing = document.getElementById(id);
@@ -79,6 +43,17 @@
 
   function refreshWhatsappLinks() {
     if (window.SiteWhatsapp) window.SiteWhatsapp.standardizeLinks(document);
+  }
+
+  function initializeEnrollmentGuard() {
+    if (!window.SiteEnrollmentGuard) return;
+    window.SiteEnrollmentGuard.initialize({
+      watchDynamicLinks: !window.SitePageContext.isPublicMarketingPage()
+    });
+  }
+
+  function refreshEnrollmentLinks() {
+    if (window.SiteEnrollmentGuard) window.SiteEnrollmentGuard.removeLinks(document);
   }
 
   function loadAccessibility() {
@@ -131,7 +106,7 @@
 
   function loadFooterCore() {
     loadScript("teacher-flavius-site-footer-core", "/site_footer_core.js?v=20260820-privacy-1", function () {
-      removeEnrollmentLinks(document);
+      refreshEnrollmentLinks();
       refreshWhatsappLinks();
     });
   }
@@ -160,8 +135,7 @@
     window.SiteBranding.install();
     loadAccessibility();
     if (!window.SitePageContext.isHomePage()) loadMobileTopNavigation();
-    if (window.SitePageContext.isPublicMarketingPage()) removeEnrollmentLinks(document);
-    else installEnrollmentLinkGuard();
+    initializeEnrollmentGuard();
     initializeWhatsappUi();
   }
 
@@ -171,7 +145,7 @@
   }
 
   function initializePageRuntime() {
-    if (!window.SitePageContext || !window.SiteBranding) return;
+    if (!window.SitePageContext || !window.SiteBranding || !window.SiteEnrollmentGuard) return;
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initializeUi, { once: true });
@@ -186,7 +160,14 @@
   function loadSiteFoundations() {
     loadScript("teacher-flavius-site-page-context", "/site_page_context.js?v=20260902-1", function () {
       if (!window.SitePageContext) return;
-      loadScript("teacher-flavius-site-branding", "/site_branding.js?v=20260902-1", initializePageRuntime);
+      loadScript("teacher-flavius-site-branding", "/site_branding.js?v=20260902-1", function () {
+        if (!window.SiteBranding) return;
+        loadScript(
+          "teacher-flavius-site-enrollment-guard",
+          "/site_enrollment_guard.js?v=20260902-1",
+          initializePageRuntime
+        );
+      });
     });
   }
 
