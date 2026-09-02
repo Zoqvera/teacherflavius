@@ -1,4 +1,5 @@
 name: Run course authority patch 20260902
+# Triggered after workflow registration on the default branch.
 
 on:
   push:
