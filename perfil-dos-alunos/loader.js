@@ -2,8 +2,8 @@
   "use strict";
 
   try {
-    const sourceUrl = "https://raw.githubusercontent.com/Zoqvera/teacherflavius/main/perfil_dos_alunos.html";
-    const response = await fetch(sourceUrl, { cache: "no-store" });
+    const sourceUrl = "/perfil_dos_alunos.html";
+    const response = await fetch(sourceUrl, { cache: "no-store", credentials: "same-origin" });
     if (!response.ok) throw new Error("Não foi possível carregar a página de perfis.");
 
     const html = await response.text();
