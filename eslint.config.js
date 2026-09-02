@@ -9,7 +9,8 @@ module.exports = [
       "auth_session_service.js",
       "google_auth_ui.js",
       "student_profile_service.js",
-      "activity_progress_service.js"
+      "activity_progress_service.js",
+      "module_loader.js"
     ],
     languageOptions: {
       ecmaVersion: "latest",
