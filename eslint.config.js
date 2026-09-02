@@ -6,7 +6,8 @@ module.exports = [
       "acessos_dos_alunos.js",
       "auth.js",
       "auth_infrastructure.js",
-      "google_auth_ui.js"
+      "google_auth_ui.js",
+      "student_profile_service.js"
     ],
     languageOptions: {
       ecmaVersion: "latest",
