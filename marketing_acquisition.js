@@ -276,7 +276,7 @@
     var periodNode = document.getElementById("periodFilter");
     var period = Number(periodNode && periodNode.value) || 30;
     if (button) button.disabled = true;
-    if (status) status.textContent = "Atualizando funil de aquisição...";
+    if (status) status.textContent = "Atualizando funil de conversão...";
 
     try {
       var client = Auth.getClient();
@@ -290,9 +290,9 @@
       attributionStudents = Array.isArray(responses[2].data) ? responses[2].data : [];
       renderSummary(responses[0].data || {});
       renderRecentLeads(responses[1].data || []);
-      if (status) status.textContent = "Funil de aquisição dos últimos " + period + " dias.";
+      if (status) status.textContent = "Funil de conversão dos últimos " + period + " dias.";
     } catch (error) {
-      console.error("Falha ao carregar aquisição:", error);
+      console.error("Falha ao carregar conversão:", error);
       if (status) status.textContent = friendlyError(error);
     } finally {
       if (button) button.disabled = false;
