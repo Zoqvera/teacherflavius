@@ -11,7 +11,8 @@ module.exports = [
       "google_auth_ui.js",
       "student_profile_service.js",
       "activity_progress_service.js",
-      "module_loader.js"
+      "module_loader.js",
+      "supabase_client_service.js"
     ],
     languageOptions: {
       ecmaVersion: "latest",
