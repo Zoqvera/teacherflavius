@@ -218,10 +218,7 @@
       if (!studentProfileService) {
         studentProfileService = serviceModule.create({
           getClient: getClient,
-          requireClient: requireClient,
-          getUser: getUser,
-          getRedirectUrl: getRedirectUrl,
-          generateEnrollmentCode: generateEnrollmentCode
+          getUser: getUser
         });
       }
       return studentProfileService;
@@ -268,8 +265,7 @@
   }
 
   async function enrollStudent(data) {
-    const service = await getStudentProfileService();
-    return service.enrollStudent(data);
+    return getStudentEnrollmentService().enrollStudent(data);
   }
 
   async function getProfile() {
