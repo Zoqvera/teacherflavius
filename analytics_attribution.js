@@ -4,10 +4,10 @@
   var EXPERIMENT_NAME = "cta_copy_v1";
   var VARIANT_KEY = "tf_cro_cta_copy_v1";
   var AI_REFERRAL_KEY = "tf_ai_referral_v1";
-  var WHATSAPP_LEAD_KEY = "tf_whatsapp_lead_v1";
   var ACQUISITION_SESSION_KEY = "tf_acquisition_session_v1";
   var VISITOR_KEY = "tf_marketing_visitor_v1";
   var SESSION_KEY = "tf_marketing_session_v1";
+  var WHATSAPP_CLICK_DEBOUNCE_MS = 1200;
   var COLLECTOR_URL = "https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/marketing-acquisition-event";
 
   if (window.gtag && window.gtag.__tfAttributionWrapped) return;
@@ -180,6 +180,32 @@
 
   var visitorId = getVisitorId();
   var sessionId = getSessionId();
+  var lastWhatsappLeadAt = 0;
+
+  function queueFirstPartyPayload(payload, useBeacon) {
+    var body = JSON.stringify(payload);
+
+    if (useBeacon && navigator && typeof navigator.sendBeacon === "function") {
+      try {
+        if (navigator.sendBeacon(COLLECTOR_URL, body)) return;
+      } catch (error) {
+        /* Fall back to fetch below. */
+      }
+    }
+
+    try {
+      window.fetch(COLLECTOR_URL, {
+        method: "POST",
+        mode: "cors",
+        credentials: "omit",
+        keepalive: useBeacon,
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: body
+      }).catch(function () { /* First-party analytics must never block the page. */ });
+    } catch (error) {
+      /* First-party analytics must never block the page. */
+    }
+  }
 
   function sendFirstPartyEvent(eventName, params) {
     if (!isAcquisitionPage()) return;
@@ -198,18 +224,7 @@
       occurred_at: new Date().toISOString()
     }, params || {});
 
-    try {
-      window.fetch(COLLECTOR_URL, {
-        method: "POST",
-        mode: "cors",
-        credentials: "omit",
-        keepalive: eventName === "generate_lead",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      }).catch(function () { /* First-party analytics must never block the page. */ });
-    } catch (error) {
-      /* First-party analytics must never block the page. */
-    }
+    queueFirstPartyPayload(payload, eventName === "generate_lead");
   }
 
   function queryVariantOverride() {
@@ -280,9 +295,15 @@
     return "page_link";
   }
 
-  function trackWhatsappLeadOnce(target) {
-    if (safeSessionGet(WHATSAPP_LEAD_KEY)) return;
-    safeSessionSet(WHATSAPP_LEAD_KEY, "1");
+  function shouldTrackWhatsappLead() {
+    var now = Date.now();
+    if (now - lastWhatsappLeadAt < WHATSAPP_CLICK_DEBOUNCE_MS) return false;
+    lastWhatsappLeadAt = now;
+    return true;
+  }
+
+  function trackWhatsappLead(target) {
+    if (!shouldTrackWhatsappLead()) return;
 
     var params = {
       lead_method: "whatsapp",
@@ -302,7 +323,7 @@
   document.addEventListener("click", function (event) {
     var target = event.target && event.target.closest ? event.target.closest("a[href]") : null;
     if (!target || !isWhatsappHref(target.getAttribute("href"))) return;
-    trackWhatsappLeadOnce(target);
+    trackWhatsappLead(target);
   }, true);
 
   wrappedGtag.__tfAttributionWrapped = true;
