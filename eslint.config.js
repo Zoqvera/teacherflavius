@@ -5,6 +5,7 @@ module.exports = [
       "area_do_estudante.js",
       "acessos_dos_alunos.js",
       "student_access_service.js",
+      "student_access_renderer.js",
       "auth.js",
       "auth_guard_service.js",
       "auth_infrastructure.js",
