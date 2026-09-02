@@ -1,6 +1,164 @@
 (function () {
   "use strict";
 
+  var ACADEMIC_PROOF = [
+    {
+      title: "Speech-to-speech translation — USP",
+      description: "Artigo publicado em 2017 na revista TradTerm, da Universidade de São Paulo, sobre conceitos e arquitetura de sistemas de tradução automática de fala.",
+      link: "https://revistas.usp.br/tradterm/pt_BR/article/view/134416",
+      linkLabel: "Ver publicação na USP"
+    },
+    {
+      title: "Pesquisa de mestrado — UFU",
+      description: "Dissertação em Estudos Linguísticos sobre aplicativos móveis de interpretação automática e a experiência de usuários brasileiros, disponível no Repositório Institucional da UFU.",
+      link: "https://repositorio.ufu.br/handle/123456789/35038",
+      linkLabel: "Ver pesquisa na UFU"
+    },
+    {
+      title: "Produção internacional — Diacrítica",
+      description: "Coautor de estudo sobre a evolução da pesquisa em machine interpreting, publicado na revista Diacrítica, do Centro de Estudos Humanísticos da Universidade do Minho.",
+      link: "https://doaj.org/article/09e6d2630519401db695819da13ef6e2",
+      linkLabel: "Ver publicação internacional"
+    },
+    {
+      title: "Tradução automática — IBICT",
+      description: "Coautor de estudo cienciométrico sobre desenvolvimentos tecnológicos em tradução automática publicado na revista Ciência da Informação.",
+      link: "https://revista.ibict.br/ciinf/article/view/5542",
+      linkLabel: "Ver publicação no IBICT"
+    }
+  ];
+
+  function createExternalLink(url, label, className) {
+    var link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = label;
+    if (className) link.className = className;
+    return link;
+  }
+
+  function updateAcademicStructuredData() {
+    document.querySelectorAll('script[type="application/ld+json"]').forEach(function (script) {
+      try {
+        var data = JSON.parse(script.textContent || "{}");
+        var graph = Array.isArray(data["@graph"]) ? data["@graph"] : [];
+        var person = graph.find(function (item) {
+          return item && item["@type"] === "Person" && item.name === "Flávio de Sousa Freitas";
+        });
+        if (!person) return;
+
+        person.description = "Professor de inglês, Doutor e Mestre em Linguística, Bacharel em Tradução, certificado CELTA e pesquisador na interface entre linguagem, tradução e tecnologias de inteligência artificial.";
+        person.sameAs = Array.from(new Set((person.sameAs || []).concat([
+          "https://www.instagram.com/teacher.flavius",
+          "https://orcid.org/0000-0002-8972-5870"
+        ])));
+        person.knowsAbout = [
+          "Língua inglesa",
+          "Linguística",
+          "Tradução",
+          "Speech-to-speech translation",
+          "Machine interpreting",
+          "Machine translation"
+        ];
+        script.textContent = JSON.stringify(data);
+      } catch (error) {
+        // Structured data from another component must not block the funnel.
+      }
+    });
+  }
+
+  function addCredential(list, html) {
+    if (!list || list.querySelector('[data-authority-credential="' + html + '"]')) return;
+    var item = document.createElement("li");
+    item.setAttribute("data-authority-credential", html);
+    item.innerHTML = html;
+    list.insertBefore(item, list.lastElementChild || null);
+  }
+
+  function createAcademicProofCard(item) {
+    var card = document.createElement("article");
+    card.className = "authority-proof-card";
+
+    var title = document.createElement("h3");
+    title.textContent = item.title;
+
+    var description = document.createElement("p");
+    description.textContent = item.description;
+
+    var linkParagraph = document.createElement("p");
+    linkParagraph.appendChild(createExternalLink(item.link, item.linkLabel, "authority-proof-link"));
+
+    card.appendChild(title);
+    card.appendChild(description);
+    card.appendChild(linkParagraph);
+    return card;
+  }
+
+  function ensureAcademicAuthoritySection() {
+    var teacherTitle = document.getElementById("teacher-title");
+    var teacherSection = teacherTitle && teacherTitle.closest("section");
+    if (!teacherSection) return;
+
+    var teacherCopy = teacherSection.querySelector(".teacher-copy");
+    var intro = teacherCopy && teacherCopy.querySelector("p:not(.eyebrow)");
+    if (intro) {
+      intro.innerHTML = "Professor de inglês com mais de 15 anos de experiência e formação acadêmica em linguagem. Além da docência, Flávio de Sousa Freitas desenvolve pesquisa na interface entre Linguística, Tradução e inteligência artificial, com produção científica sobre <em>speech-to-speech translation</em>, interpretação automática e tradução automática. O curso combina essa formação acadêmica com uma proposta prática: aulas ao vivo, turmas reduzidas e acompanhamento contínuo.";
+    }
+
+    var credentials = teacherCopy && teacherCopy.querySelector(".credentials");
+    addCredential(credentials, "Pesquisador de <em>speech-to-speech translation</em> e tecnologias da linguagem");
+    addCredential(credentials, "Publicações científicas no Brasil e no exterior");
+
+    if (document.getElementById("academicAuthorityProof")) return;
+
+    var proof = document.createElement("div");
+    proof.id = "academicAuthorityProof";
+    proof.className = "shell authority-proof";
+    proof.setAttribute("aria-labelledby", "research-evidence-title");
+
+    var heading = document.createElement("div");
+    heading.className = "section-head";
+    heading.innerHTML = [
+      '<p class="eyebrow">Pesquisa e publicações</p>',
+      '<h2 id="research-evidence-title">Formação acadêmica respaldada por produção científica.</h2>',
+      '<p>A trajetória de pesquisa do professor inclui trabalhos publicados por universidades e periódicos acadêmicos sobre linguagem, tradução e tecnologias de inteligência artificial.</p>'
+    ].join("");
+
+    var grid = document.createElement("div");
+    grid.className = "authority-proof-grid";
+    ACADEMIC_PROOF.forEach(function (item) {
+      grid.appendChild(createAcademicProofCard(item));
+    });
+
+    var book = document.createElement("p");
+    book.className = "authority-book";
+    book.appendChild(document.createTextNode("Flávio também é coautor do livro "));
+    var bookTitle = document.createElement("strong");
+    bookTitle.textContent = "Tradução e interpretação automáticas: origens";
+    book.appendChild(bookTitle);
+    book.appendChild(document.createTextNode(", publicado pela Editora CRV em 2020. "));
+    book.appendChild(createExternalLink(
+      "https://doi.org/10.24824/978854443937.1",
+      "Consultar DOI do livro"
+    ));
+    book.appendChild(document.createTextNode("."));
+
+    proof.appendChild(heading);
+    proof.appendChild(grid);
+    proof.appendChild(book);
+    teacherSection.appendChild(proof);
+  }
+
+  function refreshCourseStylesheet() {
+    var stylesheet = document.querySelector('link[href^="/course_funnel.css"]');
+    if (stylesheet) stylesheet.href = "/course_funnel.css?v=20260902-2";
+  }
+
+  updateAcademicStructuredData();
+  ensureAcademicAuthoritySection();
+  refreshCourseStylesheet();
+
   var list = document.getElementById("liveVacanciesList");
   var summary = document.getElementById("liveVacanciesSummary");
   if (!list || !summary) return;
