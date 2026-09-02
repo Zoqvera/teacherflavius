@@ -4,7 +4,8 @@ module.exports = [
       "accessibility.js",
       "area_do_estudante.js",
       "acessos_dos_alunos.js",
-      "auth.js"
+      "auth.js",
+      "google_auth_ui.js"
     ],
     languageOptions: {
       ecmaVersion: "latest",

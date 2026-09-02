@@ -8,6 +8,13 @@
     onboarding: "/complete-cadastro/",
     profile: "/perfil/"
   });
+  const ASSETS = Object.freeze({
+    animatedCardsCss: "animated_cards.css?v=20260429-6",
+    animatedCardsJs: "animated_cards.js?v=20260716-logout-1",
+    accessTrackerJs: "/student_access_tracker.js?v=20260730-2",
+    googleAuthCss: "/google_auth_ui.css?v=20260902-1",
+    googleAuthJs: "/google_auth_ui.js?v=20260902-1"
+  });
   const ENROLLMENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const ENROLLMENT_CODE_LENGTH = 5;
   const AVAILABILITY_DAYS = Object.freeze(["seg", "ter", "qua", "qui", "sex"]);
@@ -40,10 +47,20 @@
 
   function loadSharedAssets() {
     runWhenDomReady(function () {
-      appendStylesheetOnce('link[href^="animated_cards.css"]', "animated_cards.css?v=20260429-6");
-      appendScriptOnce('script[src^="animated_cards.js"]', "animated_cards.js?v=20260716-logout-1");
-      appendScriptOnce('script[src^="/student_access_tracker.js"]', "/student_access_tracker.js?v=20260730-2");
+      appendStylesheetOnce('link[href^="animated_cards.css"]', ASSETS.animatedCardsCss);
+      appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
+      appendScriptOnce('script[src^="/student_access_tracker.js"]', ASSETS.accessTrackerJs);
     });
+  }
+
+  function isGoogleAuthUiPage() {
+    return window.location.pathname === PATHS.login || window.location.pathname === PATHS.profile;
+  }
+
+  function loadGoogleAuthUiAssets() {
+    if (!isGoogleAuthUiPage()) return;
+    appendStylesheetOnce('link[href^="/google_auth_ui.css"]', ASSETS.googleAuthCss);
+    appendScriptOnce('script[src^="/google_auth_ui.js"]', ASSETS.googleAuthJs);
   }
 
   function isConfigured() {
@@ -101,14 +118,6 @@
 
   function isOnOnboardingPage() {
     return window.location.pathname === PATHS.onboarding;
-  }
-
-  function isOnLoginPage() {
-    return window.location.pathname === PATHS.login;
-  }
-
-  function isOnProfilePage() {
-    return window.location.pathname === PATHS.profile;
   }
 
   function showConfigWarning() {
@@ -317,6 +326,7 @@
       options: { data: { name: name }, emailRedirectTo: getRedirectUrl() }
     });
     if (response.error) throw response.error;
+
     if (response.data && response.data.user) {
       await client.from("profiles").upsert({
         id: response.data.user.id,
@@ -524,129 +534,6 @@
     return response.data || [];
   }
 
-  function injectGoogleStyles() {
-    if (document.getElementById("teacher-google-auth-styles")) return;
-    const style = document.createElement("style");
-    style.id = "teacher-google-auth-styles";
-    style.textContent = `.google-auth-block{margin:0 0 18px}.google-auth-button{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.22);background:#fff;color:#1f2937;font:700 15px Georgia,serif;cursor:pointer}.google-auth-button:hover{background:#f8fafc}.google-auth-button:disabled{opacity:.65;cursor:wait}.google-auth-g{font-family:Arial,sans-serif;font-size:20px;font-weight:700}.google-auth-divider{display:flex;align-items:center;gap:10px;color:#64748b;font-size:12px;margin:16px 0}.google-auth-divider:before,.google-auth-divider:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}.google-auth-note{margin-top:10px;color:#94a3b8;font-size:12px;line-height:1.5;text-align:center}.google-link-status{color:#cbd5e1;margin:0 0 14px}.google-link-success{color:#6ee7b7}`;
-    document.head.appendChild(style);
-  }
-
-  async function finishGoogleLogin() {
-    if (!isOnLoginPage()) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("oauth") !== GOOGLE_PROVIDER) return;
-
-    const errorBox = document.getElementById("error");
-    try {
-      const session = await getSession();
-      if (!session || !session.user) throw new Error("Não foi possível concluir o login com Google.");
-
-      const profile = await ensureProfileForUser(session.user);
-      const next = normalizeNextPath(params.get("next"), PATHS.studentArea);
-      if (!profile || profile.profile_completed !== true) {
-        window.location.replace(PATHS.onboarding + "?next=" + encodeURIComponent(next));
-        return;
-      }
-      window.location.replace(next);
-    } catch (error) {
-      if (errorBox) errorBox.textContent = error.message || "Não foi possível concluir o login com Google.";
-    }
-  }
-
-  function setupGoogleLoginUi() {
-    if (!isOnLoginPage()) return;
-    const form = document.getElementById("loginForm");
-    if (!form || document.getElementById("googleLoginBlock")) return;
-
-    injectGoogleStyles();
-    const block = document.createElement("div");
-    block.id = "googleLoginBlock";
-    block.className = "google-auth-block";
-    block.innerHTML = `<button id="googleLoginButton" class="google-auth-button" type="button"><span class="google-auth-g">G</span> CONTINUAR COM GOOGLE</button><div class="google-auth-note">Alunos atuais: para preservar todo o histórico, entre primeiro com seu e-mail e senha e vincule o Google em Meu Perfil.</div><div class="google-auth-divider"><span>OU</span></div>`;
-    form.parentNode.insertBefore(block, form);
-
-    const button = document.getElementById("googleLoginButton");
-    button.addEventListener("click", async function () {
-      const params = new URLSearchParams(window.location.search);
-      const next = normalizeNextPath(params.get("next"), PATHS.studentArea);
-      button.disabled = true;
-      button.textContent = "ABRINDO GOOGLE...";
-      try {
-        await signInWithGoogle(next);
-      } catch (error) {
-        button.disabled = false;
-        button.innerHTML = '<span class="google-auth-g">G</span> CONTINUAR COM GOOGLE';
-        const errorBox = document.getElementById("error");
-        if (errorBox) errorBox.textContent = error.message || "Não foi possível iniciar o login com Google.";
-      }
-    });
-    finishGoogleLogin();
-  }
-
-  async function setupProfileIdentityUi() {
-    if (!isOnProfilePage()) return;
-    const container = document.querySelector(".container");
-    if (!container || document.getElementById("googleIdentityCard")) return;
-
-    injectGoogleStyles();
-    const firstCard = container.querySelector(".card");
-    const card = document.createElement("div");
-    card.id = "googleIdentityCard";
-    card.className = "card";
-    card.innerHTML = `<h2>Formas de acesso</h2><p id="googleIdentityStatus" class="google-link-status">Verificando sua conta Google...</p><button id="linkGoogleButton" type="button" class="primary" hidden>VINCULAR CONTA GOOGLE</button><div id="googleIdentityMessage" class="message"></div>`;
-    if (firstCard) container.insertBefore(card, firstCard);
-    else container.appendChild(card);
-
-    const status = document.getElementById("googleIdentityStatus");
-    const button = document.getElementById("linkGoogleButton");
-    const message = document.getElementById("googleIdentityMessage");
-
-    try {
-      const session = await getSession();
-      if (!session) return;
-
-      const identities = await getUserIdentities();
-      const googleIdentity = identities.find(function (identity) {
-        return identity.provider === GOOGLE_PROVIDER;
-      });
-
-      if (googleIdentity) {
-        status.classList.add("google-link-success");
-        status.textContent = "✓ Conta Google vinculada. Você pode entrar com Google ou com seu login atual.";
-        button.hidden = true;
-      } else {
-        status.textContent = "Sua conta ainda não está vinculada ao Google.";
-        button.hidden = false;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("google_linked") === "1" && googleIdentity) {
-        message.className = "message success";
-        message.textContent = "Conta Google vinculada com sucesso. Seus dados e seu progresso foram preservados.";
-      }
-    } catch (error) {
-      status.textContent = "Não foi possível verificar as formas de acesso.";
-      message.className = "message error";
-      message.textContent = error.message || "Tente novamente.";
-    }
-
-    button.addEventListener("click", async function () {
-      button.disabled = true;
-      button.textContent = "ABRINDO GOOGLE...";
-      message.className = "message";
-      message.textContent = "";
-      try {
-        await linkGoogleIdentity();
-      } catch (error) {
-        button.disabled = false;
-        button.textContent = "VINCULAR CONTA GOOGLE";
-        message.className = "message error";
-        message.textContent = error.message || "Não foi possível vincular a conta Google.";
-      }
-    });
-  }
-
   window.Auth = {
     isConfigured: isConfigured,
     getClient: getClient,
@@ -671,11 +558,6 @@
     normalizeNextPath: normalizeNextPath
   };
 
-  function setupGoogleAuthUi() {
-    setupGoogleLoginUi();
-    setupProfileIdentityUi();
-  }
-
   loadSharedAssets();
-  runWhenDomReady(setupGoogleAuthUi);
+  runWhenDomReady(loadGoogleAuthUiAssets);
 })();
