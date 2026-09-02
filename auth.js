@@ -1,13 +1,6 @@
 (function () {
   "use strict";
 
-  const APP_ORIGIN = "https://teacherflavius.com";
-  const PATHS = Object.freeze({
-    studentArea: "/area-do-estudante/",
-    login: "/login/",
-    onboarding: "/complete-cadastro/",
-    profile: "/perfil/"
-  });
   const MODULE_LOADER = Object.freeze({
     selector: 'script[src^="/module_loader.js"]',
     src: "/module_loader.js?v=20260902-1"
@@ -130,6 +123,14 @@
     return service;
   }
 
+  function getAuthNavigationService() {
+    const service = window.AuthNavigationService;
+    if (!service) {
+      throw new Error("O serviço de navegação da autenticação não foi inicializado.");
+    }
+    return service;
+  }
+
   function getStudentEnrollmentServiceModule() {
     const service = window.StudentEnrollmentService;
     if (!service) {
@@ -140,9 +141,10 @@
 
   function getStudentEnrollmentService() {
     if (!studentEnrollmentService) {
+      const navigation = getAuthNavigationService();
       studentEnrollmentService = getStudentEnrollmentServiceModule().create({
         requireClient: requireClient,
-        getRedirectUrl: getRedirectUrl
+        getRedirectUrl: navigation.getRedirectUrl
       });
     }
     return studentEnrollmentService;
@@ -161,23 +163,7 @@
   }
 
   function normalizeNextPath(value, fallback) {
-    const safeFallback = fallback || PATHS.studentArea;
-    const text = String(value || "").trim();
-    if (!text || !text.startsWith("/") || text.startsWith("//")) return safeFallback;
-    return text;
-  }
-
-  function getRedirectUrl() {
-    return APP_ORIGIN + PATHS.login;
-  }
-
-  function getGoogleRedirectUrl(nextPath) {
-    const next = normalizeNextPath(nextPath, PATHS.studentArea);
-    return APP_ORIGIN + PATHS.login + "?oauth=google&next=" + encodeURIComponent(next);
-  }
-
-  function getGoogleLinkRedirectUrl() {
-    return APP_ORIGIN + PATHS.profile + "?google_linked=1";
+    return getAuthNavigationService().normalizeNextPath(value, fallback);
   }
 
   function generateEnrollmentCode() {
@@ -189,12 +175,13 @@
 
     return loadGlobalModule(MODULES.authSessionService).then(function (serviceModule) {
       if (!authSessionService) {
+        const navigation = getAuthNavigationService();
         authSessionService = serviceModule.create({
           getClient: getClient,
           requireClient: requireClient,
-          getGoogleRedirectUrl: getGoogleRedirectUrl,
-          getGoogleLinkRedirectUrl: getGoogleLinkRedirectUrl,
-          loginPath: PATHS.login
+          getGoogleRedirectUrl: navigation.getGoogleRedirectUrl,
+          getGoogleLinkRedirectUrl: navigation.getGoogleLinkRedirectUrl,
+          loginPath: navigation.paths.login
         });
       }
       return authSessionService;
@@ -244,15 +231,16 @@
 
     return loadGlobalModule(MODULES.authGuardService).then(function (serviceModule) {
       if (!authGuardService) {
+        const navigation = getAuthNavigationService();
         authGuardService = serviceModule.create({
           isConfigured: isConfigured,
           showConfigWarning: showConfigWarning,
           getSession: getSession,
           ensureProfileForUser: ensureProfileForUser,
-          normalizeNextPath: normalizeNextPath,
-          loginPath: PATHS.login,
-          onboardingPath: PATHS.onboarding,
-          studentAreaPath: PATHS.studentArea
+          normalizeNextPath: navigation.normalizeNextPath,
+          loginPath: navigation.paths.login,
+          onboardingPath: navigation.paths.onboarding,
+          studentAreaPath: navigation.paths.studentArea
         });
       }
       return authGuardService;
