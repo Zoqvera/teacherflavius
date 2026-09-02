@@ -28,3 +28,5 @@ jobs:
           git add curso-de-ingles-online/index.html
           git commit -m "feat: add decision details and live vacancies to course funnel"
           git push origin HEAD:main
+
+# one-off trigger: 2026-09-02
