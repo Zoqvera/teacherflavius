@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Check out pull request
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v1
