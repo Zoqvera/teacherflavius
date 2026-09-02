@@ -267,6 +267,10 @@
   }
 
   function loadPublicPageScripts() {
+    if (currentPath() === "/") {
+      loadFooterCore();
+      return;
+    }
     if (isGeoContentPage()) {
       loadScript("teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1");
       return;
