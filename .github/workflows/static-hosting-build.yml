@@ -11,6 +11,7 @@ on:
       - "**/*.txt"
       - "scripts/build_static_site.py"
       - "scripts/inject_auth_module_loader.py"
+      - "scripts/inject_site_privacy_analytics.py"
       - "scripts/inject_google_tag_manager.py"
       - "netlify/_headers"
       - "netlify.toml"
@@ -27,6 +28,7 @@ on:
       - "**/*.txt"
       - "scripts/build_static_site.py"
       - "scripts/inject_auth_module_loader.py"
+      - "scripts/inject_site_privacy_analytics.py"
       - "scripts/inject_google_tag_manager.py"
       - "netlify/_headers"
       - "netlify.toml"
@@ -44,6 +46,25 @@ jobs:
 
       - name: Build static site
         run: python3 scripts/build_static_site.py
+
+      - name: Ensure privacy analytics precedes footer
+        run: |
+          python3 scripts/inject_site_privacy_analytics.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          footer_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
+          privacy_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_privacy_analytics\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
+          for path in Path('_site').rglob('*.html'):
+              html = path.read_text(encoding='utf-8')
+              footer = footer_re.search(html)
+              if not footer:
+                  continue
+              privacy = privacy_re.search(html)
+              if not privacy or privacy.start() > footer.start():
+                  raise SystemExit(f'Invalid privacy analytics bootstrap order in {path}')
+          PY
 
       - name: Ensure module loader precedes auth
         run: |
@@ -76,8 +97,10 @@ jobs:
           cp -R . "$tmp_dir/site"
           rm -rf "$tmp_dir/site/_site" "$tmp_dir/site/.git"
           python3 "$tmp_dir/site/scripts/inject_auth_module_loader.py" --site-root "$tmp_dir/site"
+          python3 "$tmp_dir/site/scripts/inject_site_privacy_analytics.py" --site-root "$tmp_dir/site"
           python3 "$tmp_dir/site/scripts/inject_google_tag_manager.py" --site-root "$tmp_dir/site"
           grep -q '/module_loader.js?v=20260902-2' "$tmp_dir/site/login.html"
+          grep -q '/site_privacy_analytics.js?v=20260902-1' "$tmp_dir/site/index.html"
           grep -q 'GTM-K2NWR2NK' "$tmp_dir/site/index.html"
 
       - name: Validate publish output
@@ -88,6 +111,7 @@ jobs:
           test -f _site/sitemap.xml
           test -f _site/error_monitor.js
           test -f _site/responsive_compat.css
+          test -f _site/site_privacy_analytics.js
           test -f _site/_headers
           if find _site -type f \( -name '*.md' -o -name '*.sql' -o -name '*.py' -o -name '*.yml' -o -name '*.yaml' -o -name '*.toml' \) | grep -q .; then
             echo 'Operational file leaked into _site'
