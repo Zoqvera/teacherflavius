@@ -57,6 +57,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&amp;family=Open+Sans:wght@400;500;600;700&amp;display=swap">
   <link id="teacher-flavius-brand-palette" rel="stylesheet" href="/brand_palette.css?v=20260820-3">
+  <link rel="stylesheet" href="/course_funnel.css?v=20260902-1">
   <style>
     :root{--navy:#02102b;--navy2:#063e7d;--paper:#f7f9fc;--white:#fff;--text:#12213b;--muted:#64748b;--green:#168c4d;--green2:#0f713d;--gold:#e6bd68;--line:rgba(2,16,43,.13);--shadow:0 24px 70px rgba(2,16,43,.16)}
     *{box-sizing:border-box}html{scroll-behavior:smooth;overflow-x:clip}body{margin:0;min-width:320px;overflow-x:clip;background:var(--paper);color:var(--text);font-family:var(--tf-font-body,Inter,system-ui,sans-serif);line-height:1.65}a{color:inherit}.shell{width:min(1120px,calc(100% - 32px));margin:0 auto}.eyebrow{margin:0 0 12px;color:#116cba;font-size:.8rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase}h1,h2,h3,p{margin-top:0}
@@ -95,10 +96,10 @@
           <h1 id="hero-title">Curso de inglês online com aulas ao vivo e turmas de até 4 alunos.</h1>
           <p class="lead">Estude inglês com um professor experiente, encontros semanais ao vivo, prática durante as aulas e orientação para continuar aprendendo entre um encontro e outro.</p>
           <ul class="hero-points">
-            <li>4 aulas ao vivo por mês</li>
+            <li>4 aulas ao vivo de 60 minutos por mês</li>
             <li>Turmas de até 4 alunos</li>
-            <li>Material de apoio</li>
-            <li>Cronograma de estudos</li>
+            <li>Material e plataforma incluídos</li>
+            <li>Sem taxa de matrícula ou fidelidade</li>
           </ul>
           <div class="actions">
             <a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR AULA EXPERIMENTAL GRÁTIS</a>
@@ -108,7 +109,8 @@
         <aside class="hero-card" aria-label="Resumo do investimento">
           <p class="eyebrow">Investimento</p>
           <p class="price">R$ 99,90</p>
-          <p>por mês, com quatro aulas online e ao vivo.</p>
+          <p>por mês, com quatro aulas online e ao vivo de 60 minutos.</p>
+          <p><strong>Pagamento:</strong> mensalidade recorrente no Pix ou cartão. Sem taxa de matrícula, sem material cobrado à parte e sem fidelidade — você pode cancelar quando quiser.</p>
           <p><strong>Professor:</strong> Teacher Flávio — Doutor e Mestre em Linguística, Bacharel em Tradução e certificado CELTA.</p>
         </aside>
       </div>
@@ -137,12 +139,13 @@
           <h2 id="included-title">Um curso de inglês online pensado para acompanhamento próximo.</h2>
         </div>
         <div class="grid cols-3">
-          <article class="card"><h3>4 aulas por mês</h3><p>Encontros online e ao vivo distribuídos ao longo do mês.</p></article>
+          <article class="card"><h3>4 aulas de 60 minutos</h3><p>Quatro encontros online e ao vivo por mês, com 60 minutos de duração cada.</p></article>
           <article class="card"><h3>Turmas pequenas</h3><p>Até 4 alunos por turma para manter espaço de participação durante as aulas.</p></article>
           <article class="card"><h3>Prática do inglês</h3><p>Atividades orientadas para usar o idioma e desenvolver segurança gradualmente.</p></article>
           <article class="card"><h3>Material de apoio</h3><p>Recursos complementares para revisar e continuar estudando fora do horário da aula.</p></article>
           <article class="card"><h3>Cronograma de estudos</h3><p>Uma orientação prática para distribuir os estudos e manter regularidade.</p></article>
           <article class="card"><h3>Aula experimental</h3><p>Você pode experimentar o formato gratuitamente antes de decidir pela matrícula.</p></article>
+          <article class="card"><h3>Reposições pelo site</h3><p>Se precisar repor uma aula, o agendamento pode ser feito diretamente no site, sem depender de troca de mensagens para organizar o horário.</p></article>
           <article class="card"><h3>Certificado por módulo</h3><p>Ao final de cada módulo, o aluno pode receber um certificado de conclusão após realizar uma avaliação final correspondente ao nível de proficiência alcançado.</p></article>
         </div>
       </div>
@@ -155,29 +158,69 @@
           <h2 id="levels-title">Um percurso de 24 meses do nível iniciante ao avançado.</h2>
           <p>A duração é organizada em três etapas, permitindo visualizar com clareza o caminho completo do curso.</p>
         </div>
+        <div class="leveling-callout">
+          <h3>Nivelamento gratuito antes de escolher a turma</h3>
+          <p>Você não precisa começar do zero. O professor envia uma avaliação online gratuita para identificar seu nível atual e orientar a escolha de uma turma compatível com o seu momento de aprendizagem.</p>
+        </div>
         <ol class="levels-path" aria-label="Níveis e duração do curso">
           <li class="level-stage">
             <span class="level-index" aria-hidden="true">01</span>
-            <h3>Iniciante</h3>
+            <h3>Iniciante · A1/A2</h3>
             <p class="level-duration">6 <span>meses</span></p>
-            <p class="level-note">Primeira etapa do percurso.</p>
+            <p class="level-note">Em geral, o aluno aprende a se apresentar, falar de rotina, família, preferências e necessidades imediatas; fazer perguntas simples; lidar com compras, viagens e serviços básicos; e participar de conversas curtas sobre situações familiares.</p>
           </li>
           <li class="level-stage">
             <span class="level-index" aria-hidden="true">02</span>
-            <h3>Intermediário</h3>
+            <h3>Intermediário · B1/B2</h3>
             <p class="level-duration">6 <span>meses</span></p>
-            <p class="level-note">Segunda etapa do percurso.</p>
+            <p class="level-note">Em geral, o aluno passa a relatar experiências, explicar planos, defender opiniões, resolver situações de viagem e trabalho, sustentar conversas com mais espontaneidade e compreender as ideias principais de textos e falas mais complexos.</p>
           </li>
           <li class="level-stage">
             <span class="level-index" aria-hidden="true">03</span>
-            <h3>Avançado</h3>
+            <h3>Avançado · C1/C2</h3>
             <p class="level-duration">12 <span>meses</span></p>
-            <p class="level-note">Etapa mais longa, correspondente à metade do percurso completo.</p>
+            <p class="level-note">Em geral, o aluno desenvolve comunicação fluente e precisa, adapta o registro ao contexto, compreende textos e falas exigentes — inclusive sentidos implícitos —, discute temas complexos e se comunica com alto grau de autonomia em ambientes profissionais, acadêmicos e sociais.</p>
           </li>
         </ol>
         <div class="levels-total" aria-label="Tempo total do curso: 24 meses">
           <p class="levels-total-copy"><strong>Tempo total do início ao fim</strong><span>Iniciante + Intermediário + Avançado</span></p>
           <p class="levels-total-time">24 <small>meses</small></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" aria-labelledby="journey-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Do primeiro contato à primeira aula</p>
+          <h2 id="journey-title">Uma jornada simples para entrar na turma certa.</h2>
+          <p>Você conhece o curso antes de assumir qualquer compromisso e recebe orientação em cada etapa.</p>
+        </div>
+        <div class="steps">
+          <article class="step"><h3>Aula experimental</h3><p>Conheça o formato ao vivo e veja como funciona a dinâmica das aulas.</p></article>
+          <article class="step"><h3>Nivelamento gratuito</h3><p>O professor envia uma avaliação online para identificar seu nível atual.</p></article>
+          <article class="step"><h3>Escolha da turma</h3><p>Com o nível definido, você verifica os horários e escolhe uma turma compatível.</p></article>
+          <article class="step"><h3>Matrícula</h3><p>A matrícula é feita sem taxa de adesão e sem fidelidade contratual.</p></article>
+          <article class="step"><h3>Acesso à área do estudante</h3><p>Você recebe acesso à plataforma com os recursos do curso e sua rotina de estudos.</p></article>
+          <article class="step"><h3>Início das aulas</h3><p>Você entra na turma e começa a participar dos encontros semanais de 60 minutos.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="platform-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Além da aula ao vivo</p>
+          <h2 id="platform-title">O curso continua dentro da plataforma teacherflavius.com.</h2>
+          <p>A Área do Estudante organiza o que você precisa fazer entre as aulas e concentra ferramentas acadêmicas e administrativas em um só lugar.</p>
+        </div>
+        <div class="grid cols-3">
+          <article class="card platform-card"><strong>Minha Semana</strong><p>Visualize aulas, atividades e as prioridades da semana.</p></article>
+          <article class="card platform-card"><strong>Portal de Exercícios</strong><p>Acesse atividades propostas e mantenha uma rotina prática de estudo.</p></article>
+          <article class="card platform-card"><strong>Roteiro, flashcards e gramática</strong><p>Use materiais de revisão e ferramentas para ampliar vocabulário e consolidar estruturas.</p></article>
+          <article class="card platform-card"><strong>Meu Progresso</strong><p>Acompanhe sua evolução e os registros do percurso no curso.</p></article>
+          <article class="card platform-card"><strong>Turma, frequência e horários</strong><p>Consulte informações da sua turma, presença e horários disponíveis diretamente no portal.</p></article>
+          <article class="card platform-card"><strong>Reposições e mensalidades</strong><p>Agende reposições e acompanhe pagamentos sem sair da Área do Estudante.</p></article>
         </div>
       </div>
     </section>
@@ -230,14 +273,50 @@
               <tr><td>Aulas ao vivo</td><td class="yes">Sim</td></tr>
               <tr><td>Turmas de até 4 alunos</td><td class="yes">Sim</td></tr>
               <tr><td>4 aulas por mês</td><td class="yes">Sim</td></tr>
+              <tr><td>Duração de cada aula</td><td class="yes">60 minutos</td></tr>
               <tr><td>Material de apoio</td><td class="yes">Incluído</td></tr>
               <tr><td>Cronograma de estudos</td><td class="yes">Incluído</td></tr>
+              <tr><td>Reposição de aulas</td><td class="yes">Agendamento pelo site</td></tr>
               <tr><td>Aula experimental</td><td class="yes">Gratuita</td></tr>
               <tr><td>Certificado ao final de cada módulo</td><td class="yes">Após avaliação final</td></tr>
+              <tr><td>Pagamento</td><td class="yes">Pix ou cartão</td></tr>
+              <tr><td>Fidelidade</td><td class="yes">Não</td></tr>
+              <tr><td>Taxa de matrícula</td><td class="yes">Não</td></tr>
               <tr><td>Investimento mensal</td><td class="yes">R$ 99,90</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <section class="section alt" aria-labelledby="payment-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Pagamento e cancelamento</p>
+          <h2 id="payment-title">Mensalidade simples, sem taxa de matrícula e sem fidelidade.</h2>
+          <p>As condições são apresentadas de forma clara para que você saiba exatamente o que está contratando.</p>
+        </div>
+        <div class="grid cols-2">
+          <article class="card"><h3>Mensalidade recorrente</h3><p>O curso funciona por mensalidade, atualmente no valor de R$ 99,90.</p></article>
+          <article class="card"><h3>Pix ou cartão</h3><p>Você pode pagar a mensalidade por Pix ou cartão.</p></article>
+          <article class="card"><h3>Sem fidelidade</h3><p>Não existe período mínimo de permanência. Você pode cancelar quando quiser.</p></article>
+          <article class="card"><h3>Sem custos adicionais de entrada</h3><p>Não há taxa de matrícula e o material de apoio não é cobrado à parte.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="vacancies-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Vagas disponíveis agora</p>
+          <h2 id="vacancies-title">Veja quais turmas em grupo já estão em andamento e ainda têm vaga.</h2>
+          <p id="liveVacanciesSummary">Consultando a disponibilidade atual das turmas...</p>
+        </div>
+        <div id="liveVacanciesList" class="vacancy-public-grid" aria-live="polite">
+          <div class="vacancy-empty">Carregando vagas disponíveis...</div>
+        </div>
+        <p class="funnel-small-note">A lista é atualizada automaticamente a partir das matrículas registradas no sistema. Para esta vitrine, aparecem apenas turmas classificadas como quarteto, ativas, com pelo menos dois alunos e ainda com vagas disponíveis.</p>
+        <div class="funnel-inline-cta"><a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">QUERO CONHECER UMA TURMA</a></div>
       </div>
     </section>
 
@@ -254,6 +333,11 @@
           <article class="faq-item"><h3>Quantas aulas estão incluídas por mês?</h3><p>O plano inclui 4 aulas online e ao vivo por mês.</p></article>
           <article class="faq-item"><h3>Existe material para estudar fora das aulas?</h3><p>Sim. Há material de apoio e cronograma de estudos para ajudar a manter continuidade entre os encontros.</p></article>
           <article class="faq-item"><h3>O curso oferece certificado?</h3><p>Sim. Ao final de cada módulo, o aluno pode receber um certificado de conclusão. A emissão ocorre após a realização de uma avaliação final com conteúdos e competências correspondentes ao nível de proficiência alcançado.</p></article>
+          <article class="faq-item"><h3>Quanto tempo dura cada aula?</h3><p>Cada encontro ao vivo tem 60 minutos de duração. O plano mensal inclui quatro aulas.</p></article>
+          <article class="faq-item"><h3>Como funciona o nivelamento?</h3><p>O professor envia gratuitamente uma avaliação online para identificar seu nível atual e orientar a escolha de uma turma adequada.</p></article>
+          <article class="faq-item"><h3>Posso fazer reposição se faltar?</h3><p>Sim. Os alunos podem marcar reposições de aulas diretamente pelo site, usando a área própria de reposições da plataforma.</p></article>
+          <article class="faq-item"><h3>Como funcionam pagamento e cancelamento?</h3><p>A cobrança é uma mensalidade recorrente, paga por Pix ou cartão. Não há fidelidade: você pode cancelar quando quiser. Também não existe taxa de matrícula e o material não é cobrado à parte.</p></article>
+          <article class="faq-item"><h3>O que encontro na Área do Estudante?</h3><p>A plataforma reúne Minha Semana, Portal de Exercícios, roteiro de estudos, flashcards, aulas de gramática, acompanhamento de progresso, informações da turma, frequência, horários, reposições e mensalidades.</p></article>
           <article class="faq-item"><h3>Quanto custa o curso de inglês online?</h3><p>O investimento atual é de R$ 99,90 por mês, sujeito à disponibilidade de vagas nas turmas.</p></article>
           <article class="faq-item"><h3>Posso fazer uma aula antes de me matricular?</h3><p>Sim. É possível agendar uma aula experimental gratuita pelo WhatsApp.</p></article>
           <article class="faq-item"><h3>Como faço para saber se há vaga em uma turma?</h3><p>Entre em contato pelo WhatsApp. Você poderá consultar os horários disponíveis e conversar diretamente com o professor antes de decidir.</p></article>
@@ -271,6 +355,8 @@
     </section>
   </main>
 
+  <script src="/supabase_config.js?v=20260902-1"></script>
+  <script defer src="/course_vacancies.js?v=20260902-1"></script>
   <script defer src="/site_footer.js?v=20260820-ux-1"></script>
 </body>
 </html>
