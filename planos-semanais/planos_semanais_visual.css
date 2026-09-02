@@ -1,0 +1,90 @@
+@import url('/brand_palette.css?v=20260820-3');
+
+html.tf-brand-palette body {
+  background: linear-gradient(145deg,#020817 0%,#031a3f 48%,#02102b 100%);
+  color:#edf4ff;
+  font-family:'Open Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+
+html.tf-brand-palette .container{width:min(1160px,calc(100% - 28px));margin:0 auto;padding:30px 0 64px}
+html.tf-brand-palette .top-links{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+html.tf-brand-palette .top-link{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:1px solid rgba(78,154,236,.28);border-radius:999px;background:rgba(5,66,136,.12);color:#bfdbfe;text-decoration:none;font-family:'Montserrat',sans-serif;font-size:.72rem;font-weight:800;letter-spacing:.06em}
+html.tf-brand-palette .top-link:hover{border-color:#4e9aec;background:rgba(9,104,188,.16);transform:translateY(-1px)}
+html.tf-brand-palette .top-link:focus-visible{outline:3px solid rgba(78,154,236,.42);outline-offset:2px}
+
+html.tf-brand-palette .header{text-align:center;padding:4px 0 20px}
+html.tf-brand-palette .header .badge{display:inline-flex;padding:7px 11px;border:1px solid rgba(78,154,236,.32);border-radius:999px;background:rgba(9,104,188,.12);color:#bfdbfe;font-family:'Montserrat',sans-serif;font-size:.7rem;font-weight:800;letter-spacing:.12em}
+html.tf-brand-palette h1{margin:14px 0 8px;color:#f8fbff;font-family:'Montserrat',sans-serif;font-size:clamp(2rem,5vw,3.4rem);line-height:1.05;letter-spacing:-.035em}
+html.tf-brand-palette .status{color:#a9bbd2;font-size:.84rem}
+html.tf-brand-palette .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(78,154,236,.34),transparent);margin-bottom:24px}
+html.tf-brand-palette .intro{max-width:860px;margin:0 auto 22px;color:#b9c9dc;line-height:1.65}
+
+html.tf-brand-palette .summary-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+html.tf-brand-palette .summary-card{position:relative;overflow:hidden;padding:17px;border:1px solid rgba(78,154,236,.18);border-radius:16px;background:linear-gradient(145deg,rgba(10,41,86,.78),rgba(3,26,63,.84));box-shadow:0 14px 30px rgba(0,0,0,.18);text-align:left}
+html.tf-brand-palette .summary-card::before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:#4e9aec}
+html.tf-brand-palette .summary-card span{color:#9fb2c9;font-size:.76rem;font-weight:700}
+html.tf-brand-palette .summary-card strong{display:block;color:#f8fbff;font-family:'Montserrat',sans-serif;font-size:1.8rem;line-height:1.1}
+html.tf-brand-palette .summary-card:nth-child(2)::before{background:#22c55e}
+html.tf-brand-palette .summary-card:nth-child(3)::before{background:#f59e0b}
+html.tf-brand-palette .summary-card:nth-child(4)::before{background:#ef4444}
+
+html.tf-brand-palette .toolbar{display:grid;grid-template-columns:minmax(0,1fr) 230px auto;gap:10px;padding:14px;border:1px solid rgba(78,154,236,.16);border-radius:16px;background:rgba(3,26,63,.68);box-shadow:0 12px 26px rgba(0,0,0,.16)}
+html.tf-brand-palette .toolbar input,html.tf-brand-palette .toolbar select{min-height:46px;border:1px solid rgba(159,176,200,.25);border-radius:11px;background:#07172f;color:#f8fbff;font-family:'Open Sans',sans-serif}
+html.tf-brand-palette .toolbar input:focus,html.tf-brand-palette .toolbar select:focus{border-color:#4e9aec;box-shadow:0 0 0 3px rgba(78,154,236,.16);outline:none}
+html.tf-brand-palette .toolbar button{min-height:46px;border:1px solid #0968bc;border-radius:11px;background:linear-gradient(180deg,#0968bc,#054288);color:#fff;font-family:'Montserrat',sans-serif;font-size:.76rem;font-weight:800;letter-spacing:.03em;cursor:pointer}
+html.tf-brand-palette .toolbar button:hover{transform:translateY(-1px);filter:brightness(1.05)}
+html.tf-brand-palette .toolbar button:active{transform:translateY(0)}
+html.tf-brand-palette .toolbar button:focus-visible{outline:3px solid rgba(78,154,236,.42);outline-offset:2px}
+html.tf-brand-palette .toolbar button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+html.tf-brand-palette .student-list{gap:14px}
+html.tf-brand-palette .student-card{position:relative;overflow:hidden;padding:18px;border:1px solid rgba(78,154,236,.16);border-radius:18px;background:linear-gradient(145deg,rgba(10,41,86,.74),rgba(3,26,63,.88));box-shadow:0 16px 34px rgba(0,0,0,.18);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+html.tf-brand-palette .student-card::before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:#f59e0b}
+html.tf-brand-palette .student-card.is-complete::before{background:#22c55e}
+html.tf-brand-palette .student-card.is-low::before{background:#ef4444}
+@media (hover:hover){html.tf-brand-palette .student-card:hover{transform:translateY(-2px);border-color:rgba(78,154,236,.3);box-shadow:0 20px 38px rgba(0,0,0,.22)}}
+html.tf-brand-palette .student-name{color:#f8fbff;font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.05rem}
+html.tf-brand-palette .student-meta{color:#9fb2c9;font-size:.78rem;line-height:1.6}
+html.tf-brand-palette .progress-badge{min-width:74px;padding:9px 11px;border:1px solid rgba(78,154,236,.3);border-radius:12px;background:rgba(9,104,188,.12);color:#bfdbfe;font-family:'Montserrat',sans-serif;font-size:1.15rem;font-weight:800}
+html.tf-brand-palette .student-card.is-complete .progress-badge{border-color:rgba(34,197,94,.32);background:rgba(34,197,94,.11);color:#bbf7d0}
+html.tf-brand-palette .student-card.is-low .progress-badge{border-color:rgba(239,68,68,.34);background:rgba(239,68,68,.1);color:#fecaca}
+html.tf-brand-palette .bar{height:9px;background:rgba(159,176,200,.14)}
+html.tf-brand-palette .bar div{background:linear-gradient(90deg,#054288,#4e9aec)}
+html.tf-brand-palette .student-card.is-complete .bar div{background:#22c55e}
+html.tf-brand-palette .student-card.is-low .bar div{background:#ef4444}
+
+html.tf-brand-palette .pending-title{color:#dbeafe;font-family:'Montserrat',sans-serif;font-size:.78rem;font-weight:800;letter-spacing:.02em}
+html.tf-brand-palette .pending-list{gap:7px}
+html.tf-brand-palette .pending-item{padding:9px 11px;border:1px solid rgba(245,158,11,.2);border-radius:10px;background:rgba(245,158,11,.08);color:#fde7b0;font-size:.78rem}
+html.tf-brand-palette .student-card.is-low .pending-item{border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.07);color:#fecaca}
+html.tf-brand-palette .all-done{padding:9px 11px;border:1px solid rgba(34,197,94,.22);border-radius:10px;background:rgba(34,197,94,.08);color:#bbf7d0;font-size:.78rem}
+html.tf-brand-palette .info-line{color:#a9bbd2;font-size:.78rem}
+html.tf-brand-palette .card-actions{gap:8px}
+html.tf-brand-palette .card-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 12px;border:1px solid rgba(78,154,236,.3);border-radius:10px;background:rgba(9,104,188,.1);color:#dbeafe;font-family:'Montserrat',sans-serif;font-size:.7rem;font-weight:800;text-decoration:none;letter-spacing:.02em}
+html.tf-brand-palette .card-actions a:hover{background:rgba(9,104,188,.18);border-color:#4e9aec;transform:translateY(-1px)}
+html.tf-brand-palette .card-actions a:focus-visible{outline:3px solid rgba(78,154,236,.42);outline-offset:2px}
+html.tf-brand-palette .empty{border-color:rgba(78,154,236,.16);background:rgba(3,26,63,.55);color:#9fb2c9}
+
+@media(max-width:899px){
+  html.tf-brand-palette .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html.tf-brand-palette .toolbar{grid-template-columns:1fr 220px}
+  html.tf-brand-palette .toolbar button{grid-column:1/-1}
+}
+@media(max-width:639px){
+  html.tf-brand-palette .container{width:min(100% - 20px,1160px);padding-top:18px}
+  html.tf-brand-palette .top-links{display:grid;grid-template-columns:1fr}
+  html.tf-brand-palette .top-link{justify-content:center}
+  html.tf-brand-palette .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  html.tf-brand-palette .summary-card{padding:14px}
+  html.tf-brand-palette .summary-card strong{font-size:1.5rem}
+  html.tf-brand-palette .toolbar{grid-template-columns:1fr;padding:11px}
+  html.tf-brand-palette .toolbar button{grid-column:auto}
+  html.tf-brand-palette .student-head{flex-direction:column}
+  html.tf-brand-palette .progress-badge{align-self:flex-start}
+  html.tf-brand-palette .card-actions{display:grid;grid-template-columns:1fr}
+  html.tf-brand-palette .card-actions a{width:100%}
+}
+
+@media(prefers-reduced-motion:reduce){
+  html.tf-brand-palette *,html.tf-brand-palette *::before,html.tf-brand-palette *::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
+}
