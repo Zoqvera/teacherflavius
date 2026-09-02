@@ -40,7 +40,7 @@ function loadAssetLoader(existingById) {
 
 test("calls script callback immediately when asset already exists", function () {
   let calls = 0;
-  const runtime = loadAssetLoader({ existing-script: { id: "existing-script" } });
+  const runtime = loadAssetLoader({ "existing-script": { id: "existing-script" } });
 
   runtime.loader.loadScript("existing-script", "/existing.js", function () {
     calls += 1;
