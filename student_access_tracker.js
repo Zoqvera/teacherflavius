@@ -4,18 +4,23 @@
   if (window.__studentAccessTrackerLoaded) return;
   window.__studentAccessTrackerLoaded = true;
 
+  const AUTH_WAIT_OPTIONS = Object.freeze({
+    maxAttempts: 20,
+    delayMs: 150
+  });
+
   let trackingStarted = false;
 
-  function sleep(ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  function isAuthReady() {
+    return !!(window.Auth && Auth.getClient && Auth.getSession);
   }
 
-  async function waitForAuth() {
-    for (let attempt = 0; attempt < 20; attempt++) {
-      if (window.Auth && Auth.getClient && Auth.getSession) return true;
-      await sleep(150);
+  function waitForAuth() {
+    const resourceWaiter = window.ResourceWaiter;
+    if (!resourceWaiter || typeof resourceWaiter.waitUntil !== "function") {
+      return Promise.resolve(false);
     }
-    return !!(window.Auth && Auth.getClient && Auth.getSession);
+    return resourceWaiter.waitUntil(isAuthReady, AUTH_WAIT_OPTIONS);
   }
 
   function getTimezone() {
@@ -53,9 +58,9 @@
     await logCurrentPage();
   }
 
-  window.StudentAccessTracker = {
+  window.StudentAccessTracker = Object.freeze({
     logCurrentPage: logCurrentPage
-  };
+  });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", startTracking, { once: true });
