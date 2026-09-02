@@ -99,20 +99,16 @@
     return APP_ORIGIN + PATHS.profile + "?google_linked=1";
   }
 
-  function pathMatches(cleanPath, htmlSuffix) {
-    return window.location.pathname === cleanPath || window.location.pathname.endsWith(htmlSuffix);
-  }
-
   function isOnOnboardingPage() {
-    return pathMatches(PATHS.onboarding, "/complete-cadastro.html");
+    return window.location.pathname === PATHS.onboarding;
   }
 
   function isOnLoginPage() {
-    return pathMatches(PATHS.login, "/login.html");
+    return window.location.pathname === PATHS.login;
   }
 
   function isOnProfilePage() {
-    return pathMatches(PATHS.profile, "/perfil.html");
+    return window.location.pathname === PATHS.profile;
   }
 
   function showConfigWarning() {
