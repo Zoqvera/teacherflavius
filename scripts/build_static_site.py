@@ -24,6 +24,10 @@ ANALYTICS_SCRIPT_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?analytics\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
+RESOURCE_WAITER_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?resource_waiter\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
 SUPABASE_CLIENT_SERVICE_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?supabase_client_service\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
@@ -57,6 +61,11 @@ ANALYTICS_PAYMENTS_RE = re.compile(
     re.IGNORECASE,
 )
 AUTH_DEPENDENCIES = (
+    (
+        "Resource waiter",
+        RESOURCE_WAITER_RE,
+        "/resource_waiter.js?v=20260902-2",
+    ),
     (
         "Supabase client service",
         SUPABASE_CLIENT_SERVICE_RE,
@@ -334,6 +343,7 @@ def main() -> None:
         PUBLISH / "robots.txt",
         PUBLISH / "sitemap.xml",
         PUBLISH / "error_monitor.js",
+        PUBLISH / "resource_waiter.js",
         PUBLISH / "supabase_client_service.js",
         PUBLISH / "auth_navigation_service.js",
         PUBLISH / "student_data_utils.js",
