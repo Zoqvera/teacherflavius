@@ -4,17 +4,21 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - "health.json"
       - "netlify.toml"
       - "netlify/**"
       - "scripts/build_static_site.py"
+      - "scripts/check_health_endpoint.py"
       - "scripts/postprocess_production.py"
       - ".github/workflows/production-availability.yml"
   push:
     branches: [main]
     paths:
+      - "health.json"
       - "netlify.toml"
       - "netlify/**"
       - "scripts/build_static_site.py"
+      - "scripts/check_health_endpoint.py"
       - "scripts/postprocess_production.py"
       - ".github/workflows/production-availability.yml"
   schedule:
@@ -42,11 +46,15 @@ jobs:
           import json
           from pathlib import Path
 
-          health = json.loads(Path("_site/health.json").read_text(encoding="utf-8"))
-          assert health.get("status") == "ok", health
-          assert health.get("service") == "teacherflavius.com", health
-          assert len(health.get("commit", "")) == 40, health
-          print("Generated health endpoint is valid:", health["commit"][:12])
+          static_health = json.loads(Path("health.json").read_text(encoding="utf-8"))
+          assert static_health.get("status") == "ok", static_health
+          assert static_health.get("service") == "teacherflavius.com", static_health
+
+          generated_health = json.loads(Path("_site/health.json").read_text(encoding="utf-8"))
+          assert generated_health.get("status") == "ok", generated_health
+          assert generated_health.get("service") == "teacherflavius.com", generated_health
+          assert len(generated_health.get("commit", "")) == 40, generated_health
+          print("Generated health endpoint is valid:", generated_health["commit"][:12])
           PY
 
       - name: Resolve production DNS
@@ -68,19 +76,10 @@ jobs:
       - name: Check HTTPS health endpoint
         if: github.event_name != 'pull_request'
         run: |
-          curl --fail --silent --show-error \
-            --retry 3 --retry-all-errors --connect-timeout 10 --max-time 20 \
-            https://teacherflavius.com/health.json -o /tmp/teacherflavius-health.json
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          health = json.loads(Path("/tmp/teacherflavius-health.json").read_text(encoding="utf-8"))
-          assert health.get("status") == "ok", health
-          assert health.get("service") == "teacherflavius.com", health
-          assert len(health.get("commit", "")) == 40, health
-          print("Production health OK:", health["commit"][:12], health.get("generated_at"))
-          PY
+          python3 scripts/check_health_endpoint.py \
+            https://teacherflavius.com/health.json \
+            --attempts 18 \
+            --delay 5
 
       - name: Check production security headers
         if: github.event_name != 'pull_request'
