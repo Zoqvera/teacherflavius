@@ -9,8 +9,13 @@
     (async function () {
       const response = await fetch('/acessos_dos_alunos.html', { cache: 'no-store' });
       const html = await response.text();
+      const enhancedHtml = html
+        .replace('<html lang="pt-BR">', '<html lang="pt-BR" class="tf-brand-palette">')
+        .replace('<head>', '<head>\n  <base href="/">')
+        .replace('</head>', '  <link rel="stylesheet" href="/acessos-dos-alunos/acessos_visual.css?v=20260901-1">\n</head>')
+        .replace('</body>', '  <script src="/acessos-dos-alunos/acessos_visual.js?v=20260901-1"><\/script>\n</body>');
       document.open();
-      document.write(html.replace('<head>', '<head>\n  <base href="/">'));
+      document.write(enhancedHtml);
       document.close();
     })();
   </script>
