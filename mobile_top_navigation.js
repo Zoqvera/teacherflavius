@@ -24,8 +24,8 @@
         var url = new URL(link.getAttribute("href"), window.location.href);
         var next = url.searchParams.get("next");
         if (url.origin !== window.location.origin) return;
-        if (url.pathname !== "/login/" && url.pathname !== "/login.html") return;
-        if (next !== "/area-do-estudante/" && next !== "/area_do_estudante.html") return;
+        if (url.pathname !== "/login/") return;
+        if (next !== "/area-do-estudante/") return;
         link.href = "/area-do-estudante/";
       } catch (error) {
         // Keep the original link if parsing fails.
