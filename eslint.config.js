@@ -6,6 +6,7 @@ module.exports = [
       "acessos_dos_alunos.js",
       "professor_home.js",
       "resource_waiter.js",
+      "google_only_access.js",
       "student_access_service.js",
       "student_access_renderer.js",
       "auth.js",
