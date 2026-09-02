@@ -21,6 +21,8 @@ module.exports = [
       "student_payment_notice_loader.js",
       "site_footer_renderer.js",
       "site_footer_core.js",
+      "site_whatsapp.js",
+      "site_footer.js",
       "global_logout.js",
       "student_access_service.js",
       "student_access_renderer.js",
