@@ -72,16 +72,30 @@ def insert_after_opening_tag(html: str, tag_re: re.Pattern[str], snippet: str) -
     return f"{html[:match.end()]}\n{snippet}\n{html[match.end():]}"
 
 
+def insert_before_marker(html: str, marker: str, snippet: str) -> str:
+    marker_position = html.find(marker)
+    if marker_position < 0:
+        return html
+    return f"{html[:marker_position]}{snippet}\n{html[marker_position:]}"
+
+
 def inject_gtm(html: str, relative: Path) -> tuple[str, bool]:
     if not HTML_OPEN_RE.search(html):
         return html, False
 
+    has_consent_snippet = CONSENT_MODE_MARKER in html
     has_head_snippet = GTM_HEAD_MARKER in html
     has_body_snippet = GTM_BODY_MARKER in html
+
     if has_head_snippet != has_body_snippet:
         raise SystemExit(f"Partial Google Tag Manager installation in {relative.as_posix()}")
+    if has_consent_snippet and not has_head_snippet:
+        raise SystemExit(f"Google Consent Mode installed without GTM in {relative.as_posix()}")
+
     if has_head_snippet:
-        return html, False
+        if has_consent_snippet:
+            return html, False
+        return insert_before_marker(html, GTM_HEAD_MARKER, CONSENT_MODE_SNIPPET), True
 
     if not HEAD_OPEN_RE.search(html) or not BODY_OPEN_RE.search(html):
         raise SystemExit(f"HTML document missing <head> or <body>: {relative.as_posix()}")
