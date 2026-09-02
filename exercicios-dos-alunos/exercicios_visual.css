@@ -1,0 +1,282 @@
+@import url('/brand_palette.css?v=20260820-3');
+
+html.tf-brand-palette body,
+body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(9,104,188,.13), transparent 34rem),
+    linear-gradient(155deg, #020916 0%, #031226 48%, #041a34 100%);
+  color: #edf4ff;
+  font-family: "Open Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.container { width: min(1180px, calc(100% - 32px)); padding-bottom: 64px; }
+.header h1,
+.student-heading strong,
+.summary-card strong,
+.exercise-metric b,
+.exercise-editor-heading strong,
+.teacher-exercise-header a,
+button,
+.badge,
+.exercise-status-pill { font-family: "Montserrat", "Open Sans", sans-serif; }
+
+.page-intro {
+  max-width: 900px;
+  margin: 4px auto 28px;
+  color: #b7c8df;
+  font-size: 14px;
+}
+.page-intro strong { color: #dcecff; }
+.panel-version { color: #6f86a5; }
+
+.summary-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.summary-card {
+  min-height: 118px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(160deg, rgba(10,41,86,.72), rgba(3,26,63,.82));
+  border: 1px solid rgba(78,154,236,.22);
+  border-radius: 16px;
+  box-shadow: 0 12px 34px rgba(0,0,0,.16);
+  padding: 17px 14px;
+}
+.summary-card span { color: #aebfd5; font-size: 11px; }
+.summary-card strong { color: #f7fbff; font-size: 28px; line-height: 1; }
+.summary-card:nth-child(2),
+.summary-card:nth-child(3),
+.summary-card.danger {
+  border-color: rgba(239,68,68,.36);
+  background: linear-gradient(160deg, rgba(127,29,29,.2), rgba(3,26,63,.85));
+}
+.summary-card:nth-child(2) strong,
+.summary-card:nth-child(3) strong { color: #fecaca; }
+.summary-card:nth-child(4) {
+  border-color: rgba(245,158,11,.34);
+  background: linear-gradient(160deg, rgba(120,53,15,.16), rgba(3,26,63,.85));
+}
+.summary-card:nth-child(4) strong { color: #fde68a; }
+.summary-card:nth-child(5) {
+  border-color: rgba(34,197,94,.32);
+  background: linear-gradient(160deg, rgba(20,83,45,.16), rgba(3,26,63,.85));
+}
+.summary-card:nth-child(5) strong { color: #bbf7d0; }
+
+.panel {
+  border: 1px solid rgba(78,154,236,.2);
+  background: linear-gradient(165deg, rgba(3,26,63,.82), rgba(2,16,43,.9));
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.18);
+}
+.filter-row {
+  align-items: end;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(191,219,254,.1);
+}
+.filter-row label { color: #b7c8df; font-weight: 700; }
+.filter-row select {
+  min-height: 44px;
+  border: 1px solid rgba(78,154,236,.34);
+  border-radius: 10px;
+  background: #061a36;
+  color: #f5f9ff;
+  font-family: "Open Sans", sans-serif;
+}
+.filter-row select:focus-visible {
+  outline: 3px solid rgba(78,154,236,.3);
+  outline-offset: 2px;
+  border-color: #4e9aec;
+}
+#visibleStudentsCount {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(9,104,188,.1);
+  border: 1px solid rgba(78,154,236,.18);
+  color: #bcd8f5;
+  font-weight: 700;
+}
+
+.student-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+.exercise-status-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(78,154,236,.18);
+  border-left: 4px solid #4e9aec;
+  border-radius: 17px;
+  background: linear-gradient(160deg, rgba(6,31,66,.84), rgba(3,21,48,.9));
+  box-shadow: 0 12px 30px rgba(0,0,0,.14);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.exercise-status-card.status-late {
+  border-left-color: #ef4444;
+  background: linear-gradient(160deg, rgba(127,29,29,.14), rgba(3,21,48,.92));
+}
+.exercise-status-card.status-pending {
+  border-left-color: #f59e0b;
+  background: linear-gradient(160deg, rgba(120,53,15,.11), rgba(3,21,48,.92));
+}
+.exercise-status-card.status-done {
+  border-left-color: #22c55e;
+  background: linear-gradient(160deg, rgba(20,83,45,.11), rgba(3,21,48,.92));
+}
+.student-heading { margin-bottom: 16px; }
+.student-heading strong { font-size: 17px; color: #f7fbff; }
+.student-email { color: #91a8c6; }
+.exercise-status-pill {
+  border: 1px solid transparent;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.exercise-status-pill.late { color: #fecaca; background: rgba(239,68,68,.13); border-color: rgba(239,68,68,.25); }
+.exercise-status-pill.pending { color: #fde68a; background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.25); }
+.exercise-status-pill.done { color: #bbf7d0; background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.24); }
+
+.exercise-metrics { gap: 8px; margin-bottom: 15px; }
+.exercise-metric {
+  background: rgba(2,16,43,.58);
+  border: 1px solid rgba(191,219,254,.09);
+  border-radius: 11px;
+  padding: 11px;
+}
+.exercise-metric span { color: #8fa7c5; }
+.exercise-metric b { color: #eef6ff; font-size: 19px; }
+.exercise-metric.danger { border-color: rgba(239,68,68,.22); background: rgba(127,29,29,.1); }
+.exercise-metric.danger b { color: #fecaca; }
+.student-details { border-top-color: rgba(191,219,254,.1); }
+.student-details p { color: #b7c8df; }
+.student-details b { color: #dcecff; }
+
+body .student-actions { border-top-color: rgba(191,219,254,.1); }
+body .manage-exercises-button,
+body .save-exercise-button,
+body .close-exercise-editor-button {
+  min-height: 44px;
+  border-radius: 10px;
+  font: 800 11px/1.2 "Montserrat", "Open Sans", sans-serif;
+  letter-spacing: .04em;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, opacity .16s ease;
+}
+body .manage-exercises-button,
+body .save-exercise-button {
+  border: 1px solid rgba(78,154,236,.4);
+  background: linear-gradient(135deg, #054288, #0968bc);
+  color: #fff;
+}
+body .close-exercise-editor-button {
+  border: 1px solid rgba(78,154,236,.28);
+  background: rgba(9,104,188,.09);
+  color: #cce5ff;
+}
+body .manage-exercises-button:hover,
+body .save-exercise-button:hover,
+body .close-exercise-editor-button:hover { transform: translateY(-1px); filter: none; }
+body .manage-exercises-button:focus-visible,
+body .save-exercise-button:focus-visible,
+body .close-exercise-editor-button:focus-visible,
+body .teacher-exercise-toggle input:focus-visible,
+body .teacher-exercise-date:focus-visible {
+  outline: 3px solid rgba(78,154,236,.3);
+  outline-offset: 2px;
+}
+body .manage-exercises-button:disabled,
+body .save-exercise-button:disabled { cursor: wait; opacity: .58; transform: none; }
+
+body .exercise-editor {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(78,154,236,.28);
+  border-radius: 14px;
+  background: rgba(2,16,43,.72);
+  box-shadow: inset 0 1px rgba(255,255,255,.025);
+}
+body .exercise-editor-heading { margin-bottom: 14px; }
+body .exercise-editor-heading strong { color: #f7fbff; }
+body .exercise-editor-heading p,
+body .exercise-editor-message { color: #91a8c6; }
+body .teacher-exercise-list { gap: 9px; }
+body .teacher-exercise-row {
+  border: 1px solid rgba(191,219,254,.1);
+  border-radius: 12px;
+  background: rgba(6,31,66,.45);
+}
+body .teacher-exercise-row.is-completed {
+  border-color: rgba(34,197,94,.28);
+  background: rgba(20,83,45,.1);
+}
+body .teacher-exercise-header a { color: #dcecff; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+body .teacher-exercise-header a:hover { color: #7db5ee; }
+body .teacher-exercise-toggle { color: #bfd0e4; }
+body .teacher-exercise-toggle input { width: 20px; height: 20px; accent-color: #0968bc; }
+body .teacher-exercise-date-label { color: #91a8c6; }
+body .teacher-exercise-date {
+  min-height: 44px;
+  border-color: rgba(78,154,236,.28);
+  border-radius: 10px;
+  background: #061a36;
+  color: #f7fbff;
+}
+body .teacher-exercise-meta,
+body .teacher-exercise-save-status { color: #91a8c6; }
+body .teacher-exercise-save-status.success { color: #86efac; }
+body .teacher-exercise-save-status.error { color: #fca5a5; }
+
+.empty {
+  border-color: rgba(78,154,236,.16);
+  background: rgba(2,16,43,.42);
+  color: #91a8c6;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .exercise-status-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(78,154,236,.34);
+    box-shadow: 0 16px 38px rgba(0,0,0,.18);
+  }
+}
+
+@media (max-width: 899px) {
+  .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .student-status-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 639px) {
+  .container { width: min(100% - 20px, 1180px); }
+  .summary-grid { grid-template-columns: 1fr; gap: 9px; }
+  .summary-card { min-height: 92px; padding: 14px; }
+  .filter-row { display: grid; grid-template-columns: 1fr; align-items: stretch; }
+  .filter-row label { display: grid; gap: 7px; }
+  .filter-row select { margin-left: 0; width: 100%; }
+  #visibleStudentsCount { justify-self: start; }
+  .student-heading { flex-direction: column; }
+  .exercise-status-pill { align-self: flex-start; }
+  .exercise-metrics { grid-template-columns: 1fr 1fr; }
+  body .exercise-editor-heading,
+  body .teacher-exercise-header { flex-direction: column; }
+  body .teacher-exercise-fields { grid-template-columns: 1fr; }
+  body .manage-exercises-button,
+  body .save-exercise-button,
+  body .close-exercise-editor-button { width: 100%; }
+}
+
+@media (max-width: 390px) {
+  .exercise-metrics { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exercise-status-card,
+  body .manage-exercises-button,
+  body .save-exercise-button,
+  body .close-exercise-editor-button { transition: none !important; }
+  .exercise-status-card:hover,
+  body .manage-exercises-button:hover,
+  body .save-exercise-button:hover,
+  body .close-exercise-editor-button:hover { transform: none !important; }
+}
