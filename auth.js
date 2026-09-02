@@ -8,59 +8,69 @@
     onboarding: "/complete-cadastro/",
     profile: "/perfil/"
   });
-  const ASSETS = Object.freeze({
-    animatedCardsCss: "animated_cards.css?v=20260429-6",
-    animatedCardsJs: "animated_cards.js?v=20260716-logout-1",
-    accessTrackerJs: "/student_access_tracker.js?v=20260730-2",
-    googleAuthCss: "/google_auth_ui.css?v=20260902-1",
-    googleAuthJs: "/google_auth_ui.js?v=20260902-1"
-  });
+  const AUTH_INFRASTRUCTURE_SRC = "/auth_infrastructure.js?v=20260902-1";
+  const AUTH_INFRASTRUCTURE_SELECTOR = 'script[src^="/auth_infrastructure.js"]';
   const ENROLLMENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const ENROLLMENT_CODE_LENGTH = 5;
   const AVAILABILITY_DAYS = Object.freeze(["seg", "ter", "qua", "qui", "sex"]);
   const AVAILABILITY_HOURS = Object.freeze(["09", "10", "12", "13", "15", "17", "18", "20", "21"]);
   const GOOGLE_PROVIDER = "google";
 
-  function runWhenDomReady(callback) {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", callback, { once: true });
-      return;
-    }
-    callback();
-  }
+  let infrastructurePromise = null;
 
-  function appendStylesheetOnce(selector, href) {
-    if (document.querySelector(selector)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  }
+  function getAuthInfrastructure() {
+    if (window.AuthInfrastructure) return Promise.resolve(window.AuthInfrastructure);
+    if (infrastructurePromise) return infrastructurePromise;
 
-  function appendScriptOnce(selector, src) {
-    if (document.querySelector(selector)) return;
-    const script = document.createElement("script");
-    script.src = src;
-    script.defer = true;
-    document.body.appendChild(script);
-  }
+    infrastructurePromise = new Promise(function (resolve, reject) {
+      function resolveInfrastructure() {
+        if (!window.AuthInfrastructure) {
+          reject(new Error("A infraestrutura de autenticação não foi inicializada."));
+          return;
+        }
+        resolve(window.AuthInfrastructure);
+      }
 
-  function loadSharedAssets() {
-    runWhenDomReady(function () {
-      appendStylesheetOnce('link[href^="animated_cards.css"]', ASSETS.animatedCardsCss);
-      appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
-      appendScriptOnce('script[src^="/student_access_tracker.js"]', ASSETS.accessTrackerJs);
+      const existingScript = document.querySelector(AUTH_INFRASTRUCTURE_SELECTOR);
+      if (existingScript) {
+        existingScript.addEventListener("load", resolveInfrastructure, { once: true });
+        existingScript.addEventListener("error", function () {
+          reject(new Error("Não foi possível carregar a infraestrutura de autenticação."));
+        }, { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = AUTH_INFRASTRUCTURE_SRC;
+      script.async = true;
+      script.addEventListener("load", resolveInfrastructure, { once: true });
+      script.addEventListener("error", function () {
+        reject(new Error("Não foi possível carregar a infraestrutura de autenticação."));
+      }, { once: true });
+      document.head.appendChild(script);
     });
+
+    return infrastructurePromise;
   }
 
-  function isGoogleAuthUiPage() {
-    return window.location.pathname === PATHS.login || window.location.pathname === PATHS.profile;
+  function initializeAuthInfrastructure() {
+    getAuthInfrastructure()
+      .then(function (infrastructure) {
+        infrastructure.initialize({ pathname: window.location.pathname });
+      })
+      .catch(function (error) {
+        console.warn("Não foi possível inicializar recursos auxiliares de autenticação:", error);
+      });
   }
 
-  function loadGoogleAuthUiAssets() {
-    if (!isGoogleAuthUiPage()) return;
-    appendStylesheetOnce('link[href^="/google_auth_ui.css"]', ASSETS.googleAuthCss);
-    appendScriptOnce('script[src^="/google_auth_ui.js"]', ASSETS.googleAuthJs);
+  function showConfigWarning() {
+    getAuthInfrastructure()
+      .then(function (infrastructure) {
+        infrastructure.showConfigWarning();
+      })
+      .catch(function (error) {
+        console.warn("Não foi possível exibir o aviso de configuração do Supabase:", error);
+      });
   }
 
   function isConfigured() {
@@ -118,28 +128,6 @@
 
   function isOnOnboardingPage() {
     return window.location.pathname === PATHS.onboarding;
-  }
-
-  function showConfigWarning() {
-    if (document.getElementById("supabase-config-warning")) return;
-
-    const warning = document.createElement("div");
-    warning.id = "supabase-config-warning";
-    warning.style.position = "fixed";
-    warning.style.left = "12px";
-    warning.style.right = "12px";
-    warning.style.bottom = "12px";
-    warning.style.zIndex = "20000";
-    warning.style.background = "rgba(251,191,36,0.12)";
-    warning.style.border = "1px solid rgba(251,191,36,0.35)";
-    warning.style.color = "#fde68a";
-    warning.style.borderRadius = "12px";
-    warning.style.padding = "12px 14px";
-    warning.style.fontFamily = "Georgia, serif";
-    warning.style.fontSize = "13px";
-    warning.style.lineHeight = "1.5";
-    warning.textContent = "Supabase ainda não configurado. Edite supabase_config.js com a URL e a chave pública anon do seu projeto.";
-    document.body.appendChild(warning);
   }
 
   function generateEnrollmentCode() {
@@ -558,6 +546,5 @@
     normalizeNextPath: normalizeNextPath
   };
 
-  loadSharedAssets();
-  runWhenDomReady(loadGoogleAuthUiAssets);
+  initializeAuthInfrastructure();
 })();
