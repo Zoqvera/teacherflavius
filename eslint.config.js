@@ -8,6 +8,7 @@ module.exports = [
       "resource_waiter.js",
       "google_only_access.js",
       "student_access_tracker.js",
+      "student_birthdays.js",
       "student_access_service.js",
       "student_access_renderer.js",
       "auth.js",
