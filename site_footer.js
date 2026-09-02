@@ -136,7 +136,7 @@
   }
 
   function loadWhatsappLeadForm() {
-    loadScript("teacher-flavius-whatsapp-lead-form", "/whatsapp_lead_form.js?v=20260901-1");
+    loadScript("teacher-flavius-whatsapp-lead-form", "/whatsapp_lead_form.js?v=20260902-direct-2");
   }
 
   function initializeWhatsappUi() {
@@ -165,7 +165,7 @@
   }
 
   function loadAnalytics() {
-    loadScript("teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260901-2", loadAnalyticsCore);
+    loadScript("teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260902-leadfix-1", loadAnalyticsCore);
   }
 
   function disableAnalytics() {
@@ -240,8 +240,7 @@
     else window.setTimeout(loadPublicPageScripts, 0);
   }
 
-  // This must be registered before privacy/analytics so non-floating WhatsApp
-  // clicks are intercepted before they can be counted as leads.
+  // Keep the compatibility bootstrap available for browsers that cached older pages.
   loadWhatsappLeadForm();
   loadPrivacy();
 
