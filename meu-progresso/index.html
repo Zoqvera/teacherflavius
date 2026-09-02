@@ -3,8 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Flávio</title>
-  <script src="/clean_route_loader.js?v=20260819-1"></script>
+  <title>Meu Progresso - Teacher Flávio</title>
 </head>
-<body></body>
+<body>
+  <script>
+    (async function () {
+      try {
+        const response = await fetch('/meu_progresso.html', { cache: 'no-store' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const html = await response.text();
+        const enhancedHtml = html
+          .replace('<head>', '<head>\n  <base href="/">\n  <link rel="stylesheet" href="/meu-progresso/meu_progresso_visual.css?v=20260902-1">')
+          .replace('</body>', '  <script src="/meu-progresso/meu_progresso_visual.js?v=20260902-1"><\\/script>\n</body>');
+        document.open();
+        document.write(enhancedHtml);
+        document.close();
+      } catch (error) {
+        console.error('Não foi possível carregar Meu Progresso:', error);
+        document.body.textContent = 'Não foi possível carregar a página de progresso.';
+      }
+    })();
+  </script>
+</body>
 </html>
