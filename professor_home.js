@@ -1,6 +1,10 @@
 let currentProfessorSession = null;
 
 const PROFESSOR_CARD_ORDER_KEY = "teacherFlavius.professorCardOrder.v1";
+const PROFESSOR_AUTH_MAX_ATTEMPTS = 10;
+const PROFESSOR_AUTH_RETRY_DELAY_MS = 150;
+const PROFESSOR_PATH = "/professor/";
+const LOGIN_PATH = "/login/";
 
 function applyProfessorCardOrder(grid) {
   if (!grid) return;
@@ -133,19 +137,21 @@ function ensureAcquisitionDashboardCard() {
 }
 
 function redirectProfessorToLogin() {
-  window.location.href = "login.html?next=" + encodeURIComponent("professor.html");
+  const nextPath = window.Auth.normalizeNextPath(window.location.pathname, PROFESSOR_PATH);
+  window.location.href = LOGIN_PATH + "?next=" + encodeURIComponent(nextPath);
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function professorAuthResourcesAreReady() {
+  return !!(window.Auth && window.SUPABASE_CONFIG && window.Auth.isConfigured());
 }
 
-async function waitForProfessorAuthResources() {
-  for (let i = 0; i < 10; i++) {
-    if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured()) return true;
-    await sleep(150);
-  }
-  return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
+function waitForProfessorAuthResources() {
+  if (!window.ResourceWaiter) return Promise.resolve(false);
+
+  return window.ResourceWaiter.waitUntil(professorAuthResourcesAreReady, {
+    maxAttempts: PROFESSOR_AUTH_MAX_ATTEMPTS,
+    delayMs: PROFESSOR_AUTH_RETRY_DELAY_MS
+  });
 }
 
 async function guardProfessorHome() {
@@ -160,14 +166,14 @@ async function guardProfessorHome() {
     return;
   }
 
-  currentProfessorSession = await Auth.getSession();
+  currentProfessorSession = await window.Auth.getSession();
   if (!currentProfessorSession || !currentProfessorSession.user) {
     redirectProfessorToLogin();
     return;
   }
 
   try {
-    const response = await Auth.getClient().rpc("is_teacher_admin");
+    const response = await window.Auth.getClient().rpc("is_teacher_admin");
     if (response.error) throw response.error;
 
     if (response.data !== true) {
