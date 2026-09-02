@@ -9,6 +9,7 @@ on:
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_privacy_analytics.py"
       - "scripts/inject_google_tag_manager.py"
+      - "scripts/materialize_clean_route_aliases.py"
       - ".github/workflows/materialize-gtm-github-pages.yml"
 
 permissions:
@@ -29,6 +30,7 @@ jobs:
           python3 scripts/inject_auth_module_loader.py --site-root .
           python3 scripts/inject_site_privacy_analytics.py --site-root .
           python3 scripts/inject_google_tag_manager.py --site-root .
+          python3 scripts/materialize_clean_route_aliases.py --site-root .
 
       - name: Commit generated HTML changes
         shell: bash
