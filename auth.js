@@ -22,6 +22,13 @@
       src: "/student_profile_service.js?v=20260902-1",
       missingMessage: "O serviço de perfil do aluno não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de perfil do aluno."
+    }),
+    activityProgressService: Object.freeze({
+      globalName: "ActivityProgressService",
+      selector: 'script[src^="/activity_progress_service.js"]',
+      src: "/activity_progress_service.js?v=20260902-1",
+      missingMessage: "O serviço de progresso das atividades não foi inicializado.",
+      loadErrorMessage: "Não foi possível carregar o serviço de progresso das atividades."
     })
   });
   const ENROLLMENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -30,6 +37,7 @@
 
   const modulePromises = {};
   let studentProfileService = null;
+  let activityProgressService = null;
 
   function loadGlobalModule(config) {
     const existingModule = window[config.globalName];
@@ -189,6 +197,20 @@
     });
   }
 
+  function getActivityProgressService() {
+    if (activityProgressService) return Promise.resolve(activityProgressService);
+
+    return loadGlobalModule(MODULES.activityProgressService).then(function (serviceModule) {
+      if (!activityProgressService) {
+        activityProgressService = serviceModule.create({
+          getClient: getClient,
+          getUser: getUser
+        });
+      }
+      return activityProgressService;
+    });
+  }
+
   async function ensureProfileForUser(user) {
     const service = await getStudentProfileService();
     return service.ensureProfileForUser(user);
@@ -212,6 +234,16 @@
   async function completeProfile(data) {
     const service = await getStudentProfileService();
     return service.completeProfile(data);
+  }
+
+  async function saveActivityResult(result) {
+    const service = await getActivityProgressService();
+    return service.saveActivityResult(result);
+  }
+
+  async function getMyResults() {
+    const service = await getActivityProgressService();
+    return service.getMyResults();
   }
 
   async function requireAuth(options) {
@@ -312,42 +344,6 @@
     const response = await client.auth.signOut({ scope: "local" });
     if (response.error) throw response.error;
     window.location.replace(PATHS.login + "?logged_out=1");
-  }
-
-  async function saveActivityResult(result) {
-    const client = getClient();
-    const user = await getUser();
-    if (!client || !user) return null;
-
-    const payload = {
-      user_id: user.id,
-      activity_type: result.activity_type || result.type || "activity",
-      activity_title: result.activity_title || result.quiz || result.title,
-      score: Number(result.score),
-      total: Number(result.total),
-      percentage: Math.round((Number(result.score) / Number(result.total)) * 100),
-      completed_at: new Date().toISOString()
-    };
-    const response = await client.from("activity_results").insert(payload).select().single();
-    if (response.error) {
-      console.warn("Erro ao salvar no Supabase:", response.error.message);
-      return null;
-    }
-    return response.data;
-  }
-
-  async function getMyResults() {
-    const client = getClient();
-    const user = await getUser();
-    if (!client || !user) return [];
-
-    const response = await client
-      .from("activity_results")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("completed_at", { ascending: false });
-    if (response.error) return [];
-    return response.data || [];
   }
 
   window.Auth = {
