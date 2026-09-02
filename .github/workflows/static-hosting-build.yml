@@ -10,6 +10,7 @@ on:
       - "**/*.xml"
       - "**/*.txt"
       - "scripts/build_static_site.py"
+      - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_google_tag_manager.py"
       - "netlify/_headers"
       - "netlify.toml"
@@ -25,6 +26,7 @@ on:
       - "**/*.xml"
       - "**/*.txt"
       - "scripts/build_static_site.py"
+      - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_google_tag_manager.py"
       - "netlify/_headers"
       - "netlify.toml"
@@ -43,6 +45,25 @@ jobs:
       - name: Build static site
         run: python3 scripts/build_static_site.py
 
+      - name: Ensure module loader precedes auth
+        run: |
+          python3 scripts/inject_auth_module_loader.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          auth_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?auth\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
+          loader_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?module_loader\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
+          for path in Path('_site').rglob('*.html'):
+              html = path.read_text(encoding='utf-8')
+              auth = auth_re.search(html)
+              if not auth:
+                  continue
+              loader = loader_re.search(html)
+              if not loader or loader.start() > auth.start():
+                  raise SystemExit(f'Invalid auth bootstrap order in {path}')
+          PY
+
       - name: Inject and validate Google Tag Manager
         run: |
           python3 scripts/inject_google_tag_manager.py
@@ -54,7 +75,9 @@ jobs:
           tmp_dir="$(mktemp -d)"
           cp -R . "$tmp_dir/site"
           rm -rf "$tmp_dir/site/_site" "$tmp_dir/site/.git"
+          python3 "$tmp_dir/site/scripts/inject_auth_module_loader.py" --site-root "$tmp_dir/site"
           python3 "$tmp_dir/site/scripts/inject_google_tag_manager.py" --site-root "$tmp_dir/site"
+          grep -q '/module_loader.js?v=20260902-2' "$tmp_dir/site/login.html"
           grep -q 'GTM-K2NWR2NK' "$tmp_dir/site/index.html"
 
       - name: Validate publish output
