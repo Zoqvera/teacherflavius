@@ -49,10 +49,9 @@
       loadErrorMessage: "Não foi possível carregar o serviço de progresso das atividades."
     })
   });
-  const ENROLLMENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const ENROLLMENT_CODE_LENGTH = 5;
 
   let moduleLoaderPromise = null;
+  let studentEnrollmentService = null;
   let authSessionService = null;
   let authGuardService = null;
   let studentProfileService = null;
@@ -131,6 +130,24 @@
     return service;
   }
 
+  function getStudentEnrollmentServiceModule() {
+    const service = window.StudentEnrollmentService;
+    if (!service) {
+      throw new Error("O serviço de matrícula do aluno não foi inicializado.");
+    }
+    return service;
+  }
+
+  function getStudentEnrollmentService() {
+    if (!studentEnrollmentService) {
+      studentEnrollmentService = getStudentEnrollmentServiceModule().create({
+        requireClient: requireClient,
+        getRedirectUrl: getRedirectUrl
+      });
+    }
+    return studentEnrollmentService;
+  }
+
   function isConfigured() {
     return getSupabaseClientService().isConfigured();
   }
@@ -164,12 +181,7 @@
   }
 
   function generateEnrollmentCode() {
-    let code = "";
-    for (let index = 0; index < ENROLLMENT_CODE_LENGTH; index += 1) {
-      const randomIndex = Math.floor(Math.random() * ENROLLMENT_CODE_ALPHABET.length);
-      code += ENROLLMENT_CODE_ALPHABET[randomIndex];
-    }
-    return code;
+    return getStudentEnrollmentServiceModule().generateEnrollmentCode();
   }
 
   function getAuthSessionService() {
@@ -291,23 +303,7 @@
   }
 
   async function signUp(name, email, password) {
-    const client = requireClient();
-    const response = await client.auth.signUp({
-      email: email,
-      password: password,
-      options: { data: { name: name }, emailRedirectTo: getRedirectUrl() }
-    });
-    if (response.error) throw response.error;
-
-    if (response.data && response.data.user) {
-      await client.from("profiles").upsert({
-        id: response.data.user.id,
-        name: name,
-        email: email,
-        profile_completed: true
-      });
-    }
-    return response.data;
+    return getStudentEnrollmentService().signUp(name, email, password);
   }
 
   async function signIn(email, password) {

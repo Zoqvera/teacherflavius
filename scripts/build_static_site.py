@@ -13,7 +13,6 @@ RESPONSIVE_COMPAT_LINK = f'  <link rel="stylesheet" href="{RESPONSIVE_COMPAT_HRE
 ERROR_MONITOR_SRC = "/error_monitor.js?v=20260820-1"
 VIEWPORT_META = '  <meta name="viewport" content="width=device-width, initial-scale=1.0">'
 CLEAN_ROUTE_LOADER = ROOT / "clean_route_loader.js"
-SUPABASE_CLIENT_SERVICE_SRC = "/supabase_client_service.js?v=20260902-1"
 STANDARD_WHATSAPP_URL = "https://wa.me/5534998349756?text=Ol%C3%A1%2C%20Teacher%21%20Vim%20pelo%20site%20e%20gostaria%20de%20conversar%20sobre%20as%20aulas%20de%20ingl%C3%AAs."
 WA_ME_RE = re.compile(r'https://wa\.me/5534998349756(?:\?[^"\']*)?', re.IGNORECASE)
 API_WHATSAPP_RE = re.compile(r'https://api\.whatsapp\.com/send\?[^"\']*phone=5534998349756[^"\']*', re.IGNORECASE)
@@ -24,6 +23,22 @@ AUTH_SCRIPT_RE = re.compile(
 SUPABASE_CLIENT_SERVICE_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?supabase_client_service\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
+)
+STUDENT_ENROLLMENT_SERVICE_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?student_enrollment_service\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
+AUTH_DEPENDENCIES = (
+    (
+        "Supabase client service",
+        SUPABASE_CLIENT_SERVICE_RE,
+        "/supabase_client_service.js?v=20260902-1",
+    ),
+    (
+        "Student enrollment service",
+        STUDENT_ENROLLMENT_SERVICE_RE,
+        "/student_enrollment_service.js?v=20260902-1",
+    ),
 )
 CLEAN_ROUTE_PAIR_RE = re.compile(
     r'^\s*"(?P<route>/[^"]+/)"\s*:\s*"(?P<source>/[^"]+\.html)"\s*,?\s*$',
@@ -82,8 +97,12 @@ def standardize_whatsapp_links(html: str) -> str:
     return API_WHATSAPP_RE.sub(STANDARD_WHATSAPP_URL, html)
 
 
-def inject_supabase_client_service(html: str) -> tuple[str, bool]:
-    if SUPABASE_CLIENT_SERVICE_RE.search(html):
+def inject_script_before_auth(
+    html: str,
+    dependency_re: re.Pattern[str],
+    dependency_src: str,
+) -> tuple[str, bool]:
+    if dependency_re.search(html):
         return html, False
 
     auth_script = AUTH_SCRIPT_RE.search(html)
@@ -93,8 +112,19 @@ def inject_supabase_client_service(html: str) -> tuple[str, bool]:
     line_start = html.rfind("\n", 0, auth_script.start()) + 1
     indentation_match = re.match(r"[ \t]*", html[line_start:auth_script.start()])
     indentation = indentation_match.group(0) if indentation_match else ""
-    script = f'{indentation}<script src="{SUPABASE_CLIENT_SERVICE_SRC}"></script>\n'
+    script = f'{indentation}<script src="{dependency_src}"></script>\n'
     return f"{html[:auth_script.start()]}{script}{html[auth_script.start():]}", True
+
+
+def inject_auth_dependencies(html: str) -> tuple[str, int]:
+    injections = 0
+
+    for _, dependency_re, dependency_src in AUTH_DEPENDENCIES:
+        html, injected = inject_script_before_auth(html, dependency_re, dependency_src)
+        if injected:
+            injections += 1
+
+    return html, injections
 
 
 def inject_site_baseline(html: str, relative: Path) -> tuple[str, bool]:
@@ -175,15 +205,16 @@ def validate_auth_dependency_order() -> None:
         if not auth_script:
             continue
 
-        client_service = SUPABASE_CLIENT_SERVICE_RE.search(html)
-        if not client_service or client_service.start() > auth_script.start():
-            invalid.append(str(path.relative_to(PUBLISH)))
+        for dependency_name, dependency_re, _ in AUTH_DEPENDENCIES:
+            dependency = dependency_re.search(html)
+            if not dependency or dependency.start() > auth_script.start():
+                invalid.append(
+                    f"{path.relative_to(PUBLISH)} ({dependency_name})"
+                )
 
     if invalid:
         joined = ", ".join(invalid)
-        raise SystemExit(
-            "Supabase client service must load before auth.js in: " + joined
-        )
+        raise SystemExit("Auth dependencies must load before auth.js in: " + joined)
 
 
 def main() -> None:
@@ -209,12 +240,11 @@ def main() -> None:
             html = destination.read_text(encoding="utf-8")
             original_html = html
             html = standardize_whatsapp_links(html)
-            html, dependency_injected = inject_supabase_client_service(html)
+            html, dependency_injections = inject_auth_dependencies(html)
             html, enhanced = inject_site_baseline(html, relative)
             if html != original_html:
                 destination.write_text(html, encoding="utf-8")
-            if dependency_injected:
-                auth_dependency_injections += 1
+            auth_dependency_injections += dependency_injections
             if enhanced:
                 enhanced_html += 1
 
@@ -233,6 +263,7 @@ def main() -> None:
         PUBLISH / "sitemap.xml",
         PUBLISH / "error_monitor.js",
         PUBLISH / "supabase_client_service.js",
+        PUBLISH / "student_enrollment_service.js",
         PUBLISH / "quero-conhecer" / "index.html",
         PUBLISH / "cadastro" / "index.html",
         PUBLISH / "meu-progresso" / "index.html",
@@ -257,7 +288,7 @@ def main() -> None:
     print(
         f"Static publish directory ready: {copied} public files + _headers; "
         f"site baseline enhanced {enhanced_html} HTML files; "
-        f"injected auth dependency into {auth_dependency_injections} HTML files; "
+        f"injected {auth_dependency_injections} auth dependency scripts; "
         f"materialized {clean_route_aliases} clean route aliases"
     )
 

@@ -10,6 +10,7 @@ module.exports = [
       "auth_session_service.js",
       "google_auth_ui.js",
       "student_profile_service.js",
+      "student_enrollment_service.js",
       "activity_progress_service.js",
       "module_loader.js",
       "supabase_client_service.js"
