@@ -1,0 +1,134 @@
+name: Production availability
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "netlify.toml"
+      - "netlify/**"
+      - "scripts/build_static_site.py"
+      - "scripts/postprocess_production.py"
+      - ".github/workflows/production-availability.yml"
+  push:
+    branches: [main]
+    paths:
+      - "netlify.toml"
+      - "netlify/**"
+      - "scripts/build_static_site.py"
+      - "scripts/postprocess_production.py"
+      - ".github/workflows/production-availability.yml"
+  schedule:
+    - cron: "7,37 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-availability
+  cancel-in-progress: true
+
+jobs:
+  availability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate production build
+        run: |
+          python3 scripts/build_static_site.py
+          python3 scripts/postprocess_production.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          health = json.loads(Path("_site/health.json").read_text(encoding="utf-8"))
+          assert health.get("status") == "ok", health
+          assert health.get("service") == "teacherflavius.com", health
+          assert len(health.get("commit", "")) == 40, health
+          print("Generated health endpoint is valid:", health["commit"][:12])
+          PY
+
+      - name: Resolve production DNS
+        if: github.event_name != 'pull_request'
+        run: |
+          python3 - <<'PY'
+          import socket
+
+          for host in ("teacherflavius.com", "www.teacherflavius.com"):
+              addresses = sorted({
+                  entry[4][0]
+                  for entry in socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+              })
+              if not addresses:
+                  raise SystemExit(f"DNS did not resolve {host}")
+              print(host, "->", ", ".join(addresses))
+          PY
+
+      - name: Check HTTPS health endpoint
+        if: github.event_name != 'pull_request'
+        run: |
+          curl --fail --silent --show-error \
+            --retry 3 --retry-all-errors --connect-timeout 10 --max-time 20 \
+            https://teacherflavius.com/health.json -o /tmp/teacherflavius-health.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          health = json.loads(Path("/tmp/teacherflavius-health.json").read_text(encoding="utf-8"))
+          assert health.get("status") == "ok", health
+          assert health.get("service") == "teacherflavius.com", health
+          assert len(health.get("commit", "")) == 40, health
+          print("Production health OK:", health["commit"][:12], health.get("generated_at"))
+          PY
+
+      - name: Check production security headers
+        if: github.event_name != 'pull_request'
+        run: |
+          curl --fail --silent --show-error --connect-timeout 10 --max-time 20 \
+            -D /tmp/headers.txt -o /dev/null https://teacherflavius.com/
+          grep -Eiq '^strict-transport-security:' /tmp/headers.txt
+          grep -Eiq '^x-content-type-options:[[:space:]]*nosniff' /tmp/headers.txt
+          grep -Eiq '^content-security-policy-report-only:' /tmp/headers.txt
+          grep -Eiq '^referrer-policy:' /tmp/headers.txt
+
+      - name: Check canonical redirects
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          expect_redirect() {
+            local source="$1"
+            local expected_prefix="$2"
+            local result code target
+            result="$(curl --silent --show-error --connect-timeout 10 --max-time 20 \
+              -o /dev/null -w '%{http_code} %{redirect_url}' "$source")"
+            code="${result%% *}"
+            target="${result#* }"
+            case "$code" in
+              301|302|307|308) ;;
+              *) echo "Expected redirect from $source, got HTTP $code"; exit 1 ;;
+            esac
+            case "$target" in
+              "$expected_prefix"*) echo "$source -> $target" ;;
+              *) echo "Unexpected redirect target from $source: $target"; exit 1 ;;
+            esac
+          }
+
+          expect_redirect "http://teacherflavius.com/" "https://teacherflavius.com"
+          expect_redirect "https://www.teacherflavius.com/" "https://teacherflavius.com"
+          expect_redirect "https://teacherflavius.netlify.app/" "https://teacherflavius.com"
+
+      - name: Check TLS certificate lifetime
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo | openssl s_client \
+            -servername teacherflavius.com \
+            -connect teacherflavius.com:443 \
+            -showcerts 2>/dev/null \
+            | openssl x509 -outform PEM > /tmp/teacherflavius-cert.pem
+          openssl x509 -in /tmp/teacherflavius-cert.pem -noout -subject -issuer -dates
+          openssl x509 -in /tmp/teacherflavius-cert.pem -checkend 1814400 -noout
