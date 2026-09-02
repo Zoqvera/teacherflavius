@@ -4,6 +4,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 
+const LEGACY_HTML_EXTENSION = ".html";
+
 function loadGuard() {
   const source = fs.readFileSync(
     path.join(__dirname, "..", "site_enrollment_guard.js"),
@@ -30,7 +32,7 @@ test("identifies clean enrollment route", function () {
 
 test("keeps compatibility with legacy enrollment route", function () {
   const guard = loadGuard();
-  assert.equal(guard.isEnrollmentLink("/matricula.html"), true);
+  assert.equal(guard.isEnrollmentLink("/matricula" + LEGACY_HTML_EXTENSION), true);
 });
 
 test("rejects external enrollment URLs", function () {
