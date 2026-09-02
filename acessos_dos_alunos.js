@@ -1,16 +1,34 @@
 (function () {
-  let currentSession = null;
+  "use strict";
+
+  const RESOURCE_MAX_ATTEMPTS = 15;
+  const RESOURCE_RETRY_DELAY_MS = 150;
+  const state = {
+    session: null,
+    accessService: null
+  };
 
   function sleep(ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+    return new Promise(function (resolve) {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
+  function resourcesAreReady() {
+    return !!(
+      window.Auth &&
+      window.StudentAccessService &&
+      window.SUPABASE_CONFIG &&
+      window.Auth.isConfigured()
+    );
   }
 
   async function waitForResources() {
-    for (let attempt = 0; attempt < 15; attempt++) {
-      if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured()) return true;
-      await sleep(150);
+    for (let attempt = 0; attempt < RESOURCE_MAX_ATTEMPTS; attempt += 1) {
+      if (resourcesAreReady()) return true;
+      await sleep(RESOURCE_RETRY_DELAY_MS);
     }
-    return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
+    return resourcesAreReady();
   }
 
   function setStatus(text, isError) {
@@ -166,15 +184,13 @@
   }
 
   async function loadStudents() {
-    const response = await Auth.getClient().rpc("get_teacher_students");
-    if (response.error) throw response.error;
-    renderStudents(response.data || []);
+    const students = await state.accessService.getStudents();
+    renderStudents(students);
   }
 
   async function loadAccessStatuses() {
-    const response = await Auth.getClient().rpc("get_teacher_student_access_statuses");
-    if (response.error) throw response.error;
-    renderAccessStatuses(response.data || []);
+    const statuses = await state.accessService.getAccessStatuses();
+    renderAccessStatuses(statuses);
   }
 
   async function loadAccesses() {
@@ -191,13 +207,12 @@
     tableWrap.hidden = true;
 
     try {
-      const response = await Auth.getClient().rpc("get_teacher_student_accesses", {
-        target_days: days,
-        target_user_id: userId
+      const accesses = await state.accessService.getAccesses({
+        days: days,
+        userId: userId
       });
-      if (response.error) throw response.error;
-      renderAccesses(response.data || []);
-      setStatus("Professor autenticado: " + currentSession.user.email + ".");
+      renderAccesses(accesses);
+      setStatus("Professor autenticado: " + state.session.user.email + ".");
     } catch (error) {
       renderSummary([]);
       message.hidden = false;
@@ -213,6 +228,14 @@
     await Promise.all([loadAccessStatuses(), loadAccesses()]);
   }
 
+  function createAccessService() {
+    return window.StudentAccessService.create({
+      getClient: function () {
+        return window.Auth.getClient();
+      }
+    });
+  }
+
   async function initializeDashboard() {
     const ready = await waitForResources();
     const content = document.getElementById("dashboardContent");
@@ -223,16 +246,16 @@
       return;
     }
 
-    currentSession = await Auth.getSession();
-    if (!currentSession || !currentSession.user) {
+    state.accessService = createAccessService();
+    state.session = await window.Auth.getSession();
+    if (!state.session || !state.session.user) {
       window.location.href = "/login.html?next=" + encodeURIComponent("acessos_dos_alunos.html");
       return;
     }
 
     try {
-      const adminResponse = await Auth.getClient().rpc("is_teacher_admin");
-      if (adminResponse.error) throw adminResponse.error;
-      if (adminResponse.data !== true) {
+      const isTeacherAdmin = await state.accessService.isTeacherAdmin();
+      if (!isTeacherAdmin) {
         setStatus("Acesso negado. Esta página é exclusiva do professor.", true);
         document.body.classList.remove("auth-checking");
         return;
@@ -240,7 +263,7 @@
 
       content.hidden = false;
       document.body.classList.remove("auth-checking");
-      setStatus("Professor autenticado: " + currentSession.user.email + ".");
+      setStatus("Professor autenticado: " + state.session.user.email + ".");
 
       await loadStudents();
       await refreshDashboard();
