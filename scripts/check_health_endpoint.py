@@ -8,7 +8,8 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-EXPECTED_SERVICE = "teacherflavius.com"
+from health_endpoint_contract import validate_health
+
 DEFAULT_TIMEOUT_SECONDS = 15
 
 
@@ -26,13 +27,6 @@ def fetch_health(url: str) -> dict[str, Any]:
         if response.status != 200:
             raise RuntimeError(f"Unexpected HTTP status: {response.status}")
         return json.loads(response.read().decode("utf-8"))
-
-
-def validate_health(payload: dict[str, Any]) -> None:
-    if payload.get("status") != "ok":
-        raise ValueError(f"Invalid health status: {payload!r}")
-    if payload.get("service") != EXPECTED_SERVICE:
-        raise ValueError(f"Unexpected service identifier: {payload!r}")
 
 
 def wait_for_healthy_endpoint(url: str, attempts: int, delay_seconds: float) -> dict[str, Any]:
