@@ -44,7 +44,7 @@
     document.querySelectorAll("[" + CONTENT_KEY_ATTRIBUTE + "]").forEach(function (element) {
       const key = element.getAttribute(CONTENT_KEY_ATTRIBUTE);
       const value = content[key];
-      if (typeof value === "string" && value.trim()) element.textContent = value;
+      if (typeof value === "string") element.textContent = value;
     });
   }
 
