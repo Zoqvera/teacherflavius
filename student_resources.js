@@ -150,6 +150,79 @@
     })
   ]);
 
+  const PODCAST_RESOURCES = Object.freeze([
+    Object.freeze({
+      name: "Learning English Conversations",
+      accessLabel: "Spotify",
+      description: "Podcast da BBC Radio com conversas, expressões cotidianas e episódios voltados ao uso natural do inglês falado.",
+      differential: "Episódios curtos e objetivos ajudam a incorporar expressões úteis para situações reais de conversation.",
+      url: "https://open.spotify.com/show/33450hhCQdEEqRpd4w1TBe"
+    }),
+    Object.freeze({
+      name: "All Ears English Podcast",
+      accessLabel: "Spotify",
+      description: "Podcast de inglês americano com foco em listening, fluência, vocabulário e comunicação natural no dia a dia.",
+      differential: "Explora expressões atuais e estratégias para falar com mais confiança em situações sociais e profissionais.",
+      url: "https://open.spotify.com/show/6qXldSz1Ulq1Nvj2JK5kSR"
+    }),
+    Object.freeze({
+      name: "Luke's ENGLISH Podcast",
+      accessLabel: "Spotify",
+      description: "Podcast apresentado pelo professor Luke Thompson para estudantes que querem desenvolver compreensão do inglês britânico natural.",
+      differential: "Episódios extensos e descontraídos oferecem exposição prolongada a vocabulário, humor, cultura e fala espontânea.",
+      url: "https://open.spotify.com/show/2LgQSA21R1KykxsXNWvQmc"
+    }),
+    Object.freeze({
+      name: "Espresso English Podcast",
+      accessLabel: "Spotify",
+      description: "Lições rápidas sobre vocabulário, gramática, frases, expressões e outros aspectos práticos da língua inglesa.",
+      differential: "O formato curto facilita encaixar pequenos momentos de estudo na rotina diária.",
+      url: "https://open.spotify.com/show/3apZ4F9LH9oI6DIjiQl6zR"
+    }),
+    Object.freeze({
+      name: "RealLife English",
+      accessLabel: "Spotify",
+      description: "Podcast voltado à compreensão e ao uso de inglês natural em situações reais, com temas de fluência e comunicação.",
+      differential: "Ajuda o aluno a sair do inglês exclusivamente didático e se acostumar com expressões e ritmo de conversas autênticas.",
+      url: "https://open.spotify.com/show/0xBw3oEE9tW79gKd9pQHdN"
+    }),
+    Object.freeze({
+      name: "Thinking in English",
+      accessLabel: "Spotify",
+      description: "Podcast para alunos intermediários e avançados que desenvolve listening e vocabulário por meio de temas culturais, históricos e atuais.",
+      differential: "Combina aprendizagem de inglês com conteúdo informativo, favorecendo compreensão de textos orais mais complexos.",
+      url: "https://open.spotify.com/show/2OwAg0ckS0mUDPi6HW8FNt"
+    }),
+    Object.freeze({
+      name: "ESL Pod Official",
+      accessLabel: "Spotify",
+      description: "Podcast de English as a Second Language com episódios baseados em situações comunicativas e compreensão do inglês falado.",
+      differential: "A abordagem enfatiza compreender o que se ouve antes de avançar para usos mais complexos do idioma.",
+      url: "https://open.spotify.com/show/0J4qOTETN4I9J4SLyopSZw"
+    }),
+    Object.freeze({
+      name: "Let's Master English!",
+      accessLabel: "Spotify",
+      description: "Podcast para estudantes de inglês com notícias, perguntas e respostas, orientação de estudos e seções variadas.",
+      differential: "Mistura prática linguística com conteúdo leve e diferentes formatos, reduzindo a monotonia do estudo de listening.",
+      url: "https://open.spotify.com/show/6MrDwfnwcFcZRidfyak9Uu"
+    }),
+    Object.freeze({
+      name: "Simple English News Daily",
+      accessLabel: "Spotify",
+      description: "Notícias internacionais apresentadas em inglês acessível para estudantes que querem praticar listening com acontecimentos reais.",
+      differential: "Permite desenvolver compreensão auditiva e vocabulário enquanto o aluno acompanha temas atuais.",
+      url: "https://open.spotify.com/show/4QctJjCUuHefLzeZWDoXqc"
+    }),
+    Object.freeze({
+      name: "Teacher Joseph Podcast",
+      accessLabel: "Spotify",
+      description: "Podcast para estudantes de inglês com notícias, listening, pronúncia, vocabulário e prática de inglês britânico.",
+      differential: "É especialmente útil para shadowing, ritmo, entonação e contato frequente com pronúncia britânica clara.",
+      url: "https://open.spotify.com/show/3fO3bkt56OMexK6PnJCJT6"
+    })
+  ]);
+
   function sleep(milliseconds) {
     return new Promise(function (resolve) {
       window.setTimeout(resolve, milliseconds);
@@ -226,6 +299,7 @@
   function renderResources() {
     renderResourceList("appsGrid", APP_RESOURCES, "ACESSAR APLICATIVO");
     renderResourceList("sitesGrid", WEBSITE_RESOURCES, "ACESSAR SITE");
+    renderResourceList("podcastsGrid", PODCAST_RESOURCES, "OUVIR NO SPOTIFY");
   }
 
   async function initializePage() {
