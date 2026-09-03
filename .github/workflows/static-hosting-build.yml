@@ -10,6 +10,7 @@ on:
       - "**/*.xml"
       - "**/*.txt"
       - "scripts/build_static_site.py"
+      - "scripts/html_script_dependency.py"
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_runtime_config.py"
@@ -30,6 +31,7 @@ on:
       - "**/*.xml"
       - "**/*.txt"
       - "scripts/build_static_site.py"
+      - "scripts/html_script_dependency.py"
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_runtime_config.py"
@@ -54,99 +56,19 @@ jobs:
         run: python3 scripts/build_static_site.py
 
       - name: Ensure site asset loader precedes footer
-        run: |
-          python3 scripts/inject_site_asset_loader.py
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          footer_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          loader_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_asset_loader\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          for path in Path('_site').rglob('*.html'):
-              html = path.read_text(encoding='utf-8')
-              footer = footer_re.search(html)
-              if not footer:
-                  continue
-              loader = loader_re.search(html)
-              if not loader or loader.start() > footer.start():
-                  raise SystemExit(f'Invalid site asset loader bootstrap order in {path}')
-          PY
+        run: python3 scripts/inject_site_asset_loader.py
 
       - name: Ensure runtime configuration precedes footer
-        run: |
-          python3 scripts/inject_site_runtime_config.py
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          footer_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          config_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_runtime_config\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          for path in Path('_site').rglob('*.html'):
-              html = path.read_text(encoding='utf-8')
-              footer = footer_re.search(html)
-              if not footer:
-                  continue
-              config = config_re.search(html)
-              if not config or config.start() > footer.start():
-                  raise SystemExit(f'Invalid site runtime configuration bootstrap order in {path}')
-          PY
+        run: python3 scripts/inject_site_runtime_config.py
 
       - name: Ensure page runtime precedes footer
-        run: |
-          python3 scripts/inject_site_page_runtime.py
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          footer_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          runtime_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_page_runtime\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          for path in Path('_site').rglob('*.html'):
-              html = path.read_text(encoding='utf-8')
-              footer = footer_re.search(html)
-              if not footer:
-                  continue
-              runtime = runtime_re.search(html)
-              if not runtime or runtime.start() > footer.start():
-                  raise SystemExit(f'Invalid site page runtime bootstrap order in {path}')
-          PY
+        run: python3 scripts/inject_site_page_runtime.py
 
       - name: Ensure privacy analytics precedes footer
-        run: |
-          python3 scripts/inject_site_privacy_analytics.py
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          footer_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          privacy_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?site_privacy_analytics\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          for path in Path('_site').rglob('*.html'):
-              html = path.read_text(encoding='utf-8')
-              footer = footer_re.search(html)
-              if not footer:
-                  continue
-              privacy = privacy_re.search(html)
-              if not privacy or privacy.start() > footer.start():
-                  raise SystemExit(f'Invalid privacy analytics bootstrap order in {path}')
-          PY
+        run: python3 scripts/inject_site_privacy_analytics.py
 
       - name: Ensure module loader precedes auth
-        run: |
-          python3 scripts/inject_auth_module_loader.py
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          auth_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?auth\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          loader_re = re.compile(r'<script\b[^>]*\bsrc=["\']/?module_loader\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>', re.I)
-          for path in Path('_site').rglob('*.html'):
-              html = path.read_text(encoding='utf-8')
-              auth = auth_re.search(html)
-              if not auth:
-                  continue
-              loader = loader_re.search(html)
-              if not loader or loader.start() > auth.start():
-                  raise SystemExit(f'Invalid auth bootstrap order in {path}')
-          PY
+        run: python3 scripts/inject_auth_module_loader.py
 
       - name: Inject and validate Google Tag Manager
         run: |
