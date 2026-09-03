@@ -24,10 +24,12 @@ def compile_script_pattern(filename: str) -> re.Pattern[str]:
     )
 
 
-def script_indentation(html: str, position: int) -> str:
+def script_insertion_context(html: str, position: int) -> tuple[int, str]:
     line_start = html.rfind("\n", 0, position) + 1
-    match = re.match(r"[ \t]*", html[line_start:position])
-    return match.group(0) if match else ""
+    prefix = html[line_start:position]
+    if re.fullmatch(r"[ \t]*", prefix):
+        return line_start, prefix
+    return position, ""
 
 
 def dependency_is_current(script_match: re.Match[str], spec: ScriptDependencySpec) -> bool:
@@ -60,9 +62,9 @@ def ensure_dependency_before_target(
     if not target_script:
         return html, False
 
-    indentation = script_indentation(html, target_script.start())
+    insertion_point, indentation = script_insertion_context(html, target_script.start())
     dependency_script = f'{indentation}<script src="{spec.dependency_src}"></script>\n'
-    updated = f"{html[:target_script.start()]}{dependency_script}{html[target_script.start():]}"
+    updated = f"{html[:insertion_point]}{dependency_script}{html[insertion_point:]}"
     return updated, True
 
 
