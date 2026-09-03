@@ -4,7 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
@@ -30,6 +30,7 @@ class ProductionPostprocessRunnerTests(unittest.TestCase):
             with (
                 patch("production_postprocess_runner.update_homepage", side_effect=lambda value: events.append(("homepage", value))),
                 patch("production_postprocess_runner.update_course_authority", side_effect=lambda value: events.append(("course", value))),
+                patch("production_postprocess_runner.update_public_seo", side_effect=lambda value: events.append(("seo", value))),
                 patch("production_postprocess_runner.write_health_check", side_effect=lambda root_value, publish_value: events.append(("health", root_value, publish_value))),
             ):
                 run_production_postprocess(root, publish)
@@ -39,6 +40,7 @@ class ProductionPostprocessRunnerTests(unittest.TestCase):
                 [
                     ("homepage", publish),
                     ("course", publish),
+                    ("seo", publish),
                     ("health", root, publish),
                 ],
             )
