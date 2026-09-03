@@ -5,13 +5,7 @@ from pathlib import Path
 
 from static_dependency_runtime import inject_dependency_groups
 from static_html_baseline import inject_site_baseline
-from static_site_dependencies import (
-    ANALYTICS_DEPENDENCIES,
-    AUTH_DEPENDENCIES,
-    DEPENDENCY_GROUPS,
-    PORTAL_HELPER_DEPENDENCIES,
-)
-from static_whatsapp_links import STANDARD_WHATSAPP_URL, standardize_whatsapp_links
+from static_whatsapp_links import standardize_whatsapp_links
 
 
 def transform_html(html: str, relative: Path) -> tuple[str, int, bool]:
