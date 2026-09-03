@@ -3,11 +3,11 @@ import unittest
 from pathlib import Path
 
 from scripts.html_script_dependency import (
-    ScriptDependencySpec,
     ensure_dependency_before_target,
     process_site,
     validate_dependency_order,
 )
+from scripts.script_dependency_spec import ScriptDependencySpec
 
 
 class HtmlScriptDependencyTests(unittest.TestCase):
