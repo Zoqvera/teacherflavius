@@ -3,11 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from html_script_dependency import (
-    ScriptDependencySpec,
-    ensure_dependency_before_target,
-    validate_dependency_order,
-)
+from html_script_dependency import ensure_dependency_before_target, validate_dependency_order
+from script_dependency_spec import ScriptDependencySpec
 from static_site_dependencies import DEPENDENCY_GROUPS
 
 DependencyGroup = tuple[ScriptDependencySpec, ...]
