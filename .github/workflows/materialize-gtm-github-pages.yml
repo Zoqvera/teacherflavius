@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "**/*.html"
+      - "scripts/html_script_dependency.py"
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_runtime_config.py"
