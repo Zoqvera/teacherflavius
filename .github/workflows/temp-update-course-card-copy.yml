@@ -1,0 +1,35 @@
+name: Temporary course card copy update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-update-course-card-copy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Update requested course copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('curso-de-ingles-online/index.html')
+          text = path.read_text(encoding='utf-8')
+          old = '4 encontros ao vivo por mês, com 60 minutos de duração cada.'
+          new = 'Encontros ao vivo por mês, com 60 minutos de duração cada.'
+          if old not in text:
+              raise SystemExit('Expected text not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          git rm .github/workflows/temp-update-course-card-copy.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add curso-de-ingles-online/index.html
+          git commit -m 'content: simplify live meetings copy'
+          git push
