@@ -7,7 +7,10 @@ on:
     paths:
       - "**/*.html"
       - "scripts/html_script_dependency.py"
+      - "scripts/html_script_dependency_transform.py"
+      - "scripts/script_dependency_spec.py"
       - "scripts/materialize_site.py"
+      - "scripts/materialization_profiles.py"
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_runtime_config.py"
