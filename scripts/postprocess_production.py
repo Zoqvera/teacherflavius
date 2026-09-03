@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from production_content import update_course_authority, update_homepage
+from production_course_authority import update_course_authority
 from production_health import write_health_check
+from production_homepage import update_homepage
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLISH = ROOT / "_site"
