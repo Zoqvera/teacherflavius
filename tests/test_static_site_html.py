@@ -8,13 +8,13 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+from static_dependency_runtime import validate_html_dependencies  # noqa: E402
 from static_site_html import (  # noqa: E402
     ANALYTICS_DEPENDENCIES,
     AUTH_DEPENDENCIES,
     PORTAL_HELPER_DEPENDENCIES,
     STANDARD_WHATSAPP_URL,
     transform_html,
-    validate_html_dependencies,
 )
 
 
