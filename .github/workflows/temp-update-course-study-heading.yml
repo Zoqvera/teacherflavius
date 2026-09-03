@@ -1,0 +1,48 @@
+name: Temporary course heading update
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/temp-update-course-study-heading.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-heading:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Update course section heading
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('curso-de-ingles-online/index.html')
+          old = '<h2 id="how-title">Aula ao vivo, prática e uma rotina de estudo entre os encontros.</h2>'
+          new = '<h2 id="how-title">Aulas práticas e rotina de estudos</h2>'
+          content = path.read_text(encoding='utf-8')
+
+          if content.count(old) != 1:
+              raise SystemExit('Expected heading was not found exactly once.')
+
+          path.write_text(content.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Validate update
+        run: |
+          grep -Fq '<h2 id="how-title">Aulas práticas e rotina de estudos</h2>' curso-de-ingles-online/index.html
+          ! grep -Fq 'Aula ao vivo, prática e uma rotina de estudo entre os encontros.' curso-de-ingles-online/index.html
+
+      - name: Commit update and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add curso-de-ingles-online/index.html
+          git rm .github/workflows/temp-update-course-study-heading.yml
+          git commit -m "content: simplify course study heading"
+          git push
