@@ -6,6 +6,7 @@ from pathlib import Path
 from production_course_authority import update_course_authority
 from production_health import write_health_check
 from production_homepage import update_homepage
+from production_public_seo import update_public_seo
 
 
 def run_production_postprocess(root: Path, publish: Path) -> None:
@@ -14,4 +15,5 @@ def run_production_postprocess(root: Path, publish: Path) -> None:
 
     update_homepage(publish)
     update_course_authority(publish)
+    update_public_seo(publish)
     write_health_check(root, publish)

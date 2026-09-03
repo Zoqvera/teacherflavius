@@ -11,7 +11,7 @@ PUBLISH = ROOT / "_site"
 
 def main() -> None:
     run_production_postprocess(ROOT, PUBLISH)
-    print("Production post-processing ready: homepage cleanup + course authority + health.json")
+    print("Production post-processing ready: homepage + course authority + public SEO + health.json")
 
 
 if __name__ == "__main__":
