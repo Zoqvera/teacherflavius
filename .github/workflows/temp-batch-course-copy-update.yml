@@ -1,0 +1,56 @@
+name: Temporary batch course copy update
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-batch-course-copy-update.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Apply requested course copy updates
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('curso-de-ingles-online/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = [
+              ('Quatro encontros online e ao vivo por mês, com 60 minutos de duração cada.', '4 encontros ao vivo por mês, com 60 minutos de duração cada.'),
+              ('Em geral, o aluno aprende a se apresentar, falar de rotina, família, preferências e necessidades imediatas; fazer perguntas simples; lidar com compras, viagens e serviços básicos; e participar de conversas curtas sobre situações familiares.', 'Nesse nível, o aluno aprende a se apresentar, falar de rotina, família, preferências e necessidades imediatas; fazer perguntas simples; lidar com compras, viagens e serviços básicos; e participar de conversas curtas sobre situações familiares.'),
+              ('Em geral, o aluno passa a relatar experiências, explicar planos, defender opiniões, resolver situações de viagem e trabalho, sustentar conversas com mais espontaneidade e compreender as ideias principais de textos e falas mais complexos.', 'Aqui, o aluno passa a relatar experiências, explicar planos, defender opiniões, resolver situações de viagem e trabalho, sustentar conversas com mais espontaneidade e compreender as ideias principais de textos e falas mais complexos.'),
+              ('Em geral, o aluno desenvolve comunicação fluente e precisa, adapta o registro ao contexto, compreende textos e falas exigentes — inclusive sentidos implícitos —, discute temas complexos e se comunica com alto grau de autonomia em ambientes profissionais, acadêmicos e sociais.', 'Por fim, o aluno desenvolve comunicação fluente e precisa, adapta o registro ao contexto, compreende textos e falas exigentes — inclusive sentidos implícitos —, discute temas complexos e se comunica com alto grau de autonomia em ambientes profissionais, acadêmicos e sociais.'),
+              ('Critérios claros para receber o certificado de conclusão.', 'Critérios para receber o certificado de conclusão.'),
+              ('O curso foi estruturado para quem procura uma experiência online com professor e participação ao vivo.', 'O curso foi estruturado para quem procura uma experiência mais próxima com um professor e participação ao vivo.'),
+              ('          <p>As condições são apresentadas de forma clara para que você saiba exatamente o que está contratando.</p>\n', ''),
+              (' Para esta vitrine, aparecem apenas turmas classificadas como quarteto, ativas, com pelo menos dois alunos e ainda com vagas disponíveis.', ''),
+              ('O curso de inglês é totalmente online?', 'O curso de inglês é totalmente ao vivo?'),
+              ('As aulas regulares acontecem online e ao vivo, permitindo participar de qualquer lugar com conexão adequada à internet.', 'As aulas regulares acontecem ao vivo por meio da plataforma Google Meet, permitindo participar de qualquer lugar com conexão adequada à internet.'),
+              ('O plano inclui 4 aulas online e ao vivo por mês.', 'O plano inclui 4 aulas ao vivo por mês.'),
+              ('A plataforma reúne Minha Semana, Portal de Exercícios, roteiro de estudos, flashcards, aulas de gramática, acompanhamento de progresso, informações da turma, frequência, horários, reposições e mensalidades.', 'A plataforma reúne Portal de Exercícios, Roteiro de Estudos, Flashcards, Aulas de Gramática, Acompanhamento de Progresso, Informações da Turma, Frequência, Horários, Reposições e Pagamento de Mensalidades.'),
+          ]
+
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one occurrence, found {count}: {old}')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit requested updates and remove temporary workflow
+        run: |
+          rm .github/workflows/temp-batch-course-copy-update.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'content: refine course page copy'
+          git push origin main
