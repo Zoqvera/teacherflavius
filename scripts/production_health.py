@@ -2,22 +2,12 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+from git_revision import current_commit_sha
+
 SERVICE_NAME = "teacherflavius.com"
-
-
-def current_commit_sha(root: Path) -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.strip()
 
 
 def build_health_payload(root: Path, generated_at: datetime | None = None) -> dict[str, str]:
