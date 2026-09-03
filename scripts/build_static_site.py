@@ -5,10 +5,11 @@ from pathlib import Path
 
 from static_build_pipeline import transform_copied_html
 from static_dependency_runtime import validate_publish_dependencies
+from static_hosting_headers import install_shared_headers
 from static_publish_workspace import prepare_publish_directory
 from static_site_files import copy_public_files
 from static_site_routes import materialize_clean_route_aliases
-from static_site_validation import install_shared_headers, validate_publish
+from static_site_validation import validate_publish
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLISH = ROOT / "_site"
