@@ -9,15 +9,14 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from production_course_authority import (  # noqa: E402
+from production_course_authority import transform_course_authority_html, update_course_authority  # noqa: E402
+from production_course_authority_content import (  # noqa: E402
     COURSE_AUTHORITY_BLOCK,
     COURSE_INSERTION_ANCHOR,
     COURSE_SCHEMA_NEW,
     COURSE_SCHEMA_OLD,
     COURSE_TEACHER_NEW,
     COURSE_TEACHER_OLD,
-    transform_course_authority_html,
-    update_course_authority,
 )
 
 
