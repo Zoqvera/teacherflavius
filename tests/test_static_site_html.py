@@ -9,13 +9,13 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from static_dependency_runtime import validate_html_dependencies  # noqa: E402
-from static_site_html import (  # noqa: E402
+from static_site_dependencies import (  # noqa: E402
     ANALYTICS_DEPENDENCIES,
     AUTH_DEPENDENCIES,
     PORTAL_HELPER_DEPENDENCIES,
-    STANDARD_WHATSAPP_URL,
-    transform_html,
 )
+from static_site_html import transform_html  # noqa: E402
+from static_whatsapp_links import STANDARD_WHATSAPP_URL  # noqa: E402
 
 
 class StaticSiteHtmlTests(unittest.TestCase):
