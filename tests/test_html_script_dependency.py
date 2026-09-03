@@ -1,13 +1,20 @@
+from __future__ import annotations
+
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.html_script_dependency import (
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+from html_script_dependency import (  # noqa: E402
     ensure_dependency_before_target,
     process_site,
     validate_dependency_order,
 )
-from scripts.script_dependency_spec import ScriptDependencySpec
+from script_dependency_spec import ScriptDependencySpec  # noqa: E402
 
 
 class HtmlScriptDependencyTests(unittest.TestCase):
