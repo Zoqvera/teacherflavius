@@ -28,6 +28,7 @@ module.exports = [
       "site_privacy_analytics.js",
       "site_asset_loader.js",
       "site_runtime_config.js",
+      "site_page_runtime.js",
       "site_footer.js",
       "global_logout.js",
       "student_access_service.js",

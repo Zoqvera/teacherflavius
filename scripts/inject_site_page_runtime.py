@@ -5,13 +5,13 @@ import argparse
 import re
 from pathlib import Path
 
-SITE_RUNTIME_CONFIG_SRC = "/site_runtime_config.js?v=20260903-1"
+SITE_PAGE_RUNTIME_SRC = "/site_page_runtime.js?v=20260903-1"
 SITE_FOOTER_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
-SITE_RUNTIME_CONFIG_RE = re.compile(
-    r'<script\b[^>]*\bsrc=["\']/?site_runtime_config\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
+SITE_PAGE_RUNTIME_RE = re.compile(
+    r'<script\b[^>]*\bsrc=["\']/?site_page_runtime\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
 
@@ -22,34 +22,26 @@ def script_indentation(html: str, position: int) -> str:
     return match.group(0) if match else ""
 
 
-def remove_runtime_config_scripts(html: str) -> str:
-    return SITE_RUNTIME_CONFIG_RE.sub("", html)
+def remove_page_runtime_scripts(html: str) -> str:
+    return SITE_PAGE_RUNTIME_RE.sub("", html)
 
 
-def has_current_runtime_config(script_match: re.Match[str]) -> bool:
-    return SITE_RUNTIME_CONFIG_SRC in script_match.group(0)
-
-
-def ensure_runtime_config_before_footer(html: str) -> tuple[str, bool]:
+def ensure_page_runtime_before_footer(html: str) -> tuple[str, bool]:
     footer_script = SITE_FOOTER_RE.search(html)
     if not footer_script:
         return html, False
 
-    existing = SITE_RUNTIME_CONFIG_RE.search(html)
-    if (
-        existing
-        and existing.start() < footer_script.start()
-        and has_current_runtime_config(existing)
-    ):
+    existing = SITE_PAGE_RUNTIME_RE.search(html)
+    if existing and existing.start() < footer_script.start():
         return html, False
 
-    html = remove_runtime_config_scripts(html)
+    html = remove_page_runtime_scripts(html)
     footer_script = SITE_FOOTER_RE.search(html)
     if not footer_script:
         return html, False
 
     indentation = script_indentation(html, footer_script.start())
-    dependency = f'{indentation}<script src="{SITE_RUNTIME_CONFIG_SRC}"></script>\n'
+    dependency = f'{indentation}<script src="{SITE_PAGE_RUNTIME_SRC}"></script>\n'
     html = f"{html[:footer_script.start()]}{dependency}{html[footer_script.start():]}"
     return html, True
 
@@ -59,22 +51,16 @@ def validate_order(html: str, path: Path) -> None:
     if not footer_script:
         return
 
-    dependency = SITE_RUNTIME_CONFIG_RE.search(html)
-    if (
-        not dependency
-        or dependency.start() > footer_script.start()
-        or not has_current_runtime_config(dependency)
-    ):
-        raise SystemExit(
-            f"site_runtime_config.js must load with the current version before site_footer.js in {path}"
-        )
+    dependency = SITE_PAGE_RUNTIME_RE.search(html)
+    if not dependency or dependency.start() > footer_script.start():
+        raise SystemExit(f"site_page_runtime.js must load before site_footer.js in {path}")
 
 
 def process_site(root: Path) -> int:
     changed = 0
     for path in root.rglob("*.html"):
         html = path.read_text(encoding="utf-8")
-        updated, modified = ensure_runtime_config_before_footer(html)
+        updated, modified = ensure_page_runtime_before_footer(html)
         validate_order(updated, path)
         if modified:
             path.write_text(updated, encoding="utf-8")
@@ -84,7 +70,7 @@ def process_site(root: Path) -> int:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Ensure the current site_runtime_config.js loads before site_footer.js."
+        description="Ensure site_page_runtime.js loads before site_footer.js."
     )
     parser.add_argument(
         "--site-root",
@@ -101,7 +87,7 @@ def main() -> None:
         raise SystemExit(f"Site root not found: {root}")
 
     changed = process_site(root)
-    print(f"Site runtime configuration bootstrap: {changed} HTML file(s) updated.")
+    print(f"Site page runtime bootstrap: {changed} HTML file(s) updated.")
 
 
 if __name__ == "__main__":

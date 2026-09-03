@@ -38,6 +38,10 @@
       id: "teacher-flavius-site-privacy-analytics",
       src: "/site_privacy_analytics.js?v=20260902-1"
     }),
+    sitePageRuntime: freezeAsset({
+      id: "teacher-flavius-site-page-runtime",
+      src: "/site_page_runtime.js?v=20260903-1"
+    }),
     mobileTopNavigation: freezeAsset({
       id: "teacher-flavius-mobile-top-navigation",
       src: "/mobile_top_navigation.js?v=20260820-desktop-menu-1"
