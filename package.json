@@ -21,7 +21,8 @@
     "test:static-site-files": "python3 -m unittest discover -s tests -p 'test_static_site_files.py'",
     "test:static-site-routes": "python3 -m unittest discover -s tests -p 'test_static_site_routes.py'",
     "test:production-postprocess": "python3 -m unittest discover -s tests -p 'test_production_postprocess.py'",
-    "quality": "npm run check:js && npm run lint && npm run test:module-loader && npm run test:payment-notice-presenter && npm run test:site-footer-renderer && npm run test:site-whatsapp && npm run test:site-page-context && npm run test:site-enrollment-guard && npm run test:site-privacy-analytics && npm run test:site-asset-loader && npm run test:site-runtime-config && npm run test:site-page-runtime && npm run test:html-script-dependency && npm run test:materialize-site && npm run test:static-site-html && npm run test:static-site-validation && npm run test:static-site-files && npm run test:static-site-routes && npm run test:production-postprocess"
+    "test:static-build-pipeline": "python3 -m unittest discover -s tests -p 'test_static_build_pipeline.py'",
+    "quality": "npm run check:js && npm run lint && npm run test:module-loader && npm run test:payment-notice-presenter && npm run test:site-footer-renderer && npm run test:site-whatsapp && npm run test:site-page-context && npm run test:site-enrollment-guard && npm run test:site-privacy-analytics && npm run test:site-asset-loader && npm run test:site-runtime-config && npm run test:site-page-runtime && npm run test:html-script-dependency && npm run test:materialize-site && npm run test:static-site-html && npm run test:static-site-validation && npm run test:static-site-files && npm run test:static-site-routes && npm run test:production-postprocess && npm run test:static-build-pipeline"
   },
   "devDependencies": {
     "eslint": "9.34.0"
