@@ -18,5 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Run technical SEO audit
-        run: python3 scripts/validate_seo.py
+      - name: Build static publish artifact
+        run: python3 scripts/build_static_site.py
+
+      - name: Run production post-processing
+        run: python3 scripts/postprocess_production.py
+
+      - name: Run public SEO unit tests
+        run: python3 -m unittest tests.test_production_public_seo
+
+      - name: Audit published technical SEO
+        run: python3 scripts/validate_seo.py --site-root _site
