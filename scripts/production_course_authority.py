@@ -11,6 +11,10 @@ from production_course_authority_content import (
     COURSE_TEACHER_NEW,
     COURSE_TEACHER_OLD,
 )
+from production_html_transform import apply_html_transform
+
+COURSE_PAGE_PATH = Path("curso-de-ingles-online") / "index.html"
+COURSE_PAGE_MISSING_MESSAGE = "Static build missing _site/curso-de-ingles-online/index.html"
 
 
 def transform_course_authority_html(html: str) -> str:
@@ -39,9 +43,9 @@ def transform_course_authority_html(html: str) -> str:
 
 
 def update_course_authority(publish: Path) -> None:
-    index = publish / "curso-de-ingles-online" / "index.html"
-    if not index.is_file():
-        raise SystemExit("Static build missing _site/curso-de-ingles-online/index.html")
-
-    html = index.read_text(encoding="utf-8")
-    index.write_text(transform_course_authority_html(html), encoding="utf-8")
+    apply_html_transform(
+        publish,
+        COURSE_PAGE_PATH,
+        transform_course_authority_html,
+        missing_message=COURSE_PAGE_MISSING_MESSAGE,
+    )
