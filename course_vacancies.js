@@ -140,7 +140,7 @@
     book.appendChild(document.createTextNode(", publicado pela Editora CRV em 2020. "));
     book.appendChild(createExternalLink(
       "https://loja.editoracrv.com.br/produtos/traducao-e-interpretacao-automaticas-origens/?srsltid=AfmBOoo_shGtXTWv5ZvmBk4-_vXBpPXyMGESp6VFMOdRFHMaJ4vTrbQY",
-      "Conheça o livro aqui"
+      "Conheça o livro"
     ));
     book.appendChild(document.createTextNode("."));
 
