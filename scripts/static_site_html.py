@@ -9,7 +9,12 @@ from html_script_dependency import (
     ensure_dependency_before_target,
     validate_dependency_order,
 )
-from static_site_dependencies import DEPENDENCY_GROUPS
+from static_site_dependencies import (
+    ANALYTICS_DEPENDENCIES,
+    AUTH_DEPENDENCIES,
+    DEPENDENCY_GROUPS,
+    PORTAL_HELPER_DEPENDENCIES,
+)
 
 RESPONSIVE_COMPAT_HREF = "/responsive_compat.css?v=20260820-1"
 RESPONSIVE_COMPAT_LINK = f'  <link rel="stylesheet" href="{RESPONSIVE_COMPAT_HREF}">'
