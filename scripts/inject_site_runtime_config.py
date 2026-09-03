@@ -5,7 +5,7 @@ import argparse
 import re
 from pathlib import Path
 
-SITE_RUNTIME_CONFIG_SRC = "/site_runtime_config.js?v=20260902-1"
+SITE_RUNTIME_CONFIG_SRC = "/site_runtime_config.js?v=20260903-1"
 SITE_FOOTER_RE = re.compile(
     r'<script\b[^>]*\bsrc=["\']/?site_footer\.js(?:\?[^"\']*)?["\'][^>]*>\s*</script>',
     re.IGNORECASE,
