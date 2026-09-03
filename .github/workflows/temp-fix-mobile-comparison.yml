@@ -1,0 +1,39 @@
+name: Temporary mobile comparison fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-fix-mobile-comparison.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Make comparison table responsive on mobile
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('curso-de-ingles-online/index.html')
+          content = path.read_text(encoding='utf-8')
+          old = '@media(max-width:520px){.shell{width:min(100% - 24px,1120px)}.topbar{padding:14px 0}.brand{font-size:.9rem}.nav-link{padding:8px 10px;font-size:.74rem}.hero{padding-top:102px}.hero h1{font-size:clamp(2.05rem,10vw,2.55rem)}.actions{display:grid}.btn{width:100%}.hero-card{padding:22px}.section{padding:58px 0}.levels-total{display:block;text-align:center}.levels-total-time{margin-top:14px}}'
+          new = '@media(max-width:520px){.shell{width:min(100% - 24px,1120px)}.topbar{padding:14px 0}.brand{font-size:.9rem}.nav-link{padding:8px 10px;font-size:.74rem}.hero{padding-top:102px}.hero h1{font-size:clamp(2.05rem,10vw,2.55rem)}.actions{display:grid}.btn{width:100%}.hero-card{padding:22px}.section{padding:58px 0}.levels-total{display:block;text-align:center}.levels-total-time{margin-top:14px}.comparison{overflow:visible}.comparison table{width:100%;min-width:0;table-layout:fixed}.comparison th,.comparison td{padding:14px 10px;font-size:.9rem;line-height:1.4;vertical-align:top;white-space:normal;overflow-wrap:anywhere;word-break:normal}.comparison th:first-child,.comparison td:first-child{width:56%}.comparison th:last-child,.comparison td:last-child{width:44%}.comparison .yes{font-size:.88rem}}'
+          if old not in content:
+              raise SystemExit('Expected mobile media query not found; refusing unsafe patch.')
+          path.write_text(content.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Commit responsive fix and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/temp-fix-mobile-comparison.yml
+          git add curso-de-ingles-online/index.html
+          git commit -m 'fix: prevent course comparison table clipping on mobile'
+          git pull --rebase origin main
+          git push origin HEAD:main
