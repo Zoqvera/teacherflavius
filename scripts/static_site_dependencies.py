@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from html_script_dependency import ScriptDependencySpec
+from script_dependency_spec import ScriptDependencySpec
 
 AUTH_DEPENDENCIES = (
     ScriptDependencySpec(
