@@ -6,18 +6,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from git_revision import current_commit_sha
-
-SERVICE_NAME = "teacherflavius.com"
+from production_health_payload import build_health_payload as build_payload
 
 
 def build_health_payload(root: Path, generated_at: datetime | None = None) -> dict[str, str]:
     timestamp = generated_at or datetime.now(timezone.utc)
-    return {
-        "status": "ok",
-        "service": SERVICE_NAME,
-        "commit": current_commit_sha(root),
-        "generated_at": timestamp.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-    }
+    return build_payload(current_commit_sha(root), timestamp)
 
 
 def write_health_check(root: Path, publish: Path) -> None:
