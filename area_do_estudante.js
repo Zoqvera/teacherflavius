@@ -8,6 +8,7 @@
   const AUTH_RESOURCE_MAX_ATTEMPTS = 10;
   const AUTH_RESOURCE_RETRY_DELAY_MS = 150;
   const STUDENT_AREA_PATH = "/area-do-estudante/";
+  const STUDENT_RESOURCES_PATH = "/area-do-estudante/recursos/";
   const LOGIN_PATH = "/login/";
   const FALLBACK_EXERCISES_PATH = "/exercicios-diarios/";
 
@@ -117,6 +118,43 @@
   function updateProfessorAreaVisibility() {
     const professorSection = document.getElementById("professorAreaSection");
     if (professorSection) professorSection.hidden = !isProfessorSession();
+  }
+
+  function createStudentResourcesCard() {
+    const card = document.createElement("a");
+    card.className = "menu-button";
+    card.href = STUDENT_RESOURCES_PATH;
+    card.dataset.studentResourcesCard = "true";
+
+    const label = document.createElement("span");
+    label.className = "menu-label";
+
+    const icon = document.createElement("span");
+    icon.className = "icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = '<svg class="tf-icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18"/><path d="M12 3a15 15 0 0 0 0 18"/></svg>';
+
+    label.appendChild(icon);
+    label.appendChild(document.createTextNode("RECURSOS"));
+
+    const arrow = document.createElement("span");
+    arrow.className = "arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "›";
+
+    card.appendChild(label);
+    card.appendChild(arrow);
+    return card;
+  }
+
+  function ensureStudentResourcesCard() {
+    if (document.querySelector('[data-student-resources-card="true"]')) return;
+
+    const studySection = document.querySelector('[aria-labelledby="studyTitle"]');
+    const studyGrid = studySection ? studySection.querySelector(".menu-grid") : null;
+    if (!studyGrid) return;
+
+    studyGrid.appendChild(createStudentResourcesCard());
   }
 
   function countAvailabilitySlots(profile) {
@@ -332,6 +370,7 @@
     }
   }
 
+  ensureStudentResourcesCard();
   bindOverdueModal();
   updateStatus();
 })();
