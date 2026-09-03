@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 REQUIRED_PUBLIC_PATHS = (
@@ -28,13 +27,6 @@ REQUIRED_PUBLIC_PATHS = (
 )
 
 FORBIDDEN_PUBLISH_SUFFIXES = frozenset({".md", ".sql", ".py", ".yml", ".yaml", ".toml"})
-
-
-def install_shared_headers(root: Path, publish: Path) -> None:
-    source = root / "netlify" / "_headers"
-    if not source.is_file():
-        raise SystemExit("Missing shared hosting headers at netlify/_headers")
-    shutil.copy2(source, publish / "_headers")
 
 
 def missing_required_files(publish: Path) -> list[str]:
