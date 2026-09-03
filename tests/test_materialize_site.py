@@ -1,23 +1,26 @@
 from __future__ import annotations
 
-import importlib.util
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "materialize_site.py"
-SPEC = importlib.util.spec_from_file_location("materialize_site", MODULE_PATH)
-assert SPEC is not None and SPEC.loader is not None
-materialize_site = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = materialize_site
-SPEC.loader.exec_module(materialize_site)
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+from materialization_profiles import (  # noqa: E402
+    GITHUB_PAGES_STEPS,
+    PUBLISH_STEPS,
+    MaterializationStep,
+)
+from materialize_site import materialize_site  # noqa: E402
 
 
 class MaterializeSiteTests(unittest.TestCase):
     def test_publish_profile_preserves_existing_order(self) -> None:
         self.assertEqual(
-            [step.script_name for step in materialize_site.PUBLISH_STEPS],
+            [step.script_name for step in PUBLISH_STEPS],
             [
                 "inject_site_asset_loader.py",
                 "inject_site_runtime_config.py",
@@ -30,7 +33,7 @@ class MaterializeSiteTests(unittest.TestCase):
 
     def test_github_pages_profile_preserves_existing_order_and_aliases(self) -> None:
         self.assertEqual(
-            [step.script_name for step in materialize_site.GITHUB_PAGES_STEPS],
+            [step.script_name for step in GITHUB_PAGES_STEPS],
             [
                 "inject_auth_module_loader.py",
                 "inject_site_asset_loader.py",
@@ -52,10 +55,10 @@ class MaterializeSiteTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir).resolve()
             steps = (
-                materialize_site.MaterializationStep("first.py"),
-                materialize_site.MaterializationStep("second.py"),
+                MaterializationStep("first.py"),
+                MaterializationStep("second.py"),
             )
-            materialize_site.materialize_site(root, steps, runner=fake_runner)
+            materialize_site(root, steps, runner=fake_runner)
 
         self.assertEqual(len(calls), 2)
         self.assertTrue(all(check for _, check in calls))
@@ -76,9 +79,9 @@ class MaterializeSiteTests(unittest.TestCase):
             self.fail(f"Unexpected test fixture path exists: {missing_root}")
 
         with self.assertRaises(SystemExit):
-            materialize_site.materialize_site(
+            materialize_site(
                 missing_root,
-                (materialize_site.MaterializationStep("first.py"),),
+                (MaterializationStep("first.py"),),
                 runner=fake_runner,
             )
 
