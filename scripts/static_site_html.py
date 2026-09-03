@@ -9,6 +9,12 @@ from html_script_dependency import (
     ensure_dependency_before_target,
     validate_dependency_order,
 )
+from static_site_dependencies import (
+    ANALYTICS_DEPENDENCIES,
+    AUTH_DEPENDENCIES,
+    DEPENDENCY_GROUPS,
+    PORTAL_HELPER_DEPENDENCIES,
+)
 
 RESPONSIVE_COMPAT_HREF = "/responsive_compat.css?v=20260820-1"
 RESPONSIVE_COMPAT_LINK = f'  <link rel="stylesheet" href="{RESPONSIVE_COMPAT_HREF}">'
@@ -22,75 +28,6 @@ WA_ME_RE = re.compile(
 API_WHATSAPP_RE = re.compile(
     r'https://api\.whatsapp\.com/send\?[^"\']*phone=5534998349756[^"\']*',
     re.IGNORECASE,
-)
-
-AUTH_DEPENDENCIES = (
-    ScriptDependencySpec(
-        dependency_src="/supabase_client_service.js?v=20260902-1",
-        dependency_filename="supabase_client_service.js",
-        target_filename="auth.js",
-        validation_message="Dependencies must load before auth.js in: {path} (Supabase client service)",
-    ),
-    ScriptDependencySpec(
-        dependency_src="/auth_navigation_service.js?v=20260902-1",
-        dependency_filename="auth_navigation_service.js",
-        target_filename="auth.js",
-        validation_message="Dependencies must load before auth.js in: {path} (Auth navigation service)",
-    ),
-    ScriptDependencySpec(
-        dependency_src="/student_data_utils.js?v=20260902-1",
-        dependency_filename="student_data_utils.js",
-        target_filename="auth.js",
-        validation_message="Dependencies must load before auth.js in: {path} (Student data utilities)",
-    ),
-    ScriptDependencySpec(
-        dependency_src="/student_enrollment_service.js?v=20260902-1",
-        dependency_filename="student_enrollment_service.js",
-        target_filename="auth.js",
-        validation_message="Dependencies must load before auth.js in: {path} (Student enrollment service)",
-    ),
-)
-
-ANALYTICS_DEPENDENCIES = (
-    ScriptDependencySpec(
-        dependency_src="/analytics_utils.js?v=20260902-1",
-        dependency_filename="analytics_utils.js",
-        target_filename="analytics.js",
-        validation_message="Dependencies must load before analytics.js in: {path} (Analytics utilities)",
-    ),
-    ScriptDependencySpec(
-        dependency_src="/analytics_acquisition.js?v=20260902-1",
-        dependency_filename="analytics_acquisition.js",
-        target_filename="analytics.js",
-        validation_message="Dependencies must load before analytics.js in: {path} (Analytics acquisition)",
-    ),
-    ScriptDependencySpec(
-        dependency_src="/analytics_forms.js?v=20260902-1",
-        dependency_filename="analytics_forms.js",
-        target_filename="analytics.js",
-        validation_message="Dependencies must load before analytics.js in: {path} (Analytics forms)",
-    ),
-    ScriptDependencySpec(
-        dependency_src="/analytics_payments.js?v=20260902-1",
-        dependency_filename="analytics_payments.js",
-        target_filename="analytics.js",
-        validation_message="Dependencies must load before analytics.js in: {path} (Analytics payments)",
-    ),
-)
-
-PORTAL_HELPER_DEPENDENCIES = (
-    ScriptDependencySpec(
-        dependency_src="/resource_waiter.js?v=20260902-2",
-        dependency_filename="resource_waiter.js",
-        target_filename="site_footer.js",
-        validation_message="Dependencies must load before site_footer.js in: {path} (Resource waiter)",
-    ),
-)
-
-DEPENDENCY_GROUPS = (
-    AUTH_DEPENDENCIES,
-    ANALYTICS_DEPENDENCIES,
-    PORTAL_HELPER_DEPENDENCIES,
 )
 
 
