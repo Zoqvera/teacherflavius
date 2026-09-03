@@ -5,8 +5,8 @@ import shutil
 from pathlib import Path
 
 from static_build_pipeline import transform_copied_html
+from static_dependency_runtime import validate_publish_dependencies
 from static_site_files import copy_public_files
-from static_site_html import validate_publish_dependencies
 from static_site_routes import materialize_clean_route_aliases
 from static_site_validation import install_shared_headers, validate_publish
 
