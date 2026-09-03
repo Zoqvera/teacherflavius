@@ -3,17 +3,9 @@ from __future__ import annotations
 
 import argparse
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
-
-@dataclass(frozen=True)
-class ScriptDependencySpec:
-    dependency_src: str
-    dependency_filename: str
-    target_filename: str
-    validation_message: str
-    require_current_src: bool = False
+from script_dependency_spec import ScriptDependencySpec
 
 
 def compile_script_pattern(filename: str) -> re.Pattern[str]:
