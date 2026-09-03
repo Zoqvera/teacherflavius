@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-"""Fail CI when core technical SEO invariants regress.
-
-The validator intentionally uses only the Python standard library so it can run
-on GitHub-hosted runners without installing dependencies.
-"""
+"""Validate technical SEO invariants for every canonical public URL."""
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -15,7 +12,6 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlparse
 
-ROOT = Path(__file__).resolve().parents[1]
 SITE_ORIGIN = "https://teacherflavius.com"
 PRIVATE_PREFIXES = (
     "/login/",
@@ -35,6 +31,14 @@ PRIVATE_PREFIXES = (
     "/roteiro-de-estudos/",
     "/pagamento/",
 )
+LEGACY_REDIRECTS = (
+    "/quero_conhecer.html",
+    "/quero_conhecer",
+    "/quero_conhecer/",
+    "/quero-conhecer",
+    "/quero-conhecer/",
+)
+COURSE_PATH = "/curso-de-ingles-online/"
 
 
 class DocumentParser(HTMLParser):
@@ -42,7 +46,7 @@ class DocumentParser(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.title_depth = 0
         self.title_parts: list[str] = []
-        self.h1_count = 0
+        self.heading_levels: list[int] = []
         self.meta: dict[str, str] = {}
         self.og: dict[str, str] = {}
         self.links: list[dict[str, str]] = []
@@ -57,8 +61,8 @@ class DocumentParser(HTMLParser):
 
         if tag == "title":
             self.title_depth += 1
-        elif tag == "h1":
-            self.h1_count += 1
+        elif tag in {"h1", "h2", "h3"}:
+            self.heading_levels.append(int(tag[1]))
         elif tag == "meta":
             name = attrs_dict.get("name", "").lower()
             prop = attrs_dict.get("property", "").lower()
@@ -98,6 +102,10 @@ class DocumentParser(HTMLParser):
     def title(self) -> str:
         return " ".join(part.strip() for part in self.title_parts if part.strip()).strip()
 
+    @property
+    def h1_count(self) -> int:
+        return self.heading_levels.count(1)
+
     def canonical(self) -> str:
         for link in self.links:
             rel_tokens = {token.lower() for token in link.get("rel", "").split()}
@@ -112,125 +120,246 @@ def parse_html(path: Path) -> DocumentParser:
     return parser
 
 
-def is_absolute_https(url: str) -> bool:
-    parsed = urlparse(url)
-    return parsed.scheme == "https" and bool(parsed.netloc)
+def sitemap_urls(site_root: Path, errors: list[str]) -> list[str]:
+    sitemap_path = site_root / "sitemap.xml"
+    if not sitemap_path.is_file():
+        errors.append("Arquivo obrigatório ausente: sitemap.xml")
+        return []
+
+    try:
+        root = ET.parse(sitemap_path).getroot()
+    except ET.ParseError as exc:
+        errors.append(f"sitemap.xml inválido: {exc}")
+        return []
+
+    namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    urls = [(node.text or "").strip() for node in root.findall(f".//{namespace}loc")]
+    if not urls:
+        errors.append("sitemap.xml precisa conter ao menos uma URL")
+    if len(urls) != len(set(urls)):
+        errors.append("sitemap.xml contém URLs duplicadas")
+    return urls
+
+
+def page_path_for_url(site_root: Path, url: str) -> Path:
+    path = urlparse(url).path.strip("/")
+    return site_root / ("index.html" if not path else str(Path(path) / "index.html"))
+
+
+def schema_types(document: DocumentParser, label: str, errors: list[str]) -> set[str]:
+    found: set[str] = set()
+    valid_blocks = 0
+    for block in document.json_ld:
+        try:
+            data = json.loads(block)
+        except json.JSONDecodeError as exc:
+            errors.append(f"{label}: JSON-LD inválido: {exc}")
+            continue
+        valid_blocks += 1
+        nodes = data.get("@graph", []) if isinstance(data, dict) else []
+        if isinstance(nodes, dict):
+            nodes = [nodes]
+        if not nodes and isinstance(data, dict):
+            nodes = [data]
+        for node in nodes:
+            if not isinstance(node, dict):
+                continue
+            node_type = node.get("@type")
+            if isinstance(node_type, str):
+                found.add(node_type)
+            elif isinstance(node_type, list):
+                found.update(value for value in node_type if isinstance(value, str))
+    if valid_blocks == 0:
+        errors.append(f"{label}: precisa de pelo menos um bloco JSON-LD válido")
+    return found
+
+
+def expected_schema_types(path: str) -> set[str]:
+    if path == "/":
+        return {"WebSite", "Course"}
+    if path == COURSE_PATH:
+        return {"Course"}
+    if path == "/sobre/":
+        return {"AboutPage", "Person"}
+    if path == "/recursos/":
+        return {"CollectionPage"}
+    if path.startswith("/recursos/"):
+        return {"Article"}
+    return set()
+
+
+def validate_heading_hierarchy(document: DocumentParser, label: str, errors: list[str]) -> None:
+    if document.h1_count != 1:
+        errors.append(f"{label}: deve ter exatamente um H1; encontrado(s): {document.h1_count}")
+        return
+    if not document.heading_levels or document.heading_levels[0] != 1:
+        errors.append(f"{label}: o primeiro heading deve ser H1")
+    previous = document.heading_levels[0] if document.heading_levels else 1
+    for level in document.heading_levels[1:]:
+        if level > previous + 1:
+            errors.append(f"{label}: salto de hierarquia H{previous} → H{level}")
+            break
+        previous = level
+
+
+def validate_public_page(site_root: Path, url: str, errors: list[str]) -> None:
+    parsed_url = urlparse(url)
+    label = parsed_url.path or "/"
+    if not url.startswith(f"{SITE_ORIGIN}/"):
+        errors.append(f"URL do sitemap fora do domínio canônico: {url}")
+        return
+    if parsed_url.query or parsed_url.fragment:
+        errors.append(f"URL do sitemap não deve conter query/fragmento: {url}")
+    if parsed_url.path.endswith(".html"):
+        errors.append(f"URL legada .html encontrada no sitemap: {url}")
+    if any(parsed_url.path.startswith(prefix) for prefix in PRIVATE_PREFIXES):
+        errors.append(f"URL privada encontrada no sitemap: {url}")
+
+    path = page_path_for_url(site_root, url)
+    if not path.is_file():
+        errors.append(f"{label}: arquivo público não encontrado em {path.relative_to(site_root)}")
+        return
+
+    document = parse_html(path)
+    title = document.title
+    description = document.meta.get("description", "")
+    robots = document.meta.get("robots", "").lower()
+
+    if not 10 <= len(title) <= 80:
+        errors.append(f"{label}: <title> ausente ou com tamanho incomum ({len(title)} caracteres)")
+    if not 50 <= len(description) <= 200:
+        errors.append(f"{label}: meta description ausente ou com tamanho incomum ({len(description)} caracteres)")
+    if "noindex" in robots:
+        errors.append(f"{label}: URL pública do sitemap não pode conter noindex")
+    if document.canonical() != url:
+        errors.append(f"{label}: canonical deve ser {url}; encontrado: {document.canonical() or 'ausente'}")
+
+    validate_heading_hierarchy(document, label, errors)
+
+    required_og = (
+        "og:type",
+        "og:locale",
+        "og:site_name",
+        "og:title",
+        "og:description",
+        "og:url",
+        "og:image",
+        "og:image:width",
+        "og:image:height",
+        "og:image:alt",
+    )
+    for key in required_og:
+        if not document.og.get(key):
+            errors.append(f"{label}: Open Graph obrigatório ausente: {key}")
+    if document.og.get("og:url") != url:
+        errors.append(f"{label}: og:url deve corresponder ao canonical")
+    if document.og.get("og:image:width") != "1200" or document.og.get("og:image:height") != "630":
+        errors.append(f"{label}: imagem Open Graph deve declarar 1200x630")
+    if urlparse(document.og.get("og:image", "")).scheme != "https":
+        errors.append(f"{label}: og:image deve usar URL HTTPS absoluta")
+
+    for key in ("twitter:card", "twitter:title", "twitter:description", "twitter:image"):
+        if not document.meta.get(key):
+            errors.append(f"{label}: Twitter Card obrigatório ausente: {key}")
+    if document.meta.get("twitter:card") != "summary_large_image":
+        errors.append(f"{label}: twitter:card deve ser summary_large_image")
+
+    found_types = schema_types(document, label, errors)
+    for expected in expected_schema_types(parsed_url.path):
+        if expected not in found_types:
+            errors.append(f"{label}: Schema.org deve incluir {expected}")
+
+    legacy_links = []
+    for href in document.anchors:
+        parsed = urlparse(href)
+        if parsed.scheme or parsed.netloc:
+            continue
+        if parsed.path.endswith(".html"):
+            legacy_links.append(href)
+    if legacy_links:
+        errors.append(f"{label}: links internos legados .html: {', '.join(sorted(set(legacy_links)))}")
+
+
+def validate_robots(site_root: Path, errors: list[str]) -> None:
+    path = site_root / "robots.txt"
+    if not path.is_file():
+        errors.append("Arquivo obrigatório ausente: robots.txt")
+        return
+    text = path.read_text(encoding="utf-8")
+    if re.search(r"(?im)^User-agent:\s*\*$", text) is None:
+        errors.append("robots.txt precisa declarar User-agent: *")
+    if re.search(rf"(?im)^Sitemap:\s*{re.escape(SITE_ORIGIN)}/sitemap\.xml\s*$", text) is None:
+        errors.append("robots.txt precisa apontar para o sitemap canônico")
+    for prefix in ("/login/", "/area-do-estudante/", "/professor/", "/mensalidades/"):
+        if re.search(rf"(?im)^Disallow:\s*{re.escape(prefix)}\s*$", text) is None:
+            errors.append(f"robots.txt deve bloquear crawling de {prefix}")
+
+
+def validate_404(site_root: Path, errors: list[str]) -> None:
+    path = site_root / "404.html"
+    if not path.is_file():
+        errors.append("Arquivo obrigatório ausente: 404.html")
+        return
+    document = parse_html(path)
+    if document.h1_count != 1:
+        errors.append(f"404.html deve ter exatamente um H1; encontrado(s): {document.h1_count}")
+    if "noindex" not in document.meta.get("robots", "").lower():
+        errors.append("404.html precisa conter meta robots noindex")
+    if document.canonical():
+        errors.append("404.html não deve canonicalizar para uma página válida")
+    paths = {urlparse(href).path for href in document.anchors}
+    if "/" not in paths:
+        errors.append("404.html precisa oferecer link para a homepage")
+    if COURSE_PATH not in paths:
+        errors.append(f"404.html precisa oferecer link para {COURSE_PATH}")
+    if "/quero-conhecer/" in paths or "/quero_conhecer.html" in paths:
+        errors.append("404.html não deve apontar para rota comercial legada")
+
+
+def validate_redirects(site_root: Path, errors: list[str]) -> None:
+    path = site_root / "_redirects"
+    if not path.is_file():
+        errors.append("Arquivo obrigatório ausente: _redirects")
+        return
+    rules: dict[str, tuple[str, str]] = {}
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) >= 3:
+            rules[parts[0]] = (parts[1], parts[2])
+    for legacy in LEGACY_REDIRECTS:
+        destination, status = rules.get(legacy, ("", ""))
+        if destination != COURSE_PATH or status != "301":
+            errors.append(f"_redirects: {legacy} deve redirecionar 301 para {COURSE_PATH}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--site-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[1],
+        help="Diretório que contém o artefato estático a validar.",
+    )
+    return parser.parse_args()
 
 
 def main() -> int:
+    args = parse_args()
+    site_root = args.site_root.resolve()
     errors: list[str] = []
-    notices: list[str] = []
 
-    def require(condition: bool, message: str) -> None:
-        if not condition:
-            errors.append(message)
+    urls = sitemap_urls(site_root, errors)
+    if f"{SITE_ORIGIN}/" not in urls:
+        errors.append("sitemap.xml precisa conter a homepage canônica")
+    for url in urls:
+        validate_public_page(site_root, url, errors)
 
-    index_path = ROOT / "index.html"
-    robots_path = ROOT / "robots.txt"
-    sitemap_path = ROOT / "sitemap.xml"
-    not_found_path = ROOT / "404.html"
-
-    for path in (index_path, robots_path, sitemap_path, not_found_path):
-        require(path.exists(), f"Arquivo obrigatório ausente: {path.relative_to(ROOT)}")
-
-    if index_path.exists():
-        index = parse_html(index_path)
-        require(bool(index.title), "index.html precisa de <title> não vazio")
-        require(10 <= len(index.title) <= 65, f"<title> da homepage tem tamanho incomum ({len(index.title)} caracteres)")
-
-        description = index.meta.get("description", "")
-        require(bool(description), "index.html precisa de meta description")
-        require(70 <= len(description) <= 180, f"meta description da homepage tem tamanho incomum ({len(description)} caracteres)")
-
-        robots = index.meta.get("robots", "").lower()
-        require("noindex" not in robots, "homepage não pode conter noindex")
-        require(index.h1_count == 1, f"homepage deve ter exatamente um H1; encontrado(s): {index.h1_count}")
-
-        canonical = index.canonical()
-        require(canonical == f"{SITE_ORIGIN}/", f"canonical da homepage deve ser {SITE_ORIGIN}/; encontrado: {canonical or 'ausente'}")
-
-        required_og = ("og:type", "og:locale", "og:site_name", "og:title", "og:description", "og:url", "og:image", "og:image:width", "og:image:height", "og:image:alt")
-        for key in required_og:
-            require(bool(index.og.get(key)), f"Open Graph obrigatório ausente: {key}")
-        require(index.og.get("og:url") == f"{SITE_ORIGIN}/", "og:url da homepage deve apontar para a URL canônica")
-        require(is_absolute_https(index.og.get("og:image", "")), "og:image deve usar URL HTTPS absoluta")
-        require(index.og.get("og:image:width") == "1200" and index.og.get("og:image:height") == "630", "imagem Open Graph deve declarar 1200x630")
-
-        for key in ("twitter:card", "twitter:title", "twitter:description", "twitter:image"):
-            require(bool(index.meta.get(key)), f"Twitter Card obrigatório ausente: {key}")
-        require(index.meta.get("twitter:card") == "summary_large_image", "twitter:card deve ser summary_large_image")
-        require(is_absolute_https(index.meta.get("twitter:image", "")), "twitter:image deve usar URL HTTPS absoluta")
-
-        schema_types: set[str] = set()
-        valid_json_ld = 0
-        for block in index.json_ld:
-            try:
-                data = json.loads(block)
-            except json.JSONDecodeError as exc:
-                errors.append(f"JSON-LD inválido na homepage: {exc}")
-                continue
-            valid_json_ld += 1
-            nodes = data.get("@graph", []) if isinstance(data, dict) else []
-            if isinstance(nodes, dict):
-                nodes = [nodes]
-            if not nodes and isinstance(data, dict):
-                nodes = [data]
-            for node in nodes:
-                if not isinstance(node, dict):
-                    continue
-                node_type = node.get("@type")
-                if isinstance(node_type, str):
-                    schema_types.add(node_type)
-                elif isinstance(node_type, list):
-                    schema_types.update(value for value in node_type if isinstance(value, str))
-        require(valid_json_ld > 0, "homepage precisa de pelo menos um bloco JSON-LD válido")
-        require("WebSite" in schema_types, "Schema.org da homepage deve incluir WebSite")
-        require("Course" in schema_types, "Schema.org da homepage deve incluir Course")
-
-        legacy_html_links = []
-        for href in index.anchors:
-            parsed = urlparse(href)
-            if parsed.scheme or parsed.netloc:
-                continue
-            path = parsed.path
-            if path.endswith(".html"):
-                legacy_html_links.append(href)
-        require(not legacy_html_links, f"homepage contém links internos legados .html: {', '.join(legacy_html_links)}")
-
-    if robots_path.exists():
-        robots_text = robots_path.read_text(encoding="utf-8")
-        require(re.search(r"(?im)^User-agent:\s*\*$", robots_text) is not None, "robots.txt precisa declarar User-agent: *")
-        require(re.search(rf"(?im)^Sitemap:\s*{re.escape(SITE_ORIGIN)}/sitemap\.xml\s*$", robots_text) is not None, "robots.txt precisa apontar para o sitemap canônico")
-        for prefix in ("/login/", "/area-do-estudante/", "/professor/", "/mensalidades/"):
-            require(re.search(rf"(?im)^Disallow:\s*{re.escape(prefix)}\s*$", robots_text) is not None, f"robots.txt deve bloquear crawling de {prefix}")
-
-    if sitemap_path.exists():
-        try:
-            tree = ET.parse(sitemap_path)
-            root = tree.getroot()
-            namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
-            locs = [(node.text or "").strip() for node in root.findall(f".//{namespace}loc")]
-            require(bool(locs), "sitemap.xml precisa conter ao menos uma URL")
-            require(len(locs) == len(set(locs)), "sitemap.xml contém URLs duplicadas")
-            require(f"{SITE_ORIGIN}/" in locs, "sitemap.xml precisa conter a homepage canônica")
-            for loc in locs:
-                require(loc.startswith(f"{SITE_ORIGIN}/"), f"URL do sitemap fora do domínio canônico: {loc}")
-                parsed = urlparse(loc)
-                require(not parsed.query and not parsed.fragment, f"URL do sitemap não deve conter query/fragmento: {loc}")
-                require(not parsed.path.endswith(".html"), f"URL legada .html encontrada no sitemap: {loc}")
-                require(not any(parsed.path.startswith(prefix) for prefix in PRIVATE_PREFIXES), f"URL privada encontrada no sitemap: {loc}")
-        except ET.ParseError as exc:
-            errors.append(f"sitemap.xml inválido: {exc}")
-
-    if not_found_path.exists():
-        not_found = parse_html(not_found_path)
-        require(bool(not_found.title), "404.html precisa de <title>")
-        require(not_found.h1_count == 1, f"404.html deve ter exatamente um H1; encontrado(s): {not_found.h1_count}")
-        robots = not_found.meta.get("robots", "").lower()
-        require("noindex" in robots, "404.html precisa conter meta robots noindex")
-        require(any(urlparse(href).path == "/" for href in not_found.anchors), "404.html precisa oferecer link para a homepage")
-        require(any(urlparse(href).path == "/quero-conhecer/" for href in not_found.anchors), "404.html precisa oferecer link para /quero-conhecer/")
-        require(not not_found.canonical(), "404.html não deve canonicalizar para uma página válida")
+    validate_robots(site_root, errors)
+    validate_404(site_root, errors)
+    validate_redirects(site_root, errors)
 
     if errors:
         print("Technical SEO audit: FAILED")
@@ -239,9 +368,7 @@ def main() -> int:
         return 1
 
     print("Technical SEO audit: OK")
-    print("Validated: title/description, canonical, H1, Open Graph, Twitter Card, JSON-LD, robots.txt, sitemap.xml and 404.html.")
-    for notice in notices:
-        print(f"::notice::{notice}")
+    print(f"Validated {len(urls)} sitemap URLs plus robots.txt, redirects and 404.html.")
     return 0
 
 
