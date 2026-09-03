@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 from static_site_html import transform_html, validate_publish_dependencies
+from static_site_validation import install_shared_headers, validate_publish
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLISH = ROOT / "_site"
@@ -142,48 +143,8 @@ def main() -> None:
 
     clean_route_aliases = materialize_clean_route_aliases()
     validate_publish_dependencies(PUBLISH)
-
-    headers = ROOT / "netlify" / "_headers"
-    if not headers.is_file():
-        raise SystemExit("Missing shared hosting headers at netlify/_headers")
-    shutil.copy2(headers, PUBLISH / "_headers")
-
-    required = [
-        PUBLISH / "index.html",
-        PUBLISH / "404.html",
-        PUBLISH / "robots.txt",
-        PUBLISH / "sitemap.xml",
-        PUBLISH / "error_monitor.js",
-        PUBLISH / "resource_waiter.js",
-        PUBLISH / "supabase_client_service.js",
-        PUBLISH / "auth_navigation_service.js",
-        PUBLISH / "student_data_utils.js",
-        PUBLISH / "student_enrollment_service.js",
-        PUBLISH / "analytics.js",
-        PUBLISH / "analytics_utils.js",
-        PUBLISH / "analytics_acquisition.js",
-        PUBLISH / "analytics_forms.js",
-        PUBLISH / "analytics_payments.js",
-        PUBLISH / "quero-conhecer" / "index.html",
-        PUBLISH / "cadastro" / "index.html",
-        PUBLISH / "meu-progresso" / "index.html",
-    ]
-    missing = [str(path.relative_to(ROOT)) for path in required if not path.is_file()]
-    if missing:
-        raise SystemExit(f"Static build missing required public files: {', '.join(missing)}")
-
-    compat_stylesheet = PUBLISH / "responsive_compat.css"
-    if not compat_stylesheet.is_file():
-        raise SystemExit("Static build missing responsive_compat.css")
-
-    forbidden_suffixes = {".md", ".sql", ".py", ".yml", ".yaml", ".toml"}
-    leaked = [
-        str(path.relative_to(PUBLISH))
-        for path in PUBLISH.rglob("*")
-        if path.is_file() and path.suffix.lower() in forbidden_suffixes
-    ]
-    if leaked:
-        raise SystemExit(f"Operational files leaked into publish directory: {', '.join(leaked)}")
+    install_shared_headers(ROOT, PUBLISH)
+    validate_publish(PUBLISH)
 
     print(
         f"Static publish directory ready: {copied} public files + _headers; "
