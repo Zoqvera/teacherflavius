@@ -9,7 +9,7 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from html_script_dependency import process_site  # noqa: E402
+from html_script_dependency_runtime import process_site  # noqa: E402
 from html_script_dependency_transform import (  # noqa: E402
     ensure_dependency_before_target,
     validate_dependency_order,
@@ -28,9 +28,7 @@ class HtmlScriptDependencyTests(unittest.TestCase):
 
     def test_inserts_dependency_before_target_with_matching_indentation(self) -> None:
         html = "<body>\n  <script src=\"/target.js\"></script>\n</body>\n"
-
         updated, modified = ensure_dependency_before_target(html, self.spec)
-
         self.assertTrue(modified)
         self.assertIn(
             '  <script src="/dependency.js?v=1"></script>\n  <script src="/target.js"></script>',
@@ -38,24 +36,14 @@ class HtmlScriptDependencyTests(unittest.TestCase):
         )
 
     def test_keeps_valid_existing_dependency_idempotently(self) -> None:
-        html = (
-            '<script src="/dependency.js?v=1"></script>\n'
-            '<script src="/target.js"></script>\n'
-        )
-
+        html = '<script src="/dependency.js?v=1"></script>\n<script src="/target.js"></script>\n'
         updated, modified = ensure_dependency_before_target(html, self.spec)
-
         self.assertFalse(modified)
         self.assertEqual(updated, html)
 
     def test_moves_dependency_that_appears_after_target(self) -> None:
-        html = (
-            '<script src="/target.js"></script>\n'
-            '<script src="/dependency.js?v=1"></script>\n'
-        )
-
+        html = '<script src="/target.js"></script>\n<script src="/dependency.js?v=1"></script>\n'
         updated, modified = ensure_dependency_before_target(html, self.spec)
-
         self.assertTrue(modified)
         self.assertLess(updated.index("dependency.js"), updated.index("target.js"))
         self.assertEqual(updated.count("dependency.js"), 1)
@@ -68,13 +56,8 @@ class HtmlScriptDependencyTests(unittest.TestCase):
             validation_message="current dependency must precede target in {path}",
             require_current_src=True,
         )
-        html = (
-            '<script src="/dependency.js?v=1"></script>\n'
-            '<script src="/target.js"></script>\n'
-        )
-
+        html = '<script src="/dependency.js?v=1"></script>\n<script src="/target.js"></script>\n'
         updated, modified = ensure_dependency_before_target(html, versioned_spec)
-
         self.assertTrue(modified)
         self.assertIn('/dependency.js?v=2', updated)
         self.assertNotIn('/dependency.js?v=1', updated)
@@ -86,16 +69,13 @@ class HtmlScriptDependencyTests(unittest.TestCase):
             untouched = root / "other.html"
             target.write_text('<script src="/target.js"></script>\n', encoding="utf-8")
             untouched.write_text("<p>Sem target</p>\n", encoding="utf-8")
-
             changed = process_site(root, self.spec)
-
             self.assertEqual(changed, 1)
             self.assertIn("dependency.js", target.read_text(encoding="utf-8"))
             self.assertEqual(untouched.read_text(encoding="utf-8"), "<p>Sem target</p>\n")
 
     def test_validation_rejects_missing_dependency(self) -> None:
         html = '<script src="/target.js"></script>\n'
-
         with self.assertRaises(SystemExit):
             validate_dependency_order(html, Path("index.html"), self.spec)
 
