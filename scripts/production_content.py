@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import re
 from pathlib import Path
+
+from production_homepage import update_homepage
 
 COURSE_SCHEMA_OLD = '''        "description":"Professor de inglês com mais de 15 anos de experiência, Doutor e Mestre em Linguística, Bacharel em Tradução e certificado CELTA.",
         "sameAs":["https://www.instagram.com/teacher.flavius"]'''
@@ -68,27 +69,6 @@ COURSE_INSERTION_ANCHOR = '''      </div>
 COURSE_INSERTION_REPLACEMENT = "      </div>\n" + COURSE_AUTHORITY_BLOCK + '''    </section>
 
     <section class="section" aria-labelledby="difference-title">'''
-
-
-def update_homepage(publish: Path) -> None:
-    index = publish / "index.html"
-    if not index.is_file():
-        raise SystemExit("Static build missing _site/index.html")
-
-    html = index.read_text(encoding="utf-8")
-    html = re.sub(
-        r'<section\s+class="section"\s+aria-labelledby="benefits-title">',
-        '<section class="section" aria-label="Como funcionam as aulas">',
-        html,
-        count=1,
-    )
-    html = re.sub(
-        r'\s*<h2\s+id="benefits-title">Inglês online com professor, prática e acompanhamento\.</h2>\s*',
-        "\n",
-        html,
-        count=1,
-    )
-    index.write_text(html, encoding="utf-8")
 
 
 def update_course_authority(publish: Path) -> None:
