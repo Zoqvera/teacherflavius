@@ -18,6 +18,7 @@ BLOCKED_TOP_LEVEL = frozenset({
 })
 
 SKIP_NAMES = frozenset({"CNAME", ".nojekyll"})
+PUBLIC_SPECIAL_NAMES = frozenset({"_redirects"})
 
 PUBLIC_SUFFIXES = frozenset({
     ".html", ".htm",
@@ -49,7 +50,7 @@ def is_public(path: Path) -> bool:
         return False
     if any(part.startswith(".") for part in path.parts):
         return False
-    return path.suffix.lower() in PUBLIC_SUFFIXES
+    return path.name in PUBLIC_SPECIAL_NAMES or path.suffix.lower() in PUBLIC_SUFFIXES
 
 
 def public_tracked_files(root: Path) -> list[Path]:

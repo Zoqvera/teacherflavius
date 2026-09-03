@@ -6,10 +6,16 @@ from pathlib import Path
 
 SHARED_HEADERS_SOURCE = Path("netlify") / "_headers"
 PUBLISH_HEADERS_NAME = "_headers"
+MISSING_SHARED_HEADERS_MESSAGE = "Missing shared hosting headers at netlify/_headers"
 
 
-def install_shared_headers(root: Path, publish: Path) -> None:
+def install_shared_headers(
+    root: Path,
+    publish: Path,
+    *,
+    missing_message: str = MISSING_SHARED_HEADERS_MESSAGE,
+) -> None:
     source = root / SHARED_HEADERS_SOURCE
     if not source.is_file():
-        raise SystemExit("Missing shared hosting headers at netlify/_headers")
+        raise SystemExit(missing_message)
     shutil.copy2(source, publish / PUBLISH_HEADERS_NAME)
