@@ -9,7 +9,7 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from html_script_dependency import ScriptDependencySpec  # noqa: E402
+from script_dependency_spec import ScriptDependencySpec  # noqa: E402
 from static_dependency_runtime import (  # noqa: E402
     inject_dependencies,
     inject_dependency_groups,
