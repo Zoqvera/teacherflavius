@@ -3,11 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from html_script_dependency import (
-    ScriptDependencySpec,
-    process_site as process_html_site,
-    resolve_site_root,
-)
+from html_script_dependency import process_site as process_html_site, resolve_site_root
+from script_dependency_spec import ScriptDependencySpec
 
 SITE_PAGE_RUNTIME_SRC = "/site_page_runtime.js?v=20260903-1"
 SPEC = ScriptDependencySpec(
