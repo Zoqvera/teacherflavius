@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+from pathlib import Path
+
 REQUIRED_PUBLIC_PATHS = (
     "index.html",
     "404.html",
@@ -23,3 +25,7 @@ REQUIRED_PUBLIC_PATHS = (
     "responsive_compat.css",
     "_headers",
 )
+
+
+def missing_required_files(publish: Path) -> list[str]:
+    return [relative for relative in REQUIRED_PUBLIC_PATHS if not (publish / relative).is_file()]
