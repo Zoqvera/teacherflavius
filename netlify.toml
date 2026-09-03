@@ -1,5 +1,5 @@
 [build]
-  command = "python3 scripts/build_static_site.py && python3 scripts/inject_site_asset_loader.py && python3 scripts/inject_site_runtime_config.py && python3 scripts/inject_site_page_runtime.py && python3 scripts/inject_site_privacy_analytics.py && python3 scripts/inject_auth_module_loader.py && python3 scripts/inject_google_tag_manager.py && python3 scripts/postprocess_production.py"
+  command = "python3 scripts/build_static_site.py && python3 scripts/materialize_site.py --profile publish && python3 scripts/postprocess_production.py"
   publish = "_site"
 
 [build.processing]
