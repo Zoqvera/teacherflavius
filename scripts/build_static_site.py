@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 from static_build_pipeline import transform_copied_html
 from static_dependency_runtime import validate_publish_dependencies
+from static_publish_workspace import prepare_publish_directory
 from static_site_files import copy_public_files
 from static_site_routes import materialize_clean_route_aliases
 from static_site_validation import install_shared_headers, validate_publish
@@ -15,9 +15,7 @@ PUBLISH = ROOT / "_site"
 
 
 def main() -> None:
-    if PUBLISH.exists():
-        shutil.rmtree(PUBLISH)
-    PUBLISH.mkdir(parents=True)
+    prepare_publish_directory(PUBLISH)
 
     copied_files = copy_public_files(ROOT, PUBLISH)
     transform_stats = transform_copied_html(PUBLISH, copied_files)
