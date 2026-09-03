@@ -16,6 +16,9 @@ on:
       - "scripts/static_site_validation.py"
       - "scripts/html_script_dependency.py"
       - "scripts/materialize_site.py"
+      - "scripts/postprocess_production.py"
+      - "scripts/production_content.py"
+      - "scripts/production_health.py"
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_runtime_config.py"
@@ -43,6 +46,9 @@ on:
       - "scripts/static_site_validation.py"
       - "scripts/html_script_dependency.py"
       - "scripts/materialize_site.py"
+      - "scripts/postprocess_production.py"
+      - "scripts/production_content.py"
+      - "scripts/production_health.py"
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_runtime_config.py"
@@ -73,6 +79,13 @@ jobs:
           grep -q 'GTM-K2NWR2NK' _site/index.html
           grep -q 'googletagmanager.com/ns.html?id=GTM-K2NWR2NK' _site/index.html
 
+      - name: Run production post-processing
+        run: |
+          python3 scripts/postprocess_production.py
+          test -f _site/health.json
+          grep -q '"status":"ok"' _site/health.json
+          grep -q 'id="academicAuthorityProof"' _site/curso-de-ingles-online/index.html
+
       - name: Validate GitHub Pages source compatibility
         run: |
           tmp_dir="$(mktemp -d)"
@@ -99,6 +112,7 @@ jobs:
           test -f _site/site_runtime_config.js
           test -f _site/site_page_runtime.js
           test -f _site/site_privacy_analytics.js
+          test -f _site/health.json
           test -f _site/_headers
           if find _site -type f \( -name '*.md' -o -name '*.sql' -o -name '*.py' -o -name '*.yml' -o -name '*.yaml' -o -name '*.toml' \) | grep -q .; then
             echo 'Operational file leaked into _site'
