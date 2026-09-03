@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from html_script_dependency import process_site as process_html_site, resolve_site_root
+from html_script_dependency import resolve_site_root
+from html_script_dependency_runtime import process_site as process_html_site
 from script_dependency_spec import ScriptDependencySpec
 
 MODULE_LOADER_SRC = "/module_loader.js?v=20260902-2"
