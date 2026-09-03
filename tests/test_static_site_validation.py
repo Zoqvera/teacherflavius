@@ -10,8 +10,8 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from static_hosting_headers import install_shared_headers  # noqa: E402
+from static_publish_requirements import REQUIRED_PUBLIC_PATHS  # noqa: E402
 from static_site_validation import (  # noqa: E402
-    REQUIRED_PUBLIC_PATHS,
     leaked_operational_files,
     missing_required_files,
     validate_publish,
