@@ -26,13 +26,21 @@ def remove_runtime_config_scripts(html: str) -> str:
     return SITE_RUNTIME_CONFIG_RE.sub("", html)
 
 
+def has_current_runtime_config(script_match: re.Match[str]) -> bool:
+    return SITE_RUNTIME_CONFIG_SRC in script_match.group(0)
+
+
 def ensure_runtime_config_before_footer(html: str) -> tuple[str, bool]:
     footer_script = SITE_FOOTER_RE.search(html)
     if not footer_script:
         return html, False
 
     existing = SITE_RUNTIME_CONFIG_RE.search(html)
-    if existing and existing.start() < footer_script.start():
+    if (
+        existing
+        and existing.start() < footer_script.start()
+        and has_current_runtime_config(existing)
+    ):
         return html, False
 
     html = remove_runtime_config_scripts(html)
@@ -52,8 +60,14 @@ def validate_order(html: str, path: Path) -> None:
         return
 
     dependency = SITE_RUNTIME_CONFIG_RE.search(html)
-    if not dependency or dependency.start() > footer_script.start():
-        raise SystemExit(f"site_runtime_config.js must load before site_footer.js in {path}")
+    if (
+        not dependency
+        or dependency.start() > footer_script.start()
+        or not has_current_runtime_config(dependency)
+    ):
+        raise SystemExit(
+            f"site_runtime_config.js must load with the current version before site_footer.js in {path}"
+        )
 
 
 def process_site(root: Path) -> int:
@@ -70,7 +84,7 @@ def process_site(root: Path) -> int:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Ensure site_runtime_config.js loads before site_footer.js."
+        description="Ensure the current site_runtime_config.js loads before site_footer.js."
     )
     parser.add_argument(
         "--site-root",
