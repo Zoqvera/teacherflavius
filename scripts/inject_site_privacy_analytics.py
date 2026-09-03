@@ -3,11 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from html_script_dependency import (
-    ScriptDependencySpec,
-    process_site as process_html_site,
-    resolve_site_root,
-)
+from html_script_dependency import process_site as process_html_site, resolve_site_root
+from script_dependency_spec import ScriptDependencySpec
 
 PRIVACY_ANALYTICS_SRC = "/site_privacy_analytics.js?v=20260902-1"
 SPEC = ScriptDependencySpec(
