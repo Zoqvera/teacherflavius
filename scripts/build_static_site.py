@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from static_build_pipeline import transform_copied_html
+from static_build_summary import format_build_summary
 from static_dependency_runtime import validate_publish_dependencies
 from static_hosting_headers import install_shared_headers
 from static_publish_workspace import prepare_publish_directory
@@ -26,12 +27,7 @@ def main() -> None:
     install_shared_headers(ROOT, PUBLISH)
     validate_publish(PUBLISH)
 
-    print(
-        f"Static publish directory ready: {len(copied_files)} public files + _headers; "
-        f"site baseline enhanced {transform_stats.enhanced_files} HTML files; "
-        f"injected {transform_stats.dependency_injections} dependency scripts; "
-        f"materialized {clean_route_aliases} clean route aliases"
-    )
+    print(format_build_summary(len(copied_files), transform_stats, clean_route_aliases))
 
 
 if __name__ == "__main__":
