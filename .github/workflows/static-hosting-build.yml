@@ -11,12 +11,14 @@ on:
       - "**/*.txt"
       - "scripts/build_static_site.py"
       - "scripts/html_script_dependency.py"
+      - "scripts/materialize_site.py"
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_runtime_config.py"
       - "scripts/inject_site_page_runtime.py"
       - "scripts/inject_site_privacy_analytics.py"
       - "scripts/inject_google_tag_manager.py"
+      - "scripts/materialize_clean_route_aliases.py"
       - "netlify/_headers"
       - "netlify.toml"
       - ".github/workflows/static-hosting-build.yml"
@@ -32,12 +34,14 @@ on:
       - "**/*.txt"
       - "scripts/build_static_site.py"
       - "scripts/html_script_dependency.py"
+      - "scripts/materialize_site.py"
       - "scripts/inject_auth_module_loader.py"
       - "scripts/inject_site_asset_loader.py"
       - "scripts/inject_site_runtime_config.py"
       - "scripts/inject_site_page_runtime.py"
       - "scripts/inject_site_privacy_analytics.py"
       - "scripts/inject_google_tag_manager.py"
+      - "scripts/materialize_clean_route_aliases.py"
       - "netlify/_headers"
       - "netlify.toml"
       - ".github/workflows/static-hosting-build.yml"
@@ -55,24 +59,9 @@ jobs:
       - name: Build static site
         run: python3 scripts/build_static_site.py
 
-      - name: Ensure site asset loader precedes footer
-        run: python3 scripts/inject_site_asset_loader.py
-
-      - name: Ensure runtime configuration precedes footer
-        run: python3 scripts/inject_site_runtime_config.py
-
-      - name: Ensure page runtime precedes footer
-        run: python3 scripts/inject_site_page_runtime.py
-
-      - name: Ensure privacy analytics precedes footer
-        run: python3 scripts/inject_site_privacy_analytics.py
-
-      - name: Ensure module loader precedes auth
-        run: python3 scripts/inject_auth_module_loader.py
-
-      - name: Inject and validate Google Tag Manager
+      - name: Materialize and validate publish bootstrap
         run: |
-          python3 scripts/inject_google_tag_manager.py
+          python3 scripts/materialize_site.py --profile publish
           grep -q 'GTM-K2NWR2NK' _site/index.html
           grep -q 'googletagmanager.com/ns.html?id=GTM-K2NWR2NK' _site/index.html
 
@@ -81,18 +70,14 @@ jobs:
           tmp_dir="$(mktemp -d)"
           cp -R . "$tmp_dir/site"
           rm -rf "$tmp_dir/site/_site" "$tmp_dir/site/.git"
-          python3 "$tmp_dir/site/scripts/inject_auth_module_loader.py" --site-root "$tmp_dir/site"
-          python3 "$tmp_dir/site/scripts/inject_site_asset_loader.py" --site-root "$tmp_dir/site"
-          python3 "$tmp_dir/site/scripts/inject_site_runtime_config.py" --site-root "$tmp_dir/site"
-          python3 "$tmp_dir/site/scripts/inject_site_page_runtime.py" --site-root "$tmp_dir/site"
-          python3 "$tmp_dir/site/scripts/inject_site_privacy_analytics.py" --site-root "$tmp_dir/site"
-          python3 "$tmp_dir/site/scripts/inject_google_tag_manager.py" --site-root "$tmp_dir/site"
+          python3 "$tmp_dir/site/scripts/materialize_site.py" --site-root "$tmp_dir/site" --profile github-pages
           grep -q '/module_loader.js?v=20260902-2' "$tmp_dir/site/login.html"
           grep -q '/site_asset_loader.js?v=20260902-1' "$tmp_dir/site/index.html"
           grep -q '/site_runtime_config.js?v=20260903-1' "$tmp_dir/site/index.html"
           grep -q '/site_page_runtime.js?v=20260903-1' "$tmp_dir/site/index.html"
           grep -q '/site_privacy_analytics.js?v=20260902-1' "$tmp_dir/site/index.html"
           grep -q 'GTM-K2NWR2NK' "$tmp_dir/site/index.html"
+          test -f "$tmp_dir/site/mensalidades/index.html"
 
       - name: Validate publish output
         run: |
