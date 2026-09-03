@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from production_html_transform import apply_html_transform
+
 BENEFITS_SECTION_PATTERN = re.compile(
     r'<section\s+class="section"\s+aria-labelledby="benefits-title">'
 )
@@ -11,6 +13,8 @@ BENEFITS_HEADING_PATTERN = re.compile(
     r'\s*<h2\s+id="benefits-title">Inglês online com professor, prática e acompanhamento\.</h2>\s*'
 )
 BENEFITS_SECTION_REPLACEMENT = '<section class="section" aria-label="Como funcionam as aulas">'
+HOMEPAGE_PATH = Path("index.html")
+HOMEPAGE_MISSING_MESSAGE = "Static build missing _site/index.html"
 
 
 def transform_homepage_html(html: str) -> str:
@@ -19,9 +23,9 @@ def transform_homepage_html(html: str) -> str:
 
 
 def update_homepage(publish: Path) -> None:
-    index = publish / "index.html"
-    if not index.is_file():
-        raise SystemExit("Static build missing _site/index.html")
-
-    html = index.read_text(encoding="utf-8")
-    index.write_text(transform_homepage_html(html), encoding="utf-8")
+    apply_html_transform(
+        publish,
+        HOMEPAGE_PATH,
+        transform_homepage_html,
+        missing_message=HOMEPAGE_MISSING_MESSAGE,
+    )
