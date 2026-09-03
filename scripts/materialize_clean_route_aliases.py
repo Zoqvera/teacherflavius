@@ -4,28 +4,9 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 from pathlib import Path
 
-
-@dataclass(frozen=True)
-class CleanRouteAlias:
-    source: str
-    target: str
-    canonical_path: str
-    stylesheet: str | None = None
-    script: str | None = None
-
-
-ALIASES = (
-    CleanRouteAlias(
-        source="mensalidades.html",
-        target="mensalidades/index.html",
-        canonical_path="/mensalidades/",
-        stylesheet="/mensalidades/mensalidades_visual.css?v=20260901-1",
-        script="/mensalidades/mensalidades_visual.js?v=20260901-1",
-    ),
-)
+from clean_route_alias_catalog import ALIASES, CleanRouteAlias
 
 
 def ensure_after(text: str, marker: str, addition: str) -> str:
