@@ -54,7 +54,7 @@ COURSE_AUTHORITY_BLOCK = '''      <div id="academicAuthorityProof" class="shell 
             <p><a class="authority-proof-link" href="https://revista.ibict.br/ciinf/article/view/5542" target="_blank" rel="noopener noreferrer">Ver publicação no IBICT</a></p>
           </article>
         </div>
-        <p class="authority-book">Flávio também é coautor do livro <strong>Tradução e interpretação automáticas: origens</strong>, publicado pela Editora CRV em 2020. <a href="https://doi.org/10.24824/978854443937.1" target="_blank" rel="noopener noreferrer">Consultar DOI do livro</a>.</p>
+        <p class="authority-book">Flávio também é coautor do livro <strong>Tradução e interpretação automáticas: origens</strong>, publicado pela Editora CRV em 2020. <a href="https://loja.editoracrv.com.br/produtos/traducao-e-interpretacao-automaticas-origens/?srsltid=AfmBOoo_shGtXTWv5ZvmBk4-_vXBpPXyMGESp6VFMOdRFHMaJ4vTrbQY" target="_blank" rel="noopener noreferrer">Conheça o livro aqui</a>.</p>
       </div>
 '''
 
