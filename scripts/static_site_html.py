@@ -9,6 +9,7 @@ from html_script_dependency import (
     ensure_dependency_before_target,
     validate_dependency_order,
 )
+from static_html_baseline import inject_site_baseline
 from static_site_dependencies import (
     ANALYTICS_DEPENDENCIES,
     AUTH_DEPENDENCIES,
@@ -16,10 +17,6 @@ from static_site_dependencies import (
     PORTAL_HELPER_DEPENDENCIES,
 )
 
-RESPONSIVE_COMPAT_HREF = "/responsive_compat.css?v=20260820-1"
-RESPONSIVE_COMPAT_LINK = f'  <link rel="stylesheet" href="{RESPONSIVE_COMPAT_HREF}">'
-ERROR_MONITOR_SRC = "/error_monitor.js?v=20260820-1"
-VIEWPORT_META = '  <meta name="viewport" content="width=device-width, initial-scale=1.0">'
 STANDARD_WHATSAPP_URL = "https://wa.me/5534998349756?text=Ol%C3%A1%2C%20Teacher%21%20Vim%20pelo%20site%20e%20gostaria%20de%20conversar%20sobre%20as%20aulas%20de%20ingl%C3%AAs."
 WA_ME_RE = re.compile(
     r'https://wa\.me/5534998349756(?:\?[^"\']*)?',
@@ -46,31 +43,6 @@ def inject_dependencies(
         if injected:
             injections += 1
     return html, injections
-
-
-def inject_site_baseline(html: str, relative: Path) -> tuple[str, bool]:
-    closing_head = html.lower().find("</head>")
-    if closing_head < 0:
-        return html, False
-
-    additions: list[str] = []
-    lower_html = html.lower()
-    if 'name="viewport"' not in lower_html and "name='viewport'" not in lower_html:
-        additions.append(VIEWPORT_META)
-    if "/responsive_compat.css" not in lower_html:
-        additions.append(RESPONSIVE_COMPAT_LINK)
-    if "/error_monitor.js" not in lower_html:
-        status_attribute = ' data-page-status="404"' if relative.as_posix() == "404.html" else ""
-        additions.append(f'  <script defer src="{ERROR_MONITOR_SRC}"{status_attribute}></script>')
-
-    if not additions:
-        return html, False
-
-    prefix = html[:closing_head]
-    suffix = html[closing_head:]
-    separator = "" if prefix.endswith("\n") else "\n"
-    injected = "\n".join(additions)
-    return f"{prefix}{separator}{injected}\n{suffix}", True
 
 
 def transform_html(html: str, relative: Path) -> tuple[str, int, bool]:
