@@ -1,87 +1,12 @@
 (function () {
   "use strict";
 
-  const GOOGLE_MEASUREMENT_ID = "G-11V3W5B6TG";
-  const PUBLIC_SCRIPTS_IDLE_TIMEOUT_MS = 1200;
   const SITE_ASSET_LOADER_SRC = "/site_asset_loader.js?v=20260902-1";
-  const SCRIPT_ASSETS = Object.freeze({
-    whatsappLeadForm: Object.freeze({
-      id: "teacher-flavius-whatsapp-lead-form",
-      src: "/whatsapp_lead_form.js?v=20260902-direct-2"
-    }),
-    siteWhatsapp: Object.freeze({
-      id: "teacher-flavius-site-whatsapp",
-      src: "/site_whatsapp.js?v=20260902-1"
-    }),
-    accessibility: Object.freeze({
-      id: "teacher-flavius-accessibility",
-      src: "/accessibility.js?v=20260820-1"
-    }),
-    cro: Object.freeze({
-      id: "teacher-flavius-cro",
-      src: "/cro.js?v=20260820-1"
-    }),
-    analytics: Object.freeze({
-      id: "teacher-flavius-analytics",
-      src: "/analytics.js?v=20260820-1"
-    }),
-    analyticsAttribution: Object.freeze({
-      id: "teacher-flavius-analytics-attribution",
-      src: "/analytics_attribution.js?v=20260902-leadfix-1"
-    }),
-    privacyConsent: Object.freeze({
-      id: "teacher-flavius-privacy-consent",
-      src: "/privacy_consent.js?v=20260820-2"
-    }),
-    sitePrivacyAnalytics: Object.freeze({
-      id: "teacher-flavius-site-privacy-analytics",
-      src: "/site_privacy_analytics.js?v=20260902-1"
-    }),
-    mobileTopNavigation: Object.freeze({
-      id: "teacher-flavius-mobile-top-navigation",
-      src: "/mobile_top_navigation.js?v=20260820-desktop-menu-1"
-    }),
-    footerCore: Object.freeze({
-      id: "teacher-flavius-site-footer-core",
-      src: "/site_footer_core.js?v=20260820-privacy-1"
-    }),
-    cleanUrls: Object.freeze({
-      id: "teacher-flavius-clean-urls",
-      src: "/clean_urls.js?v=20260819-1"
-    }),
-    googleOnlyAccess: Object.freeze({
-      id: "teacher-flavius-google-only-access",
-      src: "/google_only_access.js?v=20260819-1"
-    }),
-    studentBirthdays: Object.freeze({
-      id: "teacher-flavius-student-birthdays",
-      src: "/student_birthdays.js?v=20260819-1"
-    }),
-    sitePageContext: Object.freeze({
-      id: "teacher-flavius-site-page-context",
-      src: "/site_page_context.js?v=20260902-1"
-    }),
-    siteBranding: Object.freeze({
-      id: "teacher-flavius-site-branding",
-      src: "/site_branding.js?v=20260902-1"
-    }),
-    siteEnrollmentGuard: Object.freeze({
-      id: "teacher-flavius-site-enrollment-guard",
-      src: "/site_enrollment_guard.js?v=20260902-1"
-    })
+  const SITE_RUNTIME_CONFIG_ASSET = Object.freeze({
+    id: "teacher-flavius-site-runtime-config",
+    src: "/site_runtime_config.js?v=20260902-1"
   });
-  const PRIVACY_ANALYTICS_ASSETS = Object.freeze({
-    privacyConsent: SCRIPT_ASSETS.privacyConsent,
-    analyticsAttribution: SCRIPT_ASSETS.analyticsAttribution,
-    analytics: SCRIPT_ASSETS.analytics,
-    cro: SCRIPT_ASSETS.cro
-  });
-  const STYLESHEET_ASSETS = Object.freeze({
-    accessibility: Object.freeze({
-      id: "teacher-flavius-accessibility-styles",
-      href: "/accessibility.css?v=20260820-1"
-    })
-  });
+  let runtimeConfig = null;
 
   function loadScriptAsset(asset, callback) {
     window.SiteAssetLoader.loadScriptAsset(asset, callback);
@@ -91,16 +16,20 @@
     window.SiteAssetLoader.loadStylesheetAsset(asset);
   }
 
+  function scriptAssets() {
+    return runtimeConfig.scriptAssets;
+  }
+
   function loadWhatsappLeadForm() {
-    loadScriptAsset(SCRIPT_ASSETS.whatsappLeadForm);
+    loadScriptAsset(scriptAssets().whatsappLeadForm);
   }
 
   function configurePrivacyAnalytics() {
     if (!window.SitePrivacyAnalytics) return;
     window.SitePrivacyAnalytics.initialize({
-      measurementId: GOOGLE_MEASUREMENT_ID,
+      measurementId: runtimeConfig.googleMeasurementId,
       loadScriptAsset: loadScriptAsset,
-      assets: PRIVACY_ANALYTICS_ASSETS
+      assets: runtimeConfig.privacyAnalyticsAssets
     });
   }
 
@@ -109,12 +38,12 @@
       configurePrivacyAnalytics();
       return;
     }
-    loadScriptAsset(SCRIPT_ASSETS.sitePrivacyAnalytics, configurePrivacyAnalytics);
+    loadScriptAsset(scriptAssets().sitePrivacyAnalytics, configurePrivacyAnalytics);
   }
 
   function initializeWhatsappUi() {
     const watchDynamicLinks = !window.SitePageContext.isPublicMarketingPage();
-    loadScriptAsset(SCRIPT_ASSETS.siteWhatsapp, function () {
+    loadScriptAsset(scriptAssets().siteWhatsapp, function () {
       if (!window.SiteWhatsapp) return;
       window.SiteWhatsapp.initialize({ watchDynamicLinks: watchDynamicLinks });
     });
@@ -136,16 +65,16 @@
   }
 
   function loadAccessibility() {
-    loadStylesheetAsset(STYLESHEET_ASSETS.accessibility);
-    loadScriptAsset(SCRIPT_ASSETS.accessibility);
+    loadStylesheetAsset(runtimeConfig.stylesheetAssets.accessibility);
+    loadScriptAsset(scriptAssets().accessibility);
   }
 
   function loadMobileTopNavigation() {
-    loadScriptAsset(SCRIPT_ASSETS.mobileTopNavigation);
+    loadScriptAsset(scriptAssets().mobileTopNavigation);
   }
 
   function loadFooterCore() {
-    loadScriptAsset(SCRIPT_ASSETS.footerCore, function () {
+    loadScriptAsset(scriptAssets().footerCore, function () {
       refreshEnrollmentLinks();
       refreshWhatsappLinks();
     });
@@ -157,16 +86,16 @@
       return;
     }
     if (window.SitePageContext.isGeoContentPage()) {
-      loadScriptAsset(SCRIPT_ASSETS.cleanUrls);
+      loadScriptAsset(scriptAssets().cleanUrls);
       return;
     }
-    loadScriptAsset(SCRIPT_ASSETS.cleanUrls, loadFooterCore);
+    loadScriptAsset(scriptAssets().cleanUrls, loadFooterCore);
   }
 
   function loadPortalScripts() {
-    loadScriptAsset(SCRIPT_ASSETS.cleanUrls, function () {
-      loadScriptAsset(SCRIPT_ASSETS.googleOnlyAccess, function () {
-        loadScriptAsset(SCRIPT_ASSETS.studentBirthdays, loadFooterCore);
+    loadScriptAsset(scriptAssets().cleanUrls, function () {
+      loadScriptAsset(scriptAssets().googleOnlyAccess, function () {
+        loadScriptAsset(scriptAssets().studentBirthdays, loadFooterCore);
       });
     });
   }
@@ -181,7 +110,9 @@
 
   function schedulePublicScripts() {
     if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(loadPublicPageScripts, { timeout: PUBLIC_SCRIPTS_IDLE_TIMEOUT_MS });
+      window.requestIdleCallback(loadPublicPageScripts, {
+        timeout: runtimeConfig.publicScriptsIdleTimeoutMs
+      });
       return;
     }
     window.setTimeout(loadPublicPageScripts, 0);
@@ -201,34 +132,43 @@
   }
 
   function loadSiteFoundations() {
-    loadScriptAsset(SCRIPT_ASSETS.sitePageContext, function () {
+    loadScriptAsset(scriptAssets().sitePageContext, function () {
       if (!window.SitePageContext) return;
-      loadScriptAsset(SCRIPT_ASSETS.siteBranding, function () {
+      loadScriptAsset(scriptAssets().siteBranding, function () {
         if (!window.SiteBranding) return;
-        loadScriptAsset(SCRIPT_ASSETS.siteEnrollmentGuard, initializePageRuntime);
+        loadScriptAsset(scriptAssets().siteEnrollmentGuard, initializePageRuntime);
       });
     });
   }
 
   function initializeFooterRuntime() {
-    if (!window.SiteAssetLoader) return;
+    if (!window.SiteAssetLoader || !window.SiteRuntimeConfig) return;
+    runtimeConfig = window.SiteRuntimeConfig;
 
-    // Keep the compatibility bootstrap available for browsers that cached older pages.
+    // Keep compatibility bootstraps available for browsers that cached older pages.
     loadWhatsappLeadForm();
     initializePrivacyAnalytics();
     loadSiteFoundations();
   }
 
+  function initializeRuntimeConfig() {
+    if (window.SiteRuntimeConfig) {
+      initializeFooterRuntime();
+      return;
+    }
+    loadScriptAsset(SITE_RUNTIME_CONFIG_ASSET, initializeFooterRuntime);
+  }
+
   function bootstrapAssetLoader() {
     if (window.SiteAssetLoader) {
-      initializeFooterRuntime();
+      initializeRuntimeConfig();
       return;
     }
 
     const script = document.createElement("script");
     script.src = SITE_ASSET_LOADER_SRC;
     script.async = false;
-    script.addEventListener("load", initializeFooterRuntime, { once: true });
+    script.addEventListener("load", initializeRuntimeConfig, { once: true });
     script.addEventListener("error", function () {
       console.warn("Não foi possível carregar a infraestrutura de assets do site.");
     }, { once: true });
