@@ -3,12 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from static_dependency_runtime import (
-    inject_dependencies,
-    inject_dependency_groups,
-    validate_html_dependencies,
-    validate_publish_dependencies,
-)
+from static_dependency_runtime import inject_dependency_groups
 from static_html_baseline import inject_site_baseline
 from static_site_dependencies import (
     ANALYTICS_DEPENDENCIES,
