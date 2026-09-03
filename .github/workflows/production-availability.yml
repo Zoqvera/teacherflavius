@@ -7,6 +7,7 @@ on:
       - "health.json"
       - "netlify.toml"
       - "netlify/**"
+      - "recursos/como-escolher-curso-de-ingles-online/index.html"
       - "scripts/build_static_site.py"
       - "scripts/check_health_endpoint.py"
       - "scripts/postprocess_production.py"
@@ -17,6 +18,7 @@ on:
       - "health.json"
       - "netlify.toml"
       - "netlify/**"
+      - "recursos/como-escolher-curso-de-ingles-online/index.html"
       - "scripts/build_static_site.py"
       - "scripts/check_health_endpoint.py"
       - "scripts/postprocess_production.py"
@@ -80,6 +82,37 @@ jobs:
             https://teacherflavius.com/health.json \
             --attempts 18 \
             --delay 5
+
+      - name: Check published resource freshness
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://teacherflavius.com/recursos/como-escolher-curso-de-ingles-online/"
+          expected='Como escolher um curso de inglês pela internet?'
+
+          for attempt in $(seq 1 18); do
+            curl --fail --silent --show-error --connect-timeout 10 --max-time 20 \
+              -D /tmp/resource-headers.txt \
+              -o /tmp/resource.html \
+              "${url}?deploy=${GITHUB_SHA}&attempt=${attempt}" || true
+
+            if grep -Fq "$expected" /tmp/resource.html; then
+              echo "Published resource is current on attempt ${attempt}."
+              grep -Eai '^(age|cache-control|cf-cache-status|etag|last-modified|server|cf-ray):' \
+                /tmp/resource-headers.txt || true
+              exit 0
+            fi
+
+            echo "Published resource is still stale on attempt ${attempt}."
+            grep -Eo '<h1>[^<]*</h1>' /tmp/resource.html | head -1 || true
+            grep -Eai '^(age|cache-control|cf-cache-status|etag|last-modified|server|cf-ray):' \
+              /tmp/resource-headers.txt || true
+            sleep 5
+          done
+
+          echo "Published resource did not expose the expected content."
+          exit 1
 
       - name: Check production security headers
         if: github.event_name != 'pull_request'
