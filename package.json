@@ -27,7 +27,8 @@
     "test:static-whatsapp-links": "python3 -m unittest discover -s tests -p 'test_static_whatsapp_links.py'",
     "test:production-homepage": "python3 -m unittest discover -s tests -p 'test_production_homepage.py'",
     "test:production-course-authority": "python3 -m unittest discover -s tests -p 'test_production_course_authority.py'",
-    "quality": "npm run check:js && npm run lint && npm run test:module-loader && npm run test:payment-notice-presenter && npm run test:site-footer-renderer && npm run test:site-whatsapp && npm run test:site-page-context && npm run test:site-enrollment-guard && npm run test:site-privacy-analytics && npm run test:site-asset-loader && npm run test:site-runtime-config && npm run test:site-page-runtime && npm run test:html-script-dependency && npm run test:materialize-site && npm run test:static-site-html && npm run test:static-site-validation && npm run test:static-site-files && npm run test:static-site-routes && npm run test:production-postprocess && npm run test:static-build-pipeline && npm run test:static-site-dependencies && npm run test:static-html-baseline && npm run test:static-whatsapp-links && npm run test:production-homepage && npm run test:production-course-authority"
+    "test:python": "python3 -m unittest discover -s tests -p 'test_*.py'",
+    "quality": "npm run check:js && npm run lint && npm run test:module-loader && npm run test:payment-notice-presenter && npm run test:site-footer-renderer && npm run test:site-whatsapp && npm run test:site-page-context && npm run test:site-enrollment-guard && npm run test:site-privacy-analytics && npm run test:site-asset-loader && npm run test:site-runtime-config && npm run test:site-page-runtime && npm run test:python"
   },
   "devDependencies": {
     "eslint": "9.34.0"
