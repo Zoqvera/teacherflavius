@@ -23,7 +23,7 @@ const EXPECTED_SCRIPT_ASSETS = {
   analyticsAttribution: ["teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260902-leadfix-1"],
   privacyConsent: ["teacher-flavius-privacy-consent", "/privacy_consent.js?v=20260820-2"],
   sitePrivacyAnalytics: ["teacher-flavius-site-privacy-analytics", "/site_privacy_analytics.js?v=20260902-1"],
-  sitePageRuntime: ["teacher-flavius-site-page-runtime", "/site_page_runtime.js?v=20260903-1"],
+  sitePageRuntime: ["teacher-flavius-site-page-runtime", "/site_page_runtime.js?v=20260904-whatsapp-tracking-1"],
   mobileTopNavigation: ["teacher-flavius-mobile-top-navigation", "/mobile_top_navigation.js?v=20260820-desktop-menu-1"],
   footerCore: ["teacher-flavius-site-footer-core", "/site_footer_core.js?v=20260820-privacy-1"],
   cleanUrls: ["teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1"],
@@ -32,7 +32,8 @@ const EXPECTED_SCRIPT_ASSETS = {
   sitePageContext: ["teacher-flavius-site-page-context", "/site_page_context.js?v=20260902-1"],
   siteBranding: ["teacher-flavius-site-branding", "/site_branding.js?v=20260902-1"],
   siteEnrollmentGuard: ["teacher-flavius-site-enrollment-guard", "/site_enrollment_guard.js?v=20260902-1"],
-  marketingTrackingControl: ["teacher-flavius-marketing-tracking-control", "/marketing_tracking_control.js?v=20260904-1"]
+  marketingTrackingControl: ["teacher-flavius-marketing-tracking-control", "/marketing_tracking_control.js?v=20260904-1"],
+  marketingWhatsappTracker: ["teacher-flavius-marketing-whatsapp-tracker", "/marketing_whatsapp_tracker.js?v=20260904-1"]
 };
 
 test("preserves measurement id and public script timeout", function () {
