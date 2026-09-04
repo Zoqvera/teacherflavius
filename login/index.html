@@ -40,12 +40,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           '</style>',
           '</style>\n  <link rel="stylesheet" href="/login/login_visual.css?v=20260901-1">'
         );
-        html = html.replace('<body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-', '<body class="login-page">');
+        html = html.replace(/<body(?:\s[^>]*)?>/i, '<body class="login-page">');
 
         document.open();
         document.write(html);
