@@ -134,10 +134,11 @@
   }
 
   function redirectToLogin() {
-    let nextPath = window.location.pathname;
+    const requestedPath = window.location.pathname + window.location.search;
+    let nextPath = requestedPath;
 
     if (window.Auth && typeof window.Auth.normalizeNextPath === "function") {
-      nextPath = window.Auth.normalizeNextPath(window.location.pathname, window.location.pathname);
+      nextPath = window.Auth.normalizeNextPath(requestedPath, requestedPath);
     }
 
     window.location.href = LOGIN_PATH + "?next=" + encodeURIComponent(nextPath);
