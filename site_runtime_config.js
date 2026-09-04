@@ -73,6 +73,10 @@
     siteEnrollmentGuard: freezeAsset({
       id: "teacher-flavius-site-enrollment-guard",
       src: "/site_enrollment_guard.js?v=20260902-1"
+    }),
+    marketingTrackingControl: freezeAsset({
+      id: "teacher-flavius-marketing-tracking-control",
+      src: "/marketing_tracking_control.js?v=20260904-1"
     })
   });
 
