@@ -65,3 +65,5 @@ jobs:
           git add index.html curso-de-ingles-online sobre recursos quero-conhecer quero_conhecer landing-page 2>/dev/null || true
           git commit -m 'chore: refresh public marketing runtime assets'
           git push
+
+# Temporary workflow; remove after the one-time refresh completes.
