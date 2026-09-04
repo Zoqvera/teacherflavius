@@ -21,8 +21,12 @@ LEGACY_COMPATIBILITY_FILES = {
 # New public pages must be directory indexes. 404.html is a GitHub Pages special file.
 ALLOWED_NEW_HTML_BASENAMES = {"index.html", "404.html"}
 
-TEACHERFLAVIUS_HTML_URL_RE = re.compile(
-    r"(?:https?://(?:www\.)?teacherflavius\.com)?/[^\s\"'<>]*\.html(?:[?#][^\s\"'<>]*)?",
+ABSOLUTE_TEACHERFLAVIUS_HTML_URL_RE = re.compile(
+    r"https?://(?:www\.)?teacherflavius\.com/[^\s\"'<>]*\.html(?:[?#][^\s\"'<>]*)?",
+    re.IGNORECASE,
+)
+RELATIVE_HTML_URL_RE = re.compile(
+    r"(?<![A-Za-z0-9.])(?:/|\./|\.\./)[^\s\"'<>]*\.html(?:[?#][^\s\"'<>]*)?",
     re.IGNORECASE,
 )
 ATTRIBUTE_RE = re.compile(
@@ -88,7 +92,9 @@ def added_lines(base: str, head: str) -> list[tuple[str, str]]:
 
 
 def is_internal_html_reference(text: str) -> bool:
-    if TEACHERFLAVIUS_HTML_URL_RE.search(text):
+    if ABSOLUTE_TEACHERFLAVIUS_HTML_URL_RE.search(text):
+        return True
+    if RELATIVE_HTML_URL_RE.search(text):
         return True
 
     for match in ATTRIBUTE_RE.finditer(text):
