@@ -4,7 +4,7 @@
   const SITE_ASSET_LOADER_SRC = "/site_asset_loader.js?v=20260902-1";
   const SITE_RUNTIME_CONFIG_ASSET = Object.freeze({
     id: "teacher-flavius-site-runtime-config",
-    src: "/site_runtime_config.js?v=20260904-1"
+    src: "/site_runtime_config.js?v=20260904-2"
   });
   const MARKETING_TRACKING_CONTROL_ASSET = Object.freeze({
     id: "teacher-flavius-marketing-tracking-control",
