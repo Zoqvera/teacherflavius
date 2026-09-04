@@ -41,6 +41,10 @@
       deps.loadScriptAsset(scriptAssets.mobileTopNavigation);
     }
 
+    function loadOperationalMarketingTracking() {
+      deps.loadScriptAsset(scriptAssets.marketingWhatsappTracker);
+    }
+
     function initializeEnrollmentGuard() {
       const enrollmentGuard = windowRef.SiteEnrollmentGuard;
       if (!enrollmentGuard) return;
@@ -117,8 +121,12 @@
         initializeUi();
       }
 
-      if (pageContext().isPublicMarketingPage()) schedulePublicScripts();
-      else loadPortalScripts();
+      if (pageContext().isPublicMarketingPage()) {
+        loadOperationalMarketingTracking();
+        schedulePublicScripts();
+      } else {
+        loadPortalScripts();
+      }
     }
 
     function loadSiteFoundations() {
