@@ -26,7 +26,7 @@ ABSOLUTE_TEACHERFLAVIUS_HTML_URL_RE = re.compile(
     re.IGNORECASE,
 )
 RELATIVE_HTML_URL_RE = re.compile(
-    r"(?<![A-Za-z0-9.])(?:/|\./|\.\./)[^\s\"'<>]*\.html(?:[?#][^\s\"'<>]*)?",
+    r"(?:^|[\s\"'(=])(?:(?:/(?!/))|\./|\.\./)[^\s\"'<>)]*\.html(?:[?#][^\s\"'<>)]*)?",
     re.IGNORECASE,
 )
 ATTRIBUTE_RE = re.compile(
@@ -101,15 +101,19 @@ def is_internal_html_reference(text: str) -> bool:
         value = match.group(1).strip()
         if ".html" not in value.lower():
             continue
+
         lowered = value.lower()
         if lowered.startswith(("https://teacherflavius.com/", "http://teacherflavius.com/")):
             return True
         if lowered.startswith(("https://www.teacherflavius.com/", "http://www.teacherflavius.com/")):
             return True
+        if value.startswith("//"):
+            return lowered.startswith(("//teacherflavius.com/", "//www.teacherflavius.com/"))
         if value.startswith(("/", "./", "../")):
             return True
-        if not SCHEME_RE.match(value):
-            return True
+        if SCHEME_RE.match(value):
+            continue
+        return True
 
     return False
 
