@@ -4,7 +4,11 @@
   const SITE_ASSET_LOADER_SRC = "/site_asset_loader.js?v=20260902-1";
   const SITE_RUNTIME_CONFIG_ASSET = Object.freeze({
     id: "teacher-flavius-site-runtime-config",
-    src: "/site_runtime_config.js?v=20260903-1"
+    src: "/site_runtime_config.js?v=20260904-1"
+  });
+  const MARKETING_TRACKING_CONTROL_ASSET = Object.freeze({
+    id: "teacher-flavius-marketing-tracking-control",
+    src: "/marketing_tracking_control.js?v=20260904-1"
   });
   let runtimeConfig = null;
 
@@ -22,6 +26,15 @@
 
   function loadWhatsappLeadForm() {
     loadScriptAsset(scriptAssets().whatsappLeadForm);
+  }
+
+  function isMarketingAcquisitionPage() {
+    return (window.location.pathname || "").toLowerCase().indexOf("/marketing_acquisition") === 0;
+  }
+
+  function loadMarketingTrackingControl() {
+    if (!isMarketingAcquisitionPage()) return;
+    loadScriptAsset(scriptAssets().marketingTrackingControl || MARKETING_TRACKING_CONTROL_ASSET);
   }
 
   function configurePrivacyAnalytics() {
@@ -65,6 +78,7 @@
 
     // Keep compatibility bootstraps available for browsers that cached older pages.
     loadWhatsappLeadForm();
+    loadMarketingTrackingControl();
     initializePrivacyAnalytics();
     initializePageRuntime();
   }
