@@ -62,7 +62,7 @@ jobs:
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html curso-de-ingles-online sobre recursos quero-conhecer quero_conhecer landing-page 2>/dev/null || true
+          git add -A
           git commit -m 'chore: refresh public marketing runtime assets'
           git push
 
