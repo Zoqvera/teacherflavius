@@ -1,6 +1,9 @@
 (function () {
   "use strict";
 
+  if (window.__tfMarketingTrackingControlLoaded) return;
+  window.__tfMarketingTrackingControlLoaded = true;
+
   var VISITOR_KEY = "tf_marketing_visitor_v1";
   var TRACKING_EXCLUDED_KEY = "tf_marketing_tracking_excluded_v1";
   var AUTH_WAIT_ATTEMPTS = 30;
