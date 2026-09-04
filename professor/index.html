@@ -27,7 +27,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <title>Área do Professor - Teacher Flávio</title>
   <link rel="canonical" href="/professor/">
   <script>
-    (function () {
+    (async function () {
       "use strict";
 
       const EDITOR_QUERY_KEY = "editar";
@@ -65,16 +65,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         });
       }
 
-      async function loadProfessorHome() {
-        const response = await fetch("/professor.html", { cache: "no-store" });
-        if (!response.ok) throw new Error("Não foi possível carregar a Área do Professor.");
-
-        const html = await response.text();
-        document.open();
-        document.write(html.replace("<head>", "<head>\n  <base href=\"/\">"));
-        document.close();
-      }
-
       async function initializeTemporaryEditor() {
         const loading = document.getElementById("professorLoading");
         const editor = document.getElementById("temporaryEditor");
@@ -106,12 +96,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         window.addEventListener("DOMContentLoaded", function () {
           initializeTemporaryEditor().catch(showEditorFailure);
         }, { once: true });
-      } else {
-        loadProfessorHome().catch(function (error) {
-          console.error("Falha ao carregar a Área do Professor.", error);
-        });
+        return;
       }
-    })();
+
+      const response = await fetch('/professor.html', { cache: 'no-store' });
+      const html = await response.text();
+      document.open();
+      document.write(html.replace('<head>', '<head>\n  <base href="/">'));
+      document.close();
+    })().catch(function (error) {
+      console.error("Falha ao inicializar a Área do Professor.", error);
+    });
   </script>
 </head>
 <body>
