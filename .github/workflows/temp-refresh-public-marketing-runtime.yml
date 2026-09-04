@@ -1,0 +1,67 @@
+name: Temporary refresh public marketing runtime
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-refresh-public-marketing-runtime.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Refresh public marketing runtime versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          candidates = [Path('index.html')]
+          for root in ('curso-de-ingles-online', 'sobre', 'recursos', 'quero-conhecer', 'quero_conhecer', 'landing-page'):
+              path = Path(root)
+              if path.exists():
+                  candidates.extend(path.rglob('*.html'))
+
+          replacements = {
+              '/site_runtime_config.js?v=20260903-1': '/site_runtime_config.js?v=20260904-whatsapp-tracking-1',
+              '/site_runtime_config.js?v=20260904-1': '/site_runtime_config.js?v=20260904-whatsapp-tracking-1',
+              '/site_page_runtime.js?v=20260903-1': '/site_page_runtime.js?v=20260904-whatsapp-tracking-1',
+              '/site_footer.js?v=20260902-leadfix-1': '/site_footer.js?v=20260904-whatsapp-tracking-1',
+              '/site_footer.js?v=20260820-desktop-menu-1': '/site_footer.js?v=20260904-whatsapp-tracking-1',
+          }
+
+          changed = []
+          for file in dict.fromkeys(candidates):
+              if not file.is_file():
+                  continue
+              text = file.read_text(encoding='utf-8')
+              updated = text
+              for old, new in replacements.items():
+                  updated = updated.replace(old, new)
+              if updated != text:
+                  file.write_text(updated, encoding='utf-8')
+                  changed.append(str(file))
+
+          print(f'Refreshed {len(changed)} public marketing HTML files')
+          for file in changed:
+              print(file)
+          PY
+      - name: Commit refreshed assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'No runtime references needed refresh.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html curso-de-ingles-online sobre recursos quero-conhecer quero_conhecer landing-page 2>/dev/null || true
+          git commit -m 'chore: refresh public marketing runtime assets'
+          git push
