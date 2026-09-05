@@ -28,85 +28,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="canonical" href="/professor/">
   <script>
     (async function () {
-      "use strict";
-
-      const EDITOR_QUERY_KEY = "editar";
-      const EDITOR_QUERY_VALUE = "turma-pequena";
-      const EDITOR_STYLESHEET = "/editar-como-funciona-aula-de-ingles-online-em-turma-pequena.css?v=20260904-2";
-      const EDITOR_SCRIPT = "/editar-como-funciona-aula-de-ingles-online-em-turma-pequena.js?v=20260904-2";
-
-      function editorWasRequested() {
-        return new URLSearchParams(window.location.search).get(EDITOR_QUERY_KEY) === EDITOR_QUERY_VALUE;
-      }
-
-      function appendStylesheet(href) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = href;
-        document.head.appendChild(link);
-      }
-
-      function appendNoIndexDirective() {
-        const meta = document.createElement("meta");
-        meta.name = "robots";
-        meta.content = "noindex, nofollow";
-        document.head.appendChild(meta);
-      }
-
-      function loadScript(src) {
-        return new Promise(function (resolve, reject) {
-          const script = document.createElement("script");
-          script.src = src;
-          script.onload = resolve;
-          script.onerror = function () {
-            reject(new Error("Falha ao carregar recurso do editor: " + src));
-          };
-          document.body.appendChild(script);
-        });
-      }
-
-      async function initializeTemporaryEditor() {
-        const loading = document.getElementById("professorLoading");
-        const editor = document.getElementById("temporaryEditor");
-
-        if (!editor) throw new Error("Estrutura do editor temporário não encontrada.");
-
-        document.title = "Editor temporário | Aula online em turma pequena";
-        document.body.className = "auth-checking";
-        if (loading) loading.hidden = true;
-        editor.hidden = false;
-
-        await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3");
-        await loadScript("/supabase_config.js?v=20260715-1");
-        await loadScript("/module_loader.js?v=20260902-2");
-        await loadScript("/auth.js?v=20260730-1");
-        await loadScript(EDITOR_SCRIPT);
-      }
-
-      function showEditorFailure(error) {
-        console.error("Falha ao abrir o editor temporário.", error);
-        const status = document.getElementById("editorStatus");
-        if (status) status.textContent = "Não foi possível carregar o editor. Recarregue a página e tente novamente.";
-        document.body.classList.remove("auth-checking");
-      }
-
-      if (editorWasRequested()) {
-        appendNoIndexDirective();
-        appendStylesheet(EDITOR_STYLESHEET);
-        window.addEventListener("DOMContentLoaded", function () {
-          initializeTemporaryEditor().catch(showEditorFailure);
-        }, { once: true });
-        return;
-      }
-
       const response = await fetch('/professor.html', { cache: 'no-store' });
       const html = await response.text();
       document.open();
       document.write(html.replace('<head>', '<head>\n  <base href="/">'));
       document.close();
-    })().catch(function (error) {
-      console.error("Falha ao inicializar a Área do Professor.", error);
-    });
+    })();
   </script>
 </head>
 <body>
@@ -115,36 +42,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-  <p id="professorLoading">Carregando área do professor...</p>
+  <p>Carregando área do professor...</p>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
 
-  <main id="temporaryEditor" class="editor-shell" hidden>
-    <header class="editor-header">
-      <p class="eyebrow">Teacher Flávio · editor temporário</p>
-      <h1>Como funciona uma aula de inglês online em turma pequena?</h1>
-      <p>Edite somente os textos. Links, estrutura, SEO técnico e scripts da página não serão alterados por este formulário.</p>
-      <div class="editor-actions">
-        <a href="/professor/">Voltar à área do professor</a>
-        <a href="/recursos/como-funciona-aula-de-ingles-online-em-turma-pequena/" target="_blank" rel="noopener">Abrir página pública</a>
-      </div>
-    </header>
-
-    <p id="editorStatus" class="status" role="status" aria-live="polite">Verificando acesso administrativo...</p>
-
-    <form id="contentEditor" class="editor-form" hidden>
-      <div id="editorFields"></div>
-      <section class="submit-panel" aria-labelledby="submitTitle">
-        <h2 id="submitTitle">Publicar a versão editada</h2>
-        <p>Ao enviar, os textos salvos passam a aparecer na página pública. O conteúdo estático atual permanece como fallback de segurança.</p>
-        <button id="saveButton" type="submit">Enviar versão editada e atualizar a página</button>
-        <p id="saveStatus" class="save-status" role="status" aria-live="polite"></p>
-      </section>
-    </form>
-  </main>
-
-  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
-  <script src="/site_asset_loader.js?v=20260902-1"></script>
-  <script src="/site_runtime_config.js?v=20260903-1"></script>
-  <script src="/site_page_runtime.js?v=20260903-1"></script>
-  <script defer src="/site_footer.js?v=20260814-1"></script>
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script src="/site_page_runtime.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260814-1"></script>
 </body>
 </html>
