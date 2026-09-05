@@ -11,6 +11,7 @@ const SCRIPT_NAMES = [
   "accessibility",
   "mobileTopNavigation",
   "siteWhatsapp",
+  "marketingWhatsappTracker",
   "footerCore",
   "cleanUrls",
   "googleOnlyAccess",
@@ -137,6 +138,7 @@ test("loads public home runtime without clean URL script", function () {
     "siteEnrollmentGuard",
     "accessibility",
     "siteWhatsapp",
+    "marketingWhatsappTracker",
     "footerCore"
   ]);
   assert.deepEqual(result.stylesheetCalls, ["accessibilityStyles"]);

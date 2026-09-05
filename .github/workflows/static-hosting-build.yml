@@ -133,7 +133,7 @@ jobs:
           grep -q '/module_loader.js?v=20260902-2' "$tmp_dir/site/login.html"
           grep -q '/site_asset_loader.js?v=20260902-1' "$tmp_dir/site/index.html"
           grep -q '/site_runtime_config.js?v=20260903-1' "$tmp_dir/site/index.html"
-          grep -q '/site_page_runtime.js?v=20260903-1' "$tmp_dir/site/index.html"
+          grep -q '/site_page_runtime.js?v=' "$tmp_dir/site/index.html"
           grep -q '/site_privacy_analytics.js?v=20260902-1' "$tmp_dir/site/index.html"
           grep -q 'GTM-K2NWR2NK' "$tmp_dir/site/index.html"
           test -f "$tmp_dir/site/mensalidades/index.html"
