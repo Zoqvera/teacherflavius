@@ -40,7 +40,7 @@
     }),
     sitePageRuntime: freezeAsset({
       id: "teacher-flavius-site-page-runtime",
-      src: "/site_page_runtime.js?v=20260904-whatsapp-tracking-1"
+      src: "/site_page_runtime.js?v=20260905-online-copy-1"
     }),
     mobileTopNavigation: freezeAsset({
       id: "teacher-flavius-mobile-top-navigation",
