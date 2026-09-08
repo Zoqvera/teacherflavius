@@ -1,0 +1,84 @@
+name: Temporary billing start month UI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-billing-start-month-ui.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Patch billing schedule UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              file_path = Path(path)
+              text = file_path.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:120]}')
+              file_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'mensalidades.html',
+              '<p>Defina o valor mensal e quando a cobrança começa. O vencimento é escolhido pelo aluno.</p>',
+              '<p>Defina apenas o valor mensal. O vencimento e o início da cobrança são definidos automaticamente pelo sistema.</p>'
+          )
+          replace_once(
+              'mensalidades.html',
+              '<label for="billingStartMonth">Início da cobrança</label>\n            <input id="billingStartMonth" class="finance-input" type="month" required>',
+              '<label for="billingStartMonth">Início da cobrança (automático)</label>\n            <input id="billingStartMonth" class="finance-input" type="month" readonly>'
+          )
+          replace_once(
+              'mensalidades.html',
+              '/mensalidades_due_day_readonly.js?v=20260908-1',
+              '/mensalidades_due_day_readonly.js?v=20260908-2'
+          )
+
+          replace_once(
+              'perfil_dos_alunos.html',
+              'O vencimento é escolhido pelo aluno durante a matrícula ou no primeiro acesso. O professor define o valor mensal; o início da cobrança, o status e as observações existentes são preservados.',
+              'O professor define apenas o valor mensal. O vencimento é escolhido pelo aluno e o início da cobrança é calculado automaticamente pelo sistema.'
+          )
+          replace_once(
+              'perfil_dos_alunos.html',
+              '/perfil_dos_alunos_vencimento.js?v=20260908-2',
+              '/perfil_dos_alunos_vencimento.js?v=20260908-3'
+          )
+
+          replace_once(
+              'complete-cadastro.html',
+              '/student_tuition_due_day.js?v=20260908-1',
+              '/student_tuition_due_day.js?v=20260908-2'
+          )
+
+          loader = Path('perfil-dos-alunos/loader.js')
+          loader_text = loader.read_text(encoding='utf-8')
+          if '/perfil_dos_alunos_vencimento.js?v=20260908-2' not in loader_text:
+              raise SystemExit('Expected vencimento asset version not found in perfil-dos-alunos/loader.js')
+          loader.write_text(
+              loader_text.replace(
+                  '/perfil_dos_alunos_vencimento.js?v=20260908-2',
+                  '/perfil_dos_alunos_vencimento.js?v=20260908-3'
+              ),
+              encoding='utf-8'
+          )
+          PY
+      - name: Materialize clean route aliases
+        run: python scripts/materialize_clean_route_aliases.py --site-root .
+      - name: Commit changes
+        run: |
+          git config user.name "Zoqvera Development Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add complete-cadastro.html mensalidades.html mensalidades/index.html perfil_dos_alunos.html perfil-dos-alunos/loader.js perfil-dos-alunos/index.html 2>/dev/null || true
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: make billing start month automatic"
+          git push
