@@ -19,7 +19,6 @@
     "/quarta-feira-18h/": "/quarta-feira-18h.html",
     "/quarta-feira-20h/": "/quarta-feira-20h.html",
     "/quarta-feira-21h/": "/quarta-feira-21h.html",
-    "/quero-conhecer/": "/quero_conhecer.html",
     "/quinta-feira-09h/": "/quinta-feira-09h.html",
     "/quinta-feira-10h/": "/quinta-feira-10h.html",
     "/quinta-feira-12h/": "/quinta-feira-12h.html",
