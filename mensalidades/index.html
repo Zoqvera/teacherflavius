@@ -517,7 +517,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="panel-header">
           <div>
             <h2>Configuração por aluno</h2>
-            <p>Defina o valor mensal e quando a cobrança começa. O vencimento é escolhido pelo aluno.</p>
+            <p>Defina apenas o valor mensal. O vencimento e o início da cobrança são definidos automaticamente pelo sistema.</p>
           </div>
           <span id="configuredStudentsCount" class="configured-count">0 configurados</span>
         </div>
@@ -563,8 +563,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <input id="dueDay" class="finance-input" type="text" readonly placeholder="Aguardando escolha do aluno">
           </div>
           <div class="form-field">
-            <label for="billingStartMonth">Início da cobrança</label>
-            <input id="billingStartMonth" class="finance-input" type="month" required>
+            <label for="billingStartMonth">Início da cobrança (automático)</label>
+            <input id="billingStartMonth" class="finance-input" type="month" readonly>
           </div>
           <div class="form-field">
             <label>Situação da cobrança</label>
@@ -661,7 +661,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 
   <script src="mensalidades.js?v=20260902-exempt-1"></script>
-  <script src="/mensalidades_due_day_readonly.js?v=20260908-1"></script>
+  <script src="/mensalidades_due_day_readonly.js?v=20260908-2"></script>
   <script src="animated_cards.js?v=20260715-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
