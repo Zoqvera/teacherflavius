@@ -116,8 +116,8 @@
     const note = document.createElement("p");
     note.className = "tuition-due-day-note";
     note.textContent = state.selectedDueDay == null
-      ? "Escolha uma das três opções. O valor da mensalidade continuará sendo definido pelo professor."
-      : "Vencimento já registrado: dia " + state.selectedDueDay + ".";
+      ? "Escolha uma das três opções. A cobrança começa no mês da matrícula; se a opção escolhida cair no mês seguinte, a cobrança começa no mês seguinte. O valor é definido pelo professor."
+      : "Vencimento já registrado: dia " + state.selectedDueDay + ". O início da cobrança foi definido automaticamente pelo sistema.";
     section.appendChild(note);
 
     return section;
