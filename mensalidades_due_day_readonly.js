@@ -8,6 +8,10 @@
     return document.getElementById("dueDay");
   }
 
+  function getStartMonthInput() {
+    return document.getElementById("billingStartMonth");
+  }
+
   function getSelectedStudent() {
     try {
       if (typeof selectedStudentId === "undefined" || !selectedStudentId) return null;
@@ -47,15 +51,30 @@
       input.insertAdjacentElement("afterend", note);
     }
     note.textContent = input.value
-      ? "O aluno escolheu o dia " + input.value + ". O professor define apenas o valor e os demais parâmetros da cobrança."
-      : "O aluno ainda não escolheu o vencimento. O valor pode ser configurado agora e o vencimento será aplicado quando ele fizer a escolha.";
+      ? "O aluno escolheu o dia " + input.value + "."
+      : "O aluno ainda não escolheu o vencimento.";
+  }
+
+  function hideSystemStartMonthField() {
+    const input = getStartMonthInput();
+    if (!input) return;
+
+    input.required = false;
+    input.readOnly = true;
+    const field = input.closest(".form-field");
+    if (field) field.hidden = true;
+  }
+
+  function refreshSystemFields() {
+    updateDueDayField();
+    hideSystemStartMonthField();
   }
 
   function installModalObserver() {
     document.addEventListener("click", function (event) {
       const button = event.target.closest && event.target.closest('[data-action="settings"]');
       if (!button) return;
-      window.setTimeout(updateDueDayField, 0);
+      window.setTimeout(refreshSystemFields, 0);
     }, true);
   }
 
@@ -68,25 +87,23 @@
 
     const button = document.getElementById("saveSettingsButton");
     const fee = Number(document.getElementById("monthlyFee").value);
-    const startMonth = document.getElementById("billingStartMonth").value;
 
-    if (!fee || fee <= 0 || !startMonth) {
+    if (!fee || fee <= 0) {
       if (typeof setFormMessage === "function") {
-        setFormMessage("settingsMessage", "Informe um valor e um mês inicial válidos.", "error");
+        setFormMessage("settingsMessage", "Informe um valor mensal válido.", "error");
       }
       return;
     }
 
     if (typeof setButtonBusy === "function") setButtonBusy(button, true, "SALVANDO...");
     if (typeof setFormMessage === "function") {
-      setFormMessage("settingsMessage", "Salvando configuração...", "info");
+      setFormMessage("settingsMessage", "Salvando valor da mensalidade...", "info");
     }
 
     try {
       const response = await Auth.getClient().rpc("save_student_billing_settings", {
         target_student_id: selectedStudentId,
         target_monthly_fee: fee,
-        target_billing_start_month: startMonth + "-01",
         target_active: document.getElementById("billingActive").checked,
         target_notes: document.getElementById("billingNotes").value.trim()
       });
@@ -100,8 +117,8 @@
       if (typeof setPageMessage === "function") {
         setPageMessage(
           awaitingDueDay
-            ? "Valor da mensalidade salvo. O vencimento será aplicado quando o aluno fizer a escolha no primeiro acesso."
-            : "Configuração financeira atualizada.",
+            ? "Valor da mensalidade salvo. Vencimento e início da cobrança serão finalizados automaticamente quando o aluno escolher uma das opções."
+            : "Valor da mensalidade atualizado. Vencimento e início da cobrança permanecem controlados pelo sistema.",
           "success"
         );
       }
@@ -117,10 +134,10 @@
   function initialize() {
     const panelDescription = document.querySelector(".finance-panel:nth-of-type(2) .panel-header p");
     if (panelDescription) {
-      panelDescription.textContent = "Defina o valor mensal e quando a cobrança começa. O vencimento é escolhido pelo aluno.";
+      panelDescription.textContent = "Defina apenas o valor mensal. O vencimento e o início da cobrança são definidos automaticamente pelo sistema.";
     }
 
-    updateDueDayField();
+    refreshSystemFields();
     installModalObserver();
     document.addEventListener("submit", handleSettingsSubmit, true);
   }
