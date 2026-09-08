@@ -1,0 +1,80 @@
+name: Temporary student due day UI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-student-due-day-ui.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Patch student and teacher billing UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              file_path = Path(path)
+              text = file_path.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:100]}')
+              file_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'complete-cadastro.html',
+              '  <script src="/student_profile_optional.js?v=20260902-1"></script>',
+              '  <script src="/student_profile_optional.js?v=20260902-1"></script>\n  <script src="/student_tuition_due_day.js?v=20260908-1"></script>'
+          )
+
+          replace_once(
+              'mensalidades.html',
+              '<p>Defina o valor mensal, o dia de vencimento e quando a cobrança começa.</p>',
+              '<p>Defina o valor mensal e quando a cobrança começa. O vencimento é escolhido pelo aluno.</p>'
+          )
+          replace_once(
+              'mensalidades.html',
+              '<label for="dueDay">Dia do vencimento</label>\n            <input id="dueDay" class="finance-input" type="number" min="1" max="31" step="1" required>',
+              '<label for="dueDay">Vencimento escolhido pelo aluno</label>\n            <input id="dueDay" class="finance-input" type="text" readonly placeholder="Aguardando escolha do aluno">'
+          )
+          replace_once(
+              'mensalidades.html',
+              '  <script src="mensalidades.js?v=20260902-exempt-1"></script>',
+              '  <script src="mensalidades.js?v=20260902-exempt-1"></script>\n  <script src="/mensalidades_due_day_readonly.js?v=20260908-1"></script>'
+          )
+
+          replace_once(
+              'perfil_dos_alunos.html',
+              '  <script src="perfil_dos_alunos.js?v=20260814-billing-1"></script>',
+              '  <script src="perfil_dos_alunos.js?v=20260814-billing-1"></script>\n  <script src="/perfil_dos_alunos_vencimento.js?v=20260908-2"></script>'
+          )
+          replace_once(
+              'perfil_dos_alunos.html',
+              '<p class="billing-modal-note">O vencimento, o início da cobrança, o status e as observações já existentes serão preservados. Para uma nova configuração, o vencimento será no dia 10 e a cobrança começará no mês atual. As opções completas continuam disponíveis na página Mensalidades.</p>',
+              '<p class="billing-modal-note">O vencimento é escolhido pelo aluno durante a matrícula ou no primeiro acesso. O professor define o valor mensal; o início da cobrança, o status e as observações existentes são preservados.</p>'
+          )
+
+          loader = Path('perfil-dos-alunos/loader.js')
+          loader_text = loader.read_text(encoding='utf-8')
+          loader_text = loader_text.replace(
+              '/perfil_dos_alunos_vencimento.js?v=20260901-1',
+              '/perfil_dos_alunos_vencimento.js?v=20260908-2'
+          )
+          loader.write_text(loader_text, encoding='utf-8')
+          PY
+      - name: Materialize clean route aliases
+        run: python scripts/materialize_clean_route_aliases.py --site-root .
+      - name: Commit changes
+        run: |
+          git config user.name "Zoqvera Development Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add complete-cadastro.html mensalidades.html mensalidades/index.html perfil_dos_alunos.html perfil-dos-alunos/loader.js perfil-dos-alunos/index.html 2>/dev/null || true
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: let students choose tuition due day"
+          git push
