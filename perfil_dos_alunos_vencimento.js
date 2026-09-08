@@ -43,7 +43,7 @@
       if (note) {
         form.insertBefore(label, note);
         form.insertBefore(field, note);
-        note.textContent = "Defina apenas o valor mensal. O vencimento é escolhido pelo aluno durante a matrícula ou no primeiro acesso. O mês inicial, o status e as observações existentes serão preservados.";
+        note.textContent = "Defina apenas o valor mensal. O vencimento é escolhido pelo aluno e o início da cobrança é calculado automaticamente pelo sistema.";
       } else {
         monthlyFeeInput.insertAdjacentElement("afterend", label);
         label.insertAdjacentElement("afterend", field);
@@ -124,11 +124,6 @@
     }
 
     const settings = selection.settings || getBillingSettings(selection.studentId) || {};
-    const startMonth = settings.billing_start_month || (
-      typeof getCurrentBillingMonth === "function"
-        ? getCurrentBillingMonth()
-        : new Date().toISOString().slice(0, 7) + "-01"
-    );
     const active = settings.monthly_fee == null ? true : settings.billing_active === true;
 
     if (button) {
@@ -144,7 +139,6 @@
       const response = await client.rpc("save_student_billing_settings", {
         target_student_id: selection.studentId,
         target_monthly_fee: fee,
-        target_billing_start_month: startMonth,
         target_active: active,
         target_notes: settings.billing_notes || ""
       });
@@ -167,13 +161,13 @@
         const awaitingDueDay = response.data && response.data.awaiting_student_due_day === true;
         if (generation.error) {
           setBillingStatusMessage(
-            "Mensalidade salva, mas a cobrança do mês atual não pôde ser atualizada automaticamente: " + (generation.error.message || "erro desconhecido") + ".",
+            "Mensalidade salva, mas a cobrança não pôde ser atualizada automaticamente: " + (generation.error.message || "erro desconhecido") + ".",
             "warning"
           );
         } else if (awaitingDueDay) {
-          setBillingStatusMessage("Mensalidade salva. O vencimento será aplicado quando o aluno fizer a escolha.", "success");
+          setBillingStatusMessage("Mensalidade salva. Vencimento e início da cobrança serão finalizados automaticamente quando o aluno fizer a escolha.", "success");
         } else {
-          setBillingStatusMessage("Mensalidade atualizada com sucesso.", "success");
+          setBillingStatusMessage("Mensalidade atualizada. O calendário da cobrança permanece controlado pelo sistema.", "success");
         }
       }
       window.setTimeout(annotateBillingCards, 0);
