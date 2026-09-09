@@ -16,6 +16,7 @@ const SCRIPT_NAMES = [
   "cleanUrls",
   "googleOnlyAccess",
   "studentBirthdays",
+  "studentBirthdayCelebration",
   "paymentOperationsDashboard",
   "paymentWebhookLog"
 ];
@@ -70,7 +71,11 @@ function createRuntime(options) {
       callback();
     };
   }
-  const documentRef = { readyState: "complete", addEventListener: function () {} };
+  const documentRef = {
+    readyState: "complete",
+    addEventListener: function () {},
+    getElementById: function () { return null; }
+  };
   const context = { window: {} };
 
   vm.runInNewContext(source, context);
@@ -122,9 +127,15 @@ test("loads only clean URLs after UI foundations on geo pages", function () {
   assert.equal(result.scriptCalls.includes("googleOnlyAccess"), false);
 });
 
-test("loads portal chain in the original order", function () {
+test("loads portal chain in the expected order", function () {
   const result = createRuntime({ path: "/area-do-estudante/", publicPage: false });
-  assert.deepEqual(result.scriptCalls.slice(-4), ["cleanUrls", "googleOnlyAccess", "studentBirthdays", "footerCore"]);
+  assert.deepEqual(result.scriptCalls.slice(-5), [
+    "cleanUrls",
+    "googleOnlyAccess",
+    "studentBirthdays",
+    "studentBirthdayCelebration",
+    "footerCore"
+  ]);
   assert.equal(result.scriptCalls.includes("paymentOperationsDashboard"), false);
   assert.equal(result.scriptCalls.includes("paymentWebhookLog"), false);
   assert.deepEqual(result.events.enrollment, [true]);
@@ -136,12 +147,13 @@ test("loads payment operations and webhook audit only on mensalidades", function
   const result = createRuntime({ path: "/mensalidades/", publicPage: false });
   assert.equal(result.scriptCalls.includes("paymentOperationsDashboard"), true);
   assert.equal(result.scriptCalls.includes("paymentWebhookLog"), true);
-  assert.deepEqual(result.scriptCalls.slice(-6), [
+  assert.deepEqual(result.scriptCalls.slice(-7), [
     "paymentOperationsDashboard",
     "paymentWebhookLog",
     "cleanUrls",
     "googleOnlyAccess",
     "studentBirthdays",
+    "studentBirthdayCelebration",
     "footerCore"
   ]);
 });
