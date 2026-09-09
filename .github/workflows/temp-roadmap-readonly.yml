@@ -50,33 +50,40 @@ jobs:
           if policy_note not in html:
               html = html.replace(description, description + "\n" + policy_note, 1)
 
-          old_completion = """            '<div class=\"completion-row\">' +
-              '<button type=\"button\" class=\"completion-button\" data-lesson-id=\"' + lessonId + '\">' + (isDone ? 'MARCAR COMO NÃO FEITA' : 'MARCAR COMO FEITA') + '</button>' +
-              '<span class=\"completion-status ' + (isDone ? 'saved' : '') + '\" id=\"status-' + lessonId + '\">' + (isDone ? 'Feita' : 'Não feita') + '</span>' +
-            '</div>' +"""
-          new_completion = """            '<div class=\"completion-row\">' +
-              '<span class=\"completion-status ' + (isDone ? 'saved' : '') + '\" id=\"status-' + lessonId + '\">' + (isDone ? 'Conclusão registrada' : 'Aguardando registro do professor') + '</span>' +
-            '</div>' +"""
-          if old_completion not in html:
-              raise SystemExit("Completion control block not found")
-          html = html.replace(old_completion, new_completion, 1)
+          html, button_count = re.subn(
+              r"^\s*'<button type=\"button\" class=\"completion-button\"[^\n]*\n",
+              "",
+              html,
+              count=1,
+              flags=re.M,
+          )
+          if button_count != 1:
+              raise SystemExit("Student completion button was not removed")
 
-          html = re.sub(
+          html = html.replace(
+              "(isDone ? 'Feita' : 'Não feita')",
+              "(isDone ? 'Conclusão registrada' : 'Aguardando registro do professor')",
+              1,
+          )
+
+          html, listener_count = re.subn(
               r"\n\s*document\.querySelectorAll\(\"\.completion-button\"\)\.forEach\(function \(button\) \{.*?\n\s*\}\);",
               "",
               html,
               count=1,
               flags=re.S,
           )
+          if listener_count != 1:
+              raise SystemExit("Student completion listener was not removed")
 
-          html, removed = re.subn(
+          html, save_count = re.subn(
               r"\n    async function saveLessonCompletion\(lessonId, completed, button\) \{.*?\n    \}\n\n    async function guardPage\(\) \{",
               "\n\n    async function guardPage() {",
               html,
               count=1,
               flags=re.S,
           )
-          if removed != 1:
+          if save_count != 1:
               raise SystemExit("saveLessonCompletion function was not removed")
 
           html = html.replace(
@@ -85,7 +92,7 @@ jobs:
               1,
           )
 
-          forbidden = ["MARCAR COMO FEITA", "MARCAR COMO NÃO FEITA", ".upsert({"]
+          forbidden = ["completion-button", "saveLessonCompletion", "MARCAR COMO FEITA", "MARCAR COMO NÃO FEITA", ".upsert({"]
           found = [token for token in forbidden if token in html]
           if found:
               raise SystemExit(f"Student completion controls still present: {found}")
