@@ -9,21 +9,21 @@
     infrastructure: Object.freeze({
       globalName: "AuthInfrastructure",
       selector: 'script[src^="/auth_infrastructure.js"]',
-      src: "/auth_infrastructure.js?v=20260902-1",
+      src: "/auth_infrastructure.js?v=20260909-1",
       missingMessage: "A infraestrutura de autenticação não foi inicializada.",
       loadErrorMessage: "Não foi possível carregar a infraestrutura de autenticação."
     }),
     authSessionService: Object.freeze({
       globalName: "AuthSessionService",
       selector: 'script[src^="/auth_session_service.js"]',
-      src: "/auth_session_service.js?v=20260902-1",
+      src: "/auth_session_service.js?v=20260909-1",
       missingMessage: "O serviço de sessão não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de sessão."
     }),
     authGuardService: Object.freeze({
       globalName: "AuthGuardService",
       selector: 'script[src^="/auth_guard_service.js"]',
-      src: "/auth_guard_service.js?v=20260902-1",
+      src: "/auth_guard_service.js?v=20260909-1",
       missingMessage: "O serviço de guarda de autenticação não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de guarda de autenticação."
     }),
@@ -181,6 +181,7 @@
           requireClient: requireClient,
           getGoogleRedirectUrl: navigation.getGoogleRedirectUrl,
           getGoogleLinkRedirectUrl: navigation.getGoogleLinkRedirectUrl,
+          getPasswordRecoveryRedirectUrl: navigation.getPasswordRecoveryRedirectUrl || navigation.getRedirectUrl,
           loginPath: navigation.paths.login
         });
       }
@@ -196,6 +197,15 @@
   async function getUser() {
     const service = await getAuthSessionService();
     return service.getUser();
+  }
+
+  async function isTeacherAdmin() {
+    const client = getClient();
+    if (!client) return false;
+
+    const response = await client.rpc("is_teacher_admin");
+    if (response.error) throw response.error;
+    return response.data === true;
   }
 
   function getStudentProfileService() {
@@ -237,10 +247,13 @@
           showConfigWarning: showConfigWarning,
           getSession: getSession,
           ensureProfileForUser: ensureProfileForUser,
+          isTeacherAdmin: isTeacherAdmin,
           normalizeNextPath: navigation.normalizeNextPath,
           loginPath: navigation.paths.login,
           onboardingPath: navigation.paths.onboarding,
-          studentAreaPath: navigation.paths.studentArea
+          profilePath: navigation.paths.profile,
+          studentAreaPath: navigation.paths.studentArea,
+          accessDeniedPath: navigation.paths.accessDenied || "/acesso-negado/"
         });
       }
       return authGuardService;
@@ -295,6 +308,16 @@
     return service.signIn(email, password);
   }
 
+  async function requestPasswordReset(email) {
+    const service = await getAuthSessionService();
+    return service.requestPasswordReset(email);
+  }
+
+  async function updatePassword(password) {
+    const service = await getAuthSessionService();
+    return service.updatePassword(password);
+  }
+
   async function signInWithGoogle(nextPath) {
     const service = await getAuthSessionService();
     return service.signInWithGoogle(nextPath);
@@ -322,11 +345,14 @@
     generateEnrollmentCode: generateEnrollmentCode,
     getSession: getSession,
     getUser: getUser,
+    isTeacherAdmin: isTeacherAdmin,
     ensureProfileForUser: ensureProfileForUser,
     requireAuth: requireAuth,
     signUp: signUp,
     enrollStudent: enrollStudent,
     signIn: signIn,
+    requestPasswordReset: requestPasswordReset,
+    updatePassword: updatePassword,
     signInWithGoogle: signInWithGoogle,
     linkGoogleIdentity: linkGoogleIdentity,
     getUserIdentities: getUserIdentities,
