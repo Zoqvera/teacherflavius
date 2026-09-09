@@ -93,7 +93,7 @@ O arquivo `supabase_seguranca_fase2_rls.sql`:
 Use uma conta de aluno:
 
 1. Entrar no site e abrir o próprio perfil.
-2. Marcar e desmarcar uma lição no roteiro de estudos.
+2. Abrir o roteiro de estudos, consultar o próprio progresso e confirmar que não existem controles para registrar ou alterar lições concluídas.
 3. Marcar um exercício diário como concluído.
 4. Abrir os recursos da própria turma.
 5. Confirmar que não é possível visualizar dados de outro aluno.
