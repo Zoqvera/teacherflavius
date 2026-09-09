@@ -96,7 +96,7 @@
     const rows = normalizeChargebacks(chargebacks);
     if (!rows.length) {
       return '<section class="chargeback-panel" aria-labelledby="chargeback-title">' +
-        '<div class="chargeback-heading"><div><span class="chargeback-kicker">CONTestações</span>' +
+        '<div class="chargeback-heading"><div><span class="chargeback-kicker">CONTESTAÇÕES</span>' +
         '<h2 id="chargeback-title">Chargebacks do Mercado Pago</h2></div>' +
         '<span class="chargeback-summary healthy">Nenhuma contestação no mês</span></div>' +
         '<p class="chargeback-empty">Não há chargebacks vinculados às mensalidades deste mês de referência.</p></section>';
