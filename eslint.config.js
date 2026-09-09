@@ -57,6 +57,8 @@ module.exports = [
       "analytics_forms.js",
       "analytics_payments.js",
       "payment_operations_dashboard.js",
+      "payment_refund_operations.js",
+      "payment_chargeback_operations.js",
       "payment_webhook_log.js",
       "pagamento/app.js",
       "pagamento/payment_idempotency.js",
