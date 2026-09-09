@@ -32,6 +32,13 @@ function isRecord(value: unknown): value is JsonRecord {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
+function cleanIdentifier(value: unknown, maxLength: number): string {
+  if (typeof value !== "string" && typeof value !== "number" && typeof value !== "bigint") {
+    return "";
+  }
+  return String(value).trim().slice(0, maxLength);
+}
+
 function hexFromBytes(bytes: Uint8Array): string {
   return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
@@ -39,6 +46,30 @@ function hexFromBytes(bytes: Uint8Array): string {
 async function sha256Hex(value: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", encoder.encode(value));
   return hexFromBytes(new Uint8Array(digest));
+}
+
+async function buildDeduplicationKey(options: {
+  providerEventId: string;
+  providerPaymentId: string;
+  eventType: string;
+  action: string;
+  eventCreatedAt: string;
+  bodyText: string;
+}): Promise<string> {
+  if (options.providerEventId) {
+    return await sha256Hex(`mercado_pago|notification|${options.providerEventId}`);
+  }
+
+  const bodyFingerprint = await sha256Hex(options.bodyText);
+  return await sha256Hex([
+    "mercado_pago",
+    "fallback",
+    options.providerPaymentId,
+    options.eventType,
+    options.action,
+    options.eventCreatedAt,
+    bodyFingerprint,
+  ].join("|"));
 }
 
 function constantTimeEqual(first: string, second: string): boolean {
@@ -177,14 +208,13 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const requestUrl = new URL(request.url);
-  const queryDataId = cleanString(
-    requestUrl.searchParams.get("data.id") ?? requestUrl.searchParams.get("data_id"),
-    128,
-  );
+  const rawQueryDataId = requestUrl.searchParams.get("data.id") ?? requestUrl.searchParams.get("data_id") ?? "";
+  const queryDataId = cleanIdentifier(rawQueryDataId, 128);
   const xSignature = request.headers.get("x-signature") ?? "";
-  const xRequestId = cleanString(request.headers.get("x-request-id"), 160);
+  const rawRequestId = request.headers.get("x-request-id") ?? "";
+  const xRequestId = cleanString(rawRequestId, 160);
 
-  if (!(await validateSignature(xSignature, xRequestId, queryDataId, webhookSecret))) {
+  if (!(await validateSignature(xSignature, rawRequestId, rawQueryDataId, webhookSecret))) {
     await recordOperationalEvent(
       supabaseAdmin,
       "invalid_webhook_signature",
@@ -226,19 +256,17 @@ Deno.serve(async (request: Request) => {
   const payloadData = isRecord(payload.data) ? payload.data : {};
   const eventType = cleanString(payload.type, 50).toLowerCase();
   const action = cleanString(payload.action, 100).toLowerCase();
-  const providerEventId = cleanString(payload.id, 128);
-  const providerPaymentId = queryDataId || cleanString(payloadData.id, 128);
+  const providerEventId = cleanIdentifier(payload.id, 128);
+  const providerPaymentId = queryDataId || cleanIdentifier(payloadData.id, 128);
   const eventCreatedAt = cleanString(payload.date_created, 60);
-  const bodyFingerprint = await sha256Hex(bodyText);
-  const deduplicationKey = await sha256Hex([
-    xRequestId,
+  const deduplicationKey = await buildDeduplicationKey({
     providerEventId,
     providerPaymentId,
     eventType,
     action,
     eventCreatedAt,
-    bodyFingerprint,
-  ].join("|"));
+    bodyText,
+  });
 
   let logged: RegisteredWebhook;
   try {
