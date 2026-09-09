@@ -23,6 +23,7 @@ const encoder = new TextEncoder();
 
 const ALERT_SUBJECTS: Record<string, string> = {
   reconciliation_failure: "Alerta: falha na reconciliação de pagamento",
+  reconciliation_stalled: "Alerta: reconciliação automática sem execução recente",
   duplicate_payment: "Alerta crítico: possível pagamento duplicado",
   approved_without_application: "Alerta crítico: pagamento aprovado sem baixa",
   payment_reversal: "Alerta: pagamento estornado ou contestado",
@@ -97,6 +98,11 @@ function detailLines(alert: PaymentAlert): string[] {
         `Falhas registradas: ${cleanDetail(details.failure_count) || "1"}`,
         `Status do pagamento: ${cleanDetail(details.payment_status) || "não informado"}`,
         `Erro: ${cleanDetail(details.error) || "não informado"}`,
+      ];
+    case "reconciliation_stalled":
+      return [
+        `Última execução bem-sucedida: ${cleanDetail(details.last_success_at) || "não registrada"}`,
+        `Minutos sem execução bem-sucedida: ${cleanDetail(details.minutes_since_success) || "15+"}`,
       ];
     case "duplicate_payment":
       return [
