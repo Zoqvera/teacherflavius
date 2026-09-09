@@ -54,7 +54,9 @@ module.exports = [
       "analytics_utils.js",
       "analytics_acquisition.js",
       "analytics_forms.js",
-      "analytics_payments.js"
+      "analytics_payments.js",
+      "pagamento/app.js",
+      "pagamento/payment_idempotency.js"
     ],
     languageOptions: {
       ecmaVersion: "latest",
