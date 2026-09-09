@@ -32,7 +32,7 @@ const EXPECTED_SCRIPT_ASSETS = {
   siteEnrollmentGuard: ["teacher-flavius-site-enrollment-guard", "/site_enrollment_guard.js?v=20260902-1"],
   marketingTrackingControl: ["teacher-flavius-marketing-tracking-control", "/marketing_tracking_control.js?v=20260904-1"],
   marketingWhatsappTracker: ["teacher-flavius-marketing-whatsapp-tracker", "/marketing_whatsapp_tracker.js?v=20260904-1"],
-  paymentOperationsDashboard: ["teacher-flavius-payment-operations-dashboard", "/payment_operations_dashboard.js?v=20260909-1"],
+  paymentOperationsDashboard: ["teacher-flavius-payment-operations-dashboard", "/payment_operations_dashboard.js?v=20260909-2"],
   paymentWebhookLog: ["teacher-flavius-payment-webhook-log", "/payment_webhook_log.js?v=20260909-1"]
 };
 

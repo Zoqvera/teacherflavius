@@ -38,6 +38,7 @@
   function resolveHealth(state) {
     if (state.criticalOpenAlerts > 0 || state.divergences > 0) return CRITICAL;
     if (
+      state.reconciliationStalled ||
       state.failedAlerts > 0 ||
       state.reconciliationFailures > 0 ||
       state.gatewayFailures24h > 0 ||
@@ -66,6 +67,7 @@
       gatewayFailures24h: toNumber(source.gateway_failures_24h),
       invalidWebhooks24h: toNumber(source.invalid_webhooks_24h),
       lastReconciliationAt: String(source.last_reconciliation_at || ""),
+      reconciliationStalled: source.reconciliation_stalled === true,
       reconciliationFailures: toNumber(source.reconciliation_failures),
       approvedWithoutApplication: toNumber(divergences.approved_without_application),
       reversalPending: toNumber(divergences.reversal_pending),
@@ -117,6 +119,7 @@
 
   function buildMarkup(state) {
     const health = state.health || HEALTHY;
+    const reconciliationStatus = state.reconciliationStalled ? "ATRASADA" : "EM DIA";
     const cards = [
       metricCard("Aprovados", state.approved.count, formatCurrency(state.approved.amount), "healthy"),
       metricCard("Pendentes", state.pending.count, formatCurrency(state.pending.amount), state.pending.count ? "warning" : "neutral"),
@@ -138,6 +141,7 @@
     '<div class="payment-ops-grid">' + cards + '</div>' +
     '<div class="payment-ops-footnotes">' +
       '<span><strong>Última reconciliação:</strong> ' + escapeHtml(formatDateTime(state.lastReconciliationAt)) + '</span>' +
+      '<span><strong>Reconciliação automática:</strong> ' + escapeHtml(reconciliationStatus) + '</span>' +
       '<span><strong>Falhas de reconciliação:</strong> ' + escapeHtml(state.reconciliationFailures) + '</span>' +
       '<span><strong>Webhooks inválidos · 24h:</strong> ' + escapeHtml(state.invalidWebhooks24h) + '</span>' +
       '<span><strong>Aprovados sem baixa:</strong> ' + escapeHtml(state.approvedWithoutApplication) + '</span>' +

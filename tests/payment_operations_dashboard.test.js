@@ -13,6 +13,7 @@ test("normalizes payment operation metrics", () => {
     },
     gateway_failures_24h: 0,
     invalid_webhooks_24h: 0,
+    reconciliation_stalled: false,
     reconciliation_failures: 0,
     divergences: {
       approved_without_application: 0,
@@ -28,6 +29,7 @@ test("normalizes payment operation metrics", () => {
   assert.equal(state.pix.count, 2);
   assert.equal(state.card.count, 1);
   assert.equal(state.divergences, 0);
+  assert.equal(state.reconciliationStalled, false);
   assert.equal(state.health.tone, "healthy");
 });
 
@@ -49,11 +51,24 @@ test("marks gateway and reconciliation failures as warning", () => {
   const state = Dashboard.normalizeDashboard({
     gateway_failures_24h: 2,
     reconciliation_failures: 1,
+    reconciliation_stalled: false,
     divergences: {},
     alerts: {}
   });
 
   assert.equal(state.health.tone, "warning");
+});
+
+test("marks stalled automatic reconciliation as warning", () => {
+  const state = Dashboard.normalizeDashboard({
+    reconciliation_stalled: true,
+    divergences: {},
+    alerts: {}
+  });
+
+  assert.equal(state.reconciliationStalled, true);
+  assert.equal(state.health.tone, "warning");
+  assert.match(Dashboard.buildMarkup(state), /Reconciliação automática:<\/strong> ATRASADA/);
 });
 
 test("renders all required technical indicators", () => {
@@ -64,6 +79,7 @@ test("renders all required technical indicators", () => {
     methods: { pix: { count: 3, amount: 299.7 } },
     gateway_failures_24h: 0,
     invalid_webhooks_24h: 0,
+    reconciliation_stalled: false,
     divergences: {},
     duplicate_payments: 0,
     reversals: 0,
@@ -82,6 +98,7 @@ test("renders all required technical indicators", () => {
     "Duplicidades",
     "Estornos",
     "Alertas abertos",
-    "Última reconciliação"
+    "Última reconciliação",
+    "Reconciliação automática"
   ].forEach((label) => assert.match(markup, new RegExp(label)));
 });

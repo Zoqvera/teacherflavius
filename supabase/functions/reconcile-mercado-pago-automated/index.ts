@@ -30,6 +30,18 @@ type MercadoPagoSearchResponse = {
   results?: MercadoPagoPayment[];
 };
 
+type ReconciliationSummary = {
+  checked: number;
+  synchronized: number;
+  recovered: number;
+  not_found: number;
+  approved: number;
+  pending: number;
+  reversed: number;
+  duplicates: number;
+  failed: number;
+};
+
 const ACTIVE_STATUSES = new Set([
   "created",
   "pending",
@@ -216,6 +228,54 @@ async function markReconciliationMiss(
   if (error) throw new Error(error.message);
 }
 
+async function beginReconciliationRun(
+  supabaseAdmin: ReturnType<typeof createClient>,
+): Promise<string | null> {
+  const { data, error } = await supabaseAdmin.rpc("begin_mercado_pago_reconciliation_run");
+  if (error || typeof data !== "string") {
+    console.error("Unable to begin reconciliation heartbeat", error?.message ?? "invalid run id");
+    return null;
+  }
+  return data;
+}
+
+async function finishReconciliationRun(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  runId: string | null,
+  status: "succeeded" | "failed",
+  summary: JsonRecord,
+  errorCode: string | null = null,
+): Promise<void> {
+  if (!runId) return;
+  const { data, error } = await supabaseAdmin.rpc("finish_mercado_pago_reconciliation_run", {
+    target_run_id: runId,
+    target_status: status,
+    target_summary: summary,
+    target_error_code: errorCode,
+  });
+  if (error || data !== true) {
+    console.error("Unable to finish reconciliation heartbeat", error?.message ?? "run was not updated");
+  }
+}
+
+function createSummary(): ReconciliationSummary {
+  return {
+    checked: 0,
+    synchronized: 0,
+    recovered: 0,
+    not_found: 0,
+    approved: 0,
+    pending: 0,
+    reversed: 0,
+    duplicates: 0,
+    failed: 0,
+  };
+}
+
+function resultSummary(candidateCount: number, summary: ReconciliationSummary): JsonRecord {
+  return { candidates: candidateCount, ...summary };
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
@@ -255,6 +315,7 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
+  const runId = await beginReconciliationRun(supabaseAdmin);
   const { data: attempts, error: attemptsError } = await supabaseAdmin
     .from("tuition_payment_attempts")
     .select("id, provider_payment_id, amount, status, last_reconciled_at, provider_updated_at, created_at")
@@ -264,23 +325,20 @@ Deno.serve(async (request: Request) => {
 
   if (attemptsError) {
     console.error("Unable to load Mercado Pago reconciliation candidates", attemptsError.message);
+    await finishReconciliationRun(
+      supabaseAdmin,
+      runId,
+      "failed",
+      { stage: "candidate_load" },
+      "candidate_load_failed",
+    );
     return jsonResponse({ error: "Unable to load reconciliation candidates" }, 500);
   }
 
   const now = Date.now();
   const candidates = ((attempts ?? []) as PaymentAttempt[])
     .filter((attempt) => isDueForReconciliation(attempt, now));
-  const summary = {
-    checked: 0,
-    synchronized: 0,
-    recovered: 0,
-    not_found: 0,
-    approved: 0,
-    pending: 0,
-    reversed: 0,
-    duplicates: 0,
-    failed: 0,
-  };
+  const summary = createSummary();
 
   for (const attempt of candidates) {
     summary.checked += 1;
@@ -337,5 +395,7 @@ Deno.serve(async (request: Request) => {
     }
   }
 
-  return jsonResponse({ ok: true, candidates: candidates.length, ...summary });
+  const responseSummary = resultSummary(candidates.length, summary);
+  await finishReconciliationRun(supabaseAdmin, runId, "succeeded", responseSummary);
+  return jsonResponse({ ok: true, ...responseSummary });
 });

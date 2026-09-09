@@ -12,7 +12,10 @@ test("payment workflow keeps deterministic contracts on pull requests", () => {
   assert.match(workflow, /pull_request:/);
   assert.match(workflow, /Validate payment contracts/);
   assert.match(workflow, /tests\/payment_gateway_contract\.test\.js/);
+  assert.match(workflow, /tests\/payment_reconciliation_monitor_contract\.test\.js/);
   assert.match(workflow, /tests\/payment_sandbox_probe\.test\.js/);
+  assert.match(workflow, /supabase\/functions\/reconcile-mercado-pago-automated\/\*\*/);
+  assert.match(workflow, /supabase\/functions\/notify-payment-alert\/\*\*/);
 });
 
 test("sandbox job is restricted to scheduled or explicit executions", () => {
