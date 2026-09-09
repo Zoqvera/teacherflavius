@@ -12,6 +12,8 @@
     accessTrackerJs: "/student_access_tracker.js?v=20260730-2",
     googleAuthCss: "/google_auth_ui.css?v=20260902-1",
     googleAuthJs: "/google_auth_ui.js?v=20260902-1",
+    passwordRecoveryCss: "/password_recovery_login.css?v=20260909-1",
+    passwordRecoveryJs: "/password_recovery_login.js?v=20260909-1",
     infrastructureCss: "/auth_infrastructure.css?v=20260902-1"
   });
 
@@ -90,6 +92,15 @@
     return pathname === PATHS.login || pathname === PATHS.profile;
   }
 
+  function loadLoginPasswordRecoveryAssets(pathname) {
+    if (pathname !== PATHS.login) return;
+
+    appendStylesheetOnce('link[href^="/password_recovery_login.css"]', ASSETS.passwordRecoveryCss);
+    runWhenDomReady(function () {
+      appendScriptOnce('script[src^="/password_recovery_login.js"]', ASSETS.passwordRecoveryJs);
+    });
+  }
+
   function loadGoogleAuthUiAssets(pathname) {
     if (!isGoogleAuthUiPage(pathname)) return;
 
@@ -116,8 +127,10 @@
 
   function initialize(options) {
     const settings = options || {};
+    const pathname = settings.pathname || window.location.pathname;
     loadSharedAssets();
-    loadGoogleAuthUiAssets(settings.pathname || window.location.pathname);
+    loadGoogleAuthUiAssets(pathname);
+    loadLoginPasswordRecoveryAssets(pathname);
   }
 
   window.AuthInfrastructure = Object.freeze({
