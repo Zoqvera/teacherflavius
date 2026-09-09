@@ -162,11 +162,11 @@ test("verifies a valid TOTP code and confirms session promotion to aal2", async 
 
   assert.equal(result.ok, true);
   assert.equal(calls.length, 2);
-  assert.deepEqual(calls[0].payload, { factorId: "factor-1" });
-  assert.deepEqual(calls[1].payload, {
-    factorId: "factor-1",
-    challengeId: "challenge-1",
-    code: "123456"
-  });
+  assert.equal(calls[0].method, "challenge");
+  assert.equal(calls[0].payload.factorId, "factor-1");
+  assert.equal(calls[1].method, "verify");
+  assert.equal(calls[1].payload.factorId, "factor-1");
+  assert.equal(calls[1].payload.challengeId, "challenge-1");
+  assert.equal(calls[1].payload.code, "123456");
   assert.equal(assuranceCalls, 1);
 });
