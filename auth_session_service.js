@@ -8,7 +8,8 @@
       "getClient",
       "requireClient",
       "getGoogleRedirectUrl",
-      "getGoogleLinkRedirectUrl"
+      "getGoogleLinkRedirectUrl",
+      "getPasswordRecoveryRedirectUrl"
     ];
 
     requiredFunctions.forEach(function (name) {
@@ -20,6 +21,18 @@
     if (typeof dependencies.loginPath !== "string" || !dependencies.loginPath) {
       throw new Error("Dependência inválida do serviço de sessão: loginPath.");
     }
+  }
+
+  function normalizeEmail(email) {
+    return String(email || "").trim().toLowerCase();
+  }
+
+  function validateNewPassword(password) {
+    const value = String(password || "");
+    if (value.length < 8) {
+      throw new Error("A nova senha deve ter pelo menos 8 caracteres.");
+    }
+    return value;
   }
 
   function create(dependencies) {
@@ -46,6 +59,28 @@
         email: email,
         password: password
       });
+      if (response.error) throw response.error;
+      return response.data;
+    }
+
+    async function requestPasswordReset(email) {
+      const client = deps.requireClient();
+      const normalizedEmail = normalizeEmail(email);
+      if (!normalizedEmail) {
+        throw new Error("Informe seu e-mail.");
+      }
+
+      const response = await client.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: deps.getPasswordRecoveryRedirectUrl()
+      });
+      if (response.error) throw response.error;
+      return response.data;
+    }
+
+    async function updatePassword(password) {
+      const client = deps.requireClient();
+      const newPassword = validateNewPassword(password);
+      const response = await client.auth.updateUser({ password: newPassword });
       if (response.error) throw response.error;
       return response.data;
     }
@@ -104,6 +139,8 @@
       getSession: getSession,
       getUser: getUser,
       signIn: signIn,
+      requestPasswordReset: requestPasswordReset,
+      updatePassword: updatePassword,
       signInWithGoogle: signInWithGoogle,
       linkGoogleIdentity: linkGoogleIdentity,
       getUserIdentities: getUserIdentities,
