@@ -11,6 +11,7 @@
     const normalizeNextPath = settings.normalizeNextPath;
     const loginPath = settings.loginPath;
     const onboardingPath = settings.onboardingPath;
+    const profilePath = settings.profilePath;
     const studentAreaPath = settings.studentAreaPath;
     const accessDeniedPath = settings.accessDeniedPath;
 
@@ -21,6 +22,10 @@
 
     function isOnOnboardingPage() {
       return window.location.pathname === onboardingPath;
+    }
+
+    function isOnAccountManagementPage() {
+      return window.location.pathname === profilePath;
     }
 
     function redirectToLogin() {
@@ -59,7 +64,7 @@
 
     async function requireAuth(options) {
       const guardOptions = options || {};
-      const requiresActiveStudent = guardOptions.requireActiveStudent !== false;
+      const requiresActiveStudent = guardOptions.requireActiveStudent !== false && !isOnAccountManagementPage();
 
       if (!isConfigured()) {
         showConfigWarning();
