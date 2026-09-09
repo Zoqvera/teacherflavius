@@ -189,6 +189,7 @@
     function loadPaymentOperationsTools() {
       if (!isPaymentAdminPage() || !scriptAssets.paymentOperationsDashboard) return;
       deps.loadScriptAsset(scriptAssets.paymentOperationsDashboard, function () {
+        if (scriptAssets.paymentRefundOperations) deps.loadScriptAsset(scriptAssets.paymentRefundOperations);
         if (scriptAssets.paymentWebhookLog) deps.loadScriptAsset(scriptAssets.paymentWebhookLog);
       });
     }
