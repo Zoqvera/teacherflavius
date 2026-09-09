@@ -15,94 +15,53 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Make roadmap completion read-only for students
+      - name: Finalize roadmap read-only UI
         shell: python
         run: |
           from pathlib import Path
-          import re
 
           path = Path("roteiro_de_estudos.html")
           html = path.read_text(encoding="utf-8")
 
-          html = html.replace(
-              "      justify-content: space-between;\n      gap: 12px;\n      padding-top: 12px;",
-              "      justify-content: flex-end;\n      gap: 12px;\n      padding-top: 12px;",
-              1,
-          )
+          broken_tail = '      grid.innerHTML = cards.join("");\n      });\n    }\n\n    async function loadCompletedLessons() {'
+          fixed_tail = '      grid.innerHTML = cards.join("");\n    }\n\n    async function loadCompletedLessons() {'
+          if broken_tail in html:
+              html = html.replace(broken_tail, fixed_tail, 1)
 
-          html = re.sub(
-              r"\n    \.completion-button \{.*?\n    \}\n    \.lesson-card\.done \.completion-button \{.*?\n    \}\n    \.completion-button:disabled \{.*?\}\n",
-              "\n",
-              html,
-              count=1,
-              flags=re.S,
-          )
+          required = [
+              "O registro de conclusão das lições é controlado pelo professor e não pode ser alterado pelo aluno.",
+              "Conclusão registrada",
+              "Aguardando registro do professor",
+              '.from("study_roadmap_completion")',
+              '.select("lesson_id, completed")',
+          ]
+          missing = [token for token in required if token not in html]
+          if missing:
+              raise SystemExit(f"Required read-only elements missing: {missing}")
 
-          html = html.replace(
-              "    .completion-status.error { color: #fca5a5; }",
-              "    .completion-status.error { color: #fca5a5; }\n"
-              "    .completion-policy-note { color: #a7f3d0; font-size: 13px; line-height: 1.5; max-width: 760px; margin: 10px auto 0; text-align: center; }",
-              1,
-          )
-
-          description = "      <p class=\"page-description\">ESSAS LIÇÕES DEVEM SER APRESENTADAS DURANTE A AULA. VOCÊ SE PREPARA EM CASA E VAI PARA A AULA E APRESENTA.</p>"
-          policy_note = "      <p class=\"completion-policy-note\">O registro de conclusão das lições é controlado pelo professor e não pode ser alterado pelo aluno.</p>"
-          if policy_note not in html:
-              html = html.replace(description, description + "\n" + policy_note, 1)
-
-          html, button_count = re.subn(
-              r"^\s*'<button type=\"button\" class=\"completion-button\"[^\n]*\n",
-              "",
-              html,
-              count=1,
-              flags=re.M,
-          )
-          if button_count != 1:
-              raise SystemExit("Student completion button was not removed")
-
-          html = html.replace(
-              "(isDone ? 'Feita' : 'Não feita')",
-              "(isDone ? 'Conclusão registrada' : 'Aguardando registro do professor')",
-              1,
-          )
-
-          html, listener_count = re.subn(
-              r"\n\s*document\.querySelectorAll\(\"\.completion-button\"\)\.forEach\(function \(button\) \{.*?\n\s*\}\);",
-              "",
-              html,
-              count=1,
-              flags=re.S,
-          )
-          if listener_count != 1:
-              raise SystemExit("Student completion listener was not removed")
-
-          html, save_count = re.subn(
-              r"\n    async function saveLessonCompletion\(lessonId, completed, button\) \{.*?\n    \}\n\n    async function guardPage\(\) \{",
-              "\n\n    async function guardPage() {",
-              html,
-              count=1,
-              flags=re.S,
-          )
-          if save_count != 1:
-              raise SystemExit("saveLessonCompletion function was not removed")
-
-          html = html.replace(
-              "Não foi possível carregar seus registros. Execute supabase_roteiro_de_estudos.sql no Supabase.",
-              "Não foi possível carregar seus registros de conclusão.",
-              1,
-          )
-
-          forbidden = ["completion-button", "saveLessonCompletion", "MARCAR COMO FEITA", "MARCAR COMO NÃO FEITA", ".upsert({"]
+          forbidden = [
+              "completion-button",
+              "saveLessonCompletion",
+              "MARCAR COMO FEITA",
+              "MARCAR COMO NÃO FEITA",
+              ".upsert({",
+          ]
           found = [token for token in forbidden if token in html]
           if found:
               raise SystemExit(f"Student completion controls still present: {found}")
 
           path.write_text(html, encoding="utf-8")
+
+          script_start = html.index("    let currentUser = null;")
+          script_end = html.index("    guardPage();", script_start) + len("    guardPage();")
+          Path("/tmp/roadmap-inline.js").write_text(html[script_start:script_end], encoding="utf-8")
+      - name: Validate roadmap JavaScript syntax
+        run: node --check /tmp/roadmap-inline.js
       - name: Commit roadmap UI update
         run: |
           git config user.name "Zoqvera Development Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add roteiro_de_estudos.html
           git diff --cached --quiet && exit 0
-          git commit -m "fix: make study roadmap completion read-only for students"
+          git commit -m "fix: finalize read-only study roadmap"
           git push
