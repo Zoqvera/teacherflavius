@@ -193,11 +193,19 @@
       });
     }
 
+    function loadStudentBirthdayCelebration() {
+      if (!scriptAssets.studentBirthdayCelebration) {
+        loadFooterCore();
+        return;
+      }
+      deps.loadScriptAsset(scriptAssets.studentBirthdayCelebration, loadFooterCore);
+    }
+
     function loadPortalScripts() {
       loadPaymentOperationsTools();
       deps.loadScriptAsset(scriptAssets.cleanUrls, function () {
         deps.loadScriptAsset(scriptAssets.googleOnlyAccess, function () {
-          deps.loadScriptAsset(scriptAssets.studentBirthdays, loadFooterCore);
+          deps.loadScriptAsset(scriptAssets.studentBirthdays, loadStudentBirthdayCelebration);
         });
       });
     }
