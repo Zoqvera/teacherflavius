@@ -32,10 +32,34 @@ class ProductionCourseAuthorityTests(unittest.TestCase):
             + "\n</body></html>"
         )
 
+    def current_schema_html(self) -> str:
+        current_schema = '''        "@id":"https://teacherflavius.com/#teacher",
+        "description":"Professor de inglês com experiência acadêmica.",
+        "knowsAbout":["ensino de língua inglesa","linguística"],
+        "sameAs":["https://www.instagram.com/teacher.flavius","https://orcid.org/0000-0002-8972-5870"]'''
+        return (
+            "<html><body>\n"
+            + current_schema
+            + "\n"
+            + COURSE_TEACHER_OLD
+            + "\n"
+            + COURSE_INSERTION_ANCHOR
+            + "\n</body></html>"
+        )
+
     def test_transforms_course_authority(self) -> None:
         transformed = transform_course_authority_html(self.source_html())
 
         self.assertIn(COURSE_SCHEMA_NEW, transformed)
+        self.assertIn(COURSE_TEACHER_NEW, transformed)
+        self.assertEqual(transformed.count(COURSE_AUTHORITY_BLOCK.strip()), 1)
+
+    def test_accepts_current_person_schema_without_rewriting_it(self) -> None:
+        source = self.current_schema_html()
+        transformed = transform_course_authority_html(source)
+
+        self.assertIn('"knowsAbout":["ensino de língua inglesa","linguística"]', transformed)
+        self.assertIn('"https://orcid.org/0000-0002-8972-5870"', transformed)
         self.assertIn(COURSE_TEACHER_NEW, transformed)
         self.assertEqual(transformed.count(COURSE_AUTHORITY_BLOCK.strip()), 1)
 
