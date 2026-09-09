@@ -39,6 +39,11 @@
     return value == null ? "" : String(value);
   }
 
+  function valueFrom(source, snakeName, camelName) {
+    if (!source || typeof source !== "object") return undefined;
+    return source[snakeName] !== undefined ? source[snakeName] : source[camelName];
+  }
+
   function escapeHtml(value) {
     return text(value)
       .replace(/&/g, "&amp;")
@@ -76,33 +81,46 @@
     return { tone: "healthy", label: "Prazo em aberto", expired: false, hours: hours };
   }
 
+  function normalizeEvidence(items) {
+    return (Array.isArray(items) ? items : []).map(function (item) {
+      const category = text(item && item.category);
+      const status = text(item && item.status);
+      return {
+        id: text(item && item.id),
+        category: CATEGORY_LABELS[category] ? category : "other",
+        label: text(item && item.label),
+        notes: text(item && item.notes),
+        status: EVIDENCE_LABELS[status] ? status : "needed",
+        updatedAt: text(valueFrom(item, "updated_at", "updatedAt"))
+      };
+    }).filter(function (item) { return item.id && item.label; });
+  }
+
+  function normalizeEvents(items) {
+    return (Array.isArray(items) ? items : []).map(function (event) {
+      return {
+        action: text(event && event.action),
+        details: event && event.details,
+        createdAt: text(valueFrom(event, "created_at", "createdAt"))
+      };
+    });
+  }
+
   function normalizeCasePayload(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
-    const rawCase = source.case && typeof source.case === "object" ? source.case : {};
-    const evidence = Array.isArray(source.evidence) ? source.evidence : [];
-    const events = Array.isArray(source.events) ? source.events : [];
+    const rawCase = source.case && typeof source.case === "object" ? source.case : source;
+    const preparationStatus = text(valueFrom(rawCase, "preparation_status", "preparationStatus"));
     return {
-      chargebackId: text(rawCase.chargeback_id),
-      providerChargebackId: text(rawCase.provider_chargeback_id),
-      documentationStatus: text(rawCase.documentation_status),
-      documentationDeadline: text(rawCase.documentation_deadline),
-      operationalStatus: text(rawCase.operational_status),
-      preparationStatus: PREPARATION_LABELS[text(rawCase.preparation_status)] ? text(rawCase.preparation_status) : "not_started",
-      internalNotes: text(rawCase.internal_notes),
-      submissionMarkedAt: text(rawCase.submission_marked_at),
-      evidence: evidence.map(function (item) {
-        return {
-          id: text(item && item.id),
-          category: CATEGORY_LABELS[text(item && item.category)] ? text(item.category) : "other",
-          label: text(item && item.label),
-          notes: text(item && item.notes),
-          status: EVIDENCE_LABELS[text(item && item.status)] ? text(item.status) : "needed",
-          updatedAt: text(item && item.updated_at)
-        };
-      }).filter(function (item) { return item.id && item.label; }),
-      events: events.map(function (event) {
-        return { action: text(event && event.action), details: event && event.details, createdAt: text(event && event.created_at) };
-      })
+      chargebackId: text(valueFrom(rawCase, "chargeback_id", "chargebackId")),
+      providerChargebackId: text(valueFrom(rawCase, "provider_chargeback_id", "providerChargebackId")),
+      documentationStatus: text(valueFrom(rawCase, "documentation_status", "documentationStatus")),
+      documentationDeadline: text(valueFrom(rawCase, "documentation_deadline", "documentationDeadline")),
+      operationalStatus: text(valueFrom(rawCase, "operational_status", "operationalStatus")),
+      preparationStatus: PREPARATION_LABELS[preparationStatus] ? preparationStatus : "not_started",
+      internalNotes: text(valueFrom(rawCase, "internal_notes", "internalNotes")),
+      submissionMarkedAt: text(valueFrom(rawCase, "submission_marked_at", "submissionMarkedAt")),
+      evidence: normalizeEvidence(source.evidence),
+      events: normalizeEvents(source.events)
     };
   }
 
@@ -136,7 +154,8 @@
       evidence_removed: "Evidência removida",
       submission_marked: "Envio marcado internamente"
     };
-    return '<li><strong>' + escapeHtml(labels[event.action] || event.action) + '</strong><span>' + escapeHtml(formatDate(event.createdAt)) + '</span></li>';
+    return '<li><strong>' + escapeHtml(labels[event.action] || event.action) + '</strong><span>' +
+      escapeHtml(formatDate(event.createdAt)) + '</span></li>';
   }
 
   function buildMarkup(raw) {
@@ -198,7 +217,7 @@
     const response = await windowRef.Auth.getClient().functions.invoke(FUNCTION_NAME, { body: body });
     if (response.error) throw response.error;
     if (!response.data || response.data.ok !== true) throw new Error("Resposta inválida do serviço de documentação.");
-    return normalizeCasePayload(response.data.result);
+    return response.data.result;
   }
 
   function setMessage(panel, message, tone) {
@@ -208,7 +227,7 @@
     target.textContent = message || "";
   }
 
-  function render(documentRef, raw) {
+  function render(documentRef, payload) {
     let container = documentRef.getElementById(PANEL_ID);
     if (!container) {
       container = documentRef.createElement("div");
@@ -217,23 +236,13 @@
       if (!anchor || !anchor.parentNode) return null;
       anchor.parentNode.insertBefore(container, anchor.nextSibling);
     }
-    container.innerHTML = buildMarkup(raw);
+    container.innerHTML = buildMarkup(payload);
     return container.firstElementChild;
   }
 
   async function openCase(dependencies, chargebackId) {
-    const caseData = await invoke(dependencies.windowRef, { action: "get_case", chargeback_id: chargebackId });
-    render(dependencies.documentRef, { case: {
-      chargeback_id: caseData.chargebackId,
-      provider_chargeback_id: caseData.providerChargebackId,
-      documentation_status: caseData.documentationStatus,
-      documentation_deadline: caseData.documentationDeadline,
-      operational_status: caseData.operationalStatus,
-      preparation_status: caseData.preparationStatus,
-      internal_notes: caseData.internalNotes,
-      submission_marked_at: caseData.submissionMarkedAt
-    }, evidence: caseData.evidence, events: caseData.events });
-    const panel = dependencies.documentRef.querySelector(".cb-doc-panel");
+    const payload = await invoke(dependencies.windowRef, { action: "get_case", chargeback_id: chargebackId });
+    const panel = render(dependencies.documentRef, payload);
     if (panel && typeof panel.scrollIntoView === "function") panel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -241,55 +250,54 @@
     return panel ? text(panel.dataset.chargebackId) : "";
   }
 
+  async function refreshAfterCommand(dependencies, body, chargebackId) {
+    await invoke(dependencies.windowRef, body);
+    await openCase(dependencies, chargebackId);
+  }
+
   async function handleCaseSave(dependencies, panel) {
-    const result = await invoke(dependencies.windowRef, {
+    const chargebackId = currentChargebackId(panel);
+    await refreshAfterCommand(dependencies, {
       action: "save_case",
-      chargeback_id: currentChargebackId(panel),
+      chargeback_id: chargebackId,
       preparation_status: panel.querySelector("[data-case-status]").value,
       internal_notes: panel.querySelector("[data-case-notes]").value
-    });
-    render(dependencies.documentRef, { case: {
-      chargeback_id: result.chargebackId,
-      provider_chargeback_id: result.providerChargebackId,
-      documentation_status: result.documentationStatus,
-      documentation_deadline: result.documentationDeadline,
-      operational_status: result.operationalStatus,
-      preparation_status: result.preparationStatus,
-      internal_notes: result.internalNotes,
-      submission_marked_at: result.submissionMarkedAt
-    }, evidence: result.evidence, events: result.events });
+    }, chargebackId);
   }
 
   async function handleEvidenceAdd(dependencies, panel) {
+    const chargebackId = currentChargebackId(panel);
     const label = panel.querySelector("[data-new-label]").value.trim();
     if (!label) throw new Error("Informe a descrição da evidência.");
-    await invoke(dependencies.windowRef, {
+    await refreshAfterCommand(dependencies, {
       action: "add_evidence",
-      chargeback_id: currentChargebackId(panel),
+      chargeback_id: chargebackId,
       category: panel.querySelector("[data-new-category]").value,
       label: label,
       notes: panel.querySelector("[data-new-notes]").value
-    });
-    await openCase(dependencies, currentChargebackId(panel));
+    }, chargebackId);
   }
 
   async function handleEvidenceUpdate(dependencies, panel, button) {
+    const chargebackId = currentChargebackId(panel);
     const item = button.closest("[data-evidence-id]");
-    await invoke(dependencies.windowRef, {
+    await refreshAfterCommand(dependencies, {
       action: "update_evidence",
       evidence_id: item.dataset.evidenceId,
       status: item.querySelector("[data-evidence-status]").value,
       label: item.querySelector("[data-evidence-label]").value,
       notes: item.querySelector("[data-evidence-notes]").value
-    });
-    await openCase(dependencies, currentChargebackId(panel));
+    }, chargebackId);
   }
 
   async function handleEvidenceDelete(dependencies, panel, button) {
-    const item = button.closest("[data-evidence-id]");
     if (!dependencies.windowRef.confirm("Remover esta evidência do checklist?")) return;
-    await invoke(dependencies.windowRef, { action: "delete_evidence", evidence_id: item.dataset.evidenceId });
-    await openCase(dependencies, currentChargebackId(panel));
+    const chargebackId = currentChargebackId(panel);
+    const item = button.closest("[data-evidence-id]");
+    await refreshAfterCommand(dependencies, {
+      action: "delete_evidence",
+      evidence_id: item.dataset.evidenceId
+    }, chargebackId);
   }
 
   async function handleSubmission(dependencies, panel) {
@@ -297,12 +305,12 @@
       "Confirme somente se os arquivos já foram enviados diretamente ao Mercado Pago. Este botão NÃO envia documentos."
     );
     if (!confirmed) return;
-    await invoke(dependencies.windowRef, {
+    const chargebackId = currentChargebackId(panel);
+    await refreshAfterCommand(dependencies, {
       action: "mark_submitted",
-      chargeback_id: currentChargebackId(panel),
+      chargeback_id: chargebackId,
       confirmation: SUBMISSION_CONFIRMATION
-    });
-    await openCase(dependencies, currentChargebackId(panel));
+    }, chargebackId);
   }
 
   async function handleAction(dependencies, event) {
@@ -325,8 +333,7 @@
       else if (action === "save-evidence") await handleEvidenceUpdate(dependencies, panel, button);
       else if (action === "delete-evidence") await handleEvidenceDelete(dependencies, panel, button);
       else if (action === "mark-submitted") await handleSubmission(dependencies, panel);
-      const current = dependencies.documentRef.querySelector(".cb-doc-panel");
-      setMessage(current, "Atualização registrada.", "success");
+      setMessage(dependencies.documentRef.querySelector(".cb-doc-panel"), "Atualização registrada.", "success");
     } catch (error) {
       setMessage(panel, error && error.message ? error.message : "Não foi possível atualizar a documentação.", "error");
     } finally {
