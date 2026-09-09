@@ -85,11 +85,12 @@
   }
 
   async function loadCandidates(windowRef, documentRef) {
-    const response = await windowRef.Auth.getClient().rpc("get_teacher_mercado_pago_refund_candidates", {
-      target_reference_month: selectedMonth(documentRef)
+    const response = await windowRef.Auth.getClient().functions.invoke("list-mercado-pago-refund-candidates", {
+      body: { reference_month: selectedMonth(documentRef) }
     });
     if (response.error) throw response.error;
-    return normalizeCandidates(response.data);
+    const data = response.data && typeof response.data === "object" ? response.data : {};
+    return normalizeCandidates(data.candidates);
   }
 
   async function invokeRefund(windowRef, tuitionId, reason) {
