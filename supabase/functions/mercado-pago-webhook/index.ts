@@ -1,46 +1,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
-
-type JsonRecord = Record<string, unknown>;
-
-type MercadoPagoPayment = {
-  id?: string | number;
-  status?: string;
-  status_detail?: string;
-  transaction_amount?: number;
-  payment_method_id?: string;
-  payment_type_id?: string;
-  external_reference?: string;
-  live_mode?: boolean;
-  date_created?: string;
-  date_last_updated?: string;
-  date_approved?: string;
-};
+import {
+  cleanString,
+  getDefaultKey,
+  JsonRecord,
+  PaymentSyncError,
+  synchronizeMercadoPagoPayment,
+} from "../_shared/mercado_pago_payment_sync.ts";
 
 const encoder = new TextEncoder();
-const KNOWN_PAYMENT_STATUSES = new Set([
-  "created",
-  "pending",
-  "approved",
-  "authorized",
-  "in_process",
-  "in_mediation",
-  "rejected",
-  "cancelled",
-  "refunded",
-  "charged_back",
-]);
 
-function getDefaultKey(envName: string, legacyName: string): string {
-  const raw = Deno.env.get(envName);
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      const key = parsed?.default;
-      if (typeof key === "string" && key) return key;
-    } catch (_) {}
-  }
-  return Deno.env.get(legacyName) ?? "";
-}
+type RegisteredWebhook = {
+  event_id?: string;
+  status?: string;
+  delivery_count?: number;
+  processing_attempts?: number;
+  replay_count?: number;
+  last_processing_started_at?: string | null;
+};
 
 function jsonResponse(body: JsonRecord, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -56,30 +32,44 @@ function isRecord(value: unknown): value is JsonRecord {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-function cleanString(value: unknown, maxLength: number): string {
-  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
-}
-
-function normalizeStatus(value: unknown): string {
-  const status = cleanString(value, 40).toLowerCase();
-  return KNOWN_PAYMENT_STATUSES.has(status) ? status : "in_process";
-}
-
-function normalizePaymentMethod(payment: MercadoPagoPayment): "pix" | "card" {
-  return payment.payment_method_id === "pix" || payment.payment_type_id === "bank_transfer"
-    ? "pix"
-    : "card";
-}
-
-function safeDate(value: unknown): string | null {
-  const text = cleanString(value, 60);
-  if (!text) return null;
-  const date = new Date(text);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+function cleanIdentifier(value: unknown, maxLength: number): string {
+  if (typeof value !== "string" && typeof value !== "number" && typeof value !== "bigint") {
+    return "";
+  }
+  return String(value).trim().slice(0, maxLength);
 }
 
 function hexFromBytes(bytes: Uint8Array): string {
   return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(value));
+  return hexFromBytes(new Uint8Array(digest));
+}
+
+async function buildDeduplicationKey(options: {
+  providerEventId: string;
+  providerPaymentId: string;
+  eventType: string;
+  action: string;
+  eventCreatedAt: string;
+  bodyText: string;
+}): Promise<string> {
+  if (options.providerEventId) {
+    return await sha256Hex(`mercado_pago|notification|${options.providerEventId}`);
+  }
+
+  const bodyFingerprint = await sha256Hex(options.bodyText);
+  return await sha256Hex([
+    "mercado_pago",
+    "fallback",
+    options.providerPaymentId,
+    options.eventType,
+    options.action,
+    options.eventCreatedAt,
+    bodyFingerprint,
+  ].join("|"));
 }
 
 function constantTimeEqual(first: string, second: string): boolean {
@@ -142,15 +132,67 @@ async function recordOperationalEvent(
     target_details: details,
   });
 
-  if (error) {
-    console.error("Unable to record payment operational event", eventType, error.message);
+  if (error) console.error("Unable to record payment operational event", eventType, error.message);
+}
+
+async function registerWebhook(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  options: {
+    deduplicationKey: string;
+    requestId: string;
+    providerEventId: string;
+    providerPaymentId: string;
+    eventType: string;
+    action: string;
+    metadata?: JsonRecord;
+  },
+): Promise<RegisteredWebhook> {
+  const { data, error } = await supabaseAdmin.rpc("register_mercado_pago_webhook_event", {
+    target_deduplication_key: options.deduplicationKey,
+    target_request_id: options.requestId || null,
+    target_provider_event_id: options.providerEventId || null,
+    target_provider_payment_id: options.providerPaymentId || null,
+    target_event_type: options.eventType || null,
+    target_action: options.action || null,
+    target_metadata: options.metadata ?? {},
+  });
+
+  if (error || !isRecord(data) || typeof data.event_id !== "string") {
+    throw new Error(error?.message || "Unable to persist webhook event");
   }
+  return data as RegisteredWebhook;
+}
+
+async function finishWebhook(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  eventId: string,
+  status: "processed" | "ignored" | "failed",
+  errorCode: string | null = null,
+): Promise<void> {
+  const { error } = await supabaseAdmin.rpc("finish_mercado_pago_webhook_event", {
+    target_event_id: eventId,
+    target_status: status,
+    target_error: errorCode,
+  });
+  if (error) throw new Error(error.message);
+}
+
+function processingIsFresh(value: unknown): boolean {
+  if (typeof value !== "string" || !value) return false;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) && Date.now() - timestamp < 120_000;
+}
+
+function syncErrorHttpStatus(error: PaymentSyncError): number {
+  if (error.code.startsWith("gateway_")) return 502;
+  if (["provider_data_mismatch", "attempt_mismatch", "payment_identifier_mismatch"].includes(error.code)) {
+    return 422;
+  }
+  return 500;
 }
 
 Deno.serve(async (request: Request) => {
-  if (request.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
-  }
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
@@ -166,131 +208,145 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const requestUrl = new URL(request.url);
-  const queryDataId = cleanString(
-    requestUrl.searchParams.get("data.id") ?? requestUrl.searchParams.get("data_id"),
-    128,
-  );
+  const rawQueryDataId = requestUrl.searchParams.get("data.id") ?? requestUrl.searchParams.get("data_id") ?? "";
+  const queryDataId = cleanIdentifier(rawQueryDataId, 128);
   const xSignature = request.headers.get("x-signature") ?? "";
-  const xRequestId = request.headers.get("x-request-id") ?? "";
+  const rawRequestId = request.headers.get("x-request-id") ?? "";
+  const xRequestId = cleanString(rawRequestId, 160);
 
-  if (!(await validateSignature(xSignature, xRequestId, queryDataId, webhookSecret))) {
+  if (!(await validateSignature(xSignature, rawRequestId, rawQueryDataId, webhookSecret))) {
     await recordOperationalEvent(
       supabaseAdmin,
       "invalid_webhook_signature",
       "invalid_signature",
       null,
-      {
-        has_request_id: xRequestId.length > 0,
-        has_payment_id: queryDataId.length > 0,
-      },
+      { has_request_id: !!xRequestId, has_payment_id: !!queryDataId },
     );
     console.warn("Rejected Mercado Pago webhook with invalid signature", xRequestId || "without-request-id");
     return jsonResponse({ error: "Invalid signature" }, 401);
   }
 
+  const bodyText = await request.text();
   let payload: JsonRecord;
   try {
-    const parsed = await request.json();
+    const parsed = JSON.parse(bodyText);
     if (!isRecord(parsed)) throw new Error("Invalid body");
     payload = parsed;
   } catch {
+    const deduplicationKey = await sha256Hex(
+      [xRequestId, queryDataId, "invalid_json", await sha256Hex(bodyText)].join("|"),
+    );
+    try {
+      const logged = await registerWebhook(supabaseAdmin, {
+        deduplicationKey,
+        requestId: xRequestId,
+        providerEventId: "",
+        providerPaymentId: queryDataId,
+        eventType: "invalid_json",
+        action: "",
+        metadata: { source: "mercado_pago_webhook", signature_valid: true },
+      });
+      await finishWebhook(supabaseAdmin, logged.event_id!, "failed", "invalid_json");
+    } catch (error) {
+      console.error("Unable to log invalid Mercado Pago JSON", error instanceof Error ? error.message : error);
+    }
     return jsonResponse({ error: "Invalid JSON body" }, 400);
   }
 
+  const payloadData = isRecord(payload.data) ? payload.data : {};
   const eventType = cleanString(payload.type, 50).toLowerCase();
+  const action = cleanString(payload.action, 100).toLowerCase();
+  const providerEventId = cleanIdentifier(payload.id, 128);
+  const providerPaymentId = queryDataId || cleanIdentifier(payloadData.id, 128);
+  const eventCreatedAt = cleanString(payload.date_created, 60);
+  const deduplicationKey = await buildDeduplicationKey({
+    providerEventId,
+    providerPaymentId,
+    eventType,
+    action,
+    eventCreatedAt,
+    bodyText,
+  });
+
+  let logged: RegisteredWebhook;
+  try {
+    logged = await registerWebhook(supabaseAdmin, {
+      deduplicationKey,
+      requestId: xRequestId,
+      providerEventId,
+      providerPaymentId,
+      eventType,
+      action,
+      metadata: {
+        source: "mercado_pago_webhook",
+        signature_valid: true,
+        event_created_at: eventCreatedAt || null,
+      },
+    });
+  } catch (error) {
+    console.error("Unable to persist Mercado Pago webhook", error instanceof Error ? error.message : error);
+    return jsonResponse({ error: "Unable to persist webhook event" }, 500);
+  }
+
+  const eventId = logged.event_id!;
   if (eventType && eventType !== "payment") {
+    await finishWebhook(supabaseAdmin, eventId, "ignored");
     return jsonResponse({ ok: true, ignored: eventType });
   }
 
-  const payloadData = isRecord(payload.data) ? payload.data : {};
-  const paymentId = queryDataId || cleanString(payloadData.id, 128);
-  if (!paymentId) {
+  if (!providerPaymentId) {
+    await finishWebhook(supabaseAdmin, eventId, "failed", "payment_id_missing");
     return jsonResponse({ error: "Payment ID is missing" }, 400);
   }
 
-  let mercadoPagoResponse: Response;
-  try {
-    mercadoPagoResponse = await fetch(
-      `https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${mercadoPagoAccessToken}`,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(8_000),
-      },
-    );
-  } catch (error) {
-    const message = error instanceof Error ? error.name : "network_error";
-    await recordOperationalEvent(
-      supabaseAdmin,
-      "gateway_failure",
-      `webhook_lookup_${message}`.slice(0, 160),
-      paymentId,
-    );
-    console.error("Unable to contact Mercado Pago for webhook", paymentId, message);
-    return jsonResponse({ error: "Unable to retrieve payment" }, 502);
+  if (logged.status === "processed" || logged.status === "ignored") {
+    return jsonResponse({ ok: true, duplicate: true, delivery_count: logged.delivery_count ?? 1 });
+  }
+  if (logged.status === "processing" && processingIsFresh(logged.last_processing_started_at)) {
+    return jsonResponse({ ok: true, duplicate: true, processing: true });
   }
 
-  if (!mercadoPagoResponse.ok) {
-    await recordOperationalEvent(
-      supabaseAdmin,
-      "gateway_failure",
-      `webhook_lookup_http_${mercadoPagoResponse.status}`,
-      paymentId,
-    );
-    console.error("Unable to retrieve Mercado Pago payment", paymentId, mercadoPagoResponse.status);
-    return jsonResponse({ error: "Unable to retrieve payment" }, 502);
-  }
-
-  const payment = await mercadoPagoResponse.json() as MercadoPagoPayment;
-  const returnedPaymentId = payment.id != null ? String(payment.id) : "";
-  const attemptId = cleanString(payment.external_reference, 36);
-  const amount = Number(payment.transaction_amount);
-
-  if (!returnedPaymentId || returnedPaymentId !== paymentId || !attemptId || !Number.isFinite(amount) || amount <= 0) {
-    console.error("Mercado Pago returned inconsistent payment data", paymentId);
-    return jsonResponse({ error: "Inconsistent payment data" }, 422);
-  }
-
-  const { data: attempt, error: attemptError } = await supabaseAdmin
-    .from("tuition_payment_attempts")
-    .select("id, amount, provider_payment_id")
-    .eq("id", attemptId)
-    .maybeSingle();
-
-  if (attemptError) {
-    console.error("Unable to load local payment attempt", attemptId, attemptError.message);
-    return jsonResponse({ error: "Unable to load payment attempt" }, 500);
-  }
-
-  if (!attempt || Number(attempt.amount).toFixed(2) !== amount.toFixed(2)) {
-    console.error("Payment attempt was not found or amount did not match", attemptId);
-    return jsonResponse({ error: "Payment attempt mismatch" }, 422);
-  }
-
-  if (attempt.provider_payment_id && attempt.provider_payment_id !== returnedPaymentId) {
-    console.error("Payment attempt is linked to another provider payment", attemptId);
-    return jsonResponse({ error: "Payment identifier mismatch" }, 422);
-  }
-
-  const { error: processError } = await supabaseAdmin.rpc("process_mercado_pago_payment", {
-    target_attempt_id: attemptId,
-    target_provider_payment_id: returnedPaymentId,
-    target_status: normalizeStatus(payment.status),
-    target_status_detail: cleanString(payment.status_detail, 300) || null,
-    target_amount: amount,
-    target_payment_method: normalizePaymentMethod(payment),
-    target_live_mode: payment.live_mode === true,
-    target_provider_created_at: safeDate(payment.date_created),
-    target_provider_updated_at: safeDate(payment.date_last_updated),
-    target_approved_at: safeDate(payment.date_approved),
+  const { error: beginError } = await supabaseAdmin.rpc("begin_mercado_pago_webhook_processing", {
+    target_event_id: eventId,
+    target_is_replay: false,
   });
-
-  if (processError) {
-    console.error("Unable to apply Mercado Pago webhook", attemptId, processError.message);
-    return jsonResponse({ error: "Unable to process payment" }, 500);
+  if (beginError) {
+    if (beginError.message.includes("já está em processamento")) {
+      return jsonResponse({ ok: true, duplicate: true, processing: true });
+    }
+    console.error("Unable to begin Mercado Pago webhook processing", eventId, beginError.message);
+    return jsonResponse({ error: "Unable to process webhook" }, 500);
   }
 
-  return jsonResponse({ ok: true });
+  try {
+    const result = await synchronizeMercadoPagoPayment({
+      supabaseAdmin,
+      accessToken: mercadoPagoAccessToken,
+      paymentId: providerPaymentId,
+    });
+    await finishWebhook(supabaseAdmin, eventId, "processed");
+    return jsonResponse({ ok: true, status: result.provider_status ?? null });
+  } catch (error) {
+    const syncError = error instanceof PaymentSyncError
+      ? error
+      : new PaymentSyncError("unexpected_processing_error", "Falha inesperada ao processar pagamento.");
+
+    try {
+      await finishWebhook(supabaseAdmin, eventId, "failed", syncError.code);
+    } catch (finishError) {
+      console.error("Unable to mark webhook as failed", eventId, finishError instanceof Error ? finishError.message : finishError);
+    }
+
+    if (syncError.code.startsWith("gateway_")) {
+      await recordOperationalEvent(
+        supabaseAdmin,
+        "gateway_failure",
+        `webhook_${syncError.code}`.slice(0, 160),
+        providerPaymentId,
+      );
+    }
+
+    console.error("Unable to apply Mercado Pago webhook", eventId, syncError.code);
+    return jsonResponse({ error: "Unable to process payment" }, syncErrorHttpStatus(syncError));
+  }
 });
