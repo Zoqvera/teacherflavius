@@ -7,7 +7,8 @@
     login: "/login/",
     onboarding: "/complete-cadastro/",
     profile: "/perfil/",
-    passwordRecovery: "/recuperar-senha/"
+    passwordRecovery: "/recuperar-senha/",
+    accessDenied: "/acesso-negado/"
   });
 
   function normalizeNextPath(value, fallback) {
