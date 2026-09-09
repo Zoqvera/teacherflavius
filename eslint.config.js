@@ -14,6 +14,7 @@ module.exports = [
       "google_only_access.js",
       "student_access_tracker.js",
       "student_birthdays.js",
+      "student_birthday_celebration.js",
       "student_payment_service.js",
       "student_payment_notice_presenter.js",
       "student_payment_notice_renderer.js",
