@@ -1,0 +1,70 @@
+.card.course-tools-card {
+  margin-top: 24px;
+  border-top: 4px solid var(--navy2);
+}
+
+.card.course-tools-card h3 {
+  margin-bottom: 24px;
+  font-family: var(--tf-font-display, Georgia, serif);
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  line-height: 1.25;
+}
+
+.course-tools-list {
+  display: grid;
+  align-items: center;
+  gap: 16px;
+}
+
+.course-tools-devices {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+}
+
+.course-tools-card .course-tools-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.course-tools-emoji {
+  flex: 0 0 40px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 2rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.course-tools-or {
+  color: var(--muted);
+  font-size: .9rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.course-tools-plus {
+  justify-self: center;
+  color: var(--navy2);
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (min-width: 960px) {
+  .course-tools-list {
+    grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 24px;
+  }
+}
