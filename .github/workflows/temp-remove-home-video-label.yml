@@ -1,0 +1,37 @@
+name: Temporary remove home video label
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-remove-home-video-label.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Remove home video overlay label
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          target = '            <span>ASSISTIR AULA GRATUITA</span>\n'
+          if target not in text:
+              raise SystemExit('Expected home video overlay label not found')
+          path.write_text(text.replace(target, '', 1), encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "Zoqvera Development Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: remove home video overlay label"
+          git push
