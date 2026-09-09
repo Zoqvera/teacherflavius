@@ -127,6 +127,26 @@ async function validateSignature(
   return receivedSignatures.some((received) => constantTimeEqual(received, expectedSignature));
 }
 
+async function recordOperationalEvent(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  eventType: "invalid_webhook_signature" | "gateway_failure",
+  eventCode: string,
+  providerPaymentId: string | null = null,
+  details: JsonRecord = {},
+): Promise<void> {
+  const { error } = await supabaseAdmin.rpc("record_payment_operational_event", {
+    target_event_type: eventType,
+    target_event_code: eventCode,
+    target_attempt_id: null,
+    target_provider_payment_id: providerPaymentId,
+    target_details: details,
+  });
+
+  if (error) {
+    console.error("Unable to record payment operational event", eventType, error.message);
+  }
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
@@ -142,6 +162,9 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Server configuration is incomplete" }, 500);
   }
 
+  const supabaseAdmin = createClient(supabaseUrl, secretKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
   const requestUrl = new URL(request.url);
   const queryDataId = cleanString(
     requestUrl.searchParams.get("data.id") ?? requestUrl.searchParams.get("data_id"),
@@ -151,6 +174,16 @@ Deno.serve(async (request: Request) => {
   const xRequestId = request.headers.get("x-request-id") ?? "";
 
   if (!(await validateSignature(xSignature, xRequestId, queryDataId, webhookSecret))) {
+    await recordOperationalEvent(
+      supabaseAdmin,
+      "invalid_webhook_signature",
+      "invalid_signature",
+      null,
+      {
+        has_request_id: xRequestId.length > 0,
+        has_payment_id: queryDataId.length > 0,
+      },
+    );
     console.warn("Rejected Mercado Pago webhook with invalid signature", xRequestId || "without-request-id");
     return jsonResponse({ error: "Invalid signature" }, 401);
   }
@@ -175,17 +208,37 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Payment ID is missing" }, 400);
   }
 
-  const mercadoPagoResponse = await fetch(
-    `https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`,
-    {
-      headers: {
-        Authorization: `Bearer ${mercadoPagoAccessToken}`,
-        Accept: "application/json",
+  let mercadoPagoResponse: Response;
+  try {
+    mercadoPagoResponse = await fetch(
+      `https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${mercadoPagoAccessToken}`,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(8_000),
       },
-    },
-  );
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.name : "network_error";
+    await recordOperationalEvent(
+      supabaseAdmin,
+      "gateway_failure",
+      `webhook_lookup_${message}`.slice(0, 160),
+      paymentId,
+    );
+    console.error("Unable to contact Mercado Pago for webhook", paymentId, message);
+    return jsonResponse({ error: "Unable to retrieve payment" }, 502);
+  }
 
   if (!mercadoPagoResponse.ok) {
+    await recordOperationalEvent(
+      supabaseAdmin,
+      "gateway_failure",
+      `webhook_lookup_http_${mercadoPagoResponse.status}`,
+      paymentId,
+    );
     console.error("Unable to retrieve Mercado Pago payment", paymentId, mercadoPagoResponse.status);
     return jsonResponse({ error: "Unable to retrieve payment" }, 502);
   }
@@ -199,10 +252,6 @@ Deno.serve(async (request: Request) => {
     console.error("Mercado Pago returned inconsistent payment data", paymentId);
     return jsonResponse({ error: "Inconsistent payment data" }, 422);
   }
-
-  const supabaseAdmin = createClient(supabaseUrl, secretKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
   const { data: attempt, error: attemptError } = await supabaseAdmin
     .from("tuition_payment_attempts")
