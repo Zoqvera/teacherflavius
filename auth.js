@@ -16,14 +16,14 @@
     authSessionService: Object.freeze({
       globalName: "AuthSessionService",
       selector: 'script[src^="/auth_session_service.js"]',
-      src: "/auth_session_service.js?v=20260902-1",
+      src: "/auth_session_service.js?v=20260909-1",
       missingMessage: "O serviço de sessão não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de sessão."
     }),
     authGuardService: Object.freeze({
       globalName: "AuthGuardService",
       selector: 'script[src^="/auth_guard_service.js"]',
-      src: "/auth_guard_service.js?v=20260902-1",
+      src: "/auth_guard_service.js?v=20260909-1",
       missingMessage: "O serviço de guarda de autenticação não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de guarda de autenticação."
     }),
@@ -181,7 +181,7 @@
           requireClient: requireClient,
           getGoogleRedirectUrl: navigation.getGoogleRedirectUrl,
           getGoogleLinkRedirectUrl: navigation.getGoogleLinkRedirectUrl,
-          getPasswordRecoveryRedirectUrl: navigation.getPasswordRecoveryRedirectUrl,
+          getPasswordRecoveryRedirectUrl: navigation.getPasswordRecoveryRedirectUrl || navigation.getRedirectUrl,
           loginPath: navigation.paths.login
         });
       }
@@ -252,7 +252,7 @@
           loginPath: navigation.paths.login,
           onboardingPath: navigation.paths.onboarding,
           studentAreaPath: navigation.paths.studentArea,
-          accessDeniedPath: navigation.paths.accessDenied
+          accessDeniedPath: navigation.paths.accessDenied || "/acesso-negado/"
         });
       }
       return authGuardService;
