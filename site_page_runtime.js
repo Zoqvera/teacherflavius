@@ -202,7 +202,17 @@
       deps.loadScriptAsset(scriptAssets.cleanUrls, loadFooterCore);
     }
 
+    function isPaymentAdminPage() {
+      return pageContext().currentPath() === "/mensalidades/";
+    }
+
+    function loadPaymentOperationsDashboard() {
+      if (!isPaymentAdminPage() || !scriptAssets.paymentOperationsDashboard) return;
+      deps.loadScriptAsset(scriptAssets.paymentOperationsDashboard);
+    }
+
     function loadPortalScripts() {
+      loadPaymentOperationsDashboard();
       deps.loadScriptAsset(scriptAssets.cleanUrls, function () {
         deps.loadScriptAsset(scriptAssets.googleOnlyAccess, function () {
           deps.loadScriptAsset(scriptAssets.studentBirthdays, loadFooterCore);

@@ -40,7 +40,7 @@
     }),
     sitePageRuntime: freezeAsset({
       id: "teacher-flavius-site-page-runtime",
-      src: "/site_page_runtime.js?v=20260904-whatsapp-tracking-1"
+      src: "/site_page_runtime.js?v=20260909-payment-dashboard-1"
     }),
     mobileTopNavigation: freezeAsset({
       id: "teacher-flavius-mobile-top-navigation",
@@ -81,6 +81,10 @@
     marketingWhatsappTracker: freezeAsset({
       id: "teacher-flavius-marketing-whatsapp-tracker",
       src: "/marketing_whatsapp_tracker.js?v=20260904-1"
+    }),
+    paymentOperationsDashboard: freezeAsset({
+      id: "teacher-flavius-payment-operations-dashboard",
+      src: "/payment_operations_dashboard.js?v=20260909-1"
     })
   });
 
