@@ -1,0 +1,27 @@
+name: Temporary move course free class card
+
+on:
+  push:
+    paths:
+      - ".github/workflows/temp-move-course-free-class-card.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Move course free class card
+        run: python scripts/temp_move_course_free_class_card.py
+      - name: Commit course page
+        run: |
+          git config user.name "Zoqvera Development Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add curso-de-ingles-online/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: move free class card after how it works"
+          git push
