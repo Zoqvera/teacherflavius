@@ -33,15 +33,27 @@
     return { label: "EM CONTESTAÇÃO", tone: "open" };
   }
 
+  function workflowMeta(status) {
+    const mapping = {
+      not_started: { label: "NÃO INICIADA", tone: "neutral" },
+      collecting: { label: "COLETANDO EVIDÊNCIAS", tone: "warning" },
+      ready: { label: "PRONTA PARA ENVIO", tone: "ready" },
+      submitted: { label: "ENVIO MARCADO", tone: "submitted" },
+      closed: { label: "ENCERRADA", tone: "closed" }
+    };
+    return mapping[status] || mapping.not_started;
+  }
+
   function normalizeChargebacks(rows) {
     return (Array.isArray(rows) ? rows : []).map(function (row) {
+      const preparationStatus = toString(row && row.preparation_status);
       return {
+        caseId: toString(row && row.case_id),
         tuitionId: toString(row && row.tuition_id),
         chargebackId: toString(row && row.chargeback_id),
         amount: toNumber(row && row.amount),
         currency: toString(row && row.currency) || "BRL",
         reason: toString(row && row.reason),
-        coverageApplied: row && typeof row.coverage_applied === "boolean" ? row.coverage_applied : null,
         coverageEligible: row && typeof row.coverage_eligible === "boolean" ? row.coverage_eligible : null,
         documentationStatus: toString(row && row.documentation_status),
         documentationDeadline: toString(row && row.documentation_deadline),
@@ -49,11 +61,16 @@
           ? toString(row.operational_status)
           : "open",
         paymentStatus: toString(row && row.payment_status),
+        preparationStatus: ["not_started", "collecting", "ready", "submitted", "closed"].includes(preparationStatus)
+          ? preparationStatus
+          : "not_started",
+        evidenceTotal: toNumber(row && row.evidence_total),
+        evidenceIncluded: toNumber(row && row.evidence_included),
+        submissionMarkedAt: toString(row && row.submission_marked_at),
         createdAt: toString(row && row.provider_created_at),
-        updatedAt: toString(row && row.provider_updated_at),
-        lastReconciledAt: toString(row && row.last_reconciled_at)
+        updatedAt: toString(row && row.provider_updated_at)
       };
-    }).filter(function (item) { return item.tuitionId && item.chargebackId; });
+    }).filter(function (item) { return item.caseId && item.tuitionId && item.chargebackId; });
   }
 
   function escapeHtml(value) {
@@ -92,6 +109,20 @@
     return status + deadline;
   }
 
+  function workflowText(item) {
+    const meta = workflowMeta(item.preparationStatus);
+    const evidence = item.evidenceTotal
+      ? item.evidenceIncluded + "/" + item.evidenceTotal + " incluídas"
+      : "sem evidências cadastradas";
+    return '<span class="chargeback-workflow ' + meta.tone + '">' + meta.label + '</span><br><small>' + escapeHtml(evidence) + '</small>';
+  }
+
+  function managementButton(item) {
+    return '<button class="chargeback-manage-button" type="button" data-chargeback-manage="true" ' +
+      'data-chargeback-case-id="' + escapeHtml(item.caseId) + '" data-chargeback-provider-id="' + escapeHtml(item.chargebackId) + '">' +
+      'GERENCIAR DOCUMENTAÇÃO</button>';
+  }
+
   function buildMarkup(chargebacks) {
     const rows = normalizeChargebacks(chargebacks);
     if (!rows.length) {
@@ -110,7 +141,8 @@
         '<td>' + escapeHtml(formatCurrency(item.amount, item.currency)) + '</td>' +
         '<td><span class="chargeback-status ' + meta.tone + '">' + meta.label + '</span><br><small>Pagamento: ' + escapeHtml(item.paymentStatus || "não informado") + '</small></td>' +
         '<td>' + escapeHtml(documentationText(item)) + '</td>' +
-        '<td>' + escapeHtml(formatDate(item.updatedAt || item.createdAt)) + '</td>' +
+        '<td>' + workflowText(item) + '</td>' +
+        '<td>' + managementButton(item) + '</td>' +
         '</tr>';
     }).join("");
 
@@ -121,7 +153,7 @@
       (openCount ? openCount + ' em contestação' : 'Sem contestações abertas') + '</span></div>' +
       '<p class="chargeback-description">Casos recebidos diretamente do Mercado Pago. Enquanto a contestação estiver aberta, reembolsos manuais ficam bloqueados.</p>' +
       '<div class="chargeback-table-wrap"><table class="chargeback-table"><thead><tr>' +
-      '<th>Caso</th><th>Valor</th><th>Situação</th><th>Documentação</th><th>Atualização</th>' +
+      '<th>Caso</th><th>Valor</th><th>Situação</th><th>Mercado Pago</th><th>Preparação</th><th>Ação</th>' +
       '</tr></thead><tbody>' + body + '</tbody></table></div></section>';
   }
 
@@ -137,12 +169,14 @@
       ".chargeback-summary{padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}",
       ".chargeback-summary.healthy{background:#ecfdf3;color:#027a48}.chargeback-summary.critical{background:#fff1f3;color:#c01048}",
       ".chargeback-description,.chargeback-empty{color:#667085;margin:0 0 16px;font-size:14px}",
-      ".chargeback-table-wrap{overflow:auto}.chargeback-table{width:100%;border-collapse:collapse;min-width:760px}",
+      ".chargeback-table-wrap{overflow:auto}.chargeback-table{width:100%;border-collapse:collapse;min-width:980px}",
       ".chargeback-table th,.chargeback-table td{text-align:left;padding:12px 10px;border-top:1px solid #eaecf0;vertical-align:top;font-size:13px}",
       ".chargeback-table th{font-size:11px;letter-spacing:.04em;color:#667085;text-transform:uppercase}",
-      ".chargeback-table small{color:#667085}.chargeback-status{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800}",
-      ".chargeback-status.open{background:#fff4e5;color:#b54708}.chargeback-status.won{background:#ecfdf3;color:#027a48}.chargeback-status.lost{background:#fff1f3;color:#c01048}",
-      "button[data-chargeback-locked=true]{cursor:not-allowed;opacity:.72}",
+      ".chargeback-table small{color:#667085}.chargeback-status,.chargeback-workflow{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800}",
+      ".chargeback-status.open,.chargeback-workflow.warning{background:#fff4e5;color:#b54708}.chargeback-status.won,.chargeback-workflow.ready{background:#ecfdf3;color:#027a48}",
+      ".chargeback-status.lost{background:#fff1f3;color:#c01048}.chargeback-workflow.neutral,.chargeback-workflow.closed{background:#f2f4f7;color:#475467}.chargeback-workflow.submitted{background:#eef4ff;color:#3538cd}",
+      ".chargeback-manage-button{border:1px solid #344054;background:#fff;color:#344054;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:800;cursor:pointer}",
+      ".chargeback-manage-button:hover{background:#f9fafb}button[data-chargeback-locked=true]{cursor:not-allowed;opacity:.72}",
       "@media(max-width:620px){.chargeback-panel{padding:16px}.chargeback-heading{display:block}.chargeback-summary{display:inline-block;margin-top:10px}}"
     ].join("");
     documentRef.head.appendChild(style);
@@ -254,6 +288,9 @@
       chargebacks = await loadChargebacks(windowRef, documentRef);
       renderPanel(documentRef, chargebacks);
       lockOpenChargebackActions(documentRef, chargebacks);
+      if (typeof windowRef.CustomEvent === "function") {
+        documentRef.dispatchEvent(new windowRef.CustomEvent("payment-chargebacks-refreshed", { detail: { chargebacks: chargebacks } }));
+      }
       return chargebacks;
     };
 
@@ -269,6 +306,7 @@
 
   return Object.freeze({
     statusMeta: statusMeta,
+    workflowMeta: workflowMeta,
     normalizeChargebacks: normalizeChargebacks,
     buildMarkup: buildMarkup,
     lockOpenChargebackActions: lockOpenChargebackActions,

@@ -31,6 +31,7 @@ const ALERT_SUBJECTS: Record<string, string> = {
   invalid_webhook_burst: "Alerta de segurança: webhooks inválidos do Mercado Pago",
   gateway_failure: "Alerta: falha no gateway Mercado Pago",
   chargeback_opened: "Alerta crítico: nova contestação no Mercado Pago",
+  chargeback_documentation_deadline: "Alerta: prazo de documentação de contestação",
 };
 
 function getDefaultKey(envName: string, legacyName: string): string {
@@ -121,6 +122,14 @@ function detailLines(alert: PaymentAlert): string[] {
         `Situação da documentação: ${cleanDetail(details.documentation_status) || "não informada"}`,
         `Prazo da documentação: ${cleanDetail(details.documentation_deadline) || "não informado"}`,
         `Elegível à cobertura: ${cleanDetail(details.coverage_eligible) || "não informado"}`,
+      ];
+    case "chargeback_documentation_deadline":
+      return [
+        `ID da contestação: ${cleanDetail(details.chargeback_id) || "não informado"}`,
+        `Prazo: ${cleanDetail(details.documentation_deadline) || "não informado"}`,
+        `Horas restantes: ${cleanDetail(details.hours_remaining) || "0"}`,
+        `Preparação interna: ${cleanDetail(details.preparation_status) || "não iniciada"}`,
+        `Faixa do alerta: ${cleanDetail(details.deadline_tier) || "prazo próximo"}`,
       ];
     case "invalid_webhook_burst":
       return [`Webhooks inválidos nos últimos 15 minutos: ${cleanDetail(details.count_15m) || "3+"}`];

@@ -7,6 +7,7 @@ on:
       - "payment_operations_dashboard.js"
       - "payment_refund_operations.js"
       - "payment_chargeback_operations.js"
+      - "payment_chargeback_documentation.js"
       - "payment_webhook_log.js"
       - "supabase/functions/create-mercado-pago-payment/**"
       - "supabase/functions/mercado-pago-webhook/**"
@@ -15,6 +16,7 @@ on:
       - "supabase/functions/refund-mercado-pago-payment/**"
       - "supabase/functions/list-mercado-pago-refund-candidates/**"
       - "supabase/functions/list-mercado-pago-chargebacks/**"
+      - "supabase/functions/manage-mercado-pago-chargeback-documentation/**"
       - "supabase/functions/replay-mercado-pago-webhook/**"
       - "supabase/functions/list-payment-webhooks/**"
       - "supabase/functions/notify-payment-alert/**"
@@ -35,6 +37,7 @@ on:
       - "payment_operations_dashboard.js"
       - "payment_refund_operations.js"
       - "payment_chargeback_operations.js"
+      - "payment_chargeback_documentation.js"
       - "payment_webhook_log.js"
       - "supabase/functions/create-mercado-pago-payment/**"
       - "supabase/functions/mercado-pago-webhook/**"
@@ -43,6 +46,7 @@ on:
       - "supabase/functions/refund-mercado-pago-payment/**"
       - "supabase/functions/list-mercado-pago-refund-candidates/**"
       - "supabase/functions/list-mercado-pago-chargebacks/**"
+      - "supabase/functions/manage-mercado-pago-chargeback-documentation/**"
       - "supabase/functions/replay-mercado-pago-webhook/**"
       - "supabase/functions/list-payment-webhooks/**"
       - "supabase/functions/notify-payment-alert/**"
@@ -84,6 +88,7 @@ jobs:
           tests/payment_reconciliation_monitor_contract.test.js
           tests/payment_refund_operations.test.js
           tests/payment_chargeback_operations.test.js
+          tests/payment_chargeback_documentation.test.js
           tests/payment_sandbox_probe.test.js
           tests/payment_webhook_log.test.js
           tests/payment_workflow_contract.test.js

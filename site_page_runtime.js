@@ -190,12 +190,20 @@
       if (scriptAssets.paymentWebhookLog) deps.loadScriptAsset(scriptAssets.paymentWebhookLog);
     }
 
-    function loadPaymentChargebackOperations() {
-      if (!scriptAssets.paymentChargebackOperations) {
+    function loadPaymentChargebackDocumentation() {
+      if (!scriptAssets.paymentChargebackDocumentation) {
         loadPaymentWebhookLog();
         return;
       }
-      deps.loadScriptAsset(scriptAssets.paymentChargebackOperations, loadPaymentWebhookLog);
+      deps.loadScriptAsset(scriptAssets.paymentChargebackDocumentation, loadPaymentWebhookLog);
+    }
+
+    function loadPaymentChargebackOperations() {
+      if (!scriptAssets.paymentChargebackOperations) {
+        loadPaymentChargebackDocumentation();
+        return;
+      }
+      deps.loadScriptAsset(scriptAssets.paymentChargebackOperations, loadPaymentChargebackDocumentation);
     }
 
     function loadPaymentRefundOperations() {
