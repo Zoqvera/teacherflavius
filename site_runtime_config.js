@@ -20,6 +20,7 @@
     cleanUrls: freezeAsset({ id: "teacher-flavius-clean-urls", src: "/clean_urls.js?v=20260819-1" }),
     googleOnlyAccess: freezeAsset({ id: "teacher-flavius-google-only-access", src: "/google_only_access.js?v=20260819-1" }),
     studentBirthdays: freezeAsset({ id: "teacher-flavius-student-birthdays", src: "/student_birthdays.js?v=20260819-1" }),
+    studentBirthdayCelebration: freezeAsset({ id: "teacher-flavius-student-birthday-celebration", src: "/student_birthday_celebration.js?v=20260909-1" }),
     sitePageContext: freezeAsset({ id: "teacher-flavius-site-page-context", src: "/site_page_context.js?v=20260902-1" }),
     siteBranding: freezeAsset({ id: "teacher-flavius-site-branding", src: "/site_branding.js?v=20260902-1" }),
     siteEnrollmentGuard: freezeAsset({ id: "teacher-flavius-site-enrollment-guard", src: "/site_enrollment_guard.js?v=20260902-1" }),
