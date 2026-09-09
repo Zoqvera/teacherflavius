@@ -69,3 +69,5 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "feat: add free class card to course page"
           git push
+
+# Triggered after creation so the one-time patch runs.
