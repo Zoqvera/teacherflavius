@@ -1,0 +1,184 @@
+body.professor-mfa-required {
+  overflow: hidden;
+}
+
+.professor-mfa-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+}
+
+.professor-mfa-panel {
+  width: min(100%, 520px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 30px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 20px;
+  background: #111827;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+  color: #f8fafc;
+  font-family: Georgia, serif;
+}
+
+.professor-mfa-badge {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.16);
+  color: #c7d2fe;
+  font: 700 11px/1.2 monospace;
+  letter-spacing: 1.4px;
+}
+
+.professor-mfa-title {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: clamp(25px, 5vw, 34px);
+  line-height: 1.12;
+}
+
+.professor-mfa-description,
+.professor-mfa-instruction,
+.professor-mfa-secret-label {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.professor-mfa-content {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.professor-mfa-qr {
+  display: block;
+  width: min(220px, 100%);
+  height: auto;
+  margin: 0 auto;
+  padding: 10px;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.professor-mfa-secret-label {
+  font-size: 13px;
+  text-align: center;
+}
+
+.professor-mfa-secret {
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font: 600 13px/1.5 monospace;
+  text-align: center;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.professor-mfa-code-form {
+  display: grid;
+  gap: 14px;
+}
+
+.professor-mfa-label {
+  display: grid;
+  gap: 8px;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.professor-mfa-code-input {
+  width: 100%;
+  min-height: 54px;
+  padding: 10px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 12px;
+  background: #0f172a;
+  color: #ffffff;
+  font: 700 24px/1 monospace;
+  letter-spacing: 8px;
+  text-align: center;
+  outline: none;
+}
+
+.professor-mfa-code-input:focus {
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.14);
+}
+
+.professor-mfa-primary-button,
+.professor-mfa-link-button {
+  min-height: 48px;
+  border-radius: 12px;
+  font: 700 13px/1 Georgia, serif;
+  cursor: pointer;
+}
+
+.professor-mfa-primary-button {
+  width: 100%;
+  border: 0;
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.professor-mfa-primary-button:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.professor-mfa-primary-button:disabled,
+.professor-mfa-link-button:disabled {
+  cursor: wait;
+  opacity: 0.66;
+}
+
+.professor-mfa-error {
+  min-height: 20px;
+  margin: 15px 0 0;
+  color: #fca5a5;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.professor-mfa-secondary-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.professor-mfa-link-button {
+  border: 0;
+  background: transparent;
+  color: #cbd5e1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .professor-mfa-overlay {
+    padding: 14px;
+  }
+
+  .professor-mfa-panel {
+    max-height: calc(100vh - 28px);
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+
+  .professor-mfa-code-input {
+    letter-spacing: 5px;
+  }
+}
