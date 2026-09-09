@@ -7,10 +7,12 @@
     const showConfigWarning = settings.showConfigWarning;
     const getSession = settings.getSession;
     const ensureProfileForUser = settings.ensureProfileForUser;
+    const isTeacherAdmin = settings.isTeacherAdmin;
     const normalizeNextPath = settings.normalizeNextPath;
     const loginPath = settings.loginPath;
     const onboardingPath = settings.onboardingPath;
     const studentAreaPath = settings.studentAreaPath;
+    const accessDeniedPath = settings.accessDeniedPath;
 
     function getCurrentPath() {
       const currentPath = window.location.pathname + window.location.search;
@@ -31,6 +33,30 @@
       );
     }
 
+    function redirectToAccessDenied() {
+      window.location.replace(accessDeniedPath);
+    }
+
+    function isActiveStudent(profile) {
+      return !!profile &&
+        profile.profile_completed === true &&
+        profile.enrolled === true &&
+        profile.archived !== true;
+    }
+
+    async function teacherHasAccess(guardOptions) {
+      if (guardOptions.allowTeacher === false || typeof isTeacherAdmin !== "function") {
+        return false;
+      }
+
+      try {
+        return await isTeacherAdmin();
+      } catch (error) {
+        console.warn("Não foi possível confirmar o perfil de professor:", error);
+        return false;
+      }
+    }
+
     async function requireAuth(options) {
       const guardOptions = options || {};
 
@@ -49,25 +75,38 @@
         return session.user;
       }
 
+      if (guardOptions.requireActiveStudent && await teacherHasAccess(guardOptions)) {
+        return session.user;
+      }
+
       try {
         const profile = await ensureProfileForUser(session.user);
         if (!profile || profile.profile_completed !== true) {
           redirectToOnboarding();
           return null;
         }
+
+        if (guardOptions.requireActiveStudent && !isActiveStudent(profile)) {
+          redirectToAccessDenied();
+          return null;
+        }
       } catch (error) {
         console.error("Não foi possível verificar o cadastro do usuário:", error);
+        if (guardOptions.requireActiveStudent) {
+          redirectToAccessDenied();
+          return null;
+        }
       }
 
       return session.user;
     }
 
-    return {
+    return Object.freeze({
       requireAuth: requireAuth
-    };
+    });
   }
 
-  window.AuthGuardService = {
+  window.AuthGuardService = Object.freeze({
     create: create
-  };
+  });
 })();
