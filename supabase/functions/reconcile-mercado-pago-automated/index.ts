@@ -44,6 +44,7 @@ const KNOWN_PAYMENT_STATUSES = new Set([
 const ACTIVE_RECONCILIATION_INTERVAL_MS = 4 * 60 * 1000;
 const APPROVED_RECONCILIATION_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const APPROVED_RECONCILIATION_WINDOW_MS = 180 * 24 * 60 * 60 * 1000;
+const AUTH_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
 const PROVIDER_TIMEOUT_MS = 8_000;
 const BATCH_LIMIT = 100;
 
@@ -161,6 +162,14 @@ function jsonResponse(body: JsonRecord, status = 200): Response {
   });
 }
 
+function hasFreshTimestamp(value: string): boolean {
+  if (!/^\d{10,13}$/.test(value)) return false;
+  const raw = Number(value);
+  if (!Number.isFinite(raw)) return false;
+  const timestampMs = value.length <= 10 ? raw * 1000 : raw;
+  return Math.abs(Date.now() - timestampMs) <= AUTH_TIMESTAMP_TOLERANCE_MS;
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
@@ -169,14 +178,15 @@ Deno.serve(async (request: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const mercadoPagoAccessToken = normalizeAccessToken(Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN"));
-  const reconciliationSecret = cleanString(request.headers.get("x-reconciliation-secret"), 256);
+  const reconciliationTimestamp = cleanString(request.headers.get("x-reconciliation-timestamp"), 20);
+  const reconciliationSignature = cleanString(request.headers.get("x-reconciliation-signature"), 128).toLowerCase();
 
   if (!supabaseUrl || !secretKey || !mercadoPagoAccessToken) {
     console.error("Server environment is incomplete for automatic Mercado Pago reconciliation");
     return jsonResponse({ error: "Server configuration is incomplete" }, 500);
   }
 
-  if (!reconciliationSecret) {
+  if (!hasFreshTimestamp(reconciliationTimestamp) || !/^[a-f0-9]{64}$/.test(reconciliationSignature)) {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
@@ -184,15 +194,18 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data: validSecret, error: secretError } = await supabaseAdmin.rpc(
-    "validate_mercado_pago_reconciliation_secret",
-    { candidate: reconciliationSecret },
+  const { data: validSignature, error: signatureError } = await supabaseAdmin.rpc(
+    "validate_mercado_pago_reconciliation_signature",
+    {
+      candidate_timestamp: reconciliationTimestamp,
+      candidate_signature: reconciliationSignature,
+    },
   );
-  if (secretError) {
-    console.error("Unable to validate reconciliation secret", secretError.message);
+  if (signatureError) {
+    console.error("Unable to validate reconciliation signature", signatureError.message);
     return jsonResponse({ error: "Unable to validate authorization" }, 500);
   }
-  if (validSecret !== true) {
+  if (validSignature !== true) {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
