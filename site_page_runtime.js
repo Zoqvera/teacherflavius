@@ -186,12 +186,29 @@
       if (settingsModal) settingsModal.remove();
     }
 
+    function loadPaymentWebhookLog() {
+      if (scriptAssets.paymentWebhookLog) deps.loadScriptAsset(scriptAssets.paymentWebhookLog);
+    }
+
+    function loadPaymentChargebackOperations() {
+      if (!scriptAssets.paymentChargebackOperations) {
+        loadPaymentWebhookLog();
+        return;
+      }
+      deps.loadScriptAsset(scriptAssets.paymentChargebackOperations, loadPaymentWebhookLog);
+    }
+
+    function loadPaymentRefundOperations() {
+      if (!scriptAssets.paymentRefundOperations) {
+        loadPaymentChargebackOperations();
+        return;
+      }
+      deps.loadScriptAsset(scriptAssets.paymentRefundOperations, loadPaymentChargebackOperations);
+    }
+
     function loadPaymentOperationsTools() {
       if (!isPaymentAdminPage() || !scriptAssets.paymentOperationsDashboard) return;
-      deps.loadScriptAsset(scriptAssets.paymentOperationsDashboard, function () {
-        if (scriptAssets.paymentRefundOperations) deps.loadScriptAsset(scriptAssets.paymentRefundOperations);
-        if (scriptAssets.paymentWebhookLog) deps.loadScriptAsset(scriptAssets.paymentWebhookLog);
-      });
+      deps.loadScriptAsset(scriptAssets.paymentOperationsDashboard, loadPaymentRefundOperations);
     }
 
     function loadStudentBirthdayCelebration() {

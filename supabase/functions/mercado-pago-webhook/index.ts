@@ -1,5 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
 import {
+  ChargebackSyncError,
+  synchronizeMercadoPagoChargeback,
+} from "../_shared/mercado_pago_chargeback_sync.ts";
+import {
   cleanString,
   getDefaultKey,
   JsonRecord,
@@ -8,6 +12,7 @@ import {
 } from "../_shared/mercado_pago_payment_sync.ts";
 
 const encoder = new TextEncoder();
+const CHARGEBACK_EVENT_TYPE = "topic_chargebacks_wh";
 
 type RegisteredWebhook = {
   event_id?: string;
@@ -33,9 +38,7 @@ function isRecord(value: unknown): value is JsonRecord {
 }
 
 function cleanIdentifier(value: unknown, maxLength: number): string {
-  if (typeof value !== "string" && typeof value !== "number" && typeof value !== "bigint") {
-    return "";
-  }
+  if (typeof value !== "string" && typeof value !== "number" && typeof value !== "bigint") return "";
   return String(value).trim().slice(0, maxLength);
 }
 
@@ -56,10 +59,7 @@ async function buildDeduplicationKey(options: {
   eventCreatedAt: string;
   bodyText: string;
 }): Promise<string> {
-  if (options.providerEventId) {
-    return await sha256Hex(`mercado_pago|notification|${options.providerEventId}`);
-  }
-
+  if (options.providerEventId) return await sha256Hex(`mercado_pago|notification|${options.providerEventId}`);
   const bodyFingerprint = await sha256Hex(options.bodyText);
   return await sha256Hex([
     "mercado_pago",
@@ -76,11 +76,8 @@ function constantTimeEqual(first: string, second: string): boolean {
   const firstBytes = encoder.encode(first.toLowerCase());
   const secondBytes = encoder.encode(second.toLowerCase());
   if (firstBytes.length !== secondBytes.length) return false;
-
   let difference = 0;
-  for (let index = 0; index < firstBytes.length; index += 1) {
-    difference |= firstBytes[index] ^ secondBytes[index];
-  }
+  for (let index = 0; index < firstBytes.length; index += 1) difference |= firstBytes[index] ^ secondBytes[index];
   return difference === 0;
 }
 
@@ -95,7 +92,6 @@ async function validateSignature(
   const receivedSignatures = signatureParts
     .filter((part) => part.startsWith("v1="))
     .map((part) => part.slice(3));
-
   if (!timestamp || !/^\d+$/.test(timestamp) || !receivedSignatures.length || !secret) return false;
 
   const normalizedDataId = dataId && /[A-Z]/.test(dataId) ? dataId.toLowerCase() : dataId;
@@ -104,7 +100,6 @@ async function validateSignature(
     xRequestId ? `request-id:${xRequestId};` : "",
     `ts:${timestamp};`,
   ].join("");
-
   const key = await crypto.subtle.importKey(
     "raw",
     encoder.encode(secret),
@@ -131,7 +126,6 @@ async function recordOperationalEvent(
     target_provider_payment_id: providerPaymentId,
     target_details: details,
   });
-
   if (error) console.error("Unable to record payment operational event", eventType, error.message);
 }
 
@@ -156,7 +150,6 @@ async function registerWebhook(
     target_action: options.action || null,
     target_metadata: options.metadata ?? {},
   });
-
   if (error || !isRecord(data) || typeof data.event_id !== "string") {
     throw new Error(error?.message || "Unable to persist webhook event");
   }
@@ -183,11 +176,14 @@ function processingIsFresh(value: unknown): boolean {
   return Number.isFinite(timestamp) && Date.now() - timestamp < 120_000;
 }
 
-function syncErrorHttpStatus(error: PaymentSyncError): number {
-  if (error.code.startsWith("gateway_")) return 502;
-  if (["provider_data_mismatch", "attempt_mismatch", "payment_identifier_mismatch"].includes(error.code)) {
-    return 422;
-  }
+function errorCode(error: unknown): string {
+  if (error instanceof PaymentSyncError || error instanceof ChargebackSyncError) return error.code;
+  return "unexpected_processing_error";
+}
+
+function errorHttpStatus(code: string): number {
+  if (code.includes("gateway_")) return 502;
+  if (code.includes("mismatch") || code.includes("invalid") || code.includes("ambiguous")) return 422;
   return 500;
 }
 
@@ -196,10 +192,9 @@ Deno.serve(async (request: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
-  const mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") ?? "";
+  const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") ?? "";
   const webhookSecret = Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET") ?? "";
-
-  if (!supabaseUrl || !secretKey || !mercadoPagoAccessToken || !webhookSecret) {
+  if (!supabaseUrl || !secretKey || !accessToken || !webhookSecret) {
     console.error("Missing environment variables for Mercado Pago webhook");
     return jsonResponse({ error: "Server configuration is incomplete" }, 500);
   }
@@ -220,9 +215,8 @@ Deno.serve(async (request: Request) => {
       "invalid_webhook_signature",
       "invalid_signature",
       null,
-      { has_request_id: !!xRequestId, has_payment_id: !!queryDataId },
+      { has_request_id: !!xRequestId, has_data_id: !!queryDataId },
     );
-    console.warn("Rejected Mercado Pago webhook with invalid signature", xRequestId || "without-request-id");
     return jsonResponse({ error: "Invalid signature" }, 401);
   }
 
@@ -241,7 +235,7 @@ Deno.serve(async (request: Request) => {
         deduplicationKey,
         requestId: xRequestId,
         providerEventId: "",
-        providerPaymentId: queryDataId,
+        providerPaymentId: "",
         eventType: "invalid_json",
         action: "",
         metadata: { source: "mercado_pago_webhook", signature_valid: true },
@@ -257,7 +251,12 @@ Deno.serve(async (request: Request) => {
   const eventType = cleanString(payload.type, 50).toLowerCase();
   const action = cleanString(payload.action, 100).toLowerCase();
   const providerEventId = cleanIdentifier(payload.id, 128);
-  const providerPaymentId = queryDataId || cleanIdentifier(payloadData.id, 128);
+  const chargebackId = eventType === CHARGEBACK_EVENT_TYPE
+    ? (queryDataId || cleanIdentifier(payloadData.id, 128))
+    : "";
+  const providerPaymentId = eventType === CHARGEBACK_EVENT_TYPE
+    ? cleanIdentifier(payloadData.payment_id, 128)
+    : (queryDataId || cleanIdentifier(payloadData.id, 128));
   const eventCreatedAt = cleanString(payload.date_created, 60);
   const deduplicationKey = await buildDeduplicationKey({
     providerEventId,
@@ -281,6 +280,7 @@ Deno.serve(async (request: Request) => {
         source: "mercado_pago_webhook",
         signature_valid: true,
         event_created_at: eventCreatedAt || null,
+        chargeback_id: chargebackId || null,
       },
     });
   } catch (error) {
@@ -289,14 +289,17 @@ Deno.serve(async (request: Request) => {
   }
 
   const eventId = logged.event_id!;
-  if (eventType && eventType !== "payment") {
+  if (eventType && eventType !== "payment" && eventType !== CHARGEBACK_EVENT_TYPE) {
     await finishWebhook(supabaseAdmin, eventId, "ignored");
     return jsonResponse({ ok: true, ignored: eventType });
   }
-
   if (!providerPaymentId) {
     await finishWebhook(supabaseAdmin, eventId, "failed", "payment_id_missing");
     return jsonResponse({ error: "Payment ID is missing" }, 400);
+  }
+  if (eventType === CHARGEBACK_EVENT_TYPE && !chargebackId) {
+    await finishWebhook(supabaseAdmin, eventId, "failed", "chargeback_id_missing");
+    return jsonResponse({ error: "Chargeback ID is missing" }, 400);
   }
 
   if (logged.status === "processed" || logged.status === "ignored") {
@@ -314,39 +317,48 @@ Deno.serve(async (request: Request) => {
     if (beginError.message.includes("já está em processamento")) {
       return jsonResponse({ ok: true, duplicate: true, processing: true });
     }
-    console.error("Unable to begin Mercado Pago webhook processing", eventId, beginError.message);
     return jsonResponse({ error: "Unable to process webhook" }, 500);
   }
 
   try {
-    const result = await synchronizeMercadoPagoPayment({
-      supabaseAdmin,
-      accessToken: mercadoPagoAccessToken,
-      paymentId: providerPaymentId,
-    });
-    await finishWebhook(supabaseAdmin, eventId, "processed");
-    return jsonResponse({ ok: true, status: result.provider_status ?? null });
-  } catch (error) {
-    const syncError = error instanceof PaymentSyncError
-      ? error
-      : new PaymentSyncError("unexpected_processing_error", "Falha inesperada ao processar pagamento.");
+    const result = eventType === CHARGEBACK_EVENT_TYPE
+      ? await synchronizeMercadoPagoChargeback({
+        supabaseAdmin,
+        accessToken,
+        chargebackId,
+        expectedPaymentId: providerPaymentId,
+        sourceWebhookEventId: eventId,
+      })
+      : await synchronizeMercadoPagoPayment({
+        supabaseAdmin,
+        accessToken,
+        paymentId: providerPaymentId,
+      });
 
+    await finishWebhook(supabaseAdmin, eventId, "processed");
+    return jsonResponse({
+      ok: true,
+      event_type: eventType || "payment",
+      status: result.provider_status ?? result.operational_status ?? null,
+    });
+  } catch (error) {
+    const code = errorCode(error);
     try {
-      await finishWebhook(supabaseAdmin, eventId, "failed", syncError.code);
+      await finishWebhook(supabaseAdmin, eventId, "failed", code);
     } catch (finishError) {
       console.error("Unable to mark webhook as failed", eventId, finishError instanceof Error ? finishError.message : finishError);
     }
 
-    if (syncError.code.startsWith("gateway_")) {
+    if (code.includes("gateway_")) {
       await recordOperationalEvent(
         supabaseAdmin,
         "gateway_failure",
-        `webhook_${syncError.code}`.slice(0, 160),
+        `webhook_${code}`.slice(0, 160),
         providerPaymentId,
+        { source: eventType === CHARGEBACK_EVENT_TYPE ? "chargeback_webhook" : "payment_webhook" },
       );
     }
-
-    console.error("Unable to apply Mercado Pago webhook", eventId, syncError.code);
-    return jsonResponse({ error: "Unable to process payment" }, syncErrorHttpStatus(syncError));
+    console.error("Unable to apply Mercado Pago webhook", eventId, code);
+    return jsonResponse({ error: "Unable to process Mercado Pago event", code }, errorHttpStatus(code));
   }
 });
