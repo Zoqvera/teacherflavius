@@ -15,7 +15,8 @@ const SCRIPT_NAMES = [
   "footerCore",
   "cleanUrls",
   "googleOnlyAccess",
-  "studentBirthdays"
+  "studentBirthdays",
+  "paymentOperationsDashboard"
 ];
 
 function createAssets() {
@@ -184,7 +185,24 @@ test("loads portal chain in the original order", function () {
     "studentBirthdays",
     "footerCore"
   ]);
+  assert.equal(result.scriptCalls.includes("paymentOperationsDashboard"), false);
   assert.deepEqual(result.events.enrollment, [true]);
   assert.deepEqual(result.events.whatsapp, [true]);
   assert.deepEqual(result.events.idleTimeouts, []);
+});
+
+test("loads the payment operations dashboard only on mensalidades", function () {
+  const result = createRuntime({
+    path: "/mensalidades/",
+    publicPage: false
+  });
+
+  assert.equal(result.scriptCalls.includes("paymentOperationsDashboard"), true);
+  assert.deepEqual(result.scriptCalls.slice(-5), [
+    "paymentOperationsDashboard",
+    "cleanUrls",
+    "googleOnlyAccess",
+    "studentBirthdays",
+    "footerCore"
+  ]);
 });
