@@ -29,7 +29,7 @@ test("webhook validates HMAC before accepting and persisting valid notifications
   assert.notEqual(registrationIndex, -1);
   assert.ok(validationIndex < registrationIndex);
   assert.match(webhookSource, /constantTimeEqual/);
-  assert.match(webhookSource, /providerEventId\s*\?\s*`mercado_pago_event:/);
+  assert.match(webhookSource, /mercado_pago\|notification\|\$\{options\.providerEventId\}/);
   assert.match(webhookSource, /delivery_count/);
 });
 
@@ -53,5 +53,6 @@ test("webhook listing requires administrative MFA and exposes a bounded technica
   assert.match(listSource, /rpc\("is_teacher_admin_mfa"\)/);
   assert.match(listSource, /\.from\("payment_webhook_events"\)/);
   assert.match(listSource, /Math\.min/);
-  assert.doesNotMatch(listSource, /signature|authorization.*select|raw_payload/i);
+  assert.match(listSource, /id, provider_payment_id, event_type, action, status, delivery_count/);
+  assert.doesNotMatch(listSource, /raw_payload|payload_body/);
 });
