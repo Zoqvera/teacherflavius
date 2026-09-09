@@ -77,17 +77,71 @@ function stopPaymentPolling() {
   paymentPollTimer = null;
 }
 
-async function getFunctionError(error) {
-  if (!error) return "Não foi possível processar o pagamento.";
+function getPaymentStorage() {
+  try {
+    return window.sessionStorage;
+  } catch (_) {
+    return null;
+  }
+}
+
+function getPaymentUserId() {
+  return paymentSession && paymentSession.user ? paymentSession.user.id : "";
+}
+
+function loadPaymentAttemptKey(tuitionId) {
+  if (!window.PaymentIdempotency || !tuitionId) return null;
+  return window.PaymentIdempotency.load(getPaymentStorage(), getPaymentUserId(), tuitionId);
+}
+
+function getOrCreatePaymentAttemptKey(tuitionId) {
+  if (!window.PaymentIdempotency) return currentIdempotencyKey || window.crypto.randomUUID();
+  return window.PaymentIdempotency.getOrCreate(
+    getPaymentStorage(),
+    getPaymentUserId(),
+    tuitionId,
+    function () { return window.crypto.randomUUID(); }
+  );
+}
+
+function clearPaymentAttemptKey(tuitionId) {
+  if (window.PaymentIdempotency && tuitionId) {
+    window.PaymentIdempotency.clear(getPaymentStorage(), getPaymentUserId(), tuitionId);
+  }
+  if (!selectedTuition || String(selectedTuition.tuition_id) === String(tuitionId || "")) {
+    currentIdempotencyKey = null;
+  }
+}
+
+async function getFunctionFailure(error) {
+  const fallbackMessage = error && error.message
+    ? error.message
+    : "Não foi possível processar o pagamento.";
+  const failure = { message: fallbackMessage, code: "", status: null };
+  if (!error) return failure;
+
   try {
     if (error.context && typeof error.context.clone === "function") {
+      const status = Number(error.context.status);
+      if (Number.isFinite(status) && status > 0) failure.status = status;
       const data = await error.context.clone().json();
-      if (data && data.error) return data.error;
+      if (data && data.error) failure.message = data.error;
+      if (data && data.code) failure.code = String(data.code);
     }
-  } catch (contextError) {
-    // Usa a mensagem padrão abaixo.
+  } catch (_) {
+    // Mantém os dados disponíveis no erro original.
   }
-  return error.message || "Não foi possível processar o pagamento.";
+
+  return failure;
+}
+
+async function getFunctionError(error) {
+  return (await getFunctionFailure(error)).message;
+}
+
+function shouldClearPaymentAttemptKey(failure) {
+  if (!window.PaymentIdempotency) return true;
+  return window.PaymentIdempotency.shouldClearAfterFailure(failure);
 }
 
 async function invokePaymentFunction(payload) {
@@ -152,7 +206,7 @@ async function renderPaymentBrick() {
   if (!selectedTuition || !bricksBuilder) return;
   stopPaymentPolling();
   await destroyBricks();
-  currentIdempotencyKey = null;
+  currentIdempotencyKey = loadPaymentAttemptKey(selectedTuition.tuition_id);
   document.getElementById("retryPaymentButton").hidden = true;
   document.getElementById("paymentBrickLoading").hidden = false;
 
@@ -179,7 +233,7 @@ async function renderPaymentBrick() {
         document.getElementById("paymentBrickLoading").hidden = true;
       },
       onSubmit: async function (submission) {
-        currentIdempotencyKey = currentIdempotencyKey || window.crypto.randomUUID();
+        currentIdempotencyKey = getOrCreatePaymentAttemptKey(selectedTuition.tuition_id);
         setPageMessage("Enviando o pagamento com segurança ao Mercado Pago...", "");
         try {
           const result = await invokePaymentFunction({
@@ -200,8 +254,11 @@ async function renderPaymentBrick() {
           );
           startPaymentPolling(selectedTuition.tuition_id, 0);
         } catch (error) {
-          currentIdempotencyKey = null;
-          setPageMessage(await getFunctionError(error), "error");
+          const failure = await getFunctionFailure(error);
+          if (shouldClearPaymentAttemptKey(failure)) {
+            clearPaymentAttemptKey(selectedTuition.tuition_id);
+          }
+          setPageMessage(failure.message, "error");
           throw error;
         }
       },
@@ -222,7 +279,9 @@ async function renderStatusScreen(paymentId, status) {
   }
   document.getElementById("paymentBrickContainer").innerHTML = "";
   document.getElementById("paymentBrickLoading").hidden = true;
-  document.getElementById("retryPaymentButton").hidden = !["rejected", "cancelled"].includes(status);
+  const retryableStatus = ["rejected", "cancelled"].includes(status);
+  document.getElementById("retryPaymentButton").hidden = !retryableStatus;
+  if (retryableStatus && selectedTuition) clearPaymentAttemptKey(selectedTuition.tuition_id);
 
   statusScreenBrickController = await bricksBuilder.create("statusScreen", "statusScreenBrickContainer", {
     initialization: { paymentId: paymentId },
@@ -250,6 +309,7 @@ async function selectTuition(tuitionId) {
 
 function showAllPaid(message) {
   stopPaymentPolling();
+  if (selectedTuition) clearPaymentAttemptKey(selectedTuition.tuition_id);
   destroyBricks();
   document.getElementById("paymentWorkspace").hidden = true;
   document.getElementById("paymentSuccess").hidden = false;
@@ -268,13 +328,13 @@ async function refreshAfterPayment(paidTuitionId) {
   });
 
   if (!stillPending) {
+    clearPaymentAttemptKey(paidTuitionId);
     if (!pendingTuitions.length) {
       showAllPaid("Seu pagamento foi confirmado. Todas as mensalidades desta conta estão em dia.");
       return true;
     }
 
     await destroyBricks();
-    currentIdempotencyKey = null;
     selectedTuition = pendingTuitions[0];
     renderTuitionList();
     updateCheckoutHeading();
@@ -357,7 +417,7 @@ async function initializePage() {
 }
 
 document.getElementById("retryPaymentButton").addEventListener("click", function () {
-  currentIdempotencyKey = null;
+  if (selectedTuition) clearPaymentAttemptKey(selectedTuition.tuition_id);
   renderPaymentBrick();
 });
 
