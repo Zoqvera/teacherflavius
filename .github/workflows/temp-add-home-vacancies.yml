@@ -1,0 +1,27 @@
+name: Temporary add home vacancies card
+
+on:
+  push:
+    paths:
+      - ".github/workflows/temp-add-home-vacancies.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Add home vacancies card
+        run: python scripts/temp_add_home_vacancies.py
+      - name: Commit home page
+        run: |
+          git config user.name "Zoqvera Development Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: add live vacancies card to home"
+          git push
