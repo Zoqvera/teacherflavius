@@ -30,8 +30,7 @@ function jsonResponse(request: Request, body: JsonRecord, status = 200): Respons
 function normalizeReferenceMonth(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (!/^\d{4}-\d{2}-01$/.test(trimmed)) return null;
-  return trimmed;
+  return /^\d{4}-\d{2}-01$/.test(trimmed) ? trimmed : null;
 }
 
 Deno.serve(async (request: Request) => {
@@ -68,7 +67,7 @@ Deno.serve(async (request: Request) => {
   const supabaseAdmin = createClient(supabaseUrl, secretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data, error } = await supabaseAdmin.rpc("list_mercado_pago_chargebacks", {
+  const { data, error } = await supabaseAdmin.rpc("list_mercado_pago_chargeback_documentation_cases", {
     target_reference_month: referenceMonth,
   });
   if (error) {
@@ -77,12 +76,12 @@ Deno.serve(async (request: Request) => {
   }
 
   const rows = (Array.isArray(data) ? data : []).map((row: JsonRecord) => ({
+    case_id: row.chargeback_id ?? null,
     tuition_id: row.tuition_id ?? null,
     chargeback_id: row.provider_chargeback_id ?? null,
     amount: row.amount ?? null,
     currency: row.currency ?? null,
     reason: row.reason ?? null,
-    coverage_applied: row.coverage_applied ?? null,
     coverage_eligible: row.coverage_eligible ?? null,
     documentation_status: row.documentation_status ?? null,
     documentation_deadline: row.documentation_deadline ?? null,
@@ -90,7 +89,10 @@ Deno.serve(async (request: Request) => {
     payment_status: row.payment_status ?? null,
     provider_created_at: row.provider_created_at ?? null,
     provider_updated_at: row.provider_updated_at ?? null,
-    last_reconciled_at: row.last_reconciled_at ?? null,
+    preparation_status: row.preparation_status ?? "not_started",
+    submission_marked_at: row.submission_marked_at ?? null,
+    evidence_total: row.evidence_total ?? 0,
+    evidence_included: row.evidence_included ?? 0,
   }));
 
   return jsonResponse(request, { ok: true, chargebacks: rows });
