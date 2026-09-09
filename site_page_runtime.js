@@ -203,8 +203,7 @@
     }
 
     function isPaymentAdminPage() {
-      const path = pageContext().currentPath();
-      return path === "/mensalidades/" || path === "/mensalidades.html";
+      return pageContext().currentPath() === "/mensalidades/";
     }
 
     function loadPaymentOperationsDashboard() {
