@@ -1,18 +1,41 @@
 (function () {
+  "use strict";
+
   const CLASS_TYPES = ["INDIVIDUAL", "QUARTETO", "8 ALUNOS"];
+  const AUTH_WAIT_OPTIONS = Object.freeze({
+    maxAttempts: 20,
+    delayMs: 150,
+    finalCheck: false
+  });
+  const RESOURCE_WAITER_MODULE = Object.freeze({
+    globalName: "ResourceWaiter",
+    selector: 'script[src*="resource_waiter.js"]',
+    src: "/resource_waiter.js?v=20260909-1"
+  });
+
   const classTypeByStudentId = new Map();
   let client = null;
 
-  function sleep(ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  function authResourcesAreReady() {
+    return !!(window.Auth && Auth.isConfigured && Auth.isConfigured());
+  }
+
+  async function getResourceWaiter() {
+    if (window.ResourceWaiter) return window.ResourceWaiter;
+    if (!window.ModuleLoader || typeof window.ModuleLoader.loadGlobalModule !== "function") return null;
+
+    try {
+      return await window.ModuleLoader.loadGlobalModule(RESOURCE_WAITER_MODULE);
+    } catch (error) {
+      console.error("Falha ao carregar ResourceWaiter:", error);
+      return null;
+    }
   }
 
   async function waitForAuth() {
-    for (let i = 0; i < 20; i++) {
-      if (window.Auth && Auth.isConfigured && Auth.isConfigured()) return true;
-      await sleep(150);
-    }
-    return false;
+    const resourceWaiter = await getResourceWaiter();
+    if (!resourceWaiter || typeof resourceWaiter.waitUntil !== "function") return false;
+    return resourceWaiter.waitUntil(authResourcesAreReady, AUTH_WAIT_OPTIONS);
   }
 
   function getStudentId(card) {
