@@ -61,6 +61,7 @@ jobs:
           tests/payment_gateway_contract.test.js
           tests/payment_sandbox_probe.test.js
           tests/payment_webhook_log.test.js
+          tests/payment_workflow_contract.test.js
 
   sandbox-credential-probe:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
