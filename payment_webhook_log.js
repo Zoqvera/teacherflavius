@@ -187,9 +187,13 @@
   }
 
   async function loadEvents(client) {
-    const response = await client.rpc("get_teacher_payment_webhook_events", { target_limit: 15 });
+    const response = await client.functions.invoke("list-payment-webhooks", {
+      body: { limit: 15 }
+    });
     if (response.error) throw response.error;
-    return Array.isArray(response.data) ? response.data : [];
+    return response.data && Array.isArray(response.data.events)
+      ? response.data.events
+      : [];
   }
 
   async function refresh(dependencies) {
