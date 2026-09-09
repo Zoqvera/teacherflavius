@@ -59,6 +59,7 @@
 
     async function requireAuth(options) {
       const guardOptions = options || {};
+      const requiresActiveStudent = guardOptions.requireActiveStudent !== false;
 
       if (!isConfigured()) {
         showConfigWarning();
@@ -75,7 +76,7 @@
         return session.user;
       }
 
-      if (guardOptions.requireActiveStudent && await teacherHasAccess(guardOptions)) {
+      if (requiresActiveStudent && await teacherHasAccess(guardOptions)) {
         return session.user;
       }
 
@@ -86,13 +87,13 @@
           return null;
         }
 
-        if (guardOptions.requireActiveStudent && !isActiveStudent(profile)) {
+        if (requiresActiveStudent && !isActiveStudent(profile)) {
           redirectToAccessDenied();
           return null;
         }
       } catch (error) {
         console.error("Não foi possível verificar o cadastro do usuário:", error);
-        if (guardOptions.requireActiveStudent) {
+        if (requiresActiveStudent) {
           redirectToAccessDenied();
           return null;
         }
