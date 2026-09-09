@@ -19,31 +19,10 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
+          from textwrap import dedent
 
-          def replace_once(text, old, new, label):
-              if old not in text:
-                  raise SystemExit(f"Expected block not found: {label}")
-              return text.replace(old, new, 1)
-
-          phase2 = Path("supabase_seguranca_fase2_rls.sql")
-          sql = phase2.read_text(encoding="utf-8")
-          old = '''alter policy "Alunos podem ver suas lições do roteiro"
-            on public.study_roadmap_completion
-            to authenticated
-            using ((select auth.uid()) = user_id);
-
-          alter policy "Alunos podem inserir suas lições do roteiro"
-            on public.study_roadmap_completion
-            to authenticated
-            with check ((select auth.uid()) = user_id);
-
-          alter policy "Alunos podem atualizar suas lições do roteiro"
-            on public.study_roadmap_completion
-            to authenticated
-            using ((select auth.uid()) = user_id)
-            with check ((select auth.uid()) = user_id);
-'''
-          new = '''alter policy "Alunos podem ver suas lições do roteiro"
+          teacher_only = dedent('''
+          alter policy "Alunos podem ver suas lições do roteiro"
             on public.study_roadmap_completion
             to authenticated
             using ((select auth.uid()) = user_id);
@@ -77,72 +56,58 @@ jobs:
             for delete
             to authenticated
             using ((select public.is_teacher_admin()));
-'''
-          sql = replace_once(sql, old, new, "phase2 roadmap policies")
-          phase2.write_text(sql, encoding="utf-8")
+          ''').lstrip()
 
-          rollback = Path("supabase_seguranca_fase2_rls_rollback.sql")
-          sql = rollback.read_text(encoding="utf-8")
-          old = '''alter policy "Alunos podem ver suas lições do roteiro"
-            on public.study_roadmap_completion
-            to public
-            using (auth.uid() = user_id);
+          replacements = {
+              Path("supabase_seguranca_fase2_rls.sql"): dedent('''
+              alter policy "Alunos podem ver suas lições do roteiro"
+                on public.study_roadmap_completion
+                to authenticated
+                using ((select auth.uid()) = user_id);
 
-          alter policy "Alunos podem inserir suas lições do roteiro"
-            on public.study_roadmap_completion
-            to public
-            with check (auth.uid() = user_id);
+              alter policy "Alunos podem inserir suas lições do roteiro"
+                on public.study_roadmap_completion
+                to authenticated
+                with check ((select auth.uid()) = user_id);
 
-          alter policy "Alunos podem atualizar suas lições do roteiro"
-            on public.study_roadmap_completion
-            to public
-            using (auth.uid() = user_id)
-            with check (auth.uid() = user_id);
-'''
-          new = '''alter policy "Alunos podem ver suas lições do roteiro"
-            on public.study_roadmap_completion
-            to authenticated
-            using ((select auth.uid()) = user_id);
+              alter policy "Alunos podem atualizar suas lições do roteiro"
+                on public.study_roadmap_completion
+                to authenticated
+                using ((select auth.uid()) = user_id)
+                with check ((select auth.uid()) = user_id);
+              ''').lstrip(),
+              Path("supabase_seguranca_fase2_rls_rollback.sql"): dedent('''
+              alter policy "Alunos podem ver suas lições do roteiro"
+                on public.study_roadmap_completion
+                to public
+                using (auth.uid() = user_id);
 
-          drop policy if exists "Alunos podem inserir suas lições do roteiro"
-            on public.study_roadmap_completion;
-          drop policy if exists "Alunos podem atualizar suas lições do roteiro"
-            on public.study_roadmap_completion;
+              alter policy "Alunos podem inserir suas lições do roteiro"
+                on public.study_roadmap_completion
+                to public
+                with check (auth.uid() = user_id);
 
-          drop policy if exists "Professor pode inserir progresso do roteiro"
-            on public.study_roadmap_completion;
-          create policy "Professor pode inserir progresso do roteiro"
-            on public.study_roadmap_completion
-            for insert
-            to authenticated
-            with check ((select public.is_teacher_admin()));
+              alter policy "Alunos podem atualizar suas lições do roteiro"
+                on public.study_roadmap_completion
+                to public
+                using (auth.uid() = user_id)
+                with check (auth.uid() = user_id);
+              ''').lstrip(),
+          }
 
-          drop policy if exists "Professor pode atualizar progresso do roteiro"
-            on public.study_roadmap_completion;
-          create policy "Professor pode atualizar progresso do roteiro"
-            on public.study_roadmap_completion
-            for update
-            to authenticated
-            using ((select public.is_teacher_admin()))
-            with check ((select public.is_teacher_admin()));
-
-          drop policy if exists "Professor pode excluir progresso do roteiro"
-            on public.study_roadmap_completion;
-          create policy "Professor pode excluir progresso do roteiro"
-            on public.study_roadmap_completion
-            for delete
-            to authenticated
-            using ((select public.is_teacher_admin()));
-'''
-          sql = replace_once(sql, old, new, "phase2 rollback roadmap policies")
-          rollback.write_text(sql, encoding="utf-8")
-
-          for path in (phase2, rollback):
+          for path, legacy in replacements.items():
               content = path.read_text(encoding="utf-8")
-              if 'alter policy "Alunos podem inserir suas lições do roteiro"' in content:
-                  raise SystemExit(f"Legacy student insert policy remains in {path}")
-              if 'alter policy "Alunos podem atualizar suas lições do roteiro"' in content:
-                  raise SystemExit(f"Legacy student update policy remains in {path}")
+              if legacy not in content:
+                  raise SystemExit(f"Expected roadmap policy block not found in {path}")
+              updated = content.replace(legacy, teacher_only, 1)
+              forbidden = (
+                  'alter policy "Alunos podem inserir suas lições do roteiro"',
+                  'alter policy "Alunos podem atualizar suas lições do roteiro"',
+              )
+              remaining = [token for token in forbidden if token in updated]
+              if remaining:
+                  raise SystemExit(f"Legacy student write policies remain in {path}: {remaining}")
+              path.write_text(updated, encoding="utf-8")
       - name: Commit aligned security scripts
         run: |
           git config user.name "Zoqvera Development Bot"
