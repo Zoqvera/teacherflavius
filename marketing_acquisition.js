@@ -1,17 +1,39 @@
 (function () {
   "use strict";
 
+  const AUTH_WAIT_OPTIONS = Object.freeze({
+    maxAttempts: 30,
+    delayMs: 100
+  });
+  const RESOURCE_WAITER_MODULE = Object.freeze({
+    globalName: "ResourceWaiter",
+    selector: 'script[src*="resource_waiter.js"]',
+    src: "/resource_waiter.js?v=20260909-1"
+  });
+
   var attributionStudents = [];
   var recentLeadRows = [];
 
-  function sleep(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+  function authResourcesAreReady() {
+    return !!(window.Auth && Auth.getClient && Auth.getSession && Auth.isConfigured && Auth.isConfigured());
+  }
+
+  async function getResourceWaiter() {
+    if (window.ResourceWaiter) return window.ResourceWaiter;
+    if (!window.ModuleLoader || typeof window.ModuleLoader.loadGlobalModule !== "function") return null;
+
+    try {
+      return await window.ModuleLoader.loadGlobalModule(RESOURCE_WAITER_MODULE);
+    } catch (error) {
+      console.error("Falha ao carregar ResourceWaiter:", error);
+      return null;
+    }
+  }
 
   async function waitForAuth() {
-    for (var i = 0; i < 30; i++) {
-      if (window.Auth && Auth.getClient && Auth.getSession && Auth.isConfigured && Auth.isConfigured()) return true;
-      await sleep(100);
-    }
-    return !!(window.Auth && Auth.getClient && Auth.getSession && Auth.isConfigured && Auth.isConfigured());
+    var resourceWaiter = await getResourceWaiter();
+    if (!resourceWaiter || typeof resourceWaiter.waitUntil !== "function") return false;
+    return resourceWaiter.waitUntil(authResourcesAreReady, AUTH_WAIT_OPTIONS);
   }
 
   function escapeHtml(value) {
