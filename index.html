@@ -59,6 +59,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   </script>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link id="teacher-flavius-brand-palette" rel="stylesheet" href="/brand_palette.css?v=20260820-3">
+  <link rel="stylesheet" href="/home_vacancies.css?v=20260909-1">
   <style>
     :root{--ux-navy:#02102b;--ux-navy-2:#063e7d;--ux-paper:#f7f9fc;--ux-white:#fff;--ux-text:#12213b;--ux-muted:#64748b;--ux-green:#168c4d;--ux-green-dark:#0f713d;--ux-gold:#e6bd68;--ux-line:rgba(2,16,43,.13);--ux-shadow:0 24px 70px rgba(2,16,43,.16)}
     *{box-sizing:border-box}html{scroll-behavior:smooth;overflow-x:clip}body{margin:0;min-width:320px;overflow-x:clip;background:var(--ux-paper);color:var(--ux-text);font-family:var(--tf-font-body,Inter,system-ui,sans-serif);line-height:1.6}a{color:inherit}.shell{width:min(1120px,calc(100% - 32px));margin:0 auto}
@@ -211,6 +212,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </section>
 
+    <section class="home-vacancies-section" aria-labelledby="home-vacancies-title">
+      <div class="shell home-vacancies-card">
+        <div class="home-vacancies-head">
+          <p class="eyebrow">Vagas disponíveis agora</p>
+          <h2 id="home-vacancies-title">Veja quais turmas em grupo já estão em andamento e ainda têm vaga.</h2>
+          <p id="homeVacanciesSummary">Consultando a disponibilidade atual das turmas...</p>
+        </div>
+        <div id="homeVacanciesList" class="home-vacancies-grid" aria-live="polite">
+          <div class="home-vacancies-empty">Carregando vagas disponíveis...</div>
+        </div>
+        <div class="home-vacancies-cta">
+          <a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR UMA AULA EXPERIMENTAL GRATUITA</a>
+        </div>
+      </div>
+    </section>
+
     <section class="faq" aria-labelledby="faq-title">
       <div class="shell">
         <div class="section-head">
@@ -285,6 +302,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       window.setTimeout(function(){observer.disconnect();},12000);
     })();
   </script>
+  <script src="/supabase_config.js?v=20260902-1"></script>
+  <script defer src="/home_vacancies.js?v=20260909-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
 
