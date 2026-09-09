@@ -44,6 +44,23 @@ test("normalizes provider case, evidence and audit history", function () {
   assert.equal(result.preparationStatus, "collecting");
   assert.equal(result.evidence[0].status, "verified");
   assert.equal(result.events[0].action, "evidence_added");
+  assert.equal(result.events[0].createdAt, "2026-09-09T19:00:00Z");
+});
+
+test("preserves camel-case audit timestamps after an in-page refresh", function () {
+  const result = workflow.normalizeCasePayload({
+    chargebackId: "11111111-1111-4111-8111-111111111111",
+    providerChargebackId: "234000062890459000",
+    documentationStatus: "pending",
+    documentationDeadline: "2026-09-10T20:00:00Z",
+    operationalStatus: "open",
+    preparationStatus: "ready",
+    evidence: [{ id: "e1", category: "service_delivery", label: "Frequência", status: "included", updatedAt: "2026-09-09T19:05:00Z" }],
+    events: [{ action: "evidence_updated", createdAt: "2026-09-09T19:06:00Z" }]
+  });
+
+  assert.equal(result.evidence[0].updatedAt, "2026-09-09T19:05:00Z");
+  assert.equal(result.events[0].createdAt, "2026-09-09T19:06:00Z");
 });
 
 test("allows internal submission mark only when every safeguard is satisfied", function () {
