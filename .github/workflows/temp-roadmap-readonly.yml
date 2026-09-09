@@ -1,0 +1,101 @@
+name: Temporary make study roadmap read-only
+
+on:
+  push:
+    paths:
+      - ".github/workflows/temp-roadmap-readonly.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Make roadmap completion read-only for students
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path("roteiro_de_estudos.html")
+          html = path.read_text(encoding="utf-8")
+
+          html = html.replace(
+              "      justify-content: space-between;\n      gap: 12px;\n      padding-top: 12px;",
+              "      justify-content: flex-end;\n      gap: 12px;\n      padding-top: 12px;",
+              1,
+          )
+
+          html = re.sub(
+              r"\n    \.completion-button \{.*?\n    \}\n    \.lesson-card\.done \.completion-button \{.*?\n    \}\n    \.completion-button:disabled \{.*?\}\n",
+              "\n",
+              html,
+              count=1,
+              flags=re.S,
+          )
+
+          html = html.replace(
+              "    .completion-status.error { color: #fca5a5; }",
+              "    .completion-status.error { color: #fca5a5; }\n"
+              "    .completion-policy-note { color: #a7f3d0; font-size: 13px; line-height: 1.5; max-width: 760px; margin: 10px auto 0; text-align: center; }",
+              1,
+          )
+
+          description = "      <p class=\"page-description\">ESSAS LIÇÕES DEVEM SER APRESENTADAS DURANTE A AULA. VOCÊ SE PREPARA EM CASA E VAI PARA A AULA E APRESENTA.</p>"
+          policy_note = "      <p class=\"completion-policy-note\">O registro de conclusão das lições é controlado pelo professor e não pode ser alterado pelo aluno.</p>"
+          if policy_note not in html:
+              html = html.replace(description, description + "\n" + policy_note, 1)
+
+          old_completion = """            '<div class=\"completion-row\">' +
+              '<button type=\"button\" class=\"completion-button\" data-lesson-id=\"' + lessonId + '\">' + (isDone ? 'MARCAR COMO NÃO FEITA' : 'MARCAR COMO FEITA') + '</button>' +
+              '<span class=\"completion-status ' + (isDone ? 'saved' : '') + '\" id=\"status-' + lessonId + '\">' + (isDone ? 'Feita' : 'Não feita') + '</span>' +
+            '</div>' +"""
+          new_completion = """            '<div class=\"completion-row\">' +
+              '<span class=\"completion-status ' + (isDone ? 'saved' : '') + '\" id=\"status-' + lessonId + '\">' + (isDone ? 'Conclusão registrada' : 'Aguardando registro do professor') + '</span>' +
+            '</div>' +"""
+          if old_completion not in html:
+              raise SystemExit("Completion control block not found")
+          html = html.replace(old_completion, new_completion, 1)
+
+          html = re.sub(
+              r"\n\s*document\.querySelectorAll\(\"\.completion-button\"\)\.forEach\(function \(button\) \{.*?\n\s*\}\);",
+              "",
+              html,
+              count=1,
+              flags=re.S,
+          )
+
+          html, removed = re.subn(
+              r"\n    async function saveLessonCompletion\(lessonId, completed, button\) \{.*?\n    \}\n\n    async function guardPage\(\) \{",
+              "\n\n    async function guardPage() {",
+              html,
+              count=1,
+              flags=re.S,
+          )
+          if removed != 1:
+              raise SystemExit("saveLessonCompletion function was not removed")
+
+          html = html.replace(
+              "Não foi possível carregar seus registros. Execute supabase_roteiro_de_estudos.sql no Supabase.",
+              "Não foi possível carregar seus registros de conclusão.",
+              1,
+          )
+
+          forbidden = ["MARCAR COMO FEITA", "MARCAR COMO NÃO FEITA", ".upsert({"]
+          found = [token for token in forbidden if token in html]
+          if found:
+              raise SystemExit(f"Student completion controls still present: {found}")
+
+          path.write_text(html, encoding="utf-8")
+      - name: Commit roadmap UI update
+        run: |
+          git config user.name "Zoqvera Development Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add roteiro_de_estudos.html
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: make study roadmap completion read-only for students"
+          git push
