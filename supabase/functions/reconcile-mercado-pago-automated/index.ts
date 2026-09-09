@@ -26,6 +26,10 @@ type MercadoPagoPayment = {
   date_approved?: string;
 };
 
+type MercadoPagoSearchResponse = {
+  results?: MercadoPagoPayment[];
+};
+
 const ACTIVE_STATUSES = new Set([
   "created",
   "pending",
@@ -113,43 +117,70 @@ function isDueForReconciliation(attempt: PaymentAttempt, now: number): boolean {
   return lastReconciledAt === null || now - lastReconciledAt >= APPROVED_RECONCILIATION_INTERVAL_MS;
 }
 
+function amountMatches(attempt: PaymentAttempt, payment: MercadoPagoPayment): boolean {
+  const amount = Number(payment.transaction_amount);
+  return Number.isFinite(amount)
+    && amount > 0
+    && amount.toFixed(2) === Number(attempt.amount).toFixed(2);
+}
+
 function validateProviderPayment(attempt: PaymentAttempt, payment: MercadoPagoPayment): void {
   const providerPaymentId = payment.id != null ? String(payment.id) : "";
   const externalReference = cleanString(payment.external_reference, 36);
-  const amount = Number(payment.transaction_amount);
 
   if (
-    !attempt.provider_payment_id
-    || providerPaymentId !== attempt.provider_payment_id
+    !providerPaymentId
+    || (attempt.provider_payment_id && providerPaymentId !== attempt.provider_payment_id)
     || externalReference !== attempt.id
-    || !Number.isFinite(amount)
-    || amount <= 0
-    || amount.toFixed(2) !== Number(attempt.amount).toFixed(2)
+    || !amountMatches(attempt, payment)
   ) {
     throw new Error("Mercado Pago returned inconsistent payment data");
   }
+}
+
+async function fetchProviderJson(url: string, accessToken: string): Promise<unknown> {
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+    },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Mercado Pago lookup failed with HTTP ${response.status}`);
+  }
+  return await response.json();
 }
 
 async function fetchMercadoPagoPayment(
   accessToken: string,
   providerPaymentId: string,
 ): Promise<MercadoPagoPayment> {
-  const response = await fetch(
-    `https://api.mercadopago.com/v1/payments/${encodeURIComponent(providerPaymentId)}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
-      },
-      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
-    },
-  );
+  const url = `https://api.mercadopago.com/v1/payments/${encodeURIComponent(providerPaymentId)}`;
+  return await fetchProviderJson(url, accessToken) as MercadoPagoPayment;
+}
 
-  if (!response.ok) {
-    throw new Error(`Mercado Pago payment lookup failed with HTTP ${response.status}`);
+async function findMercadoPagoPayment(
+  accessToken: string,
+  attempt: PaymentAttempt,
+): Promise<MercadoPagoPayment | null> {
+  const parameters = new URLSearchParams({
+    sort: "date_created",
+    criteria: "desc",
+    external_reference: attempt.id,
+    limit: "10",
+  });
+  const url = `https://api.mercadopago.com/v1/payments/search?${parameters.toString()}`;
+  const search = await fetchProviderJson(url, accessToken) as MercadoPagoSearchResponse;
+  const matches = (Array.isArray(search.results) ? search.results : []).filter(function (payment) {
+    return cleanString(payment.external_reference, 36) === attempt.id && amountMatches(attempt, payment);
+  });
+
+  if (matches.length > 1) {
+    throw new Error("Multiple Mercado Pago payments found for the same payment attempt");
   }
-
-  return await response.json() as MercadoPagoPayment;
+  return matches[0] ?? null;
 }
 
 function jsonResponse(body: JsonRecord, status = 200): Response {
@@ -168,6 +199,21 @@ function hasFreshTimestamp(value: string): boolean {
   if (!Number.isFinite(raw)) return false;
   const timestampMs = value.length <= 10 ? raw * 1000 : raw;
   return Math.abs(Date.now() - timestampMs) <= AUTH_TIMESTAMP_TOLERANCE_MS;
+}
+
+async function markReconciliationMiss(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  attemptId: string,
+): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("tuition_payment_attempts")
+    .update({
+      last_reconciled_at: new Date().toISOString(),
+      last_reconciliation_error: null,
+    })
+    .eq("id", attemptId)
+    .is("provider_payment_id", null);
+  if (error) throw new Error(error.message);
 }
 
 Deno.serve(async (request: Request) => {
@@ -212,7 +258,6 @@ Deno.serve(async (request: Request) => {
   const { data: attempts, error: attemptsError } = await supabaseAdmin
     .from("tuition_payment_attempts")
     .select("id, provider_payment_id, amount, status, last_reconciled_at, provider_updated_at, created_at")
-    .not("provider_payment_id", "is", null)
     .in("status", RECONCILABLE_STATUSES)
     .order("last_reconciled_at", { ascending: true, nullsFirst: true })
     .limit(BATCH_LIMIT);
@@ -228,6 +273,8 @@ Deno.serve(async (request: Request) => {
   const summary = {
     checked: 0,
     synchronized: 0,
+    recovered: 0,
+    not_found: 0,
     approved: 0,
     pending: 0,
     reversed: 0,
@@ -236,11 +283,20 @@ Deno.serve(async (request: Request) => {
   };
 
   for (const attempt of candidates) {
-    if (!attempt.provider_payment_id) continue;
     summary.checked += 1;
 
     try {
-      const payment = await fetchMercadoPagoPayment(mercadoPagoAccessToken, attempt.provider_payment_id);
+      const recoveredProviderId = !attempt.provider_payment_id;
+      const payment = attempt.provider_payment_id
+        ? await fetchMercadoPagoPayment(mercadoPagoAccessToken, attempt.provider_payment_id)
+        : await findMercadoPagoPayment(mercadoPagoAccessToken, attempt);
+
+      if (!payment) {
+        await markReconciliationMiss(supabaseAdmin, attempt.id);
+        summary.not_found += 1;
+        continue;
+      }
+
       validateProviderPayment(attempt, payment);
       const status = normalizeStatus(payment.status);
       const { data: processResult, error: processError } = await supabaseAdmin.rpc(
@@ -262,6 +318,7 @@ Deno.serve(async (request: Request) => {
 
       const result = (processResult ?? {}) as JsonRecord;
       summary.synchronized += 1;
+      if (recoveredProviderId) summary.recovered += 1;
       if (status === "approved") summary.approved += 1;
       if (ACTIVE_STATUSES.has(status)) summary.pending += 1;
       if (result.payment_reversed === true) summary.reversed += 1;
