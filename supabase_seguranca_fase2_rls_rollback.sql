@@ -288,19 +288,38 @@ alter policy "Alunos podem atualizar seus próprios dados privados"
 
 alter policy "Alunos podem ver suas lições do roteiro"
   on public.study_roadmap_completion
-  to public
-  using (auth.uid() = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id);
 
-alter policy "Alunos podem inserir suas lições do roteiro"
-  on public.study_roadmap_completion
-  to public
-  with check (auth.uid() = user_id);
+drop policy if exists "Alunos podem inserir suas lições do roteiro"
+  on public.study_roadmap_completion;
+drop policy if exists "Alunos podem atualizar suas lições do roteiro"
+  on public.study_roadmap_completion;
 
-alter policy "Alunos podem atualizar suas lições do roteiro"
+drop policy if exists "Professor pode inserir progresso do roteiro"
+  on public.study_roadmap_completion;
+create policy "Professor pode inserir progresso do roteiro"
   on public.study_roadmap_completion
-  to public
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  for insert
+  to authenticated
+  with check ((select public.is_teacher_admin()));
+
+drop policy if exists "Professor pode atualizar progresso do roteiro"
+  on public.study_roadmap_completion;
+create policy "Professor pode atualizar progresso do roteiro"
+  on public.study_roadmap_completion
+  for update
+  to authenticated
+  using ((select public.is_teacher_admin()))
+  with check ((select public.is_teacher_admin()));
+
+drop policy if exists "Professor pode excluir progresso do roteiro"
+  on public.study_roadmap_completion;
+create policy "Professor pode excluir progresso do roteiro"
+  on public.study_roadmap_completion
+  for delete
+  to authenticated
+  using ((select public.is_teacher_admin()));
 
 alter policy "Professor pode verificar suas próprias credenciais"
   on public.teacher_admins
