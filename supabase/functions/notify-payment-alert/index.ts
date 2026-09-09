@@ -30,6 +30,7 @@ const ALERT_SUBJECTS: Record<string, string> = {
   payment_reversal_pending: "Alerta crítico: reversão de pagamento pendente",
   invalid_webhook_burst: "Alerta de segurança: webhooks inválidos do Mercado Pago",
   gateway_failure: "Alerta: falha no gateway Mercado Pago",
+  chargeback_opened: "Alerta crítico: nova contestação no Mercado Pago",
 };
 
 function getDefaultKey(envName: string, legacyName: string): string {
@@ -64,11 +65,8 @@ async function secretsMatch(received: string, expected: string): Promise<boolean
   const receivedBytes = new Uint8Array(receivedDigest);
   const expectedBytes = new Uint8Array(expectedDigest);
   if (receivedBytes.length !== expectedBytes.length) return false;
-
   let difference = 0;
-  for (let index = 0; index < receivedBytes.length; index += 1) {
-    difference |= receivedBytes[index] ^ expectedBytes[index];
-  }
+  for (let index = 0; index < receivedBytes.length; index += 1) difference |= receivedBytes[index] ^ expectedBytes[index];
   return difference === 0;
 }
 
@@ -115,6 +113,15 @@ function detailLines(alert: PaymentAlert): string[] {
         `Status do provedor: ${cleanDetail(details.provider_status) || "não informado"}`,
         `Detalhe: ${cleanDetail(details.status_detail) || "não informado"}`,
       ];
+    case "chargeback_opened":
+      return [
+        `ID da contestação: ${cleanDetail(details.chargeback_id) || "não informado"}`,
+        `Valor contestado: ${cleanDetail(details.amount) || "não informado"} ${cleanDetail(details.currency) || ""}`.trim(),
+        `Motivo: ${cleanDetail(details.reason) || "não informado"}`,
+        `Situação da documentação: ${cleanDetail(details.documentation_status) || "não informada"}`,
+        `Prazo da documentação: ${cleanDetail(details.documentation_deadline) || "não informado"}`,
+        `Elegível à cobertura: ${cleanDetail(details.coverage_eligible) || "não informado"}`,
+      ];
     case "invalid_webhook_burst":
       return [`Webhooks inválidos nos últimos 15 minutos: ${cleanDetail(details.count_15m) || "3+"}`];
     case "gateway_failure":
@@ -151,9 +158,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const receivedWebhookSecret = request.headers.get("x-webhook-secret") ?? "";
-  if (!(await secretsMatch(receivedWebhookSecret, expectedWebhookSecret))) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
-  }
+  if (!(await secretsMatch(receivedWebhookSecret, expectedWebhookSecret))) return jsonResponse({ error: "Unauthorized" }, 401);
 
   let payload: WebhookPayload;
   try {
@@ -174,17 +179,12 @@ Deno.serve(async (request: Request) => {
   const supabase = createClient(supabaseUrl, secretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-
   const { data: alert, error: alertError } = await supabase
     .from("payment_alert_notifications")
     .select("id, alert_type, severity, status, attempts, details, created_at")
     .eq("id", payload.record.id)
     .single();
-
-  if (alertError || !alert) {
-    console.error("Payment alert not found", payload.record.id, alertError?.message);
-    return jsonResponse({ error: "Alert not found" }, 404);
-  }
+  if (alertError || !alert) return jsonResponse({ error: "Alert not found" }, 404);
 
   const paymentAlert = alert as PaymentAlert;
   if (paymentAlert.status === "sent") return jsonResponse({ ok: true, already_sent: true });
@@ -194,24 +194,14 @@ Deno.serve(async (request: Request) => {
   const nextAttempt = Number(paymentAlert.attempts ?? 0) + 1;
   const { error: attemptUpdateError } = await supabase
     .from("payment_alert_notifications")
-    .update({
-      attempts: nextAttempt,
-      last_attempt_at: attemptAt,
-      updated_at: attemptAt,
-      last_error: null,
-    })
+    .update({ attempts: nextAttempt, last_attempt_at: attemptAt, updated_at: attemptAt, last_error: null })
     .eq("id", paymentAlert.id)
     .eq("status", "pending");
-
-  if (attemptUpdateError) {
-    console.error("Unable to mark payment alert attempt", paymentAlert.id, attemptUpdateError.message);
-    return jsonResponse({ error: "Unable to update alert attempt" }, 500);
-  }
+  if (attemptUpdateError) return jsonResponse({ error: "Unable to update alert attempt" }, 500);
 
   if (paymentAlert.details?.dry_run === true) {
     const sentAt = new Date().toISOString();
-    await supabase
-      .from("payment_alert_notifications")
+    await supabase.from("payment_alert_notifications")
       .update({ status: "sent", sent_at: sentAt, updated_at: sentAt, last_error: null })
       .eq("id", paymentAlert.id);
     return jsonResponse({ ok: true, dry_run: true });
@@ -232,7 +222,6 @@ Deno.serve(async (request: Request) => {
     "Consulte o Controle de Mensalidades no portal para investigar o caso.",
     "Por privacidade, este e-mail não inclui dados cadastrais do aluno.",
   ].join("\n");
-
   const detailHtml = details.length
     ? `<ul>${details.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`
     : "";
@@ -258,44 +247,28 @@ Deno.serve(async (request: Request) => {
         "Content-Type": "application/json",
         "Idempotency-Key": `payment-alert-${paymentAlert.id}`,
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [notificationEmail],
-        subject,
-        text: textBody,
-        html: htmlBody,
-      }),
+      body: JSON.stringify({ from: fromEmail, to: [notificationEmail], subject, text: textBody, html: htmlBody }),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await supabase
-      .from("payment_alert_notifications")
+    await supabase.from("payment_alert_notifications")
       .update({ status: "failed", last_error: message.slice(0, 1000), updated_at: new Date().toISOString() })
       .eq("id", paymentAlert.id);
-    console.error("Unable to send payment alert", paymentAlert.id, message);
     return jsonResponse({ error: "Unable to contact email provider" }, 502);
   }
 
   if (!resendResponse.ok) {
     const providerError = `provider_http_${resendResponse.status}`;
-    await supabase
-      .from("payment_alert_notifications")
+    await supabase.from("payment_alert_notifications")
       .update({ status: "failed", last_error: providerError, updated_at: new Date().toISOString() })
       .eq("id", paymentAlert.id);
-    console.error("Resend rejected payment alert", paymentAlert.id, resendResponse.status);
     return jsonResponse({ error: "Email provider rejected the message" }, 502);
   }
 
   const sentAt = new Date().toISOString();
-  const { error: sentUpdateError } = await supabase
-    .from("payment_alert_notifications")
+  const { error: sentUpdateError } = await supabase.from("payment_alert_notifications")
     .update({ status: "sent", sent_at: sentAt, updated_at: sentAt, last_error: null })
     .eq("id", paymentAlert.id);
-
-  if (sentUpdateError) {
-    console.error("Payment alert sent but status update failed", paymentAlert.id, sentUpdateError.message);
-    return jsonResponse({ error: "Email sent but status update failed" }, 500);
-  }
-
+  if (sentUpdateError) return jsonResponse({ error: "Email sent but status update failed" }, 500);
   return jsonResponse({ ok: true });
 });
