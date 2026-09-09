@@ -58,7 +58,8 @@ module.exports = [
       "payment_operations_dashboard.js",
       "payment_webhook_log.js",
       "pagamento/app.js",
-      "pagamento/payment_idempotency.js"
+      "pagamento/payment_idempotency.js",
+      "scripts/mercado_pago_sandbox_probe.js"
     ],
     languageOptions: {
       ecmaVersion: "latest",
