@@ -9,7 +9,7 @@ function read(relativePath) {
 }
 
 const migration = read("supabase/migrations/20260909213850_add_safe_mercado_pago_refunds.sql");
-const accessMigration = read("supabase/migrations/20260909215030_harden_mercado_pago_refund_access.sql");
+const accessMigration = read("supabase/migrations/20260909214900_harden_mercado_pago_refund_access.sql");
 const edgeFunction = read("supabase/functions/refund-mercado-pago-payment/index.ts");
 const listingFunction = read("supabase/functions/list-mercado-pago-refund-candidates/index.ts");
 const browserModule = read("payment_refund_operations.js");
