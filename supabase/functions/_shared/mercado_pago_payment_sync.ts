@@ -103,6 +103,23 @@ async function fetchPayment(accessToken: string, paymentId: string): Promise<Mer
   return await response.json() as MercadoPagoPayment;
 }
 
+async function clearReversalMarkerAfterReapproval(
+  supabaseAdmin: SupabaseClient,
+  attemptId: string,
+  providerPaymentId: string,
+): Promise<void> {
+  const { error } = await supabaseAdmin.rpc("mark_mercado_pago_payment_reinstated", {
+    target_attempt_id: attemptId,
+    target_provider_payment_id: providerPaymentId,
+  });
+  if (error) {
+    throw new PaymentSyncError(
+      "reinstatement_failed",
+      "Pagamento reprovado anteriormente foi aprovado novamente, mas a auditoria não pôde ser atualizada.",
+    );
+  }
+}
+
 export async function synchronizeMercadoPagoPayment(options: {
   supabaseAdmin: SupabaseClient;
   accessToken: string;
@@ -112,6 +129,7 @@ export async function synchronizeMercadoPagoPayment(options: {
   const returnedPaymentId = payment.id != null ? String(payment.id) : "";
   const attemptId = cleanString(payment.external_reference, 36);
   const amount = Number(payment.transaction_amount);
+  const normalizedStatus = normalizeStatus(payment.status);
 
   if (
     !returnedPaymentId ||
@@ -146,7 +164,7 @@ export async function synchronizeMercadoPagoPayment(options: {
     {
       target_attempt_id: attemptId,
       target_provider_payment_id: returnedPaymentId,
-      target_status: normalizeStatus(payment.status),
+      target_status: normalizedStatus,
       target_status_detail: cleanString(payment.status_detail, 300) || null,
       target_amount: amount,
       target_payment_method: normalizePaymentMethod(payment),
@@ -161,9 +179,13 @@ export async function synchronizeMercadoPagoPayment(options: {
     throw new PaymentSyncError("process_failed", "Falha ao aplicar o estado do pagamento.");
   }
 
+  if (normalizedStatus === "approved") {
+    await clearReversalMarkerAfterReapproval(options.supabaseAdmin, attemptId, returnedPaymentId);
+  }
+
   return {
     ...(processResult && typeof processResult === "object" ? processResult as JsonRecord : {}),
     provider_payment_id: returnedPaymentId,
-    provider_status: normalizeStatus(payment.status),
+    provider_status: normalizedStatus,
   };
 }
