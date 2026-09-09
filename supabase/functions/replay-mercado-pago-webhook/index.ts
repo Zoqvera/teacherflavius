@@ -71,7 +71,9 @@ Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders(request) });
   }
-  if (request.method !== "POST") return jsonResponse(request, { error: "Method not allowed" }, 405);
+  if (request.method !== "POST") {
+    return jsonResponse(request, { error: "Method not allowed" }, 405);
+  }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -103,7 +105,9 @@ Deno.serve(async (request: Request) => {
   }
 
   const eventId = body.event_id;
-  if (!isUuid(eventId)) return jsonResponse(request, { error: "Invalid webhook event ID" }, 400);
+  if (!isUuid(eventId)) {
+    return jsonResponse(request, { error: "Invalid webhook event ID" }, 400);
+  }
 
   const supabaseAdmin = createClient(supabaseUrl, secretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -112,22 +116,31 @@ Deno.serve(async (request: Request) => {
     .from("payment_webhook_events")
     .select("id, provider, provider_payment_id, event_type, status, last_processing_started_at")
     .eq("id", eventId)
-    .maybeSingle<WebhookEvent>();
+    .maybeSingle();
 
   if (eventError) {
     console.error("Unable to load webhook event for replay", eventError.message);
     return jsonResponse(request, { error: "Unable to load webhook event" }, 500);
   }
   if (!event) return jsonResponse(request, { error: "Webhook event not found" }, 404);
-  if (event.provider !== "mercado_pago" || event.event_type !== "payment" || !event.provider_payment_id) {
+
+  const webhookEvent = event as WebhookEvent;
+  if (
+    webhookEvent.provider !== "mercado_pago" ||
+    webhookEvent.event_type !== "payment" ||
+    !webhookEvent.provider_payment_id
+  ) {
     return jsonResponse(request, { error: "Webhook event is not replayable" }, 422);
   }
-  if (event.status === "processing" && isProcessingFresh(event.last_processing_started_at)) {
+  if (
+    webhookEvent.status === "processing" &&
+    isProcessingFresh(webhookEvent.last_processing_started_at)
+  ) {
     return jsonResponse(request, { error: "Webhook event is already processing" }, 409);
   }
 
   const { error: beginError } = await supabaseAdmin.rpc("begin_mercado_pago_webhook_processing", {
-    target_event_id: event.id,
+    target_event_id: webhookEvent.id,
     target_is_replay: true,
   });
   if (beginError) {
@@ -139,10 +152,10 @@ Deno.serve(async (request: Request) => {
     const result = await synchronizeMercadoPagoPayment({
       supabaseAdmin,
       accessToken: mercadoPagoAccessToken,
-      paymentId: event.provider_payment_id,
+      paymentId: webhookEvent.provider_payment_id,
     });
     const { error: finishError } = await supabaseAdmin.rpc("finish_mercado_pago_webhook_event", {
-      target_event_id: event.id,
+      target_event_id: webhookEvent.id,
       target_status: "processed",
       target_error: null,
     });
@@ -150,8 +163,8 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, {
       ok: true,
-      event_id: event.id,
-      provider_payment_id: event.provider_payment_id,
+      event_id: webhookEvent.id,
+      provider_payment_id: webhookEvent.provider_payment_id,
       provider_status: result.provider_status ?? null,
       payment_applied: result.payment_applied === true,
       payment_reversed: result.payment_reversed === true,
@@ -163,16 +176,24 @@ Deno.serve(async (request: Request) => {
       : new PaymentSyncError("unexpected_replay_error", "Unexpected replay failure");
 
     const { error: finishError } = await supabaseAdmin.rpc("finish_mercado_pago_webhook_event", {
-      target_event_id: event.id,
+      target_event_id: webhookEvent.id,
       target_status: "failed",
       target_error: syncError.code,
     });
     if (finishError) console.error("Unable to mark replay failure", finishError.message);
 
     if (syncError.code.startsWith("gateway_")) {
-      await recordGatewayFailure(supabaseAdmin, syncError.code, event.provider_payment_id);
+      await recordGatewayFailure(
+        supabaseAdmin,
+        syncError.code,
+        webhookEvent.provider_payment_id,
+      );
     }
-    console.error("Mercado Pago webhook replay failed", event.id, syncError.code);
-    return jsonResponse(request, { error: "Unable to replay webhook", code: syncError.code }, 502);
+    console.error("Mercado Pago webhook replay failed", webhookEvent.id, syncError.code);
+    return jsonResponse(
+      request,
+      { error: "Unable to replay webhook", code: syncError.code },
+      502,
+    );
   }
 });
