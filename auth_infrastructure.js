@@ -3,7 +3,8 @@
 
   const PATHS = Object.freeze({
     login: "/login/",
-    profile: "/perfil/"
+    profile: "/perfil/",
+    studentArea: "/area-do-estudante/"
   });
 
   const ASSETS = Object.freeze({
@@ -14,6 +15,7 @@
     googleAuthJs: "/google_auth_ui.js?v=20260902-1",
     passwordRecoveryCss: "/password_recovery_login.css?v=20260909-1",
     passwordRecoveryJs: "/password_recovery_login.js?v=20260909-1",
+    studentAreaGuardJs: "/student_area_route_guard.js?v=20260909-1",
     infrastructureCss: "/auth_infrastructure.css?v=20260902-1"
   });
 
@@ -101,6 +103,14 @@
     });
   }
 
+  function loadStudentAreaGuard(pathname) {
+    if (pathname !== PATHS.studentArea) return;
+
+    runWhenDomReady(function () {
+      appendScriptOnce('script[src^="/student_area_route_guard.js"]', ASSETS.studentAreaGuardJs);
+    });
+  }
+
   function loadGoogleAuthUiAssets(pathname) {
     if (!isGoogleAuthUiPage(pathname)) return;
 
@@ -131,6 +141,7 @@
     loadSharedAssets();
     loadGoogleAuthUiAssets(pathname);
     loadLoginPasswordRecoveryAssets(pathname);
+    loadStudentAreaGuard(pathname);
   }
 
   window.AuthInfrastructure = Object.freeze({
