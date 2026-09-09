@@ -175,6 +175,17 @@
       return pageContext().currentPath() === "/mensalidades/";
     }
 
+    function removeLegacyBillingConfigurationUi() {
+      if (!isPaymentAdminPage()) return;
+
+      const configuredStudentsCount = documentRef.getElementById("configuredStudentsCount");
+      const configurationPanel = configuredStudentsCount && configuredStudentsCount.closest(".finance-panel");
+      if (configurationPanel) configurationPanel.remove();
+
+      const settingsModal = documentRef.getElementById("settingsModal");
+      if (settingsModal) settingsModal.remove();
+    }
+
     function loadPaymentOperationsTools() {
       if (!isPaymentAdminPage() || !scriptAssets.paymentOperationsDashboard) return;
       deps.loadScriptAsset(scriptAssets.paymentOperationsDashboard, function () {
@@ -196,6 +207,7 @@
         normalizePublicCopy();
         observePublicCopy();
       }
+      removeLegacyBillingConfigurationUi();
       if (windowRef.SiteBranding) windowRef.SiteBranding.install();
       loadAccessibility();
       if (!pageContext().isHomePage()) loadMobileTopNavigation();
