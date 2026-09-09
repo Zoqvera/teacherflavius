@@ -59,6 +59,7 @@ module.exports = [
       "payment_operations_dashboard.js",
       "payment_refund_operations.js",
       "payment_chargeback_operations.js",
+      "payment_chargeback_documentation.js",
       "payment_webhook_log.js",
       "pagamento/app.js",
       "pagamento/payment_idempotency.js",
