@@ -3,65 +3,21 @@ name: Temporary course free class card
 on:
   push:
     paths:
-      - '.github/workflows/temp-course-free-class-card.yml'
+      - ".github/workflows/temp-course-free-class-card.yml"
 
 permissions:
   contents: write
 
 jobs:
-  patch:
+  apply:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Add free class card to course page
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('curso-de-ingles-online/index.html')
-          html = path.read_text(encoding='utf-8')
-
-          stylesheet_target = '  <link rel="stylesheet" href="/course_funnel.css?v=20260902-1">'
-          stylesheet_replacement = stylesheet_target + '\n  <link rel="stylesheet" href="/course_free_class.css?v=20260909-1">'
-          if '/course_free_class.css?v=20260909-1' not in html:
-              if stylesheet_target not in html:
-                  raise SystemExit('Course funnel stylesheet marker not found')
-              html = html.replace(stylesheet_target, stylesheet_replacement, 1)
-
-          section_marker = '    <section id="como-funciona" class="section" aria-labelledby="how-title">'
-          free_class_section = '''    <section class="course-free-class-section" aria-labelledby="course-free-class-title">
-      <div class="shell">
-        <div class="course-free-class-card">
-          <div class="course-free-class-copy">
-            <h2 id="course-free-class-title">Assista a uma aula gratuita</h2>
-            <p>Veja como uma aula de inglês pela internet funciona antes de decidir.</p>
-          </div>
-          <div class="course-free-class-frame" id="courseFreeClassFrame">
-            <button class="course-free-class-trigger" id="courseFreeClassTrigger" type="button" aria-label="Reproduzir aula gratuita do Teacher Flávio">
-              <span class="course-free-class-play" aria-hidden="true">▶</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-'''
-          if 'id="courseFreeClassFrame"' not in html:
-              if section_marker not in html:
-                  raise SystemExit('Course section insertion marker not found')
-              html = html.replace(section_marker, free_class_section + section_marker, 1)
-
-          script = '  <script defer src="/course_free_class.js?v=20260909-1"></script>\n'
-          if '/course_free_class.js?v=20260909-1' not in html:
-              if '</body>' not in html:
-                  raise SystemExit('Course page closing body marker not found')
-              html = html.replace('</body>', script + '</body>', 1)
-
-          path.write_text(html, encoding='utf-8')
-          PY
-      - name: Commit change
+      - name: Apply course card patch
+        run: python scripts/temp_add_course_free_class_card.py
+      - name: Commit course page
         run: |
           git config user.name "Zoqvera Development Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -69,5 +25,3 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "feat: add free class card to course page"
           git push
-
-# Triggered after creation so the one-time patch runs.
