@@ -100,6 +100,7 @@ select jsonb_pretty(jsonb_build_object(
       'daily-data-retention-maintenance',
       'mercado-pago-chargeback-reconciliation',
       'mercado-pago-reconciliation',
+      'operational-data-quality-health-check',
       'payment-alert-health-scan',
       'payment-financial-health-check',
       'sync-auto-makeup-slots-30-days',
