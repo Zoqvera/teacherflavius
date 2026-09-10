@@ -122,13 +122,70 @@ jobs:
             --data-only \
             --schema supabase_migrations
 
+      - name: Capture recovery manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          BACKUP_DIR="${{ steps.metadata.outputs.backup_dir }}"
+
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+
+          psql "$SUPABASE_DB_URL" -At -v ON_ERROR_STOP=1 <<'SQL' > "$BACKUP_DIR/recovery_manifest.json"
+          select jsonb_pretty(jsonb_build_object(
+            'format_version', 1,
+            'captured_at', now(),
+            'critical_row_counts', jsonb_build_object(
+              'profiles', (select count(*) from public.profiles),
+              'auth_users', (select count(*) from auth.users),
+              'monthly_tuition', (select count(*) from public.monthly_tuition),
+              'tuition_payment_attempts', (select count(*) from public.tuition_payment_attempts),
+              'makeup_class_slots', (select count(*) from public.makeup_class_slots)
+            ),
+            'storage', jsonb_build_object(
+              'buckets', (select count(*) from storage.buckets),
+              'objects', (select count(*) from storage.objects)
+            ),
+            'cron_jobs', coalesce((
+              select jsonb_agg(
+                jsonb_build_object(
+                  'jobname', jobname,
+                  'schedule', schedule,
+                  'command', command,
+                  'active', active
+                ) order by jobname
+              )
+              from cron.job
+              where jobname in (
+                'daily-data-retention-maintenance',
+                'mercado-pago-chargeback-reconciliation',
+                'mercado-pago-reconciliation',
+                'payment-alert-health-scan',
+                'payment-financial-health-check',
+                'sync-auto-makeup-slots-30-days',
+                'system-health-watchdog',
+                'system-synthetic-probe'
+              )
+            ), '[]'::jsonb)
+          ));
+          SQL
+
+          jq -e '
+            .format_version == 1
+            and (.critical_row_counts | type == "object")
+            and (.storage | type == "object")
+            and (.cron_jobs | length == 8)
+          ' "$BACKUP_DIR/recovery_manifest.json" >/dev/null
+
       - name: Validate plaintext dump set
         shell: bash
         run: |
           set -euo pipefail
           BACKUP_DIR="${{ steps.metadata.outputs.backup_dir }}"
 
-          for file in roles.sql schema.sql data.sql history_schema.sql history_data.sql; do
+          for file in roles.sql schema.sql data.sql history_schema.sql history_data.sql recovery_manifest.json; do
             test -s "$BACKUP_DIR/$file" || {
               echo "::error::Backup file is missing or empty: $file"
               exit 1
@@ -137,12 +194,20 @@ jobs:
 
           (
             cd "$BACKUP_DIR"
-            sha256sum roles.sql schema.sql data.sql history_schema.sql history_data.sql > manifest.sha256
+            sha256sum \
+              roles.sql \
+              schema.sql \
+              data.sql \
+              history_schema.sql \
+              history_data.sql \
+              recovery_manifest.json \
+              > manifest.sha256
           )
 
           cat > "$BACKUP_DIR/README.txt" <<'EOF'
           Teacherflavius encrypted Supabase logical backup.
           This archive contains production database data and must remain confidential.
+          recovery_manifest.json contains only technical counts/configuration used by the automated restore verifier.
           Restore instructions are versioned in BACKUP_RECOVERY.md in the repository.
           EOF
 
