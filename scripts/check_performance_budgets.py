@@ -48,6 +48,8 @@ class ResourceParser(HTMLParser):
         self.scripts: set[str] = set()
         self.eager_media: set[str] = set()
         self.direct_resources: set[str] = set()
+        self.inline_css_parts: list[str] = []
+        self._inside_style = False
 
     @staticmethod
     def _attrs(attributes: list[tuple[str, str | None]]) -> dict[str, str]:
@@ -56,6 +58,10 @@ class ResourceParser(HTMLParser):
     def handle_starttag(self, tag: str, attributes: list[tuple[str, str | None]]) -> None:
         attrs = self._attrs(attributes)
         normalized_tag = tag.lower()
+
+        if normalized_tag == "style":
+            self._inside_style = True
+            return
 
         if normalized_tag == "link" and attrs.get("rel", "").lower() == "stylesheet":
             self._record(attrs.get("href"), self.stylesheets)
@@ -70,12 +76,24 @@ class ResourceParser(HTMLParser):
             if source and attrs.get("loading", "").lower() != "lazy":
                 self._record(source, self.eager_media)
 
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() == "style":
+            self._inside_style = False
+
+    def handle_data(self, data: str) -> None:
+        if self._inside_style and data:
+            self.inline_css_parts.append(data)
+
     def _record(self, value: str | None, target: set[str]) -> None:
         if not value or not is_local_resource(value):
             return
         normalized = strip_query(value)
         target.add(normalized)
         self.direct_resources.add(normalized)
+
+    @property
+    def inline_css(self) -> str:
+        return "\n".join(self.inline_css_parts)
 
 
 def is_local_resource(value: str) -> bool:
@@ -111,6 +129,25 @@ def resource_size(root: Path, page_file: Path, resource: str) -> int:
     return candidate.stat().st_size if candidate.is_file() else 0
 
 
+def css_urls(css_text: str, root: Path, css_base: Path) -> set[str]:
+    media: set[str] = set()
+    for match in CSS_URL_PATTERN.finditer(css_text):
+        value = match.group(1).strip()
+        if not is_local_resource(value) or value.startswith("#"):
+            continue
+        css_relative = strip_query(value)
+        if css_relative.startswith("/"):
+            media.add(css_relative)
+            continue
+        resolved = (css_base / css_relative).resolve()
+        try:
+            relative = resolved.relative_to(root.resolve())
+        except ValueError:
+            continue
+        media.add("/" + relative.as_posix())
+    return media
+
+
 def css_eager_media(root: Path, page_file: Path, stylesheets: set[str]) -> set[str]:
     media: set[str] = set()
     for stylesheet in stylesheets:
@@ -118,20 +155,7 @@ def css_eager_media(root: Path, page_file: Path, stylesheets: set[str]) -> set[s
         if not css_file.is_file():
             continue
         text = css_file.read_text(encoding="utf-8", errors="ignore")
-        for match in CSS_URL_PATTERN.finditer(text):
-            value = match.group(1).strip()
-            if not is_local_resource(value) or value.startswith("#"):
-                continue
-            css_relative = strip_query(value)
-            if css_relative.startswith("/"):
-                media.add(css_relative)
-            else:
-                resolved = (css_file.parent / css_relative).resolve()
-                try:
-                    relative = resolved.relative_to(root.resolve())
-                except ValueError:
-                    continue
-                media.add("/" + relative.as_posix())
+        media.update(css_urls(text, root, css_file.parent))
     return media
 
 
@@ -143,9 +167,10 @@ def measure_page(root: Path, route: str) -> Metrics:
     parser = ResourceParser()
     parser.feed(page_file.read_text(encoding="utf-8", errors="ignore"))
 
-    css_media = css_eager_media(root, page_file, parser.stylesheets)
-    eager_media = set(parser.eager_media) | css_media
-    direct_resources = set(parser.direct_resources) | css_media
+    stylesheet_media = css_eager_media(root, page_file, parser.stylesheets)
+    inline_media = css_urls(parser.inline_css, root, page_file.parent)
+    eager_media = set(parser.eager_media) | stylesheet_media | inline_media
+    direct_resources = set(parser.direct_resources) | stylesheet_media | inline_media
 
     return Metrics(
         html_bytes=page_file.stat().st_size,
