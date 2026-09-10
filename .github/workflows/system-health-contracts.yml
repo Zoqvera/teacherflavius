@@ -13,8 +13,11 @@ on:
       - "supabase/functions/notify-system-health-alert/**"
       - "supabase/functions/get-system-health-dashboard/**"
       - "supabase/migrations/*system_health*"
+      - "supabase/migrations/*data_quality*"
+      - "supabase/migrations/*class_capacity*"
       - "docs/system_health_monitoring.md"
       - "tests/system_health_*.test.js"
+      - "tests/data_quality_health_contract.test.js"
       - "site_runtime_config.js"
       - "site_page_runtime.js"
       - "tests/site_runtime_config.test.js"
@@ -49,5 +52,6 @@ jobs:
           tests/system_health_dashboard.test.js
           tests/system_health_reports_integration.test.js
           tests/system_health_monitoring_contract.test.js
+          tests/data_quality_health_contract.test.js
           tests/site_runtime_config.test.js
           tests/site_page_runtime.test.js

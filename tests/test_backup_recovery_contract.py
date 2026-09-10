@@ -8,6 +8,7 @@ APPLICATION_CRONS = (
     "daily-data-retention-maintenance",
     "mercado-pago-chargeback-reconciliation",
     "mercado-pago-reconciliation",
+    "operational-data-quality-health-check",
     "payment-alert-health-scan",
     "payment-financial-health-check",
     "sync-auto-makeup-slots-30-days",
@@ -81,6 +82,7 @@ class BackupRecoveryContractTests(unittest.TestCase):
             self.assertIn(marker, script)
 
         self.assertIn(".storage.buckets == 0 and .storage.objects == 0", script)
+        self.assertIn(".cron_jobs | length == 9", script)
 
     def test_recovery_baseline_versions_every_application_cron(self) -> None:
         platform_config = self.read("supabase/baseline/30_platform_config.sql")

@@ -33,7 +33,24 @@
     synthetic_probe_stale: "Probe de disponibilidade atrasado",
     scheduled_job_failure: "Falha de job agendado",
     scheduled_jobs_stale: "Jobs agendados atrasados",
-    system_health_stalled: "Health check global atrasado"
+    system_health_stalled: "Health check global atrasado",
+    data_quality_check_stalled: "Health check de qualidade de dados atrasado",
+    data_quality_orphan_class_assignments: "Vínculos de turma órfãos",
+    data_quality_invalid_class_student_refs: "Vínculos de turma com referência inválida",
+    data_quality_class_capacity_exceeded: "Turma acima da capacidade",
+    data_quality_student_class_type_mismatch: "Tipo do aluno incompatível com a turma",
+    data_quality_typed_student_without_active_class: "Aluno com tipo definido sem turma ativa",
+    data_quality_duplicate_active_cpf: "CPF duplicado entre alunos ativos",
+    data_quality_archive_state_mismatch: "Estado de arquivamento inconsistente",
+    data_quality_active_class_schedule_missing: "Turma ativa sem horário completo",
+    data_quality_makeup_capacity_exceeded: "Reposição acima da capacidade",
+    data_quality_makeup_booking_class_mismatch: "Reposição vinculada à turma incorreta",
+    data_quality_makeup_status_timestamp_mismatch: "Status de reposição inconsistente",
+    data_quality_future_auto_slot_invalid_class: "Reposição automática ligada a turma inválida",
+    data_quality_lesson_orphan_class: "Registro de lição com turma inexistente",
+    data_quality_frequency_invalid_subject_ref: "Frequência com referência de aluno inválida",
+    data_quality_tuition_subject_mismatch: "Mensalidade com referência de aluno inconsistente",
+    data_quality_payment_attempt_subject_mismatch: "Tentativa de pagamento com referência inconsistente"
   });
 
   function toString(value) {
@@ -57,20 +74,25 @@
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
   }
 
+  function normalizeHealthBlock(raw) {
+    const health = toObject(raw);
+    return Object.freeze({
+      status: toString(health.status) || "unknown",
+      issueCount: Number(health.issue_count || 0),
+      criticalCount: Number(health.critical_count || 0),
+      warningCount: Number(health.warning_count || 0),
+      completedAt: toString(health.completed_at),
+      metrics: Object.freeze(toObject(health.metrics)),
+      issues: Object.freeze(toArray(health.issues).map(toObject))
+    });
+  }
+
   function normalizeDashboard(raw) {
     const dashboard = toObject(raw);
-    const health = toObject(dashboard.health);
     return Object.freeze({
       generatedAt: toString(dashboard.generated_at),
-      health: Object.freeze({
-        status: toString(health.status) || "unknown",
-        issueCount: Number(health.issue_count || 0),
-        criticalCount: Number(health.critical_count || 0),
-        warningCount: Number(health.warning_count || 0),
-        completedAt: toString(health.completed_at),
-        metrics: Object.freeze(toObject(health.metrics)),
-        issues: Object.freeze(toArray(health.issues).map(toObject))
-      }),
+      health: normalizeHealthBlock(dashboard.health),
+      dataQuality: normalizeHealthBlock(dashboard.data_quality),
       probes: Object.freeze(toArray(dashboard.probes).map(toObject)),
       crons: Object.freeze(toArray(dashboard.crons).map(toObject)),
       alerts: Object.freeze(toArray(dashboard.alerts).map(toObject))
@@ -123,16 +145,9 @@
     ].join("");
   }
 
-  function renderIssues(documentRef, dashboard) {
-    const element = documentRef.getElementById("healthIssues");
-    if (!element) return;
-    const issues = dashboard.health.issues;
-    if (!issues.length) {
-      element.innerHTML = '<div class="health-empty health-good">Nenhuma invariante operacional ativa.</div>';
-      return;
-    }
-
-    element.innerHTML = issues.map(function (issue) {
+  function renderIssueRows(issues) {
+    if (!issues.length) return '<div class="health-empty health-good">Nenhuma invariante ativa.</div>';
+    return issues.map(function (issue) {
       const severity = toString(issue.severity) || "warning";
       const details = toObject(issue.details);
       return '<article class="health-row ' + statusClass(severity) + '">' +
@@ -141,6 +156,26 @@
         '<span>' + escapeHtml(severity === "critical" ? "CRÍTICO" : "ATENÇÃO") + '</span>' +
       '</article>';
     }).join("");
+  }
+
+  function renderIssues(documentRef, dashboard) {
+    const element = documentRef.getElementById("healthIssues");
+    if (!element) return;
+    element.innerHTML = renderIssueRows(dashboard.health.issues);
+  }
+
+  function renderDataQuality(documentRef, dashboard) {
+    const quality = dashboard.dataQuality;
+    const summary = documentRef.getElementById("dataQualitySummary");
+    const issues = documentRef.getElementById("dataQualityIssues");
+    if (summary) {
+      summary.innerHTML = [
+        '<article class="health-card ' + statusClass(quality.status) + '"><span>Qualidade dos dados</span><strong>' + escapeHtml(healthLabel(quality.status)) + '</strong></article>',
+        '<article class="health-card"><span>Findings ativos</span><strong>' + escapeHtml(quality.issueCount) + '</strong></article>',
+        '<article class="health-card"><span>Última verificação</span><strong class="health-card-date">' + escapeHtml(formatDateTime(quality.completedAt)) + '</strong></article>'
+      ].join("");
+    }
+    if (issues) issues.innerHTML = renderIssueRows(quality.issues);
   }
 
   function renderProbes(documentRef, dashboard) {
@@ -196,6 +231,7 @@
     const dashboard = normalizeDashboard(rawDashboard);
     renderSummary(documentRef, dashboard);
     renderIssues(documentRef, dashboard);
+    renderDataQuality(documentRef, dashboard);
     renderProbes(documentRef, dashboard);
     renderCrons(documentRef, dashboard);
     renderAlerts(documentRef, dashboard);
