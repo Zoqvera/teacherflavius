@@ -56,17 +56,24 @@
   height: 100%;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   border: 0;
   cursor: pointer;
-  background:
-    linear-gradient(rgba(1, 9, 24, .18), rgba(1, 9, 24, .46)),
-    url('/assets/home-free-class-thumbnail.jpg?v=20260908-1') center / cover no-repeat;
+  background: #081525;
 }
 
-.course-free-class-trigger:hover {
-  background:
-    linear-gradient(rgba(1, 9, 24, .08), rgba(1, 9, 24, .36)),
-    url('/assets/home-free-class-thumbnail.jpg?v=20260908-1') center / cover no-repeat;
+.course-free-class-trigger-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(.58);
+  transition: filter .18s ease;
+}
+
+.course-free-class-trigger:hover .course-free-class-trigger-image {
+  filter: brightness(.7);
 }
 
 .course-free-class-trigger:focus-visible {
@@ -75,6 +82,8 @@
 }
 
 .course-free-class-play {
+  position: relative;
+  z-index: 1;
   display: grid;
   width: 82px;
   height: 82px;
