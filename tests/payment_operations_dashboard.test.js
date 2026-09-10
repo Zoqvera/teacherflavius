@@ -2,6 +2,18 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const Dashboard = require("../payment_operations_dashboard.js");
 
+function healthyFinancialHealth() {
+  return {
+    status: "healthy",
+    completed_at: "2026-09-10T01:28:00.121Z",
+    stale: false,
+    warning_count: 0,
+    critical_count: 0,
+    issue_count: 0,
+    issue_codes: []
+  };
+}
+
 test("normalizes payment operation metrics", () => {
   const state = Dashboard.normalizeDashboard({
     approved: { count: 3, amount: 299.7 },
@@ -21,7 +33,8 @@ test("normalizes payment operation metrics", () => {
     },
     duplicate_payments: 0,
     reversals: 0,
-    alerts: { pending: 0, failed: 0, critical_open: 0 }
+    alerts: { pending: 0, failed: 0, critical_open: 0 },
+    financial_health: healthyFinancialHealth()
   });
 
   assert.equal(state.approved.count, 3);
@@ -30,6 +43,7 @@ test("normalizes payment operation metrics", () => {
   assert.equal(state.card.count, 1);
   assert.equal(state.divergences, 0);
   assert.equal(state.reconciliationStalled, false);
+  assert.equal(state.financialHealthStatus, "healthy");
   assert.equal(state.health.tone, "healthy");
 });
 
@@ -39,7 +53,8 @@ test("marks unresolved financial divergences as critical", () => {
       approved_without_application: 1,
       reversal_pending: 1
     },
-    alerts: { critical_open: 0 }
+    alerts: { critical_open: 0 },
+    financial_health: healthyFinancialHealth()
   });
 
   assert.equal(state.divergences, 2);
@@ -53,7 +68,8 @@ test("marks gateway and reconciliation failures as warning", () => {
     reconciliation_failures: 1,
     reconciliation_stalled: false,
     divergences: {},
-    alerts: {}
+    alerts: {},
+    financial_health: healthyFinancialHealth()
   });
 
   assert.equal(state.health.tone, "warning");
@@ -63,7 +79,8 @@ test("marks stalled automatic reconciliation as warning", () => {
   const state = Dashboard.normalizeDashboard({
     reconciliation_stalled: true,
     divergences: {},
-    alerts: {}
+    alerts: {},
+    financial_health: healthyFinancialHealth()
   });
 
   assert.equal(state.reconciliationStalled, true);
@@ -83,11 +100,13 @@ test("renders all required technical indicators", () => {
     divergences: {},
     duplicate_payments: 0,
     reversals: 0,
-    alerts: {}
+    alerts: {},
+    financial_health: healthyFinancialHealth()
   });
   const markup = Dashboard.buildMarkup(state);
 
   [
+    "Health check",
     "Aprovados",
     "Pendentes",
     "Rejeitados",
@@ -98,6 +117,7 @@ test("renders all required technical indicators", () => {
     "Duplicidades",
     "Estornos",
     "Alertas abertos",
+    "Último health check",
     "Última reconciliação",
     "Reconciliação automática"
   ].forEach((label) => assert.match(markup, new RegExp(label)));
