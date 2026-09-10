@@ -8,12 +8,12 @@ O controle de novas cobranças permite interromper a criação de novos pagament
 
 O estado fica em `private.payment_creation_control`. Apenas uma linha singleton existe. Mudanças são auditadas em `private.payment_creation_control_events`.
 
-O professor administra o estado por duas RPCs protegidas por MFA AAL2:
+O navegador administra o estado exclusivamente pela Edge Function `manage-payment-creation-control`, implantada com `verify_jwt=true`. A função valida a sessão e exige `is_teacher_admin_mfa()` antes de usar as RPCs internas:
 
-- `get_teacher_payment_creation_control()`
-- `set_teacher_payment_creation_enabled(boolean, text)`
+- `get_payment_creation_control_internal()`
+- `set_payment_creation_enabled_internal(boolean, text, uuid)`
 
-Nenhuma das duas é executável por `anon`.
+Essas RPCs são executáveis somente por `service_role`; `PUBLIC`, `anon` e `authenticated` não têm `EXECUTE`.
 
 ## Bloqueio no banco
 
@@ -29,6 +29,8 @@ O módulo `payment_creation_control.js` é carregado somente em `/mensalidades/`
 
 - `BLOQUEAR` para desativar novas cobranças, junto com um motivo de pelo menos cinco caracteres;
 - `REATIVAR` para permitir novas cobranças novamente.
+
+A interface nunca recebe acesso direto à tabela privada nem às RPCs internas.
 
 ## Default privileges globais
 
