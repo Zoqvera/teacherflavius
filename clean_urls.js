@@ -77,6 +77,7 @@
   };
 
   const TOP_LEVEL_CANONICAL_ROUTES = Object.freeze({
+    "/relatorios": "/relatorios/",
     "/relatorios.html": "/relatorios/"
   });
 

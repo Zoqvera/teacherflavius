@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <base href="/">
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatório de Sincronização - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="supabase_config.js?v=20260715-1"></script>
+    <script src="/module_loader.js?v=20260902-2"></script>
+<script src="auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="professor.css?v=20260715-1">
+  <style>
+    body.auth-checking .reports-content { display:none; }
+    .reports-toolbar { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; margin:0 0 18px; }
+    .reports-note { color:#cbd5e1; font-size:13px; line-height:1.55; max-width:780px; margin:0; }
+    .reports-note small { display:block; color:#94a3b8; margin-top:5px; }
+    .report-days { display:grid; gap:18px; }
+    .day-card { border:1px solid rgba(255,255,255,.10); border-radius:20px; background:rgba(255,255,255,.035); padding:20px; }
+    .day-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+    .day-title { font-size:22px; margin-bottom:5px; text-transform:capitalize; }
+    .day-meta { color:#94a3b8; font-size:13px; }
+    .status-pill { display:inline-flex; align-items:center; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:700; white-space:nowrap; }
+    .status-success { background:rgba(34,197,94,.14); color:#86efac; border:1px solid rgba(34,197,94,.28); }
+    .status-partial { background:rgba(245,158,11,.14); color:#fde68a; border:1px solid rgba(245,158,11,.30); }
+    .status-error { background:rgba(239,68,68,.14); color:#fca5a5; border:1px solid rgba(239,68,68,.30); }
+    .status-neutral { background:rgba(148,163,184,.12); color:#cbd5e1; border:1px solid rgba(148,163,184,.25); }
+    .metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:10px; margin-bottom:18px; }
+    .metric { background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:13px; text-align:center; }
+    .metric-value { font-size:24px; font-weight:700; }
+    .metric-label { color:#94a3b8; font-size:11px; text-transform:uppercase; letter-spacing:.65px; margin-top:4px; }
+    .section-title { margin:17px 0 9px; font-size:14px; color:#f1f5f9; }
+    .table-wrap { overflow:auto; border-radius:12px; border:1px solid rgba(255,255,255,.08); }
+    table { width:100%; border-collapse:collapse; min-width:820px; font-size:12px; }
+    th, td { padding:9px 10px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; vertical-align:top; }
+    th { color:#c7d2fe; background:rgba(129,140,248,.08); position:sticky; top:0; }
+    tbody tr:last-child td { border-bottom:0; }
+    .empty-panel { padding:28px; text-align:center; border:1px solid rgba(255,255,255,.09); border-radius:18px; color:#cbd5e1; background:rgba(255,255,255,.035); line-height:1.6; }
+    .error-text { color:#fca5a5; }
+    .muted { color:#94a3b8; }
+    @media (max-width:760px) { .day-card { padding:15px; } }
+  </style>
+</head>
+<body class="auth-checking">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+  <div class="container">
+    <div class="top-links">
+      <a class="top-link" href="/">HOME</a>
+      <a class="top-link" href="/professor/">ÁREA DO PROFESSOR</a>
+    </div>
+
+    <div class="header">
+      <div><span class="badge">TEACHER FLÁVIO</span></div>
+      <h1>Sincronização de exercícios</h1>
+      <div id="reportStatus" class="status">Verificando credenciais e carregando eventos...</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <main class="reports-content">
+      <div class="reports-toolbar">
+        <p class="reports-note">
+          Este relatório acompanha a sincronização atual por envio: cada resposta do Google Forms é processada individualmente e registrada no Portal de Exercícios.
+          <small>O histórico do sincronizador antigo em lote foi preservado no banco, mas não entra mais nas métricas abaixo.</small>
+        </p>
+        <button id="refreshButton" class="top-link" type="button" style="cursor:pointer;font-family:inherit;">ATUALIZAR</button>
+      </div>
+      <div id="reportDays" class="report-days"></div>
+    </main>
+  </div>
+
+  <script>
+    const TZ = "America/Sao_Paulo";
+
+    function esc(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+        .replace(/\"/g,"&quot;").replace(/'/g,"&#039;");
+    }
+
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    async function waitForAuthResources() {
+      for (let i = 0; i < 15; i++) {
+        if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured && Auth.isConfigured()) return true;
+        await sleep(150);
+      }
+      return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured && Auth.isConfigured());
+    }
+
+    function dateKey(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "sem-data";
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone:TZ, year:"numeric", month:"2-digit", day:"2-digit"
+      }).formatToParts(date);
+      const out = {};
+      parts.forEach(part => { if (part.type !== "literal") out[part.type] = part.value; });
+      return `${out.year}-${out.month}-${out.day}`;
+    }
+
+    function formatDay(key) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(key || ""))) return "Data não disponível";
+      return new Intl.DateTimeFormat("pt-BR", {
+        timeZone:TZ, weekday:"long", day:"2-digit", month:"2-digit", year:"numeric"
+      }).format(new Date(key + "T12:00:00-03:00"));
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "—";
+      return new Intl.DateTimeFormat("pt-BR", {
+        timeZone:TZ, day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit"
+      }).format(date);
+    }
+
+    function formatTime(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "—";
+      return new Intl.DateTimeFormat("pt-BR", { timeZone:TZ, hour:"2-digit", minute:"2-digit", second:"2-digit" }).format(date);
+    }
+
+    function statusLabel(status) {
+      const labels = {
+        processed:"Sincronizado",
+        unmatched_student:"Aluno não encontrado",
+        ambiguous_email:"E-mail ambíguo",
+        not_enrolled:"Aluno não matriculado",
+        exercise_not_found:"Atividade não encontrada",
+        invalid_payload:"Dados inválidos",
+        error:"Erro"
+      };
+      return labels[status] || status || "Desconhecido";
+    }
+
+    function actionLabel(action) {
+      const labels = {
+        inserted:"Nova conclusão",
+        confirmed_existing:"Já estava concluído",
+        updated_earlier_completion:"Data de conclusão corrigida"
+      };
+      return labels[action] || "—";
+    }
+
+    function eventStatusClass(status) {
+      return status === "processed" ? "status-success" : "status-error";
+    }
+
+    function dailyStatus(events) {
+      const processed = events.filter(event => event.status === "processed").length;
+      const failed = events.length - processed;
+      if (!failed) return { label:"SUCESSO", cls:"status-success" };
+      if (processed) return { label:"PARCIAL", cls:"status-partial" };
+      return { label:"ERRO", cls:"status-error" };
+    }
+
+    function aggregateActivities(events) {
+      const map = new Map();
+      events.forEach(event => {
+        const key = event.exercise_id || "sem-id";
+        if (!map.has(key)) {
+          map.set(key, {
+            id:event.exercise_id || "—",
+            title:event.exercise_title || "Atividade não identificada",
+            received:0, processed:0, inserted:0, confirmed:0, corrected:0, failed:0,
+            users:new Set()
+          });
+        }
+        const row = map.get(key);
+        row.received += 1;
+        if (event.status === "processed") {
+          row.processed += 1;
+          if (event.user_id) row.users.add(event.user_id);
+          if (event.record_action === "inserted") row.inserted += 1;
+          else if (event.record_action === "confirmed_existing") row.confirmed += 1;
+          else if (event.record_action === "updated_earlier_completion") row.corrected += 1;
+        } else {
+          row.failed += 1;
+        }
+      });
+      return Array.from(map.values()).sort((a,b) => b.received - a.received || String(a.id).localeCompare(String(b.id)));
+    }
+
+    function renderActivityTable(events) {
+      const rows = aggregateActivities(events);
+      if (!rows.length) return '<div class="empty-panel">Nenhuma atividade registrada neste dia.</div>';
+      return `<div class="table-wrap"><table>
+        <thead><tr><th>Atividade</th><th>Título</th><th>Envios</th><th>Sincronizados</th><th>Alunos</th><th>Novos</th><th>Já concluídos</th><th>Datas corrigidas</th><th>Falhas</th></tr></thead>
+        <tbody>${rows.map(row => `<tr>
+          <td>${esc(row.id)}</td><td>${esc(row.title)}</td><td>${row.received}</td><td>${row.processed}</td><td>${row.users.size}</td><td>${row.inserted}</td><td>${row.confirmed}</td><td>${row.corrected}</td><td>${row.failed}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`;
+    }
+
+    function renderEventTable(events) {
+      if (!events.length) return '<div class="empty-panel">Nenhum evento registrado.</div>';
+      return `<div class="table-wrap"><table>
+        <thead><tr><th>Horário</th><th>Status</th><th>Atividade</th><th>Aluno</th><th>E-mail recebido</th><th>Ação</th><th>Conclusão registrada</th><th>Detalhe</th></tr></thead>
+        <tbody>${events.map(event => {
+          const detail = event.error_message || (event.source_email !== event.normalized_email && event.normalized_email ? `Alias aplicado → ${event.normalized_email}` : "—");
+          return `<tr>
+            <td>${esc(formatTime(event.received_at))}</td>
+            <td><span class="status-pill ${eventStatusClass(event.status)}">${esc(statusLabel(event.status))}</span></td>
+            <td>${esc(event.exercise_title || event.exercise_id || "—")}</td>
+            <td>${esc(event.student_name || "—")}</td>
+            <td>${esc(event.source_email || "—")}</td>
+            <td>${esc(actionLabel(event.record_action))}</td>
+            <td>${esc(formatDateTime(event.stored_completed_at))}</td>
+            <td class="${event.error_message ? "error-text" : "muted"}">${esc(detail)}</td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>`;
+    }
+
+    function renderReports(events) {
+      const root = document.getElementById("reportDays");
+      if (!events.length) {
+        root.innerHTML = '<div class="empty-panel"><strong>Nenhum evento da sincronização atual foi registrado ainda.</strong><br>Os próximos envios do Google Forms aparecerão aqui automaticamente após serem processados pelo monitor.</div>';
+        return;
+      }
+
+      const groups = new Map();
+      events.forEach(event => {
+        const key = dateKey(event.received_at);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(event);
+      });
+
+      root.innerHTML = Array.from(groups.entries()).map(([day, dayEvents]) => {
+        dayEvents.sort((a,b) => new Date(b.received_at) - new Date(a.received_at));
+        const processed = dayEvents.filter(event => event.status === "processed");
+        const failed = dayEvents.filter(event => event.status !== "processed");
+        const inserted = processed.filter(event => event.record_action === "inserted").length;
+        const confirmed = processed.filter(event => event.record_action === "confirmed_existing").length;
+        const corrected = processed.filter(event => event.record_action === "updated_earlier_completion").length;
+        const students = new Set(processed.map(event => event.user_id).filter(Boolean)).size;
+        const activities = new Set(processed.map(event => event.exercise_id).filter(Boolean)).size;
+        const status = dailyStatus(dayEvents);
+
+        return `<section class="day-card">
+          <div class="day-head">
+            <div>
+              <div class="day-title">${esc(formatDay(day))}</div>
+              <div class="day-meta">${dayEvents.length} envio(s) recebido(s) · último às ${esc(formatTime(dayEvents[0].received_at))}</div>
+            </div>
+            <span class="status-pill ${status.cls}">${status.label}</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">${dayEvents.length}</div><div class="metric-label">Envios recebidos</div></div>
+            <div class="metric"><div class="metric-value">${processed.length}</div><div class="metric-label">Sincronizados</div></div>
+            <div class="metric"><div class="metric-value">${inserted}</div><div class="metric-label">Novas conclusões</div></div>
+            <div class="metric"><div class="metric-value">${confirmed}</div><div class="metric-label">Já concluídos</div></div>
+            <div class="metric"><div class="metric-value">${corrected}</div><div class="metric-label">Datas corrigidas</div></div>
+            <div class="metric"><div class="metric-value">${students}</div><div class="metric-label">Alunos</div></div>
+            <div class="metric"><div class="metric-value">${activities}</div><div class="metric-label">Atividades</div></div>
+            <div class="metric"><div class="metric-value">${failed.length}</div><div class="metric-label">Falhas</div></div>
+          </div>
+
+          <div class="section-title">Resumo por atividade</div>
+          ${renderActivityTable(dayEvents)}
+          <div class="section-title">Eventos da sincronização</div>
+          ${renderEventTable(dayEvents)}
+        </section>`;
+      }).join("");
+    }
+
+    async function guardTeacher() {
+      const ready = await waitForAuthResources();
+      if (!ready) throw new Error("Autenticação não configurada.");
+      const session = await Auth.getSession();
+      if (!session || !session.user) {
+        window.location.href = "/login/?next=" + encodeURIComponent("/relatorios/");
+        return false;
+      }
+      const admin = await Auth.getClient().rpc("is_teacher_admin");
+      if (admin.error) throw admin.error;
+      if (admin.data !== true) {
+        document.body.classList.remove("auth-checking");
+        document.getElementById("reportStatus").textContent = "Acesso negado. Este relatório é exclusivo do professor.";
+        return false;
+      }
+      document.body.classList.remove("auth-checking");
+      return true;
+    }
+
+    async function loadReports() {
+      const button = document.getElementById("refreshButton");
+      const status = document.getElementById("reportStatus");
+      button.disabled = true;
+      status.textContent = "Carregando eventos da sincronização atual...";
+      try {
+        const allowed = await guardTeacher();
+        if (!allowed) return;
+        const response = await Auth.getClient()
+          .from("exercise_sync_events")
+          .select("id,received_at,status,exercise_id,exercise_title,source_email,normalized_email,user_id,student_name,submitted_completed_at,stored_completed_at,record_action,error_message,metadata")
+          .order("received_at", { ascending:false })
+          .limit(1000);
+        if (response.error) throw response.error;
+        const events = response.data || [];
+        renderReports(events);
+        status.textContent = events.length
+          ? `${events.length} evento(s) carregado(s). Último evento: ${formatDateTime(events[0].received_at)}.`
+          : "Monitoramento por evento ativo. Aguardando o próximo envio do Google Forms.";
+      } catch (error) {
+        console.error("Erro ao carregar relatório de sincronização:", error);
+        document.body.classList.remove("auth-checking");
+        document.getElementById("reportDays").innerHTML = '<div class="empty-panel error-text">Não foi possível carregar o relatório da sincronização atual.</div>';
+        status.textContent = "Erro ao carregar eventos de sincronização.";
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    document.getElementById("refreshButton").addEventListener("click", loadReports);
+    loadReports();
+  </script>
+</body>
+</html>
