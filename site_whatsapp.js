@@ -4,8 +4,10 @@
   const FLOAT_ID = "teacher-flavius-whatsapp-float";
   const STYLE_ID = "teacher-flavius-whatsapp-float-styles";
   const LINK_SELECTOR = 'a[href*="wa.me/"], a[href*="api.whatsapp.com/"]';
+  const TRIAL_LESSON_LINK_SELECTOR = ".trial-whatsapp-link";
   const WHATSAPP_NUMBER = "5534998349756";
   const WHATSAPP_MESSAGE = "Olá, Teacher! Vim pelo site e gostaria de conversar sobre as aulas de inglês.";
+  const TRIAL_LESSON_WHATSAPP_MESSAGE = "Olá! Você tem uma aula experimental agendada. Você confirma sua participação?";
   const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
   const ICON_PATH = "M16.04 3C9.42 3 4.05 8.25 4.05 14.73c0 2.28.67 4.51 1.94 6.41L4 28.2l7.32-1.91a12.13 12.13 0 0 0 4.71.94h.01c6.61 0 12-5.26 12-11.73C28.04 9 22.65 3 16.04 3Zm0 21.91h-.01a9.86 9.86 0 0 1-4.99-1.35l-.36-.21-4.34 1.13 1.16-4.13-.24-.38a9.38 9.38 0 0 1-1.5-5.24c0-5.21 4.6-9.45 10.27-9.45 5.66 0 10.27 4.24 10.27 9.45 0 5.22-4.61 10.18-10.26 10.18Zm5.63-7.08c-.31-.15-1.82-.88-2.1-.98-.28-.1-.49-.15-.69.15-.2.3-.8.98-.98 1.18-.18.2-.36.22-.67.07-.31-.15-1.3-.47-2.48-1.49-.92-.8-1.53-1.79-1.71-2.09-.18-.3-.02-.46.13-.61.14-.13.31-.35.46-.53.15-.18.2-.3.31-.5.1-.2.05-.38-.03-.53-.08-.15-.69-1.63-.95-2.23-.25-.6-.5-.52-.69-.53h-.59c-.2 0-.54.08-.82.38-.28.3-1.08 1.03-1.08 2.51 0 1.48 1.1 2.91 1.25 3.11.15.2 2.16 3.24 5.23 4.54.73.31 1.3.49 1.75.63.73.23 1.4.2 1.93.12.59-.09 1.82-.73 2.08-1.43.26-.7.26-1.3.18-1.43-.08-.13-.28-.2-.59-.35Z";
   let linkObserver = null;
@@ -14,10 +16,11 @@
     return String(value || "").replace(/\D/g, "");
   }
 
-  function buildUrl(number) {
+  function buildUrl(number, message) {
     const phone = normalizePhone(number);
     if (!phone) return "";
-    return "https://wa.me/" + phone + "?text=" + encodeURIComponent(WHATSAPP_MESSAGE);
+    const resolvedMessage = message || WHATSAPP_MESSAGE;
+    return "https://wa.me/" + phone + "?text=" + encodeURIComponent(resolvedMessage);
   }
 
   function createFloatIcon() {
@@ -75,11 +78,18 @@
     return "";
   }
 
+  function messageForLink(link) {
+    if (link.matches && link.matches(TRIAL_LESSON_LINK_SELECTOR)) {
+      return TRIAL_LESSON_WHATSAPP_MESSAGE;
+    }
+    return WHATSAPP_MESSAGE;
+  }
+
   function standardizeLink(link) {
     try {
       const phone = getPhoneFromUrl(link.getAttribute("href"));
       if (!phone) return;
-      link.href = buildUrl(phone);
+      link.href = buildUrl(phone, messageForLink(link));
     } catch (_error) {
       // Keep the original link if parsing fails.
     }
