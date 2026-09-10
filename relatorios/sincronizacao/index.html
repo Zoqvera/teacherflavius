@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <base href="/">
 <!-- Google Consent Mode default -->
 <script>
 window.dataLayer = window.dataLayer || [];
@@ -296,7 +297,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (!ready) throw new Error("Autenticação não configurada.");
       const session = await Auth.getSession();
       if (!session || !session.user) {
-        window.location.href = "/login.html?next=" + encodeURIComponent("/relatorios/");
+        window.location.href = "/login/?next=" + encodeURIComponent("/relatorios/");
         return false;
       }
       const admin = await Auth.getClient().rpc("is_teacher_admin");

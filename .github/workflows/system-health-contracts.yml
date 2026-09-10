@@ -1,0 +1,53 @@
+name: System health contracts
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths:
+      - "system_health_dashboard.js"
+      - "system_health_reports_integration.js"
+      - "saude-do-sistema/**"
+      - "supabase/functions/system-synthetic-probe/**"
+      - "supabase/functions/notify-system-health-alert/**"
+      - "supabase/functions/get-system-health-dashboard/**"
+      - "supabase/migrations/*system_health*"
+      - "docs/system_health_monitoring.md"
+      - "tests/system_health_*.test.js"
+      - "site_runtime_config.js"
+      - "site_page_runtime.js"
+      - "tests/site_runtime_config.test.js"
+      - "tests/site_page_runtime.test.js"
+      - "package.json"
+      - ".github/workflows/system-health-contracts.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check system_health_dashboard.js
+          node --check system_health_reports_integration.js
+
+      - name: Validate system health contracts
+        run: >-
+          node --test
+          tests/system_health_dashboard.test.js
+          tests/system_health_reports_integration.test.js
+          tests/system_health_monitoring_contract.test.js
+          tests/site_runtime_config.test.js
+          tests/site_page_runtime.test.js

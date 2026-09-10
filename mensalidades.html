@@ -510,79 +510,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p id="tuitionEmptyState" class="empty-state" hidden></p>
       </section>
 
-      <section class="finance-panel">
-        <div class="panel-header">
-          <div>
-            <h2>Configuração por aluno</h2>
-            <p>Defina apenas o valor mensal. O vencimento e o início da cobrança são definidos automaticamente pelo sistema.</p>
-          </div>
-          <span id="configuredStudentsCount" class="configured-count">0 configurados</span>
-        </div>
-
-        <div class="data-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Aluno</th>
-                <th>Valor mensal</th>
-                <th>Vencimento</th>
-                <th>Início</th>
-                <th>Situação</th>
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody id="billingStudentsBody"></tbody>
-          </table>
-        </div>
-        <p id="billingStudentsEmpty" class="empty-state" hidden></p>
-      </section>
     </main>
   </div>
 
-  <div id="settingsModal" class="modal-backdrop">
-    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <div class="modal-header">
-        <div>
-          <h2 id="settingsTitle">Configurar mensalidade</h2>
-          <p id="settingsStudentName"></p>
-        </div>
-        <button class="modal-close" type="button" data-close-modal="settingsModal" aria-label="Fechar">×</button>
-      </div>
-
-      <form id="settingsForm">
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="monthlyFee">Valor mensal (R$)</label>
-            <input id="monthlyFee" class="finance-input" type="number" min="0.01" step="0.01" required>
-          </div>
-          <div class="form-field">
-            <label for="dueDay">Vencimento escolhido pelo aluno</label>
-            <input id="dueDay" class="finance-input" type="text" readonly placeholder="Aguardando escolha do aluno">
-          </div>
-          <div class="form-field">
-            <label for="billingStartMonth">Início da cobrança (automático)</label>
-            <input id="billingStartMonth" class="finance-input" type="month" readonly>
-          </div>
-          <div class="form-field">
-            <label>Situação da cobrança</label>
-            <label class="checkbox-field">
-              <input id="billingActive" type="checkbox">
-              Cobrança mensal ativa
-            </label>
-          </div>
-          <div class="form-field full">
-            <label for="billingNotes">Observações administrativas</label>
-            <textarea id="billingNotes" class="finance-textarea" placeholder="Informação opcional"></textarea>
-          </div>
-        </div>
-        <p id="settingsMessage" class="form-message" hidden></p>
-        <div class="modal-actions">
-          <button class="finance-button" type="button" data-close-modal="settingsModal">CANCELAR</button>
-          <button id="saveSettingsButton" class="finance-button primary" type="submit">SALVAR CONFIGURAÇÃO</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <div id="paymentModal" class="modal-backdrop">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
@@ -657,8 +587,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
-  <script src="mensalidades.js?v=20260902-exempt-1"></script>
-  <script src="/mensalidades_due_day_readonly.js?v=20260908-2"></script>
+  <script src="mensalidades.js?v=20260909-1"></script>
   <script src="animated_cards.js?v=20260715-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>

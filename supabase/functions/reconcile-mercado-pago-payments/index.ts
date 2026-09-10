@@ -163,7 +163,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  const anonKey = getDefaultKey("SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_ANON_KEY");
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") ?? "";
   const authorization = request.headers.get("Authorization") ?? "";
@@ -209,9 +209,9 @@ Deno.serve(async (request: Request) => {
     return jsonResponse(request, { error: "Mensalidade inválida." }, 422);
   }
 
-  const { data: isAdminData, error: adminError } = await supabaseAuth.rpc("is_teacher_admin");
+  const { data: isAdminData, error: adminError } = await supabaseAuth.rpc("is_teacher_admin_mfa");
   if (adminError) {
-    console.error("Unable to verify teacher admin access", adminError.message);
+    console.error("Unable to verify teacher admin MFA access", adminError.message);
     return jsonResponse(request, { error: "Não foi possível verificar a autorização." }, 500);
   }
   const isAdmin = isAdminData === true;

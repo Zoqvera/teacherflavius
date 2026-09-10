@@ -5,10 +5,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 function loadConfig() {
-  const source = fs.readFileSync(
-    path.join(__dirname, "..", "site_runtime_config.js"),
-    "utf8"
-  );
+  const source = fs.readFileSync(path.join(__dirname, "..", "site_runtime_config.js"), "utf8");
   const context = { window: {} };
   vm.runInNewContext(source, context);
   return context.window.SiteRuntimeConfig;
@@ -23,17 +20,25 @@ const EXPECTED_SCRIPT_ASSETS = {
   analyticsAttribution: ["teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260902-leadfix-1"],
   privacyConsent: ["teacher-flavius-privacy-consent", "/privacy_consent.js?v=20260820-2"],
   sitePrivacyAnalytics: ["teacher-flavius-site-privacy-analytics", "/site_privacy_analytics.js?v=20260902-1"],
-  sitePageRuntime: ["teacher-flavius-site-page-runtime", "/site_page_runtime.js?v=20260904-whatsapp-tracking-1"],
+  sitePageRuntime: ["teacher-flavius-site-page-runtime", "/site_page_runtime.js?v=20260910-system-health-1"],
   mobileTopNavigation: ["teacher-flavius-mobile-top-navigation", "/mobile_top_navigation.js?v=20260820-desktop-menu-1"],
   footerCore: ["teacher-flavius-site-footer-core", "/site_footer_core.js?v=20260820-privacy-1"],
-  cleanUrls: ["teacher-flavius-clean-urls", "/clean_urls.js?v=20260819-1"],
+  cleanUrls: ["teacher-flavius-clean-urls", "/clean_urls.js?v=20260910-reports-extensionless-1"],
   googleOnlyAccess: ["teacher-flavius-google-only-access", "/google_only_access.js?v=20260819-1"],
   studentBirthdays: ["teacher-flavius-student-birthdays", "/student_birthdays.js?v=20260819-1"],
+  studentBirthdayCelebration: ["teacher-flavius-student-birthday-celebration", "/student_birthday_celebration.js?v=20260909-1"],
   sitePageContext: ["teacher-flavius-site-page-context", "/site_page_context.js?v=20260902-1"],
   siteBranding: ["teacher-flavius-site-branding", "/site_branding.js?v=20260902-1"],
   siteEnrollmentGuard: ["teacher-flavius-site-enrollment-guard", "/site_enrollment_guard.js?v=20260902-1"],
   marketingTrackingControl: ["teacher-flavius-marketing-tracking-control", "/marketing_tracking_control.js?v=20260904-1"],
-  marketingWhatsappTracker: ["teacher-flavius-marketing-whatsapp-tracker", "/marketing_whatsapp_tracker.js?v=20260904-1"]
+  marketingWhatsappTracker: ["teacher-flavius-marketing-whatsapp-tracker", "/marketing_whatsapp_tracker.js?v=20260904-1"],
+  paymentCreationControl: ["teacher-flavius-payment-creation-control", "/payment_creation_control.js?v=20260910-1"],
+  paymentOperationsDashboard: ["teacher-flavius-payment-operations-dashboard", "/payment_operations_dashboard.js?v=20260910-1"],
+  paymentRefundOperations: ["teacher-flavius-payment-refund-operations", "/payment_refund_operations.js?v=20260909-1"],
+  paymentChargebackOperations: ["teacher-flavius-payment-chargeback-operations", "/payment_chargeback_operations.js?v=20260909-2"],
+  paymentChargebackDocumentation: ["teacher-flavius-payment-chargeback-documentation", "/payment_chargeback_documentation.js?v=20260909-1"],
+  paymentWebhookLog: ["teacher-flavius-payment-webhook-log", "/payment_webhook_log.js?v=20260909-1"],
+  systemHealthReportsIntegration: ["teacher-flavius-system-health-reports-integration", "/system_health_reports_integration.js?v=20260910-1"]
 };
 
 test("preserves measurement id and public script timeout", function () {
@@ -45,7 +50,6 @@ test("preserves measurement id and public script timeout", function () {
 test("preserves every script asset id and source", function () {
   const config = loadConfig();
   assert.deepEqual(Object.keys(config.scriptAssets), Object.keys(EXPECTED_SCRIPT_ASSETS));
-
   Object.entries(EXPECTED_SCRIPT_ASSETS).forEach(function ([name, expected]) {
     assert.equal(config.scriptAssets[name].id, expected[0]);
     assert.equal(config.scriptAssets[name].src, expected[1]);
@@ -68,10 +72,6 @@ test("exposes deeply frozen runtime configuration", function () {
   assert.equal(Object.isFrozen(config.scriptAssets), true);
   assert.equal(Object.isFrozen(config.stylesheetAssets), true);
   assert.equal(Object.isFrozen(config.privacyAnalyticsAssets), true);
-  Object.values(config.scriptAssets).forEach(function (asset) {
-    assert.equal(Object.isFrozen(asset), true);
-  });
-  Object.values(config.stylesheetAssets).forEach(function (asset) {
-    assert.equal(Object.isFrozen(asset), true);
-  });
+  Object.values(config.scriptAssets).forEach(function (asset) { assert.equal(Object.isFrozen(asset), true); });
+  Object.values(config.stylesheetAssets).forEach(function (asset) { assert.equal(Object.isFrozen(asset), true); });
 });

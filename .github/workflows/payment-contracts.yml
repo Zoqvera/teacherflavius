@@ -1,0 +1,123 @@
+name: Payment contracts
+
+on:
+  pull_request:
+    paths:
+      - "pagamento/**"
+      - "payment_creation_control.js"
+      - "payment_operations_dashboard.js"
+      - "payment_refund_operations.js"
+      - "payment_chargeback_operations.js"
+      - "payment_chargeback_documentation.js"
+      - "payment_webhook_log.js"
+      - "supabase/functions/create-mercado-pago-payment/**"
+      - "supabase/functions/mercado-pago-webhook/**"
+      - "supabase/functions/reconcile-mercado-pago-automated/**"
+      - "supabase/functions/reconcile-mercado-pago-chargebacks/**"
+      - "supabase/functions/refund-mercado-pago-payment/**"
+      - "supabase/functions/list-mercado-pago-refund-candidates/**"
+      - "supabase/functions/list-mercado-pago-chargebacks/**"
+      - "supabase/functions/manage-mercado-pago-chargeback-documentation/**"
+      - "supabase/functions/manage-payment-creation-control/**"
+      - "supabase/functions/replay-mercado-pago-webhook/**"
+      - "supabase/functions/list-payment-webhooks/**"
+      - "supabase/functions/notify-payment-alert/**"
+      - "supabase/functions/_shared/mercado_pago_payment_sync.ts"
+      - "supabase/functions/_shared/mercado_pago_chargeback_sync.ts"
+      - "supabase/migrations/*payment*"
+      - "supabase/migrations/*chargeback*"
+      - "docs/payment_*.md"
+      - "tests/payment_*.test.js"
+      - "scripts/mercado_pago_sandbox_probe.js"
+      - ".github/workflows/payment-contracts.yml"
+      - "package.json"
+      - "eslint.config.js"
+  push:
+    branches:
+      - main
+    paths:
+      - "pagamento/**"
+      - "payment_creation_control.js"
+      - "payment_operations_dashboard.js"
+      - "payment_refund_operations.js"
+      - "payment_chargeback_operations.js"
+      - "payment_chargeback_documentation.js"
+      - "payment_webhook_log.js"
+      - "supabase/functions/create-mercado-pago-payment/**"
+      - "supabase/functions/mercado-pago-webhook/**"
+      - "supabase/functions/reconcile-mercado-pago-automated/**"
+      - "supabase/functions/reconcile-mercado-pago-chargebacks/**"
+      - "supabase/functions/refund-mercado-pago-payment/**"
+      - "supabase/functions/list-mercado-pago-refund-candidates/**"
+      - "supabase/functions/list-mercado-pago-chargebacks/**"
+      - "supabase/functions/manage-mercado-pago-chargeback-documentation/**"
+      - "supabase/functions/manage-payment-creation-control/**"
+      - "supabase/functions/replay-mercado-pago-webhook/**"
+      - "supabase/functions/list-payment-webhooks/**"
+      - "supabase/functions/notify-payment-alert/**"
+      - "supabase/functions/_shared/mercado_pago_payment_sync.ts"
+      - "supabase/functions/_shared/mercado_pago_chargeback_sync.ts"
+      - "supabase/migrations/*payment*"
+      - "supabase/migrations/*chargeback*"
+      - "docs/payment_*.md"
+      - "tests/payment_*.test.js"
+      - "scripts/mercado_pago_sandbox_probe.js"
+      - ".github/workflows/payment-contracts.yml"
+      - "package.json"
+      - "eslint.config.js"
+  schedule:
+    - cron: "23 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Validate payment contracts
+        run: >-
+          node --test
+          tests/payment_idempotency.test.js
+          tests/payment_gateway_contract.test.js
+          tests/payment_reconciliation_monitor_contract.test.js
+          tests/payment_refund_operations.test.js
+          tests/payment_chargeback_operations.test.js
+          tests/payment_chargeback_documentation.test.js
+          tests/payment_financial_health_contract.test.js
+          tests/payment_access_hardening_contract.test.js
+          tests/payment_runbook_contract.test.js
+          tests/payment_creation_control.test.js
+          tests/payment_sandbox_probe.test.js
+          tests/payment_webhook_log.test.js
+          tests/payment_workflow_contract.test.js
+
+  sandbox-credential-probe:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MERCADO_PAGO_TEST_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_TEST_ACCESS_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Probe Mercado Pago test credential with read-only GET
+        run: node scripts/mercado_pago_sandbox_probe.js

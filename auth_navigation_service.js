@@ -6,7 +6,9 @@
     studentArea: "/area-do-estudante/",
     login: "/login/",
     onboarding: "/complete-cadastro/",
-    profile: "/perfil/"
+    profile: "/perfil/",
+    passwordRecovery: "/recuperar-senha/",
+    accessDenied: "/acesso-negado/"
   });
 
   function normalizeNextPath(value, fallback) {
@@ -24,6 +26,10 @@
     return APP_ORIGIN + PATHS.login;
   }
 
+  function getPasswordRecoveryRedirectUrl() {
+    return getRedirectUrl();
+  }
+
   function getGoogleRedirectUrl(nextPath) {
     const next = normalizeNextPath(nextPath, PATHS.studentArea);
     return APP_ORIGIN + PATHS.login + "?oauth=google&next=" + encodeURIComponent(next);
@@ -37,6 +43,7 @@
     paths: PATHS,
     normalizeNextPath: normalizeNextPath,
     getRedirectUrl: getRedirectUrl,
+    getPasswordRecoveryRedirectUrl: getPasswordRecoveryRedirectUrl,
     getGoogleRedirectUrl: getGoogleRedirectUrl,
     getGoogleLinkRedirectUrl: getGoogleLinkRedirectUrl
   });

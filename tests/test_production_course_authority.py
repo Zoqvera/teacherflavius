@@ -19,6 +19,10 @@ from production_course_authority_content import (  # noqa: E402
     COURSE_TEACHER_OLD,
 )
 
+COURSE_VIDEO_TRIGGER = '''<button class="course-free-class-trigger" id="courseFreeClassTrigger" type="button" aria-label="Reproduzir aula gratuita do Teacher Flávio">
+<span class="course-free-class-play" aria-hidden="true">▶</span>
+</button>'''
+
 
 class ProductionCourseAuthorityTests(unittest.TestCase):
     def source_html(self) -> str:
@@ -29,6 +33,25 @@ class ProductionCourseAuthorityTests(unittest.TestCase):
             + COURSE_TEACHER_OLD
             + "\n"
             + COURSE_INSERTION_ANCHOR
+            + "\n"
+            + COURSE_VIDEO_TRIGGER
+            + "\n</body></html>"
+        )
+
+    def current_schema_html(self) -> str:
+        current_schema = '''        "@id":"https://teacherflavius.com/#teacher",
+        "description":"Professor de inglês com experiência acadêmica.",
+        "knowsAbout":["ensino de língua inglesa","linguística"],
+        "sameAs":["https://www.instagram.com/teacher.flavius","https://orcid.org/0000-0002-8972-5870"]'''
+        return (
+            "<html><body>\n"
+            + current_schema
+            + "\n"
+            + COURSE_TEACHER_OLD
+            + "\n"
+            + COURSE_INSERTION_ANCHOR
+            + "\n"
+            + COURSE_VIDEO_TRIGGER
             + "\n</body></html>"
         )
 
@@ -36,6 +59,23 @@ class ProductionCourseAuthorityTests(unittest.TestCase):
         transformed = transform_course_authority_html(self.source_html())
 
         self.assertIn(COURSE_SCHEMA_NEW, transformed)
+        self.assertIn(COURSE_TEACHER_NEW, transformed)
+        self.assertEqual(transformed.count(COURSE_AUTHORITY_BLOCK.strip()), 1)
+
+    def test_injects_lazy_course_video_thumbnail(self) -> None:
+        transformed = transform_course_authority_html(self.source_html())
+
+        self.assertIn('class="course-free-class-trigger-image"', transformed)
+        self.assertIn('loading="lazy"', transformed)
+        self.assertIn('decoding="async"', transformed)
+        self.assertEqual(transformed.count('class="course-free-class-trigger-image"'), 1)
+
+    def test_accepts_current_person_schema_without_rewriting_it(self) -> None:
+        source = self.current_schema_html()
+        transformed = transform_course_authority_html(source)
+
+        self.assertIn('"knowsAbout":["ensino de língua inglesa","linguística"]', transformed)
+        self.assertIn('"https://orcid.org/0000-0002-8972-5870"', transformed)
         self.assertIn(COURSE_TEACHER_NEW, transformed)
         self.assertEqual(transformed.count(COURSE_AUTHORITY_BLOCK.strip()), 1)
 
