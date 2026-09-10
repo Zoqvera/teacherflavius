@@ -7,6 +7,7 @@ module.exports = [
       "professor_home.js",
       "resource_waiter.js",
       "animated_cards.js",
+      "aula_template.js",
       "animated_cards_visuals.js",
       "class_type_service.js",
       "class_type_badge_renderer.js",
