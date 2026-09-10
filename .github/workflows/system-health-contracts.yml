@@ -2,22 +2,6 @@ name: System health contracts
 
 on:
   pull_request:
-    paths:
-      - "system_health_dashboard.js"
-      - "system_health_reports_integration.js"
-      - "saude-do-sistema/**"
-      - "supabase/functions/system-synthetic-probe/**"
-      - "supabase/functions/notify-system-health-alert/**"
-      - "supabase/functions/get-system-health-dashboard/**"
-      - "supabase/migrations/*system_health*"
-      - "docs/system_health_monitoring.md"
-      - "tests/system_health_*.test.js"
-      - "site_runtime_config.js"
-      - "site_page_runtime.js"
-      - "tests/site_runtime_config.test.js"
-      - "tests/site_page_runtime.test.js"
-      - "package.json"
-      - ".github/workflows/system-health-contracts.yml"
   push:
     branches:
       - main
