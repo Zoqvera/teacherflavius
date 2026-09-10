@@ -6,6 +6,7 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const runbook = fs.readFileSync(path.join(root, "docs/payment_incident_runbook.md"), "utf8");
 const audit = fs.readFileSync(path.join(root, "docs/payment_operational_audit.md"), "utf8");
+const killSwitch = fs.readFileSync(path.join(root, "docs/payment_kill_switch.md"), "utf8");
 
 const REQUIRED_INCIDENTS = [
   "Pagamento pendente por tempo excessivo",
@@ -40,7 +41,8 @@ const REQUIRED_EDGE_FUNCTIONS = [
   "list-mercado-pago-refund-candidates",
   "reconcile-mercado-pago-chargebacks",
   "list-mercado-pago-chargebacks",
-  "manage-mercado-pago-chargeback-documentation"
+  "manage-mercado-pago-chargeback-documentation",
+  "manage-payment-creation-control"
 ];
 
 test("incident runbook covers every operational payment failure class", () => {
@@ -63,11 +65,22 @@ test("operational audit inventories all financial crons and Edge Functions", () 
   REQUIRED_EDGE_FUNCTIONS.forEach((name) => assert.match(audit, new RegExp(escapeRegex(name))));
 });
 
-test("operational audit records residual risks instead of claiming perfect coverage", () => {
+test("operational audit records current residual risks instead of obsolete ones", () => {
   assert.match(audit, /Riscos residuais/);
-  assert.match(audit, /Ausência de kill switch financeiro dedicado/);
-  assert.match(audit, /Defaults de grants do projeto fora do domínio financeiro/);
+  assert.match(audit, /Janela de requisição em voo no kill switch/);
+  assert.match(audit, /Defaults gerenciados pela plataforma/);
   assert.match(audit, /noop-schema-probe/);
+  assert.match(audit, /Proteção contra senhas vazadas/);
+  assert.doesNotMatch(audit, /Ausência de kill switch financeiro dedicado/);
+  assert.doesNotMatch(audit, /Defaults de grants do projeto fora do domínio financeiro/);
+});
+
+test("kill switch operations remain documented as recovery-safe", () => {
+  assert.match(killSwitch, /manage-payment-creation-control/);
+  assert.match(killSwitch, /Webhooks, reconciliação, reembolsos, chargebacks, documentação e alertas continuam operacionais/);
+  assert.match(killSwitch, /BLOQUEAR/);
+  assert.match(killSwitch, /REATIVAR/);
+  assert.match(killSwitch, /requisição que já tenha passado pelo ponto de admissão/i);
 });
 
 function escapeRegex(value) {
