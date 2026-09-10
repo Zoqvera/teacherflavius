@@ -14,7 +14,7 @@
     analyticsAttribution: freezeAsset({ id: "teacher-flavius-analytics-attribution", src: "/analytics_attribution.js?v=20260902-leadfix-1" }),
     privacyConsent: freezeAsset({ id: "teacher-flavius-privacy-consent", src: "/privacy_consent.js?v=20260820-2" }),
     sitePrivacyAnalytics: freezeAsset({ id: "teacher-flavius-site-privacy-analytics", src: "/site_privacy_analytics.js?v=20260902-1" }),
-    sitePageRuntime: freezeAsset({ id: "teacher-flavius-site-page-runtime", src: "/site_page_runtime.js?v=20260910-payment-kill-switch-1" }),
+    sitePageRuntime: freezeAsset({ id: "teacher-flavius-site-page-runtime", src: "/site_page_runtime.js?v=20260910-system-health-1" }),
     mobileTopNavigation: freezeAsset({ id: "teacher-flavius-mobile-top-navigation", src: "/mobile_top_navigation.js?v=20260820-desktop-menu-1" }),
     footerCore: freezeAsset({ id: "teacher-flavius-site-footer-core", src: "/site_footer_core.js?v=20260820-privacy-1" }),
     cleanUrls: freezeAsset({ id: "teacher-flavius-clean-urls", src: "/clean_urls.js?v=20260910-reports-extensionless-1" }),
@@ -31,14 +31,12 @@
     paymentRefundOperations: freezeAsset({ id: "teacher-flavius-payment-refund-operations", src: "/payment_refund_operations.js?v=20260909-1" }),
     paymentChargebackOperations: freezeAsset({ id: "teacher-flavius-payment-chargeback-operations", src: "/payment_chargeback_operations.js?v=20260909-2" }),
     paymentChargebackDocumentation: freezeAsset({ id: "teacher-flavius-payment-chargeback-documentation", src: "/payment_chargeback_documentation.js?v=20260909-1" }),
-    paymentWebhookLog: freezeAsset({ id: "teacher-flavius-payment-webhook-log", src: "/payment_webhook_log.js?v=20260909-1" })
+    paymentWebhookLog: freezeAsset({ id: "teacher-flavius-payment-webhook-log", src: "/payment_webhook_log.js?v=20260909-1" }),
+    systemHealthReportsIntegration: freezeAsset({ id: "teacher-flavius-system-health-reports-integration", src: "/system_health_reports_integration.js?v=20260910-1" })
   });
 
   const stylesheetAssets = Object.freeze({
-    accessibility: freezeAsset({
-      id: "teacher-flavius-accessibility-styles",
-      href: "/accessibility.css?v=20260820-1"
-    })
+    accessibility: freezeAsset({ id: "teacher-flavius-accessibility-styles", href: "/accessibility.css?v=20260820-1" })
   });
 
   const privacyAnalyticsAssets = Object.freeze({

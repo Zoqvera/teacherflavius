@@ -22,7 +22,8 @@ const SCRIPT_NAMES = [
   "paymentRefundOperations",
   "paymentChargebackOperations",
   "paymentChargebackDocumentation",
-  "paymentWebhookLog"
+  "paymentWebhookLog",
+  "systemHealthReportsIntegration"
 ];
 
 function createAssets() {
@@ -36,18 +37,10 @@ function createRuntime(options) {
   const source = fs.readFileSync(path.join(__dirname, "..", "site_page_runtime.js"), "utf8");
   const scriptCalls = [];
   const stylesheetCalls = [];
-  const events = {
-    branding: 0,
-    enrollment: [],
-    whatsapp: [],
-    removedLinks: 0,
-    standardizedLinks: 0,
-    idleTimeouts: []
-  };
-  const scriptAssets = createAssets();
+  const events = { branding: 0, enrollment: [], whatsapp: [], removedLinks: 0, standardizedLinks: 0, idleTimeouts: [] };
   const runtimeConfig = {
     publicScriptsIdleTimeoutMs: 1200,
-    scriptAssets: scriptAssets,
+    scriptAssets: createAssets(),
     stylesheetAssets: { accessibility: Object.freeze({ id: "accessibilityStyles", href: "/accessibility.css" }) }
   };
   const pageContext = {
@@ -75,20 +68,13 @@ function createRuntime(options) {
       callback();
     };
   }
-  const documentRef = {
-    readyState: "complete",
-    addEventListener: function () {},
-    getElementById: function () { return null; }
-  };
+  const documentRef = { readyState: "complete", addEventListener: function () {}, getElementById: function () { return null; } };
   const context = { window: {} };
 
   vm.runInNewContext(source, context);
   const runtime = context.window.SitePageRuntime.create({
     runtimeConfig: runtimeConfig,
-    loadScriptAsset: function (asset, callback) {
-      scriptCalls.push(asset.id);
-      if (callback) callback();
-    },
+    loadScriptAsset: function (asset, callback) { scriptCalls.push(asset.id); if (callback) callback(); },
     loadStylesheetAsset: function (asset) { stylesheetCalls.push(asset.id); },
     windowRef: windowRef,
     documentRef: documentRef
@@ -100,15 +86,7 @@ function createRuntime(options) {
 
 test("loads public home runtime without clean URL script", function () {
   const result = createRuntime({ path: "/", home: true, publicPage: true });
-  assert.deepEqual(result.scriptCalls, [
-    "sitePageContext",
-    "siteBranding",
-    "siteEnrollmentGuard",
-    "accessibility",
-    "siteWhatsapp",
-    "marketingWhatsappTracker",
-    "footerCore"
-  ]);
+  assert.deepEqual(result.scriptCalls, ["sitePageContext", "siteBranding", "siteEnrollmentGuard", "accessibility", "siteWhatsapp", "marketingWhatsappTracker", "footerCore"]);
   assert.deepEqual(result.stylesheetCalls, ["accessibilityStyles"]);
   assert.deepEqual(result.events.idleTimeouts, [1200]);
   assert.deepEqual(result.events.enrollment, [false]);
@@ -133,19 +111,14 @@ test("loads only clean URLs after UI foundations on geo pages", function () {
 
 test("loads portal chain in the expected order", function () {
   const result = createRuntime({ path: "/area-do-estudante/", publicPage: false });
-  assert.deepEqual(result.scriptCalls.slice(-5), [
-    "cleanUrls",
-    "googleOnlyAccess",
-    "studentBirthdays",
-    "studentBirthdayCelebration",
-    "footerCore"
-  ]);
+  assert.deepEqual(result.scriptCalls.slice(-5), ["cleanUrls", "googleOnlyAccess", "studentBirthdays", "studentBirthdayCelebration", "footerCore"]);
   assert.equal(result.scriptCalls.includes("paymentCreationControl"), false);
   assert.equal(result.scriptCalls.includes("paymentOperationsDashboard"), false);
   assert.equal(result.scriptCalls.includes("paymentRefundOperations"), false);
   assert.equal(result.scriptCalls.includes("paymentChargebackOperations"), false);
   assert.equal(result.scriptCalls.includes("paymentChargebackDocumentation"), false);
   assert.equal(result.scriptCalls.includes("paymentWebhookLog"), false);
+  assert.equal(result.scriptCalls.includes("systemHealthReportsIntegration"), false);
   assert.deepEqual(result.events.enrollment, [true]);
   assert.deepEqual(result.events.whatsapp, [true]);
   assert.deepEqual(result.events.idleTimeouts, []);
@@ -159,17 +132,13 @@ test("loads payment kill switch and operations only on mensalidades", function (
   assert.equal(result.scriptCalls.includes("paymentChargebackOperations"), true);
   assert.equal(result.scriptCalls.includes("paymentChargebackDocumentation"), true);
   assert.equal(result.scriptCalls.includes("paymentWebhookLog"), true);
-  assert.deepEqual(result.scriptCalls.slice(-11), [
-    "paymentCreationControl",
-    "paymentOperationsDashboard",
-    "paymentRefundOperations",
-    "paymentChargebackOperations",
-    "paymentChargebackDocumentation",
-    "paymentWebhookLog",
-    "cleanUrls",
-    "googleOnlyAccess",
-    "studentBirthdays",
-    "studentBirthdayCelebration",
-    "footerCore"
-  ]);
+  assert.equal(result.scriptCalls.includes("systemHealthReportsIntegration"), false);
+  assert.deepEqual(result.scriptCalls.slice(-11), ["paymentCreationControl", "paymentOperationsDashboard", "paymentRefundOperations", "paymentChargebackOperations", "paymentChargebackDocumentation", "paymentWebhookLog", "cleanUrls", "googleOnlyAccess", "studentBirthdays", "studentBirthdayCelebration", "footerCore"]);
+});
+
+test("loads system health integration only on reports", function () {
+  const result = createRuntime({ path: "/relatorios/", publicPage: false });
+  assert.equal(result.scriptCalls.includes("systemHealthReportsIntegration"), true);
+  assert.equal(result.scriptCalls.includes("paymentCreationControl"), false);
+  assert.deepEqual(result.scriptCalls.slice(-6), ["systemHealthReportsIntegration", "cleanUrls", "googleOnlyAccess", "studentBirthdays", "studentBirthdayCelebration", "footerCore"]);
 });

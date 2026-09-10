@@ -10,12 +10,8 @@
   }
 
   function assertDependencies(dependencies) {
-    if (!dependencies || typeof dependencies !== "object") {
-      throw new TypeError("SitePageRuntime requer dependências de inicialização.");
-    }
-    if (!dependencies.runtimeConfig || !dependencies.runtimeConfig.scriptAssets) {
-      throw new Error("SitePageRuntime requer runtimeConfig válido.");
-    }
+    if (!dependencies || typeof dependencies !== "object") throw new TypeError("SitePageRuntime requer dependências de inicialização.");
+    if (!dependencies.runtimeConfig || !dependencies.runtimeConfig.scriptAssets) throw new Error("SitePageRuntime requer runtimeConfig válido.");
     assertFunction(dependencies.loadScriptAsset, "loadScriptAsset");
     assertFunction(dependencies.loadStylesheetAsset, "loadStylesheetAsset");
   }
@@ -39,7 +35,6 @@
   function create(dependencies) {
     const deps = dependencies || {};
     assertDependencies(deps);
-
     const runtimeConfig = deps.runtimeConfig;
     const scriptAssets = runtimeConfig.scriptAssets;
     const stylesheetAssets = runtimeConfig.stylesheetAssets;
@@ -63,10 +58,7 @@
       if (!nodeFilter || typeof nodeFilter.SHOW_TEXT !== "number") return;
       const walker = documentRef.createTreeWalker(root, nodeFilter.SHOW_TEXT);
       let node = walker.nextNode();
-      while (node) {
-        normalizeTextNode(node);
-        node = walker.nextNode();
-      }
+      while (node) { normalizeTextNode(node); node = walker.nextNode(); }
     }
 
     function normalizeElementAttributes(root) {
@@ -99,9 +91,7 @@
           const data = JSON.parse(script.textContent || "");
           const normalized = JSON.stringify(replaceJsonStrings(data));
           if (normalized !== script.textContent) script.textContent = normalized;
-        } catch (error) {
-          console.warn("Não foi possível normalizar os dados estruturados da página.", error);
-        }
+        } catch (error) { console.warn("Não foi possível normalizar os dados estruturados da página.", error); }
       });
     }
 
@@ -118,10 +108,7 @@
       if (!windowRef.MutationObserver || !documentRef.documentElement || publicCopyObserver) return;
       publicCopyObserver = new windowRef.MutationObserver(function (mutations) {
         mutations.forEach(function (mutation) {
-          if (mutation.type === "characterData") {
-            normalizeTextNode(mutation.target);
-            return;
-          }
+          if (mutation.type === "characterData") { normalizeTextNode(mutation.target); return; }
           mutation.addedNodes.forEach(function (node) {
             if (node.nodeType === 3) normalizeTextNode(node);
             else normalizePublicCopy(node);
@@ -131,18 +118,13 @@
       publicCopyObserver.observe(documentRef.documentElement, { childList: true, characterData: true, subtree: true });
     }
 
-    function loadAccessibility() {
-      deps.loadStylesheetAsset(stylesheetAssets.accessibility);
-      deps.loadScriptAsset(scriptAssets.accessibility);
-    }
-
+    function loadAccessibility() { deps.loadStylesheetAsset(stylesheetAssets.accessibility); deps.loadScriptAsset(scriptAssets.accessibility); }
     function loadMobileTopNavigation() { deps.loadScriptAsset(scriptAssets.mobileTopNavigation); }
     function loadOperationalMarketingTracking() { deps.loadScriptAsset(scriptAssets.marketingWhatsappTracker); }
 
     function initializeEnrollmentGuard() {
       const enrollmentGuard = windowRef.SiteEnrollmentGuard;
-      if (!enrollmentGuard) return;
-      enrollmentGuard.initialize({ watchDynamicLinks: !pageContext().isPublicMarketingPage() });
+      if (enrollmentGuard) enrollmentGuard.initialize({ watchDynamicLinks: !pageContext().isPublicMarketingPage() });
     }
 
     function initializeWhatsappUi() {
@@ -160,87 +142,60 @@
     function loadFooterCore() { deps.loadScriptAsset(scriptAssets.footerCore, refreshFooterLinks); }
 
     function loadPublicPageScripts() {
-      if (pageContext().currentPath() === "/") {
-        loadFooterCore();
-        return;
-      }
-      if (pageContext().isGeoContentPage()) {
-        deps.loadScriptAsset(scriptAssets.cleanUrls);
-        return;
-      }
+      if (pageContext().currentPath() === "/") { loadFooterCore(); return; }
+      if (pageContext().isGeoContentPage()) { deps.loadScriptAsset(scriptAssets.cleanUrls); return; }
       deps.loadScriptAsset(scriptAssets.cleanUrls, loadFooterCore);
     }
 
-    function isPaymentAdminPage() {
-      return pageContext().currentPath() === "/mensalidades/";
-    }
+    function isPaymentAdminPage() { return pageContext().currentPath() === "/mensalidades/"; }
+    function isReportsPage() { return pageContext().currentPath() === "/relatorios/"; }
 
     function removeLegacyBillingConfigurationUi() {
       if (!isPaymentAdminPage()) return;
-
       const configuredStudentsCount = documentRef.getElementById("configuredStudentsCount");
       const configurationPanel = configuredStudentsCount && configuredStudentsCount.closest(".finance-panel");
       if (configurationPanel) configurationPanel.remove();
-
       const settingsModal = documentRef.getElementById("settingsModal");
       if (settingsModal) settingsModal.remove();
     }
 
-    function loadPaymentWebhookLog() {
-      if (scriptAssets.paymentWebhookLog) deps.loadScriptAsset(scriptAssets.paymentWebhookLog);
-    }
-
+    function loadPaymentWebhookLog() { if (scriptAssets.paymentWebhookLog) deps.loadScriptAsset(scriptAssets.paymentWebhookLog); }
     function loadPaymentChargebackDocumentation() {
-      if (!scriptAssets.paymentChargebackDocumentation) {
-        loadPaymentWebhookLog();
-        return;
-      }
+      if (!scriptAssets.paymentChargebackDocumentation) { loadPaymentWebhookLog(); return; }
       deps.loadScriptAsset(scriptAssets.paymentChargebackDocumentation, loadPaymentWebhookLog);
     }
-
     function loadPaymentChargebackOperations() {
-      if (!scriptAssets.paymentChargebackOperations) {
-        loadPaymentChargebackDocumentation();
-        return;
-      }
+      if (!scriptAssets.paymentChargebackOperations) { loadPaymentChargebackDocumentation(); return; }
       deps.loadScriptAsset(scriptAssets.paymentChargebackOperations, loadPaymentChargebackDocumentation);
     }
-
     function loadPaymentRefundOperations() {
-      if (!scriptAssets.paymentRefundOperations) {
-        loadPaymentChargebackOperations();
-        return;
-      }
+      if (!scriptAssets.paymentRefundOperations) { loadPaymentChargebackOperations(); return; }
       deps.loadScriptAsset(scriptAssets.paymentRefundOperations, loadPaymentChargebackOperations);
     }
-
     function loadPaymentOperationsDashboard() {
-      if (!scriptAssets.paymentOperationsDashboard) {
-        loadPaymentRefundOperations();
-        return;
-      }
+      if (!scriptAssets.paymentOperationsDashboard) { loadPaymentRefundOperations(); return; }
       deps.loadScriptAsset(scriptAssets.paymentOperationsDashboard, loadPaymentRefundOperations);
     }
-
     function loadPaymentOperationsTools() {
       if (!isPaymentAdminPage()) return;
-      if (!scriptAssets.paymentCreationControl) {
-        loadPaymentOperationsDashboard();
-        return;
-      }
+      if (!scriptAssets.paymentCreationControl) { loadPaymentOperationsDashboard(); return; }
       deps.loadScriptAsset(scriptAssets.paymentCreationControl, loadPaymentOperationsDashboard);
     }
 
-    function loadStudentBirthdayCelebration() {
-      if (!scriptAssets.studentBirthdayCelebration) {
-        loadFooterCore();
-        return;
+    function loadSystemHealthReportsIntegration() {
+      if (isReportsPage() && scriptAssets.systemHealthReportsIntegration) {
+        deps.loadScriptAsset(scriptAssets.systemHealthReportsIntegration);
       }
+    }
+
+    function loadStudentBirthdayCelebration() {
+      if (!scriptAssets.studentBirthdayCelebration) { loadFooterCore(); return; }
       deps.loadScriptAsset(scriptAssets.studentBirthdayCelebration, loadFooterCore);
     }
 
     function loadPortalScripts() {
       loadPaymentOperationsTools();
+      loadSystemHealthReportsIntegration();
       deps.loadScriptAsset(scriptAssets.cleanUrls, function () {
         deps.loadScriptAsset(scriptAssets.googleOnlyAccess, function () {
           deps.loadScriptAsset(scriptAssets.studentBirthdays, loadStudentBirthdayCelebration);
@@ -249,10 +204,7 @@
     }
 
     function initializeUi() {
-      if (pageContext().isPublicMarketingPage()) {
-        normalizePublicCopy();
-        observePublicCopy();
-      }
+      if (pageContext().isPublicMarketingPage()) { normalizePublicCopy(); observePublicCopy(); }
       removeLegacyBillingConfigurationUi();
       if (windowRef.SiteBranding) windowRef.SiteBranding.install();
       loadAccessibility();
@@ -271,17 +223,10 @@
 
     function initializeResolvedRuntime() {
       if (!pageContext() || !windowRef.SiteBranding || !windowRef.SiteEnrollmentGuard) return;
-      if (documentRef.readyState === "loading") {
-        documentRef.addEventListener("DOMContentLoaded", initializeUi, { once: true });
-      } else {
-        initializeUi();
-      }
-      if (pageContext().isPublicMarketingPage()) {
-        loadOperationalMarketingTracking();
-        schedulePublicScripts();
-      } else {
-        loadPortalScripts();
-      }
+      if (documentRef.readyState === "loading") documentRef.addEventListener("DOMContentLoaded", initializeUi, { once: true });
+      else initializeUi();
+      if (pageContext().isPublicMarketingPage()) { loadOperationalMarketingTracking(); schedulePublicScripts(); }
+      else loadPortalScripts();
     }
 
     function loadSiteFoundations() {
