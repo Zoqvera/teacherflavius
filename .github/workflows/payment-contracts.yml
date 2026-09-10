@@ -24,6 +24,7 @@ on:
       - "supabase/functions/_shared/mercado_pago_chargeback_sync.ts"
       - "supabase/migrations/*payment*"
       - "supabase/migrations/*chargeback*"
+      - "docs/payment_*.md"
       - "tests/payment_*.test.js"
       - "scripts/mercado_pago_sandbox_probe.js"
       - ".github/workflows/payment-contracts.yml"
@@ -54,6 +55,7 @@ on:
       - "supabase/functions/_shared/mercado_pago_chargeback_sync.ts"
       - "supabase/migrations/*payment*"
       - "supabase/migrations/*chargeback*"
+      - "docs/payment_*.md"
       - "tests/payment_*.test.js"
       - "scripts/mercado_pago_sandbox_probe.js"
       - ".github/workflows/payment-contracts.yml"
@@ -91,6 +93,7 @@ jobs:
           tests/payment_chargeback_documentation.test.js
           tests/payment_financial_health_contract.test.js
           tests/payment_access_hardening_contract.test.js
+          tests/payment_runbook_contract.test.js
           tests/payment_sandbox_probe.test.js
           tests/payment_webhook_log.test.js
           tests/payment_workflow_contract.test.js
