@@ -1,0 +1,95 @@
+name: Performance budget
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-budgets:
+    name: Static performance budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Build static site
+        run: |
+          python3 scripts/build_static_site.py
+          python3 scripts/postprocess_production.py
+      - name: Validate performance budgets
+        run: python3 scripts/check_performance_budgets.py --root _site --json performance-budget-report.json
+      - name: Run checker tests
+        run: python3 -m unittest tests.test_performance_budgets
+      - name: Upload budget report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-budget-report
+          path: performance-budget-report.json
+
+  lighthouse-lab:
+    name: Lighthouse lab guardrails
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build static site
+        run: |
+          python3 scripts/build_static_site.py
+          python3 scripts/postprocess_production.py
+      - name: Start local static server
+        run: |
+          python3 -m http.server 4173 --directory _site >/tmp/teacherflavius-http.log 2>&1 &
+          echo $! > /tmp/teacherflavius-http.pid
+          for attempt in $(seq 1 20); do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Run Lighthouse mobile audit
+        run: |
+          npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ \
+            --only-categories=performance \
+            --output=json \
+            --output-path=lighthouse-home-mobile.json \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+            --quiet
+      - name: Validate Lighthouse guardrails
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("lighthouse-home-mobile.json").read_text(encoding="utf-8"))
+          audits = report["audits"]
+          score = float(report["categories"]["performance"]["score"] or 0)
+          lcp_ms = float(audits["largest-contentful-paint"]["numericValue"])
+          cls = float(audits["cumulative-layout-shift"]["numericValue"])
+          tbt_ms = float(audits["total-blocking-time"]["numericValue"])
+          print(f"performance={score:.2f} lcp_ms={lcp_ms:.0f} cls={cls:.3f} tbt_ms={tbt_ms:.0f}")
+
+          failures = []
+          if score < 0.65: failures.append(f"performance score {score:.2f} < 0.65")
+          if lcp_ms > 4000: failures.append(f"LCP {lcp_ms:.0f}ms > 4000ms")
+          if cls > 0.15: failures.append(f"CLS {cls:.3f} > 0.15")
+          if tbt_ms > 800: failures.append(f"TBT {tbt_ms:.0f}ms > 800ms")
+          if failures:
+              raise SystemExit("Lighthouse guardrails failed: " + "; ".join(failures))
+          PY
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-home-mobile
+          path: lighthouse-home-mobile.json
