@@ -31,20 +31,20 @@ Nenhuma RPC financeira é executável por `anon`.
 
 ## Edge Functions públicas sem JWT
 
-Três superfícies financeiras permanecem sem `verify_jwt` porque não são endpoints de usuário anônimo:
+Quatro superfícies financeiras permanecem sem `verify_jwt` porque não são endpoints de usuário anônimo:
 
 - `mercado-pago-webhook`: valida a assinatura HMAC enviada pelo Mercado Pago.
 - `reconcile-mercado-pago-automated`: valida timestamp e assinatura de reconciliação.
 - `reconcile-mercado-pago-chargebacks`: usa a mesma autenticação assinada da reconciliação.
 - `notify-payment-alert`: valida o segredo próprio do webhook antes de ler ou alterar alertas.
 
-As funções administrativas acionadas pelo navegador exigem JWT e, quando manipulam informações financeiras sensíveis, também validam MFA.
+As funções administrativas acionadas pelo navegador exigem JWT e, quando manipulam informações financeiras sensíveis, também validam MFA. A reconciliação manual preserva o autosserviço do aluno por `student_id`, mas só habilita o escopo administrativo amplo quando `is_teacher_admin_mfa()` retorna verdadeiro.
 
 ## Segredos
 
 Os crons financeiros executam somente funções privadas do Postgres; não carregam chaves ou tokens em seus comandos. Os segredos de dispatch ficam no Vault e as Edge Functions mantêm tokens do Mercado Pago e chaves Supabase apenas no ambiente do servidor.
 
-O código versionado das funções financeiras usa `SUPABASE_SECRET_KEYS` como fonte preferencial para credenciais secretas, mantendo `SUPABASE_SERVICE_ROLE_KEY` apenas como fallback de compatibilidade. O contrato `payment_access_hardening_contract.test.js` impede a reintrodução de leitura direta da chave legada nas funções financeiras.
+O código versionado das funções financeiras usa `SUPABASE_SECRET_KEYS` como fonte preferencial para credenciais secretas, mantendo `SUPABASE_SERVICE_ROLE_KEY` apenas como fallback de compatibilidade. A reconciliação manual também prefere `SUPABASE_PUBLISHABLE_KEYS`, com `SUPABASE_ANON_KEY` somente como fallback. O contrato `payment_access_hardening_contract.test.js` impede a reintrodução de leitura direta da chave legada de serviço nas funções financeiras.
 
 ## Verificação operacional
 
