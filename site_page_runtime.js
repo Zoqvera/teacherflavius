@@ -214,9 +214,21 @@
       deps.loadScriptAsset(scriptAssets.paymentRefundOperations, loadPaymentChargebackOperations);
     }
 
-    function loadPaymentOperationsTools() {
-      if (!isPaymentAdminPage() || !scriptAssets.paymentOperationsDashboard) return;
+    function loadPaymentOperationsDashboard() {
+      if (!scriptAssets.paymentOperationsDashboard) {
+        loadPaymentRefundOperations();
+        return;
+      }
       deps.loadScriptAsset(scriptAssets.paymentOperationsDashboard, loadPaymentRefundOperations);
+    }
+
+    function loadPaymentOperationsTools() {
+      if (!isPaymentAdminPage()) return;
+      if (!scriptAssets.paymentCreationControl) {
+        loadPaymentOperationsDashboard();
+        return;
+      }
+      deps.loadScriptAsset(scriptAssets.paymentCreationControl, loadPaymentOperationsDashboard);
     }
 
     function loadStudentBirthdayCelebration() {
