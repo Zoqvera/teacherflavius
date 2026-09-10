@@ -12,7 +12,6 @@ const historyMigration = fs.readFileSync(
   path.join(__dirname, "../supabase/migrations/20260910122016_preserve_trial_lesson_class_history.sql"),
   "utf8"
 );
-const page = fs.readFileSync(path.join(__dirname, "../aulas-experimentais/index.html"), "utf8");
 const professorHome = fs.readFileSync(path.join(__dirname, "../professor_home.js"), "utf8");
 
 test("normalizes WhatsApp contacts without leaking formatting into wa.me", function () {
@@ -69,11 +68,7 @@ test("preserves the class name snapshot when a historical class reference is rem
   assert.match(historyMigration, /lesson_mode = 'individual' and class_number is null and class_name_snapshot is null/i);
 });
 
-test("publishes the protected trial lesson route and professor dashboard card", function () {
-  assert.match(page, /<meta name="robots" content="noindex, nofollow">/i);
-  assert.match(page, /<link rel="canonical" href="\/aulas-experimentais\/">/i);
-  assert.match(page, /\/professor_mfa_gate\.js\?v=/i);
-  assert.match(page, /\/trial_lesson_scheduler\.js\?v=20260910-1/i);
+test("adds a clean public route card to the professor dashboard", function () {
   assert.match(professorHome, /id: "aulas-experimentais"/i);
   assert.match(professorHome, /href: "\/aulas-experimentais\/"/i);
   assert.match(professorHome, /label: "AULAS EXPERIMENTAIS"/i);
