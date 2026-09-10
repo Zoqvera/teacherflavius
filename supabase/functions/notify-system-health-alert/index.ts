@@ -24,6 +24,23 @@ const SUBJECTS: Record<string, string> = {
   scheduled_job_failure: "Alerta crítico: job agendado falhou",
   scheduled_jobs_stale: "Alerta: jobs agendados atrasados",
   system_health_stalled: "Alerta crítico: health check global parou",
+  data_quality_check_stalled: "Alerta: health check de qualidade de dados parou",
+  data_quality_orphan_class_assignments: "Alerta crítico: vínculo de turma órfão",
+  data_quality_invalid_class_student_refs: "Alerta crítico: referência inválida em turma",
+  data_quality_class_capacity_exceeded: "Alerta crítico: turma acima da capacidade",
+  data_quality_student_class_type_mismatch: "Alerta: tipo de aluno incompatível com a turma",
+  data_quality_typed_student_without_active_class: "Alerta: aluno com tipo definido sem turma ativa",
+  data_quality_duplicate_active_cpf: "Alerta crítico: CPF duplicado entre alunos ativos",
+  data_quality_archive_state_mismatch: "Alerta: arquivamento inconsistente",
+  data_quality_active_class_schedule_missing: "Alerta: turma ativa sem horário completo",
+  data_quality_makeup_capacity_exceeded: "Alerta crítico: reposição acima da capacidade",
+  data_quality_makeup_booking_class_mismatch: "Alerta: reposição vinculada à turma incorreta",
+  data_quality_makeup_status_timestamp_mismatch: "Alerta: status de reposição inconsistente",
+  data_quality_future_auto_slot_invalid_class: "Alerta: reposição automática com turma inválida",
+  data_quality_lesson_orphan_class: "Alerta: registro de lição com turma inexistente",
+  data_quality_frequency_invalid_subject_ref: "Alerta crítico: frequência com referência inválida",
+  data_quality_tuition_subject_mismatch: "Alerta crítico: mensalidade com referência inconsistente",
+  data_quality_payment_attempt_subject_mismatch: "Alerta crítico: tentativa de pagamento inconsistente",
 };
 
 function getDefaultKey(envName: string, legacyName: string): string {
@@ -80,7 +97,7 @@ function clean(value: unknown): string {
 
 function detailLines(details: JsonRecord): string[] {
   return Object.entries(details)
-    .filter(([key]) => key !== "health_run_id")
+    .filter(([key]) => key !== "health_run_id" && key !== "data_quality_run_id")
     .slice(0, 12)
     .map(([key, value]) => `${key}: ${clean(value) || JSON.stringify(value).slice(0, 240)}`);
 }
