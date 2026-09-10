@@ -1,544 +1,608 @@
-# Teacher Flávio — Portal de Ensino de Inglês
+# Teacher Flávio — Plataforma de Ensino de Inglês
 
 <!-- markdownlint-disable MD013 -->
 
-Site oficial e portal acadêmico do Teacher Flávio, disponível em
-[teacherflavius.com](https://teacherflavius.com).
+Plataforma web do **Teacher Flávio** para aquisição de alunos, matrícula, autenticação, ensino de inglês e administração acadêmica, operacional e financeira.
 
-O projeto deixou de ser apenas uma coleção de atividades estáticas. Atualmente,
-ele reúne matrícula, autenticação, áreas do aluno e do professor, gestão de
-turmas, registro de lições, frequência, exercícios, mensalidades, reposições,
-aulas de gramática, pagamentos online, notificações por e-mail, rodapé
-institucional compartilhado e acompanhamento de acessos.
+Produção: [teacherflavius.com](https://teacherflavius.com)  
+Acesso direto do aluno: [teacherflavius.com/acesso-aluno/](https://teacherflavius.com/acesso-aluno/)
 
-## Visão geral
+O projeto combina um frontend estático em HTML, CSS e JavaScript com Supabase para autenticação, PostgreSQL, Row Level Security, RPCs, jobs agendados e Edge Functions. Integrações externas incluem Mercado Pago, Resend, Google OAuth, Google Forms/Sheets e Google Tag Manager.
 
-Há três experiências principais:
+## Estado atual
 
-- **Visitante:** conhece as aulas, inicia uma matrícula e acessa o login.
-- **Aluno autenticado:** consulta sua turma, materiais, frequência, roteiro,
-  exercícios, reposições, aulas de gramática e perfil.
-- **Professor administrador:** gerencia alunos, turmas, lições, exercícios,
-  mensalidades, reposições e relatórios de acesso.
+Em 10 de setembro de 2026, o projeto possui:
 
-O frontend é estático e hospedado no GitHub Pages. Autenticação, dados, regras de
-acesso e funções remotas ficam no Supabase. As notificações de matrícula e
-reposição são enviadas pelo Resend por meio de Supabase Edge Functions.
+- frontend estático publicado pelo GitHub Pages com domínio próprio;
+- pipeline de materialização e validação do HTML antes da publicação;
+- autenticação Supabase com Google como fluxo principal e acesso por senha restrito a fluxos legados autorizados;
+- MFA para operações administrativas sensíveis do professor;
+- banco PostgreSQL protegido por RLS, RPCs, privilégios explícitos e objetos privados de servidor;
+- módulos acadêmicos de alunos, turmas, frequência, lições, exercícios, flashcards e reposições;
+- módulo financeiro com mensalidades, Pix/cartão, reconciliação, reembolsos, chargebacks, health financeiro e kill switch de novas cobranças;
+- sincronização de exercícios recebidos por Google Forms;
+- observabilidade com monitor de erros, CSP reporting, health interno, probes sintéticos e verificação externa de disponibilidade;
+- analytics com Consent Mode, Google Tag Manager e eventos de aquisição, formulários e pagamentos;
+- suíte automatizada de qualidade em JavaScript e Python;
+- backup lógico criptografado do Supabase e teste automatizado de restauração;
+- baseline versionado para reconstrução do banco em recuperação de desastre.
+
+Os experimentos históricos de **pronúncia com IA** e **MCP V1** estão deliberadamente adiados e não fazem parte da aplicação ativa. Consulte [Decisões de arquitetura](#decisões-de-arquitetura).
+
+## Arquitetura
 
 ```mermaid
 flowchart TB
-  Pages["GitHub Pages<br>teacherflavius.com"] --> Browser["HTML, CSS e JavaScript<br>no navegador"]
-  Browser --> Auth["Supabase Auth"]
-  Browser --> Database["PostgreSQL<br>RLS e RPCs"]
-  Browser --> MercadoPagoJS["Mercado Pago.js v2<br>Checkout Bricks"]
-  Database --> Functions["Database Webhooks<br>Edge Functions"]
-  Functions --> Resend["Resend<br>e-mails transacionais"]
-  Functions -->|"Criação e consulta"| MercadoPagoAPI["Mercado Pago<br>Payments API"]
+  User["Visitante / Aluno / Professor"] --> Pages["GitHub Pages\nteacherflavius.com"]
+  Pages --> Browser["HTML + CSS + JavaScript"]
+
+  Browser --> Runtime["Runtime compartilhado\nloaders, guards, analytics, footer"]
+  Browser --> Auth["Supabase Auth\nGoogle + sessão"]
+  Browser --> Database["Supabase PostgreSQL\nRLS + RPCs"]
+  Browser --> MercadoPagoJS["Mercado Pago.js v2\nCheckout Bricks"]
+  Browser --> GTM["Google Tag Manager\nConsent Mode"]
+
+  Database --> Functions["Supabase Edge Functions"]
+  Database --> Cron["Cron / jobs operacionais"]
+  Functions --> Resend["Resend\ne-mails transacionais e alertas"]
+  Functions --> MercadoPagoAPI["Mercado Pago\nPayments API"]
   MercadoPagoAPI -->|"Webhook assinado"| Functions
+  Forms["Google Forms / Sheets"] --> Functions
+
+  Actions["GitHub Actions"] --> Quality["Quality gates / contratos"]
+  Actions --> Build["Build e materialização estática"]
+  Actions --> Backup["Backup criptografado + restore test"]
+  Build --> Pages
 ```
+
+### Frontend e runtime compartilhado
+
+O frontend não usa um framework SPA nem um bundler de aplicação. As páginas continuam sendo HTML estático, mas a produção possui uma etapa de **build/materialização** que garante dependências, runtime comum, SEO, analytics, segurança e compatibilidade entre páginas.
+
+Componentes centrais:
+
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `module_loader.js` | carregamento previsível de módulos e dependências |
+| `site_asset_loader.js` | carregamento de assets compartilhados |
+| `site_runtime_config.js` | configuração comum do runtime |
+| `site_page_runtime.js` | comportamento transversal das páginas |
+| `site_privacy_analytics.js` | integração de privacidade/analytics |
+| `site_footer.js` / `site_footer_renderer.js` | rodapé institucional compartilhado |
+| `error_monitor.js` | captura de falhas de aplicação e recursos |
+| `responsive_compat.css` | baseline de compatibilidade responsiva |
+| `brand_palette.css` | tokens e identidade visual compartilhada |
+
+A ordem das dependências de scripts é validada e, quando necessário, materializada automaticamente pelos scripts em `scripts/`.
+
+### Backend no Supabase
+
+O Supabase fornece:
+
+- Auth e identidades;
+- PostgreSQL;
+- RLS e grants explícitos;
+- RPCs para APIs de aluno e professor;
+- schema `private` para dados e rotinas exclusivamente de servidor;
+- Edge Functions em TypeScript/Deno;
+- Vault para segredos usados por rotinas do banco;
+- Cron para reconciliações, retenção e monitoramento operacional.
+
+O navegador usa apenas configuração pública do Supabase. `service_role`, senhas de banco, tokens privados e segredos de terceiros nunca devem ser colocados no frontend ou versionados.
 
 ## Tecnologias
 
 | Camada | Tecnologia |
 | --- | --- |
-| Hospedagem | GitHub Pages com domínio personalizado |
-| Frontend | HTML, CSS e JavaScript sem etapa de build |
-| Cliente de dados | `@supabase/supabase-js` v2 carregado por CDN |
-| Atividades antigas | React e ReactDOM carregados por CDN |
-| Autenticação | Supabase Auth com e-mail e senha |
+| Hospedagem | GitHub Pages + domínio personalizado |
+| Frontend | HTML, CSS e JavaScript |
+| Build/materialização | Python 3 + scripts próprios |
+| Qualidade JS | Node.js 22, Node Test Runner e ESLint 9 |
+| Cliente de dados | `@supabase/supabase-js` v2 |
+| Autenticação | Supabase Auth + Google OAuth |
 | Banco | PostgreSQL do Supabase |
-| Autorização | Row Level Security (RLS) e RPCs PostgreSQL |
-| Funções de servidor | Supabase Edge Functions em TypeScript/Deno |
+| Autorização | RLS, grants e RPCs PostgreSQL |
+| Backend server-side | Supabase Edge Functions / Deno |
 | E-mail | Resend |
-| Pagamentos | Mercado Pago Checkout Bricks e Payments API (`/v1/payments`) |
+| Pagamentos | Mercado Pago Checkout Bricks + Payments API |
+| Exercícios externos | Google Forms + Google Sheets + Apps Script |
+| Analytics | Google Tag Manager + Consent Mode + módulos próprios |
+| CI/CD e operações | GitHub Actions |
+| Backup | Supabase CLI/`pg_dump`, GnuPG AES-256 e restore automatizado |
 
-## Rotas principais
+## Experiências da plataforma
 
-Os diretórios com `index.html` fornecem URLs amigáveis. Alguns arquivos `.html`
-na raiz são mantidos por compatibilidade.
+Há três superfícies principais.
 
-### Páginas públicas
+### Visitante
 
-| Rota | Finalidade |
-| --- | --- |
-| `/` | Página inicial com entrada para alunos e visitantes |
-| `/quero_conhecer.html` | Apresentação das opções de estudo |
-| `/matricula/` | Matrícula e criação da conta do aluno |
-| `/login/` | Login com e-mail e senha |
+O visitante pode conhecer o serviço, consultar informações comerciais, iniciar matrícula e acessar a autenticação.
 
-### Área do aluno
+Rotas relevantes:
 
 | Rota | Finalidade |
 | --- | --- |
-| `/area-do-estudante/` | Menu principal do aluno |
-| `/perfil/` | Dados pessoais e histórico de atividades |
-| `/minha-turma/` | Turma, videoaula, material, gravações e grupo |
-| `/reposicoes/` | Consulta, agendamento e cancelamento de reposições |
-| `/pagamento/` | Pagamento de mensalidades com Pix ou cartão de crédito |
-| `/frequencia/` | Histórico de lições e frequência |
-| `/exercicios-diarios/` | Portal de exercícios publicados |
-| `/roteiro-de-estudos/` | Roteiro e progresso das lições |
-| `/aulas-de-gramatica.html` | Videoaulas e exercícios de gramática |
-| `/guia-do-estudante.html` | Orientações para o aluno |
+| `/` | home pública |
+| `/curso-de-ingles-online/` | página pública do curso |
+| `/quero-conhecer/` | apresentação comercial e captação |
+| `/matricula/` | matrícula e onboarding |
+| `/login/` | autenticação |
+| `/acesso-aluno/` | entrada direta para a área do estudante |
 
-### Área do professor
+### Aluno autenticado
 
 | Rota | Finalidade |
 | --- | --- |
-| `/professor/` | Menu administrativo |
-| `/perfil-dos-alunos/` | Lista, consulta e edição de alunos |
-| `/acessos-dos-alunos/` | Data, hora e páginas acessadas pelos alunos |
-| `/mensalidades/` | Configuração, geração e registro de pagamentos |
-| `/turmas/` | Criação e gestão de turmas |
-| `/reposicoes-admin/` | Publicação de horários e acompanhamento de reservas |
-| `/quadro-de-turmas.html` | Visão geral de turmas, horários e tags |
-| `/criar-exercicio/` | Cadastro de links de exercícios |
-| `/aulas-de-gramatica-interface-do-professor.html` | Gestão das aulas de gramática |
-| `/exercicios-dos-alunos/` | Progresso dos exercícios feitos pelos alunos |
+| `/area-do-estudante/` | menu principal do aluno |
+| `/perfil/` | dados pessoais e histórico |
+| `/minha-turma/` | turma, videoaula, materiais e gravações |
+| `/frequencia/` | histórico de lições e frequência |
+| `/roteiro-de-estudos/` | roteiro e progresso individual |
+| `/exercicios-diarios/` | exercícios publicados |
+| `/flashcards/` | decks, prática e repetição espaçada |
+| `/reposicoes/` | consulta, reserva e cancelamento de reposições |
+| `/pagamento/` | pagamento de mensalidades |
+| `/aulas-de-gramatica.html` | aulas e exercícios de gramática |
+| `/guia-do-estudante.html` | orientações do curso |
 
-### Atividades estáticas
+Algumas páginas `.html` na raiz continuam existindo por compatibilidade histórica; as rotas com diretório e `index.html` são preferidas quando disponíveis.
 
-O repositório ainda contém quizzes tradicionais e exercícios de ordenar frases,
-como:
+### Professor / administração
 
-- `in_on_at.html`;
-- `there_to_be.html`;
-- `this_that_these_those.html`;
-- `simple_present.html`;
-- `simple_past.html`;
-- `ordenar_simple_present.html`.
+| Rota | Finalidade |
+| --- | --- |
+| `/professor/` | painel principal do professor |
+| `/perfil-dos-alunos/` | gestão de alunos e dados acadêmicos |
+| `/turmas/` | gestão de turmas |
+| `/quadro-de-turmas.html` | visão operacional das turmas |
+| `/mensalidades/` | administração financeira |
+| `/reposicoes-admin/` | gestão de horários e reservas de reposição |
+| `/criar-exercicio/` | publicação de exercícios |
+| `/exercicios-dos-alunos/` | acompanhamento de atividades |
+| `/acessos-dos-alunos/` | relatório de acesso ao portal |
+| `/relatorios/` | relatórios administrativos |
+| `/saude-do-sistema/` | saúde operacional consolidada |
+| `/solicitacoes-de-privacidade/` | fluxo administrativo de solicitações de privacidade |
+| `/aulas-de-gramatica-interface-do-professor.html` | gestão das aulas de gramática |
 
-Essas atividades usam `quiz_core.js` e salvam resultados em
-`activity_results` no Supabase. Como o gabarito faz parte do JavaScript entregue
-ao navegador, elas são adequadas para prática pedagógica e revisão.
+Operações administrativas sensíveis usam verificação de professor e, nos fluxos protegidos mais recentes, MFA.
 
-## Funcionalidades
+## Domínios funcionais
 
-### Autenticação e matrícula
+### Autenticação, matrícula e identidade
 
-- criação de conta com e-mail e senha;
-- confirmação de e-mail e redirecionamento para o login;
-- cadastro de nome, CPF, WhatsApp, chave PIX e disponibilidade;
-- código de matrícula;
-- pré-matrículas e posterior associação à conta;
-- distinção entre aluno e professor administrador.
+O fluxo atual prioriza **Google OAuth**. O sistema consegue vincular uma matrícula preexistente à identidade Google do aluno para preservar histórico e dados acadêmicos. Há também suporte controlado a autenticação por senha para contas/fluxos previamente autorizados.
 
-`auth.js` concentra sessão, login, matrícula, perfil e gravação de resultados.
-`supabase_config.js` contém somente a URL do projeto e a chave pública usada pelo
-navegador.
+Módulos relevantes incluem:
 
-### Turmas e acompanhamento pedagógico
+- `auth.js` e serviços `auth_*`;
+- `google_auth_ui.js` e `google_auth_renderer.js`;
+- `student_area_route_guard.js`;
+- `student_enrollment_service.js`;
+- `student_profile_service.js`;
+- `professor_mfa_service.js` e `professor_mfa_gate.js`.
 
-- uma turma ativa por aluno;
-- criação, edição e ordenação de turmas;
-- exibição alfabética nas telas administrativas;
-- links de videoaula, material, aulas gravadas e grupo;
-- registros de L1 a L74 e opções especiais;
-- histórico de lições preservado quando o aluno muda de turma;
-- controle de presença e histórico individual;
-- tags administrativas, como `pacote antigo`.
+### Alunos, turmas, lições e frequência
 
-### Exercícios
+O domínio acadêmico cobre:
 
-- exercícios cadastrados pelo professor;
-- publicação imediata ou programada;
-- marcação de conclusão pelo aluno;
-- roteiro de estudos com progresso individual.
+- alunos ativos e arquivados;
+- associação de alunos a turmas;
+- tipos, horários, capacidade e ordenação de turmas;
+- links de videoaula, materiais, grupo e aulas gravadas;
+- registro de lições;
+- frequência;
+- preservação de histórico em mudanças de turma;
+- relatórios de vagas e acompanhamento pedagógico.
+
+### Exercícios e roteiro de estudos
+
+O professor pode publicar exercícios e acompanhar conclusão/progresso. O projeto também mantém atividades HTML tradicionais para prática pedagógica, usando `quiz_core.js` e armazenamento de resultados no Supabase.
+
+A integração com Google Forms segue o fluxo:
+
+```text
+Google Forms → Google Sheets → Apps Script → Edge Function → Supabase
+```
+
+Consulte [GOOGLE_FORMS_EVENT_SYNC.md](GOOGLE_FORMS_EVENT_SYNC.md).
+
+### Flashcards
+
+O módulo de flashcards possui:
+
+- decks por aluno;
+- cards e ordenação;
+- prática registrada;
+- repetição espaçada;
+- camada visual institucional em `flashcards/flashcards_visual.css` e `flashcards/flashcards_visual.js`.
 
 ### Reposições
 
-- cada horário publicado tem duração padrão de uma hora;
-- o professor escolhe o horário inicial, a turma e a capacidade;
-- o link da videoaula é copiado dos recursos da turma;
-- alunos matriculados podem reservar vagas disponíveis;
-- cancelamento pelo aluno antes do limite definido pelo banco;
-- cancelamento administrativo;
-- devolução automática da vaga;
-- e-mails de confirmação e cancelamento;
-- datas armazenadas em UTC e exibidas em `America/Sao_Paulo`.
+O módulo de reposições administra horários, capacidade, reserva, cancelamento e devolução de vagas. Eventos de reserva/cancelamento podem produzir notificações transacionais.
 
-Detalhes: [CONFIGURAR_REPOSICOES.md](CONFIGURAR_REPOSICOES.md).
+Datas são armazenadas de forma consistente no backend e apresentadas ao usuário em `America/Sao_Paulo` quando aplicável.
 
-### Mensalidades
+Consulte [CONFIGURAR_REPOSICOES.md](CONFIGURAR_REPOSICOES.md).
 
-- valor, vencimento, situação e observações por aluno;
-- definição e identificação do valor individual diretamente em `/perfil-dos-alunos/`;
-- geração das mensalidades do mês;
-- registro e estorno de pagamento;
-- pagamento pelo aluno com Pix ou cartão de crédito em `/pagamento/`;
-- faixa global e pop-up para cobranças em aberto;
-- confirmação automática por Webhook do Mercado Pago;
-- histórico de eventos financeiros;
-- administração restrita ao professor e consulta individual pelo aluno.
+### Mensalidades e pagamentos
 
-A integração atual usa **Checkout Bricks com a Payments API**, por meio do
-endpoint `/v1/payments`. Ela não usa a Orders API. Ao criar a aplicação no
-Mercado Pago, escolha Checkout Transparente/Checkout Bricks e a opção
-**Payments API (Legacy)** para manter compatibilidade com o backend existente.
+O domínio financeiro evoluiu além do simples registro manual de mensalidades. Atualmente inclui:
 
-Configuração: [CONFIGURAR_MERCADO_PAGO.md](CONFIGURAR_MERCADO_PAGO.md).
+- mensalidades por aluno;
+- valor individual, vencimento, situação e histórico;
+- avisos globais de cobrança;
+- checkout do aluno;
+- Pix e cartão via Mercado Pago Checkout Bricks;
+- Payments API (`/v1/payments`);
+- idempotência na criação de pagamentos;
+- webhook assinado;
+- reconciliação de pagamentos;
+- log operacional de webhooks;
+- candidatos e operações de reembolso;
+- acompanhamento de chargebacks e documentação;
+- health financeiro;
+- alertas operacionais;
+- kill switch para bloquear novas cobranças em incidente sem impedir leitura/reconciliação do estado existente.
 
-### Acessos dos alunos
+Exemplos de Edge Functions desse domínio:
 
-O rastreador registra:
+- `create-mercado-pago-payment`;
+- `mercado-pago-webhook`;
+- `reconcile-mercado-pago-payments`;
+- `list-mercado-pago-refund-candidates`;
+- `list-mercado-pago-chargebacks`;
+- `manage-mercado-pago-chargeback-documentation`;
+- `manage-payment-creation-control`;
+- `list-payment-webhooks`.
 
-- aluno autenticado;
-- data e hora;
-- caminho e título da página;
-- fuso horário informado pelo navegador.
+Configuração e operação:
 
-Não são registrados localização, coordenadas, endereço IP nem parâmetros da URL.
-Os registros são restritos ao professor e mantidos por no máximo 90 dias.
+- [CONFIGURAR_MERCADO_PAGO.md](CONFIGURAR_MERCADO_PAGO.md)
+- [docs/mercado_pago_testing.md](docs/mercado_pago_testing.md)
+- [docs/payment_access_security.md](docs/payment_access_security.md)
+- [docs/payment_financial_health.md](docs/payment_financial_health.md)
+- [docs/payment_alerting.md](docs/payment-alerting.md)
+- [docs/payment_kill_switch.md](docs/payment_kill_switch.md)
+- [docs/payment_incident_runbook.md](docs/payment_incident_runbook.md)
+
+### Privacidade e LGPD
+
+O sistema trabalha com dados pessoais e acadêmicos, incluindo nome, e-mail, informações de matrícula, progresso, pagamentos e histórico de uso necessário à operação do portal.
+
+O projeto possui:
+
+- Consent Mode antes da ativação de analytics;
+- fluxo de solicitações do titular de dados;
+- políticas RLS específicas;
+- minimização de dados no rastreamento de acessos;
+- retenção operacional para diferentes categorias de log;
+- separação entre dados de cliente e objetos privados de servidor.
+
+Dados reais nunca devem ser adicionados a issues, commits, PRs, fixtures públicas, logs ou documentação.
+
+### Analytics e aquisição
+
+O analytics é modularizado em arquivos como:
+
+- `analytics.js`;
+- `analytics_utils.js`;
+- `analytics_acquisition.js`;
+- `analytics_forms.js`;
+- `analytics_payments.js`.
+
+O Google Tag Manager é materializado nas páginas pelo pipeline. O Consent Mode inicia armazenamento de analytics/anúncios como negado até que a escolha aplicável do usuário seja processada.
 
 ### E-mails transacionais
 
-As Edge Functions relacionadas a notificações e pagamentos incluem:
+O Resend é usado por Edge Functions para notificações e alertas. Entre os fluxos estão matrícula, reposições e saúde operacional.
 
-| Função | Origem | Finalidade |
-| --- | --- | --- |
-| `notify-new-enrollment` | Inserção em `enrollment_email_notifications` | Avisar o professor sobre uma nova matrícula |
-| `notify-makeup-booking` | Inserção em `makeup_class_email_notifications` | Confirmar agendamento ou cancelamento de reposição |
-| `create-mercado-pago-payment` | Aluno autenticado | Criar Pix ou pagamento por cartão com valor validado no banco |
-| `mercado-pago-webhook` | Webhook assinado do Mercado Pago | Atualizar, confirmar ou reverter o pagamento da mensalidade |
-| `reconcile-mercado-pago-payments` | Aluno ou professor autenticado | Recuperar confirmações quando o webhook estiver atrasado ou ausente |
+As rotinas máquina-a-máquina não devem confiar em endpoints públicos sem autenticação própria. Os webhooks internos usam segredos compartilhados e os fluxos de usuário usam JWT e, quando exigido, MFA.
 
-As funções de e-mail são chamadas por Database Webhooks e exigem o cabeçalho
-privado `x-webhook-secret`. A criação de pagamentos exige JWT do aluno e usa a
-Payments API do Mercado Pago. O webhook do Mercado Pago não recebe JWT do
-Supabase e valida a assinatura HMAC `x-signature` antes de consultar e aplicar
-qualquer pagamento.
+### Observabilidade e saúde do sistema
 
-Detalhes: [CONFIGURAR_EMAIL_MATRICULAS.md](CONFIGURAR_EMAIL_MATRICULAS.md) e
-[CONFIGURAR_REPOSICOES.md](CONFIGURAR_REPOSICOES.md).
+Há duas camadas complementares.
+
+**Dentro da aplicação:**
+
+- `error_monitor.js` registra erros e falhas de recursos;
+- `app-error-report` recebe eventos de aplicação;
+- `csp-report` recebe violações de CSP;
+- o monitor global executa probes sintéticos e consolida sinais operacionais;
+- `/saude-do-sistema/` mostra o painel administrativo;
+- alertas são deduplicados e enviados pelo fluxo operacional de notificações.
+
+**Fora da aplicação:**
+
+- o workflow `Production availability` verifica produção pelo GitHub Actions;
+- `health.json` fornece um contrato simples de disponibilidade da camada estática.
+
+O monitor interno roda em ciclos frequentes e possui watchdog para detectar a própria interrupção. Detalhes: [docs/system_health_monitoring.md](docs/system_health_monitoring.md).
+
+## Edge Functions
+
+As funções versionadas vivem em `supabase/functions/`. A lista cresce conforme os domínios são extraídos do frontend; consulte o diretório como inventário canônico.
+
+Categorias atuais incluem:
+
+| Categoria | Exemplos |
+| --- | --- |
+| Erros e segurança | `app-error-report`, `csp-report` |
+| Exercícios | `google-forms-exercise-sync`, `google-forms-integration-manager`, `exercise-sync-runner` |
+| Pagamentos | criação, webhook, reconciliação, refunds, chargebacks e kill switch |
+| Marketing | `marketing-acquisition-event` |
+| Saúde operacional | `get-system-health-dashboard`, probes e notificações de health |
+| Notificações | matrícula, reposições e alertas operacionais |
+
+Não exponha `service_role` ou secrets dessas funções ao navegador.
+
+## Banco de dados e recuperação
+
+### Migrações e baseline
+
+O repositório possui três tipos de material SQL, com finalidades diferentes:
+
+1. `supabase/migrations/` — histórico versionado de mudanças de desenvolvimento e produção mais recentes;
+2. `supabase/baseline/` — **baseline canônico de reconstrução do schema** para disaster recovery;
+3. arquivos `supabase_*.sql` na raiz — scripts históricos, bootstrap e correções pontuais preservados por compatibilidade/auditoria.
+
+Importante: o histórico de migrations do projeto não forma, sozinho, uma cadeia completa capaz de reconstruir um banco vazio. Para recuperação de desastre, siga `supabase/baseline/README.md` e `BACKUP_RECOVERY.md`; não execute indiscriminadamente todos os SQLs históricos.
+
+O baseline deliberadamente não contém linhas de alunos, pagamentos, usuários Auth ou valores de segredos. Um `migration-ledger.csv` preserva o inventário técnico necessário sem publicar dados pessoais que existiram em migrações históricas remotas.
+
+### Backup e restore
+
+O projeto mantém uma camada própria de recuperação, independente de qualquer backup gerenciado da plataforma:
+
+- backup lógico de produção em GitHub Actions;
+- payload criptografado com GnuPG AES-256 antes do upload;
+- retenção diferenciada para backups diários e mensais;
+- hash de integridade;
+- manifest técnico de recuperação;
+- restauração automática em uma stack Supabase descartável após backup bem-sucedido;
+- comparação do estado restaurado com o manifest;
+- exercício de RTO registrado pela automação.
+
+O workflow de backup é diário. Um backup só deve ser considerado **recovery-verified** quando o workflow de restauração subsequente também concluir com sucesso.
+
+Procedimento completo: [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md).
 
 ## Estrutura do repositório
 
-| Arquivo ou diretório | Responsabilidade |
+| Caminho | Responsabilidade |
 | --- | --- |
-| `index.html` | Entrada pública do site |
-| `site_footer.js` | Rodapé institucional compartilhado entre todas as páginas |
-| `student_payment_notice.js` | Faixa e pop-up globais de mensalidade pendente |
-| `auth.js` | Autenticação, matrícula, perfil e resultados |
-| `supabase_config.js` | URL e chave pública do Supabase |
-| `professor.html` / `area_do_estudante.html` | Menus principais |
-| `turmas.js` / `turma.js` / `minha_turma.js` | Gestão e visualização das turmas |
-| `reposicoes_admin.js` / `reposicoes.js` | Agenda de reposições |
-| `mensalidades.js` | Controle financeiro |
-| `pagamento/` | Checkout do aluno com Mercado Pago Checkout Bricks |
-| `perfil_dos_alunos.js` | Administração de alunos |
-| `acessos_dos_alunos.js` | Relatório de acessos |
-| `student_access_tracker.js` | Registro de páginas acessadas |
-| `class_lesson_attendance.js` | Registro de lições e presença |
-| `class_recorded_lessons.js` | Link de aulas gravadas |
-| `quiz_core.js` | Motor dos quizzes estáticos |
-| `supabase/functions/` | Edge Functions versionadas |
-| `supabase_*.sql` | Estrutura, RPCs, políticas e correções do banco |
-| `CONFIGURAR_*.md` | Instruções específicas dos módulos |
-| `SUPABASE_SEGURANCA.md` | Segurança, aplicação e checklists |
-| `CNAME` | Domínio personalizado do GitHub Pages |
+| `*.html`, diretórios com `index.html` | páginas públicas, de aluno e administrativas |
+| `*.js`, `*.css` | módulos de frontend e estilos |
+| `flashcards/` | camada visual e rota do módulo de flashcards |
+| `pagamento/` | checkout e componentes financeiros do aluno |
+| `integracao-google-forms/` | interface de gestão da integração de exercícios |
+| `supabase/functions/` | Edge Functions |
+| `supabase/migrations/` | migrations versionadas disponíveis no repositório |
+| `supabase/baseline/` | baseline seguro de reconstrução do banco |
+| `supabase/recovery/` | manifest e suporte à verificação de restore |
+| `scripts/` | build, materialização, validações, backup e ferramentas operacionais |
+| `tests/` | testes Node.js e Python |
+| `.github/workflows/` | CI, validações, health e automações operacionais |
+| `docs/` | runbooks, segurança, health, pagamentos e decisões |
+| `CNAME` | domínio personalizado do GitHub Pages |
+| `package.json` | comandos de qualidade e contratos automatizados |
 
-## Executar localmente
+## Desenvolvimento local
 
-Não há instalação de dependências nem processo de compilação para o frontend.
-Sirva a raiz do repositório por HTTP:
+### Pré-requisitos
+
+Para trabalhar no frontend e executar a suíte completa:
+
+- Python 3;
+- Node.js 22;
+- npm.
+
+O Supabase CLI só é necessário para tarefas de banco, Edge Functions ou recuperação que realmente dependam da infraestrutura local/remota.
+
+### Instalar ferramentas de qualidade
+
+```bash
+npm install --ignore-scripts --no-audit --no-fund
+```
+
+### Servir a árvore de desenvolvimento
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Depois acesse <http://localhost:8000>.
+Abra <http://localhost:8000>.
 
-Não abra as páginas com `file://`: o projeto usa rotas absolutas, autenticação e
-requisições HTTP. Para testar cadastro ou confirmação de e-mail localmente,
-adicione a URL local às URLs permitidas no Supabase Auth e ajuste
-temporariamente o redirecionamento definido em `auth.js`. Não publique essa
-alteração de desenvolvimento.
+Não use `file://`: o projeto depende de rotas HTTP, módulos, autenticação e requisições de rede.
 
-## Configurar o Supabase
-
-### 1. Frontend
-
-Edite `supabase_config.js`:
-
-```javascript
-window.SUPABASE_CONFIG = {
-  url: "https://SEU_PROJECT_REF.supabase.co",
-  anonKey: "SUA_CHAVE_PUBLICA"
-};
-```
-
-A chave pública pode ser usada no navegador quando RLS e permissões estão
-corretamente configuradas. Nunca coloque `service_role`, Secret Key, senha do
-banco ou chave do Resend no frontend ou no repositório.
-
-Configuração inicial: [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
-
-### 2. Banco de dados
-
-Os arquivos SQL representam a evolução incremental do banco; ainda não são uma
-cadeia formal de migrations executada automaticamente. Por isso:
-
-- faça backup antes de mudanças estruturais;
-- leia o cabeçalho de cada SQL e respeite as dependências;
-- não execute todos os arquivos indiscriminadamente em produção;
-- faça primeiro o merge do código e depois execute o SQL correspondente;
-- aplique os scripts de segurança por último, pois scripts antigos podem
-  recriar funções ou políticas anteriores.
-
-Ordem de dependência para uma instalação nova:
-
-1. Execute a estrutura inicial descrita em `SUPABASE_SETUP.md`.
-2. Execute `supabase_add_profile_enrollment_columns.sql`.
-3. Edite o e-mail do professor e execute `supabase_professor_admin.sql`.
-4. Execute `supabase_pre_matriculas.sql` e `supabase_turmas.sql`.
-5. Execute `supabase_pre_matriculas_turmas.sql`.
-6. Instale os complementos de turma:
-   - `supabase_aulas_gravadas.sql`;
-   - `supabase_ordem_turmas.sql`;
-   - `supabase_student_tags.sql`;
-   - `supabase_limite_excepcional_quinta_21h.sql`.
-7. Instale o registro de lições:
-   - `supabase_licoes_turma.sql`;
-   - `supabase_licoes_pre_matriculas_fix.sql`;
-   - `supabase_licoes_opcoes_extras.sql`;
-   - `supabase_preservar_licoes_troca_turma.sql`;
-   - `supabase_frequencia_aluno.sql`.
-8. Instale os módulos necessários:
-   - `supabase_exercicios_diarios.sql`;
-   - `supabase_roteiro_de_estudos.sql`;
-   - `supabase_exercicios_professor.sql`;
-   - `supabase_aulas_de_gramatica.sql`;
-   - `supabase_reposicoes.sql`;
-   - `supabase_mensalidades.sql`;
-   - `supabase_acessos_alunos.sql`.
-9. Para e-mail de matrícula, execute
-   `supabase_notificacoes_matricula.sql`.
-10. Execute por último:
-    - `supabase_seguranca_fase1.sql`;
-    - `supabase_seguranca_fase2_rls.sql`.
-
-Os arquivos com `corrigir`, `fix` ou regras de migração existem para atualizar
-instalações antigas. Use-os quando o cabeçalho descrever o estado do banco que
-está sendo corrigido. Exemplos:
-
-- `supabase_corrigir_funcoes_pre_matriculas_turmas.sql`: corrige erro `42P13`;
-- `supabase_corrigir_troca_de_turma.sql`: corrige conflito de chave ao trocar a
-  turma do aluno;
-- `supabase_aluno_uma_turma.sql`: garante uma turma atual por aluno;
-- `supabase_preservar_licoes_troca_turma.sql`: mantém o histórico pedagógico
-  após a troca.
-
-Ao aplicar um corretivo que recrie funções ou políticas, reaplique as fases de
-segurança e execute os checklists.
-
-### 3. Edge Functions e Resend
-
-Secrets necessários:
-
-```text
-RESEND_API_KEY
-ENROLLMENT_NOTIFICATION_EMAIL
-ENROLLMENT_FROM_EMAIL
-ENROLLMENT_WEBHOOK_SECRET
-```
-
-Configuração pelo CLI:
+### Executar qualidade local
 
 ```bash
-npx supabase login
-npx supabase link --project-ref SEU_PROJECT_REF
-npx supabase secrets set RESEND_API_KEY=re_sua_chave
-npx supabase secrets set ENROLLMENT_NOTIFICATION_EMAIL=seu-email@exemplo.com
-npx supabase secrets set 'ENROLLMENT_FROM_EMAIL=Matrículas <matriculas@seudominio.com>'
-npx supabase secrets set ENROLLMENT_WEBHOOK_SECRET=UM_SEGREDO_LONGO_E_ALEATORIO
+npm run quality
 ```
 
-Publicação:
+Esse comando executa:
+
+1. `node --check` nos módulos JavaScript monitorados;
+2. ESLint;
+3. testes Node (`node --test`);
+4. testes Python (`unittest`).
+
+Há comandos específicos em `package.json` para contratos de pagamento, materialização, build estático, runtime e componentes individuais.
+
+### Simular o pipeline estático
 
 ```bash
-npx supabase functions deploy notify-new-enrollment --no-verify-jwt
-npx supabase functions deploy notify-makeup-booking --no-verify-jwt
-npx supabase functions deploy create-mercado-pago-payment
-npx supabase functions deploy mercado-pago-webhook --no-verify-jwt
-npx supabase functions deploy reconcile-mercado-pago-payments
+python3 scripts/build_static_site.py
+python3 scripts/materialize_site.py --profile publish
+python3 scripts/postprocess_production.py
+python3 -m http.server 4173 --directory _site
 ```
 
-Mercado Pago exige os Secrets `MERCADO_PAGO_PUBLIC_KEY`,
-`MERCADO_PAGO_ACCESS_TOKEN`, `MERCADO_PAGO_WEBHOOK_SECRET` e
-`SITE_URL=https://teacherflavius.com`. Veja o procedimento completo em
-[CONFIGURAR_MERCADO_PAGO.md](CONFIGURAR_MERCADO_PAGO.md).
+O diretório `_site/` é um workspace de publicação/validação gerado. O pipeline rejeita vazamento de arquivos operacionais como Markdown, SQL, Python, workflows e arquivos de configuração que não pertencem ao site público.
 
-`MERCADO_PAGO_PUBLIC_KEY` e `MERCADO_PAGO_ACCESS_TOKEN` devem pertencer à mesma
-aplicação e ao mesmo ambiente. Para produção, ative as credenciais produtivas,
-cadastre `https://teacherflavius.com` como site e mantenha uma chave Pix ativa
-na conta vendedora. Não use credenciais de uma aplicação configurada somente
-para Orders API com a função atual.
+## CI e quality gates
 
-Database Webhooks:
+GitHub Actions valida PRs e mudanças em `main`. Entre os workflows ativos estão:
 
-| Nome | Tabela | Evento | URL |
-| --- | --- | --- | --- |
-| `notify-new-enrollment` | `public.enrollment_email_notifications` | `INSERT` | `/functions/v1/notify-new-enrollment` |
-| `notify-makeup-booking` | `public.makeup_class_email_notifications` | `INSERT` | `/functions/v1/notify-makeup-booking` |
+| Área | Validação |
+| --- | --- |
+| Clean Code | sintaxe JS, ESLint, testes Node e Python via `npm run quality` |
+| Segurança | baseline de segurança, CSP, conteúdo público e contratos relacionados |
+| Dependências | baseline das dependências e carregamento correto de scripts |
+| Acessibilidade | validações automatizadas de baseline |
+| Responsividade | compatibilidade entre páginas |
+| URLs | política de rotas limpas e aliases |
+| SEO | auditoria técnica de páginas públicas |
+| Performance | budgets estáticos + Lighthouse mobile |
+| Build estático | geração, materialização e inspeção de `_site` |
+| Produção | disponibilidade das rotas críticas e `health.json` |
+| Pagamentos | contratos do gateway, idempotência, reconciliação, refunds, chargebacks e controles |
+| System health | contratos do monitor global e dashboard |
+| Backup | geração criptografada, validação do baseline e restore automatizado |
 
-Inclua em ambos:
+O Lighthouse é um teste de laboratório e pode apresentar variação entre runners. Uma falha deve ser investigada pelo relatório e pelos valores medidos; não deve ser mascarada quando for causada pela mudança em análise.
 
-```text
-Content-Type: application/json
-x-webhook-secret: mesmo valor de ENROLLMENT_WEBHOOK_SECRET
-```
+Testes automatizados reduzem regressões, mas não substituem smoke tests de integrações externas como OAuth, Mercado Pago, Resend e Google Forms quando essas integrações forem alteradas.
 
-### 4. Testar pagamentos
+## Pipeline de publicação
 
-1. Defina um valor de mensalidade para um aluno de teste.
-2. Entre na conta desse aluno e abra `/pagamento/`.
-3. Escolha Pix e confirme que o Mercado Pago gera o QR Code e o código copia e
-   cola.
-4. Confira em `tuition_payment_attempts` se o registro recebeu
-   `payment_method = pix`, um `provider_payment_id` e o status
-   `pending_waiting_transfer`.
-5. Para validar o fluxo completo, use uma mensalidade de valor reduzido, pague
-   o Pix e confirme a transição para `approved`, o registro da data de pagamento
-   e a remoção dos avisos de cobrança.
+A aplicação de produção usa **GitHub Pages**.
 
-Com credenciais de produção, o QR Code é **real** (`live_mode = true`). Gerar o
-Pix não movimenta dinheiro, mas pagá-lo realiza uma transferência verdadeira.
-Não pague uma cobrança de teste com valor integral apenas para validar a criação
-do código.
+Fluxo de código:
 
-## Modelo de segurança
+1. criar branch a partir de `main`;
+2. implementar a mudança com Clean Code;
+3. executar os testes aplicáveis;
+4. abrir Pull Request;
+5. aguardar/analisar quality gates;
+6. fazer merge em `main`;
+7. quando páginas HTML exigirem materialização, o workflow específico materializa os elementos gerados e atualiza `main`;
+8. validar produção.
 
-- Todas as tabelas expostas devem permanecer com RLS ativo.
-- Alunos autenticados acessam somente registros permitidos pelas políticas.
-- Operações administrativas passam por RPCs que verificam
-  `is_teacher_admin()`.
-- Funções `SECURITY DEFINER` têm execução explicitamente controlada.
-- Tabelas com gabaritos, tentativas, logs e filas não são acessadas diretamente
-  pelo navegador.
-- `service_role` é exclusiva de rotinas de servidor.
-- Edge Functions chamadas por webhooks exigem um segredo compartilhado.
-- O repositório é público: nenhum segredo operacional pode ser versionado.
+O workflow `Static hosting build` também produz `_site/` para validar o artefato estático, dependências, arquivos obrigatórios e ausência de vazamentos.
 
-As fases atuais de hardening estão documentadas em
-[SUPABASE_SEGURANCA.md](SUPABASE_SEGURANCA.md). Há também arquivos de rollback
-emergencial para cada fase.
+O merge de código **não** substitui ações de infraestrutura que precisem ser executadas no Supabase ou em provedores externos. Migrações, secrets, configuração de OAuth/webhooks e deploy de Edge Functions devem seguir o runbook do módulo correspondente.
 
-Ao criar tabelas novas, declare explicitamente os `GRANT`s necessários. RLS e
-permissões de tabela são camadas diferentes, e projetos Supabase novos podem não
-expor tabelas à Data API automaticamente.
+Ao alterar um asset versionado por query string, mantenha o `?v=` coerente quando isso for necessário para invalidar cache.
 
-## Dados pessoais e privacidade
+## Segurança
 
-O sistema pode armazenar nome, e-mail, CPF, WhatsApp, chave PIX, disponibilidade,
-progresso pedagógico, pagamentos e histórico de acesso. Esses dados devem ser
-tratados como confidenciais.
+Princípios atuais:
 
-Recomendações operacionais:
+- o repositório é público; nenhum secret operacional pode ser versionado;
+- `anon` e `authenticated` recebem somente privilégios explicitamente necessários;
+- RLS e grants são tratados como camadas separadas;
+- funções administrativas verificam a identidade do professor;
+- operações administrativas sensíveis recentes exigem MFA;
+- `service_role` é exclusiva de servidor;
+- rotinas privadas e dados operacionais sensíveis preferem o schema `private`;
+- webhooks máquina-a-máquina usam autenticação própria;
+- segredos acionados pelo banco podem ser armazenados no Vault;
+- CSP e erros de aplicação possuem canais de observabilidade;
+- novas cobranças podem ser interrompidas pelo kill switch financeiro sem destruir o histórico;
+- backups são criptografados antes de sair do runner.
 
-- manter acesso administrativo individual;
-- não compartilhar credenciais;
-- revisar periodicamente administradores e políticas RLS;
-- manter retenção mínima necessária;
-- documentar finalidade e base legal do tratamento;
-- excluir ou anonimizar dados quando não forem mais necessários;
-- nunca inserir dados reais em issues, commits, logs públicos ou testes.
+Documentação relacionada:
 
-## Publicação
+- [SUPABASE_SEGURANCA.md](SUPABASE_SEGURANCA.md)
+- [docs/global_security_hardening_20260910.md](docs/global_security_hardening_20260910.md)
+- [docs/payment_access_security.md](docs/payment_access_security.md)
 
-O site é publicado pelo GitHub Pages a partir da branch configurada no
-repositório. O arquivo `CNAME` define:
+## Configuração e secrets
 
-```text
-teacherflavius.com
-```
+`supabase_config.js` deve conter apenas valores públicos necessários ao cliente, como URL do projeto e chave pública apropriada ao frontend.
 
-Fluxo recomendado:
+Secrets devem permanecer em Supabase, GitHub Actions ou no provedor correspondente, conforme o módulo. Exemplos de categorias:
 
-1. crie uma branch;
-2. faça a alteração;
-3. valide as páginas afetadas;
-4. abra uma Pull Request;
-5. faça o merge;
-6. execute manualmente SQL e deploy de Edge Functions, quando necessários;
-7. valide produção e o Database Advisor.
+- credenciais privadas do Mercado Pago;
+- credenciais do Resend;
+- segredos de webhooks;
+- credenciais de conexão do banco para backup;
+- passphrase de criptografia de backup;
+- segredos de sincronização de exercícios;
+- configuração server-side de health/alertas.
 
-O merge publica apenas os arquivos do repositório. Ele não executa SQL, não
-altera Secrets e não republica Edge Functions automaticamente.
+Nunca copie secrets para documentação, mensagens de PR, logs ou arquivos do frontend.
 
-Ao alterar arquivos JavaScript ou CSS, atualize o parâmetro `?v=` nas páginas que
-os carregam para reduzir problemas de cache no navegador.
+## Operação e observabilidade
 
-## Checklist de validação
+Antes de considerar uma alteração operacional concluída, valide a camada apropriada:
 
-### Público
+### Aplicação
 
-- página inicial e navegação;
-- matrícula;
-- login e recuperação de sessão;
-- layout em celular.
+- autenticação e guards;
+- rotas afetadas;
+- ausência de erros no navegador;
+- comportamento mobile;
+- eventos esperados de analytics, quando aplicável.
 
-### Aluno
+### Banco
 
-- perfil;
-- turma e recursos;
-- frequência e roteiro;
-- conclusão de exercícios;
-- agendamento e cancelamento de reposição;
-- aviso de mensalidade, pagamento por Pix e cartão e confirmação automática;
-- logout.
-
-### Professor
-
-- credencial administrativa;
-- alunos e edição de perfil;
-- criação e ordenação de turmas;
-- troca de turma sem perda do histórico;
-- lições e frequência;
-- exercícios;
-- mensalidades;
-- reposições;
-- relatório de acessos.
+- migration/RPC aplicada quando necessária;
+- grants e RLS;
+- invariantes de integridade;
+- jobs agendados afetados;
+- Advisors do Supabase quando pertinente.
 
 ### Integrações
 
-- filas de notificação;
-- Database Webhooks;
 - logs das Edge Functions;
-- entrega no Resend;
-- criação de pagamento e assinatura do Webhook do Mercado Pago;
-- transição de Pix de `pending_waiting_transfer` para `approved` após pagamento;
-- Security e Performance Advisors do Supabase.
+- Resend;
+- Mercado Pago e assinatura de webhook;
+- Google Forms/Sheets/Apps Script;
+- OAuth.
 
-Não existe atualmente uma suíte automatizada de testes. Mudanças devem passar
-pelos testes manuais dos módulos afetados antes e depois da publicação.
+### Saúde
 
-## Solução de problemas
+- `health.json`;
+- workflow `Production availability`;
+- `/saude-do-sistema/` para sinais internos;
+- health financeiro para incidentes de pagamento;
+- monitor de erros/CSP para regressões de frontend e políticas.
 
-| Sintoma | Verificação |
+## Decisões de arquitetura
+
+### Pronúncia com IA — adiada
+
+Uma implementação experimental de avaliação automática de pronúncia foi encerrada sem merge produtivo. A retomada exige nova implementação sobre o `main` vigente, credenciais/configuração próprias e validação ponta a ponta antes de exposição aos alunos.
+
+Registro: [docs/decisions/2026-09-10-pronunciation-ai-deferred.md](docs/decisions/2026-09-10-pronunciation-ai-deferred.md).
+
+### MCP V1 — adiado
+
+O protótipo histórico de servidor MCP read-only também não foi promovido. A retomada deve partir da arquitetura atual e atender autenticação/autorização adequadas para produção, em vez de reutilizar o bootstrap antigo com bearer token estático.
+
+Registro: [docs/decisions/2026-09-10-mcp-v1-deferred.md](docs/decisions/2026-09-10-mcp-v1-deferred.md).
+
+## Documentação operacional
+
+| Documento | Assunto |
 | --- | --- |
-| `permission denied for function ...` | Confirme se o SQL do módulo foi executado e reaplique `supabase_seguranca_fase1.sql` |
-| Página retorna lista vazia após mudança de RLS | Confirme sessão, papel e políticas; consulte `SUPABASE_SEGURANCA.md` |
-| Erro `42P13` em pré-matrículas/turmas | Execute `supabase_corrigir_funcoes_pre_matriculas_turmas.sql` e depois o SQL principal |
-| Erro de chave duplicada ao trocar turma | Execute `supabase_corrigir_troca_de_turma.sql` |
-| E-mail permanece `pending` | Verifique webhook, URL, segredo, deploy e logs da Edge Function |
-| E-mail fica `failed` | Consulte `last_error` e os logs do Resend/Edge Function |
-| Pagamento informa que o Mercado Pago não está configurado | Confirme os quatro Secrets descritos em `CONFIGURAR_MERCADO_PAGO.md` |
-| Mercado Pago retorna `401 unauthorized` | Confirme que o Access Token é da aplicação correta, que Public Key e Access Token são do mesmo ambiente e que a aplicação foi criada para Payments API, não somente Orders API |
-| Pix está em `pending_waiting_transfer` | O código foi criado corretamente e aguarda a transferência; não marque a mensalidade como paga antes do Webhook confirmar `approved` |
-| Pagamento aprovado continua pendente | Confira o Webhook de produção, a assinatura secreta e os logs de `mercado-pago-webhook` |
-| Reposição não aparece | Confirme data futura, vaga, turma ativa e link válido da videoaula |
-| Alteração de JS/CSS não aparece | Atualize o `?v=` e limpe o cache |
-| Rota amigável retorna 404 | Confirme o diretório com `index.html`, configuração do Pages e `CNAME` |
+| [SUPABASE_SETUP.md](SUPABASE_SETUP.md) | configuração inicial do Supabase |
+| [SUPABASE_SEGURANCA.md](SUPABASE_SEGURANCA.md) | segurança e hardening do Supabase |
+| [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md) | backup, criptografia e disaster recovery |
+| [supabase/baseline/README.md](supabase/baseline/README.md) | baseline canônico de reconstrução |
+| [CONFIGURAR_REPOSICOES.md](CONFIGURAR_REPOSICOES.md) | módulo de reposições |
+| [CONFIGURAR_EMAIL_MATRICULAS.md](CONFIGURAR_EMAIL_MATRICULAS.md) | notificações de matrícula |
+| [CONFIGURAR_MERCADO_PAGO.md](CONFIGURAR_MERCADO_PAGO.md) | integração financeira |
+| [GOOGLE_FORMS_EVENT_SYNC.md](GOOGLE_FORMS_EVENT_SYNC.md) | sincronização de exercícios |
+| [docs/system_health_monitoring.md](docs/system_health_monitoring.md) | monitoramento global de saúde |
+| [docs/payment_incident_runbook.md](docs/payment_incident_runbook.md) | resposta a incidentes financeiros |
+| [docs/global_security_hardening_20260910.md](docs/global_security_hardening_20260910.md) | hardening global mais recente |
 
-## Documentação complementar
+## Convenções de manutenção
 
-- [Configuração inicial do Supabase](SUPABASE_SETUP.md)
-- [Segurança do Supabase](SUPABASE_SEGURANCA.md)
-- [Reposições](CONFIGURAR_REPOSICOES.md)
-- [E-mail de matrícula](CONFIGURAR_EMAIL_MATRICULAS.md)
-- [Pagamentos com Mercado Pago](CONFIGURAR_MERCADO_PAGO.md)
+- aplicar Clean Code em código novo e refatorações;
+- preferir módulos pequenos, responsabilidades explícitas e dependências testáveis;
+- manter funções de infraestrutura e regras de domínio fora de renderizadores quando possível;
+- adicionar ou atualizar testes para contratos relevantes;
+- evitar duplicação de lógica entre páginas;
+- preservar compatibilidade das rotas legadas apenas quando necessária;
+- não aplicar SQL histórico indiscriminadamente;
+- não publicar secrets ou dados pessoais;
+- manter documentação e runbooks sincronizados com a implementação vigente.
 
 ## Público-alvo
 
-Alunos de inglês do Teacher Flávio e o professor responsável pela administração
-pedagógica e financeira da escola.
+A plataforma atende alunos de inglês do Teacher Flávio e o professor responsável pela operação pedagógica, administrativa e financeira do curso.
