@@ -66,6 +66,39 @@ jobs:
             --output-path=lighthouse-home-mobile.json \
             --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
             --quiet
+      - name: Print Lighthouse diagnostics
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("lighthouse-home-mobile.json").read_text(encoding="utf-8"))
+          audits = report["audits"]
+
+          print("Top JavaScript CPU consumers:")
+          bootup = audits.get("bootup-time", {}).get("details", {}).get("items", [])
+          for item in sorted(bootup, key=lambda value: float(value.get("total", 0)), reverse=True)[:10]:
+              print(
+                  f"- total={float(item.get('total', 0)):.0f}ms "
+                  f"scripting={float(item.get('scripting', 0)):.0f}ms "
+                  f"url={item.get('url', 'unknown')}"
+              )
+
+          print("Top transfer consumers:")
+          requests = audits.get("network-requests", {}).get("details", {}).get("items", [])
+          for item in sorted(requests, key=lambda value: int(value.get("transferSize", 0)), reverse=True)[:10]:
+              print(f"- bytes={int(item.get('transferSize', 0))} url={item.get('url', 'unknown')}")
+
+          third_parties = audits.get("third-parties", {}).get("details", {}).get("items", [])
+          if third_parties:
+              print("Third-party CPU/transfer:")
+              for item in third_parties[:10]:
+                  print(
+                      f"- entity={item.get('entity', 'unknown')} "
+                      f"mainThread={float(item.get('mainThreadTime', 0)):.0f}ms "
+                      f"bytes={int(item.get('transferSize', 0))}"
+                  )
+          PY
       - name: Validate Lighthouse guardrails
         run: |
           python3 - <<'PY'
@@ -89,6 +122,7 @@ jobs:
               raise SystemExit("Lighthouse guardrails failed: " + "; ".join(failures))
           PY
       - name: Upload Lighthouse report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-home-mobile
