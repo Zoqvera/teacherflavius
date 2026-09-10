@@ -127,8 +127,6 @@
     paragraph.lastChild.setAttribute("data-tf-footer-year", "");
     paragraph.appendChild(document.createTextNode(" Teacher Flávio. Todos os direitos reservados."));
     appendLineBreak(paragraph);
-    paragraph.appendChild(document.createTextNode("Flávio de Sousa Freitas · Bacharel em Tradução, Mestre e Doutor em Linguística."));
-    appendLineBreak(paragraph);
     paragraph.appendChild(document.createTextNode("Desenvolvido por "));
     paragraph.appendChild(createLink("https://zoqvera.com", "Zoqvera", "", true));
     paragraph.appendChild(document.createTextNode("."));
