@@ -57,6 +57,7 @@ module.exports = [
       "analytics_acquisition.js",
       "analytics_forms.js",
       "analytics_payments.js",
+      "trial_lesson_scheduler.js",
       "payment_operations_dashboard.js",
       "payment_refund_operations.js",
       "payment_chargeback_operations.js",
