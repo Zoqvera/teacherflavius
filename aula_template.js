@@ -22,7 +22,7 @@
     return {
       day: data.day || "Aula",
       time: data.time || "",
-      back: data.back || "links_das_aulas.html",
+      back: data.back || "/minha-turma/",
       lessonLink: data.lessonLink || "#",
       materialLink: data.materialLink || "#",
       whatsappLink: data.whatsappLink || "#"
@@ -33,7 +33,7 @@
     return '<div class="container">' +
       '<div class="top-links">' +
         '<a class="top-link" href="' + config.back + '">' + config.day.toUpperCase() + '</a>' +
-        '<a class="top-link" href="links_das_aulas.html">LINKS DAS AULAS</a>' +
+        '<a class="top-link" href="/minha-turma/">MINHA TURMA</a>' +
       '</div>' +
       '<div class="header">' +
         '<span class="badge">TEACHER FLÁVIO</span>' +
