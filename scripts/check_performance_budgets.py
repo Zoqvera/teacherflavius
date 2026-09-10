@@ -34,10 +34,10 @@ class Metrics:
 
 
 BUDGETS = {
-    "/": Budget(120, 220, 320, 320, 28),
-    "/curso-de-ingles-online/": Budget(180, 260, 380, 520, 34),
-    "/login/": Budget(120, 220, 520, 180, 32),
-    "/acesso-aluno/": Budget(140, 240, 520, 180, 34),
+    "/": Budget(48, 32, 64, 64, 16),
+    "/curso-de-ingles-online/": Budget(64, 40, 72, 64, 20),
+    "/login/": Budget(16, 24, 24, 24, 8),
+    "/acesso-aluno/": Budget(12, 16, 24, 24, 6),
 }
 
 

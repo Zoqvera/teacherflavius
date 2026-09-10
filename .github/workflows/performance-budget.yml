@@ -25,8 +25,9 @@ jobs:
           python3 scripts/postprocess_production.py
       - name: Validate performance budgets
         run: python3 scripts/check_performance_budgets.py --root _site --json performance-budget-report.json
-      - name: Run checker tests
-        run: python3 -m unittest tests.test_performance_budgets
+      - name: Run performance checker tests
+        run: |
+          python3 -m unittest tests.test_performance_budgets tests.test_lighthouse_guardrails
       - name: Upload budget report
         uses: actions/upload-artifact@v4
         with:
@@ -58,72 +59,27 @@ jobs:
             sleep 1
           done
           exit 1
-      - name: Run Lighthouse mobile audit
+      - name: Run three Lighthouse mobile samples
+        shell: bash
         run: |
-          npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ \
-            --only-categories=performance \
-            --output=json \
-            --output-path=lighthouse-home-mobile.json \
-            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
-            --quiet
-      - name: Print Lighthouse diagnostics
+          set -euo pipefail
+          for sample in 1 2 3; do
+            npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ \
+              --only-categories=performance \
+              --output=json \
+              --output-path="lighthouse-home-mobile-${sample}.json" \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --quiet
+          done
+      - name: Validate median Lighthouse guardrails
         run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          report = json.loads(Path("lighthouse-home-mobile.json").read_text(encoding="utf-8"))
-          audits = report["audits"]
-
-          print("Top JavaScript CPU consumers:")
-          bootup = audits.get("bootup-time", {}).get("details", {}).get("items", [])
-          for item in sorted(bootup, key=lambda value: float(value.get("total", 0)), reverse=True)[:10]:
-              print(
-                  f"- total={float(item.get('total', 0)):.0f}ms "
-                  f"scripting={float(item.get('scripting', 0)):.0f}ms "
-                  f"url={item.get('url', 'unknown')}"
-              )
-
-          print("Top transfer consumers:")
-          requests = audits.get("network-requests", {}).get("details", {}).get("items", [])
-          for item in sorted(requests, key=lambda value: int(value.get("transferSize", 0)), reverse=True)[:10]:
-              print(f"- bytes={int(item.get('transferSize', 0))} url={item.get('url', 'unknown')}")
-
-          third_parties = audits.get("third-parties", {}).get("details", {}).get("items", [])
-          if third_parties:
-              print("Third-party CPU/transfer:")
-              for item in third_parties[:10]:
-                  print(
-                      f"- entity={item.get('entity', 'unknown')} "
-                      f"mainThread={float(item.get('mainThreadTime', 0)):.0f}ms "
-                      f"bytes={int(item.get('transferSize', 0))}"
-                  )
-          PY
-      - name: Validate Lighthouse guardrails
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          report = json.loads(Path("lighthouse-home-mobile.json").read_text(encoding="utf-8"))
-          audits = report["audits"]
-          score = float(report["categories"]["performance"]["score"] or 0)
-          lcp_ms = float(audits["largest-contentful-paint"]["numericValue"])
-          cls = float(audits["cumulative-layout-shift"]["numericValue"])
-          tbt_ms = float(audits["total-blocking-time"]["numericValue"])
-          print(f"performance={score:.2f} lcp_ms={lcp_ms:.0f} cls={cls:.3f} tbt_ms={tbt_ms:.0f}")
-
-          failures = []
-          if score < 0.65: failures.append(f"performance score {score:.2f} < 0.65")
-          if lcp_ms > 4000: failures.append(f"LCP {lcp_ms:.0f}ms > 4000ms")
-          if cls > 0.15: failures.append(f"CLS {cls:.3f} > 0.15")
-          if tbt_ms > 800: failures.append(f"TBT {tbt_ms:.0f}ms > 800ms")
-          if failures:
-              raise SystemExit("Lighthouse guardrails failed: " + "; ".join(failures))
-          PY
-      - name: Upload Lighthouse report
+          python3 scripts/check_lighthouse_guardrails.py \
+            lighthouse-home-mobile-1.json \
+            lighthouse-home-mobile-2.json \
+            lighthouse-home-mobile-3.json
+      - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-home-mobile
-          path: lighthouse-home-mobile.json
+          path: lighthouse-home-mobile-*.json
