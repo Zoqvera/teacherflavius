@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 from scripts.check_performance_budgets import (
+    BUDGETS,
     Budget,
     Metrics,
     budget_failures,
@@ -61,6 +62,12 @@ class PerformanceBudgetTests(unittest.TestCase):
         self.assertEqual(len(failures), 2)
         self.assertIn("HTML", failures[0])
         self.assertIn("direct requests", failures[1])
+
+    def test_critical_route_budgets_stay_close_to_measured_baseline(self):
+        self.assertEqual(BUDGETS["/"], Budget(48, 32, 64, 64, 16))
+        self.assertEqual(BUDGETS["/curso-de-ingles-online/"], Budget(64, 40, 72, 64, 20))
+        self.assertEqual(BUDGETS["/login/"], Budget(16, 24, 24, 24, 8))
+        self.assertEqual(BUDGETS["/acesso-aluno/"], Budget(12, 16, 24, 24, 6))
 
 
 if __name__ == "__main__":
