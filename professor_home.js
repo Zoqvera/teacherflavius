@@ -56,10 +56,10 @@ function saveProfessorCardOrder(grid) {
   }
 }
 
-function setupAcquisitionCardDragging(grid, card) {
+function setupDynamicCardDragging(grid, card) {
   if (!grid || !card) return;
 
-  let draggingAcquisitionCard = false;
+  let draggingCard = false;
   let dragStarted = false;
 
   function getCards() {
@@ -86,7 +86,7 @@ function setupAcquisitionCardDragging(grid, card) {
   }
 
   card.addEventListener("dragstart", event => {
-    draggingAcquisitionCard = true;
+    draggingCard = true;
     dragStarted = true;
     card.classList.add("dragging");
     event.dataTransfer.effectAllowed = "move";
@@ -94,7 +94,7 @@ function setupAcquisitionCardDragging(grid, card) {
   });
 
   card.addEventListener("dragend", () => {
-    draggingAcquisitionCard = false;
+    draggingCard = false;
     card.classList.remove("dragging");
     clearDragOverState();
     saveProfessorCardOrder(grid);
@@ -109,7 +109,7 @@ function setupAcquisitionCardDragging(grid, card) {
   });
 
   grid.addEventListener("dragover", event => {
-    if (!draggingAcquisitionCard) return;
+    if (!draggingCard) return;
     event.preventDefault();
 
     const target = getInsertionTarget(event.clientY);
@@ -124,33 +124,49 @@ function setupAcquisitionCardDragging(grid, card) {
   });
 
   grid.addEventListener("drop", event => {
-    if (!draggingAcquisitionCard) return;
+    if (!draggingCard) return;
     event.preventDefault();
     clearDragOverState();
     saveProfessorCardOrder(grid);
   });
 }
 
-function ensureAcquisitionDashboardCard() {
-  const grid = document.getElementById("professorMenuGrid");
-  if (!grid || grid.querySelector('[data-card-id="marketing-acquisition"]')) return;
-
+function createDynamicProfessorCard(config) {
   const card = document.createElement("a");
   card.className = "menu-button";
-  card.href = "/marketing_acquisition/";
+  card.href = config.href;
   card.draggable = true;
-  card.dataset.cardId = "marketing-acquisition";
-  card.innerHTML = '<span><span class="icon" aria-hidden="true"></span>CONVERSÃO</span><span class="arrow">›</span>';
+  card.dataset.cardId = config.id;
+  card.innerHTML = '<span><span class="icon" aria-hidden="true"></span>' + config.label + '</span><span class="arrow">›</span>';
+  return card;
+}
 
-  const reportsCard = grid.querySelector('[data-card-id="relatorios"]');
-  if (reportsCard) {
-    grid.insertBefore(card, reportsCard);
-  } else {
-    grid.appendChild(card);
-  }
+function ensureProfessorDashboardCard(config) {
+  const grid = document.getElementById("professorMenuGrid");
+  if (!grid || grid.querySelector('[data-card-id="' + config.id + '"]')) return;
+
+  const card = createDynamicProfessorCard(config);
+  const anchor = config.beforeId ? grid.querySelector('[data-card-id="' + config.beforeId + '"]') : null;
+  if (anchor) grid.insertBefore(card, anchor);
+  else grid.appendChild(card);
 
   applyProfessorCardOrder(grid);
-  setupAcquisitionCardDragging(grid, card);
+  setupDynamicCardDragging(grid, card);
+}
+
+function ensureDynamicProfessorCards() {
+  ensureProfessorDashboardCard({
+    id: "aulas-experimentais",
+    href: "/aulas-experimentais/",
+    label: "AULAS EXPERIMENTAIS",
+    beforeId: "reposicoes"
+  });
+  ensureProfessorDashboardCard({
+    id: "marketing-acquisition",
+    href: "/marketing_acquisition/",
+    label: "CONVERSÃO",
+    beforeId: "relatorios"
+  });
 }
 
 function redirectProfessorToLogin() {
@@ -245,5 +261,5 @@ async function guardProfessorHome() {
   }
 }
 
-ensureAcquisitionDashboardCard();
+ensureDynamicProfessorCards();
 guardProfessorHome();
