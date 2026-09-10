@@ -50,6 +50,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .health-card-date { font-size:16px !important; line-height:1.4; }
     .health-panel { border:1px solid rgba(148,163,184,.14); border-radius:16px; background:rgba(2,16,43,.52); padding:16px; margin-bottom:16px; }
     .health-panel h2 { margin:0 0 14px; font-size:18px; }
+    .health-panel-note { margin:-6px 0 14px; color:#94a3b8; font-size:13px; }
     .health-empty { border-radius:12px; padding:14px; }
     .health-row { display:flex; align-items:center; justify-content:space-between; gap:16px; border-radius:12px; border:1px solid rgba(148,163,184,.14); padding:13px 14px; margin-top:10px; }
     .health-row strong { display:block; color:#f8fafc; margin-bottom:4px; }
@@ -84,7 +85,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="health-header">
       <div>
         <h1>Saúde do sistema</h1>
-        <p>Disponibilidade, erros, CSP, autenticação, jobs agendados e alertas operacionais.</p>
+        <p>Disponibilidade, erros, qualidade dos dados, autenticação, jobs agendados e alertas operacionais.</p>
       </div>
       <button id="healthRefreshButton" class="health-refresh" type="button">ATUALIZAR</button>
     </div>
@@ -93,8 +94,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <section id="healthSummary" class="health-summary" aria-label="Resumo da saúde operacional"></section>
 
     <section class="health-panel">
-      <h2>Invariantes ativas</h2>
+      <h2>Invariantes operacionais ativas</h2>
       <div id="healthIssues"></div>
+    </section>
+
+    <section class="health-panel" aria-labelledby="dataQualityTitle">
+      <h2 id="dataQualityTitle">Qualidade dos dados</h2>
+      <p class="health-panel-note">Verifica relações e regras de negócio sem misturar findings cadastrais com disponibilidade do site.</p>
+      <div id="dataQualitySummary" class="health-summary" aria-label="Resumo da qualidade dos dados"></div>
+      <div id="dataQualityIssues"></div>
     </section>
 
     <section class="health-panel">
@@ -131,6 +139,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <script src="/professor_mfa_service.js?v=20260909-1"></script>
   <script src="/professor_mfa_gate.js?v=20260909-1"></script>
-  <script src="/system_health_dashboard.js?v=20260910-1"></script>
+  <script src="/system_health_dashboard.js?v=20260910-data-quality-1"></script>
 </body>
 </html>
