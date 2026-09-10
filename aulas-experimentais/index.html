@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Aulas experimentais - Teacher Flávio</title>
+  <link rel="canonical" href="/aulas-experimentais/">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260715-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/professor.css?v=20260820-1">
+  <link rel="stylesheet" href="/professor_mfa_gate.css?v=20260909-1">
+  <link rel="stylesheet" href="/trial_lesson_scheduler.css?v=20260910-1">
+</head>
+<body class="auth-checking">
+  <main class="trial-shell">
+    <nav class="trial-nav" aria-label="Navegação principal">
+      <a href="/">HOME</a>
+      <a href="/professor/">ÁREA DO PROFESSOR</a>
+    </nav>
+
+    <header class="trial-header">
+      <div>
+        <span class="trial-eyebrow">TEACHER FLÁVIO</span>
+        <h1>Aulas experimentais</h1>
+        <p>Agende pessoas que ainda não estão matriculadas no portal.</p>
+      </div>
+      <button id="trialRefreshButton" class="trial-secondary-button" type="button">ATUALIZAR</button>
+    </header>
+
+    <p id="trialMessage" class="trial-message" role="status" hidden></p>
+
+    <section id="trialSummary" class="trial-summary" aria-label="Resumo dos agendamentos"></section>
+
+    <section class="trial-panel" aria-labelledby="trialFormTitle">
+      <div class="trial-section-heading">
+        <div>
+          <span class="trial-eyebrow">NOVO AGENDAMENTO</span>
+          <h2 id="trialFormTitle">Agendar aula experimental</h2>
+        </div>
+      </div>
+
+      <form id="trialLessonForm" class="trial-form" novalidate>
+        <label class="trial-field trial-field-wide">
+          <span>Nome da pessoa</span>
+          <input id="trialVisitorName" type="text" maxlength="120" autocomplete="off" required>
+        </label>
+
+        <label class="trial-field">
+          <span>Nível de inglês</span>
+          <select id="trialEnglishLevel" required>
+            <option value="Não definido">Não definido</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+          </select>
+        </label>
+
+        <label class="trial-field">
+          <span>WhatsApp</span>
+          <input id="trialWhatsapp" type="tel" maxlength="32" inputmode="tel" autocomplete="off" placeholder="Ex.: 16 99999-9999" required>
+        </label>
+
+        <label class="trial-field trial-field-wide">
+          <span>Formato da aula</span>
+          <select id="trialLessonMode" required>
+            <option value="class">Participar de uma turma existente</option>
+            <option value="individual">Aula experimental individual</option>
+          </select>
+        </label>
+
+        <label id="trialClassField" class="trial-field trial-field-wide">
+          <span>Turma</span>
+          <select id="trialClassNumber" required>
+            <option value="">Carregando turmas...</option>
+          </select>
+          <small id="trialClassHint">Selecione uma turma para preencher automaticamente o dia e o horário.</small>
+        </label>
+
+        <label class="trial-field">
+          <span>Data</span>
+          <input id="trialDate" type="date" required>
+        </label>
+
+        <label class="trial-field">
+          <span>Horário</span>
+          <input id="trialTime" type="time" required>
+          <small id="trialTimeHint">O horário será definido pela turma selecionada.</small>
+        </label>
+
+        <button id="trialSubmitButton" class="trial-primary-button trial-field-wide" type="submit">AGENDAR AULA EXPERIMENTAL</button>
+      </form>
+    </section>
+
+    <section class="trial-panel" aria-labelledby="trialUpcomingTitle">
+      <div class="trial-section-heading">
+        <div>
+          <span class="trial-eyebrow">AGENDA</span>
+          <h2 id="trialUpcomingTitle">Próximas aulas experimentais</h2>
+        </div>
+      </div>
+      <div id="trialUpcomingList" class="trial-list" aria-live="polite"></div>
+    </section>
+
+    <section class="trial-panel" aria-labelledby="trialHistoryTitle">
+      <div class="trial-section-heading">
+        <div>
+          <span class="trial-eyebrow">HISTÓRICO</span>
+          <h2 id="trialHistoryTitle">Agendamentos anteriores e encerrados</h2>
+        </div>
+      </div>
+      <div id="trialHistoryList" class="trial-list" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script src="/professor_mfa_service.js?v=20260909-1"></script>
+  <script src="/professor_mfa_gate.js?v=20260909-1"></script>
+  <script src="/trial_lesson_scheduler.js?v=20260910-1"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260814-1"></script>
+</body>
+</html>
