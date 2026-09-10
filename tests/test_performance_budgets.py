@@ -21,10 +21,12 @@ class PerformanceBudgetTests(unittest.TestCase):
             )
             (root / "app.js").write_text("console.log('ok')", encoding="utf-8")
             (root / "assets" / "hero.jpg").write_bytes(b"x" * 20)
+            (root / "assets" / "inline.jpg").write_bytes(b"x" * 25)
             (root / "assets" / "eager.jpg").write_bytes(b"x" * 30)
             (root / "assets" / "lazy.jpg").write_bytes(b"x" * 40)
             (root / "index.html").write_text(
                 """<!doctype html><link rel='stylesheet' href='/styles.css'>
+                <style>.video{background:url('/assets/inline.jpg')}</style>
                 <img src='/assets/eager.jpg'>
                 <img src='/assets/lazy.jpg' loading='lazy'>
                 <script src='/app.js'></script>""",
@@ -35,8 +37,8 @@ class PerformanceBudgetTests(unittest.TestCase):
 
             self.assertEqual(metrics.css_bytes, (root / "styles.css").stat().st_size)
             self.assertEqual(metrics.javascript_bytes, (root / "app.js").stat().st_size)
-            self.assertEqual(metrics.eager_media_bytes, 50)
-            self.assertEqual(metrics.direct_requests, 4)
+            self.assertEqual(metrics.eager_media_bytes, 75)
+            self.assertEqual(metrics.direct_requests, 5)
 
     def test_budget_failures_report_only_exceeded_dimensions(self):
         metrics = Metrics(
