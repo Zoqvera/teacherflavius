@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saúde do sistema - Teacher Flávio</title>
+  <link rel="canonical" href="/saude-do-sistema/">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260715-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/professor.css?v=20260820-1">
+  <link rel="stylesheet" href="/professor_mfa_gate.css?v=20260909-1">
+  <style>
+    body { min-height: 100vh; }
+    .health-shell { width: min(1180px, calc(100% - 28px)); margin: 0 auto; padding: 18px 0 34px; }
+    .health-header { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin-bottom:18px; }
+    .health-header h1 { margin:0 0 6px; font-size:30px; }
+    .health-header p { margin:0; color:#94a3b8; }
+    .health-refresh { min-height:42px; padding:10px 16px; border-radius:12px; border:1px solid rgba(129,140,248,.45); background:rgba(129,140,248,.16); color:#e0e7ff; font-weight:700; cursor:pointer; }
+    .health-refresh:disabled { opacity:.55; cursor:not-allowed; }
+    .health-message { margin:0 0 16px; padding:12px 14px; border-radius:12px; background:rgba(59,130,246,.13); color:#bfdbfe; }
+    .health-message.error { background:rgba(239,68,68,.12); color:#fecaca; }
+    .health-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+    .health-card { min-height:112px; border:1px solid rgba(148,163,184,.18); border-radius:16px; background:rgba(15,23,42,.62); padding:16px; }
+    .health-card span { display:block; color:#94a3b8; font-size:12px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+    .health-card strong { color:#f8fafc; font-size:25px; }
+    .health-card-date { font-size:16px !important; line-height:1.4; }
+    .health-panel { border:1px solid rgba(148,163,184,.14); border-radius:16px; background:rgba(2,16,43,.52); padding:16px; margin-bottom:16px; }
+    .health-panel h2 { margin:0 0 14px; font-size:18px; }
+    .health-empty { border-radius:12px; padding:14px; }
+    .health-row { display:flex; align-items:center; justify-content:space-between; gap:16px; border-radius:12px; border:1px solid rgba(148,163,184,.14); padding:13px 14px; margin-top:10px; }
+    .health-row strong { display:block; color:#f8fafc; margin-bottom:4px; }
+    .health-row small { color:#94a3b8; overflow-wrap:anywhere; }
+    .health-table-wrap { overflow-x:auto; border:1px solid rgba(148,163,184,.12); border-radius:13px; }
+    .health-table { width:100%; border-collapse:collapse; min-width:680px; }
+    .health-table th, .health-table td { padding:12px 13px; text-align:left; border-bottom:1px solid rgba(148,163,184,.1); color:#cbd5e1; }
+    .health-table th { color:#94a3b8; font-size:11px; text-transform:uppercase; letter-spacing:.07em; }
+    .health-table tr:last-child td { border-bottom:0; }
+    .health-pill { display:inline-block; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:800; }
+    .health-good { color:#a7f3d0 !important; border-color:rgba(52,211,153,.35) !important; background:rgba(16,185,129,.1) !important; }
+    .health-warning { color:#fde68a !important; border-color:rgba(251,191,36,.35) !important; background:rgba(245,158,11,.1) !important; }
+    .health-critical { color:#fecaca !important; border-color:rgba(248,113,113,.4) !important; background:rgba(239,68,68,.1) !important; }
+    .health-meta { color:#94a3b8; font-size:12px; text-align:right; margin-top:8px; }
+    @media (max-width:760px) {
+      .health-shell { width:min(100% - 20px,1180px); }
+      .health-header { align-items:stretch; flex-direction:column; }
+      .health-refresh { width:100%; }
+      .health-summary { grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width:480px) { .health-summary { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body class="auth-checking">
+  <main class="health-shell">
+    <div class="health-header">
+      <div>
+        <h1>Saúde do sistema</h1>
+        <p>Disponibilidade, erros, CSP, autenticação, jobs agendados e alertas operacionais.</p>
+      </div>
+      <button id="healthRefreshButton" class="health-refresh" type="button">ATUALIZAR</button>
+    </div>
+
+    <p id="healthMessage" class="health-message" hidden></p>
+    <section id="healthSummary" class="health-summary" aria-label="Resumo da saúde operacional"></section>
+
+    <section class="health-panel">
+      <h2>Invariantes ativas</h2>
+      <div id="healthIssues"></div>
+    </section>
+
+    <section class="health-panel">
+      <h2>Disponibilidade sintética</h2>
+      <div class="health-table-wrap">
+        <table class="health-table">
+          <thead><tr><th>Alvo</th><th>Estado</th><th>HTTP</th><th>Latência</th><th>Último probe</th></tr></thead>
+          <tbody id="healthProbeTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="health-panel">
+      <h2>Jobs agendados</h2>
+      <div class="health-table-wrap">
+        <table class="health-table">
+          <thead><tr><th>Job</th><th>Estado</th><th>Último status</th><th>Última conclusão</th></tr></thead>
+          <tbody id="healthCronTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="health-panel">
+      <h2>Alertas recentes</h2>
+      <div class="health-table-wrap">
+        <table class="health-table">
+          <thead><tr><th>Evento</th><th>Severidade</th><th>Entrega</th><th>Registrado em</th></tr></thead>
+          <tbody id="healthAlertTableBody"></tbody>
+        </table>
+      </div>
+      <p id="healthGeneratedAt" class="health-meta"></p>
+    </section>
+  </main>
+
+  <script src="/professor_mfa_service.js?v=20260909-1"></script>
+  <script src="/professor_mfa_gate.js?v=20260909-1"></script>
+  <script src="/system_health_dashboard.js?v=20260910-1"></script>
+</body>
+</html>
