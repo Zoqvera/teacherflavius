@@ -1,27 +1,27 @@
 # Database backup and recovery
 
-This document describes the off-Supabase logical backup layer for the Teacherflavius production database.
+This document describes the independent logical backup and disaster-recovery verification layer for the Teacherflavius production database.
 
-## Current protection model
+## Protection model
 
-The project is on the Supabase Free plan, so managed daily database backups and Point-in-Time Recovery are not available. The repository contains a validated schema reconstruction baseline under `supabase/baseline/`, while `.github/workflows/supabase-encrypted-backup.yml` provides the separate data-backup layer.
+The repository keeps two complementary recovery layers:
 
-The two layers serve different purposes:
+- `supabase/baseline/`: versioned application-owned schema and platform configuration.
+- encrypted GitHub Actions artifacts: production roles, schema, data, migration history and a technical recovery fingerprint.
 
-- `supabase/baseline/`: versioned schema reconstruction and platform configuration.
-- encrypted GitHub Actions artifacts: production database roles, schema, data and Supabase migration-history records.
+`.github/workflows/supabase-encrypted-backup.yml` creates the encrypted artifact. `.github/workflows/supabase-backup-recovery-test.yml` is triggered after a successful backup and restores that artifact into a disposable local Supabase stack.
 
-Neither layer should be treated as a backup of Supabase Storage object bytes. Storage objects require a separate backup mechanism if buckets are added in the future.
+This repository-defined backup exists independently of any managed Supabase backup capability available to the project.
+
+Supabase Storage object bytes are not part of a database logical backup. The recovery verifier therefore fails deliberately if the production manifest reports any Storage buckets or objects. At the time this recovery layer was introduced, production had zero buckets and zero objects.
 
 ## Required GitHub repository secrets
 
-The backup workflow deliberately refuses to run without both secrets below.
-
 ### `SUPABASE_DB_URL`
 
-Use the production database connection string from the Supabase Dashboard **Connect** panel. Prefer the Session Pooler connection string for CI reliability. It must contain the database password.
+Use the production database connection string from the Supabase **Connect** panel. Prefer the Session Pooler connection string for CI reliability. It contains the database password and must never be committed.
 
-Example shape only — never commit the real value:
+Example shape only:
 
 ```text
 postgresql://postgres.<project-ref>:<database-password>@<pooler-host>:5432/postgres
@@ -29,51 +29,95 @@ postgresql://postgres.<project-ref>:<database-password>@<pooler-host>:5432/postg
 
 ### `BACKUP_ENCRYPTION_PASSPHRASE`
 
-Use a unique random passphrase of at least 32 characters. Store the same value in a password manager or another protected location outside GitHub. If this value is lost, the encrypted backup artifacts cannot be recovered.
+Use a unique random passphrase of at least 32 characters. Keep a protected copy outside GitHub. If this passphrase is lost, the encrypted artifacts cannot be recovered.
 
-Never put either secret in source files, issues, pull-request comments, Actions logs or documentation.
+Never place either secret in source files, issues, pull-request comments, Actions logs or documentation.
 
-## Schedule and retention
+## Schedule, retention and recovery objectives
 
-The workflow runs every day at `03:17 UTC`, currently `00:17` in `America/Sao_Paulo`.
+The backup workflow runs every day at `03:17 UTC`, currently `00:17` in `America/Sao_Paulo`.
 
-- Normal daily backup: retained for 30 days.
-- Backup created on the first day of each month: retained for 90 days.
+- normal daily backup: retained for 30 days;
+- backup created on the first day of each month: retained for 90 days;
+- design RPO from repository scheduling: 24 hours;
+- RTO exercise: measured on every automated disposable restore and written to the Actions step summary and recovery report artifact.
 
-The 90-day ceiling reflects the maximum artifact retention available for a public GitHub repository. A future durable archive with retention longer than 90 days should use a separate encrypted object-storage destination.
+The 24-hour RPO is a design target based on backup cadence, not a guarantee that GitHub Actions will start at the exact scheduled second. The measured restore duration is a laboratory recovery exercise and is not a guarantee of full production cutover time, which also includes DNS, Edge Functions, secrets, Auth configuration and external integrations.
 
 ## Backup contents
 
-Each run follows the current Supabase CLI backup/restore guidance and creates:
+Each successful encrypted archive contains:
 
 - `roles.sql`
 - `schema.sql`
 - `data.sql`
 - `history_schema.sql`
 - `history_data.sql`
+- `recovery_manifest.json`
 - `manifest.sha256`
 - `README.txt`
 
-Before upload, the SQL files are packed into a tarball and symmetrically encrypted with GnuPG using AES-256. The plaintext files are removed from the runner before the artifact is uploaded.
+The backup follows the Supabase CLI logical dump pattern. The payload is packed and encrypted symmetrically with GnuPG AES-256 before upload. Plaintext database material is removed from the runner before the artifact is published.
 
-The workflow then decrypts the encrypted archive once inside the same disposable runner and validates every SQL file against `manifest.sha256`. The run fails if dump creation, encryption, decryption or checksum validation fails.
+The external `.sha256` file is generated with a portable basename so it can be validated after the artifact is downloaded in a different GitHub Actions run.
 
-Only the encrypted `.gpg` payload and its SHA-256 checksum are uploaded as GitHub Actions artifacts.
+## Recovery manifest
 
-## Manual validation after activation
+`supabase/recovery/recovery_manifest.sql` is the single source of truth used to fingerprint both production at backup time and the disposable restored database.
 
-After the two repository secrets are configured:
+Manifest format version 2 contains technical counts/configuration only and no row contents or secret values. It covers:
 
-1. Run **Actions → Encrypted Supabase logical backup → Run workflow**.
-2. Confirm the workflow finishes successfully.
-3. Confirm the run contains one artifact named `supabase-daily-<timestamp>` or `supabase-monthly-<timestamp>`.
-4. Download the artifact.
-5. Verify its external SHA-256 file before decryption.
-6. Decrypt and inspect the archive locally using the recovery passphrase.
+- profiles;
+- Auth users, identities and MFA factors;
+- monthly tuition records;
+- payment attempts;
+- makeup-class slots;
+- public/private catalog counts, constraints, indexes, RLS policies and application triggers;
+- Supabase Storage bucket/object counts;
+- definitions and active state of the eight application-owned Cron jobs.
 
-A backup should not be considered operational until this first manual run succeeds.
+This makes Auth preservation an explicit recovery assertion rather than an assumption about CLI behavior.
 
-## Decrypting a backup
+## Backup self-check
+
+Before an artifact is uploaded, `scripts/create_encrypted_supabase_backup.sh`:
+
+1. validates required secrets;
+2. creates the logical dump set;
+3. captures `recovery_manifest.json`;
+4. hashes every plaintext backup component into `manifest.sha256`;
+5. archives and encrypts the set with AES-256;
+6. creates a portable SHA-256 for the encrypted payload;
+7. decrypts the new payload in the same runner;
+8. extracts it and verifies `manifest.sha256`;
+9. removes all plaintext working material.
+
+A failure in any step fails the backup workflow.
+
+## Automated restore verification
+
+After a successful `Encrypted Supabase logical backup` run, `Verify Supabase backup recovery` starts automatically with read-only repository/Actions permissions plus access to the backup passphrase secret.
+
+The verifier:
+
+1. downloads the encrypted artifact from the completed backup run;
+2. validates the encrypted payload SHA-256;
+3. decrypts and extracts the archive;
+4. validates every internal file against `manifest.sha256`;
+5. rejects the backup as incomplete if Storage contains buckets or objects;
+6. starts a clean disposable Supabase stack with no application migration history pre-applied;
+7. restores `roles.sql`, `schema.sql` and `data.sql` in one transaction with `session_replication_role = replica`;
+8. restores the backed-up `supabase_migrations` history separately;
+9. recreates the eight application-owned Cron definitions from `supabase/baseline/30_platform_config.sql`;
+10. captures a new manifest from the restored database using the same SQL as production;
+11. disables the disposable Cron jobs before committing the platform-configuration transaction so the test environment cannot execute scheduled external work;
+12. removes the volatile `captured_at` field and requires the remaining restored fingerprint to match the backup fingerprint exactly;
+13. records the restore/verification duration as `rto_exercise_seconds`;
+14. destroys the disposable Supabase stack.
+
+A backup is therefore considered recovery-verified only when the second workflow succeeds, not merely when the encrypted file exists.
+
+## Manual decryption
 
 Assuming the downloaded encrypted file is named `teacherflavius-YYYYMMDDTHHMMSSZ.tar.gz.gpg`:
 
@@ -88,41 +132,42 @@ cd teacherflavius-backup
 sha256sum --check manifest.sha256
 ```
 
-GnuPG will request the backup encryption passphrase during local decryption unless it is supplied through a secure local secret mechanism.
+GnuPG requests the recovery passphrase unless supplied through a secure local secret mechanism.
 
-## Restore order
+## Manual restore order
 
-For a disaster recovery into a newly created Supabase project:
+For an actual disaster recovery into a replacement Supabase project:
 
-1. Create the replacement Supabase project and enable required extensions/webhook capabilities.
-2. Obtain the replacement database connection string.
-3. Decrypt the selected backup artifact and verify `manifest.sha256`.
-4. Follow the repository baseline recovery instructions in `supabase/baseline/README.md` when reconstructing the application-owned schema.
-5. Restore production data with triggers disabled for the data import where required.
-6. Restore migration-history records only after the application schema/data state has been verified.
-7. Provision Vault secrets, Edge Function secrets, OAuth settings, SMTP settings and other environment-specific configuration out-of-band.
-8. Deploy Edge Functions from the repository.
-9. Validate row counts and critical application flows before switching production traffic.
+1. create the replacement project and obtain its database connection string;
+2. decrypt the selected recovery-verified artifact and verify both SHA-256 layers;
+3. restore `roles.sql`, `schema.sql` and `data.sql` using a single transaction and `SET session_replication_role = replica` for the data import;
+4. restore `history_schema.sql` and `history_data.sql` separately;
+5. apply `supabase/baseline/30_platform_config.sql` to recreate application-owned Cron jobs;
+6. provision Vault values, Edge Function secrets, OAuth providers, SMTP settings, API keys and other environment-specific configuration out-of-band;
+7. deploy Edge Functions from the repository;
+8. validate `recovery_manifest.json` against the replacement database;
+9. run critical application smoke tests before routing production traffic.
 
-Do not blindly replay the repository's incomplete historical migration chain on top of the validated baseline.
+Do not blindly replay the repository's incomplete historical migration chain on top of the validated recovery path.
 
-## Recovery verification checklist
+## Application verification before cutover
 
-Before considering a restored environment usable, verify at minimum:
+Verify at minimum:
 
-- student profiles and enrollment records
-- authentication/login and Google account linking
-- monthly tuition and payment-attempt records
-- makeup class slots/bookings
-- flashcards and practice history
-- exercise completion/history
-- teacher/admin access
-- Edge Function deployment and secrets
-- Cron job configuration
-- RLS/policies and critical database triggers
+- authentication, password/social identities and admin MFA;
+- student profiles and enrollments;
+- monthly tuition and payment attempts;
+- makeup-class slots/bookings;
+- flashcards, exercises and practice history;
+- teacher/admin access;
+- RLS policies and critical triggers;
+- all eight Cron definitions;
+- Edge Function deployment and secrets;
+- Mercado Pago and notification integrations;
+- OAuth and SMTP configuration.
 
 ## Security notes
 
-The GitHub repository is public. GitHub Actions artifacts must therefore be treated as potentially discoverable by repository readers. The database backup payload is encrypted before upload specifically so that artifact access does not expose student, payment or authentication data.
+The repository is public. Backup artifacts must be treated as potentially discoverable by repository readers. Production database material is therefore encrypted before upload; plaintext backup data must never be committed, attached to issues, published as release assets or uploaded as unencrypted Actions artifacts.
 
-Do not replace the encrypted artifact strategy with plaintext commits, plaintext release assets or unencrypted workflow artifacts.
+`recovery_manifest.json` is kept inside the encrypted archive even though it contains only technical counts/configuration. Recovery report artifacts intentionally contain status/timing metadata only, not database counts or user data.
