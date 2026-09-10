@@ -76,6 +76,10 @@
     "/turmas.html": "/turmas/"
   };
 
+  const TOP_LEVEL_CANONICAL_ROUTES = Object.freeze({
+    "/relatorios.html": "/relatorios/"
+  });
+
   function decodedPath(pathname) {
     try { return decodeURIComponent(pathname); } catch (error) { return pathname; }
   }
@@ -85,6 +89,17 @@
     if (LEGACY_TO_CLEAN[decoded]) return LEGACY_TO_CLEAN[decoded];
     if (/\/index\.html$/i.test(decoded)) return decoded.replace(/index\.html$/i, "");
     return null;
+  }
+
+  function redirectSpecialTopLevelRoute() {
+    if (window.self !== window.top) return false;
+    const canonicalPath = TOP_LEVEL_CANONICAL_ROUTES[decodedPath(window.location.pathname)];
+    if (!canonicalPath) return false;
+
+    const canonicalUrl = new URL(window.location.href);
+    canonicalUrl.pathname = canonicalPath;
+    window.location.replace(canonicalUrl.pathname + canonicalUrl.search + canonicalUrl.hash);
+    return true;
   }
 
   function cleanInternalUrl(value) {
@@ -173,6 +188,7 @@
   }
 
   function install() {
+    if (redirectSpecialTopLevelRoute()) return;
     rewriteElement(document.documentElement);
     normalizeCurrentAddress();
     const observer = new MutationObserver(function (mutations) {
