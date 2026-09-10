@@ -67,6 +67,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: supabase-recovery-report-${{ env.BACKUP_RUN_ID }}
-          path: ${{ steps.recovery.outputs.report_path }}
+          path: ${{ runner.temp }}/recovery-verification-report.json
           if-no-files-found: warn
           retention-days: 30
