@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Recuperar senha - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260429-4"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/supabase_client_service.js?v=20260902-1"></script>
+  <script src="/auth_navigation_service.js?v=20260909-1"></script>
+  <script src="/student_data_utils.js?v=20260902-1"></script>
+  <script src="/student_enrollment_service.js?v=20260902-1"></script>
+  <script src="/auth.js?v=20260909-1"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      color: #f1f5f9;
+      font-family: Georgia, serif;
+    }
+    main {
+      width: min(100%, 440px);
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px;
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(12px);
+    }
+    .header { text-align: center; }
+    .badge {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      background: linear-gradient(90deg,#818cf8,#a78bfa);
+      color: #fff;
+      font: 700 11px monospace;
+      letter-spacing: 3px;
+    }
+    h1 { margin: 0 0 8px; font-size: 32px; }
+    p { margin: 0; color: #94a3b8; font-size: 14px; line-height: 1.6; }
+    form { margin-top: 22px; }
+    label { display: block; margin: 0 0 7px; color: #cbd5e1; font-size: 13px; font-weight: 700; }
+    input {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px solid rgba(148,163,184,.28);
+      border-radius: 12px;
+      outline: none;
+      background: rgba(15,23,42,.72);
+      color: #f8fafc;
+      font: inherit;
+    }
+    input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129,140,248,.14); }
+    button, .back {
+      width: 100%;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font: 700 16px Georgia, serif;
+      text-decoration: none;
+    }
+    button {
+      margin-top: 20px;
+      border: 0;
+      background: linear-gradient(90deg,#818cf8,#a78bfa);
+      color: #fff;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .65; cursor: wait; }
+    .back {
+      margin-top: 12px;
+      border: 1.5px solid rgba(129,140,248,.35);
+      background: rgba(255,255,255,.05);
+      color: #cbd5e1;
+    }
+    .status { min-height: 42px; margin-top: 14px; color: #fca5a5; font-size: 13px; line-height: 1.5; text-align: center; }
+    .status.success { color: #86efac; }
+    .note { margin-top: 10px; color: #64748b; font-size: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+title="Google Tag Manager" aria-hidden="true"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+  <main>
+    <div class="header">
+      <span class="badge">TEACHER FLÁVIO</span>
+      <h1>Recuperar senha</h1>
+      <p>Informe o e-mail usado na sua conta para receber um link de recuperação.</p>
+    </div>
+
+    <form id="recoveryForm" novalidate>
+      <label for="recoveryEmail">E-mail</label>
+      <input id="recoveryEmail" name="email" type="email" autocomplete="email" inputmode="email" required>
+      <button id="recoverySubmit" type="submit">ENVIAR LINK</button>
+      <div id="recoveryStatus" class="status" role="status" aria-live="polite"></div>
+    </form>
+
+    <p class="note">Por segurança, a resposta não informa se o e-mail está ou não cadastrado.</p>
+    <a class="back" href="/login/?password_access=1">VOLTAR AO LOGIN</a>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const form = document.getElementById("recoveryForm");
+      const emailInput = document.getElementById("recoveryEmail");
+      const submitButton = document.getElementById("recoverySubmit");
+      const status = document.getElementById("recoveryStatus");
+      const neutralMessage = "Se houver uma conta compatível com esse e-mail, você receberá um link para criar uma nova senha.";
+
+      function setBusy(busy) {
+        emailInput.disabled = busy;
+        submitButton.disabled = busy;
+        submitButton.textContent = busy ? "ENVIANDO..." : "ENVIAR LINK";
+      }
+
+      function showNeutralSuccess() {
+        status.classList.add("success");
+        status.textContent = neutralMessage;
+      }
+
+      async function submitRecovery(email) {
+        if (!window.Auth || !Auth.isConfigured || !Auth.isConfigured()) {
+          throw new Error("Não foi possível carregar a autenticação. Atualize a página e tente novamente.");
+        }
+        await Auth.requestPasswordReset(email);
+      }
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        status.classList.remove("success");
+        status.textContent = "";
+
+        const email = emailInput.value.trim();
+        if (!email) {
+          status.textContent = "Informe seu e-mail.";
+          return;
+        }
+
+        setBusy(true);
+        try {
+          await submitRecovery(email);
+          showNeutralSuccess();
+          emailInput.value = "";
+        } catch (error) {
+          status.textContent = error && error.message
+            ? error.message
+            : "Não foi possível solicitar a recuperação agora. Tente novamente.";
+        } finally {
+          setBusy(false);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,6 +1,27 @@
 let currentProfessorSession = null;
 
 const PROFESSOR_CARD_ORDER_KEY = "teacherFlavius.professorCardOrder.v1";
+const PROFESSOR_AUTH_MAX_ATTEMPTS = 40;
+const PROFESSOR_AUTH_RETRY_DELAY_MS = 100;
+const PROFESSOR_PATH = "/professor/";
+const LOGIN_PATH = "/login/";
+const PROFESSOR_MFA_CSS = "/professor_mfa_gate.css?v=20260909-1";
+const PROFESSOR_MFA_MODULES = Object.freeze({
+  service: Object.freeze({
+    globalName: "ProfessorMfaService",
+    selector: 'script[src^="/professor_mfa_service.js"]',
+    src: "/professor_mfa_service.js?v=20260909-1",
+    missingMessage: "O serviço MFA do professor não foi inicializado.",
+    loadErrorMessage: "Não foi possível carregar o serviço MFA do professor."
+  }),
+  gate: Object.freeze({
+    globalName: "ProfessorMfaGate",
+    selector: 'script[src^="/professor_mfa_gate.js"]',
+    src: "/professor_mfa_gate.js?v=20260909-1",
+    missingMessage: "O gate MFA do professor não foi inicializado.",
+    loadErrorMessage: "Não foi possível carregar o gate MFA do professor."
+  })
+});
 
 function applyProfessorCardOrder(grid) {
   if (!grid) return;
@@ -119,7 +140,7 @@ function ensureAcquisitionDashboardCard() {
   card.href = "/marketing_acquisition/";
   card.draggable = true;
   card.dataset.cardId = "marketing-acquisition";
-  card.innerHTML = '<span><span class="icon" aria-hidden="true"></span>AQUISIÇÃO E IA</span><span class="arrow">›</span>';
+  card.innerHTML = '<span><span class="icon" aria-hidden="true"></span>CONVERSÃO</span><span class="arrow">›</span>';
 
   const reportsCard = grid.querySelector('[data-card-id="relatorios"]');
   if (reportsCard) {
@@ -133,19 +154,47 @@ function ensureAcquisitionDashboardCard() {
 }
 
 function redirectProfessorToLogin() {
-  window.location.href = "login.html?next=" + encodeURIComponent("professor.html");
+  const nextPath = window.Auth.normalizeNextPath(window.location.pathname, PROFESSOR_PATH);
+  window.location.href = LOGIN_PATH + "?next=" + encodeURIComponent(nextPath);
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function professorAuthResourcesAreReady() {
+  return !!(
+    window.Auth &&
+    window.SUPABASE_CONFIG &&
+    window.ModuleLoader &&
+    typeof window.ModuleLoader.loadGlobalModule === "function" &&
+    window.Auth.isConfigured()
+  );
 }
 
-async function waitForProfessorAuthResources() {
-  for (let i = 0; i < 10; i++) {
-    if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured()) return true;
-    await sleep(150);
-  }
-  return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
+function waitForProfessorAuthResources() {
+  if (!window.ResourceWaiter) return Promise.resolve(false);
+
+  return window.ResourceWaiter.waitUntil(professorAuthResourcesAreReady, {
+    maxAttempts: PROFESSOR_AUTH_MAX_ATTEMPTS,
+    delayMs: PROFESSOR_AUTH_RETRY_DELAY_MS
+  });
+}
+
+function appendProfessorMfaStyles() {
+  if (document.querySelector('link[href^="/professor_mfa_gate.css"]')) return;
+  const stylesheet = document.createElement("link");
+  stylesheet.rel = "stylesheet";
+  stylesheet.href = PROFESSOR_MFA_CSS;
+  document.head.appendChild(stylesheet);
+}
+
+async function loadProfessorMfaGate() {
+  appendProfessorMfaStyles();
+  await window.ModuleLoader.loadGlobalModule(PROFESSOR_MFA_MODULES.service);
+  return window.ModuleLoader.loadGlobalModule(PROFESSOR_MFA_MODULES.gate);
+}
+
+function showProfessorAccessFailure(status, menu, message) {
+  if (status) status.textContent = message;
+  if (menu) menu.hidden = true;
+  document.body.classList.remove("auth-checking");
 }
 
 async function guardProfessorHome() {
@@ -154,35 +203,45 @@ async function guardProfessorHome() {
   const resourcesReady = await waitForProfessorAuthResources();
 
   if (!resourcesReady) {
-    if (status) status.textContent = "Não foi possível carregar a autenticação. Atualize a página ou limpe o cache do navegador.";
-    if (menu) menu.hidden = true;
-    document.body.classList.remove("auth-checking");
+    showProfessorAccessFailure(
+      status,
+      menu,
+      "Não foi possível carregar a autenticação. Atualize a página ou limpe o cache do navegador."
+    );
     return;
   }
 
-  currentProfessorSession = await Auth.getSession();
+  currentProfessorSession = await window.Auth.getSession();
   if (!currentProfessorSession || !currentProfessorSession.user) {
     redirectProfessorToLogin();
     return;
   }
 
   try {
-    const response = await Auth.getClient().rpc("is_teacher_admin");
+    const client = window.Auth.getClient();
+    const response = await client.rpc("is_teacher_admin");
     if (response.error) throw response.error;
 
     if (response.data !== true) {
-      if (status) status.textContent = "Acesso negado. Esta área é exclusiva do administrador.";
-      if (menu) menu.hidden = true;
-      document.body.classList.remove("auth-checking");
+      showProfessorAccessFailure(status, menu, "Acesso negado. Esta área é exclusiva do administrador.");
       return;
     }
 
-    if (status) status.textContent = "Professor autenticado: " + currentProfessorSession.user.email + ".";
+    const mfaGate = await loadProfessorMfaGate();
+    await mfaGate.requireAal2({ client: client });
+
+    if (status) {
+      status.textContent = "Professor autenticado com verificação em duas etapas: " +
+        currentProfessorSession.user.email + ".";
+    }
     document.body.classList.remove("auth-checking");
   } catch (error) {
-    if (status) status.textContent = "Não foi possível confirmar as credenciais administrativas. Reexecute supabase_professor_admin.sql no Supabase.";
-    if (menu) menu.hidden = true;
-    document.body.classList.remove("auth-checking");
+    console.error("Falha na verificação administrativa:", error);
+    showProfessorAccessFailure(
+      status,
+      menu,
+      "Não foi possível concluir a verificação de segurança da conta administrativa."
+    );
   }
 }
 

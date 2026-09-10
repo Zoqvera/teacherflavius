@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu Perfil - Teacher Flávio</title>
@@ -8,7 +29,35 @@
   <script>
     (async function () {
       const response = await fetch('/perfil.html', { cache: 'no-store' });
-      const html = await response.text();
+      let html = await response.text();
+
+      html = html
+        .replace(
+          '          <script src="/module_loader.js?v=20260902-2"></script>
+<script src="auth.js?v=20260819-1"></script>',
+          '<script src="auth.js?v=20260819-1"></script>\n  <script src="/student_profile_optional.js?v=20260902-1"></script>'
+        )
+        .replace(
+          '<label for="pixKey">Chave PIX</label>',
+          '<label for="pixKey">Chave PIX <span style="color:#94a3b8;font-weight:normal">(opcional)</span></label>'
+        )
+        .replace(
+          '<input id="pixKey" type="text" required />',
+          '<input id="pixKey" type="text" />'
+        )
+        .replace(
+          'A chave PIX é usada apenas em situações em que o professor precise fazer reembolso de algum valor para o aluno.',
+          'Opcional. Informe apenas se quiser deixar uma chave disponível para eventuais reembolsos.'
+        )
+        .replace(
+          '<div class="availability-block">',
+          '<div id="disponibilidade" class="availability-block">'
+        )
+        .replace(
+          'Marque todos os dias e horários, de segunda a sexta, em que você estará disponível para fazer aulas de inglês.',
+          'Informe os dias e horários em que você costuma estar disponível. Você pode alterar essa informação quando quiser.'
+        );
+
       document.open();
       document.write(html.replace('<head>', '<head>\n  <base href="/">'));
       document.close();
@@ -16,7 +65,17 @@
   </script>
 </head>
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <p>Carregando perfil...</p>
-  <script defer src="/site_footer.js?v=20260814-1"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
+
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script src="/site_page_runtime.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260814-1"></script>
 </body>
 </html>

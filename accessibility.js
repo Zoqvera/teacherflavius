@@ -12,6 +12,11 @@
     return (window.location.pathname || "/").toLowerCase();
   }
 
+  function isHomePage() {
+    var path = currentPath();
+    return path === "/" || path === "/index.html";
+  }
+
   function isAuthPage() {
     var path = currentPath();
     return path === "/login" || path === "/login.html" || path === "/login/" ||
@@ -223,7 +228,7 @@
   }
 
   function installObserver() {
-    if (!document.documentElement) return;
+    if (!document.documentElement || isHomePage()) return;
     var observer = new MutationObserver(function (mutations) {
       var relevant = mutations.some(function (mutation) {
         return mutation.type === "childList" && (mutation.addedNodes.length || mutation.removedNodes.length);

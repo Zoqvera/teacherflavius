@@ -1,12 +1,34 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="tf-brand-palette">
 <head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Turmas com vagas disponíveis - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="supabase_config.js?v=20260715-1"></script>
-  <script src="auth.js?v=20260730-1"></script>
+    <script src="/module_loader.js?v=20260902-2"></script>
+<script src="auth.js?v=20260730-1"></script>
   <link rel="stylesheet" href="professor.css?v=20260715-1">
   <style>
     .container{max-width:1050px}.intro{color:#cbd5e1;line-height:1.6;text-align:center;margin:-4px auto 20px;max-width:780px}.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px}.summary-card{padding:16px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(255,255,255,.04);text-align:center}.summary-card span{display:block;color:#94a3b8;font-size:11px;margin-bottom:6px}.summary-card strong{display:block;color:#f8fafc;font-size:28px}.vacancy-list{display:grid;gap:12px}.vacancy-card{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:17px;border:1px solid rgba(255,255,255,.09);border-radius:17px;background:rgba(255,255,255,.035)}.class-name{color:#f8fafc;font-size:18px;font-weight:bold;line-height:1.35}.class-meta{color:#94a3b8;font-size:12px;line-height:1.55;margin-top:5px}.spots{min-width:110px;text-align:center;border-radius:14px;padding:12px;background:rgba(74,222,128,.10);border:1px solid rgba(74,222,128,.25)}.spots strong{display:block;color:#86efac;font-size:27px}.spots span{display:block;color:#bbf7d0;font-size:10px;margin-top:3px}.empty,.error{padding:20px;border:1px solid rgba(255,255,255,.08);border-radius:15px;text-align:center;color:#94a3b8;background:rgba(255,255,255,.035);line-height:1.6}.error{color:#fca5a5}.refresh-row{text-align:right;margin-bottom:12px}.refresh-button{border:1px solid rgba(129,140,248,.38);border-radius:10px;background:rgba(129,140,248,.1);color:#e0e7ff;padding:9px 12px;font:inherit;font-size:11px;font-weight:bold;cursor:pointer}.refresh-button:disabled{opacity:.55;cursor:wait}@media(max-width:650px){.summary-grid{grid-template-columns:1fr}.vacancy-card{grid-template-columns:1fr}.spots{min-width:0}}
@@ -14,6 +36,11 @@
   <link rel="stylesheet" href="/relatorios-vagas-turmas/vagas_visual.css?v=20260901-1">
 </head>
 <body class="auth-checking">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <div class="container">
     <div class="top-links"><a class="top-link" href="/professor.html">ÁREA DO PROFESSOR</a><a class="top-link" href="/turmas/">TURMAS</a><a class="top-link" href="/">HOME</a></div>
     <div class="header"><div><span class="badge">TEACHER FLÁVIO</span></div><h1>Turmas com vagas disponíveis</h1><div id="pageStatus" class="status">Verificando credenciais de professor...</div></div>
@@ -45,6 +72,11 @@
     init();
   </script>
   <script src="/relatorios-vagas-turmas/vagas_visual.js?v=20260901-1"></script>
-  <script defer src="/site_footer.js?v=20260814-1"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
+
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script src="/site_page_runtime.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260814-1"></script>
 </body>
 </html>

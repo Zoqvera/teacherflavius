@@ -2,8 +2,8 @@
   "use strict";
 
   try {
-    const sourceUrl = "https://raw.githubusercontent.com/Zoqvera/teacherflavius/main/perfil_dos_alunos.html";
-    const response = await fetch(sourceUrl, { cache: "no-store" });
+    const sourceUrl = "/perfil_dos_alunos";
+    const response = await fetch(sourceUrl, { cache: "no-store", credentials: "same-origin" });
     if (!response.ok) throw new Error("Não foi possível carregar a página de perfis.");
 
     const html = await response.text();
@@ -13,7 +13,7 @@
       .replace('href="professor.html"', 'href="/professor/"')
       .replace('href="index.html"', 'href="/"')
       .replace("supabase_config.js?v=20260429-8", "supabase_config.js?v=20260826-1")
-      .replace("</body>", '<script src="/tipo_turma_alunos.js?v=20260807-1"><\/script>\n<script src="/perfil_dos_alunos_vencimento.js?v=20260901-1"><\/script>\n<script src="/perfil-dos-alunos/perfil_dos_alunos_visual.js?v=20260901-1"><\/script>\n</body>');
+      .replace("</body>", '<script src="/tipo_turma_alunos.js?v=20260807-1"><\/script>\n<script src="/perfil_dos_alunos_vencimento.js?v=20260908-3"><\/script>\n<script src="/perfil-dos-alunos/perfil_dos_alunos_visual.js?v=20260901-1"><\/script>\n</body>');
 
     document.open();
     document.write(enhancedHtml);

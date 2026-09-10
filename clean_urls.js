@@ -40,7 +40,7 @@
     "/quarta-feira-18h.html": "/quarta-feira-18h/",
     "/quarta-feira-20h.html": "/quarta-feira-20h/",
     "/quarta-feira-21h.html": "/quarta-feira-21h/",
-    "/quero_conhecer.html": "/quero-conhecer/",
+    "/quero_conhecer.html": "/curso-de-ingles-online/",
     "/quinta-feira-09h.html": "/quinta-feira-09h/",
     "/quinta-feira-10h.html": "/quinta-feira-10h/",
     "/quinta-feira-12h.html": "/quinta-feira-12h/",
@@ -76,6 +76,11 @@
     "/turmas.html": "/turmas/"
   };
 
+  const TOP_LEVEL_CANONICAL_ROUTES = Object.freeze({
+    "/relatorios": "/relatorios/",
+    "/relatorios.html": "/relatorios/"
+  });
+
   function decodedPath(pathname) {
     try { return decodeURIComponent(pathname); } catch (error) { return pathname; }
   }
@@ -87,10 +92,21 @@
     return null;
   }
 
+  function redirectSpecialTopLevelRoute() {
+    if (window.self !== window.top) return false;
+    const canonicalPath = TOP_LEVEL_CANONICAL_ROUTES[decodedPath(window.location.pathname)];
+    if (!canonicalPath) return false;
+
+    const canonicalUrl = new URL(window.location.href);
+    canonicalUrl.pathname = canonicalPath;
+    window.location.replace(canonicalUrl.pathname + canonicalUrl.search + canonicalUrl.hash);
+    return true;
+  }
+
   function cleanInternalUrl(value) {
     if (!value) return null;
     let url;
-    try { url = new URL(value, window.location.href); } catch (error) { return null; }
+    try { url = new URL(value, document.baseURI || window.location.href); } catch (error) { return null; }
     if (url.origin !== window.location.origin) return null;
 
     const clean = cleanPath(url.pathname);
@@ -173,6 +189,7 @@
   }
 
   function install() {
+    if (redirectSpecialTopLevelRoute()) return;
     rewriteElement(document.documentElement);
     normalizeCurrentAddress();
     const observer = new MutationObserver(function (mutations) {

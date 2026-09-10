@@ -1,0 +1,165 @@
+name: Production availability
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "health.json"
+      - "netlify.toml"
+      - "netlify/**"
+      - "recursos/como-escolher-curso-de-ingles-online/index.html"
+      - "scripts/build_static_site.py"
+      - "scripts/check_health_endpoint.py"
+      - "scripts/postprocess_production.py"
+      - ".github/workflows/production-availability.yml"
+  push:
+    branches: [main]
+    paths:
+      - "health.json"
+      - "netlify.toml"
+      - "netlify/**"
+      - "recursos/como-escolher-curso-de-ingles-online/index.html"
+      - "scripts/build_static_site.py"
+      - "scripts/check_health_endpoint.py"
+      - "scripts/postprocess_production.py"
+      - ".github/workflows/production-availability.yml"
+  schedule:
+    - cron: "7,37 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-availability
+  cancel-in-progress: true
+
+jobs:
+  availability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate production build
+        run: |
+          python3 scripts/build_static_site.py
+          python3 scripts/postprocess_production.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          static_health = json.loads(Path("health.json").read_text(encoding="utf-8"))
+          assert static_health.get("status") == "ok", static_health
+          assert static_health.get("service") == "teacherflavius.com", static_health
+
+          generated_health = json.loads(Path("_site/health.json").read_text(encoding="utf-8"))
+          assert generated_health.get("status") == "ok", generated_health
+          assert generated_health.get("service") == "teacherflavius.com", generated_health
+          assert len(generated_health.get("commit", "")) == 40, generated_health
+          print("Generated health endpoint is valid:", generated_health["commit"][:12])
+          PY
+
+      - name: Resolve production DNS
+        if: github.event_name != 'pull_request'
+        run: |
+          python3 - <<'PY'
+          import socket
+
+          for host in ("teacherflavius.com", "www.teacherflavius.com"):
+              addresses = sorted({
+                  entry[4][0]
+                  for entry in socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+              })
+              if not addresses:
+                  raise SystemExit(f"DNS did not resolve {host}")
+              print(host, "->", ", ".join(addresses))
+          PY
+
+      - name: Check HTTPS health endpoint
+        if: github.event_name != 'pull_request'
+        run: |
+          python3 scripts/check_health_endpoint.py \
+            https://teacherflavius.com/health.json \
+            --attempts 18 \
+            --delay 5
+
+      - name: Check published resource freshness
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://teacherflavius.com/recursos/como-escolher-curso-de-ingles-online/"
+          expected='Como escolher um curso de inglês pela internet?'
+
+          for attempt in $(seq 1 18); do
+            curl --fail --silent --show-error --connect-timeout 10 --max-time 20 \
+              -D /tmp/resource-headers.txt \
+              -o /tmp/resource.html \
+              "${url}?deploy=${GITHUB_SHA}&attempt=${attempt}" || true
+
+            if grep -Fq "$expected" /tmp/resource.html; then
+              echo "Published resource is current on attempt ${attempt}."
+              grep -Eai '^(age|cache-control|cf-cache-status|etag|last-modified|server|cf-ray):' \
+                /tmp/resource-headers.txt || true
+              exit 0
+            fi
+
+            echo "Published resource is still stale on attempt ${attempt}."
+            grep -Eo '<h1>[^<]*</h1>' /tmp/resource.html | head -1 || true
+            grep -Eai '^(age|cache-control|cf-cache-status|etag|last-modified|server|cf-ray):' \
+              /tmp/resource-headers.txt || true
+            sleep 5
+          done
+
+          echo "Published resource did not expose the expected content."
+          exit 1
+
+      - name: Check production security headers
+        if: github.event_name != 'pull_request'
+        run: |
+          curl --fail --silent --show-error --connect-timeout 10 --max-time 20 \
+            -D /tmp/headers.txt -o /dev/null https://teacherflavius.com/
+          grep -Eiq '^strict-transport-security:' /tmp/headers.txt
+          grep -Eiq '^x-content-type-options:[[:space:]]*nosniff' /tmp/headers.txt
+          grep -Eiq '^content-security-policy-report-only:' /tmp/headers.txt
+          grep -Eiq '^referrer-policy:' /tmp/headers.txt
+
+      - name: Check canonical redirects
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          expect_redirect() {
+            local source="$1"
+            local expected_prefix="$2"
+            local result code target
+            result="$(curl --silent --show-error --connect-timeout 10 --max-time 20 \
+              -o /dev/null -w '%{http_code} %{redirect_url}' "$source")"
+            code="${result%% *}"
+            target="${result#* }"
+            case "$code" in
+              301|302|307|308) ;;
+              *) echo "Expected redirect from $source, got HTTP $code"; exit 1 ;;
+            esac
+            case "$target" in
+              "$expected_prefix"*) echo "$source -> $target" ;;
+              *) echo "Unexpected redirect target from $source: $target"; exit 1 ;;
+            esac
+          }
+
+          expect_redirect "http://teacherflavius.com/" "https://teacherflavius.com"
+          expect_redirect "https://www.teacherflavius.com/" "https://teacherflavius.com"
+
+      - name: Check TLS certificate lifetime
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo | openssl s_client \
+            -servername teacherflavius.com \
+            -connect teacherflavius.com:443 \
+            -showcerts 2>/dev/null \
+            | openssl x509 -outform PEM > /tmp/teacherflavius-cert.pem
+          openssl x509 -in /tmp/teacherflavius-cert.pem -noout -subject -issuer -dates
+          openssl x509 -in /tmp/teacherflavius-cert.pem -checkend 1814400 -noout

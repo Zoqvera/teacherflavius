@@ -1,16 +1,43 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Área do Professor - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="supabase_config.js?v=20260715-1"></script>
-  <script src="auth.js?v=20260730-1"></script>
+    <script src="/module_loader.js?v=20260902-2"></script>
+<script src="auth.js?v=20260730-1"></script>
   <link rel="stylesheet" href="professor.css?v=20260820-1">
   <link rel="stylesheet" href="/professor/professor_visual.css?v=20260901-1">
 </head>
 <body class="auth-checking">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <div class="container">
     <div class="top-links"><a class="top-link" href="/">HOME</a><a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a></div>
     <div class="header"><div><span class="badge">TEACHER FLÁVIO</span></div><h1>Área do Professor</h1><div id="adminStatus" class="status">Verificando credenciais de professor...</div></div>
@@ -45,6 +72,7 @@
       <a class="menu-button" href="/relatorios/" draggable="true" data-card-id="relatorios"><span><span class="icon" aria-hidden="true"></span>RELATÓRIOS</span><span class="arrow">›</span></a>
     </div>
   </div>
+  <script src="/resource_waiter.js?v=20260902-2"></script>
   <script>
     (function () {
       const STORAGE_KEY = "teacherFlavius.professorCardOrder.v1";
@@ -67,15 +95,25 @@
       const status = document.getElementById("upcomingBirthdaysStatus");
       const list = document.getElementById("upcomingBirthdaysList");
       const DAY_MS = 86400000;
+      const AUTH_MAX_ATTEMPTS = 40;
+      const AUTH_RETRY_DELAY_MS = 100;
 
-      function sleep(ms) { return new Promise(function(resolve){ setTimeout(resolve, ms); }); }
+      function authResourcesAreReady() {
+        return !!(
+          window.Auth &&
+          typeof window.Auth.getClient === "function" &&
+          typeof window.Auth.getSession === "function"
+        );
+      }
 
-      async function waitForAuth() {
-        for (let attempt = 0; attempt < 40; attempt++) {
-          if (window.Auth && Auth.getClient && Auth.getSession) return true;
-          await sleep(100);
-        }
-        return false;
+      function waitForAuth() {
+        if (!window.ResourceWaiter) return Promise.resolve(false);
+
+        return window.ResourceWaiter.waitUntil(authResourcesAreReady, {
+          maxAttempts: AUTH_MAX_ATTEMPTS,
+          delayMs: AUTH_RETRY_DELAY_MS,
+          finalCheck: false
+        });
       }
 
       function saoPauloTodayParts() {
@@ -183,8 +221,8 @@
       async function initializeBirthdaysCard() {
         try {
           if (!(await waitForAuth())) throw new Error("Autenticação indisponível.");
-          const session = await Auth.getSession();
-          const client = Auth.getClient();
+          const session = await window.Auth.getSession();
+          const client = window.Auth.getClient();
           if (!session || !session.user || !client) throw new Error("Sessão não encontrada.");
 
           const adminResponse = await client.rpc("is_teacher_admin");
@@ -216,9 +254,14 @@
       }
     })();
   </script>
-  <script src="professor_home.js?v=20260715-1"></script>
+  <script src="professor_home.js?v=20260902-1"></script>
   <script src="/professor/professor_icons.js?v=20260901-1"></script>
   <script src="animated_cards.js?v=20260715-1"></script>
-  <script defer src="/site_footer.js?v=20260820-desktop-menu-1"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
+
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script src="/site_page_runtime.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260820-desktop-menu-1"></script>
 </body>
 </html>

@@ -1,16 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Área do Estudante - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="supabase_config.js?v=20260430-3"></script>
-  <script src="auth.js?v=20260430-3"></script>
+    <script src="/module_loader.js?v=20260902-2"></script>
+<script src="auth.js?v=20260430-3"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260430-3">
   <link rel="stylesheet" href="area_do_estudante.css?v=20260901-1">
+  <link rel="stylesheet" href="/profile_completion_prompt.css?v=20260902-1">
 </head>
 <body class="auth-checking student-dashboard">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <div class="container">
     <div class="top-links">
       <a class="top-link" href="/">HOME</a>
@@ -24,6 +52,17 @@
     </div>
     <p class="dashboard-intro">Comece pelo que precisa da sua atenção agora. Os demais recursos ficam organizados por objetivo.</p>
     <div class="divider"></div>
+
+    <section id="profileSetupPrompt" class="profile-setup-prompt" aria-labelledby="profileSetupTitle" hidden>
+      <span class="profile-setup-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </span>
+      <div class="profile-setup-copy">
+        <strong id="profileSetupTitle">Informe sua disponibilidade quando puder</strong>
+        <span>Isso ajuda a organizar turmas, horários e reposições. Você pode alterar esses dados a qualquer momento.</span>
+      </div>
+      <a class="profile-setup-action" href="/perfil/#disponibilidade">INFORMAR HORÁRIOS</a>
+    </section>
 
     <div class="menu-groups">
       <section id="professorAreaSection" class="menu-group single" aria-label="Área do professor" hidden>
@@ -115,6 +154,9 @@
           <a id="guiaDoEstudanteLink" class="support-link" href="/guia-do-estudante/">
             <span><span class="support-icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M2 5.5A2.5 2.5 0 0 1 4.5 3H10a2 2 0 0 1 2 2v16a3 3 0 0 0-3-3H2Z"/><path d="M22 5.5A2.5 2.5 0 0 0 19.5 3H14a2 2 0 0 0-2 2v16a3 3 0 0 1 3-3h7Z"/></svg></span>Guia do estudante</span><span class="support-arrow" aria-hidden="true">›</span>
           </a>
+          <a class="support-link" href="https://zoqvera.github.io/Speak-First-Fix-it-Later/" target="_blank" rel="noopener noreferrer">
+            <span><span class="support-icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg></span>Ebook Speak First. Fix It Later.</span><span class="support-arrow" aria-hidden="true">›</span>
+          </a>
           <a class="support-link" href="/perfil/">
             <span><span class="support-icon" aria-hidden="true"><svg class="tf-icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Meu perfil</span><span class="support-arrow" aria-hidden="true">›</span>
           </a>
@@ -133,9 +175,15 @@
     </div>
   </div>
 
-  <script src="area_do_estudante.js?v=20260807-2"></script>
+  <script src="/resource_waiter.js?v=20260902-1"></script>
+  <script src="area_do_estudante.js?v=20260902-2"></script>
   <script src="animated_cards.js?v=20260430-3"></script>
   <script defer src="/mobile_top_navigation.js?v=20260820-close-1"></script>
-  <script defer src="/site_footer.js?v=20260820-ux-3"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
+
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script src="/site_page_runtime.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260820-ux-3"></script>
 </body>
 </html>

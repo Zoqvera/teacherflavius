@@ -4,11 +4,12 @@
   if (window.__teacherFlaviusGoogleOnlyAccessLoaded) return;
   window.__teacherFlaviusGoogleOnlyAccessLoaded = true;
 
-  let enforcing = false;
+  const AUTH_WAIT_OPTIONS = Object.freeze({
+    maxAttempts: 30,
+    delayMs: 100
+  });
 
-  function sleep(ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
-  }
+  let enforcing = false;
 
   function isLoginPage() {
     const path = window.location.pathname || "/";
@@ -20,12 +21,13 @@
     return value.startsWith("/") && !value.startsWith("//") ? value : "/area-do-estudante/";
   }
 
-  async function waitForAuth() {
-    for (let i = 0; i < 30; i++) {
-      if (window.Auth && Auth.getClient && Auth.getSession && Auth.getUserIdentities) return true;
-      await sleep(100);
-    }
+  function authResourcesAreReady() {
     return !!(window.Auth && Auth.getClient && Auth.getSession && Auth.getUserIdentities);
+  }
+
+  async function waitForAuth() {
+    if (!window.ResourceWaiter) return false;
+    return window.ResourceWaiter.waitUntil(authResourcesAreReady, AUTH_WAIT_OPTIONS);
   }
 
   function disablePasswordSignIn() {

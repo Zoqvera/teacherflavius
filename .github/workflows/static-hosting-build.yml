@@ -10,6 +10,41 @@ on:
       - "**/*.xml"
       - "**/*.txt"
       - "scripts/build_static_site.py"
+      - "scripts/static_build_pipeline.py"
+      - "scripts/static_build_runner.py"
+      - "scripts/static_build_summary.py"
+      - "scripts/static_publish_workspace.py"
+      - "scripts/static_publish_requirements.py"
+      - "scripts/static_publish_leaks.py"
+      - "scripts/static_site_files.py"
+      - "scripts/static_site_html.py"
+      - "scripts/static_dependency_runtime.py"
+      - "scripts/static_html_baseline.py"
+      - "scripts/static_whatsapp_links.py"
+      - "scripts/static_site_dependencies.py"
+      - "scripts/static_site_routes.py"
+      - "scripts/static_hosting_headers.py"
+      - "scripts/static_site_validation.py"
+      - "scripts/html_script_dependency.py"
+      - "scripts/html_script_dependency_transform.py"
+      - "scripts/script_dependency_spec.py"
+      - "scripts/materialize_site.py"
+      - "scripts/materialization_profiles.py"
+      - "scripts/postprocess_production.py"
+      - "scripts/production_postprocess_runner.py"
+      - "scripts/production_html_transform.py"
+      - "scripts/production_homepage.py"
+      - "scripts/production_course_authority.py"
+      - "scripts/production_course_authority_content.py"
+      - "scripts/production_health.py"
+      - "scripts/inject_auth_module_loader.py"
+      - "scripts/inject_site_asset_loader.py"
+      - "scripts/inject_site_runtime_config.py"
+      - "scripts/inject_site_page_runtime.py"
+      - "scripts/inject_site_privacy_analytics.py"
+      - "scripts/inject_google_tag_manager.py"
+      - "scripts/google_tag_manager_html.py"
+      - "scripts/materialize_clean_route_aliases.py"
       - "netlify/_headers"
       - "netlify.toml"
       - ".github/workflows/static-hosting-build.yml"
@@ -24,6 +59,41 @@ on:
       - "**/*.xml"
       - "**/*.txt"
       - "scripts/build_static_site.py"
+      - "scripts/static_build_pipeline.py"
+      - "scripts/static_build_runner.py"
+      - "scripts/static_build_summary.py"
+      - "scripts/static_publish_workspace.py"
+      - "scripts/static_publish_requirements.py"
+      - "scripts/static_publish_leaks.py"
+      - "scripts/static_site_files.py"
+      - "scripts/static_site_html.py"
+      - "scripts/static_dependency_runtime.py"
+      - "scripts/static_html_baseline.py"
+      - "scripts/static_whatsapp_links.py"
+      - "scripts/static_site_dependencies.py"
+      - "scripts/static_site_routes.py"
+      - "scripts/static_hosting_headers.py"
+      - "scripts/static_site_validation.py"
+      - "scripts/html_script_dependency.py"
+      - "scripts/html_script_dependency_transform.py"
+      - "scripts/script_dependency_spec.py"
+      - "scripts/materialize_site.py"
+      - "scripts/materialization_profiles.py"
+      - "scripts/postprocess_production.py"
+      - "scripts/production_postprocess_runner.py"
+      - "scripts/production_html_transform.py"
+      - "scripts/production_homepage.py"
+      - "scripts/production_course_authority.py"
+      - "scripts/production_course_authority_content.py"
+      - "scripts/production_health.py"
+      - "scripts/inject_auth_module_loader.py"
+      - "scripts/inject_site_asset_loader.py"
+      - "scripts/inject_site_runtime_config.py"
+      - "scripts/inject_site_page_runtime.py"
+      - "scripts/inject_site_privacy_analytics.py"
+      - "scripts/inject_google_tag_manager.py"
+      - "scripts/google_tag_manager_html.py"
+      - "scripts/materialize_clean_route_aliases.py"
       - "netlify/_headers"
       - "netlify.toml"
       - ".github/workflows/static-hosting-build.yml"
@@ -36,10 +106,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build static site
         run: python3 scripts/build_static_site.py
+
+      - name: Materialize and validate publish bootstrap
+        run: |
+          python3 scripts/materialize_site.py --profile publish
+          grep -q 'GTM-K2NWR2NK' _site/index.html
+          grep -q 'googletagmanager.com/ns.html?id=GTM-K2NWR2NK' _site/index.html
+
+      - name: Run production post-processing
+        run: |
+          python3 scripts/postprocess_production.py
+          test -f _site/health.json
+          grep -q '"status":"ok"' _site/health.json
+          grep -q 'id="academicAuthorityProof"' _site/curso-de-ingles-online/index.html
+
+      - name: Validate GitHub Pages source compatibility
+        run: |
+          tmp_dir="$(mktemp -d)"
+          cp -R . "$tmp_dir/site"
+          rm -rf "$tmp_dir/site/_site" "$tmp_dir/site/.git"
+          python3 "$tmp_dir/site/scripts/materialize_site.py" --site-root "$tmp_dir/site" --profile github-pages
+          grep -q '/module_loader.js?v=20260902-2' "$tmp_dir/site/login.html"
+          grep -q '/site_asset_loader.js?v=20260902-1' "$tmp_dir/site/index.html"
+          grep -q '/site_runtime_config.js?v=20260903-1' "$tmp_dir/site/index.html"
+          grep -q '/site_page_runtime.js?v=' "$tmp_dir/site/index.html"
+          grep -q '/site_privacy_analytics.js?v=20260902-1' "$tmp_dir/site/index.html"
+          grep -q 'GTM-K2NWR2NK' "$tmp_dir/site/index.html"
+          test -f "$tmp_dir/site/mensalidades/index.html"
 
       - name: Validate publish output
         run: |
@@ -49,6 +146,11 @@ jobs:
           test -f _site/sitemap.xml
           test -f _site/error_monitor.js
           test -f _site/responsive_compat.css
+          test -f _site/site_asset_loader.js
+          test -f _site/site_runtime_config.js
+          test -f _site/site_page_runtime.js
+          test -f _site/site_privacy_analytics.js
+          test -f _site/health.json
           test -f _site/_headers
           if find _site -type f \( -name '*.md' -o -name '*.sql' -o -name '*.py' -o -name '*.yml' -o -name '*.yaml' -o -name '*.toml' \) | grep -q .; then
             echo 'Operational file leaked into _site'

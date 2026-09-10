@@ -1,12 +1,34 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Roteiro de Estudos - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="supabase_config.js?v=20260428-2"></script>
-  <script src="auth.js?v=20260428-2"></script>
+    <script src="/module_loader.js?v=20260902-2"></script>
+<script src="auth.js?v=20260428-2"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260428-2">
   <style>
     .page-description {
@@ -67,39 +89,23 @@
     .completion-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 12px;
       padding-top: 12px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
-    .completion-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1.5px solid rgba(129,140,248,0.45);
-      background: rgba(129,140,248,0.10);
-      color: #c4b5fd;
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-family: Georgia, serif;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      letter-spacing: 0.4px;
-      min-width: 150px;
-    }
-    .lesson-card.done .completion-button {
-      border-color: rgba(110,231,183,0.45);
-      background: rgba(110,231,183,0.10);
-      color: #6ee7b7;
-    }
-    .completion-button:disabled { opacity: 0.65; cursor: not-allowed; }
     .completion-status { color: #94a3b8; font-size: 12px; text-align: right; min-width: 90px; }
     .completion-status.saved { color: #6ee7b7; }
     .completion-status.error { color: #fca5a5; }
+    .completion-policy-note { color: #a7f3d0; font-size: 13px; line-height: 1.5; max-width: 760px; margin: 10px auto 0; text-align: center; }
   </style>
 </head>
 <body class="auth-checking">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <div class="container">
     <div class="top-links">
       <a class="top-link" href="area_do_estudante.html">ÁREA DO ESTUDANTE</a>
@@ -110,6 +116,7 @@
       <div><span class="badge">TEACHER FLÁVIO</span></div>
       <h1>Roteiro de Estudos</h1>
       <p class="page-description">ESSAS LIÇÕES DEVEM SER APRESENTADAS DURANTE A AULA. VOCÊ SE PREPARA EM CASA E VAI PARA A AULA E APRESENTA.</p>
+      <p class="completion-policy-note">O registro de conclusão das lições é controlado pelo professor e não pode ser alterado pelo aluno.</p>
       <div id="loginStatus" class="status">Verificando acesso...</div>
     </div>
 
@@ -211,21 +218,12 @@
             renderLessonTitle(lessonId, title) +
             renderLessonDescription(lessonId) +
             '<div class="completion-row">' +
-              '<button type="button" class="completion-button" data-lesson-id="' + lessonId + '">' + (isDone ? 'MARCAR COMO NÃO FEITA' : 'MARCAR COMO FEITA') + '</button>' +
-              '<span class="completion-status ' + (isDone ? 'saved' : '') + '" id="status-' + lessonId + '">' + (isDone ? 'Feita' : 'Não feita') + '</span>' +
+              '<span class="completion-status ' + (isDone ? 'saved' : '') + '" id="status-' + lessonId + '">' + (isDone ? 'Conclusão registrada' : 'Aguardando registro do professor') + '</span>' +
             '</div>' +
           '</div>'
         );
       }
       grid.innerHTML = cards.join("");
-
-      document.querySelectorAll(".completion-button").forEach(function (button) {
-        button.addEventListener("click", function () {
-          const lessonId = button.dataset.lessonId;
-          const nextValue = !(completedLessons.get(lessonId) === true);
-          saveLessonCompletion(lessonId, nextValue, button);
-        });
-      });
     }
 
     async function loadCompletedLessons() {
@@ -241,46 +239,6 @@
       }));
     }
 
-    async function saveLessonCompletion(lessonId, completed, button) {
-      const lessonNumber = Number(lessonId.replace("lesson-", ""));
-      const lessonTitle = "Lição " + lessonNumber;
-      const card = document.querySelector('[data-lesson-id="' + lessonId + '"]');
-      const status = document.getElementById("status-" + lessonId);
-      const client = Auth.getClient();
-
-      button.disabled = true;
-      button.textContent = "SALVANDO...";
-      status.className = "completion-status";
-      status.textContent = "Salvando...";
-
-      try {
-        const response = await client
-          .from("study_roadmap_completion")
-          .upsert({
-            user_id: currentUser.id,
-            lesson_id: lessonId,
-            lesson_number: lessonNumber,
-            lesson_title: lessonTitle,
-            completed: completed,
-            completed_at: completed ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString()
-          }, { onConflict: "user_id,lesson_id" });
-
-        if (response.error) throw response.error;
-
-        completedLessons.set(lessonId, completed);
-        if (card) card.classList.toggle("done", completed);
-        button.textContent = completed ? "MARCAR COMO NÃO FEITA" : "MARCAR COMO FEITA";
-        status.className = "completion-status saved";
-        status.textContent = completed ? "Feita" : "Não feita";
-      } catch (error) {
-        status.className = "completion-status error";
-        status.textContent = "Erro ao salvar";
-        button.textContent = completed ? "MARCAR COMO FEITA" : "MARCAR COMO NÃO FEITA";
-      } finally {
-        button.disabled = false;
-      }
-    }
 
     async function guardPage() {
       const resourcesReady = await waitForAuthResources();
@@ -304,7 +262,7 @@
         await loadCompletedLessons();
         setStatus("Aluno conectado: " + currentUser.email + ".");
       } catch (error) {
-        setStatus("Não foi possível carregar seus registros. Execute supabase_roteiro_de_estudos.sql no Supabase.");
+        setStatus("Não foi possível carregar seus registros de conclusão.");
       }
 
       document.body.classList.remove("auth-checking");
@@ -314,6 +272,11 @@
     guardPage();
   </script>
   <script src="animated_cards.js?v=20260428-2"></script>
-  <script defer src="/site_footer.js?v=20260814-1"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
+
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script src="/site_page_runtime.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260814-1"></script>
 </body>
 </html>

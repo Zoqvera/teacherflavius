@@ -1,0 +1,115 @@
+.course-free-class-section {
+  padding: 56px 0 72px;
+  background: var(--paper);
+}
+
+.course-free-class-card {
+  width: min(900px, 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.course-free-class-copy {
+  padding: 34px 28px 22px;
+  text-align: center;
+}
+
+.course-free-class-copy h2 {
+  margin-bottom: 12px;
+  color: var(--navy);
+  font-family: var(--tf-font-display, Georgia, serif);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -.03em;
+}
+
+.course-free-class-copy p {
+  max-width: 680px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 1.06rem;
+}
+
+.course-free-class-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #081525;
+}
+
+.course-free-class-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.course-free-class-trigger {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  cursor: pointer;
+  background: #081525;
+}
+
+.course-free-class-trigger-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(.58);
+  transition: filter .18s ease;
+}
+
+.course-free-class-trigger:hover .course-free-class-trigger-image {
+  filter: brightness(.7);
+}
+
+.course-free-class-trigger:focus-visible {
+  outline: 4px solid var(--gold);
+  outline-offset: -7px;
+}
+
+.course-free-class-play {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 82px;
+  height: 82px;
+  place-items: center;
+  padding-left: 5px;
+  border: 3px solid rgba(255, 255, 255, .92);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  font-size: 32px;
+  line-height: 1;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .32);
+}
+
+@media (max-width: 620px) {
+  .course-free-class-section {
+    padding: 40px 0 56px;
+  }
+
+  .course-free-class-copy {
+    padding: 28px 22px 20px;
+  }
+
+  .course-free-class-play {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+}

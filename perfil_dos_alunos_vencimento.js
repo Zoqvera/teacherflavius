@@ -1,50 +1,11 @@
 (function () {
   "use strict";
 
-  function getDueDayInput() {
+  if (window.__teacherFlaviusPerfilDueDayReadonlyLoaded) return;
+  window.__teacherFlaviusPerfilDueDayReadonlyLoaded = true;
+
+  function getDueDayField() {
     return document.getElementById("studentDueDay");
-  }
-
-  function ensureDueDayField() {
-    const form = document.getElementById("studentBillingForm");
-    const monthlyFeeInput = document.getElementById("studentMonthlyFee");
-    if (!form || !monthlyFeeInput) return false;
-
-    const title = document.getElementById("studentBillingTitle");
-    if (title) title.textContent = "Mensalidade e vencimento";
-
-    let dueDayInput = getDueDayInput();
-    if (!dueDayInput) {
-      const label = document.createElement("label");
-      label.className = "modal-help";
-      label.htmlFor = "studentDueDay";
-      label.textContent = "Dia do vencimento";
-
-      dueDayInput = document.createElement("input");
-      dueDayInput.id = "studentDueDay";
-      dueDayInput.className = "class-select";
-      dueDayInput.type = "number";
-      dueDayInput.min = "1";
-      dueDayInput.max = "31";
-      dueDayInput.step = "1";
-      dueDayInput.inputMode = "numeric";
-      dueDayInput.placeholder = "Ex.: 10";
-      dueDayInput.required = true;
-
-      const note = form.querySelector(".billing-modal-note");
-      if (note) {
-        form.insertBefore(label, note);
-        form.insertBefore(dueDayInput, note);
-        note.textContent = "Defina o valor mensal e o dia do vencimento. O mês inicial da cobrança, o status e as observações existentes serão preservados. Para uma nova configuração, a cobrança começa no mês atual.";
-      } else {
-        monthlyFeeInput.insertAdjacentElement("afterend", label);
-        label.insertAdjacentElement("afterend", dueDayInput);
-      }
-    }
-
-    const saveButton = document.getElementById("saveStudentBillingButton");
-    if (saveButton && !saveButton.disabled) saveButton.textContent = "SALVAR MENSALIDADE";
-    return true;
   }
 
   function getBillingSettings(studentId) {
@@ -56,14 +17,55 @@
     return {};
   }
 
+  function ensureDueDayField() {
+    const form = document.getElementById("studentBillingForm");
+    const monthlyFeeInput = document.getElementById("studentMonthlyFee");
+    if (!form || !monthlyFeeInput) return false;
+
+    const title = document.getElementById("studentBillingTitle");
+    if (title) title.textContent = "Mensalidade";
+
+    let field = getDueDayField();
+    if (!field) {
+      const label = document.createElement("label");
+      label.className = "modal-help";
+      label.htmlFor = "studentDueDay";
+      label.textContent = "Vencimento escolhido pelo aluno";
+
+      field = document.createElement("input");
+      field.id = "studentDueDay";
+      field.className = "class-select";
+      field.type = "text";
+      field.readOnly = true;
+      field.placeholder = "Aguardando escolha do aluno";
+
+      const note = form.querySelector(".billing-modal-note");
+      if (note) {
+        form.insertBefore(label, note);
+        form.insertBefore(field, note);
+        note.textContent = "Defina apenas o valor mensal. O vencimento é escolhido pelo aluno e o início da cobrança é calculado automaticamente pelo sistema.";
+      } else {
+        monthlyFeeInput.insertAdjacentElement("afterend", label);
+        label.insertAdjacentElement("afterend", field);
+      }
+    }
+
+    const saveButton = document.getElementById("saveStudentBillingButton");
+    if (saveButton && !saveButton.disabled) saveButton.textContent = "SALVAR MENSALIDADE";
+    return true;
+  }
+
   function populateDueDay(studentId) {
     ensureDueDayField();
-    const input = getDueDayInput();
-    if (!input) return;
+    const field = getDueDayField();
+    if (!field) return;
 
     const settings = getBillingSettings(studentId);
     const dueDay = Number(settings.due_day);
-    input.value = Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31 ? String(dueDay) : "10";
+    field.value = Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31
+      ? "Dia " + dueDay
+      : "";
+    field.placeholder = "Aguardando escolha do aluno";
   }
 
   function annotateBillingCards() {
@@ -75,10 +77,15 @@
 
         const settings = getBillingSettings(button.dataset.studentId);
         const dueDay = Number(settings.due_day);
-        if (settings.monthly_fee == null || !Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) return;
+        if (Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31) {
+          const suffix = " · vence dia " + dueDay;
+          if (!badge.textContent.includes("vence dia")) badge.textContent += suffix;
+          return;
+        }
 
-        const suffix = " · vence dia " + dueDay;
-        if (!badge.textContent.includes("vence dia")) badge.textContent += suffix;
+        if (!badge.textContent.includes("vencimento aguardando aluno")) {
+          badge.textContent += " · vencimento aguardando aluno";
+        }
       });
     } catch (_) {}
   }
@@ -97,8 +104,6 @@
     event.preventDefault();
     event.stopImmediatePropagation();
 
-    ensureDueDayField();
-
     let selection;
     try {
       selection = typeof selectedStudentForBilling !== "undefined" ? selectedStudentForBilling : null;
@@ -108,10 +113,8 @@
     if (!selection) return;
 
     const feeInput = document.getElementById("studentMonthlyFee");
-    const dueDayInput = getDueDayInput();
     const button = document.getElementById("saveStudentBillingButton");
     const fee = Number(String(feeInput ? feeInput.value : "").replace(",", "."));
-    const dueDay = Number(dueDayInput ? dueDayInput.value : "");
 
     if (!Number.isFinite(fee) || fee <= 0) {
       if (typeof setStudentBillingMessage === "function") {
@@ -120,16 +123,7 @@
       return;
     }
 
-    if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
-      if (typeof setStudentBillingMessage === "function") {
-        setStudentBillingMessage("Informe um dia de vencimento entre 1 e 31.", "error");
-      }
-      if (dueDayInput) dueDayInput.focus();
-      return;
-    }
-
     const settings = selection.settings || getBillingSettings(selection.studentId) || {};
-    const startMonth = settings.billing_start_month || (typeof getCurrentBillingMonth === "function" ? getCurrentBillingMonth() : new Date().toISOString().slice(0, 7) + "-01");
     const active = settings.monthly_fee == null ? true : settings.billing_active === true;
 
     if (button) {
@@ -137,7 +131,7 @@
       button.textContent = "SALVANDO...";
     }
     if (typeof setStudentBillingMessage === "function") {
-      setStudentBillingMessage("Salvando mensalidade e vencimento...", "empty");
+      setStudentBillingMessage("Salvando mensalidade...", "empty");
     }
 
     try {
@@ -145,8 +139,6 @@
       const response = await client.rpc("save_student_billing_settings", {
         target_student_id: selection.studentId,
         target_monthly_fee: fee,
-        target_due_day: dueDay,
-        target_billing_start_month: startMonth,
         target_active: active,
         target_notes: settings.billing_notes || ""
       });
@@ -166,19 +158,22 @@
       if (typeof closeStudentBillingModal === "function") closeStudentBillingModal();
 
       if (typeof setBillingStatusMessage === "function") {
+        const awaitingDueDay = response.data && response.data.awaiting_student_due_day === true;
         if (generation.error) {
           setBillingStatusMessage(
-            "Mensalidade e vencimento foram salvos, mas a cobrança do mês atual não pôde ser atualizada automaticamente: " + (generation.error.message || "erro desconhecido") + ".",
+            "Mensalidade salva, mas a cobrança não pôde ser atualizada automaticamente: " + (generation.error.message || "erro desconhecido") + ".",
             "warning"
           );
+        } else if (awaitingDueDay) {
+          setBillingStatusMessage("Mensalidade salva. Vencimento e início da cobrança serão finalizados automaticamente quando o aluno fizer a escolha.", "success");
         } else {
-          setBillingStatusMessage("Mensalidade e dia de vencimento atualizados com sucesso.", "success");
+          setBillingStatusMessage("Mensalidade atualizada. O calendário da cobrança permanece controlado pelo sistema.", "success");
         }
       }
       window.setTimeout(annotateBillingCards, 0);
     } catch (error) {
       if (typeof setStudentBillingMessage === "function") {
-        setStudentBillingMessage("Não foi possível salvar a mensalidade e o vencimento: " + (error.message || "erro desconhecido"), "error");
+        setStudentBillingMessage("Não foi possível salvar a mensalidade: " + (error.message || "erro desconhecido"), "error");
       }
     } finally {
       if (button) {
@@ -191,19 +186,19 @@
   function observeStudentCards() {
     const list = document.getElementById("studentProfilesList");
     if (!list || typeof MutationObserver === "undefined") return;
-    const observer = new MutationObserver(function () {
-      annotateBillingCards();
-    });
+    const observer = new MutationObserver(annotateBillingCards);
     observer.observe(list, { childList: true, subtree: true });
     annotateBillingCards();
   }
 
-  if (!ensureDueDayField()) {
-    document.addEventListener("DOMContentLoaded", ensureDueDayField, { once: true });
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", observeStudentCards, { once: true });
-  } else {
+  function initialize() {
+    ensureDueDayField();
     observeStudentCards();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize, { once: true });
+  } else {
+    initialize();
   }
 })();

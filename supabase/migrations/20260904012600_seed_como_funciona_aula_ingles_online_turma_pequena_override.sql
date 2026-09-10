@@ -1,0 +1,40 @@
+insert into public.page_content_overrides (page_key, content, updated_at)
+values (
+  'como-funciona-aula-de-ingles-online-em-turma-pequena',
+  jsonb_build_object(
+    'hero_eyebrow', 'Dinâmica de aula',
+    'hero_title', 'Como funciona uma aula de inglês online em turma pequena?',
+    'hero_intro', 'Uma turma pequena permite alternar momentos de interação coletiva, trabalho em pares, produção individual e feedback sem deixar o aluno longos períodos apenas assistindo.',
+    'short_answer_label', 'Resposta curta',
+    'short_answer_text', 'Em uma boa aula online de grupo pequeno, o aluno não passa o encontro inteiro ouvindo o professor. A aula costuma ter um objetivo comunicativo, preparação de vocabulário ou estruturas, tarefas em que os participantes usam o inglês, feedback e uma orientação clara sobre como continuar estudando depois.',
+    'beginning_title', 'O que acontece no começo da aula?',
+    'beginning_p1', 'O início pode servir para retomar o encontro anterior, ativar vocabulário e colocar os alunos em uso da língua desde cedo. Perguntas curtas, uma imagem, uma situação ou uma pequena revisão ajudam a trazer para a memória elementos que serão usados na tarefa principal.',
+    'beginning_p2', 'Essa etapa também permite que o professor perceba rapidamente dificuldades que precisam de atenção antes de avançar.',
+    'grammar_title', 'O professor precisa explicar gramática?',
+    'grammar_p1', 'Sim, quando a explicação é necessária. A questão não é eliminar explicações, mas colocá-las a serviço do uso da língua. Se uma estrutura ajuda o aluno a narrar uma experiência, comparar opções ou fazer uma solicitação, ela pode ser apresentada e praticada antes de uma tarefa mais aberta.',
+    'grammar_p2', 'O problema aparece quando a explicação ocupa quase todo o encontro e resta pouco tempo para o aluno testar o que acabou de aprender.',
+    'conversation_title', 'Como funciona a conversação em um grupo pequeno?',
+    'conversation_p1', 'Conversação não precisa significar simplesmente escolher um assunto e “falar livremente”. Ela pode ser organizada com objetivos. Os alunos podem entrevistar uns aos outros, comparar respostas, resolver uma situação, defender escolhas, reconstruir uma história ou completar uma tarefa usando informações diferentes.',
+    'conversation_p2', 'Com poucas pessoas, o professor consegue acompanhar as interações, alternar participantes e trazer de volta à turma pontos que merecem correção ou expansão.',
+    'errors_title', 'O que acontece quando alguém erra?',
+    'errors_p1', 'Nem todo erro precisa interromper a fala. Durante uma atividade voltada à fluência, o professor pode anotar padrões e discutir alguns deles depois. Em atividades mais controladas, pode fazer sentido corrigir imediatamente. A decisão depende do objetivo daquele momento.',
+    'errors_p2', 'O feedback pode incluir pronúncia, escolha de palavras, gramática, clareza e estratégias de comunicação. O importante é que o aluno saiba o que pode fazer diferente na próxima tentativa.',
+    'small_group_title', 'Por que quatro ou poucos alunos mudam a dinâmica?',
+    'small_group_p1', 'Quanto menor o grupo, mais combinações de interação podem ser feitas sem transformar a aula em espera. É possível trabalhar com todos juntos, formar pares e voltar rapidamente ao grupo para comparar respostas. Cada participante também tende a ser chamado a contribuir várias vezes.',
+    'small_group_p2', 'O grupo continua oferecendo algo que a aula individual não oferece da mesma maneira: a necessidade de compreender colegas, adaptar a própria fala e lidar com respostas variadas.',
+    'after_class_title', 'E depois da aula?',
+    'after_class_p1', 'O encontro ao vivo é apenas uma parte do processo. Uma boa continuidade pode incluir revisão do vocabulário usado, retomada dos erros mais importantes, escuta relacionada ao tema, leitura curta ou uma tarefa de produção.',
+    'after_class_p2', 'Quando o aluno sabe exatamente o que revisar, a aula seguinte pode partir de uma base mais sólida.',
+    'participation_title', 'Como saber se estou participando o suficiente?',
+    'participation_p1', 'Observe se você precisa falar várias vezes durante o encontro, se responde a colegas, se faz perguntas, se recebe feedback e se precisa produzir frases que não estavam prontas no material. Se a maior parte da aula poderia acontecer da mesma forma com sua câmera e microfone desligados, a interação provavelmente está pequena demais.',
+    'related_title', 'Leituras relacionadas',
+    'related_link_1', 'Aulas em grupos pequenos funcionam?',
+    'related_link_2', 'Como perder o medo de falar inglês?',
+    'related_link_3', 'Como estudar inglês entre as aulas?',
+    'cta_title', 'Como esse formato aparece no TeacherFlavius.com?',
+    'cta_text', 'As aulas são online e ao vivo, em turmas de até quatro alunos, com material de apoio e orientação de estudos.',
+    'cta_button', 'Ver detalhes das aulas'
+  ),
+  now()
+)
+on conflict (page_key) do nothing;

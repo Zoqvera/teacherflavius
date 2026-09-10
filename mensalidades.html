@@ -1,13 +1,35 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Controle de Mensalidades - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="supabase_config.js?v=20260715-1"></script>
-  <script src="auth.js?v=20260715-1"></script>
+    <script src="/module_loader.js?v=20260902-2"></script>
+<script src="auth.js?v=20260715-1"></script>
   <link rel="stylesheet" href="professor.css?v=20260715-1">
   <style>
     .container { max-width: 1240px; }
@@ -19,7 +41,7 @@
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 14px;
     }
 
@@ -54,6 +76,7 @@
     }
 
     .summary-card.received { border-color: rgba(52,211,153,0.35); }
+    .summary-card.exempt { border-color: rgba(167,139,250,0.42); }
     .summary-card.due-soon { border-color: rgba(251,191,36,0.35); }
     .summary-card.overdue { border-color: rgba(248,113,113,0.38); }
 
@@ -237,6 +260,12 @@
       color: #a7f3d0;
     }
 
+    .status-exempt {
+      background: rgba(139,92,246,0.12);
+      border-color: rgba(167,139,250,0.42);
+      color: #ddd6fe;
+    }
+
     .status-due-soon {
       background: rgba(245,158,11,0.12);
       border-color: rgba(251,191,36,0.4);
@@ -385,6 +414,11 @@
   </style>
 </head>
 <body class="auth-checking">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <div class="container">
     <div class="top-links">
       <a class="top-link" href="/">HOME</a>
@@ -410,6 +444,10 @@
         <article class="summary-card">
           <span>Mensalidades pagas</span>
           <strong id="summaryPaid">0</strong>
+        </article>
+        <article class="summary-card exempt">
+          <span>Mensalidades isentas</span>
+          <strong id="summaryExempt">0</strong>
         </article>
         <article class="summary-card due-soon">
           <span>A vencer em 7 dias</span>
@@ -443,6 +481,7 @@
             <select id="statusFilter" class="finance-select">
               <option value="all">Todos</option>
               <option value="paid">Pagos</option>
+              <option value="exempt">Isentos</option>
               <option value="due_soon">A vencer</option>
               <option value="open">Em aberto</option>
               <option value="overdue">Atrasados</option>
@@ -471,79 +510,9 @@
         <p id="tuitionEmptyState" class="empty-state" hidden></p>
       </section>
 
-      <section class="finance-panel">
-        <div class="panel-header">
-          <div>
-            <h2>Configuração por aluno</h2>
-            <p>Defina o valor mensal, o dia de vencimento e quando a cobrança começa.</p>
-          </div>
-          <span id="configuredStudentsCount" class="configured-count">0 configurados</span>
-        </div>
-
-        <div class="data-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Aluno</th>
-                <th>Valor mensal</th>
-                <th>Vencimento</th>
-                <th>Início</th>
-                <th>Situação</th>
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody id="billingStudentsBody"></tbody>
-          </table>
-        </div>
-        <p id="billingStudentsEmpty" class="empty-state" hidden></p>
-      </section>
     </main>
   </div>
 
-  <div id="settingsModal" class="modal-backdrop">
-    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <div class="modal-header">
-        <div>
-          <h2 id="settingsTitle">Configurar mensalidade</h2>
-          <p id="settingsStudentName"></p>
-        </div>
-        <button class="modal-close" type="button" data-close-modal="settingsModal" aria-label="Fechar">×</button>
-      </div>
-
-      <form id="settingsForm">
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="monthlyFee">Valor mensal (R$)</label>
-            <input id="monthlyFee" class="finance-input" type="number" min="0.01" step="0.01" required>
-          </div>
-          <div class="form-field">
-            <label for="dueDay">Dia do vencimento</label>
-            <input id="dueDay" class="finance-input" type="number" min="1" max="31" step="1" required>
-          </div>
-          <div class="form-field">
-            <label for="billingStartMonth">Início da cobrança</label>
-            <input id="billingStartMonth" class="finance-input" type="month" required>
-          </div>
-          <div class="form-field">
-            <label>Situação da cobrança</label>
-            <label class="checkbox-field">
-              <input id="billingActive" type="checkbox">
-              Cobrança mensal ativa
-            </label>
-          </div>
-          <div class="form-field full">
-            <label for="billingNotes">Observações administrativas</label>
-            <textarea id="billingNotes" class="finance-textarea" placeholder="Informação opcional"></textarea>
-          </div>
-        </div>
-        <p id="settingsMessage" class="form-message" hidden></p>
-        <div class="modal-actions">
-          <button class="finance-button" type="button" data-close-modal="settingsModal">CANCELAR</button>
-          <button id="saveSettingsButton" class="finance-button primary" type="submit">SALVAR CONFIGURAÇÃO</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <div id="paymentModal" class="modal-backdrop">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
@@ -618,8 +587,13 @@
     </div>
   </div>
 
-  <script src="mensalidades.js?v=20260819-1"></script>
+  <script src="mensalidades.js?v=20260909-1"></script>
   <script src="animated_cards.js?v=20260715-1"></script>
-  <script defer src="/site_footer.js?v=20260814-1"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
+
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script src="/site_page_runtime.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260814-1"></script>
 </body>
 </html>

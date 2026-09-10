@@ -1,0 +1,273 @@
+@import url('/brand_palette.css?v=20260820-3');
+
+html.tf-brand-palette body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(37, 99, 235, 0.14), transparent 34%),
+    linear-gradient(180deg, #07111f 0%, #0b1728 46%, #08111e 100%);
+  color: var(--tf-text-primary, #f8fafc);
+  font-family: 'Open Sans', Arial, sans-serif;
+  padding: 32px 16px 56px;
+}
+
+html.tf-brand-palette .container { max-width: 1040px; }
+html.tf-brand-palette .top-links { margin-bottom: 30px; }
+
+html.tf-brand-palette .top-link {
+  min-height: 44px;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  background: rgba(15, 35, 58, 0.72);
+  color: #bfdbfe;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: .03em;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+html.tf-brand-palette .top-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.54);
+  background: rgba(22, 50, 82, 0.88);
+}
+
+html.tf-brand-palette .header { margin-bottom: 30px; }
+
+html.tf-brand-palette .badge {
+  background: rgba(37, 99, 235, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.34);
+  color: #bfdbfe;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+
+html.tf-brand-palette h1,
+html.tf-brand-palette .summary-value,
+html.tf-brand-palette .progress-title,
+html.tf-brand-palette .activity-title,
+html.tf-brand-palette .filter-button,
+html.tf-brand-palette .activity-action {
+  font-family: 'Montserrat', Arial, sans-serif;
+}
+
+html.tf-brand-palette h1 { letter-spacing: -.025em; }
+html.tf-brand-palette .subtitle { max-width: 720px; margin-inline: auto; color: #b8c8db; }
+html.tf-brand-palette .status { min-height: 20px; color: #8fa6be; }
+html.tf-brand-palette .summary-grid { gap: 14px; }
+
+html.tf-brand-palette .summary-card,
+html.tf-brand-palette .progress-panel,
+html.tf-brand-palette .empty,
+html.tf-brand-palette .blocked-panel {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15, 35, 58, 0.88), rgba(10, 27, 46, 0.86));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+html.tf-brand-palette .summary-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 124px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+html.tf-brand-palette .summary-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #3b82f6;
+}
+
+html.tf-brand-palette .summary-card:nth-child(2)::before { background: #22c55e; }
+html.tf-brand-palette .summary-card:nth-child(3)::before { background: #f59e0b; }
+html.tf-brand-palette .summary-card:nth-child(4)::before { background: #60a5fa; }
+
+html.tf-brand-palette .summary-value {
+  font-size: clamp(28px, 4vw, 36px);
+  color: #f8fafc;
+}
+
+html.tf-brand-palette #doneCount { color: #86efac; }
+html.tf-brand-palette #pendingCount { color: #fcd34d; }
+html.tf-brand-palette #percentCount,
+html.tf-brand-palette .progress-percent { color: #93c5fd; }
+
+html.tf-brand-palette .summary-label {
+  color: #91a6bc;
+  font-family: 'Open Sans', Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+html.tf-brand-palette .progress-panel { padding: 20px; }
+html.tf-brand-palette .progress-title { color: #e8f1fb; font-weight: 700; }
+
+html.tf-brand-palette .progress-track {
+  height: 10px;
+  background: rgba(148, 163, 184, 0.13);
+  border: 1px solid rgba(148, 163, 184, 0.11);
+}
+
+html.tf-brand-palette .progress-fill {
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  transition: width .3s ease;
+}
+
+html.tf-brand-palette .progress-panel.is-complete .progress-fill {
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+}
+
+html.tf-brand-palette .filters { gap: 8px; margin-top: 24px; }
+
+html.tf-brand-palette .filter-button {
+  min-height: 44px;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  background: rgba(15, 35, 58, 0.7);
+  color: #b8c8db;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 16px;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+}
+
+html.tf-brand-palette .filter-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.48);
+  color: #dbeafe;
+}
+
+html.tf-brand-palette .filter-button.active {
+  background: #2563eb;
+  border-color: #60a5fa;
+  color: #fff;
+  box-shadow: 0 7px 18px rgba(37, 99, 235, 0.18);
+}
+
+html.tf-brand-palette .activity-list { gap: 14px; }
+
+html.tf-brand-palette .activity-card {
+  position: relative;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: linear-gradient(180deg, rgba(48, 36, 13, 0.34), rgba(20, 31, 44, 0.9));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+html.tf-brand-palette .activity-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: 16px 0 0 16px;
+  background: #f59e0b;
+}
+
+html.tf-brand-palette .activity-card.done {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(180deg, rgba(12, 53, 35, 0.38), rgba(15, 35, 48, 0.9));
+}
+
+html.tf-brand-palette .activity-card.done::before { background: #22c55e; }
+
+html.tf-brand-palette .activity-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(96, 165, 250, 0.42);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2);
+}
+
+html.tf-brand-palette .activity-title {
+  color: #f3f7fb;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+html.tf-brand-palette .activity-meta { color: #aebfd1; }
+
+html.tf-brand-palette .status-badge {
+  min-height: 28px;
+  gap: 7px;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: .02em;
+}
+
+html.tf-brand-palette .status-badge svg { width: 14px; height: 14px; flex: 0 0 auto; }
+
+html.tf-brand-palette .status-badge.done {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  color: #86efac;
+}
+
+html.tf-brand-palette .status-badge.pending {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  color: #fcd34d;
+}
+
+html.tf-brand-palette .activity-action {
+  min-width: 144px;
+  min-height: 44px;
+  border: 1px solid rgba(96, 165, 250, 0.38);
+  background: rgba(37, 99, 235, 0.14);
+  color: #dbeafe;
+  font-weight: 700;
+  letter-spacing: .01em;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease;
+}
+
+html.tf-brand-palette .activity-action:hover {
+  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.24);
+  border-color: rgba(96, 165, 250, 0.62);
+}
+
+html.tf-brand-palette .blocked-panel { color: #cbd9e7; }
+html.tf-brand-palette .empty { color: #94a9be; }
+
+html.tf-brand-palette :where(a, button):focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.5);
+  outline-offset: 3px;
+}
+
+@media (max-width: 899px) {
+  html.tf-brand-palette .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 639px) {
+  html.tf-brand-palette body { padding: 22px 12px 44px; }
+  html.tf-brand-palette .top-links,
+  html.tf-brand-palette .filters { display: grid; grid-template-columns: 1fr; }
+  html.tf-brand-palette .top-link,
+  html.tf-brand-palette .filter-button { width: 100%; }
+  html.tf-brand-palette .summary-grid { gap: 10px; }
+  html.tf-brand-palette .summary-card { min-height: 108px; padding: 14px 10px; }
+  html.tf-brand-palette .progress-head { align-items: flex-start; flex-direction: column; gap: 5px; }
+  html.tf-brand-palette .activity-card { grid-template-columns: 1fr; padding: 16px; }
+  html.tf-brand-palette .activity-action { width: 100%; }
+}
+
+@media (hover: none) {
+  html.tf-brand-palette .top-link:hover,
+  html.tf-brand-palette .filter-button:hover,
+  html.tf-brand-palette .activity-card:hover,
+  html.tf-brand-palette .activity-action:hover { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.tf-brand-palette *,
+  html.tf-brand-palette *::before,
+  html.tf-brand-palette *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

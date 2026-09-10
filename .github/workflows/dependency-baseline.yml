@@ -1,0 +1,55 @@
+name: Dependency baseline
+
+on:
+  push:
+    branches:
+      - main
+      - 'security/**'
+      - 'hosting/**'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Require approved Supabase SDK pin
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          approved = "2.112.3"
+          exact = re.compile(r"@supabase/supabase-js@(\d+\.\d+\.\d+)")
+          floating = re.compile(r"@supabase/supabase-js@2(?=[\"'/])")
+          findings = []
+          scanned = 0
+
+          candidates = list(Path('.').glob('*.html')) + list(Path('.').glob('*/*.html'))
+          edge_root = Path('supabase/functions')
+          if edge_root.exists():
+              candidates.extend(path for path in edge_root.rglob('*') if path.is_file() and path.suffix in {'.ts', '.js'})
+
+          for path in sorted(set(candidates)):
+              text = path.read_text(encoding='utf-8', errors='ignore')
+              if '@supabase/supabase-js@' not in text:
+                  continue
+              scanned += 1
+              if floating.search(text):
+                  findings.append(f"{path}: floating 2.x import")
+              for version in exact.findall(text):
+                  if version != approved:
+                      findings.append(f"{path}: {version} (expected {approved})")
+
+          if findings:
+              print('Unapproved Supabase SDK dependency found:')
+              print('\n'.join(findings))
+              sys.exit(1)
+
+          print(f'Validated exact Supabase SDK {approved} pin in {scanned} source files.')

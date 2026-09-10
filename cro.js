@@ -194,7 +194,7 @@
       '<div class="cro-mid-cta__card">',
       '<h2>Você pode experimentar o formato antes de se matricular.</h2>',
       '<p>Faça uma aula experimental gratuita, tire suas dúvidas diretamente com o professor e consulte os horários disponíveis.</p>',
-      '<a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR AULA EXPERIMENTAL GRÁTIS</a>',
+      '<a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR AULA EXPERIMENTAL GRATUITA</a>',
       '<a class="cro-mid-cta__secondary" href="/#aula-gratuita">Prefere assistir primeiro? Veja uma aula gratuita.</a>',
       '</div>'
     ].join("");
@@ -206,14 +206,14 @@
     var variant = getVariant();
     var buttons = Array.prototype.slice.call(document.querySelectorAll('a.btn-primary[href*="wa.me/"]'));
     var eligible = buttons.filter(function (button) {
-      return /AULA EXPERIMENTAL|AULA GRÁTIS/i.test(button.textContent || "");
+      return /AULA EXPERIMENTAL|AULA GRATUITA/i.test(button.textContent || "");
     });
     if (!eligible.length) return;
 
     eligible.forEach(function (button) {
       button.setAttribute("data-cro-experiment", EXPERIMENT_NAME);
       button.setAttribute("data-cro-variant", variant);
-      if (variant === "b") button.textContent = "QUERO FAZER UMA AULA GRÁTIS";
+      if (variant === "b") button.textContent = "QUERO FAZER UMA AULA GRATUITA";
     });
 
     track("cro_experiment_exposure", {

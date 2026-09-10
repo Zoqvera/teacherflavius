@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Relatórios - Teacher Flávio</title>
@@ -42,6 +63,11 @@
   <link rel="stylesheet" href="/relatorios/relatorios_visual.css?v=20260901-1">
 </head>
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <div class="container reports-shell">
     <div class="top-links">
       <a class="top-link" href="/">HOME</a>
@@ -72,7 +98,7 @@
       </button>
     </div>
     <section class="report-panel">
-      <iframe id="syncFrame" class="report-frame" src="about:blank" data-embed-src="/relatorios.html?v=20260820-reports-theme-1" title="Relatórios de sincronização"></iframe>
+      <iframe id="syncFrame" class="report-frame" src="about:blank" data-embed-src="/relatorios/sincronizacao/?v=20260910-reports-route-1" title="Relatórios de sincronização"></iframe>
       <iframe id="accessFrame" class="report-frame" src="about:blank" data-embed-src="/acessos_dos_alunos.html?v=20260820-reports-theme-1" title="Acessos dos alunos" hidden></iframe>
       <iframe id="vacancyFrame" class="report-frame" src="about:blank" data-embed-src="/relatorios_vagas_turmas.html?v=20260820-reports-theme-1" title="Turmas com vagas disponíveis" hidden></iframe>
       <iframe id="acquisitionFrame" class="report-frame" src="about:blank" data-embed-src="/marketing_acquisition/?v=20260901-2" title="Aquisição e inteligência artificial" hidden></iframe>
@@ -234,6 +260,11 @@
     });
   </script>
   <script src="/relatorios/relatorios_visual.js?v=20260901-1"></script>
-  <script defer src="/site_footer.js?v=20260820-desktop-menu-1"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
+
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script src="/site_page_runtime.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260820-desktop-menu-1"></script>
 </body>
 </html>

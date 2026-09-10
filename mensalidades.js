@@ -1,7 +1,5 @@
 let currentAdminSession = null;
-let billingStudents = [];
 let monthlyTuition = [];
-let selectedStudentId = null;
 let selectedTuitionId = null;
 
 const paymentMethodLabels = {
@@ -14,6 +12,7 @@ const paymentMethodLabels = {
 
 const statusMetadata = {
   paid: { label: "Pago", className: "status-paid" },
+  exempt: { label: "Isento", className: "status-exempt" },
   due_soon: { label: "A vencer", className: "status-due-soon" },
   overdue: { label: "Atrasado", className: "status-overdue" },
   open: { label: "Em aberto", className: "status-open" }
@@ -133,12 +132,6 @@ async function reconcileMercadoPagoPayments() {
   return response.data || {};
 }
 
-async function loadBillingStudents() {
-  const response = await Auth.getClient().rpc("get_teacher_billing_students");
-  if (response.error) throw response.error;
-  billingStudents = response.data || [];
-  renderBillingStudents();
-}
 
 async function generateSelectedMonth() {
   const response = await Auth.getClient().rpc("generate_monthly_tuition", {
@@ -189,6 +182,7 @@ function updateSummaryCards() {
 
   document.getElementById("summaryReceived").textContent = formatCurrency(received);
   document.getElementById("summaryPaid").textContent = String(counts.paid || 0);
+  document.getElementById("summaryExempt").textContent = String(counts.exempt || 0);
   document.getElementById("summaryDueSoon").textContent = String(counts.due_soon || 0);
   document.getElementById("summaryOverdue").textContent = String(counts.overdue || 0);
 }
@@ -206,6 +200,29 @@ function getFilteredTuition() {
   });
 }
 
+function getPaymentDescription(item) {
+  if (item.payment_status === "exempt") {
+    return item.payment_notes
+      ? "Isenta · " + escapeHtml(item.payment_notes)
+      : "Isenta";
+  }
+  if (!item.payment_date) return "—";
+  return formatDate(item.payment_date) + " · " +
+    escapeHtml(paymentMethodLabels[item.payment_method] || item.payment_method || "");
+}
+
+function getTuitionActions(item) {
+  const tuitionId = escapeHtml(item.tuition_id);
+  if (item.payment_status === "paid") {
+    return '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + tuitionId + '">ESTORNAR</button>';
+  }
+  if (item.payment_status === "exempt") {
+    return '<button class="table-action" type="button" data-action="remove-exemption" data-tuition-id="' + tuitionId + '">REMOVER ISENÇÃO</button>';
+  }
+  return '<button class="table-action success" type="button" data-action="pay" data-tuition-id="' + tuitionId + '">REGISTRAR</button>' +
+    '<button class="table-action" type="button" data-action="exempt" data-tuition-id="' + tuitionId + '">ISENTAR</button>';
+}
+
 function renderTuitionTable() {
   const body = document.getElementById("tuitionTableBody");
   const empty = document.getElementById("tuitionEmptyState");
@@ -216,19 +233,15 @@ function renderTuitionTable() {
     empty.hidden = false;
     empty.textContent = monthlyTuition.length
       ? "Nenhuma mensalidade corresponde aos filtros selecionados."
-      : "Nenhuma mensalidade foi gerada para este mês. Configure os alunos abaixo para iniciar.";
+      : "Nenhuma mensalidade foi gerada para este mês. Configure a cobrança no Perfil dos Alunos.";
     return;
   }
 
   empty.hidden = true;
   body.innerHTML = filtered.map(function (item) {
     const status = getStatusMeta(item.payment_status);
-    const paymentDescription = item.payment_date
-      ? formatDate(item.payment_date) + " · " + escapeHtml(paymentMethodLabels[item.payment_method] || item.payment_method || "")
-      : "—";
-    const primaryAction = item.payment_status === "paid"
-      ? '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + escapeHtml(item.tuition_id) + '">ESTORNAR</button>'
-      : '<button class="table-action success" type="button" data-action="pay" data-tuition-id="' + escapeHtml(item.tuition_id) + '">REGISTRAR</button>';
+    const paymentDescription = getPaymentDescription(item);
+    const tuitionActions = getTuitionActions(item);
 
     return '<tr>' +
       '<td><strong>' + escapeHtml(item.student_name || "Aluno") + '</strong><small>' + escapeHtml(item.student_email || "") + '</small></td>' +
@@ -237,7 +250,7 @@ function renderTuitionTable() {
       '<td>' + escapeHtml(formatCurrency(item.amount_due)) + '</td>' +
       '<td>' + paymentDescription + '</td>' +
       '<td><span class="status-pill ' + status.className + '">' + status.label + '</span></td>' +
-      '<td><div class="table-actions">' + primaryAction +
+      '<td><div class="table-actions">' + tuitionActions +
         '<button class="table-action" type="button" data-action="history" data-student-id="' + escapeHtml(item.student_id) + '">HISTÓRICO</button>' +
       '</div></td>' +
     '</tr>';
@@ -250,39 +263,6 @@ function renderDashboard() {
   document.getElementById("exportButton").disabled = getFilteredTuition().length === 0;
 }
 
-function renderBillingStudents() {
-  const body = document.getElementById("billingStudentsBody");
-  const empty = document.getElementById("billingStudentsEmpty");
-  const configured = billingStudents.filter(function (student) { return student.monthly_fee != null; }).length;
-
-  document.getElementById("configuredStudentsCount").textContent = configured + " de " + billingStudents.length + " configurados";
-
-  if (!billingStudents.length) {
-    body.innerHTML = "";
-    empty.hidden = false;
-    empty.textContent = "Nenhum aluno matriculado foi encontrado.";
-    return;
-  }
-
-  empty.hidden = true;
-  body.innerHTML = billingStudents.map(function (student) {
-    const configuredStudent = student.monthly_fee != null;
-    const active = student.billing_active === true;
-    const statusLabel = !configuredStudent ? "Não configurado" : (active ? "Ativo" : "Suspenso");
-    const statusClass = !configuredStudent ? "status-open" : (active ? "status-paid" : "status-overdue");
-
-    return '<tr>' +
-      '<td><strong>' + escapeHtml(student.name || "Aluno") + '</strong><small>' + escapeHtml(student.email || "") + '</small></td>' +
-      '<td>' + (configuredStudent ? escapeHtml(formatCurrency(student.monthly_fee)) : "—") + '</td>' +
-      '<td>' + (configuredStudent ? "Dia " + escapeHtml(student.due_day) : "—") + '</td>' +
-      '<td>' + (student.billing_start_month ? escapeHtml(formatReferenceMonth(student.billing_start_month)) : "—") + '</td>' +
-      '<td><span class="status-pill ' + statusClass + '">' + statusLabel + '</span></td>' +
-      '<td><button class="table-action" type="button" data-action="settings" data-student-id="' + escapeHtml(student.student_id) + '">' +
-        (configuredStudent ? "EDITAR" : "CONFIGURAR") +
-      '</button></td>' +
-    '</tr>';
-  }).join("");
-}
 
 function openModal(id) {
   const modal = document.getElementById(id);
@@ -296,59 +276,6 @@ function closeModal(id) {
   modal.classList.remove("open");
 }
 
-function openSettingsModal(studentId) {
-  const student = billingStudents.find(function (item) { return String(item.student_id) === String(studentId); });
-  if (!student) return;
-
-  selectedStudentId = student.student_id;
-  document.getElementById("settingsStudentName").textContent = student.name || student.email || "Aluno";
-  document.getElementById("monthlyFee").value = student.monthly_fee != null ? Number(student.monthly_fee).toFixed(2) : "";
-  document.getElementById("dueDay").value = student.due_day || 10;
-  document.getElementById("billingStartMonth").value = student.billing_start_month
-    ? String(student.billing_start_month).slice(0, 7)
-    : document.getElementById("referenceMonth").value;
-  document.getElementById("billingActive").checked = student.monthly_fee == null || student.billing_active === true;
-  document.getElementById("billingNotes").value = student.billing_notes || "";
-  setFormMessage("settingsMessage", "", "");
-  openModal("settingsModal");
-}
-
-async function saveBillingSettings(event) {
-  event.preventDefault();
-  const button = document.getElementById("saveSettingsButton");
-  const fee = Number(document.getElementById("monthlyFee").value);
-  const dueDay = Number(document.getElementById("dueDay").value);
-  const startMonth = document.getElementById("billingStartMonth").value;
-
-  if (!fee || fee <= 0 || !Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31 || !startMonth) {
-    setFormMessage("settingsMessage", "Informe valor, vencimento e mês inicial válidos.", "error");
-    return;
-  }
-
-  setButtonBusy(button, true, "SALVANDO...");
-  setFormMessage("settingsMessage", "Salvando configuração...", "info");
-
-  try {
-    const response = await Auth.getClient().rpc("save_student_billing_settings", {
-      target_student_id: selectedStudentId,
-      target_monthly_fee: fee,
-      target_due_day: dueDay,
-      target_billing_start_month: startMonth + "-01",
-      target_active: document.getElementById("billingActive").checked,
-      target_notes: document.getElementById("billingNotes").value.trim()
-    });
-    if (response.error) throw response.error;
-
-    await loadBillingStudents();
-    await loadSelectedMonth({ generate: true });
-    closeModal("settingsModal");
-    setPageMessage("Configuração financeira atualizada.", "success");
-  } catch (error) {
-    setFormMessage("settingsMessage", "Não foi possível salvar: " + (error.message || "erro desconhecido"), "error");
-  } finally {
-    setButtonBusy(button, false);
-  }
-}
 
 function openPaymentModal(tuitionId) {
   const item = monthlyTuition.find(function (tuition) { return String(tuition.tuition_id) === String(tuitionId); });
@@ -398,6 +325,44 @@ async function registerPayment(event) {
   }
 }
 
+async function exemptTuition(tuitionId) {
+  const reason = window.prompt("Motivo da isenção (opcional). Clique em Cancelar para desistir:", "");
+  if (reason === null) return;
+  if (!window.confirm("Confirma a isenção desta mensalidade? O valor não será contabilizado como recebimento.")) return;
+
+  try {
+    setPageMessage("Registrando isenção...", "info");
+    const response = await Auth.getClient().rpc("mark_tuition_exempt", {
+      target_tuition_id: tuitionId,
+      target_reason: reason.trim()
+    });
+    if (response.error) throw response.error;
+    await loadSelectedMonth({ generate: false });
+    setPageMessage("Mensalidade marcada como ISENTA. O valor foi excluído dos recebimentos do mês.", "success");
+  } catch (error) {
+    setPageMessage("Não foi possível aplicar a isenção: " + (error.message || "erro desconhecido"), "error");
+  }
+}
+
+async function removeTuitionExemption(tuitionId) {
+  const reason = window.prompt("Motivo da remoção da isenção (opcional). Clique em Cancelar para desistir:", "");
+  if (reason === null) return;
+  if (!window.confirm("Confirma a remoção da isenção? A mensalidade voltará a ficar em aberto.")) return;
+
+  try {
+    setPageMessage("Removendo isenção...", "info");
+    const response = await Auth.getClient().rpc("reverse_tuition_exemption", {
+      target_tuition_id: tuitionId,
+      target_reason: reason.trim()
+    });
+    if (response.error) throw response.error;
+    await loadSelectedMonth({ generate: false });
+    setPageMessage("Isenção removida. A mensalidade voltou a ficar em aberto.", "success");
+  } catch (error) {
+    setPageMessage("Não foi possível remover a isenção: " + (error.message || "erro desconhecido"), "error");
+  }
+}
+
 async function reversePayment(tuitionId) {
   const reason = window.prompt("Motivo do estorno (opcional). Clique em Cancelar para desistir:", "");
   if (reason === null) return;
@@ -418,10 +383,10 @@ async function reversePayment(tuitionId) {
 }
 
 async function openHistoryModal(studentId) {
-  const student = billingStudents.find(function (item) { return String(item.student_id) === String(studentId); });
+  const student = monthlyTuition.find(function (item) { return String(item.student_id) === String(studentId); });
   const body = document.getElementById("historyTableBody");
   const empty = document.getElementById("historyEmpty");
-  document.getElementById("historyStudentName").textContent = student ? (student.name || student.email || "Aluno") : "Aluno";
+  document.getElementById("historyStudentName").textContent = student ? (student.student_name || student.student_email || "Aluno") : "Aluno";
   body.innerHTML = "";
   empty.hidden = false;
   empty.textContent = "Carregando histórico...";
@@ -495,14 +460,12 @@ function handleTuitionTableClick(event) {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
   if (button.dataset.action === "pay") openPaymentModal(button.dataset.tuitionId);
+  if (button.dataset.action === "exempt") exemptTuition(button.dataset.tuitionId);
+  if (button.dataset.action === "remove-exemption") removeTuitionExemption(button.dataset.tuitionId);
   if (button.dataset.action === "reverse") reversePayment(button.dataset.tuitionId);
   if (button.dataset.action === "history") openHistoryModal(button.dataset.studentId);
 }
 
-function handleBillingTableClick(event) {
-  const button = event.target.closest('button[data-action="settings"]');
-  if (button) openSettingsModal(button.dataset.studentId);
-}
 
 function attachEvents() {
   document.getElementById("referenceMonth").addEventListener("change", function () {
@@ -530,8 +493,6 @@ function attachEvents() {
   });
   document.getElementById("exportButton").addEventListener("click", exportCurrentView);
   document.getElementById("tuitionTableBody").addEventListener("click", handleTuitionTableClick);
-  document.getElementById("billingStudentsBody").addEventListener("click", handleBillingTableClick);
-  document.getElementById("settingsForm").addEventListener("submit", saveBillingSettings);
   document.getElementById("paymentForm").addEventListener("submit", registerPayment);
 
   document.querySelectorAll("[data-close-modal]").forEach(function (button) {
@@ -587,7 +548,6 @@ async function initializePage() {
     } catch (error) {
       console.warn("Não foi possível reconciliar pagamentos do Mercado Pago:", error);
     }
-    await loadBillingStudents();
     await loadSelectedMonth({ generate: true });
     if (Number(reconciliation.approved || 0) > 0) {
       setPageMessage(

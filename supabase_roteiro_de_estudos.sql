@@ -1,5 +1,5 @@
--- Tabela para registrar as lições concluídas no Roteiro de Estudos
--- Execute no Supabase em SQL Editor > Run.
+-- Tabela para registrar as lições concluídas no Roteiro de Estudos.
+-- O aluno pode consultar o próprio progresso, mas somente o professor pode alterá-lo.
 
 create table if not exists public.study_roadmap_completion (
   id uuid primary key default gen_random_uuid(),
@@ -26,20 +26,33 @@ drop policy if exists "Alunos podem ver suas lições do roteiro" on public.stud
 create policy "Alunos podem ver suas lições do roteiro"
   on public.study_roadmap_completion
   for select
-  using (auth.uid() = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id);
 
 drop policy if exists "Alunos podem inserir suas lições do roteiro" on public.study_roadmap_completion;
-create policy "Alunos podem inserir suas lições do roteiro"
+drop policy if exists "Alunos podem atualizar suas lições do roteiro" on public.study_roadmap_completion;
+
+drop policy if exists "Professor pode inserir progresso do roteiro" on public.study_roadmap_completion;
+create policy "Professor pode inserir progresso do roteiro"
   on public.study_roadmap_completion
   for insert
-  with check (auth.uid() = user_id);
+  to authenticated
+  with check ((select public.is_teacher_admin()));
 
-drop policy if exists "Alunos podem atualizar suas lições do roteiro" on public.study_roadmap_completion;
-create policy "Alunos podem atualizar suas lições do roteiro"
+drop policy if exists "Professor pode atualizar progresso do roteiro" on public.study_roadmap_completion;
+create policy "Professor pode atualizar progresso do roteiro"
   on public.study_roadmap_completion
   for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  to authenticated
+  using ((select public.is_teacher_admin()))
+  with check ((select public.is_teacher_admin()));
+
+drop policy if exists "Professor pode excluir progresso do roteiro" on public.study_roadmap_completion;
+create policy "Professor pode excluir progresso do roteiro"
+  on public.study_roadmap_completion
+  for delete
+  to authenticated
+  using ((select public.is_teacher_admin()));
 
 create or replace function public.set_study_roadmap_completion_updated_at()
 returns trigger as $$

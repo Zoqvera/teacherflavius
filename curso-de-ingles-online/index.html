@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Curso de Inglês Online e Ao Vivo | Teacher Flávio</title>
@@ -35,10 +56,11 @@
         "@id":"https://teacherflavius.com/#teacher",
         "name":"Flávio de Sousa Freitas",
         "alternateName":"Teacher Flávio",
-        "url":"https://teacherflavius.com/",
+        "url":"https://teacherflavius.com/sobre/",
         "jobTitle":"Professor de inglês",
         "description":"Professor de inglês com mais de 15 anos de experiência, Doutor e Mestre em Linguística, Bacharel em Tradução e certificado CELTA.",
-        "sameAs":["https://www.instagram.com/teacher.flavius"]
+        "knowsAbout":["ensino de língua inglesa","linguística","tradução","aprendizagem de inglês","tecnologias aplicadas à linguagem"],
+        "sameAs":["https://www.instagram.com/teacher.flavius","http://lattes.cnpq.br/7428463010998872","https://orcid.org/0000-0002-8972-5870"]
       },
       {
         "@type":"Course",
@@ -57,6 +79,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&amp;family=Open+Sans:wght@400;500;600;700&amp;display=swap">
   <link id="teacher-flavius-brand-palette" rel="stylesheet" href="/brand_palette.css?v=20260820-3">
+  <link rel="stylesheet" href="/course_funnel.css?v=20260902-1">
+  <link rel="stylesheet" href="/course_free_class.css?v=20260909-1">
+  <link rel="stylesheet" href="/course_tools.css?v=20260909-1">
   <style>
     :root{--navy:#02102b;--navy2:#063e7d;--paper:#f7f9fc;--white:#fff;--text:#12213b;--muted:#64748b;--green:#168c4d;--green2:#0f713d;--gold:#e6bd68;--line:rgba(2,16,43,.13);--shadow:0 24px 70px rgba(2,16,43,.16)}
     *{box-sizing:border-box}html{scroll-behavior:smooth;overflow-x:clip}body{margin:0;min-width:320px;overflow-x:clip;background:var(--paper);color:var(--text);font-family:var(--tf-font-body,Inter,system-ui,sans-serif);line-height:1.65}a{color:inherit}.shell{width:min(1120px,calc(100% - 32px));margin:0 auto}.eyebrow{margin:0 0 12px;color:#116cba;font-size:.8rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase}h1,h2,h3,p{margin-top:0}
@@ -72,11 +97,16 @@
     .cta{padding:76px 0 92px;text-align:center}.cta-card{padding:44px 28px;border-radius:30px;background:linear-gradient(135deg,#010918,var(--navy2));color:#fff;box-shadow:var(--shadow)}.cta-card h2{max-width:780px;margin:0 auto 12px;font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(2rem,5vw,3.5rem);line-height:1.08}.cta-card p{max-width:680px;margin:0 auto 24px;color:rgba(255,255,255,.8)}.back-link{display:inline-block;margin-top:18px;color:rgba(255,255,255,.72);font-weight:800;text-underline-offset:4px}
     .btn:focus-visible,.nav-link:focus-visible,.brand:focus-visible{outline:4px solid var(--gold);outline-offset:4px}
     @media(min-width:760px){.hero-grid{grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr)}.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.levels-path{grid-template-columns:1fr 1fr 2fr}.teacher{grid-template-columns:1fr .72fr}}
-    @media(max-width:520px){.shell{width:min(100% - 24px,1120px)}.topbar{padding:14px 0}.brand{font-size:.9rem}.nav-link{padding:8px 10px;font-size:.74rem}.hero{padding-top:102px}.hero h1{font-size:clamp(2.05rem,10vw,2.55rem)}.actions{display:grid}.btn{width:100%}.hero-card{padding:22px}.section{padding:58px 0}.levels-total{display:block;text-align:center}.levels-total-time{margin-top:14px}}
+    @media(max-width:520px){.shell{width:min(100% - 24px,1120px)}.topbar{padding:14px 0}.brand{font-size:.9rem}.nav-link{padding:8px 10px;font-size:.74rem}.hero{padding-top:102px}.hero h1{font-size:clamp(2.05rem,10vw,2.55rem)}.actions{display:grid}.btn{width:100%}.hero-card{padding:22px}.section{padding:58px 0}.levels-total{display:block;text-align:center}.levels-total-time{margin-top:14px}.comparison{overflow:visible}.comparison table{width:100%;min-width:0;table-layout:fixed}.comparison th,.comparison td{padding:14px 10px;font-size:.9rem;line-height:1.4;vertical-align:top;white-space:normal;overflow-wrap:anywhere;word-break:normal}.comparison th:first-child,.comparison td:first-child{width:56%}.comparison th:last-child,.comparison td:last-child{width:44%}.comparison .yes{font-size:.88rem}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
   </style>
 </head>
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
   <header class="topbar">
     <div class="shell topbar-inner">
       <a class="brand" href="/">Teacher Flávio</a>
@@ -91,24 +121,25 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="shell hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">Curso de inglês online</p>
-          <h1 id="hero-title">Curso de inglês online com aulas ao vivo e turmas de até 4 alunos.</h1>
+          <p class="eyebrow">Curso de inglês</p>
+          <h1 id="hero-title">Aulas ao vivo e turmas de até 4 alunos.</h1>
           <p class="lead">Estude inglês com um professor experiente, encontros semanais ao vivo, prática durante as aulas e orientação para continuar aprendendo entre um encontro e outro.</p>
           <ul class="hero-points">
-            <li>4 aulas ao vivo por mês</li>
+            <li>4 aulas ao vivo de 60 minutos por mês</li>
             <li>Turmas de até 4 alunos</li>
-            <li>Material de apoio</li>
-            <li>Cronograma de estudos</li>
+            <li>Material e plataforma incluídos</li>
+            <li>Sem taxa de matrícula ou fidelidade</li>
           </ul>
           <div class="actions">
-            <a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR AULA EXPERIMENTAL GRÁTIS</a>
+            <a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR AULA EXPERIMENTAL GRATUITA</a>
             <a class="btn btn-light" href="#como-funciona">COMO FUNCIONA</a>
           </div>
         </div>
         <aside class="hero-card" aria-label="Resumo do investimento">
           <p class="eyebrow">Investimento</p>
           <p class="price">R$ 99,90</p>
-          <p>por mês, com quatro aulas online e ao vivo.</p>
+          <p>por mês, com quatro aulas online e ao vivo de 60 minutos.</p>
+          <p><strong>Pagamento:</strong> mensalidade recorrente no Pix ou cartão. Sem taxa de matrícula, sem material cobrado à parte e sem fidelidade — você pode cancelar quando quiser.</p>
           <p><strong>Professor:</strong> Teacher Flávio — Doutor e Mestre em Linguística, Bacharel em Tradução e certificado CELTA.</p>
         </aside>
       </div>
@@ -118,14 +149,56 @@
       <div class="shell">
         <div class="section-head">
           <p class="eyebrow">Como funciona o curso</p>
-          <h2 id="how-title">Aula ao vivo, prática e uma rotina de estudo entre os encontros.</h2>
+          <h2 id="how-title">Aulas práticas e rotina de estudos</h2>
           <p>O objetivo é combinar contato real com o professor e os colegas com uma rotina simples de estudo fora da aula.</p>
         </div>
         <div class="steps">
-          <article class="step"><h3>Você participa da aula ao vivo</h3><p>Os encontros acontecem online e permitem interação direta com o professor e com os colegas da turma.</p></article>
+          <article class="step"><h3>Você participa da aula ao vivo</h3><p>Os encontros acontecem na plataforma Google Meet e permitem interação direta com o professor e com os colegas da turma.</p></article>
           <article class="step"><h3>Pratica inglês durante a aula</h3><p>As atividades priorizam participação e uso do idioma, em vez de uma experiência baseada apenas em assistir a conteúdo.</p></article>
           <article class="step"><h3>Recebe material de apoio</h3><p>O conteúdo complementar ajuda a revisar e ampliar o que foi trabalhado no encontro.</p></article>
           <article class="step"><h3>Continua estudando com um cronograma</h3><p>O cronograma organiza o estudo entre as aulas para favorecer constância e continuidade.</p></article>
+        </div>
+        <aside class="card course-tools-card" aria-labelledby="course-tools-title">
+          <h3 id="course-tools-title">Ferramentas necessárias</h3>
+          <div class="course-tools-list">
+            <div class="course-tools-devices">
+              <p class="course-tools-item">
+                <span class="course-tools-emoji" aria-hidden="true">📱</span>
+                <span>Celular com acesso à internet</span>
+              </p>
+              <span class="course-tools-or">ou</span>
+              <p class="course-tools-item">
+                <span class="course-tools-emoji" aria-hidden="true">💻</span>
+                <span>Computador com internet</span>
+              </p>
+            </div>
+            <span class="course-tools-plus" role="img" aria-label="mais">+</span>
+            <p class="course-tools-item">
+              <span class="course-tools-emoji" aria-hidden="true">📝</span>
+              <span>Caderno ou bloco de notas</span>
+            </p>
+            <span class="course-tools-plus" role="img" aria-label="mais">+</span>
+            <p class="course-tools-item">
+              <span class="course-tools-emoji" aria-hidden="true">🖋️</span>
+              <span>Caneta ou lápis</span>
+            </p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="course-free-class-section" aria-labelledby="course-free-class-title">
+      <div class="shell">
+        <div class="course-free-class-card">
+          <div class="course-free-class-copy">
+            <h2 id="course-free-class-title">Assista a uma aula gratuita</h2>
+            <p>Veja como uma aula de inglês pela internet funciona antes de decidir.</p>
+          </div>
+          <div class="course-free-class-frame" id="courseFreeClassFrame">
+            <button class="course-free-class-trigger" id="courseFreeClassTrigger" type="button" aria-label="Reproduzir aula gratuita do Teacher Flávio">
+              <span class="course-free-class-play" aria-hidden="true">▶</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -134,15 +207,17 @@
       <div class="shell">
         <div class="section-head">
           <p class="eyebrow">O que está incluído</p>
-          <h2 id="included-title">Um curso de inglês online pensado para acompanhamento próximo.</h2>
+          <h2 id="included-title">Um curso de inglês pensado para acompanhamento próximo</h2>
         </div>
         <div class="grid cols-3">
-          <article class="card"><h3>4 aulas por mês</h3><p>Encontros online e ao vivo distribuídos ao longo do mês.</p></article>
+          <article class="card"><h3>4 aulas de 60 minutos</h3><p>Encontros ao vivo por mês, com 60 minutos de duração cada.</p></article>
           <article class="card"><h3>Turmas pequenas</h3><p>Até 4 alunos por turma para manter espaço de participação durante as aulas.</p></article>
           <article class="card"><h3>Prática do inglês</h3><p>Atividades orientadas para usar o idioma e desenvolver segurança gradualmente.</p></article>
           <article class="card"><h3>Material de apoio</h3><p>Recursos complementares para revisar e continuar estudando fora do horário da aula.</p></article>
           <article class="card"><h3>Cronograma de estudos</h3><p>Uma orientação prática para distribuir os estudos e manter regularidade.</p></article>
           <article class="card"><h3>Aula experimental</h3><p>Você pode experimentar o formato gratuitamente antes de decidir pela matrícula.</p></article>
+          <article class="card"><h3>Reposições pelo site</h3><p>Se precisar repor uma aula, o agendamento pode ser feito diretamente no site, sem depender de troca de mensagens para organizar o horário.</p></article>
+          <article class="card"><h3>Certificado por módulo</h3><p>Ao final de cada módulo, o certificado é emitido mediante pelo menos 70% de acertos na avaliação final e o cumprimento da frequência exigida para a etapa.</p></article>
         </div>
       </div>
     </section>
@@ -154,29 +229,86 @@
           <h2 id="levels-title">Um percurso de 24 meses do nível iniciante ao avançado.</h2>
           <p>A duração é organizada em três etapas, permitindo visualizar com clareza o caminho completo do curso.</p>
         </div>
+        <div class="leveling-callout">
+          <h3>Nivelamento gratuito antes de escolher a turma</h3>
+          <p>Você não precisa começar do zero. O professor envia uma avaliação online gratuita para identificar seu nível atual e orientar a escolha de uma turma compatível com o seu momento de aprendizagem.</p>
+        </div>
         <ol class="levels-path" aria-label="Níveis e duração do curso">
           <li class="level-stage">
             <span class="level-index" aria-hidden="true">01</span>
-            <h3>Iniciante</h3>
+            <h3>Iniciante · A1/A2</h3>
             <p class="level-duration">6 <span>meses</span></p>
-            <p class="level-note">Primeira etapa do percurso.</p>
+            <p class="level-note">Nesse nível, o aluno aprende a se apresentar, falar de rotina, família, preferências e necessidades imediatas; fazer perguntas simples; lidar com compras, viagens e serviços básicos; e participar de conversas curtas sobre situações familiares.</p>
           </li>
           <li class="level-stage">
             <span class="level-index" aria-hidden="true">02</span>
-            <h3>Intermediário</h3>
+            <h3>Intermediário · B1/B2</h3>
             <p class="level-duration">6 <span>meses</span></p>
-            <p class="level-note">Segunda etapa do percurso.</p>
+            <p class="level-note">Aqui, o aluno passa a relatar experiências, explicar planos, defender opiniões, resolver situações de viagem e trabalho, sustentar conversas com mais espontaneidade e compreender as ideias principais de textos e falas mais complexos.</p>
           </li>
           <li class="level-stage">
             <span class="level-index" aria-hidden="true">03</span>
-            <h3>Avançado</h3>
+            <h3>Avançado · C1/C2</h3>
             <p class="level-duration">12 <span>meses</span></p>
-            <p class="level-note">Etapa mais longa, correspondente à metade do percurso completo.</p>
+            <p class="level-note">Por fim, o aluno desenvolve comunicação fluente e precisa, adapta o registro ao contexto, compreende textos e falas exigentes — inclusive sentidos implícitos —, discute temas complexos e se comunica com alto grau de autonomia em ambientes profissionais, acadêmicos e sociais.</p>
           </li>
         </ol>
         <div class="levels-total" aria-label="Tempo total do curso: 24 meses">
           <p class="levels-total-copy"><strong>Tempo total do início ao fim</strong><span>Iniciante + Intermediário + Avançado</span></p>
           <p class="levels-total-time">24 <small>meses</small></p>
+        </div>
+        <div class="certificate-panel" aria-labelledby="certificate-criteria-title">
+          <p class="eyebrow">Certificação por módulo</p>
+          <h3 id="certificate-criteria-title">Critérios para receber o certificado de conclusão.</h3>
+          <p class="certificate-lead">Ao final de cada módulo, o aluno realiza uma avaliação correspondente ao nível estudado. Para receber o certificado, é necessário cumprir dois critérios: obter pelo menos 70% de acertos na avaliação final e completar a frequência exigida para a etapa.</p>
+          <div class="certificate-rule-grid">
+            <div class="certificate-score" aria-label="Nota mínima de 70 por cento de acertos">
+              <strong>70%</strong>
+              <span>nota mínima de acertos na avaliação final</span>
+            </div>
+            <div class="certificate-attendance" aria-label="Frequência exigida por módulo">
+              <p><strong>Iniciante · A1/A2</strong><span>24 aulas</span></p>
+              <p><strong>Intermediário · B1/B2</strong><span>24 aulas</span></p>
+              <p><strong>Avançado · C1/C2</strong><span>48 aulas</span></p>
+            </div>
+          </div>
+          <p class="certificate-note">Se precisar reorganizar uma aula, as reposições podem ser marcadas diretamente pelo site. Os critérios de certificação ficam disponíveis desde o início para que o aluno acompanhe seu percurso com clareza.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" aria-labelledby="journey-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Do primeiro contato à primeira aula</p>
+          <h2 id="journey-title">Uma jornada simples para entrar na turma certa.</h2>
+          <p>Você conhece o curso antes de assumir qualquer compromisso e recebe orientação em cada etapa.</p>
+        </div>
+        <div class="steps">
+          <article class="step"><h3>Aula experimental</h3><p>Conheça o formato ao vivo e veja como funciona a dinâmica das aulas.</p></article>
+          <article class="step"><h3>Nivelamento gratuito</h3><p>O professor envia uma avaliação online para identificar seu nível atual.</p></article>
+          <article class="step"><h3>Escolha da turma</h3><p>Com o nível definido, você verifica os horários e escolhe uma turma compatível.</p></article>
+          <article class="step"><h3>Matrícula</h3><p>A matrícula é feita sem taxa de adesão e sem fidelidade contratual.</p></article>
+          <article class="step"><h3>Acesso à área do estudante</h3><p>Você recebe acesso à plataforma com os recursos do curso e sua rotina de estudos.</p></article>
+          <article class="step"><h3>Início das aulas</h3><p>Você entra na turma e começa a participar dos encontros semanais de 60 minutos.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="platform-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Além da aula ao vivo</p>
+          <h2 id="platform-title">O curso continua dentro da plataforma teacherflavius.com.</h2>
+          <p>A Área do Estudante organiza o que você precisa fazer entre as aulas e concentra ferramentas acadêmicas e administrativas em um só lugar.</p>
+        </div>
+        <div class="grid cols-3">
+          <article class="card platform-card"><strong>Minha Semana</strong><p>Visualize aulas, atividades e as prioridades da semana.</p></article>
+          <article class="card platform-card"><strong>Portal de Exercícios</strong><p>Acesse atividades propostas e mantenha uma rotina prática de estudo.</p></article>
+          <article class="card platform-card"><strong>Roteiro, flashcards e gramática</strong><p>Use materiais de revisão e ferramentas para ampliar vocabulário e consolidar estruturas.</p></article>
+          <article class="card platform-card"><strong>Meu Progresso</strong><p>Acompanhe sua evolução e os registros do percurso no curso.</p></article>
+          <article class="card platform-card"><strong>Turma, frequência e horários</strong><p>Consulte informações da sua turma, presença e horários disponíveis diretamente no portal.</p></article>
+          <article class="card platform-card"><strong>Reposições e mensalidades</strong><p>Agende reposições e acompanhe pagamentos sem sair da Área do Estudante.</p></article>
         </div>
       </div>
     </section>
@@ -220,7 +352,7 @@
         <div class="section-head">
           <p class="eyebrow">Formato do curso</p>
           <h2 id="difference-title">O que você encontra aqui</h2>
-          <p>O curso foi estruturado para quem procura uma experiência online com professor e participação ao vivo.</p>
+          <p>O curso foi estruturado para quem procura uma experiência mais próxima com um professor e participação ao vivo.</p>
         </div>
         <div class="comparison" role="region" aria-label="Características do curso" tabindex="0">
           <table>
@@ -229,13 +361,47 @@
               <tr><td>Aulas ao vivo</td><td class="yes">Sim</td></tr>
               <tr><td>Turmas de até 4 alunos</td><td class="yes">Sim</td></tr>
               <tr><td>4 aulas por mês</td><td class="yes">Sim</td></tr>
+              <tr><td>Duração de cada aula</td><td class="yes">60 minutos</td></tr>
               <tr><td>Material de apoio</td><td class="yes">Incluído</td></tr>
               <tr><td>Cronograma de estudos</td><td class="yes">Incluído</td></tr>
+              <tr><td>Reposição de aulas</td><td class="yes">Agendamento pelo site</td></tr>
               <tr><td>Aula experimental</td><td class="yes">Gratuita</td></tr>
+              <tr><td>Certificado ao final de cada módulo</td><td class="yes">70% na avaliação + frequência exigida</td></tr>
+              <tr><td>Pagamento</td><td class="yes">Pix ou cartão</td></tr>
+              <tr><td>Fidelidade</td><td class="yes">Não</td></tr>
+              <tr><td>Taxa de matrícula</td><td class="yes">Não</td></tr>
               <tr><td>Investimento mensal</td><td class="yes">R$ 99,90</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <section class="section alt" aria-labelledby="payment-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">Pagamento e cancelamento</p>
+          <h2 id="payment-title">Mensalidade simples, sem taxa de matrícula e sem fidelidade.</h2>
+        </div>
+        <div class="grid cols-2">
+          <article class="card"><h3>Mensalidade recorrente</h3><p>O curso funciona por mensalidade, atualmente no valor de R$ 99,90.</p></article>
+          <article class="card"><h3>Pix ou cartão</h3><p>Você pode pagar a mensalidade por Pix ou cartão.</p></article>
+          <article class="card"><h3>Sem fidelidade</h3><p>Não existe período mínimo de permanência. Você pode cancelar quando quiser.</p></article>
+          <article class="card"><h3>Sem custos adicionais de entrada</h3><p>Não há taxa de matrícula e o material de apoio não é cobrado à parte.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="vacancies-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="vacancies-title" class="eyebrow">Vagas disponíveis agora</h2>
+          <p id="liveVacanciesSummary">Consultando a disponibilidade atual das turmas...</p>
+        </div>
+        <div id="liveVacanciesList" class="vacancy-public-grid" aria-live="polite">
+          <div class="vacancy-empty">Carregando vagas disponíveis...</div>
+        </div>
+        <div class="funnel-inline-cta"><a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR UMA AULA EXPERIMENTAL GRATUITA</a></div>
       </div>
     </section>
 
@@ -246,11 +412,17 @@
           <h2 id="faq-title">Dúvidas sobre o curso de inglês online</h2>
         </div>
         <div class="faq-list">
-          <article class="faq-item"><h3>O curso de inglês é totalmente online?</h3><p>Sim. As aulas regulares acontecem online e ao vivo, permitindo participar de qualquer lugar com conexão adequada à internet.</p></article>
+          <article class="faq-item"><h3>O curso de inglês é totalmente ao vivo?</h3><p>Sim. As aulas regulares acontecem ao vivo por meio da plataforma Google Meet, permitindo participar de qualquer lugar com conexão adequada à internet.</p></article>
           <article class="faq-item"><h3>As aulas são gravadas?</h3><p>A proposta principal são encontros ao vivo. O curso não depende de uma sequência de aulas gravadas para substituir o contato com o professor.</p></article>
           <article class="faq-item"><h3>Quantos alunos há em cada turma?</h3><p>As turmas têm até 4 alunos.</p></article>
-          <article class="faq-item"><h3>Quantas aulas estão incluídas por mês?</h3><p>O plano inclui 4 aulas online e ao vivo por mês.</p></article>
+          <article class="faq-item"><h3>Quantas aulas estão incluídas por mês?</h3><p>O plano inclui 4 aulas ao vivo por mês.</p></article>
           <article class="faq-item"><h3>Existe material para estudar fora das aulas?</h3><p>Sim. Há material de apoio e cronograma de estudos para ajudar a manter continuidade entre os encontros.</p></article>
+          <article class="faq-item"><h3>O curso oferece certificado?</h3><p>Sim. Há certificado de conclusão ao final de cada módulo. Para recebê-lo, o aluno precisa obter pelo menos 70% de acertos na avaliação final correspondente ao nível estudado e cumprir a frequência exigida: 24 aulas no módulo Iniciante (A1/A2), 24 aulas no Intermediário (B1/B2) e 48 aulas no Avançado (C1/C2).</p></article>
+          <article class="faq-item"><h3>Quanto tempo dura cada aula?</h3><p>Cada encontro ao vivo tem 60 minutos de duração. O plano mensal inclui quatro aulas.</p></article>
+          <article class="faq-item"><h3>Como funciona o nivelamento?</h3><p>O professor envia gratuitamente uma avaliação online para identificar seu nível atual e orientar a escolha de uma turma adequada.</p></article>
+          <article class="faq-item"><h3>Posso fazer reposição se faltar?</h3><p>Sim. Os alunos podem marcar reposições de aulas diretamente pelo site, usando a área própria de reposições da plataforma.</p></article>
+          <article class="faq-item"><h3>Como funcionam pagamento e cancelamento?</h3><p>A cobrança é uma mensalidade recorrente, paga por Pix ou cartão. Não há fidelidade: você pode cancelar quando quiser. Também não existe taxa de matrícula e o material não é cobrado à parte.</p></article>
+          <article class="faq-item"><h3>O que encontro na Área do Estudante?</h3><p>A plataforma reúne Portal de Exercícios, Roteiro de Estudos, Flashcards, Aulas de Gramática, Acompanhamento de Progresso, Informações da Turma, Frequência, Horários, Reposições e Pagamento de Mensalidades.</p></article>
           <article class="faq-item"><h3>Quanto custa o curso de inglês online?</h3><p>O investimento atual é de R$ 99,90 por mês, sujeito à disponibilidade de vagas nas turmas.</p></article>
           <article class="faq-item"><h3>Posso fazer uma aula antes de me matricular?</h3><p>Sim. É possível agendar uma aula experimental gratuita pelo WhatsApp.</p></article>
           <article class="faq-item"><h3>Como faço para saber se há vaga em uma turma?</h3><p>Entre em contato pelo WhatsApp. Você poderá consultar os horários disponíveis e conversar diretamente com o professor antes de decidir.</p></article>
@@ -262,12 +434,21 @@
       <div class="shell cta-card">
         <h2 id="cta-title">Conheça o curso antes de se matricular.</h2>
         <p>Agende uma aula experimental gratuita e converse diretamente com o Teacher Flávio sobre horários, turma e funcionamento das aulas.</p>
-        <a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR AULA EXPERIMENTAL GRÁTIS</a><br>
+        <a class="btn btn-primary" href="https://wa.me/5534998349756?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20uma%20aula%20experimental." target="_blank" rel="noopener noreferrer">AGENDAR AULA EXPERIMENTAL GRATUITA</a><br>
         <a class="back-link" href="/">Voltar para a página de aulas de inglês online</a>
       </div>
     </section>
   </main>
 
-  <script defer src="/site_footer.js?v=20260820-ux-1"></script>
+  <script src="/supabase_config.js?v=20260902-1"></script>
+  <script defer src="/course_vacancies.js?v=20260902-1"></script>
+    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+<script src="/site_asset_loader.js?v=20260902-1"></script>
+
+
+<script src="/site_page_runtime.js?v=20260904-whatsapp-tracking-1"></script>
+<script src="/site_runtime_config.js?v=20260903-1"></script>
+<script defer src="/site_footer.js?v=20260904-whatsapp-tracking-1"></script>
+  <script defer src="/course_free_class.js?v=20260909-1"></script>
 </body>
 </html>

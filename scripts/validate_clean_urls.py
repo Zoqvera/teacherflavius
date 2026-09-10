@@ -21,8 +21,12 @@ LEGACY_COMPATIBILITY_FILES = {
 # New public pages must be directory indexes. 404.html is a GitHub Pages special file.
 ALLOWED_NEW_HTML_BASENAMES = {"index.html", "404.html"}
 
-TEACHERFLAVIUS_HTML_URL_RE = re.compile(
-    r"(?:https?://(?:www\.)?teacherflavius\.com)?/[^\s\"'<>]*\.html(?:[?#][^\s\"'<>]*)?",
+ABSOLUTE_TEACHERFLAVIUS_HTML_URL_RE = re.compile(
+    r"https?://(?:www\.)?teacherflavius\.com/[^\s\"'<>]*\.html(?:[?#][^\s\"'<>]*)?",
+    re.IGNORECASE,
+)
+RELATIVE_HTML_URL_RE = re.compile(
+    r"(?:^|[\s\"'(=])(?:(?:/(?!/))|\./|\.\./)[^\s\"'<>)]*\.html(?:[?#][^\s\"'<>)]*)?",
     re.IGNORECASE,
 )
 ATTRIBUTE_RE = re.compile(
@@ -88,22 +92,28 @@ def added_lines(base: str, head: str) -> list[tuple[str, str]]:
 
 
 def is_internal_html_reference(text: str) -> bool:
-    if TEACHERFLAVIUS_HTML_URL_RE.search(text):
+    if ABSOLUTE_TEACHERFLAVIUS_HTML_URL_RE.search(text):
+        return True
+    if RELATIVE_HTML_URL_RE.search(text):
         return True
 
     for match in ATTRIBUTE_RE.finditer(text):
         value = match.group(1).strip()
         if ".html" not in value.lower():
             continue
+
         lowered = value.lower()
         if lowered.startswith(("https://teacherflavius.com/", "http://teacherflavius.com/")):
             return True
         if lowered.startswith(("https://www.teacherflavius.com/", "http://www.teacherflavius.com/")):
             return True
+        if value.startswith("//"):
+            return lowered.startswith(("//teacherflavius.com/", "//www.teacherflavius.com/"))
         if value.startswith(("/", "./", "../")):
             return True
-        if not SCHEME_RE.match(value):
-            return True
+        if SCHEME_RE.match(value):
+            continue
+        return True
 
     return False
 

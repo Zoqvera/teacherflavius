@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+from pathlib import Path
+
+REQUIRED_PUBLIC_PATHS = (
+    "index.html",
+    "404.html",
+    "robots.txt",
+    "sitemap.xml",
+    "error_monitor.js",
+    "resource_waiter.js",
+    "supabase_client_service.js",
+    "auth_navigation_service.js",
+    "auth_guard_service.js",
+    "auth_session_service.js",
+    "auth_infrastructure.js",
+    "password_recovery_login.js",
+    "password_recovery_login.css",
+    "student_area_route_guard.js",
+    "professor_mfa_service.js",
+    "professor_mfa_gate.js",
+    "professor_mfa_gate.css",
+    "student_data_utils.js",
+    "student_enrollment_service.js",
+    "analytics.js",
+    "analytics_utils.js",
+    "analytics_acquisition.js",
+    "analytics_forms.js",
+    "analytics_payments.js",
+    "quero-conhecer/index.html",
+    "cadastro/index.html",
+    "meu-progresso/index.html",
+    "recuperar-senha/index.html",
+    "acesso-negado/index.html",
+    "responsive_compat.css",
+    "_headers",
+)
+
+
+def missing_required_files(publish: Path) -> list[str]:
+    return [relative for relative in REQUIRED_PUBLIC_PATHS if not (publish / relative).is_file()]
