@@ -14,7 +14,7 @@
     "test:site-asset-loader": "node --test tests/site_asset_loader.test.js",
     "test:site-runtime-config": "node --test tests/site_runtime_config.test.js",
     "test:site-page-runtime": "node --test tests/site_page_runtime.test.js",
-    "test:payment-contracts": "node --test tests/payment_idempotency.test.js tests/payment_gateway_contract.test.js tests/payment_reconciliation_monitor_contract.test.js tests/payment_refund_operations.test.js tests/payment_chargeback_operations.test.js tests/payment_chargeback_documentation.test.js tests/payment_financial_health_contract.test.js tests/payment_sandbox_probe.test.js tests/payment_webhook_log.test.js tests/payment_workflow_contract.test.js",
+    "test:payment-contracts": "node --test tests/payment_idempotency.test.js tests/payment_gateway_contract.test.js tests/payment_reconciliation_monitor_contract.test.js tests/payment_refund_operations.test.js tests/payment_chargeback_operations.test.js tests/payment_chargeback_documentation.test.js tests/payment_financial_health_contract.test.js tests/payment_access_hardening_contract.test.js tests/payment_runbook_contract.test.js tests/payment_sandbox_probe.test.js tests/payment_webhook_log.test.js tests/payment_workflow_contract.test.js",
     "probe:mercado-pago-sandbox": "node scripts/mercado_pago_sandbox_probe.js",
     "test:html-script-dependency": "python3 -m unittest discover -s tests -p 'test_html_script_dependency.py'",
     "test:materialize-site": "python3 -m unittest discover -s tests -p 'test_materialize_site.py'",
