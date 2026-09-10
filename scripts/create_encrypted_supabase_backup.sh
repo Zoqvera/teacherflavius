@@ -92,7 +92,7 @@ capture_recovery_manifest() {
     and (.critical_row_counts | type == "object")
     and (.catalog_fingerprint | type == "object")
     and (.storage | type == "object")
-    and (.cron_jobs | length == 8)
+    and (.cron_jobs | length == 9)
   ' "$BACKUP_DIR/recovery_manifest.json" >/dev/null
 }
 
