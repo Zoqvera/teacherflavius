@@ -14,16 +14,33 @@ from production_homepage import transform_homepage_html, update_homepage  # noqa
 
 class ProductionHomepageTests(unittest.TestCase):
     def source_html(self) -> str:
-        return '''<section class="section" aria-labelledby="benefits-title">
+        return '''<style>
+.video-trigger{background:linear-gradient(rgba(1,9,24,.18),rgba(1,9,24,.52)),url('/assets/home-free-class-thumbnail.jpg?v=20260908-1') center/cover no-repeat}
+.video-trigger:hover{background:linear-gradient(rgba(1,9,24,.08),rgba(1,9,24,.4)),url('/assets/home-free-class-thumbnail.jpg?v=20260908-1') center/cover no-repeat}
+</style>
+<section class="section" aria-labelledby="benefits-title">
 <h2 id="benefits-title">Inglês online com professor, prática e acompanhamento.</h2>
 <p>Conteúdo</p>
-</section>'''
+</section>
+<div class="video-frame" id="homeVideoFrame">
+<button class="video-trigger" id="homeVideoTrigger" type="button" aria-label="Reproduzir aula gratuita do Teacher Flávio">
+<span class="video-play" aria-hidden="true">▶</span>
+</button>
+</div>'''
 
     def test_transforms_benefits_section(self) -> None:
         transformed = transform_homepage_html(self.source_html())
         self.assertIn('aria-label="Como funcionam as aulas"', transformed)
         self.assertNotIn('id="benefits-title"', transformed)
         self.assertIn("<p>Conteúdo</p>", transformed)
+
+    def test_moves_video_thumbnail_from_eager_css_to_lazy_image(self) -> None:
+        transformed = transform_homepage_html(self.source_html())
+        self.assertNotIn("url('/assets/home-free-class-thumbnail.jpg", transformed)
+        self.assertIn('class="video-trigger-image"', transformed)
+        self.assertIn('loading="lazy"', transformed)
+        self.assertIn('decoding="async"', transformed)
+        self.assertIn(".video-trigger:hover .video-trigger-image", transformed)
 
     def test_transformation_is_idempotent(self) -> None:
         first = transform_homepage_html(self.source_html())
