@@ -47,6 +47,8 @@ Este snapshot é um ponto de referência, não uma garantia permanente. O painel
 | acesso direto a tabelas financeiras | revogação de grants + RLS | contrato de segurança | manter acesso apenas por RPC/Edge Function | coberto |
 | RPC técnica chamada pelo cliente | revogação de `EXECUTE` | contrato de segurança | service-role only | coberto |
 | escopo administrativo sem MFA | wrappers MFA e AAL2 | Security/contract tests | reautenticar com MFA | coberto no domínio financeiro |
+| necessidade de conter novas cobranças | kill switch server-side antes do `INSERT` | painel administrativo e auditoria de eventos | bloquear/reativar por Edge Function JWT+MFA sem parar recuperação | coberto |
+| objeto futuro herdar acesso amplo | default privileges opt-in para objetos de aplicação | Security Advisor e contratos | grants explícitos somente quando necessários | coberto para objetos criados por `postgres` |
 
 ## Inventário operacional
 
@@ -70,7 +72,8 @@ Este snapshot é um ponto de referência, não uma garantia permanente. O painel
 - `list-mercado-pago-refund-candidates`;
 - `reconcile-mercado-pago-chargebacks`;
 - `list-mercado-pago-chargebacks`;
-- `manage-mercado-pago-chargeback-documentation`.
+- `manage-mercado-pago-chargeback-documentation`;
+- `manage-payment-creation-control`.
 
 ## Controles de segurança validados
 
@@ -80,9 +83,11 @@ Este snapshot é um ponto de referência, não uma garantia permanente. O painel
 - RPCs exclusivamente de servidor são `service_role` only;
 - operações administrativas expostas ao navegador usam MFA/AAL2;
 - reconciliação manual mantém o aluno limitado ao próprio `student_id` e exige MFA para o escopo administrativo;
+- o kill switch é administrado por Edge Function JWT+MFA e usa RPCs internas `service_role` only;
 - crons não carregam segredos diretamente no comando;
 - segredos de dispatch ficam no Vault;
-- Edge Functions preferem o bundle atual de chaves Supabase, mantendo chaves legadas apenas como compatibilidade onde necessário.
+- Edge Functions preferem o bundle atual de chaves Supabase, mantendo chaves legadas apenas como compatibilidade onde necessário;
+- default privileges do papel `postgres` no schema `public` deixaram de conceder automaticamente tabelas, sequences e funções a papéis de cliente.
 
 ## Controles de engenharia
 
@@ -97,7 +102,8 @@ O domínio financeiro possui contratos determinísticos para:
 - sandbox read-only;
 - webhooks e replay;
 - health check financeiro;
-- superfície de acesso e MFA.
+- superfície de acesso e MFA;
+- kill switch de novas cobranças e default privileges.
 
 O workflow `Payment contracts` roda essas verificações em mudanças relacionadas ao domínio financeiro.
 
@@ -107,15 +113,13 @@ O workflow `Payment contracts` roda essas verificações em mudanças relacionad
 
 Mercado Pago, Supabase e Resend permanecem dependências externas. O sistema detecta e contém grande parte das falhas, mas não pode garantir disponibilidade do provedor.
 
-Mitigação: reconciliação, idempotência, health check, alertas e procedimento de recuperação.
+Mitigação: reconciliação, idempotência, health check, alertas, kill switch e procedimento de recuperação.
 
-### 2. Ausência de kill switch financeiro dedicado
+### 2. Janela de requisição em voo no kill switch
 
-Não há atualmente um feature flag operacional dedicado para desligar apenas a criação de novas cobranças mantendo consultas/reconciliação ativas.
+O kill switch bloqueia novas tentativas no banco antes do `INSERT`, cancela tentativas locais ainda sem `provider_payment_id` e mantém recuperação ativa. Uma requisição que já tenha ultrapassado o ponto de admissão imediatamente antes do bloqueio pode, no entanto, continuar em voo.
 
-Impacto: em um P0 que exija bloqueio imediato de novas cobranças, a contenção depende de alteração/deploy controlado em vez de um switch administrativo instantâneo.
-
-Recomendação futura: adicionar um `payment_creation_enabled` server-side, administrável somente por MFA, com fail-closed na criação e sem bloquear webhooks/reconciliação.
+Mitigação: após um bloqueio de emergência, acompanhar dashboard, webhooks e reconciliação até não haver transações pendentes. O procedimento está documentado em `docs/payment_kill_switch.md`.
 
 ### 3. Sandbox sem transação automática destrutiva
 
@@ -125,19 +129,25 @@ Motivo: evitar efeitos externos acumulativos e depender de artefatos sandbox nã
 
 Mitigação: contratos locais cobrem o comportamento determinístico; o probe valida credencial/API quando configurado.
 
-### 4. Defaults de grants do projeto fora do domínio financeiro
+### 4. Defaults gerenciados pela plataforma
 
-O projeto historicamente possui defaults amplos para novas tabelas no schema `public`. O hardening financeiro revoga grants explicitamente nas tabelas financeiras atuais, mas o default global não foi alterado nesta etapa por poder afetar módulos não financeiros.
+Os default privileges do papel de aplicação `postgres` foram migrados para opt-in. Os defaults do papel `supabase_admin` não foram modificados, para não interferir com objetos gerenciados pela plataforma.
 
-Risco: uma futura tabela criada em `public` pode receber grants automáticos se a migração não os revogar.
+Risco residual: objetos criados fora do fluxo normal de migrações precisam ser revisados conforme o owner e os grants efetivos.
 
-Recomendação futura: migrar o projeto inteiro para defaults opt-in depois de inventariar todos os módulos.
+Mitigação: criar objetos de aplicação pelas migrações do projeto, conceder acesso explicitamente e manter auditoria periódica de grants/RLS.
 
 ### 5. Função residual desativada
 
 A Edge Function `noop-schema-probe` permanece implantada por limitação da interface de gerenciamento disponível durante a implementação. Ela está desativada, exige JWT e responde HTTP 410 sem executar operações.
 
 Recomendação: remover definitivamente quando houver uma operação de exclusão de Edge Function disponível.
+
+### 6. Proteção contra senhas vazadas
+
+O Security Advisor ainda aponta `Leaked Password Protection Disabled` no Supabase Auth.
+
+Mitigação atual: MFA protege superfícies administrativas sensíveis. A habilitação da proteção contra senhas vazadas permanece uma ação de segurança global fora do domínio financeiro.
 
 ## Critérios de prontidão operacional
 
@@ -151,7 +161,8 @@ O módulo financeiro é considerado operacionalmente pronto enquanto todos os po
 6. refund e chargeback com estados persistentes e recuperáveis;
 7. acessos financeiros limitados por menor privilégio;
 8. contratos de pagamento verdes na CI;
-9. runbook atualizado quando uma nova classe de incidente for introduzida.
+9. runbook atualizado quando uma nova classe de incidente for introduzida;
+10. kill switch acessível ao professor com MFA e normalmente em estado `enabled=true`.
 
 ## Revisão pós-mudança
 
@@ -166,3 +177,4 @@ Qualquer alteração futura em pagamentos deve responder, antes do merge:
 - O fluxo administrativo exige MFA?
 - O cliente tem acesso direto a alguma nova tabela/RPC técnica?
 - O runbook precisa de um novo cenário?
+- A mudança respeita o kill switch de criação e os default privileges opt-in?
