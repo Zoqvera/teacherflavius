@@ -17,6 +17,7 @@ const SCRIPT_NAMES = [
   "googleOnlyAccess",
   "studentBirthdays",
   "studentBirthdayCelebration",
+  "paymentCreationControl",
   "paymentOperationsDashboard",
   "paymentRefundOperations",
   "paymentChargebackOperations",
@@ -139,6 +140,7 @@ test("loads portal chain in the expected order", function () {
     "studentBirthdayCelebration",
     "footerCore"
   ]);
+  assert.equal(result.scriptCalls.includes("paymentCreationControl"), false);
   assert.equal(result.scriptCalls.includes("paymentOperationsDashboard"), false);
   assert.equal(result.scriptCalls.includes("paymentRefundOperations"), false);
   assert.equal(result.scriptCalls.includes("paymentChargebackOperations"), false);
@@ -149,14 +151,16 @@ test("loads portal chain in the expected order", function () {
   assert.deepEqual(result.events.idleTimeouts, []);
 });
 
-test("loads payment operations, refunds, chargebacks, documentation and webhook audit only on mensalidades", function () {
+test("loads payment kill switch and operations only on mensalidades", function () {
   const result = createRuntime({ path: "/mensalidades/", publicPage: false });
+  assert.equal(result.scriptCalls.includes("paymentCreationControl"), true);
   assert.equal(result.scriptCalls.includes("paymentOperationsDashboard"), true);
   assert.equal(result.scriptCalls.includes("paymentRefundOperations"), true);
   assert.equal(result.scriptCalls.includes("paymentChargebackOperations"), true);
   assert.equal(result.scriptCalls.includes("paymentChargebackDocumentation"), true);
   assert.equal(result.scriptCalls.includes("paymentWebhookLog"), true);
-  assert.deepEqual(result.scriptCalls.slice(-10), [
+  assert.deepEqual(result.scriptCalls.slice(-11), [
+    "paymentCreationControl",
     "paymentOperationsDashboard",
     "paymentRefundOperations",
     "paymentChargebackOperations",
