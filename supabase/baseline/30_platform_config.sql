@@ -17,6 +17,7 @@ begin
         ('daily-data-retention-maintenance', '35 5 * * *', 'select public.perform_data_retention_maintenance(''cron'');'),
         ('mercado-pago-chargeback-reconciliation', '17,47 * * * *', 'select private.dispatch_mercado_pago_chargeback_reconciliation();'),
         ('mercado-pago-reconciliation', '*/5 * * * *', 'select private.dispatch_mercado_pago_reconciliation();'),
+        ('operational-data-quality-health-check', '12,42 * * * *', 'select private.run_operational_data_quality_check(true);'),
         ('payment-alert-health-scan', '*/5 * * * *', 'select private.scan_payment_alert_conditions();'),
         ('payment-financial-health-check', '3,8,13,18,23,28,33,38,43,48,53,58 * * * *', 'select private.run_payment_financial_health_check(true);'),
         ('sync-auto-makeup-slots-30-days', '15 6 * * *', 'select public.sync_auto_makeup_slots_30_days();'),
@@ -42,6 +43,6 @@ $$;
 --   teacherflavius_notification_webhook_secret
 
 -- Current production inventory at recovery-baseline time:
--- Application-owned Cron jobs: 8.
+-- Application-owned Cron jobs: 9.
 -- Storage buckets: none.
 -- Custom storage RLS policies: none.
