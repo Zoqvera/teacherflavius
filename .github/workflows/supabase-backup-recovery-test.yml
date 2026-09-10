@@ -1,0 +1,72 @@
+name: Verify Supabase backup recovery
+
+on:
+  workflow_run:
+    workflows:
+      - Encrypted Supabase logical backup
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      backup_run_id:
+        description: GitHub Actions run ID of a completed encrypted backup using manifest format v2
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: supabase-backup-recovery-verification
+  cancel-in-progress: false
+
+jobs:
+  restore-test:
+    name: Restore encrypted backup in disposable Supabase
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      BACKUP_RUN_ID: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || inputs.backup_run_id }}
+      BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+      BACKUP_ARTIFACT_DIR: ${{ runner.temp }}/teacherflavius-backup-artifact
+
+    steps:
+      - name: Check out recovery code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Download encrypted backup artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: supabase-*
+          path: ${{ env.BACKUP_ARTIFACT_DIR }}
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.BACKUP_RUN_ID }}
+
+      - name: Restore and verify backup
+        id: recovery
+        shell: bash
+        run: bash scripts/verify_supabase_backup_restore.sh
+
+      - name: Upload recovery exercise report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: supabase-recovery-report-${{ env.BACKUP_RUN_ID }}
+          path: ${{ steps.recovery.outputs.report_path }}
+          if-no-files-found: warn
+          retention-days: 30
