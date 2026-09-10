@@ -102,19 +102,23 @@
     return control;
   }
 
-  async function loadControl(windowRef) {
-    const response = await windowRef.Auth.getClient().rpc("get_teacher_payment_creation_control");
+  async function invokeControl(windowRef, body) {
+    const response = await windowRef.Auth.getClient().functions.invoke("manage-payment-creation-control", { body: body });
     if (response.error) throw response.error;
-    return normalizeControl(response.data);
+    const payload = response.data && typeof response.data === "object" ? response.data : {};
+    return normalizeControl(payload.control);
   }
 
-  async function saveControl(windowRef, enabled, reason) {
-    const response = await windowRef.Auth.getClient().rpc("set_teacher_payment_creation_enabled", {
-      target_enabled: enabled,
-      target_reason: reason || null
+  function loadControl(windowRef) {
+    return invokeControl(windowRef, { action: "get" });
+  }
+
+  function saveControl(windowRef, enabled, reason) {
+    return invokeControl(windowRef, {
+      action: "set",
+      enabled: enabled,
+      reason: reason || null
     });
-    if (response.error) throw response.error;
-    return normalizeControl(response.data);
   }
 
   function requestTransition(windowRef, control) {
