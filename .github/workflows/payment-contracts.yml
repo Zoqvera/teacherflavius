@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "pagamento/**"
+      - "payment_creation_control.js"
       - "payment_operations_dashboard.js"
       - "payment_refund_operations.js"
       - "payment_chargeback_operations.js"
@@ -35,6 +36,7 @@ on:
       - main
     paths:
       - "pagamento/**"
+      - "payment_creation_control.js"
       - "payment_operations_dashboard.js"
       - "payment_refund_operations.js"
       - "payment_chargeback_operations.js"
@@ -94,6 +96,7 @@ jobs:
           tests/payment_financial_health_contract.test.js
           tests/payment_access_hardening_contract.test.js
           tests/payment_runbook_contract.test.js
+          tests/payment_creation_control.test.js
           tests/payment_sandbox_probe.test.js
           tests/payment_webhook_log.test.js
           tests/payment_workflow_contract.test.js
