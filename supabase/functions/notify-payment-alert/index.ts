@@ -32,6 +32,7 @@ const ALERT_SUBJECTS: Record<string, string> = {
   gateway_failure: "Alerta: falha no gateway Mercado Pago",
   chargeback_opened: "Alerta crítico: nova contestação no Mercado Pago",
   chargeback_documentation_deadline: "Alerta: prazo de documentação de contestação",
+  financial_health_check: "Alerta: health check financeiro detectou inconsistências",
 };
 
 function getDefaultKey(envName: string, legacyName: string): string {
@@ -89,6 +90,16 @@ function cleanDetail(value: unknown): string {
   return "";
 }
 
+function cleanDetailList(value: unknown): string {
+  if (!Array.isArray(value)) return "";
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim().slice(0, 80))
+    .filter(Boolean)
+    .slice(0, 20)
+    .join(", ");
+}
+
 function detailLines(alert: PaymentAlert): string[] {
   const details = alert.details ?? {};
   switch (alert.alert_type) {
@@ -130,6 +141,15 @@ function detailLines(alert: PaymentAlert): string[] {
         `Horas restantes: ${cleanDetail(details.hours_remaining) || "0"}`,
         `Preparação interna: ${cleanDetail(details.preparation_status) || "não iniciada"}`,
         `Faixa do alerta: ${cleanDetail(details.deadline_tier) || "prazo próximo"}`,
+      ];
+    case "financial_health_check":
+      return [
+        `Estado do health check: ${cleanDetail(details.health_status) || "crítico"}`,
+        `Invariantes críticas: ${cleanDetail(details.critical_count) || "0"}`,
+        `Invariantes em atenção: ${cleanDetail(details.warning_count) || "0"}`,
+        `Problemas detectados: ${cleanDetailList(details.issue_codes) || "health check sem execução recente"}`,
+        `Última execução: ${cleanDetail(details.completed_at) || cleanDetail(details.last_health_check_at) || "não registrada"}`,
+        `Minutos sem health check: ${cleanDetail(details.minutes_since_health_check) || "0"}`,
       ];
     case "invalid_webhook_burst":
       return [`Webhooks inválidos nos últimos 15 minutos: ${cleanDetail(details.count_15m) || "3+"}`];

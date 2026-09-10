@@ -35,9 +35,33 @@
     };
   }
 
+  function readFinancialHealth(financialHealth) {
+    const source = financialHealth && typeof financialHealth === "object" ? financialHealth : {};
+    const issueCodes = Array.isArray(source.issue_codes)
+      ? source.issue_codes.filter(function (item) { return typeof item === "string"; })
+      : [];
+    return {
+      status: String(source.status || "unknown").toLowerCase(),
+      completedAt: String(source.completed_at || ""),
+      stale: source.stale !== false,
+      warningCount: toNumber(source.warning_count),
+      criticalCount: toNumber(source.critical_count),
+      issueCount: toNumber(source.issue_count),
+      issueCodes: issueCodes
+    };
+  }
+
   function resolveHealth(state) {
-    if (state.criticalOpenAlerts > 0 || state.divergences > 0) return CRITICAL;
     if (
+      state.financialHealthStatus === "critical" ||
+      state.criticalOpenAlerts > 0 ||
+      state.divergences > 0
+    ) return CRITICAL;
+
+    if (
+      state.financialHealthStale ||
+      state.financialHealthStatus === "degraded" ||
+      state.financialHealthStatus === "unknown" ||
       state.reconciliationStalled ||
       state.failedAlerts > 0 ||
       state.reconciliationFailures > 0 ||
@@ -56,6 +80,7 @@
       : {};
     const alerts = source.alerts && typeof source.alerts === "object" ? source.alerts : {};
     const methods = readMethods(source.methods);
+    const financialHealth = readFinancialHealth(source.financial_health);
     const state = {
       referenceMonth: String(source.reference_month || ""),
       generatedAt: String(source.generated_at || ""),
@@ -75,7 +100,14 @@
       reversals: toNumber(source.reversals),
       pendingAlerts: toNumber(alerts.pending),
       failedAlerts: toNumber(alerts.failed),
-      criticalOpenAlerts: toNumber(alerts.critical_open)
+      criticalOpenAlerts: toNumber(alerts.critical_open),
+      financialHealthStatus: financialHealth.status,
+      financialHealthCompletedAt: financialHealth.completedAt,
+      financialHealthStale: financialHealth.stale,
+      financialHealthWarningCount: financialHealth.warningCount,
+      financialHealthCriticalCount: financialHealth.criticalCount,
+      financialHealthIssueCount: financialHealth.issueCount,
+      financialHealthIssueCodes: financialHealth.issueCodes
     };
     state.divergences = state.approvedWithoutApplication + state.reversalPending;
     state.health = resolveHealth(state);
@@ -100,6 +132,20 @@
     }).format(date);
   }
 
+  function financialHealthLabel(state) {
+    if (state.financialHealthStale) return "ATRASADO";
+    if (state.financialHealthStatus === "healthy") return "SAUDÁVEL";
+    if (state.financialHealthStatus === "degraded") return "ATENÇÃO";
+    if (state.financialHealthStatus === "critical") return "CRÍTICO";
+    return "SEM DADOS";
+  }
+
+  function financialHealthTone(state) {
+    if (state.financialHealthStatus === "critical") return "critical";
+    if (state.financialHealthStale || state.financialHealthStatus !== "healthy") return "warning";
+    return "healthy";
+  }
+
   function escapeHtml(value) {
     return String(value == null ? "" : value)
       .replace(/&/g, "&amp;")
@@ -120,7 +166,9 @@
   function buildMarkup(state) {
     const health = state.health || HEALTHY;
     const reconciliationStatus = state.reconciliationStalled ? "ATRASADA" : "EM DIA";
+    const financialStatus = financialHealthLabel(state);
     const cards = [
+      metricCard("Health check", financialStatus, state.financialHealthIssueCount + " problema(s)", financialHealthTone(state)),
       metricCard("Aprovados", state.approved.count, formatCurrency(state.approved.amount), "healthy"),
       metricCard("Pendentes", state.pending.count, formatCurrency(state.pending.amount), state.pending.count ? "warning" : "neutral"),
       metricCard("Rejeitados", state.rejected.count, formatCurrency(state.rejected.amount), state.rejected.count ? "warning" : "neutral"),
@@ -135,11 +183,14 @@
 
     return '<div class="payment-ops-header">' +
       '<div><h2>Saúde técnica dos pagamentos</h2>' +
-      '<p>Mercado Pago, reconciliação, divergências e alertas operacionais.</p></div>' +
+      '<p>Mercado Pago, reconciliação, invariantes financeiras e alertas operacionais.</p></div>' +
       '<span class="payment-ops-health ' + escapeHtml(health.tone) + '">' + escapeHtml(health.label) + '</span>' +
     '</div>' +
     '<div class="payment-ops-grid">' + cards + '</div>' +
     '<div class="payment-ops-footnotes">' +
+      '<span><strong>Último health check:</strong> ' + escapeHtml(formatDateTime(state.financialHealthCompletedAt)) + '</span>' +
+      '<span><strong>Invariantes críticas:</strong> ' + escapeHtml(state.financialHealthCriticalCount) + '</span>' +
+      '<span><strong>Invariantes em atenção:</strong> ' + escapeHtml(state.financialHealthWarningCount) + '</span>' +
       '<span><strong>Última reconciliação:</strong> ' + escapeHtml(formatDateTime(state.lastReconciliationAt)) + '</span>' +
       '<span><strong>Reconciliação automática:</strong> ' + escapeHtml(reconciliationStatus) + '</span>' +
       '<span><strong>Falhas de reconciliação:</strong> ' + escapeHtml(state.reconciliationFailures) + '</span>' +
