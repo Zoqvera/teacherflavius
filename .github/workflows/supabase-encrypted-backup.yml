@@ -18,6 +18,10 @@ jobs:
     name: Create encrypted logical backup
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      backup_id: ${{ steps.backup.outputs.backup_id }}
+      tier: ${{ steps.backup.outputs.tier }}
+      retention: ${{ steps.backup.outputs.retention }}
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
@@ -26,273 +30,36 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Verify required secrets
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if [ -z "${SUPABASE_DB_URL:-}" ]; then
-            echo '::error::Missing repository secret SUPABASE_DB_URL.'
-            exit 1
-          fi
-
-          if [ -z "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
-            echo '::error::Missing repository secret BACKUP_ENCRYPTION_PASSPHRASE.'
-            exit 1
-          fi
-
-          if [ "${#BACKUP_ENCRYPTION_PASSPHRASE}" -lt 32 ]; then
-            echo '::error::BACKUP_ENCRYPTION_PASSPHRASE must contain at least 32 characters.'
-            exit 1
-          fi
-
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
         with:
           version: latest
 
-      - name: Prepare backup metadata
-        id: metadata
-        shell: bash
+      - name: Install PostgreSQL client
         run: |
-          set -euo pipefail
-          BACKUP_ID="$(date -u +'%Y%m%dT%H%M%SZ')"
-          DAY_OF_MONTH="$(date -u +'%d')"
-          BACKUP_DIR="$RUNNER_TEMP/teacherflavius-$BACKUP_ID"
-          ARCHIVE="$RUNNER_TEMP/teacherflavius-$BACKUP_ID.tar.gz"
-          ENCRYPTED="$RUNNER_TEMP/teacherflavius-$BACKUP_ID.tar.gz.gpg"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
 
-          mkdir -p "$BACKUP_DIR"
-
-          echo "backup_id=$BACKUP_ID" >> "$GITHUB_OUTPUT"
-          echo "backup_dir=$BACKUP_DIR" >> "$GITHUB_OUTPUT"
-          echo "archive=$ARCHIVE" >> "$GITHUB_OUTPUT"
-          echo "encrypted=$ENCRYPTED" >> "$GITHUB_OUTPUT"
-
-          if [ "$DAY_OF_MONTH" = '01' ]; then
-            echo 'retention=90' >> "$GITHUB_OUTPUT"
-            echo 'tier=monthly' >> "$GITHUB_OUTPUT"
-          else
-            echo 'retention=30' >> "$GITHUB_OUTPUT"
-            echo 'tier=daily' >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Dump database roles
+      - name: Create, encrypt and self-check backup
+        id: backup
         shell: bash
-        run: |
-          set -euo pipefail
-          supabase db dump \
-            --db-url "$SUPABASE_DB_URL" \
-            --file "${{ steps.metadata.outputs.backup_dir }}/roles.sql" \
-            --role-only
-
-      - name: Dump database schema
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase db dump \
-            --db-url "$SUPABASE_DB_URL" \
-            --file "${{ steps.metadata.outputs.backup_dir }}/schema.sql"
-
-      - name: Dump database data
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase db dump \
-            --db-url "$SUPABASE_DB_URL" \
-            --file "${{ steps.metadata.outputs.backup_dir }}/data.sql" \
-            --use-copy \
-            --data-only \
-            --exclude 'storage.buckets_vectors' \
-            --exclude 'storage.vector_indexes'
-
-      - name: Dump migration history
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase db dump \
-            --db-url "$SUPABASE_DB_URL" \
-            --file "${{ steps.metadata.outputs.backup_dir }}/history_schema.sql" \
-            --schema supabase_migrations
-
-          supabase db dump \
-            --db-url "$SUPABASE_DB_URL" \
-            --file "${{ steps.metadata.outputs.backup_dir }}/history_data.sql" \
-            --use-copy \
-            --data-only \
-            --schema supabase_migrations
-
-      - name: Capture recovery manifest
-        shell: bash
-        run: |
-          set -euo pipefail
-          BACKUP_DIR="${{ steps.metadata.outputs.backup_dir }}"
-
-          if ! command -v psql >/dev/null 2>&1; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq postgresql-client
-          fi
-
-          psql "$SUPABASE_DB_URL" -At -v ON_ERROR_STOP=1 <<'SQL' > "$BACKUP_DIR/recovery_manifest.json"
-          select jsonb_pretty(jsonb_build_object(
-            'format_version', 1,
-            'captured_at', now(),
-            'critical_row_counts', jsonb_build_object(
-              'profiles', (select count(*) from public.profiles),
-              'auth_users', (select count(*) from auth.users),
-              'monthly_tuition', (select count(*) from public.monthly_tuition),
-              'tuition_payment_attempts', (select count(*) from public.tuition_payment_attempts),
-              'makeup_class_slots', (select count(*) from public.makeup_class_slots)
-            ),
-            'storage', jsonb_build_object(
-              'buckets', (select count(*) from storage.buckets),
-              'objects', (select count(*) from storage.objects)
-            ),
-            'cron_jobs', coalesce((
-              select jsonb_agg(
-                jsonb_build_object(
-                  'jobname', jobname,
-                  'schedule', schedule,
-                  'command', command,
-                  'active', active
-                ) order by jobname
-              )
-              from cron.job
-              where jobname in (
-                'daily-data-retention-maintenance',
-                'mercado-pago-chargeback-reconciliation',
-                'mercado-pago-reconciliation',
-                'payment-alert-health-scan',
-                'payment-financial-health-check',
-                'sync-auto-makeup-slots-30-days',
-                'system-health-watchdog',
-                'system-synthetic-probe'
-              )
-            ), '[]'::jsonb)
-          ));
-          SQL
-
-          jq -e '
-            .format_version == 1
-            and (.critical_row_counts | type == "object")
-            and (.storage | type == "object")
-            and (.cron_jobs | length == 8)
-          ' "$BACKUP_DIR/recovery_manifest.json" >/dev/null
-
-      - name: Validate plaintext dump set
-        shell: bash
-        run: |
-          set -euo pipefail
-          BACKUP_DIR="${{ steps.metadata.outputs.backup_dir }}"
-
-          for file in roles.sql schema.sql data.sql history_schema.sql history_data.sql recovery_manifest.json; do
-            test -s "$BACKUP_DIR/$file" || {
-              echo "::error::Backup file is missing or empty: $file"
-              exit 1
-            }
-          done
-
-          (
-            cd "$BACKUP_DIR"
-            sha256sum \
-              roles.sql \
-              schema.sql \
-              data.sql \
-              history_schema.sql \
-              history_data.sql \
-              recovery_manifest.json \
-              > manifest.sha256
-          )
-
-          cat > "$BACKUP_DIR/README.txt" <<'EOF'
-          Teacherflavius encrypted Supabase logical backup.
-          This archive contains production database data and must remain confidential.
-          recovery_manifest.json contains only technical counts/configuration used by the automated restore verifier.
-          Restore instructions are versioned in BACKUP_RECOVERY.md in the repository.
-          EOF
-
-      - name: Archive and encrypt backup
-        shell: bash
-        run: |
-          set -euo pipefail
-          BACKUP_DIR="${{ steps.metadata.outputs.backup_dir }}"
-          ARCHIVE="${{ steps.metadata.outputs.archive }}"
-          ENCRYPTED="${{ steps.metadata.outputs.encrypted }}"
-
-          tar -C "$BACKUP_DIR" -czf "$ARCHIVE" .
-
-          printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" | \
-            gpg \
-              --batch \
-              --yes \
-              --pinentry-mode loopback \
-              --passphrase-fd 0 \
-              --symmetric \
-              --cipher-algo AES256 \
-              --s2k-digest-algo SHA512 \
-              --output "$ENCRYPTED" \
-              "$ARCHIVE"
-
-          sha256sum "$ENCRYPTED" > "$ENCRYPTED.sha256"
-
-          # Plaintext database material must not survive past encryption.
-          rm -rf "$BACKUP_DIR" "$ARCHIVE"
-
-      - name: Verify encrypted archive can be decrypted
-        shell: bash
-        run: |
-          set -euo pipefail
-          ENCRYPTED="${{ steps.metadata.outputs.encrypted }}"
-          VERIFY_ARCHIVE="$RUNNER_TEMP/verify-${{ steps.metadata.outputs.backup_id }}.tar.gz"
-          VERIFY_DIR="$RUNNER_TEMP/verify-${{ steps.metadata.outputs.backup_id }}"
-
-          mkdir -p "$VERIFY_DIR"
-
-          printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" | \
-            gpg \
-              --batch \
-              --yes \
-              --pinentry-mode loopback \
-              --passphrase-fd 0 \
-              --decrypt \
-              --output "$VERIFY_ARCHIVE" \
-              "$ENCRYPTED"
-
-          tar -xzf "$VERIFY_ARCHIVE" -C "$VERIFY_DIR"
-
-          (
-            cd "$VERIFY_DIR"
-            sha256sum --check manifest.sha256
-          )
-
-          rm -rf "$VERIFY_DIR" "$VERIFY_ARCHIVE"
+        run: bash scripts/create_encrypted_supabase_backup.sh
 
       - name: Upload encrypted backup
         uses: actions/upload-artifact@v7
         with:
-          name: supabase-${{ steps.metadata.outputs.tier }}-${{ steps.metadata.outputs.backup_id }}
+          name: supabase-${{ steps.backup.outputs.tier }}-${{ steps.backup.outputs.backup_id }}
           path: |
-            ${{ steps.metadata.outputs.encrypted }}
-            ${{ steps.metadata.outputs.encrypted }}.sha256
+            ${{ steps.backup.outputs.encrypted }}
+            ${{ steps.backup.outputs.checksum }}
           if-no-files-found: error
           compression-level: 0
-          retention-days: ${{ steps.metadata.outputs.retention }}
+          retention-days: ${{ steps.backup.outputs.retention }}
 
-      - name: Remove backup working files
+      - name: Remove encrypted runner copies
         if: always()
         shell: bash
         run: |
-          set +e
-
-          for path in \
-            "${{ steps.metadata.outputs.backup_dir }}" \
-            "${{ steps.metadata.outputs.archive }}" \
-            "${{ steps.metadata.outputs.encrypted }}" \
-            "${{ steps.metadata.outputs.encrypted }}.sha256" \
-            "$RUNNER_TEMP/verify-${{ steps.metadata.outputs.backup_id }}" \
-            "$RUNNER_TEMP/verify-${{ steps.metadata.outputs.backup_id }}.tar.gz"
-          do
-            if [ -n "$path" ] && [ "$path" != "$RUNNER_TEMP/verify-" ] && [ "$path" != "$RUNNER_TEMP/verify-.tar.gz" ]; then
-              rm -rf -- "$path"
-            fi
-          done
+          rm -f -- \
+            "${{ steps.backup.outputs.encrypted }}" \
+            "${{ steps.backup.outputs.checksum }}"
