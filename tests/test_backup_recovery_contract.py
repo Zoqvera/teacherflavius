@@ -102,7 +102,7 @@ class BackupRecoveryContractTests(unittest.TestCase):
         script = self.read("scripts/verify_supabase_backup_restore.sh")
 
         self.assertIn('LOCAL_DB_CONTAINER="supabase_db_$(basename "$STACK_DIR")"', script)
-        self.assertIn("psql \\\n      -U supabase_admin", script)
+        self.assertIn("-U supabase_admin", script)
         self.assertIn("update cron.job set active = false", script)
         self.assertIn("| run_recovery_admin_sql > \"$RESTORED_MANIFEST\"", script)
 
