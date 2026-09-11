@@ -2,6 +2,8 @@
   "use strict";
 
   const GOOGLE_PROVIDER = "google";
+  const LOCAL_SIGN_OUT_SCOPE = "local";
+  const GLOBAL_SIGN_OUT_SCOPE = "global";
 
   function assertDependencies(dependencies) {
     const requiredFunctions = [
@@ -123,16 +125,28 @@
         : [];
     }
 
-    async function signOut() {
+    async function signOutWithScope(scope, allSessions) {
       const client = deps.getClient();
+      const suffix = allSessions
+        ? "?logged_out=1&all_sessions=1"
+        : "?logged_out=1";
+
       if (!client) {
-        window.location.replace(deps.loginPath + "?logged_out=1");
+        window.location.replace(deps.loginPath + suffix);
         return;
       }
 
-      const response = await client.auth.signOut({ scope: "local" });
+      const response = await client.auth.signOut({ scope: scope });
       if (response.error) throw response.error;
-      window.location.replace(deps.loginPath + "?logged_out=1");
+      window.location.replace(deps.loginPath + suffix);
+    }
+
+    function signOut() {
+      return signOutWithScope(LOCAL_SIGN_OUT_SCOPE, false);
+    }
+
+    function signOutEverywhere() {
+      return signOutWithScope(GLOBAL_SIGN_OUT_SCOPE, true);
     }
 
     return Object.freeze({
@@ -144,7 +158,8 @@
       signInWithGoogle: signInWithGoogle,
       linkGoogleIdentity: linkGoogleIdentity,
       getUserIdentities: getUserIdentities,
-      signOut: signOut
+      signOut: signOut,
+      signOutEverywhere: signOutEverywhere
     });
   }
 
