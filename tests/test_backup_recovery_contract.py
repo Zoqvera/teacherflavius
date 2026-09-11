@@ -45,6 +45,20 @@ class BackupRecoveryContractTests(unittest.TestCase):
         self.assertIn("run-id: ${{ env.BACKUP_RUN_ID }}", workflow)
         self.assertIn("bash scripts/verify_supabase_backup_restore.sh", workflow)
 
+    def test_recovery_workflow_uses_runner_context_only_after_runner_starts(self) -> None:
+        workflow = self.read(".github/workflows/supabase-backup-recovery-test.yml")
+        job_header, _steps = workflow.split("\n    steps:\n", maxsplit=1)
+
+        self.assertNotIn("${{ runner.", job_header)
+        self.assertIn(
+            "path: ${{ runner.temp }}/teacherflavius-backup-artifact",
+            workflow,
+        )
+        self.assertIn(
+            "BACKUP_ARTIFACT_DIR: ${{ runner.temp }}/teacherflavius-backup-artifact",
+            workflow,
+        )
+
     def test_recovery_manifest_covers_auth_catalog_storage_and_crons(self) -> None:
         manifest = self.read("supabase/recovery/recovery_manifest.sql")
 
