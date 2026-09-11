@@ -9,7 +9,8 @@ function read(relativePath) {
 
 const settlement = read("supabase/migrations/20260909194701_fix_mercado_pago_duplicate_detection_null_semantics.sql");
 const sharedSync = read("supabase/functions/_shared/mercado_pago_payment_sync.ts");
-const probe = read("supabase/functions/payment-concurrency-probe/index.ts");
+const webhook = read("supabase/functions/mercado-pago-webhook/index.ts");
+const reconciler = read("supabase/functions/reconcile-mercado-pago-automated/index.ts");
 
 test("production settlement serializes attempt and tuition mutations", () => {
   const rowLocks = settlement.match(/for update;/gi) ?? [];
@@ -25,17 +26,15 @@ test("approved payment application remains exactly-once after lock acquisition",
   assert.match(settlement, /tuition_row\.payment_provider = 'mercado_pago'[\s\S]*tuition_row\.provider_payment_id = normalized_provider_payment_id/i);
 });
 
-test("webhook-style synchronization and reconciler converge through the same settlement RPC", () => {
-  assert.match(sharedSync, /synchronizeMercadoPagoPayment/);
+test("webhook and reconciler converge through the same settlement RPC", () => {
+  assert.match(webhook, /synchronizeMercadoPagoPayment/);
   assert.match(sharedSync, /\.rpc\(\s*"process_mercado_pago_payment"/);
-  assert.match(probe, /synchronizeMercadoPagoPayment/);
-  assert.match(probe, /validate_mercado_pago_reconciliation_signature/);
+  assert.match(reconciler, /\.rpc\(\s*"process_mercado_pago_payment"/);
 });
 
-test("concurrency probe is internal, freshness-bound, and does not accept browser auth", () => {
-  assert.match(probe, /AUTH_TIMESTAMP_TOLERANCE_MS = 5 \* 60 \* 1000/);
-  assert.match(probe, /x-reconciliation-timestamp/);
-  assert.match(probe, /x-reconciliation-signature/);
-  assert.doesNotMatch(probe, /SUPABASE_ANON_KEY/);
-  assert.doesNotMatch(probe, /Access-Control-Allow-Origin/);
+test("concurrency safety remains enforced by production paths without a test-only endpoint", () => {
+  assert.doesNotMatch(webhook, /payment-concurrency-probe/);
+  assert.doesNotMatch(reconciler, /payment-concurrency-probe/);
+  assert.match(webhook, /providerPaymentId/);
+  assert.match(reconciler, /provider_payment_id/);
 });
