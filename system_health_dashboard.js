@@ -35,6 +35,7 @@
     scheduled_jobs_stale: "Jobs agendados atrasados",
     system_health_stalled: "Health check global atrasado",
     data_quality_check_stalled: "Health check de qualidade de dados atrasado",
+    auth_health_check_stalled: "Health check de autenticação atrasado",
     data_quality_orphan_class_assignments: "Vínculos de turma órfãos",
     data_quality_invalid_class_student_refs: "Vínculos de turma com referência inválida",
     data_quality_class_capacity_exceeded: "Turma acima da capacidade",
@@ -50,7 +51,18 @@
     data_quality_lesson_orphan_class: "Registro de lição com turma inexistente",
     data_quality_frequency_invalid_subject_ref: "Frequência com referência de aluno inválida",
     data_quality_tuition_subject_mismatch: "Mensalidade com referência de aluno inconsistente",
-    data_quality_payment_attempt_subject_mismatch: "Tentativa de pagamento com referência inconsistente"
+    data_quality_payment_attempt_subject_mismatch: "Tentativa de pagamento com referência inconsistente",
+    auth_user_without_profile: "Conta Auth sem perfil",
+    auth_active_profile_without_user: "Perfil ativo sem conta Auth",
+    auth_active_student_unconfirmed: "Aluno ativo com conta não confirmada",
+    auth_active_student_without_identity: "Aluno ativo sem identidade Auth",
+    auth_admin_missing_user: "Administrador sem conta Auth",
+    auth_admin_without_verified_mfa: "Administrador sem MFA verificado",
+    auth_profile_email_mismatch: "E-mail do perfil divergente da autenticação",
+    auth_google_link_missing_user: "Vínculo Google sem conta Auth",
+    auth_google_link_missing_profile: "Vínculo Google sem perfil",
+    auth_google_link_cleanup_pending: "Limpeza de vínculo Google pendente",
+    auth_stale_unverified_mfa_factor: "Fator MFA não verificado e antigo"
   });
 
   function toString(value) {
@@ -93,6 +105,7 @@
       generatedAt: toString(dashboard.generated_at),
       health: normalizeHealthBlock(dashboard.health),
       dataQuality: normalizeHealthBlock(dashboard.data_quality),
+      authHealth: normalizeHealthBlock(dashboard.auth_health),
       probes: Object.freeze(toArray(dashboard.probes).map(toObject)),
       crons: Object.freeze(toArray(dashboard.crons).map(toObject)),
       alerts: Object.freeze(toArray(dashboard.alerts).map(toObject))
@@ -164,18 +177,34 @@
     element.innerHTML = renderIssueRows(dashboard.health.issues);
   }
 
-  function renderDataQuality(documentRef, dashboard) {
-    const quality = dashboard.dataQuality;
-    const summary = documentRef.getElementById("dataQualitySummary");
-    const issues = documentRef.getElementById("dataQualityIssues");
+  function renderSpecializedHealth(documentRef, block, settings) {
+    const summary = documentRef.getElementById(settings.summaryId);
+    const issues = documentRef.getElementById(settings.issuesId);
+
     if (summary) {
       summary.innerHTML = [
-        '<article class="health-card ' + statusClass(quality.status) + '"><span>Qualidade dos dados</span><strong>' + escapeHtml(healthLabel(quality.status)) + '</strong></article>',
-        '<article class="health-card"><span>Findings ativos</span><strong>' + escapeHtml(quality.issueCount) + '</strong></article>',
-        '<article class="health-card"><span>Última verificação</span><strong class="health-card-date">' + escapeHtml(formatDateTime(quality.completedAt)) + '</strong></article>'
+        '<article class="health-card ' + statusClass(block.status) + '"><span>' + escapeHtml(settings.title) + '</span><strong>' + escapeHtml(healthLabel(block.status)) + '</strong></article>',
+        '<article class="health-card"><span>Findings ativos</span><strong>' + escapeHtml(block.issueCount) + '</strong></article>',
+        '<article class="health-card"><span>Última verificação</span><strong class="health-card-date">' + escapeHtml(formatDateTime(block.completedAt)) + '</strong></article>'
       ].join("");
     }
-    if (issues) issues.innerHTML = renderIssueRows(quality.issues);
+    if (issues) issues.innerHTML = renderIssueRows(block.issues);
+  }
+
+  function renderDataQuality(documentRef, dashboard) {
+    renderSpecializedHealth(documentRef, dashboard.dataQuality, {
+      summaryId: "dataQualitySummary",
+      issuesId: "dataQualityIssues",
+      title: "Qualidade dos dados"
+    });
+  }
+
+  function renderAuthHealth(documentRef, dashboard) {
+    renderSpecializedHealth(documentRef, dashboard.authHealth, {
+      summaryId: "authHealthSummary",
+      issuesId: "authHealthIssues",
+      title: "Autenticação e contas"
+    });
   }
 
   function renderProbes(documentRef, dashboard) {
@@ -232,6 +261,7 @@
     renderSummary(documentRef, dashboard);
     renderIssues(documentRef, dashboard);
     renderDataQuality(documentRef, dashboard);
+    renderAuthHealth(documentRef, dashboard);
     renderProbes(documentRef, dashboard);
     renderCrons(documentRef, dashboard);
     renderAlerts(documentRef, dashboard);
