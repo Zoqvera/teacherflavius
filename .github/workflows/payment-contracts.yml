@@ -15,6 +15,7 @@ on:
       - "supabase/functions/mercado-pago-sandbox-webhook/**"
       - "supabase/functions/reconcile-mercado-pago-sandbox/**"
       - "supabase/functions/reconcile-mercado-pago-automated/**"
+      - "supabase/functions/payment-concurrency-probe/**"
       - "supabase/functions/reconcile-mercado-pago-chargebacks/**"
       - "supabase/functions/refund-mercado-pago-payment/**"
       - "supabase/functions/list-mercado-pago-refund-candidates/**"
@@ -51,6 +52,7 @@ on:
       - "supabase/functions/mercado-pago-sandbox-webhook/**"
       - "supabase/functions/reconcile-mercado-pago-sandbox/**"
       - "supabase/functions/reconcile-mercado-pago-automated/**"
+      - "supabase/functions/payment-concurrency-probe/**"
       - "supabase/functions/reconcile-mercado-pago-chargebacks/**"
       - "supabase/functions/refund-mercado-pago-payment/**"
       - "supabase/functions/list-mercado-pago-refund-candidates/**"
@@ -114,6 +116,7 @@ jobs:
           tests/payment_idempotency.test.js
           tests/payment_gateway_contract.test.js
           tests/payment_reconciliation_monitor_contract.test.js
+          tests/payment_concurrency_contract.test.js
           tests/payment_refund_operations.test.js
           tests/payment_chargeback_operations.test.js
           tests/payment_chargeback_documentation.test.js
