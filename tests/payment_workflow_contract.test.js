@@ -14,6 +14,7 @@ test("payment workflow keeps deterministic contracts on pull requests", () => {
   assert.match(workflow, /tests\/payment_gateway_contract\.test\.js/);
   assert.match(workflow, /tests\/payment_reconciliation_monitor_contract\.test\.js/);
   assert.match(workflow, /tests\/payment_sandbox_probe\.test\.js/);
+  assert.match(workflow, /tests\/payment_sandbox_convergence_seed\.test\.js/);
   assert.match(workflow, /supabase\/functions\/reconcile-mercado-pago-automated\/\*\*/);
   assert.match(workflow, /supabase\/functions\/notify-payment-alert\/\*\*/);
 });
@@ -32,4 +33,19 @@ test("live sandbox card payments require an explicit manual opt-in and isolated 
   assert.match(workflow, /MERCADO_PAGO_TEST_CARD_NUMBER: \$\{\{ secrets\.MERCADO_PAGO_TEST_CARD_NUMBER \}\}/);
   assert.match(workflow, /MERCADO_PAGO_SANDBOX_CARD_PROBE: "true"/);
   assert.match(workflow, /Run isolated Mercado Pago card sandbox scenarios/);
+});
+
+test("reconciliation convergence seed is manual, deterministic and sandbox-scoped", () => {
+  assert.match(workflow, /run_reconciliation_seed:/);
+  assert.match(workflow, /reconciliation_external_reference:/);
+  assert.match(
+    workflow,
+    /github\.event_name == 'workflow_dispatch' && inputs\.run_reconciliation_seed == true/
+  );
+  assert.match(
+    workflow,
+    /MERCADO_PAGO_TEST_EXTERNAL_REFERENCE: \$\{\{ inputs\.reconciliation_external_reference \}\}/
+  );
+  assert.match(workflow, /scripts\/mercado_pago_sandbox_seed\.js/);
+  assert.match(workflow, /Seed one approved payment for reconciliation convergence/);
 });

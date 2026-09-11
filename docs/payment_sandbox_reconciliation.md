@@ -62,6 +62,22 @@ A migration cria `private.dispatch_mercado_pago_sandbox_reconciliation()`. Essa 
 
 Ela não é agendada por `pg_cron`; o teste sandbox só é disparado explicitamente.
 
+## Convergência após indisponibilidade transitória
+
+A validação de convergência usa duas passagens e uma `external_reference` conhecida previamente:
+
+1. cria-se o candidato sandbox antes de qualquer pagamento existir no Mercado Pago;
+2. executa-se a reconciliação e exige-se `pending`, `provider_payment_id = NULL` e `last_error_code = 'not_found'`;
+3. o workflow manual `Payment contracts` cria exatamente um pagamento sandbox aprovado com a mesma `external_reference`, usando somente as credenciais de teste armazenadas no GitHub Actions;
+4. executa-se novamente a reconciliação;
+5. o mesmo candidato deve mudar para `recovered`, preencher o `provider_payment_id` e refletir `approved` e `live_mode = false`.
+
+O seed de pagamento fica em `scripts/mercado_pago_sandbox_seed.js`. Ele só aceita referências iniciadas por `sandbox-card-`, usa o portador de teste `APRO`, cria um único pagamento e faz um GET individual para confirmar ID, status, referência e `live_mode = false` antes de considerar o seed concluído.
+
+No workflow, esse seed só é executado por `workflow_dispatch` com `run_reconciliation_seed = true` e uma `reconciliation_external_reference` explícita. Ele não roda em cron, `push` ou `pull_request`.
+
+Esse cenário verifica uma propriedade operacional distinta do simples `missed_webhook`: uma falha temporária de descoberta não transforma o candidato em erro terminal. O registro permanece elegível para tentativas posteriores e converge quando o provedor passa a expor o pagamento.
+
 ## Critério de aprovação
 
 O cenário de recuperação é considerado validado quando um candidato criado sem `provider_payment_id` termina com:
@@ -73,5 +89,7 @@ O cenário de recuperação é considerado validado quando um candidato criado s
 - `reconciliation_attempts >= 1`;
 - `recovered_at` preenchido;
 - nenhuma alteração nas tabelas financeiras de produção.
+
+Para a validação de convergência em duas passagens, também é obrigatório demonstrar que a primeira execução terminou em `pending/not_found` e que a segunda execução recuperou o mesmo candidato depois da criação do pagamento sandbox.
 
 Esse teste valida o princípio operacional usado pelo reconciliador real: o Webhook acelera a convergência, mas não é a única fonte de verdade para recuperar o estado de um pagamento.
