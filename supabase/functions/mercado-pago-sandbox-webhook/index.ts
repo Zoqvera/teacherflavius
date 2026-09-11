@@ -98,6 +98,19 @@ async function validateSignature(
   return receivedSignatures.some((received) => constantTimeEqual(received, expectedSignature));
 }
 
+async function validateSignatureCandidates(
+  xSignature: string,
+  xRequestId: string,
+  dataIds: string[],
+  secret: string,
+): Promise<boolean> {
+  const uniqueDataIds = [...new Set(dataIds.map((value) => cleanIdentifier(value, 128)))];
+  for (const dataId of uniqueDataIds) {
+    if (await validateSignature(xSignature, xRequestId, dataId, secret)) return true;
+  }
+  return false;
+}
+
 async function buildDeduplicationKey(options: {
   providerEventId: string;
   providerPaymentId: string;
@@ -211,7 +224,11 @@ async function persistEvidence(
 
 function processingHttpStatus(code: string): number {
   if (code.startsWith("sandbox_gateway_")) return 502;
-  if (code === "sandbox_evidence_lookup_failed" || code === "sandbox_evidence_update_failed" || code === "sandbox_evidence_insert_failed") return 500;
+  if (
+    code === "sandbox_evidence_lookup_failed" ||
+    code === "sandbox_evidence_update_failed" ||
+    code === "sandbox_evidence_insert_failed"
+  ) return 500;
   return 422;
 }
 
@@ -234,10 +251,6 @@ Deno.serve(async (request: Request) => {
   const requestId = cleanString(rawRequestId, 160);
   const xSignature = request.headers.get("x-signature") ?? "";
 
-  if (!(await validateSignature(xSignature, rawRequestId, rawQueryDataId, webhookSecret))) {
-    return jsonResponse({ error: "Invalid sandbox webhook signature" }, 401);
-  }
-
   const bodyText = await request.text();
   let payload: JsonRecord;
   try {
@@ -248,12 +261,26 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Invalid JSON body" }, 400);
   }
 
+  const payloadData = isRecord(payload.data) ? payload.data : {};
+  const bodyPaymentId = cleanIdentifier(payloadData.id, 128);
+  const signatureDataIdCandidates = queryDataId
+    ? [queryDataId]
+    : [bodyPaymentId, ""];
+
+  if (!(await validateSignatureCandidates(xSignature, rawRequestId, signatureDataIdCandidates, webhookSecret))) {
+    console.warn("Invalid Mercado Pago sandbox webhook signature", {
+      has_signature: !!xSignature,
+      has_request_id: !!requestId,
+      has_query_data_id: !!queryDataId,
+      has_body_data_id: !!bodyPaymentId,
+    });
+    return jsonResponse({ error: "Invalid sandbox webhook signature" }, 401);
+  }
+
   const eventType = cleanString(payload.type, 50).toLowerCase();
   if (eventType !== "payment") return jsonResponse({ ok: true, ignored: eventType || "unknown" });
   if (payload.live_mode !== false) return jsonResponse({ error: "Only sandbox events are accepted" }, 422);
 
-  const payloadData = isRecord(payload.data) ? payload.data : {};
-  const bodyPaymentId = cleanIdentifier(payloadData.id, 128);
   if (queryDataId && bodyPaymentId && queryDataId !== bodyPaymentId) {
     return jsonResponse({ error: "Webhook payment ID mismatch" }, 422);
   }
@@ -296,6 +323,7 @@ Deno.serve(async (request: Request) => {
       payment,
       metadata: {
         source: "mercado_pago_sandbox_webhook",
+        signature_data_id_source: queryDataId ? "query" : bodyPaymentId ? "body_fallback" : "omitted",
         payment_method_id: cleanString(payment.payment_method_id, 50) || null,
         event_created_at: cleanString(payload.date_created, 60) || null,
       },

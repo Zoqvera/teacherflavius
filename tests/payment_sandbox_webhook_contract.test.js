@@ -27,6 +27,15 @@ test("sandbox webhook uses isolated test credentials and HMAC validation", () =>
   assert.match(functionSource, /HMAC/);
 });
 
+test("sandbox webhook supports Mercado Pago simulator data-id fallback without bypassing HMAC", () => {
+  assert.match(functionSource, /validateSignatureCandidates/);
+  assert.match(functionSource, /signatureDataIdCandidates/);
+  assert.match(functionSource, /queryDataId\s*\?\s*\[queryDataId\]\s*:\s*\[bodyPaymentId, ""\]/);
+  assert.match(functionSource, /validateSignatureCandidates\(xSignature, rawRequestId, signatureDataIdCandidates, webhookSecret\)/);
+  assert.match(functionSource, /signature_data_id_source/);
+  assert.match(functionSource, /body_fallback/);
+});
+
 test("sandbox webhook refuses production-mode payments", () => {
   assert.match(functionSource, /payload\.live_mode !== false/);
   assert.match(functionSource, /payment\.live_mode !== false/);
