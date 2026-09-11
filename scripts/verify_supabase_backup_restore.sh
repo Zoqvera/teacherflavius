@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APPLICATION_CRONS_SQL="'daily-data-retention-maintenance','mercado-pago-chargeback-reconciliation','mercado-pago-reconciliation','operational-data-quality-health-check','payment-alert-health-scan','payment-financial-health-check','sync-auto-makeup-slots-30-days','system-health-watchdog','system-synthetic-probe'"
+APPLICATION_CRONS_SQL="'auth-account-health-check','daily-data-retention-maintenance','mercado-pago-chargeback-reconciliation','mercado-pago-reconciliation','operational-data-quality-health-check','payment-alert-health-scan','payment-financial-health-check','sync-auto-makeup-slots-30-days','system-health-watchdog','system-synthetic-probe'"
 STACK_STARTED=false
 
 require_environment() {
@@ -108,7 +108,7 @@ verify_and_decrypt_artifact() {
     .format_version == 2
     and (.critical_row_counts | type == "object")
     and (.catalog_fingerprint | type == "object")
-    and (.cron_jobs | length == 9)
+    and (.cron_jobs | length == 10)
   ' "$RECOVERY_DIR/recovery_manifest.json" >/dev/null
 
   if ! jq -e '.storage.buckets == 0 and .storage.objects == 0' "$RECOVERY_DIR/recovery_manifest.json" >/dev/null; then
