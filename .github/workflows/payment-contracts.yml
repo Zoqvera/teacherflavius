@@ -68,6 +68,12 @@ on:
   schedule:
     - cron: "23 10 * * *"
   workflow_dispatch:
+    inputs:
+      run_card_probe:
+        description: "Run live Mercado Pago test-card smoke scenarios"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -109,6 +115,7 @@ jobs:
     timeout-minutes: 5
     env:
       MERCADO_PAGO_TEST_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_TEST_ACCESS_TOKEN }}
+      MERCADO_PAGO_REQUIRE_TEST_CREDENTIAL: "true"
 
     steps:
       - name: Checkout
@@ -120,4 +127,33 @@ jobs:
           node-version: "22"
 
       - name: Probe Mercado Pago test credential with read-only GET
+        run: node scripts/mercado_pago_sandbox_probe.js
+
+  sandbox-card-payment-probe:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_card_probe == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MERCADO_PAGO_TEST_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_TEST_ACCESS_TOKEN }}
+      MERCADO_PAGO_TEST_PUBLIC_KEY: ${{ secrets.MERCADO_PAGO_TEST_PUBLIC_KEY }}
+      MERCADO_PAGO_TEST_CARD_NUMBER: ${{ secrets.MERCADO_PAGO_TEST_CARD_NUMBER }}
+      MERCADO_PAGO_TEST_CARD_SECURITY_CODE: ${{ secrets.MERCADO_PAGO_TEST_CARD_SECURITY_CODE }}
+      MERCADO_PAGO_TEST_CARD_EXPIRATION_MONTH: ${{ secrets.MERCADO_PAGO_TEST_CARD_EXPIRATION_MONTH }}
+      MERCADO_PAGO_TEST_CARD_EXPIRATION_YEAR: ${{ secrets.MERCADO_PAGO_TEST_CARD_EXPIRATION_YEAR }}
+      MERCADO_PAGO_TEST_PAYER_EMAIL: ${{ secrets.MERCADO_PAGO_TEST_PAYER_EMAIL }}
+      MERCADO_PAGO_TEST_PAYMENT_METHOD_ID: "master"
+      MERCADO_PAGO_TEST_AMOUNT: "10"
+      MERCADO_PAGO_REQUIRE_TEST_CREDENTIAL: "true"
+      MERCADO_PAGO_SANDBOX_CARD_PROBE: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Run isolated Mercado Pago card sandbox scenarios
         run: node scripts/mercado_pago_sandbox_probe.js
