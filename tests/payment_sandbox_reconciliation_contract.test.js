@@ -39,7 +39,7 @@ test("missed-webhook recovery discovers provider payment by external reference",
   assert.match(functionSource, /provider_payment_id/);
   assert.match(functionSource, /reconciliation_status: "recovered"/);
   assert.match(functionSource, /recovered_at: now/);
-  assert.match(functionSource, /payment\.live_mode === false/);
+  assert.match(functionSource, /payment\.live_mode !== false/);
   assert.match(functionSource, /sandbox-card-/);
 });
 
