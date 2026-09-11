@@ -28,7 +28,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="supabase_config.js?v=20260428-4"></script>
     <script src="/module_loader.js?v=20260902-2"></script>
-<script src="auth.js?v=20260911-1"></script>
+<script src="auth.js?v=20260819-1"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); padding: 32px 16px 48px; font-family: Georgia, serif; color: #f1f5f9; }
@@ -85,170 +85,199 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <div class="container">
     <div class="top">
-      <a class="btn" href="area-do-estudante/">ÁREA DO ESTUDANTE</a>
-      <button id="logoutButton" type="button">SAIR</button>
+      <a class="btn" href="area_do_estudante.html">ÁREA DO ESTUDANTE</a>
+      <button type="button" onclick="Auth.signOut()">SAIR</button>
     </div>
 
     <div class="header">
-      <div class="badge">PERFIL</div>
+      <div><span class="badge">TEACHER FLÁVIO</span></div>
       <h1>Meu Perfil</h1>
-      <p>Atualize seus dados quando quiser.</p>
+      <p id="studentInfo">Carregando seus dados...</p>
     </div>
 
-    <section class="card">
-      <h2>Dados da conta</h2>
-      <div id="emailReadonly" class="readonly">Carregando e-mail...</div>
-      <label for="name">Nome</label>
-      <input id="name" type="text" maxlength="120" required />
-      <label for="email">E-mail</label>
-      <input id="email" type="email" maxlength="180" required />
-      <label for="cpf">CPF</label>
-      <input id="cpf" type="text" inputmode="numeric" maxlength="14" autocomplete="off" />
-      <label for="whatsapp">WhatsApp</label>
-      <input id="whatsapp" type="tel" maxlength="30" autocomplete="tel" />
-      <label for="pixKey">Chave PIX</label>
-      <input id="pixKey" type="text" required />
-      <div class="field-note">A chave PIX é usada apenas em situações em que o professor precise fazer reembolso de algum valor para o aluno.</div>
-
-      <div class="availability-block">
-        <div class="availability-title">Disponibilidade semanal</div>
-        <p class="availability-help">Marque todos os dias e horários, de segunda a sexta, em que você estará disponível para fazer aulas de inglês.</p>
-        <div id="availabilityGrid" class="availability-grid" aria-label="Horários disponíveis"></div>
+    <div class="card">
+      <h2>Dados da matrícula</h2>
+      <div class="readonly">
+        <p><b>E-mail de login:</b> <span id="profileEmail">Carregando...</span></p>
+        <p><b>Número de matrícula:</b> <span id="enrollmentCode">Carregando...</span></p>
       </div>
 
-      <button id="saveButton" class="primary" type="button">SALVAR ALTERAÇÕES</button>
-      <div id="message" class="message" role="status" aria-live="polite"></div>
-    </section>
+      <form id="profileForm">
+        <label for="name">Nome completo</label>
+        <input id="name" type="text" required />
+
+        <label for="cpf">CPF</label>
+        <input id="cpf" type="text" inputmode="numeric" maxlength="14" required />
+
+        <label for="whatsapp">WhatsApp</label>
+        <input id="whatsapp" type="tel" inputmode="tel" required />
+
+        <label for="pixKey">Chave PIX</label>
+        <input id="pixKey" type="text" required />
+        <div class="field-note">A chave PIX é usada apenas em situações em que o professor precise fazer reembolso de algum valor para o aluno.</div>
+
+        <div class="availability-block">
+          <div class="availability-title">Disponibilidade para aulas</div>
+          <p class="availability-help">Marque todos os dias e horários, de segunda a sexta, em que você estará disponível para fazer aulas de inglês.</p>
+          <div class="availability-grid" id="availabilityGrid"></div>
+        </div>
+
+        <button class="primary" type="submit">SALVAR ALTERAÇÕES</button>
+        <div id="message" class="message"></div>
+      </form>
+    </div>
 
     <section class="card" aria-labelledby="privacyTitle">
-      <h2 id="privacyTitle">Privacidade e dados</h2>
-      <p class="privacy-copy">Você pode consultar uma cópia dos seus dados, solicitar correção, revisão ou exclusão e acompanhar solicitações em andamento.</p>
+      <h2 id="privacyTitle">Privacidade e meus dados</h2>
+      <p class="privacy-copy">Nesta área você pode baixar uma cópia dos principais dados associados à sua conta, corrigir informações simples, registrar solicitações de acesso, correção, anonimização ou bloqueio, pedir informações sobre compartilhamentos e solicitar o encerramento da conta. Registros que precisem ser conservados por fundamento legal válido permanecem sujeitos à política de retenção.</p>
       <div class="privacy-links">
-        <a href="/privacidade/">Aviso de Privacidade</a>
-        <a href="/meus-dados/">Meus dados e solicitações</a>
+        <a href="/privacidade/">Política de Privacidade</a>
+        <a href="/cookies/">Política de Cookies</a>
+        <a href="#" data-tf-open-privacy>Preferências de privacidade</a>
       </div>
-      <div id="privacyDeletionStatus" class="privacy-request-status" hidden></div>
+      <div id="privacyRequestStatus" class="privacy-request-status" role="status" aria-live="polite">Consultando solicitações de privacidade...</div>
       <div class="privacy-actions">
-        <button id="exportDataButton" type="button">BAIXAR MEUS DADOS</button>
-        <button id="requestDeletionButton" class="privacy-danger" type="button">SOLICITAR EXCLUSÃO DA CONTA</button>
-        <button id="cancelDeletionButton" class="privacy-cancel" type="button" hidden>CANCELAR SOLICITAÇÃO</button>
+        <button id="requestAccountDeletionButton" class="privacy-danger" type="button">SOLICITAR ENCERRAMENTO DA CONTA</button>
+        <button id="cancelAccountDeletionButton" class="privacy-cancel" type="button" hidden>CANCELAR PEDIDO</button>
       </div>
-      <div id="privacyMessage" class="message" role="status" aria-live="polite"></div>
     </section>
   </div>
 
   <script>
-    async function init() {
-      if (!Auth.isConfigured()) {
-        Auth.showConfigWarning();
-        return;
-      }
+    const availabilityDays = [
+      { key: "seg", label: "Seg" },
+      { key: "ter", label: "Ter" },
+      { key: "qua", label: "Qua" },
+      { key: "qui", label: "Qui" },
+      { key: "sex", label: "Sex" }
+    ];
 
-      try {
-        await Auth.requireAuth({ requireProfileComplete: false });
-      } catch (error) {
-        if (error && error.code === "PROFILE_REQUIRED") return;
-        if (error && error.code === "PROFILE_INCOMPLETE") return;
-        throw error;
-      }
+    const availabilityFullNames = { seg: "Segunda", ter: "Terça", qua: "Quarta", qui: "Quinta", sex: "Sexta" };
+    const availabilityHours = [
+      { key: "09", label: "9h - 10h" },
+      { key: "10", label: "10h - 11h" },
+      { key: "12", label: "12h - 13h" },
+      { key: "13", label: "13h - 14h" },
+      { key: "15", label: "15h - 16h" },
+      { key: "17", label: "17h - 18h" },
+      { key: "18", label: "18h - 19h" },
+      { key: "20", label: "20h - 21h" },
+      { key: "21", label: "21h - 22h" }
+    ];
 
-      const user = await Auth.getUser();
-      const profile = await Auth.getProfile();
-      if (!user) {
-        window.location.replace("login/?next=" + encodeURIComponent("/perfil/"));
-        return;
-      }
+    function onlyDigits(value) { return String(value || "").replace(/\D/g, ""); }
 
-      document.getElementById("emailReadonly").textContent = user.email || "Sem e-mail";
-      document.getElementById("name").value = (profile && profile.name) || "";
-      document.getElementById("email").value = (profile && profile.email) || user.email || "";
-      document.getElementById("cpf").value = (profile && profile.cpf) || "";
-      document.getElementById("whatsapp").value = (profile && profile.whatsapp) || "";
-      document.getElementById("pixKey").value = (profile && profile.pix_key) || "";
-      renderAvailability((profile && profile.availability) || {});
+    function formatCpf(value) {
+      const digits = onlyDigits(value).slice(0, 11);
+      return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     }
 
-    function renderAvailability(selected) {
+    function buildAvailabilityGrid() {
       const grid = document.getElementById("availabilityGrid");
-      grid.innerHTML = "";
-      const days = [
-        ["monday", "Seg"], ["tuesday", "Ter"], ["wednesday", "Qua"], ["thursday", "Qui"], ["friday", "Sex"]
-      ];
-
-      grid.appendChild(document.createElement("div"));
-      days.forEach(([key, label]) => {
-        const head = document.createElement("div");
-        head.className = "grid-head";
-        head.textContent = label;
-        grid.appendChild(head);
-      });
-
-      for (let hour = 8; hour <= 21; hour += 1) {
-        const time = document.createElement("div");
-        time.className = "time-label";
-        time.textContent = String(hour).padStart(2, "0") + ":00";
-        grid.appendChild(time);
-
-        days.forEach(([dayKey, label]) => {
-          const slot = document.createElement("label");
-          slot.className = "slot";
-          const input = document.createElement("input");
-          input.type = "checkbox";
-          input.dataset.day = dayKey;
-          input.dataset.hour = hour;
-          input.setAttribute("aria-label", `${label} ${String(hour).padStart(2, "0")}:00`);
-          input.checked = Array.isArray(selected[dayKey]) && selected[dayKey].includes(hour);
-          const box = document.createElement("span");
-          box.className = "slot-box";
-          slot.appendChild(input);
-          slot.appendChild(box);
-          grid.appendChild(slot);
+      grid.innerHTML = '<div></div>' + availabilityDays.map(day => `<div class="grid-head" title="${availabilityFullNames[day.key]}">${day.label}</div>`).join("");
+      availabilityHours.forEach(hour => {
+        grid.insertAdjacentHTML("beforeend", `<div class="time-label">${hour.label}</div>`);
+        availabilityDays.forEach(day => {
+          const id = `availability_${day.key}_${hour.key}`;
+          grid.insertAdjacentHTML("beforeend", `
+            <label class="slot" for="${id}" title="${availabilityFullNames[day.key]}, ${hour.label}">
+              <input type="checkbox" id="${id}" name="availability" data-day="${day.key}" data-hour="${hour.key}" />
+              <span class="slot-box"></span>
+            </label>
+          `);
         });
-      }
+      });
     }
 
-    function collectAvailability() {
-      const availability = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [] };
-      document.querySelectorAll("#availabilityGrid input[type='checkbox']").forEach((input) => {
-        if (input.checked) availability[input.dataset.day].push(Number(input.dataset.hour));
+    function getAvailability() {
+      const availability = { seg: [], ter: [], qua: [], qui: [], sex: [] };
+      document.querySelectorAll('input[name="availability"]:checked').forEach(input => {
+        availability[input.dataset.day].push(input.dataset.hour);
       });
       return availability;
     }
 
-    document.getElementById("saveButton").addEventListener("click", async () => {
+    function setAvailability(availability) {
+      document.querySelectorAll('input[name="availability"]').forEach(input => input.checked = false);
+      availabilityDays.forEach(day => {
+        const hours = Array.isArray(availability && availability[day.key]) ? availability[day.key] : [];
+        hours.forEach(hour => {
+          const input = document.getElementById(`availability_${day.key}_${hour}`);
+          if (input) input.checked = true;
+        });
+      });
+    }
+
+    function setMessage(text, type) {
       const message = document.getElementById("message");
-      message.className = "message";
-      message.textContent = "Salvando...";
+      message.className = "message" + (type ? " " + type : "");
+      message.textContent = text || "";
+    }
+
+    async function loadProfile() {
+      const user = await Auth.requireAuth();
+      if (!user) return;
+
+      const profile = await Auth.getProfile();
+      document.getElementById("studentInfo").textContent = `${profile.name || "Aluno"} · ${profile.email || user.email}`;
+      document.getElementById("profileEmail").textContent = profile.email || user.email || "Não informado";
+      document.getElementById("enrollmentCode").textContent = profile.enrollment_code || "Não informado";
+      document.getElementById("name").value = profile.name || "";
+      document.getElementById("cpf").value = formatCpf(profile.cpf || "");
+      document.getElementById("whatsapp").value = profile.whatsapp || "";
+      document.getElementById("pixKey").value = profile.pix_key || "";
+      setAvailability(profile.availability || {});
+    }
+
+    function enforceGoogleOnlyCopy() {
+      const status = document.getElementById("googleIdentityStatus");
+      const googleMessage = document.getElementById("googleIdentityMessage");
+      const linkedStatus = "✓ Conta Google vinculada. A partir de agora, o acesso ao portal será feito pelo Google.";
+      const linkedMessage = "Conta Google vinculada com sucesso. Seus dados e seu progresso foram preservados. Nos próximos acessos, use o Google.";
+
+      if (status && status.textContent.includes("Conta Google vinculada") && status.textContent !== linkedStatus) {
+        status.textContent = linkedStatus;
+      }
+      if (googleMessage && googleMessage.textContent.includes("Conta Google vinculada com sucesso") && googleMessage.textContent !== linkedMessage) {
+        googleMessage.textContent = linkedMessage;
+      }
+    }
+
+    const googleCopyObserver = new MutationObserver(enforceGoogleOnlyCopy);
+    googleCopyObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+    document.getElementById("cpf").addEventListener("input", function () { this.value = formatCpf(this.value); });
+
+    document.getElementById("profileForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+      setMessage("Salvando alterações...");
 
       try {
-        await Auth.updateProfile({
+        const updatedProfile = await Auth.updateProfile({
           name: document.getElementById("name").value.trim(),
-          email: document.getElementById("email").value.trim(),
           cpf: document.getElementById("cpf").value.trim(),
           whatsapp: document.getElementById("whatsapp").value.trim(),
           pix_key: document.getElementById("pixKey").value.trim(),
-          availability: collectAvailability()
+          availability: getAvailability()
         });
-        message.className = "message success";
-        message.textContent = "Perfil atualizado com sucesso.";
+
+        document.getElementById("studentInfo").textContent = `${updatedProfile.name || "Aluno"} · ${updatedProfile.email || document.getElementById("profileEmail").textContent}`;
+        setMessage("Perfil atualizado com sucesso.", "success");
       } catch (error) {
-        message.className = "message error";
-        message.textContent = error.message || "Não foi possível atualizar o perfil.";
+        setMessage(error.message || "Não foi possível salvar as alterações.", "error");
       }
     });
 
-    document.getElementById("logoutButton").addEventListener("click", async () => {
-      await Auth.signOut();
-    });
-
-    init();
+    buildAvailabilityGrid();
+    loadProfile();
+    enforceGoogleOnlyCopy();
   </script>
-  <script src="/student_privacy_controls.js?v=20260904-1"></script>
+  <script defer src="/privacy_requests.js?v=20260820-2"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
 
 <script src="/site_runtime_config.js?v=20260903-1"></script>
 <script src="/site_page_runtime.js?v=20260903-1"></script>
-<script defer src="/site_footer.js?v=20260814-1"></script>
+<script defer src="/site_footer.js?v=20260820-privacy-1"></script>
 </body>
 </html>
