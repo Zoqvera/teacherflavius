@@ -24,6 +24,18 @@ test("payment creation preserves server-side amount and provider idempotency con
   assert.match(createPaymentSource, /process_mercado_pago_payment/);
 });
 
+test("payment creation distinguishes Pix and card policy failures", () => {
+  assert.match(createPaymentSource, /type SupportedPaymentMethod = "pix" \| "card"/);
+  assert.match(createPaymentSource, /mercado_pago_pix_temporarily_unavailable/);
+  assert.match(createPaymentSource, /mercado_pago_card_temporarily_unavailable/);
+  assert.match(createPaymentSource, /policyFallbackMessage\(paymentMethod, professorNotified\)/);
+  assert.match(createPaymentSource, /policyBlockCode\(paymentMethod\)/);
+  assert.match(
+    createPaymentSource,
+    /mercado-pago-policy-\$\{input\.paymentMethod\}-\$\{input\.providerErrorCode\}-\$\{dayKey\}/,
+  );
+});
+
 test("gateway observability captures provider outages and Mercado Pago policy blocks", () => {
   assert.match(gatewayFailureMigration, /provider_http_\(429\|5\[0-9\]\{2\}\)_/);
   assert.match(
