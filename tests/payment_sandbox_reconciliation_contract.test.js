@@ -17,6 +17,16 @@ const migrationSource = fs.readFileSync(
   ),
   "utf8"
 );
+const transientScenarioMigrationSource = fs.readFileSync(
+  path.join(
+    __dirname,
+    "..",
+    "supabase",
+    "migrations",
+    "20260911183822_extend_mercado_pago_sandbox_reconciliation_scenarios.sql"
+  ),
+  "utf8"
+);
 
 test("sandbox reconciliation uses only the test Mercado Pago credential", () => {
   assert.match(functionSource, /MERCADO_PAGO_TEST_ACCESS_TOKEN/);
@@ -53,6 +63,22 @@ test("search results are discovery only and each payment id is re-queried before
   assert.match(functionSource, /payment\.live_mode !== false/);
   assert.match(functionSource, /live_payment_rejected/);
   assert.match(functionSource, /multiple_matches/);
+});
+
+test("gateway network and HTTP failures remain retryable rather than terminal", () => {
+  assert.match(functionSource, /new SandboxReconciliationError\("gateway_unreachable"\)/);
+  assert.match(functionSource, /new SandboxReconciliationError\(`gateway_http_\$\{response\.status\}`\)/);
+  assert.match(functionSource, /constructor\(code: string, terminal = false\)/);
+  assert.match(functionSource, /if \(terminal\) await markCandidateFailed/);
+  assert.match(functionSource, /else await markCandidatePending/);
+});
+
+test("sandbox table can label deterministic transient gateway recovery evidence", () => {
+  assert.match(transientScenarioMigrationSource, /transient_gateway_503/);
+  assert.match(transientScenarioMigrationSource, /transient_gateway_timeout/);
+  assert.match(transientScenarioMigrationSource, /missed_webhook/);
+  assert.doesNotMatch(transientScenarioMigrationSource, /monthly_tuition/);
+  assert.doesNotMatch(transientScenarioMigrationSource, /tuition_payment_attempts/);
 });
 
 test("sandbox reconciliation is isolated from webhook evidence and production financial state", () => {
