@@ -98,6 +98,22 @@ class BackupRecoveryContractTests(unittest.TestCase):
         self.assertIn(".storage.buckets == 0 and .storage.objects == 0", script)
         self.assertIn(".cron_jobs | length == 9", script)
 
+    def test_restore_script_uses_local_admin_for_cron_recovery(self) -> None:
+        script = self.read("scripts/verify_supabase_backup_restore.sh")
+
+        self.assertIn('LOCAL_DB_CONTAINER="supabase_db_$(basename "$STACK_DIR")"', script)
+        self.assertIn("psql \\\n      -U supabase_admin", script)
+        self.assertIn("update cron.job set active = false", script)
+        self.assertIn("| run_recovery_admin_sql > \"$RESTORED_MANIFEST\"", script)
+
+    def test_restore_script_selects_latest_backup_from_rerun_artifacts(self) -> None:
+        script = self.read("scripts/verify_supabase_backup_restore.sh")
+
+        self.assertIn("select_latest_backup_payload", script)
+        self.assertIn("-name 'teacherflavius-*.tar.gz.gpg'", script)
+        self.assertIn("LC_ALL=C sort -r", script)
+        self.assertIn("sed -n '1p'", script)
+
     def test_recovery_baseline_versions_every_application_cron(self) -> None:
         platform_config = self.read("supabase/baseline/30_platform_config.sql")
 
