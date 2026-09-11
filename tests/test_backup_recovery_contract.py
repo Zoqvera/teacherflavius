@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 APPLICATION_CRONS = (
+    "auth-account-health-check",
     "daily-data-retention-maintenance",
     "mercado-pago-chargeback-reconciliation",
     "mercado-pago-reconciliation",
@@ -96,7 +97,7 @@ class BackupRecoveryContractTests(unittest.TestCase):
             self.assertIn(marker, script)
 
         self.assertIn(".storage.buckets == 0 and .storage.objects == 0", script)
-        self.assertIn(".cron_jobs | length == 9", script)
+        self.assertIn(".cron_jobs | length == 10", script)
 
     def test_restore_script_uses_local_admin_for_cron_recovery(self) -> None:
         script = self.read("scripts/verify_supabase_backup_restore.sh")

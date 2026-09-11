@@ -9,14 +9,14 @@
     infrastructure: Object.freeze({
       globalName: "AuthInfrastructure",
       selector: 'script[src^="/auth_infrastructure.js"]',
-      src: "/auth_infrastructure.js?v=20260909-1",
+      src: "/auth_infrastructure.js?v=20260911-1",
       missingMessage: "A infraestrutura de autenticação não foi inicializada.",
       loadErrorMessage: "Não foi possível carregar a infraestrutura de autenticação."
     }),
     authSessionService: Object.freeze({
       globalName: "AuthSessionService",
       selector: 'script[src^="/auth_session_service.js"]',
-      src: "/auth_session_service.js?v=20260909-1",
+      src: "/auth_session_service.js?v=20260911-1",
       missingMessage: "O serviço de sessão não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de sessão."
     }),
@@ -338,6 +338,11 @@
     return service.signOut();
   }
 
+  async function signOutEverywhere() {
+    const service = await getAuthSessionService();
+    return service.signOutEverywhere();
+  }
+
   window.Auth = {
     isConfigured: isConfigured,
     getClient: getClient,
@@ -357,6 +362,7 @@
     linkGoogleIdentity: linkGoogleIdentity,
     getUserIdentities: getUserIdentities,
     signOut: signOut,
+    signOutEverywhere: signOutEverywhere,
     getProfile: getProfile,
     updateProfile: updateProfile,
     completeProfile: completeProfile,
