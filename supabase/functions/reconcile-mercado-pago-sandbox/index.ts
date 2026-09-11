@@ -6,7 +6,8 @@ import {
 } from "../_shared/mercado_pago_payment_sync.ts";
 
 const CANDIDATE_TABLE = "mercado_pago_sandbox_reconciliation_candidates";
-const PAYMENT_SEARCH_ENDPOINT = "https://api.mercadopago.com/v1/payments/search";
+const PAYMENT_ENDPOINT = "https://api.mercadopago.com/v1/payments";
+const PAYMENT_SEARCH_ENDPOINT = `${PAYMENT_ENDPOINT}/search`;
 const SANDBOX_REFERENCE_PREFIX = "sandbox-card-";
 const AUTH_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
 const PROVIDER_TIMEOUT_MS = 8_000;
@@ -97,20 +98,10 @@ function validateCandidate(candidate: SandboxCandidate): void {
   }
 }
 
-async function fetchProviderSearch(
-  accessToken: string,
-  externalReference: string,
-): Promise<MercadoPagoSearchResponse> {
-  const parameters = new URLSearchParams({
-    sort: "date_created",
-    criteria: "desc",
-    external_reference: externalReference,
-    limit: "10",
-  });
-
+async function fetchProviderJson(url: string, accessToken: string): Promise<unknown> {
   let response: Response;
   try {
-    response = await fetch(`${PAYMENT_SEARCH_ENDPOINT}?${parameters.toString()}`, {
+    response = await fetch(url, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -126,39 +117,111 @@ async function fetchProviderSearch(
     throw new SandboxReconciliationError(`gateway_http_${response.status}`);
   }
 
-  const payload = await response.json();
+  return await response.json();
+}
+
+async function fetchProviderSearch(
+  accessToken: string,
+  externalReference: string,
+): Promise<MercadoPagoSearchResponse> {
+  const parameters = new URLSearchParams({
+    sort: "date_created",
+    criteria: "desc",
+    external_reference: externalReference,
+    limit: "10",
+  });
+  const payload = await fetchProviderJson(
+    `${PAYMENT_SEARCH_ENDPOINT}?${parameters.toString()}`,
+    accessToken,
+  );
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-    throw new SandboxReconciliationError("gateway_invalid_payload");
+    throw new SandboxReconciliationError("gateway_invalid_search_payload");
   }
   return payload as MercadoPagoSearchResponse;
 }
 
-function selectSandboxPayment(
-  candidate: SandboxCandidate,
-  search: MercadoPagoSearchResponse,
-): MercadoPagoPayment | null {
-  const results = Array.isArray(search.results) ? search.results : [];
-  const matchingBusinessData = results.filter((payment) => {
-    return cleanString(payment.external_reference, 200) === candidate.external_reference
-      && amountMatches(candidate, payment);
-  });
+async function fetchProviderPayment(
+  accessToken: string,
+  paymentId: string,
+): Promise<MercadoPagoPayment> {
+  const payload = await fetchProviderJson(
+    `${PAYMENT_ENDPOINT}/${encodeURIComponent(paymentId)}`,
+    accessToken,
+  );
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new SandboxReconciliationError("gateway_invalid_payment_payload");
+  }
+  return payload as MercadoPagoPayment;
+}
 
-  if (matchingBusinessData.some((payment) => payment.live_mode === true)) {
-    throw new SandboxReconciliationError("live_payment_rejected", true);
+function validatePaymentDetails(
+  candidate: SandboxCandidate,
+  expectedPaymentId: string,
+  payment: MercadoPagoPayment,
+): void {
+  const providerPaymentId = payment.id != null ? String(payment.id) : "";
+  if (
+    providerPaymentId !== expectedPaymentId
+    || cleanString(payment.external_reference, 200) !== candidate.external_reference
+    || !amountMatches(candidate, payment)
+  ) {
+    throw new SandboxReconciliationError("provider_data_mismatch", true);
+  }
+}
+
+function uniqueSearchPaymentIds(search: MercadoPagoSearchResponse): string[] {
+  const results = Array.isArray(search.results) ? search.results : [];
+  return [...new Set(
+    results
+      .map((payment) => payment.id == null ? "" : String(payment.id).trim())
+      .filter(Boolean),
+  )];
+}
+
+function canSkipDetailLookupError(error: unknown): boolean {
+  if (!(error instanceof SandboxReconciliationError)) return false;
+  return error.code === "gateway_http_403" || error.code === "gateway_http_404";
+}
+
+async function discoverSandboxPayment(
+  accessToken: string,
+  candidate: SandboxCandidate,
+): Promise<MercadoPagoPayment | null> {
+  const search = await fetchProviderSearch(accessToken, candidate.external_reference);
+  const paymentIds = uniqueSearchPaymentIds(search);
+  const sandboxMatches = new Map<string, MercadoPagoPayment>();
+  let livePaymentSeen = false;
+
+  for (const paymentId of paymentIds) {
+    let payment: MercadoPagoPayment;
+    try {
+      payment = await fetchProviderPayment(accessToken, paymentId);
+    } catch (error) {
+      if (canSkipDetailLookupError(error)) continue;
+      throw error;
+    }
+
+    validatePaymentDetails(candidate, paymentId, payment);
+    if (payment.live_mode === true) {
+      livePaymentSeen = true;
+      continue;
+    }
+    if (payment.live_mode !== false) {
+      throw new SandboxReconciliationError("provider_live_mode_missing", true);
+    }
+    sandboxMatches.set(paymentId, payment);
   }
 
-  const sandboxMatches = matchingBusinessData.filter((payment) => {
-    return payment.live_mode === false && payment.id != null;
-  });
-  const uniqueByPaymentId = new Map(
-    sandboxMatches.map((payment) => [String(payment.id), payment]),
-  );
-  const uniqueMatches = [...uniqueByPaymentId.values()];
-
-  if (uniqueMatches.length > 1) {
+  if (sandboxMatches.size > 1) {
     throw new SandboxReconciliationError("multiple_matches", true);
   }
-  return uniqueMatches[0] ?? null;
+  if (sandboxMatches.size === 1) {
+    return [...sandboxMatches.values()][0];
+  }
+  if (livePaymentSeen) {
+    throw new SandboxReconciliationError("live_payment_rejected", true);
+  }
+  return null;
 }
 
 function attemptFields(candidate: SandboxCandidate, now: string): JsonRecord {
@@ -305,8 +368,7 @@ Deno.serve(async (request: Request) => {
     summary.checked += 1;
     try {
       validateCandidate(candidate);
-      const search = await fetchProviderSearch(accessToken, candidate.external_reference);
-      const payment = selectSandboxPayment(candidate, search);
+      const payment = await discoverSandboxPayment(accessToken, candidate);
       if (!payment) {
         await markCandidatePending(supabaseAdmin, candidate, "not_found");
         summary.not_found += 1;

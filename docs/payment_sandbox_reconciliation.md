@@ -48,11 +48,13 @@ O candidato começa com:
 - `external_reference` iniciando por `sandbox-card-`;
 - `expected_amount > 0`.
 
-O reconciliador consulta `/v1/payments/search` usando a `external_reference`. Somente um pagamento com os mesmos dados de negócio, `live_mode = false` e valor compatível pode ser recuperado.
+O reconciliador consulta `/v1/payments/search` usando a `external_reference` somente para descobrir possíveis IDs. Cada ID retornado é então consultado individualmente em `/v1/payments/{id}`. Somente os detalhes da consulta individual são usados para confirmar `external_reference`, valor e `live_mode = false` antes de qualquer recuperação.
 
-Se houver exatamente uma correspondência válida, o candidato passa para `recovered` e recebe `provider_payment_id`, `provider_status`, método de pagamento, timestamps e `recovered_at`.
+Esse segundo GET é deliberado: a própria documentação do Mercado Pago apresenta a busca por `external_reference` como forma de obter o ID e recomenda consultar o pagamento individualmente para obter/confirmar seus dados. Assim, um resultado resumido ou pertencente a outro modo nunca é suficiente para marcar o candidato como recuperado.
 
-Se nenhuma correspondência existir, o candidato permanece `pending` com `last_error_code = 'not_found'`. Múltiplos pagamentos compatíveis ou dados de produção tornam o candidato `failed`.
+Se houver exatamente uma correspondência sandbox válida, o candidato passa para `recovered` e recebe `provider_payment_id`, `provider_status`, método de pagamento, timestamps e `recovered_at`.
+
+Se nenhuma correspondência existir, o candidato permanece `pending` com `last_error_code = 'not_found'`. Múltiplos pagamentos sandbox compatíveis tornam o candidato `failed`. Se apenas pagamentos `live_mode = true` forem encontrados nos detalhes, o candidato também falha de forma segura.
 
 ## Disparo manual seguro
 
