@@ -14,6 +14,7 @@ begin
     select *
     from (
       values
+        ('auth-account-health-check', '22,52 * * * *', 'select private.run_auth_account_health_check(true);'),
         ('daily-data-retention-maintenance', '35 5 * * *', 'select public.perform_data_retention_maintenance(''cron'');'),
         ('mercado-pago-chargeback-reconciliation', '17,47 * * * *', 'select private.dispatch_mercado_pago_chargeback_reconciliation();'),
         ('mercado-pago-reconciliation', '*/5 * * * *', 'select private.dispatch_mercado_pago_reconciliation();'),
@@ -43,6 +44,6 @@ $$;
 --   teacherflavius_notification_webhook_secret
 
 -- Current production inventory at recovery-baseline time:
--- Application-owned Cron jobs: 9.
+-- Application-owned Cron jobs: 10.
 -- Storage buckets: none.
 -- Custom storage RLS policies: none.
