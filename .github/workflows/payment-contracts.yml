@@ -13,6 +13,7 @@ on:
       - "supabase/functions/create-mercado-pago-payment/**"
       - "supabase/functions/mercado-pago-webhook/**"
       - "supabase/functions/mercado-pago-sandbox-webhook/**"
+      - "supabase/functions/reconcile-mercado-pago-sandbox/**"
       - "supabase/functions/reconcile-mercado-pago-automated/**"
       - "supabase/functions/reconcile-mercado-pago-chargebacks/**"
       - "supabase/functions/refund-mercado-pago-payment/**"
@@ -47,6 +48,7 @@ on:
       - "supabase/functions/create-mercado-pago-payment/**"
       - "supabase/functions/mercado-pago-webhook/**"
       - "supabase/functions/mercado-pago-sandbox-webhook/**"
+      - "supabase/functions/reconcile-mercado-pago-sandbox/**"
       - "supabase/functions/reconcile-mercado-pago-automated/**"
       - "supabase/functions/reconcile-mercado-pago-chargebacks/**"
       - "supabase/functions/refund-mercado-pago-payment/**"
@@ -109,6 +111,7 @@ jobs:
           tests/payment_creation_control.test.js
           tests/payment_sandbox_probe.test.js
           tests/payment_sandbox_webhook_contract.test.js
+          tests/payment_sandbox_reconciliation_contract.test.js
           tests/payment_webhook_log.test.js
           tests/payment_workflow_contract.test.js
 
