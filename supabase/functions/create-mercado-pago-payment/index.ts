@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
 
 type JsonRecord = Record<string, unknown>;
+type SupportedPaymentMethod = "pix" | "card";
 
 type MercadoPagoPayment = {
   id?: string | number;
@@ -141,15 +142,30 @@ function getAccessTokenDiagnostics(accessToken: string): JsonRecord {
   };
 }
 
-function pixFallbackMessage(professorNotified: boolean): string {
+function policyBlockCode(paymentMethod: SupportedPaymentMethod): string {
+  return paymentMethod === "pix"
+    ? "mercado_pago_pix_temporarily_unavailable"
+    : "mercado_pago_card_temporarily_unavailable";
+}
+
+function policyFallbackMessage(
+  paymentMethod: SupportedPaymentMethod,
+  professorNotified: boolean,
+): string {
   const notification = professorNotified ? " O professor já foi informado." : "";
-  return "O pagamento via PIX está temporariamente indisponível." + notification +
-    " Devido a indisponibilidade momentânea do pagamento via PIX por meio do Mercado Pago, você pode enviar o valor do PIX para a chave PIX " + ALTERNATIVE_PIX_KEY + ".";
+  if (paymentMethod === "pix") {
+    return "O pagamento via PIX está temporariamente indisponível." + notification +
+      " Devido à indisponibilidade momentânea do pagamento via PIX por meio do Mercado Pago, você pode enviar o valor para a chave PIX " + ALTERNATIVE_PIX_KEY + ".";
+  }
+
+  return "O pagamento por cartão está temporariamente indisponível." + notification +
+    " Você pode tentar novamente mais tarde ou, se preferir, pagar via PIX para a chave " + ALTERNATIVE_PIX_KEY + ".";
 }
 
 async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
   providerStatus: number;
   providerErrorCode: string;
+  paymentMethod: SupportedPaymentMethod;
 }): Promise<boolean> {
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   const notificationEmail = Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL") ?? "";
@@ -167,7 +183,7 @@ async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
       headers: {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": `mercado-pago-policy-${input.providerErrorCode}-${dayKey}`,
+        "Idempotency-Key": `mercado-pago-policy-${input.paymentMethod}-${input.providerErrorCode}-${dayKey}`,
       },
       body: JSON.stringify({
         from: fromEmail,
@@ -176,12 +192,13 @@ async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
         text: [
           "O site detectou que o Mercado Pago recusou a criação de um pagamento por política interna.",
           "",
+          `Método: ${input.paymentMethod === "pix" ? "PIX" : "cartão de crédito"}`,
           `HTTP do Mercado Pago: ${input.providerStatus}`,
           `Código do Mercado Pago: ${input.providerErrorCode}`,
           "",
           "Por privacidade, este alerta não inclui dados do aluno nem identificadores internos da cobrança.",
           "Consulte o Controle de Mensalidades no portal se precisar identificar o caso.",
-          `O aluno recebeu a orientação para pagar pela chave PIX alternativa: ${ALTERNATIVE_PIX_KEY}`,
+          `O aluno recebeu a opção de pagamento pela chave PIX alternativa: ${ALTERNATIVE_PIX_KEY}`,
         ].join("\n"),
       }),
     });
@@ -589,13 +606,15 @@ Deno.serve(async (request: Request) => {
     });
 
     if (mercadoPagoResponse.status === 403 && providerErrorCode === "pa_unauthorized_result_from_policies") {
+      const paymentMethod: SupportedPaymentMethod = isPix ? "pix" : "card";
       const professorNotified = await notifyProfessorOfMercadoPagoPolicyBlock({
         providerStatus: mercadoPagoResponse.status,
         providerErrorCode,
+        paymentMethod,
       });
       return jsonResponse(request, {
-        error: pixFallbackMessage(professorNotified),
-        code: "mercado_pago_pix_temporarily_unavailable",
+        error: policyFallbackMessage(paymentMethod, professorNotified),
+        code: policyBlockCode(paymentMethod),
         provider_error_code: providerErrorCode,
         alternative_pix_key: ALTERNATIVE_PIX_KEY,
         professor_notified: professorNotified,

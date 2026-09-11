@@ -12,6 +12,7 @@
     "tuition_exempt",
     "mercado_pago_not_configured",
     "mercado_pago_pix_temporarily_unavailable",
+    "mercado_pago_card_temporarily_unavailable",
     "mercado_pago_unauthorized",
   ]);
 

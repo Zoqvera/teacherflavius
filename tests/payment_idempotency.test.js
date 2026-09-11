@@ -50,4 +50,5 @@ test("clears the key after deterministic client or gateway configuration failure
   assert.equal(PaymentIdempotency.shouldClearAfterFailure({ status: 422, code: "provider_rejected_payment" }), true);
   assert.equal(PaymentIdempotency.shouldClearAfterFailure({ status: 409, code: "already_paid" }), true);
   assert.equal(PaymentIdempotency.shouldClearAfterFailure({ status: 503, code: "mercado_pago_pix_temporarily_unavailable" }), true);
+  assert.equal(PaymentIdempotency.shouldClearAfterFailure({ status: 503, code: "mercado_pago_card_temporarily_unavailable" }), true);
 });
