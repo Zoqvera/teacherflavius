@@ -23,7 +23,7 @@
       documentRef,
       "p",
       "privacy-copy",
-      "O botão SAIR encerra apenas esta sessão. Use a opção abaixo se quiser encerrar as sessões em todos os dispositivos vinculados à sua conta."
+      "O botão SAIR encerra apenas esta sessão. A opção abaixo revoga as sessões renováveis em todos os dispositivos; tokens de acesso já emitidos podem permanecer válidos até expirarem."
     );
     const button = createElement(
       documentRef,
@@ -68,7 +68,7 @@
     if (!button || !auth || typeof auth.signOutEverywhere !== "function") return;
 
     const confirmed = windowRef.confirm(
-      "Encerrar sua sessão neste navegador e também as sessões abertas nos outros dispositivos?"
+      "Revogar as sessões renováveis neste navegador e nos outros dispositivos vinculados à sua conta?"
     );
     if (!confirmed) return;
 
