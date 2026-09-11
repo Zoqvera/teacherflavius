@@ -8,6 +8,7 @@ function read(relativePath) {
 }
 
 const migration = read("supabase/migrations/20260909211458_monitor_mercado_pago_reconciliation_heartbeat.sql");
+const escalationMigration = read("supabase/migrations/20260911190219_escalate_repeated_mercado_pago_reconciliation_failures.sql");
 const reconciler = read("supabase/functions/reconcile-mercado-pago-automated/index.ts");
 const notifier = read("supabase/functions/notify-payment-alert/index.ts");
 const dashboard = read("payment_operations_dashboard.js");
@@ -45,4 +46,24 @@ test("payment dashboard exposes stalled reconciliation as operational warning", 
   assert.match(dashboard, /state\.reconciliationStalled/);
   assert.match(dashboard, /Reconciliação automática/);
   assert.match(dashboard, /ATRASADA/);
+});
+
+test("repeated reconciliation failures escalate at the third consecutive failure", () => {
+  assert.match(escalationMigration, /classify_mercado_pago_reconciliation_failure_alert/);
+  assert.match(escalationMigration, /previous_failure_count, 0\) = 0 then 'warning'/);
+  assert.match(escalationMigration, /previous_failure_count, 0\) < 3/);
+  assert.match(escalationMigration, /current_failure_count, 0\) >= 3 then 'critical'/);
+  assert.match(escalationMigration, /'escalation_threshold', 3/);
+});
+
+test("critical reconciliation escalation keeps retry enabled and uses a separate dedupe key", () => {
+  assert.match(escalationMigration, /'reconciliation_failure_escalated:' \|\| new\.id::text/);
+  assert.match(escalationMigration, /'reconciliation_failure',\s*'critical'/s);
+  assert.match(escalationMigration, /'retry_continues', true/);
+});
+
+test("reconciliation escalation preserves gateway failure capture", () => {
+  assert.match(escalationMigration, /provider_http_\(429\|5\[0-9\]\{2\}\)_/);
+  assert.match(escalationMigration, /provider_http_403_pa_unauthorized_result_from_policies/);
+  assert.match(escalationMigration, /'gateway_failure'/);
 });
