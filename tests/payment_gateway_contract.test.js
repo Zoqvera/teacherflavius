@@ -12,6 +12,9 @@ const webhookSource = read("supabase/functions/mercado-pago-webhook/index.ts");
 const replaySource = read("supabase/functions/replay-mercado-pago-webhook/index.ts");
 const listSource = read("supabase/functions/list-payment-webhooks/index.ts");
 const syncSource = read("supabase/functions/_shared/mercado_pago_payment_sync.ts");
+const gatewayFailureMigration = read(
+  "supabase/migrations/20260911025109_capture_mercado_pago_policy_gateway_failures.sql",
+);
 
 test("payment creation preserves server-side amount and provider idempotency contracts", () => {
   assert.match(createPaymentSource, /\.from\("monthly_tuition"\)/);
@@ -19,6 +22,16 @@ test("payment creation preserves server-side amount and provider idempotency con
   assert.match(createPaymentSource, /"X-Idempotency-Key": idempotencyKey/);
   assert.match(createPaymentSource, /external_reference:\s*attempt\.id/);
   assert.match(createPaymentSource, /process_mercado_pago_payment/);
+});
+
+test("gateway observability captures provider outages and Mercado Pago policy blocks", () => {
+  assert.match(gatewayFailureMigration, /provider_http_\(429\|5\[0-9\]\{2\}\)_/);
+  assert.match(
+    gatewayFailureMigration,
+    /provider_http_403_pa_unauthorized_result_from_policies/,
+  );
+  assert.match(gatewayFailureMigration, /'gateway_failure'/);
+  assert.match(gatewayFailureMigration, /payment_operational_events/);
 });
 
 test("webhook validates HMAC before accepting and persisting valid notifications", () => {
