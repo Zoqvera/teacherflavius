@@ -97,6 +97,7 @@ select jsonb_pretty(jsonb_build_object(
     )
     from cron.job
     where jobname in (
+      'auth-account-health-check',
       'daily-data-retention-maintenance',
       'mercado-pago-chargeback-reconciliation',
       'mercado-pago-reconciliation',
