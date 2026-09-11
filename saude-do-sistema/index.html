@@ -30,7 +30,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase_config.js?v=20260715-1"></script>
   <script src="/module_loader.js?v=20260902-2"></script>
-  <script src="/auth.js?v=20260730-1"></script>
+  <script src="/auth.js?v=20260911-1"></script>
   <link rel="stylesheet" href="/professor.css?v=20260820-1">
   <link rel="stylesheet" href="/professor_mfa_gate.css?v=20260909-1">
   <style>
@@ -105,6 +105,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="dataQualityIssues"></div>
     </section>
 
+    <section class="health-panel" aria-labelledby="authHealthTitle">
+      <h2 id="authHealthTitle">Autenticação e contas</h2>
+      <p class="health-panel-note">Verifica vínculos Auth/perfil, identidades Google, confirmação de contas e MFA administrativo sem expor dados pessoais.</p>
+      <div id="authHealthSummary" class="health-summary" aria-label="Resumo da saúde de autenticação"></div>
+      <div id="authHealthIssues"></div>
+    </section>
+
     <section class="health-panel">
       <h2>Disponibilidade sintética</h2>
       <div class="health-table-wrap">
@@ -139,6 +146,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <script src="/professor_mfa_service.js?v=20260909-1"></script>
   <script src="/professor_mfa_gate.js?v=20260909-1"></script>
-  <script src="/system_health_dashboard.js?v=20260910-data-quality-1"></script>
+  <script src="/system_health_dashboard.js?v=20260911-auth-health-1"></script>
 </body>
 </html>
