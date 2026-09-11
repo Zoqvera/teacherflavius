@@ -26,9 +26,35 @@ require_environment() {
   fi
 }
 
-prepare_paths() {
-  ENCRYPTED="$(find "$BACKUP_ARTIFACT_DIR" -maxdepth 1 -type f -name '*.tar.gz.gpg' -print -quit)"
+select_latest_backup_payload() {
+  local encrypted_name
+
+  encrypted_name="$(
+    find "$BACKUP_ARTIFACT_DIR" \
+      -maxdepth 1 \
+      -type f \
+      -name 'teacherflavius-*.tar.gz.gpg' \
+      -printf '%f\n' \
+      | LC_ALL=C sort -r \
+      | sed -n '1p'
+  )"
+
+  if [ -z "$encrypted_name" ]; then
+    echo '::error::Encrypted backup payload is missing.'
+    exit 1
+  fi
+
+  ENCRYPTED="$BACKUP_ARTIFACT_DIR/$encrypted_name"
   CHECKSUM="${ENCRYPTED}.sha256"
+
+  if [ ! -f "$CHECKSUM" ]; then
+    echo '::error::Encrypted backup checksum is missing.'
+    exit 1
+  fi
+}
+
+prepare_paths() {
+  select_latest_backup_payload
   RECOVERY_ARCHIVE="$RUNNER_TEMP/teacherflavius-recovery.tar.gz"
   RECOVERY_DIR="$RUNNER_TEMP/teacherflavius-recovery"
   STACK_DIR="$RUNNER_TEMP/teacherflavius-recovery-stack"
@@ -36,11 +62,6 @@ prepare_paths() {
   EXPECTED_NORMALIZED="$RUNNER_TEMP/expected-recovery-manifest.json"
   ACTUAL_NORMALIZED="$RUNNER_TEMP/actual-recovery-manifest.json"
   REPORT_PATH="$RUNNER_TEMP/recovery-verification-report.json"
-
-  if [ -z "$ENCRYPTED" ] || [ ! -f "$CHECKSUM" ]; then
-    echo '::error::Encrypted backup payload or checksum is missing.'
-    exit 1
-  fi
 }
 
 cleanup() {
@@ -116,6 +137,12 @@ start_disposable_stack() {
     echo '::error::Could not resolve disposable Supabase database URL.'
     exit 1
   fi
+
+  LOCAL_DB_CONTAINER="supabase_db_$(basename "$STACK_DIR")"
+  if ! docker inspect "$LOCAL_DB_CONTAINER" >/dev/null 2>&1; then
+    echo '::error::Could not resolve disposable Supabase database container.'
+    exit 1
+  fi
 }
 
 restore_logical_backup() {
@@ -140,16 +167,23 @@ restore_logical_backup() {
     --dbname "$LOCAL_DB_URL"
 }
 
+run_recovery_admin_sql() {
+  docker exec -i "$LOCAL_DB_CONTAINER" \
+    psql \
+      -U supabase_admin \
+      -d postgres \
+      -qAt \
+      --set ON_ERROR_STOP=1
+}
+
 capture_restored_manifest_and_disable_crons() {
-  psql "$LOCAL_DB_URL" -At --variable ON_ERROR_STOP=1 <<SQL
-begin;
-\i $GITHUB_WORKSPACE/supabase/baseline/30_platform_config.sql
-\o $RESTORED_MANIFEST
-\i $GITHUB_WORKSPACE/supabase/recovery/recovery_manifest.sql
-\o
-update cron.job set active = false where jobname in ($APPLICATION_CRONS_SQL);
-commit;
-SQL
+  {
+    echo 'begin;'
+    cat "$GITHUB_WORKSPACE/supabase/baseline/30_platform_config.sql"
+    cat "$GITHUB_WORKSPACE/supabase/recovery/recovery_manifest.sql"
+    printf 'update cron.job set active = false where jobname in (%s);\n' "$APPLICATION_CRONS_SQL"
+    echo 'commit;'
+  } | run_recovery_admin_sql > "$RESTORED_MANIFEST"
 }
 
 compare_recovery_state() {
