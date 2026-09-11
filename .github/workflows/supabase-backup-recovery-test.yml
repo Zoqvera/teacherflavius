@@ -30,7 +30,6 @@ jobs:
     env:
       BACKUP_RUN_ID: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || inputs.backup_run_id }}
       BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
-      BACKUP_ARTIFACT_DIR: ${{ runner.temp }}/teacherflavius-backup-artifact
 
     steps:
       - name: Check out recovery code
@@ -52,7 +51,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: supabase-*
-          path: ${{ env.BACKUP_ARTIFACT_DIR }}
+          path: ${{ runner.temp }}/teacherflavius-backup-artifact
           merge-multiple: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ env.BACKUP_RUN_ID }}
@@ -60,6 +59,8 @@ jobs:
       - name: Restore and verify backup
         id: recovery
         shell: bash
+        env:
+          BACKUP_ARTIFACT_DIR: ${{ runner.temp }}/teacherflavius-backup-artifact
         run: bash scripts/verify_supabase_backup_restore.sh
 
       - name: Upload recovery exercise report
