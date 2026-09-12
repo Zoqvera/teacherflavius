@@ -38,6 +38,11 @@
     assertDependencies(deps);
 
     async function signUp(name, email, password) {
+      studentData.validateEnrollmentPassword(
+        { password: password },
+        { requireEnrollmentCredentials: true }
+      );
+
       const client = deps.requireClient();
       const response = await client.auth.signUp({
         email: email,
