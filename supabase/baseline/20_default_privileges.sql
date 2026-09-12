@@ -83,7 +83,7 @@ begin
   end loop;
 
   if to_regclass('public.page_content_overrides') is not null then
-    grant select on table public.page_content_overrides to anon;
+    execute 'grant select on table public.page_content_overrides to anon';
   end if;
 end;
 $least_privilege$;
