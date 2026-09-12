@@ -109,6 +109,7 @@
 
   window.StudentDataUtils = Object.freeze({
     normalizeStudentInput: normalizeStudentInput,
+    validateEnrollmentPassword: validateEnrollmentPassword,
     validateStudentInput: validateStudentInput,
     buildProfilePayload: buildProfilePayload,
     buildUserMetadata: buildUserMetadata
