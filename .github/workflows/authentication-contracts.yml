@@ -1,0 +1,78 @@
+name: Authentication contracts
+
+on:
+  pull_request:
+    paths:
+      - "auth*.js"
+      - "account_security_ui.js"
+      - "password_recovery_login.js"
+      - "student_enrollment_service.js"
+      - "student_data_utils.js"
+      - "student_area_route_guard.js"
+      - "professor_mfa_*.js"
+      - "google_auth_*.js"
+      - "login.html"
+      - "perfil/**"
+      - "acessos_dos_alunos.html"
+      - "acessos_dos_alunos.js"
+      - "privacy_requests.js"
+      - "supabase/migrations/**"
+      - "tests/auth*.test.js"
+      - "tests/professor_mfa_service.test.js"
+      - "tests/student_data_utils.test.js"
+      - "tests/student_enrollment_service.test.js"
+      - "tests/account_deletion_security_contracts.test.js"
+      - ".github/workflows/authentication-contracts.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "auth*.js"
+      - "account_security_ui.js"
+      - "password_recovery_login.js"
+      - "student_enrollment_service.js"
+      - "student_data_utils.js"
+      - "student_area_route_guard.js"
+      - "professor_mfa_*.js"
+      - "google_auth_*.js"
+      - "login.html"
+      - "perfil/**"
+      - "acessos_dos_alunos.html"
+      - "acessos_dos_alunos.js"
+      - "privacy_requests.js"
+      - "supabase/migrations/**"
+      - "tests/auth*.test.js"
+      - "tests/professor_mfa_service.test.js"
+      - "tests/student_data_utils.test.js"
+      - "tests/student_enrollment_service.test.js"
+      - "tests/account_deletion_security_contracts.test.js"
+      - ".github/workflows/authentication-contracts.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  auth-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Run authentication regression contracts
+        run: |
+          node --test \
+            tests/auth_session_service.test.js \
+            tests/auth_password_change.test.js \
+            tests/auth_guard_service.test.js \
+            tests/auth_access_contracts.test.js \
+            tests/professor_mfa_service.test.js \
+            tests/student_data_utils.test.js \
+            tests/student_enrollment_service.test.js \
+            tests/account_deletion_security_contracts.test.js
