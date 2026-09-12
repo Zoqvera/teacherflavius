@@ -125,7 +125,7 @@ test("credential rotation runbook never requires sharing secret values", () => {
     "mercado_pago_reconciliation_cron_secret"
   ].forEach((name) => assert.match(credentialRotation, new RegExp(escapeRegex(name))));
   assert.match(credentialRotation, /Nunca colocar em chat, issue, PR, commit, log ou screenshot/i);
-  assert.match(credentialRotation, /não deve ser rotacionado quando todos os signatários e validadores/i);
+  assert.match(credentialRotation, /só deve ser rotacionado quando todos os signatários e validadores/i);
   assert.match(credentialRotation, /Nenhuma credencial externa foi rotacionada automaticamente/i);
   assert.match(credentialRotation, /kill switch de \*\*novas cobranças\*\*/i);
 });
