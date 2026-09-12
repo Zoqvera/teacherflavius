@@ -22,11 +22,27 @@ class LighthouseGuardrailTests(unittest.TestCase):
         self.assertEqual(guardrail_failures(aggregate), [])
         self.assertEqual(representative_index(samples, aggregate), 2)
 
+    def test_five_sample_median_absorbs_two_noisy_runs(self):
+        samples = [
+            LighthouseMetrics(0.84, 3910, 0.02, 42),
+            LighthouseMetrics(0.82, 3980, 0.03, 51),
+            LighthouseMetrics(0.85, 3895, 0.02, 37),
+            LighthouseMetrics(0.79, 4210, 0.04, 66),
+            LighthouseMetrics(0.80, 4170, 0.03, 61),
+        ]
+
+        aggregate = median_metrics(samples)
+
+        self.assertEqual(aggregate, LighthouseMetrics(0.82, 3980.0, 0.03, 51.0))
+        self.assertEqual(guardrail_failures(aggregate), [])
+
     def test_rejects_persistent_lcp_regression(self):
         samples = [
+            LighthouseMetrics(0.82, 3950, 0.02, 45),
             LighthouseMetrics(0.80, 4300, 0.02, 60),
             LighthouseMetrics(0.79, 4500, 0.03, 80),
             LighthouseMetrics(0.82, 4200, 0.01, 50),
+            LighthouseMetrics(0.83, 3970, 0.02, 48),
         ]
 
         failures = guardrail_failures(median_metrics(samples))
