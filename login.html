@@ -38,7 +38,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase_config.js?v=20260429-4"></script>
     <script src="/module_loader.js?v=20260902-2"></script>
-<script src="/auth.js?v=20260819-2"></script>
+<script src="/auth.js?v=20260912-1"></script>
   <link rel="stylesheet" href="/login/login_visual.css?v=20260901-1">
 </head>
 <body class="login-page">
@@ -96,7 +96,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       const params = new URLSearchParams(window.location.search);
       const passwordAccessMode = params.get("password_access") === "1";
-      const allowedUserId = "b6a3e909-e395-424a-a4eb-3a448f188e97";
       const googleButton = document.getElementById("googleLoginButton");
       const loginError = document.getElementById("loginError");
       const notice = document.getElementById("loginNotice");
@@ -119,7 +118,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       async function validateExistingEnrollment(user) {
-        if (!user || user.id !== allowedUserId || !window.Auth || !Auth.getClient) return false;
+        if (!user || !window.Auth || !Auth.getClient || !Auth.isPasswordAccessAllowedUser) return false;
+        if (!Auth.isPasswordAccessAllowedUser(user)) return false;
         const client = Auth.getClient();
         if (!client) return false;
         const result = await client
@@ -128,7 +128,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           .eq("id", user.id)
           .maybeSingle();
         if (result.error || !result.data) return false;
-        return result.data.id === allowedUserId &&
+        return result.data.id === user.id &&
           result.data.enrolled === true &&
           result.data.archived !== true &&
           result.data.profile_completed === true;
