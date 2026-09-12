@@ -4,6 +4,8 @@
   const PURCHASES_KEY = "tf_analytics_purchases_v1";
   const RETRY_INTERVAL_MS = 250;
   const MAX_RETRY_ATTEMPTS = 60;
+  const GTAG_VALUE_TIMEOUT_MS = 350;
+  const CONTEXT_CAPTURE_TIMEOUT_MS = 650;
 
   function assertDependencies(dependencies) {
     if (!dependencies || typeof dependencies.track !== "function") {
@@ -11,6 +13,9 @@
     }
     if (!dependencies.utils) {
       throw new Error("Analytics payment instrumentation requires utilities.");
+    }
+    if (!dependencies.measurementId) {
+      throw new Error("Analytics payment instrumentation requires measurementId.");
     }
   }
 
@@ -121,6 +126,83 @@
       });
     }
 
+    function getGtagValue(fieldName) {
+      return new Promise(function (resolve) {
+        let settled = false;
+        const timer = window.setTimeout(function () {
+          if (settled) return;
+          settled = true;
+          resolve("");
+        }, GTAG_VALUE_TIMEOUT_MS);
+
+        try {
+          window.gtag("get", deps.measurementId, fieldName, function (value) {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timer);
+            resolve(deps.utils.cleanText(value, 80));
+          });
+        } catch (_error) {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timer);
+          resolve("");
+        }
+      });
+    }
+
+    async function readServerAnalyticsIdentifiers() {
+      if (typeof window.gtag !== "function") return null;
+      const values = await Promise.all([
+        getGtagValue("client_id"),
+        getGtagValue("session_id")
+      ]);
+      if (!values[0]) return null;
+      return { client_id: values[0], session_id: values[1] || null };
+    }
+
+    async function captureServerAnalyticsContext(payload) {
+      if (
+        !payload ||
+        !payload.tuition_id ||
+        !payload.idempotency_key ||
+        !window.Auth ||
+        typeof window.Auth.getClient !== "function"
+      ) {
+        return false;
+      }
+
+      const identifiers = await readServerAnalyticsIdentifiers();
+      if (!identifiers) return false;
+
+      const client = window.Auth.getClient();
+      if (!client || !client.functions || typeof client.functions.invoke !== "function") return false;
+
+      const capturePromise = client.functions.invoke("capture-payment-analytics-context", {
+        body: {
+          analytics_consent: true,
+          tuition_id: payload.tuition_id,
+          idempotency_key: payload.idempotency_key,
+          client_id: identifiers.client_id,
+          session_id: identifiers.session_id
+        }
+      }).then(function (response) {
+        if (response && response.error) {
+          console.warn("Não foi possível registrar o contexto analítico do pagamento.");
+          return false;
+        }
+        return true;
+      }).catch(function () {
+        console.warn("Não foi possível registrar o contexto analítico do pagamento.");
+        return false;
+      });
+
+      const timeoutPromise = new Promise(function (resolve) {
+        window.setTimeout(function () { resolve(false); }, CONTEXT_CAPTURE_TIMEOUT_MS);
+      });
+      return Promise.race([capturePromise, timeoutPromise]);
+    }
+
     function installInvokePaymentInstrumentation() {
       if (
         typeof window.invokePaymentFunction !== "function" ||
@@ -146,6 +228,12 @@
             tuition_id: context.tuition_id,
             items: checkoutItems(context)
           });
+
+          try {
+            await captureServerAnalyticsContext(payload);
+          } catch (_error) {
+            console.warn("Não foi possível registrar o contexto analítico do pagamento.");
+          }
         }
 
         try {
