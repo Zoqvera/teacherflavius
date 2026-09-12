@@ -8,10 +8,8 @@ from pathlib import Path
 BLOCKED_TOP_LEVEL = frozenset({
     ".git",
     ".github",
-    ".netlify",
     "_site",
     "docs",
-    "netlify",
     "scripts",
     "supabase",
     "tests",
