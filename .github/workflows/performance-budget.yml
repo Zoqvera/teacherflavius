@@ -59,11 +59,21 @@ jobs:
             sleep 1
           done
           exit 1
-      - name: Run three Lighthouse mobile samples
+      - name: Warm up Lighthouse runtime
         shell: bash
         run: |
           set -euo pipefail
-          for sample in 1 2 3; do
+          npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ \
+            --only-categories=performance \
+            --output=json \
+            --output-path=/tmp/lighthouse-warmup.json \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+            --quiet
+      - name: Run five Lighthouse mobile samples
+        shell: bash
+        run: |
+          set -euo pipefail
+          for sample in 1 2 3 4 5; do
             npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ \
               --only-categories=performance \
               --output=json \
@@ -76,7 +86,9 @@ jobs:
           python3 scripts/check_lighthouse_guardrails.py \
             lighthouse-home-mobile-1.json \
             lighthouse-home-mobile-2.json \
-            lighthouse-home-mobile-3.json
+            lighthouse-home-mobile-3.json \
+            lighthouse-home-mobile-4.json \
+            lighthouse-home-mobile-5.json
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
