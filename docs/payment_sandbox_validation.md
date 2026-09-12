@@ -1,6 +1,6 @@
 # Validação sandbox de pagamentos Mercado Pago
 
-Data de referência: 11 de setembro de 2026.
+Data de referência: 12 de setembro de 2026.
 
 ## Objetivo
 
@@ -10,7 +10,7 @@ O processo separa três níveis de validação:
 
 1. um probe agendado e somente leitura para confirmar que a credencial de teste continua válida;
 2. um smoke test manual e explícito que cria transações exclusivamente no ambiente de teste do Mercado Pago;
-3. um endpoint de Webhook sandbox separado que valida HMAC, reconsulta o pagamento no Mercado Pago e persiste evidência fora das tabelas financeiras de produção.
+3. endpoints sandbox separados para validar Webhook, reconciliação, convergência e falhas transitórias sem tocar nas tabelas financeiras de produção.
 
 Nenhum teste sandbox deve usar credenciais de produção.
 
@@ -39,7 +39,7 @@ Ele valida, nessa ordem:
 
 O teste usa valor baixo de sandbox e uma parcela. Os identificadores retornados podem aparecer no log, mas Access Token, Public Key, número do cartão e código de segurança não são impressos.
 
-Em 11 de setembro de 2026, a execução manual `Payment contracts #48` concluiu com sucesso e confirmou aprovação, rejeição, consulta e preservação de idempotência com o mesmo `payment_id` no replay.
+A execução manual `Payment contracts #48`, em 11 de setembro de 2026, concluiu com sucesso e confirmou aprovação, rejeição, consulta e preservação de idempotência com o mesmo `payment_id` no replay.
 
 ## Secrets necessários no GitHub Actions
 
@@ -92,7 +92,7 @@ Ele é deliberadamente público no gateway (`verify_jwt=false`) porque o Mercado
 - exige `external_reference` iniciando por `sandbox-card-`;
 - reconsulta `/v1/payments/{id}` com o Access Token de teste antes de persistir evidência;
 - não chama `process_mercado_pago_payment`;
-- não lê nem altera `monthly_tuition` ou `payment_attempts`;
+- não lê nem altera `monthly_tuition` ou `tuition_payment_attempts`;
 - persiste apenas em `public.mercado_pago_sandbox_webhook_events`, tabela com RLS habilitado e acesso revogado para `public`, `anon` e `authenticated`.
 
 ## Secrets necessários no Supabase para o webhook sandbox
@@ -116,28 +116,76 @@ Em **Suas integrações > aplicação TeacherFlavius > Webhooks > Configurar not
 4. salve a configuração;
 5. revele/copiei a assinatura secreta de teste;
 6. cadastre essa assinatura no Supabase como `MERCADO_PAGO_TEST_WEBHOOK_SECRET`;
-7. execute novamente o smoke test manual de cartão no GitHub.
+7. use **Simular** quando precisar validar a entrega assinada de teste.
 
-A documentação oficial do Mercado Pago recomenda URLs distintas para teste e produção e gera uma assinatura secreta própria para validar a origem das notificações.
+A URL de teste e a assinatura de teste devem permanecer separadas das configurações de produção.
 
-## Evidência de Webhook e convergência
+## Evidência de Webhook validada
 
-Depois de um novo pagamento sandbox, a validação é concluída quando existe um registro recente em `public.mercado_pago_sandbox_webhook_events` com:
+Em 11 de setembro de 2026, o simulador oficial do Mercado Pago entregou com sucesso uma notificação assinada para o pagamento sandbox aprovado `1328152152`.
+
+A evidência persistida confirmou:
 
 - `signature_valid = true`;
 - `live_mode = false`;
-- `provider_payment_id` correspondente ao pagamento sandbox;
-- `provider_status` obtido por reconsulta ao Mercado Pago;
-- `external_reference` iniciando por `sandbox-card-`;
-- `transaction_amount > 0`.
+- `provider_status = approved`;
+- `provider_status_detail = accredited`;
+- `payment_method_id = master`;
+- valor sandbox de 10,00;
+- `external_reference` com prefixo `sandbox-card-`.
 
-Essa reconsulta do provedor no momento do Webhook valida o mecanismo de convergência server-side sem utilizar a base financeira de produção.
+Uma segunda simulação da mesma notificação não gerou novo efeito: permaneceu um único registro, com `delivery_count` passando de 1 para 2.
 
-A recuperação de produção quando uma notificação não chega continua sendo responsabilidade do reconciliador principal, que possui contratos, heartbeat e health checks próprios. O sandbox não injeta pagamentos de teste nas tabelas reais apenas para simular uma falha de Webhook.
+## Reconciliação sandbox isolada
+
+O endpoint `reconcile-mercado-pago-sandbox` valida a recuperação que seria necessária quando uma notificação não chega.
+
+A busca por `external_reference` usa `/v1/payments/search` apenas para descobrir IDs. Cada ID candidato é reconsultado individualmente em `/v1/payments/{id}`. A consulta individual é a fonte autoritativa para validar:
+
+- ID;
+- `external_reference`;
+- valor;
+- `live_mode=false`;
+- status atual do provedor.
+
+Essa separação foi adotada depois que um resultado resumido de busca apresentou `live_mode` incompatível com a consulta individual. Resultados de busca nunca são aceitos diretamente para recuperação.
+
+## Cenários de convergência validados
+
+### Webhook perdido
+
+Um candidato sem `provider_payment_id` foi reconciliado exclusivamente por `external_reference` e valor. O pagamento `1328152152` foi recuperado como `approved`, `accredited`, método `master`, `live_mode=false`, sem consultar a tabela de evidências de Webhook e sem tocar nas tabelas financeiras reais.
+
+### `not_found -> retry -> recovered`
+
+Foi criada primeiro uma referência inexistente no Mercado Pago. A primeira reconciliação terminou `pending/not_found`. Depois foi criado um pagamento sandbox aprovado com a mesma `external_reference`; a segunda execução recuperou o pagamento `1328152736`, limpou o erro e terminou `recovered`.
+
+### Falha transitória de gateway
+
+Foram exercitados estados persistidos equivalentes a:
+
+- `gateway_http_503`;
+- `gateway_unreachable`/timeout.
+
+Em ambos, a execução seguinte contra o Mercado Pago recuperou o pagamento e terminou `recovered`. O harness não tenta fazer o Mercado Pago devolver artificialmente um 503/timeout; ele valida separadamente a classificação da falha e a recuperação a partir do estado persistido correspondente.
+
+### Falhas repetidas e escalada
+
+O domínio de produção foi endurecido para distinguir falha isolada de repetição:
+
+- 1ª falha consecutiva: `warning`;
+- 2ª falha: retry sem novo alerta;
+- 3ª falha: alerta `critical` deduplicado;
+- falhas seguintes: retry continua sem spam de alertas;
+- sucesso posterior: contador volta a zero e erro é limpo.
+
+### Concorrência
+
+Uma corrida controlada entre o sincronizador utilizado pelo Webhook e o reconciliador automático confirmou que o mesmo pagamento não é aplicado duas vezes. O teste temporário foi removido depois da validação; o contrato permanente de locks e baixa condicional permanece no repositório.
 
 ## Critérios de segurança
 
-- nenhuma mensalidade de produção é criada ou alterada;
+- nenhuma mensalidade de produção é criada ou alterada pelos testes sandbox;
 - nenhuma conta de aluno de produção é usada no smoke test;
 - nenhum segredo é versionado no repositório;
 - o teste de escrita é manual e nunca roda por cron;
@@ -145,8 +193,12 @@ A recuperação de produção quando uma notificação não chega continua sendo
 - o Webhook sandbox rejeita eventos de produção;
 - o Webhook sandbox usa credenciais e assinatura distintas das de produção;
 - `X-Idempotency-Key` é reutilizada apenas no cenário de replay intencional;
+- o reconciliador sandbox não consulta evidências de Webhook para declarar recuperação;
+- a infraestrutura sandbox não chama a RPC de baixa financeira de produção;
 - o teste falha quando a infraestrutura sandbox obrigatória não está configurada.
 
 ## Estado atual
 
-A integração de cartão sandbox já foi validada ao vivo contra o Mercado Pago. O Webhook sandbox isolado deve ser considerado validado ao vivo somente depois que a URL de teste estiver salva no painel do Mercado Pago, os dois secrets de teste estiverem presentes no Supabase e um novo smoke test produzir evidência na tabela sandbox.
+A integração sandbox de cartão está validada de ponta a ponta para os objetivos definidos neste documento: credencial, tokenização, aprovação, rejeição, idempotência, consulta autoritativa, Webhook assinado, deduplicação, Webhook perdido, convergência após `not_found`, recuperação após falha transitória e concorrência sem baixa duplicada.
+
+A lacuna remanescente não é de sandbox: até 12 de setembro de 2026 ainda não havia um cartão aprovado em produção. Esse evento deve ser observado somente quando ocorrer um pagamento legítimo, seguindo `docs/payment_first_card_production_validation.md`; não deve ser provocado com uma cobrança real artificial.
