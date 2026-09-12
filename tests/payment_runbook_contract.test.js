@@ -4,13 +4,16 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.join(__dirname, "..");
-const runbook = fs.readFileSync(path.join(root, "docs/payment_incident_runbook.md"), "utf8");
-const audit = fs.readFileSync(path.join(root, "docs/payment_operational_audit.md"), "utf8");
-const killSwitch = fs.readFileSync(path.join(root, "docs/payment_kill_switch.md"), "utf8");
-const firstCardProtocol = fs.readFileSync(
-  path.join(root, "docs/payment_first_card_production_validation.md"),
-  "utf8"
-);
+const runbook = read("docs/payment_incident_runbook.md");
+const audit = read("docs/payment_operational_audit.md");
+const killSwitch = read("docs/payment_kill_switch.md");
+const firstCardProtocol = read("docs/payment_first_card_production_validation.md");
+const readinessReport = read("docs/payment_operational_readiness_report.md");
+const credentialRotation = read("docs/payment_credential_rotation.md");
+const firstRefundProtocol = read("docs/payment_first_real_refund_validation.md");
+const integrationCleanup = read("docs/payment_integration_cleanup.md");
+const providerDecisionGate = read("docs/payment_provider_decision_gate.md");
+const productionAvailability = read(".github/workflows/production-availability.yml");
 
 const REQUIRED_INCIDENTS = [
   "Pagamento pendente por tempo excessivo",
@@ -97,6 +100,69 @@ test("kill switch operations remain documented as recovery-safe", () => {
   assert.match(killSwitch, /REATIVAR/);
   assert.match(killSwitch, /requisição que já tenha passado pelo ponto de admissão/i);
 });
+
+test("operational readiness report records the verified production snapshot and open gates", () => {
+  assert.match(readinessReport, /status = healthy/);
+  assert.match(readinessReport, /Tentativas de pagamento \| 16/);
+  assert.match(readinessReport, /PIX aprovados \| 10/);
+  assert.match(readinessReport, /Cartões aprovados em produção \| 0/);
+  assert.match(readinessReport, /Refunds registrados \| 0/);
+  assert.match(readinessReport, /Chargebacks registrados \| 0/);
+  REQUIRED_CRONS.forEach((name) => assert.match(readinessReport, new RegExp(escapeRegex(name))));
+  assert.match(readinessReport, /Primeiro cartão real/);
+  assert.match(readinessReport, /Primeiro refund real/);
+  assert.match(readinessReport, /Analytics server-side — Fase B/);
+  assert.match(readinessReport, /Rotação de credenciais externas/);
+});
+
+test("credential rotation runbook never requires sharing secret values", () => {
+  [
+    "MERCADO_PAGO_ACCESS_TOKEN",
+    "MERCADO_PAGO_WEBHOOK_SECRET",
+    "MERCADO_PAGO_TEST_ACCESS_TOKEN",
+    "MERCADO_PAGO_TEST_WEBHOOK_SECRET",
+    "GA4_API_SECRET",
+    "mercado_pago_reconciliation_cron_secret"
+  ].forEach((name) => assert.match(credentialRotation, new RegExp(escapeRegex(name))));
+  assert.match(credentialRotation, /Nunca colocar em chat, issue, PR, commit, log ou screenshot/i);
+  assert.match(credentialRotation, /não deve ser rotacionado quando todos os signatários e validadores/i);
+  assert.match(credentialRotation, /Nenhuma credencial externa foi rotacionada automaticamente/i);
+  assert.match(credentialRotation, /kill switch de \*\*novas cobranças\*\*/i);
+});
+
+test("first real refund protocol requires legitimate need, MFA, stable idempotency and convergence", () => {
+  assert.match(firstRefundProtocol, /necessidade legítima de devolução/i);
+  assert.match(firstRefundProtocol, /Não criar nem reembolsar uma transação real apenas para testar/i);
+  assert.match(firstRefundProtocol, /MFA\/AAL2/);
+  assert.match(firstRefundProtocol, /REEMBOLSAR/);
+  assert.match(firstRefundProtocol, /reutilizar a mesma `idempotency_key`/);
+  assert.match(firstRefundProtocol, /reconsultar o Mercado Pago \*\*antes\*\*/i);
+  assert.match(firstRefundProtocol, /HTTP 202 não deve ser tratado como falha nem como conclusão final/i);
+  assert.match(firstRefundProtocol, /health financeiro posterior `healthy` com `issue_count = 0`/);
+});
+
+test("integration cleanup removes obsolete hosting triggers without deleting historical evidence", () => {
+  assert.match(integrationCleanup, /GitHub Pages/);
+  assert.match(integrationCleanup, /Migrations aplicadas são histórico imutável/);
+  assert.match(integrationCleanup, /guard do Security baseline.*deve permanecer/is);
+  assert.match(integrationCleanup, /noop-schema-probe/);
+  assert.match(integrationCleanup, /HTTP 410/);
+  assert.doesNotMatch(productionAvailability, /netlify\.toml/i);
+  assert.doesNotMatch(productionAvailability, /netlify\/\*\*/i);
+});
+
+test("future provider decision gate defaults to no-go until financial safety is proven", () => {
+  assert.match(providerDecisionGate, /Mercado Pago permanece o único provedor financeiro de produção/);
+  assert.match(providerDecisionGate, /não autoriza migração, multi-provider ou fallback automático/i);
+  assert.match(providerDecisionGate, /Webhooks isolados por segredo\/provedor/i);
+  assert.match(providerDecisionGate, /Nunca fazer fallback automático de uma cobrança falhada para outro gateway/i);
+  assert.match(providerDecisionGate, /Sem esses itens, a decisão é \*\*NO-GO\*\*/);
+  assert.match(providerDecisionGate, /manter Mercado Pago como provedor único/i);
+});
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), "utf8");
+}
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
