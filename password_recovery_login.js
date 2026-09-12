@@ -3,7 +3,7 @@
 
   const LOGIN_PATH = "/login/";
   const PASSWORD_RECOVERY_PATH = "/recuperar-senha/";
-  const MIN_PASSWORD_LENGTH = 8;
+  const MIN_PASSWORD_LENGTH = 12;
   const SESSION_WAIT_ATTEMPTS = 40;
   const SESSION_WAIT_DELAY_MS = 100;
 
@@ -149,7 +149,8 @@
     const confirmation = view.confirmationInput.value;
 
     if (password.length < MIN_PASSWORD_LENGTH) {
-      view.status.textContent = "A senha deve ter pelo menos 8 caracteres.";
+      view.status.textContent =
+        "A senha deve ter pelo menos " + MIN_PASSWORD_LENGTH + " caracteres.";
       return;
     }
 

@@ -45,7 +45,7 @@ test("requests password reset with normalized email and trusted redirect", async
   assert.equal(calls[0].options.redirectTo, "https://teacherflavius.com/login/");
 });
 
-test("rejects passwords shorter than eight characters before calling Supabase", async function () {
+test("rejects passwords shorter than twelve characters before calling Supabase", async function () {
   let updateCalls = 0;
   const client = {
     auth: {
@@ -58,8 +58,8 @@ test("rejects passwords shorter than eight characters before calling Supabase", 
   const service = loadService().create(createDependencies(client));
 
   await assert.rejects(
-    service.updatePassword("1234567"),
-    /pelo menos 8 caracteres/
+    service.updatePassword("12345678901"),
+    /pelo menos 12 caracteres/
   );
   assert.equal(updateCalls, 0);
 });
