@@ -47,7 +47,7 @@ def main() -> None:
             errors.append("vh fallback must precede dvh enhancement")
 
     if not PUBLISH.is_dir():
-        errors.append("_site is missing; run scripts/build_netlify_site.py first")
+        errors.append("_site is missing; run scripts/build_static_site.py first")
     else:
         html_files = sorted(PUBLISH.rglob("*.html")) + sorted(PUBLISH.rglob("*.htm"))
         checked = 0
