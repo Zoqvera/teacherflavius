@@ -91,7 +91,6 @@ function allowedOrigin(origin: string | null) {
     const url = new URL(origin);
     if (url.protocol !== "https:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") return null;
     if (url.hostname === "teacherflavius.com" || url.hostname === "www.teacherflavius.com") return origin;
-    if (url.hostname.endsWith(".netlify.app")) return origin;
     if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return origin;
   } catch {
     return null;

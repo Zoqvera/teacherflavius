@@ -23,7 +23,6 @@ on:
       - "scripts/static_whatsapp_links.py"
       - "scripts/static_site_dependencies.py"
       - "scripts/static_site_routes.py"
-      - "scripts/static_hosting_headers.py"
       - "scripts/static_site_validation.py"
       - "scripts/html_script_dependency.py"
       - "scripts/html_script_dependency_transform.py"
@@ -45,8 +44,6 @@ on:
       - "scripts/inject_google_tag_manager.py"
       - "scripts/google_tag_manager_html.py"
       - "scripts/materialize_clean_route_aliases.py"
-      - "netlify/_headers"
-      - "netlify.toml"
       - ".github/workflows/static-hosting-build.yml"
   push:
     branches:
@@ -72,7 +69,6 @@ on:
       - "scripts/static_whatsapp_links.py"
       - "scripts/static_site_dependencies.py"
       - "scripts/static_site_routes.py"
-      - "scripts/static_hosting_headers.py"
       - "scripts/static_site_validation.py"
       - "scripts/html_script_dependency.py"
       - "scripts/html_script_dependency_transform.py"
@@ -94,8 +90,6 @@ on:
       - "scripts/inject_google_tag_manager.py"
       - "scripts/google_tag_manager_html.py"
       - "scripts/materialize_clean_route_aliases.py"
-      - "netlify/_headers"
-      - "netlify.toml"
       - ".github/workflows/static-hosting-build.yml"
 
 permissions:
@@ -151,7 +145,6 @@ jobs:
           test -f _site/site_page_runtime.js
           test -f _site/site_privacy_analytics.js
           test -f _site/health.json
-          test -f _site/_headers
           if find _site -type f \( -name '*.md' -o -name '*.sql' -o -name '*.py' -o -name '*.yml' -o -name '*.yaml' -o -name '*.toml' \) | grep -q .; then
             echo 'Operational file leaked into _site'
             exit 1

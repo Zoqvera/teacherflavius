@@ -1,6 +1,6 @@
 # Mapa de dados pessoais — Teacher Flávio
 
-Versão: 2026-08-20 · revisão externa 1
+Versão: 2026-09-12 · revisão externa 2
 
 Este documento é o inventário operacional de dados pessoais do teacherflavius.com. Ele deve ser atualizado quando houver nova tabela, finalidade, formulário, fornecedor, integração, evento analítico ou mudança relevante de retenção.
 
@@ -66,7 +66,7 @@ Os estados significam:
 
 Esse status é um controle operacional; não equivale a uma certificação jurídica de conformidade.
 
-### Estado em 20/08/2026
+### Estado em 12/09/2026
 
 | Fornecedor | Dados/escopo | Retenção do fornecedor | Controle atual | Estado |
 | --- | --- | --- | --- | --- |
@@ -76,7 +76,7 @@ Esse status é um controle operacional; não equivale a uma certificação jurí
 | Mercado Pago | dados necessários ao pagamento | conforme necessidade operacional e obrigações aplicáveis | tokenização; sem PAN/CVV local; resposta persistida reduzida a IDs/status/valor/método/datas | verificado tecnicamente |
 | Google Forms / Sheets | e-mail, exercício e data de conclusão | respostas permanecem na conta Google até limpeza/configuração do proprietário | cópia diagnóstica local expira em 90 dias; aliases são consultados no banco, não no código | pendente |
 | Azure Speech | áudio de pronúncia e texto de referência | documentação oficial informa ausência de retenção do conteúdo enviado no Pronunciation Assessment em tempo real | qualquer cópia que permanece depois da resposta é mantida pelo próprio portal no Supabase | verificado tecnicamente |
-| Netlify | requisições e logs técnicos de entrega | depende do serviço/plano do fornecedor | frontend hospedado aqui; Netlify Forms permanece desativado; não usar o hosting como armazenamento cadastral | pendente |
+| GitHub Pages | requisições e logs técnicos de entrega | depende dos controles e políticas do GitHub | frontend público hospedado aqui; não publicar PII, segredos ou artefatos operacionais no conteúdo estático | pendente |
 | GitHub | código e histórico de commits | versões antigas permanecem no histórico Git até tratamento específico | PII foi removido do código corrente; revisar histórico antigo antes de qualquer reescrita destrutiva | ação necessária |
 
 ## Minimizações aplicadas nesta revisão
@@ -102,6 +102,10 @@ A remoção do código atual **não elimina automaticamente versões antigas do 
 ### Azure Speech
 
 A Edge Function `pronunciation-assess` envia áudio e texto de referência ao Azure Speech para avaliação em tempo real. Segundo a documentação oficial da Microsoft para esse fluxo, o serviço não mantém o conteúdo enviado após a requisição. O portal, porém, salva áudio e resultado no Supabase; essa retenção local é uma decisão do Teacher Flávio e continua sujeita ao ciclo de vida acadêmico/da conta.
+
+### Hospedagem estática
+
+O frontend público é entregue por GitHub Pages. O build não publica arquivos operacionais, migrations, scripts, documentação interna ou segredos. As permissões CORS das Edge Functions não aceitam mais origens do provedor de hospedagem anterior.
 
 ## Central de direitos do titular
 
@@ -133,7 +137,7 @@ A exportação usa exclusivamente `auth.uid()` e não recebe um `user_id` inform
 
 ## Terceiros, transferências e revisão
 
-Fornecedores/runtime atualmente mapeados: Supabase, Mercado Pago, Resend, Google Analytics, Google Forms/Sheets, Microsoft Azure Speech e Netlify. GitHub é tratado separadamente como repositório de código e deve permanecer livre de PII operacional. WhatsApp/Meta participa quando o próprio usuário decide iniciar contato pelo canal disponibilizado.
+Fornecedores/runtime atualmente mapeados: Supabase, Mercado Pago, Resend, Google Analytics, Google Forms/Sheets, Microsoft Azure Speech e GitHub Pages. GitHub também é tratado como repositório de código e deve permanecer livre de PII operacional. WhatsApp/Meta participa quando o próprio usuário decide iniciar contato pelo canal disponibilizado.
 
 Antes de adicionar novo terceiro, revisar:
 
@@ -150,7 +154,7 @@ Antes de adicionar novo terceiro, revisar:
 - confirmar o plano Supabase e os prazos reais de API/DB/Auth/Edge logs;
 - revisar no Resend histórico, exportação e mecanismos disponíveis de exclusão/limpeza;
 - definir rotina de limpeza de respostas/planilhas do Google Forms depois que não forem mais necessárias;
-- revisar controles de logs/analytics do Netlify;
+- revisar controles de privacidade e logs do GitHub Pages;
 - decidir, em procedimento separado, como tratar PII presente no histórico antigo do GitHub sem reescrever o repositório de forma precipitada;
 - revisar snapshots legados em 28/10/2026;
 - revisar semestralmente `data_retention_policies`, fornecedores externos e estado do cron;
