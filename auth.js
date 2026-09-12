@@ -12,7 +12,7 @@
     infrastructure: Object.freeze({
       globalName: "AuthInfrastructure",
       selector: 'script[src^="/auth_infrastructure.js"]',
-      src: "/auth_infrastructure.js?v=20260911-1",
+      src: "/auth_infrastructure.js?v=20260912-1",
       missingMessage: "A infraestrutura de autenticação não foi inicializada.",
       loadErrorMessage: "Não foi possível carregar a infraestrutura de autenticação."
     }),
