@@ -14,9 +14,9 @@
     googleAuthCss: "/google_auth_ui.css?v=20260902-1",
     googleAuthJs: "/google_auth_ui.js?v=20260902-1",
     passwordRecoveryCss: "/password_recovery_login.css?v=20260909-1",
-    passwordRecoveryJs: "/password_recovery_login.js?v=20260909-1",
+    passwordRecoveryJs: "/password_recovery_login.js?v=20260912-1",
     studentAreaGuardJs: "/student_area_route_guard.js?v=20260909-1",
-    accountSecurityJs: "/account_security_ui.js?v=20260911-1",
+    accountSecurityJs: "/account_security_ui.js?v=20260912-1",
     infrastructureCss: "/auth_infrastructure.css?v=20260902-1"
   });
 

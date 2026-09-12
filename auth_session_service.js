@@ -43,6 +43,14 @@
     return value;
   }
 
+  function validateCurrentPassword(password) {
+    const value = String(password || "");
+    if (!value) {
+      throw new Error("Informe sua senha atual.");
+    }
+    return value;
+  }
+
   function getLoginFailureDelayMs(failureCount) {
     if (failureCount < 3) return 0;
     if (failureCount === 3) return 5 * 1000;
@@ -199,6 +207,22 @@
       return response.data;
     }
 
+    async function changePassword(currentPassword, password) {
+      const client = deps.requireClient();
+      const current = validateCurrentPassword(currentPassword);
+      const newPassword = validateNewPassword(password);
+      if (current === newPassword) {
+        throw new Error("A nova senha deve ser diferente da senha atual.");
+      }
+
+      const response = await client.auth.updateUser({
+        password: newPassword,
+        currentPassword: current
+      });
+      if (response.error) throw response.error;
+      return response.data;
+    }
+
     async function signInWithGoogle(nextPath) {
       const client = deps.requireClient();
       const response = await client.auth.signInWithOAuth({
@@ -237,19 +261,28 @@
         : [];
     }
 
-    async function signOutWithScope(scope, allSessions) {
+    async function revokeSessions(scope) {
       const client = deps.getClient();
+      if (!client) return;
+      const response = await client.auth.signOut({ scope: scope });
+      if (response.error) throw response.error;
+    }
+
+    function revokeAllSessions() {
+      return revokeSessions(GLOBAL_SIGN_OUT_SCOPE);
+    }
+
+    async function signOutWithScope(scope, allSessions) {
       const suffix = allSessions
         ? "?logged_out=1&all_sessions=1"
         : "?logged_out=1";
 
-      if (!client) {
+      if (!deps.getClient()) {
         window.location.replace(deps.loginPath + suffix);
         return;
       }
 
-      const response = await client.auth.signOut({ scope: scope });
-      if (response.error) throw response.error;
+      await revokeSessions(scope);
       window.location.replace(deps.loginPath + suffix);
     }
 
@@ -267,9 +300,11 @@
       signIn: signIn,
       requestPasswordReset: requestPasswordReset,
       updatePassword: updatePassword,
+      changePassword: changePassword,
       signInWithGoogle: signInWithGoogle,
       linkGoogleIdentity: linkGoogleIdentity,
       getUserIdentities: getUserIdentities,
+      revokeAllSessions: revokeAllSessions,
       signOut: signOut,
       signOutEverywhere: signOutEverywhere
     });
