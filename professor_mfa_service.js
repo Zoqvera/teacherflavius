@@ -7,6 +7,11 @@
   const AAL2_LEVEL = "aal2";
   const PROMOTION_MAX_ATTEMPTS = 6;
   const PROMOTION_RETRY_DELAY_MS = 80;
+  const ADMIN_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+  const ADMIN_IDLE_CHECK_INTERVAL_MS = 30 * 1000;
+  const ADMIN_ACTIVITY_WRITE_INTERVAL_MS = 15 * 1000;
+  const ADMIN_ACTIVITY_STORAGE_KEY = "teacherFlavius.adminLastActivity.v1";
+  const ADMIN_IDLE_REDIRECT = "/login/?logged_out=1&idle_timeout=1";
 
   function assertDependencies(dependencies) {
     if (!dependencies || typeof dependencies.getClient !== "function") {
@@ -74,6 +79,104 @@
     const deps = dependencies || {};
     assertDependencies(deps);
 
+    const windowRef = deps.windowRef || window;
+    const documentRef = deps.documentRef || windowRef.document || null;
+    const now = typeof deps.now === "function" ? deps.now : Date.now;
+    const setIntervalFn = deps.setIntervalFn || windowRef.setInterval;
+    const clearIntervalFn = deps.clearIntervalFn || windowRef.clearInterval;
+    const idleTimeoutMs = deps.idleTimeoutMs || ADMIN_IDLE_TIMEOUT_MS;
+    let idleGuardStarted = false;
+    let idleGuardExpiring = false;
+    let idleGuardTimer = null;
+    let lastActivityAt = now();
+    let lastSharedWriteAt = 0;
+
+    function getActivityStorage() {
+      if (deps.activityStorage) return deps.activityStorage;
+      try {
+        return windowRef.localStorage || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function readSharedActivityAt() {
+      const storage = getActivityStorage();
+      if (!storage) return 0;
+      try {
+        const value = Number(storage.getItem(ADMIN_ACTIVITY_STORAGE_KEY));
+        return Number.isFinite(value) && value > 0 ? value : 0;
+      } catch (_) {
+        return 0;
+      }
+    }
+
+    function writeSharedActivityAt(timestamp) {
+      const storage = getActivityStorage();
+      if (!storage) return;
+      try {
+        storage.setItem(ADMIN_ACTIVITY_STORAGE_KEY, String(timestamp));
+      } catch (_) {}
+    }
+
+    function recordAdminActivity(forceWrite) {
+      const timestamp = now();
+      lastActivityAt = timestamp;
+      if (forceWrite || timestamp - lastSharedWriteAt >= ADMIN_ACTIVITY_WRITE_INTERVAL_MS) {
+        writeSharedActivityAt(timestamp);
+        lastSharedWriteAt = timestamp;
+      }
+    }
+
+    function getMostRecentActivityAt() {
+      return Math.max(lastActivityAt, readSharedActivityAt());
+    }
+
+    async function expireIdleAdminSession() {
+      if (idleGuardExpiring) return;
+      idleGuardExpiring = true;
+      if (idleGuardTimer !== null && typeof clearIntervalFn === "function") {
+        clearIntervalFn(idleGuardTimer);
+      }
+
+      try {
+        const client = deps.getClient();
+        if (client && client.auth && typeof client.auth.signOut === "function") {
+          await client.auth.signOut({ scope: "local" });
+        }
+      } finally {
+        if (windowRef.location && typeof windowRef.location.replace === "function") {
+          windowRef.location.replace(ADMIN_IDLE_REDIRECT);
+        }
+      }
+    }
+
+    async function checkAdminIdleTimeout() {
+      if (idleGuardExpiring) return;
+      if (now() - getMostRecentActivityAt() < idleTimeoutMs) return;
+      await expireIdleAdminSession();
+    }
+
+    function startAdminIdleGuard() {
+      if (idleGuardStarted || !documentRef || typeof documentRef.addEventListener !== "function") return;
+      if (typeof setIntervalFn !== "function") return;
+
+      idleGuardStarted = true;
+      recordAdminActivity(true);
+
+      ["pointerdown", "keydown", "touchstart"].forEach(function (eventName) {
+        documentRef.addEventListener(eventName, function () {
+          recordAdminActivity(false);
+        }, { passive: true });
+      });
+
+      documentRef.addEventListener("visibilitychange", function () {
+        if (documentRef.visibilityState === "visible") recordAdminActivity(true);
+      });
+
+      idleGuardTimer = setIntervalFn(checkAdminIdleTimeout, ADMIN_IDLE_CHECK_INTERVAL_MS);
+    }
+
     async function getAssuranceLevel() {
       const client = requireMfaClient(deps.getClient);
       const response = await client.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -91,6 +194,7 @@
     async function getState() {
       const assurance = await getAssuranceLevel();
       if (assurance.currentLevel === AAL2_LEVEL) {
+        startAdminIdleGuard();
         return Object.freeze({ status: "verified", factor: null, assurance: assurance });
       }
 
@@ -166,6 +270,7 @@
       if (verification.error) throw verification.error;
 
       await waitForAal2();
+      startAdminIdleGuard();
       return verification.data;
     }
 
