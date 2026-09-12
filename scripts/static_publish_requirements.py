@@ -34,6 +34,7 @@ REQUIRED_PUBLIC_PATHS = (
     "recuperar-senha/index.html",
     "acesso-negado/index.html",
     "responsive_compat.css",
+    "_headers",
 )
 
 

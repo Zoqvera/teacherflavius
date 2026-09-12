@@ -97,13 +97,24 @@ jobs:
               print('Legacy runner still contains token-based secret handling.')
               sys.exit(1)
 
-      - name: Validate static publish boundary
+      - name: Validate static publish boundary and security headers
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/build_static_site.py
           if find _site -type f \( -name '*.md' -o -name '*.sql' -o -name '*.py' -o -name '*.yml' -o -name '*.yaml' -o -name '*.toml' \) | grep -q .; then
             echo 'Operational source leaked into static publish output.'
+            exit 1
+          fi
+          test -f _site/_headers
+          grep -q '^  Strict-Transport-Security: max-age=31536000$' _site/_headers
+          grep -q '^  X-Content-Type-Options: nosniff$' _site/_headers
+          grep -q '^  Referrer-Policy: strict-origin-when-cross-origin$' _site/_headers
+          grep -q '^  X-Frame-Options: SAMEORIGIN$' _site/_headers
+          grep -q '^  Permissions-Policy:.*microphone=(self)' _site/_headers
+          grep -q '^  Content-Security-Policy-Report-Only:.*report-uri https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/csp-report$' _site/_headers
+          if grep -Eqi 'netlify' _site/_headers; then
+            echo 'Netlify-specific header residue found in deploy output.'
             exit 1
           fi
 
@@ -119,6 +130,7 @@ jobs:
           esac
 
       - name: Enforce production response security headers
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           set -euo pipefail

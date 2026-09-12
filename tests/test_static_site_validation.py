@@ -9,6 +9,7 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+from static_hosting_headers import install_shared_headers  # noqa: E402
 from static_publish_leaks import leaked_operational_files  # noqa: E402
 from static_publish_requirements import REQUIRED_PUBLIC_PATHS, missing_required_files  # noqa: E402
 from static_site_validation import validate_publish  # noqa: E402
@@ -23,12 +24,25 @@ class StaticSiteValidationTests(unittest.TestCase):
             path.write_text("ok", encoding="utf-8")
         return publish
 
+    def test_installs_shared_headers_from_hosting_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "hosting" / "_headers"
+            source.parent.mkdir(parents=True)
+            source.write_text("/*\n  X-Test: true\n", encoding="utf-8")
+            publish = root / "_site"
+            publish.mkdir()
+
+            install_shared_headers(root, publish)
+
+            self.assertEqual((publish / "_headers").read_text(encoding="utf-8"), source.read_text(encoding="utf-8"))
+
     def test_reports_missing_required_files(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             publish = Path(directory)
             missing = missing_required_files(publish)
             self.assertIn("index.html", missing)
-            self.assertNotIn("_headers", missing)
+            self.assertIn("_headers", missing)
 
     def test_reports_operational_file_leaks(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
