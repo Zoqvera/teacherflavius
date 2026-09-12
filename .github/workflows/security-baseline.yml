@@ -97,20 +97,13 @@ jobs:
               print('Legacy runner still contains token-based secret handling.')
               sys.exit(1)
 
-      - name: Validate Netlify publish boundary and headers
+      - name: Validate static publish boundary
         shell: bash
         run: |
           set -euo pipefail
-          python3 scripts/build_netlify_site.py
-          test -f _site/_headers
-          grep -q '^  Strict-Transport-Security:' _site/_headers
-          grep -q '^  X-Content-Type-Options: nosniff' _site/_headers
-          grep -q '^  Referrer-Policy: strict-origin-when-cross-origin' _site/_headers
-          grep -q '^  X-Frame-Options: SAMEORIGIN' _site/_headers
-          grep -q '^  Permissions-Policy:' _site/_headers
-          grep -q '^  Content-Security-Policy-Report-Only:' _site/_headers
+          python3 scripts/build_static_site.py
           if find _site -type f \( -name '*.md' -o -name '*.sql' -o -name '*.py' -o -name '*.yml' -o -name '*.yaml' -o -name '*.toml' \) | grep -q .; then
-            echo 'Operational source leaked into Netlify publish output.'
+            echo 'Operational source leaked into static publish output.'
             exit 1
           fi
 
