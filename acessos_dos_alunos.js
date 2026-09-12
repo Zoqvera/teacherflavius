@@ -16,6 +16,7 @@
       window.Auth &&
       window.StudentAccessService &&
       window.StudentAccessRenderer &&
+      window.ProfessorMfaGate &&
       window.SUPABASE_CONFIG &&
       window.Auth.isConfigured()
     );
@@ -46,12 +47,12 @@
     try {
       const accesses = await state.accessService.getAccesses(filters);
       state.renderer.renderAccesses(accesses);
-      state.renderer.setStatus("Professor autenticado: " + state.session.user.email + ".");
+      state.renderer.setStatus("Professor autenticado com verificação em duas etapas: " + state.session.user.email + ".");
     } catch (error) {
       state.renderer.showAccessError(
         "Não foi possível carregar os acessos. Detalhe: " + (error.message || "erro desconhecido")
       );
-      state.renderer.setStatus("O painel ainda não está configurado corretamente no Supabase.", true);
+      state.renderer.setStatus("Não foi possível carregar os dados administrativos.", true);
     } finally {
       state.renderer.setRefreshDisabled(false);
     }
@@ -85,6 +86,14 @@
     );
   }
 
+  async function requireAdministrativeMfa() {
+    const client = window.Auth.getClient();
+    if (!client) {
+      throw new Error("O cliente de autenticação não está disponível.");
+    }
+    await window.ProfessorMfaGate.requireAal2({ client: client });
+  }
+
   async function initializeDashboard() {
     const ready = await window.ResourceWaiter.waitUntil(resourcesAreReady, RESOURCE_WAIT_OPTIONS);
 
@@ -116,9 +125,13 @@
         return;
       }
 
+      await requireAdministrativeMfa();
+
       state.renderer.showDashboard();
       state.renderer.finishAuthCheck();
-      state.renderer.setStatus("Professor autenticado: " + state.session.user.email + ".");
+      state.renderer.setStatus(
+        "Professor autenticado com verificação em duas etapas: " + state.session.user.email + "."
+      );
 
       await loadStudents();
       await refreshDashboard();
