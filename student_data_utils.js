@@ -3,6 +3,7 @@
 
   const AVAILABILITY_DAYS = Object.freeze(["seg", "ter", "qua", "qui", "sex"]);
   const AVAILABILITY_HOURS = Object.freeze(["09", "10", "12", "13", "15", "17", "18", "20", "21"]);
+  const MIN_PASSWORD_LENGTH = 12;
 
   function normalizeDigits(value) {
     return String(value || "").replace(/\D/g, "");
@@ -41,12 +42,22 @@
     }, 0);
   }
 
+  function validateEnrollmentPassword(input, settings) {
+    if (!settings.requireEnrollmentCredentials) return;
+    if (String(input.password || "").length < MIN_PASSWORD_LENGTH) {
+      throw new Error(
+        "A senha da matrícula deve ter pelo menos " + MIN_PASSWORD_LENGTH + " caracteres."
+      );
+    }
+  }
+
   function validateStudentInput(input, requiredFieldsMessage, options) {
     const settings = options || {};
     const hasRequiredIdentity = input.name && input.cpf && input.whatsapp && input.pixKey;
     const hasEnrollmentCredentials = !settings.requireEnrollmentCredentials || (input.email && input.password);
 
     if (!hasRequiredIdentity || !hasEnrollmentCredentials) throw new Error(requiredFieldsMessage);
+    validateEnrollmentPassword(input, settings);
     if (input.cpf.length !== 11) throw new Error("CPF inválido. Informe 11 dígitos.");
     if (input.whatsapp.length < 10) throw new Error("WhatsApp inválido.");
     if (countAvailabilitySlots(input.availability) === 0) {

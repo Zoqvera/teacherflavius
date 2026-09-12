@@ -4,6 +4,7 @@
   const GOOGLE_PROVIDER = "google";
   const LOCAL_SIGN_OUT_SCOPE = "local";
   const GLOBAL_SIGN_OUT_SCOPE = "global";
+  const MIN_PASSWORD_LENGTH = 12;
 
   function assertDependencies(dependencies) {
     const requiredFunctions = [
@@ -31,8 +32,10 @@
 
   function validateNewPassword(password) {
     const value = String(password || "");
-    if (value.length < 8) {
-      throw new Error("A nova senha deve ter pelo menos 8 caracteres.");
+    if (value.length < MIN_PASSWORD_LENGTH) {
+      throw new Error(
+        "A nova senha deve ter pelo menos " + MIN_PASSWORD_LENGTH + " caracteres."
+      );
     }
     return value;
   }
