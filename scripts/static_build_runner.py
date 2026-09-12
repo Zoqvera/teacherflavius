@@ -6,7 +6,6 @@ from pathlib import Path
 
 from static_build_pipeline import HtmlTransformStats, transform_copied_html
 from static_dependency_runtime import validate_publish_dependencies
-from static_hosting_headers import install_shared_headers
 from static_publish_workspace import prepare_publish_directory
 from static_site_files import copy_public_files
 from static_site_routes import materialize_clean_route_aliases
@@ -28,7 +27,6 @@ def build_static_publish(root: Path, publish: Path) -> StaticBuildResult:
     clean_route_aliases = materialize_clean_route_aliases(root, publish)
 
     validate_publish_dependencies(publish)
-    install_shared_headers(root, publish)
     validate_publish(publish)
 
     return StaticBuildResult(
