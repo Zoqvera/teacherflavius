@@ -18,8 +18,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Build Netlify publish directory
-        run: python3 scripts/build_netlify_site.py
+      - name: Build static publish directory
+        run: python3 scripts/build_static_site.py
 
       - name: Validate mobile and browser compatibility baseline
         run: python3 scripts/validate_responsive_compat.py
