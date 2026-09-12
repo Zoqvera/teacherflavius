@@ -5,6 +5,9 @@
   const LOCAL_SIGN_OUT_SCOPE = "local";
   const GLOBAL_SIGN_OUT_SCOPE = "global";
   const MIN_PASSWORD_LENGTH = 12;
+  const LOGIN_THROTTLE_STORAGE_KEY = "teacherFlavius.auth.loginThrottle.v1";
+  const PASSWORD_RESET_THROTTLE_STORAGE_KEY = "teacherFlavius.auth.passwordResetThrottle.v1";
+  const PASSWORD_RESET_COOLDOWN_MS = 60 * 1000;
 
   function assertDependencies(dependencies) {
     const requiredFunctions = [
@@ -40,9 +43,106 @@
     return value;
   }
 
+  function getLoginFailureDelayMs(failureCount) {
+    if (failureCount < 3) return 0;
+    if (failureCount === 3) return 5 * 1000;
+    if (failureCount === 4) return 15 * 1000;
+    return 60 * 1000;
+  }
+
+  function createMemoryStorage() {
+    const data = Object.create(null);
+    return {
+      getItem: function (key) {
+        return Object.prototype.hasOwnProperty.call(data, key) ? data[key] : null;
+      },
+      setItem: function (key, value) {
+        data[key] = String(value);
+      },
+      removeItem: function (key) {
+        delete data[key];
+      }
+    };
+  }
+
+  function getBrowserSessionStorage() {
+    try {
+      return window.sessionStorage || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function parseThrottleState(rawValue) {
+    if (!rawValue) return { failures: 0, blockedUntil: 0 };
+    try {
+      const parsed = JSON.parse(rawValue);
+      return {
+        failures: Number.isFinite(parsed.failures) ? Math.max(0, parsed.failures) : 0,
+        blockedUntil: Number.isFinite(parsed.blockedUntil) ? Math.max(0, parsed.blockedUntil) : 0
+      };
+    } catch (_) {
+      return { failures: 0, blockedUntil: 0 };
+    }
+  }
+
   function create(dependencies) {
     const deps = dependencies || {};
     assertDependencies(deps);
+
+    const now = typeof deps.now === "function" ? deps.now : Date.now;
+    const throttleStorage = deps.throttleStorage || getBrowserSessionStorage() || createMemoryStorage();
+
+    function readThrottleState(storageKey) {
+      return parseThrottleState(throttleStorage.getItem(storageKey));
+    }
+
+    function writeThrottleState(storageKey, state) {
+      throttleStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function clearThrottleState(storageKey) {
+      throttleStorage.removeItem(storageKey);
+    }
+
+    function getRemainingThrottleSeconds(storageKey) {
+      const state = readThrottleState(storageKey);
+      const remainingMs = state.blockedUntil - now();
+      return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+    }
+
+    function assertLoginAttemptAllowed() {
+      const remainingSeconds = getRemainingThrottleSeconds(LOGIN_THROTTLE_STORAGE_KEY);
+      if (remainingSeconds <= 0) return;
+      throw new Error(
+        "Muitas tentativas de acesso. Aguarde " + remainingSeconds + " segundos e tente novamente."
+      );
+    }
+
+    function registerLoginFailure() {
+      const state = readThrottleState(LOGIN_THROTTLE_STORAGE_KEY);
+      const failures = state.failures + 1;
+      const delayMs = getLoginFailureDelayMs(failures);
+      writeThrottleState(LOGIN_THROTTLE_STORAGE_KEY, {
+        failures: failures,
+        blockedUntil: delayMs > 0 ? now() + delayMs : 0
+      });
+    }
+
+    function assertPasswordResetAllowed() {
+      const remainingSeconds = getRemainingThrottleSeconds(PASSWORD_RESET_THROTTLE_STORAGE_KEY);
+      if (remainingSeconds <= 0) return;
+      throw new Error(
+        "Aguarde " + remainingSeconds + " segundos antes de solicitar outro link de recuperação."
+      );
+    }
+
+    function registerPasswordResetCooldown() {
+      writeThrottleState(PASSWORD_RESET_THROTTLE_STORAGE_KEY, {
+        failures: 0,
+        blockedUntil: now() + PASSWORD_RESET_COOLDOWN_MS
+      });
+    }
 
     async function getSession() {
       const client = deps.getClient();
@@ -59,16 +159,22 @@
     }
 
     async function signIn(email, password) {
+      assertLoginAttemptAllowed();
       const client = deps.requireClient();
       const response = await client.auth.signInWithPassword({
         email: email,
         password: password
       });
-      if (response.error) throw response.error;
+      if (response.error) {
+        registerLoginFailure();
+        throw response.error;
+      }
+      clearThrottleState(LOGIN_THROTTLE_STORAGE_KEY);
       return response.data;
     }
 
     async function requestPasswordReset(email) {
+      assertPasswordResetAllowed();
       const client = deps.requireClient();
       const normalizedEmail = normalizeEmail(email);
       if (!normalizedEmail) {
@@ -78,7 +184,10 @@
       const response = await client.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: deps.getPasswordRecoveryRedirectUrl()
       });
-      if (response.error) throw response.error;
+      registerPasswordResetCooldown();
+      if (response.error) {
+        throw new Error("Não foi possível solicitar a recuperação agora. Tente novamente mais tarde.");
+      }
       return response.data;
     }
 
