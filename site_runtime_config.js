@@ -10,7 +10,7 @@
     siteWhatsapp: freezeAsset({ id: "teacher-flavius-site-whatsapp", src: "/site_whatsapp.js?v=20260902-1" }),
     accessibility: freezeAsset({ id: "teacher-flavius-accessibility", src: "/accessibility.js?v=20260820-1" }),
     cro: freezeAsset({ id: "teacher-flavius-cro", src: "/cro.js?v=20260820-1" }),
-    analytics: freezeAsset({ id: "teacher-flavius-analytics", src: "/analytics.js?v=20260820-1" }),
+    analytics: freezeAsset({ id: "teacher-flavius-analytics", src: "/analytics.js?v=20260912-server-1" }),
     analyticsAttribution: freezeAsset({ id: "teacher-flavius-analytics-attribution", src: "/analytics_attribution.js?v=20260902-leadfix-1" }),
     privacyConsent: freezeAsset({ id: "teacher-flavius-privacy-consent", src: "/privacy_consent.js?v=20260820-2" }),
     sitePrivacyAnalytics: freezeAsset({ id: "teacher-flavius-site-privacy-analytics", src: "/site_privacy_analytics.js?v=20260902-1" }),

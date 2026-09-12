@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - "pagamento/**"
+      - "analytics.js"
+      - "analytics_payments.js"
+      - "site_runtime_config.js"
       - "payment_creation_control.js"
       - "payment_operations_dashboard.js"
       - "payment_refund_operations.js"
@@ -24,6 +27,8 @@ on:
       - "supabase/functions/replay-mercado-pago-webhook/**"
       - "supabase/functions/list-payment-webhooks/**"
       - "supabase/functions/notify-payment-alert/**"
+      - "supabase/functions/capture-payment-analytics-context/**"
+      - "supabase/functions/dispatch-payment-analytics/**"
       - "supabase/functions/_shared/mercado_pago_payment_sync.ts"
       - "supabase/functions/_shared/mercado_pago_chargeback_sync.ts"
       - "supabase/migrations/*payment*"
@@ -40,6 +45,9 @@ on:
       - main
     paths:
       - "pagamento/**"
+      - "analytics.js"
+      - "analytics_payments.js"
+      - "site_runtime_config.js"
       - "payment_creation_control.js"
       - "payment_operations_dashboard.js"
       - "payment_refund_operations.js"
@@ -60,6 +68,8 @@ on:
       - "supabase/functions/replay-mercado-pago-webhook/**"
       - "supabase/functions/list-payment-webhooks/**"
       - "supabase/functions/notify-payment-alert/**"
+      - "supabase/functions/capture-payment-analytics-context/**"
+      - "supabase/functions/dispatch-payment-analytics/**"
       - "supabase/functions/_shared/mercado_pago_payment_sync.ts"
       - "supabase/functions/_shared/mercado_pago_chargeback_sync.ts"
       - "supabase/migrations/*payment*"
@@ -128,6 +138,7 @@ jobs:
           tests/payment_sandbox_reconciliation_contract.test.js
           tests/payment_webhook_log.test.js
           tests/payment_workflow_contract.test.js
+          tests/payment_server_analytics_contract.test.js
 
   sandbox-credential-probe:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'

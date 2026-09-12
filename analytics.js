@@ -22,7 +22,7 @@
     },
     {
       id: "teacher-flavius-analytics-payments",
-      src: "/analytics_payments.js?v=20260902-gtm-1",
+      src: "/analytics_payments.js?v=20260912-server-1",
       globalName: "TeacherAnalyticsPayments"
     }
   ];
@@ -193,7 +193,8 @@
     });
     const paymentInstrumentation = requireGlobal("TeacherAnalyticsPayments").create({
       track: track,
-      utils: utils
+      utils: utils,
+      measurementId: MEASUREMENT_ID
     });
 
     window.TeacherAnalytics = Object.freeze({
