@@ -18,10 +18,18 @@ function loadService() {
   return context.window.ProfessorMfaService;
 }
 
-function createService(client) {
-  return loadService().create({
+function createStorage() {
+  const data = new Map();
+  return {
+    getItem: function (key) { return data.has(key) ? data.get(key) : null; },
+    setItem: function (key, value) { data.set(key, String(value)); }
+  };
+}
+
+function createService(client, overrides) {
+  return loadService().create(Object.assign({
     getClient: function () { return client; }
-  });
+  }, overrides || {}));
 }
 
 test("accepts an existing aal2 session without listing factors", async function () {
@@ -44,6 +52,104 @@ test("accepts an existing aal2 session without listing factors", async function 
 
   assert.equal(state.status, "verified");
   assert.equal(listCalls, 0);
+});
+
+test("expires an aal2 administrative session after thirty minutes of inactivity", async function () {
+  let now = 1000;
+  let intervalCallback = null;
+  const signOutScopes = [];
+  const redirects = [];
+  const documentRef = {
+    visibilityState: "visible",
+    addEventListener: function () {}
+  };
+  const windowRef = {
+    location: {
+      replace: function (value) { redirects.push(value); }
+    }
+  };
+  const client = {
+    auth: {
+      signOut: async function (options) {
+        signOutScopes.push(options.scope);
+        return { error: null };
+      },
+      mfa: {
+        getAuthenticatorAssuranceLevel: async function () {
+          return { data: { currentLevel: "aal2", nextLevel: "aal2" }, error: null };
+        }
+      }
+    }
+  };
+
+  const service = createService(client, {
+    now: function () { return now; },
+    documentRef: documentRef,
+    windowRef: windowRef,
+    activityStorage: createStorage(),
+    setIntervalFn: function (callback) {
+      intervalCallback = callback;
+      return 1;
+    },
+    clearIntervalFn: function () {},
+    idleTimeoutMs: 30 * 60 * 1000
+  });
+
+  await service.getState();
+  assert.equal(typeof intervalCallback, "function");
+
+  now += 30 * 60 * 1000 + 1;
+  await intervalCallback();
+
+  assert.deepEqual(signOutScopes, ["local"]);
+  assert.deepEqual(redirects, ["/login/?logged_out=1&idle_timeout=1"]);
+});
+
+test("recent activity keeps an aal2 administrative session alive", async function () {
+  let now = 1000;
+  let intervalCallback = null;
+  const listeners = {};
+  let signOutCalls = 0;
+  const documentRef = {
+    visibilityState: "visible",
+    addEventListener: function (eventName, callback) {
+      listeners[eventName] = callback;
+    }
+  };
+  const client = {
+    auth: {
+      signOut: async function () {
+        signOutCalls += 1;
+        return { error: null };
+      },
+      mfa: {
+        getAuthenticatorAssuranceLevel: async function () {
+          return { data: { currentLevel: "aal2", nextLevel: "aal2" }, error: null };
+        }
+      }
+    }
+  };
+
+  const service = createService(client, {
+    now: function () { return now; },
+    documentRef: documentRef,
+    windowRef: { location: { replace: function () {} } },
+    activityStorage: createStorage(),
+    setIntervalFn: function (callback) {
+      intervalCallback = callback;
+      return 1;
+    },
+    clearIntervalFn: function () {},
+    idleTimeoutMs: 30 * 60 * 1000
+  });
+
+  await service.getState();
+  now += 25 * 60 * 1000;
+  listeners.keydown();
+  now += 10 * 60 * 1000;
+  await intervalCallback();
+
+  assert.equal(signOutCalls, 0);
 });
 
 test("requires a challenge when a verified TOTP factor exists", async function () {
