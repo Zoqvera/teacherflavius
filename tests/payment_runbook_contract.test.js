@@ -7,6 +7,10 @@ const root = path.join(__dirname, "..");
 const runbook = fs.readFileSync(path.join(root, "docs/payment_incident_runbook.md"), "utf8");
 const audit = fs.readFileSync(path.join(root, "docs/payment_operational_audit.md"), "utf8");
 const killSwitch = fs.readFileSync(path.join(root, "docs/payment_kill_switch.md"), "utf8");
+const firstCardProtocol = fs.readFileSync(
+  path.join(root, "docs/payment_first_card_production_validation.md"),
+  "utf8"
+);
 
 const REQUIRED_INCIDENTS = [
   "Pagamento pendente por tempo excessivo",
@@ -67,12 +71,23 @@ test("operational audit inventories all financial crons and Edge Functions", () 
 
 test("operational audit records current residual risks instead of obsolete ones", () => {
   assert.match(audit, /Riscos residuais/);
+  assert.match(audit, /Primeiro cartão real ainda não observado/);
   assert.match(audit, /Janela de requisição em voo no kill switch/);
   assert.match(audit, /Defaults gerenciados pela plataforma/);
   assert.match(audit, /noop-schema-probe/);
   assert.match(audit, /Proteção contra senhas vazadas/);
   assert.doesNotMatch(audit, /Ausência de kill switch financeiro dedicado/);
   assert.doesNotMatch(audit, /Defaults de grants do projeto fora do domínio financeiro/);
+});
+
+test("first production card protocol forbids artificial charges and requires authoritative validation", () => {
+  assert.match(firstCardProtocol, /Não criar um pagamento real/);
+  assert.match(firstCardProtocol, /provider_payment_id/);
+  assert.match(firstCardProtocol, /live_mode = true/);
+  assert.match(firstCardProtocol, /baixa local ocorreu uma única vez/);
+  assert.match(firstCardProtocol, /não repetir a cobrança com uma nova chave de idempotência/);
+  assert.match(firstCardProtocol, /health financeiro posterior `healthy`/);
+  assert.match(firstCardProtocol, /Não registrar em documentação de repositório/);
 });
 
 test("kill switch operations remain documented as recovery-safe", () => {

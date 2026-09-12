@@ -1,6 +1,6 @@
 # Auditoria operacional do módulo financeiro
 
-Data de referência: 10 de setembro de 2026.
+Data de referência: 12 de setembro de 2026.
 
 ## Escopo
 
@@ -8,32 +8,71 @@ A auditoria cobre o ciclo financeiro completo das mensalidades: criação do pag
 
 ## Estado de referência
 
-No início desta auditoria operacional, o ambiente de produção apresentava:
+Na revisão de 12 de setembro de 2026, o ambiente de produção apresentava:
 
 - health check financeiro: `healthy`;
 - `issue_count = 0`;
-- 0 alertas pendentes ou falhados;
-- 0 alertas críticos abertos;
-- 0 webhooks falhados nas últimas 24 horas;
-- 0 webhooks com processamento stale;
-- 0 refunds exigindo atenção;
-- 0 chargebacks abertos;
-- 0 documentações de chargeback vencidas;
-- 0 pagamentos aprovados sem baixa;
-- 0 reversões pendentes;
-- 0 pagamentos rejeitados ainda aplicados;
-- última reconciliação bem-sucedida registrada;
-- crons financeiros recentes com `succeeded`.
+- `warning_count = 0`;
+- `critical_count = 0`;
+- quatro crons financeiros ativos;
+- 10 pagamentos PIX aprovados registrados no provedor;
+- nenhum pagamento por cartão aprovado em produção até esta data;
+- nenhum alerta financeiro pendente ou falhado;
+- nenhuma divergência financeira ativa detectada pelo health check.
 
 Este snapshot é um ponto de referência, não uma garantia permanente. O painel e o health check são as fontes para o estado atual.
+
+## Evidência operacional consolidada
+
+Entre 10 e 11 de setembro de 2026, os controles de pagamento foram exercitados além dos contratos determinísticos do repositório.
+
+### Cartão sandbox
+
+A validação manual confirmou, contra o Mercado Pago sandbox:
+
+- tokenização de cartão de teste;
+- pagamento aprovado;
+- pagamento rejeitado;
+- consulta individual do pagamento no provedor;
+- replay da criação com a mesma `X-Idempotency-Key` retornando o mesmo `payment_id`;
+- isolamento entre credenciais sandbox e produção.
+
+### Webhook sandbox
+
+O endpoint sandbox separado foi validado com o simulador oficial do Mercado Pago. O fluxo comprovou:
+
+- validação HMAC obrigatória;
+- `live_mode=false` no evento e na reconsulta;
+- reconsulta autoritativa do pagamento por ID;
+- persistência em tabela isolada;
+- deduplicação de entregas: duas notificações para o mesmo evento permaneceram em um único registro, com `delivery_count` incrementado;
+- nenhuma escrita nas tabelas financeiras de produção.
+
+### Reconciliação e convergência
+
+A recuperação de webhook perdido foi validada em sandbox usando `external_reference`. O primeiro teste exigiu uma correção importante: `/v1/payments/search` passou a ser usado somente para descoberta de IDs; cada candidato é confirmado depois por `GET /v1/payments/{id}` antes de qualquer aceitação.
+
+Também foi validado o ciclo `not_found -> retry -> recovered`: a primeira reconciliação ocorreu antes de o pagamento existir, manteve o candidato pendente e, depois da criação do pagamento com a mesma referência, a execução seguinte recuperou o estado `approved`.
+
+### Falhas transitórias
+
+Os estados persistidos equivalentes a `HTTP 503` e timeout/rede foram exercitados. A classificação permanece retryable e uma execução posterior contra o Mercado Pago recupera o pagamento sem duplicar baixa.
+
+A terceira falha consecutiva de reconciliação gera uma escalada `critical` deduplicada; o retry continua habilitado para permitir convergência. Após sucesso, `reconciliation_failure_count` volta a zero e `last_reconciliation_error` é limpo.
+
+### Concorrência webhook x reconciliador
+
+Uma corrida controlada entre o mesmo sincronizador usado pelo webhook e o reconciliador automático confirmou que um pagamento já aprovado não é aplicado duas vezes. A RPC financeira bloqueia a tentativa e a mensalidade com `FOR UPDATE`, e a baixa só ocorre quando `payment_date IS NULL`.
+
+O probe temporário usado exclusivamente para essa validação foi retirado depois do teste; o contrato permanente de concorrência continua na suíte `Payment contracts`.
 
 ## Matriz de controles
 
 | Falha | Prevenção | Detecção | Recuperação | Estado |
 | --- | --- | --- | --- | --- |
 | cobrança duplicada por retry | `X-Idempotency-Key`, chave local única e reutilização de tentativa | evento/alerta de duplicidade e health check | confirmar duplicidade e refund do excedente | coberto |
-| webhook duplicado | `deduplication_key`, `delivery_count`, processamento idempotente | log persistente | nenhuma ação se já processado; replay seguro quando necessário | coberto |
-| webhook perdido | reconciliação periódica | heartbeat, dashboard e health check | reconsulta do estado atual no Mercado Pago | coberto |
+| webhook duplicado | `deduplication_key`, `delivery_count`, processamento idempotente | log persistente | nenhuma ação se já processado; replay seguro quando necessário | coberto e validado em sandbox |
+| webhook perdido | reconciliação periódica | heartbeat, dashboard e health check | reconsulta do estado atual no Mercado Pago | coberto e validado em sandbox |
 | webhook inválido | HMAC do Mercado Pago | eventos operacionais e burst alert | investigar origem; reconciliação preserva convergência | coberto |
 | pagamento aprovado sem baixa | processamento atômico | alerta crítico e health check | reconciliação + `process_mercado_pago_payment` | coberto |
 | reversão não aplicada | rotina de reversão | `payment_reversal_pending` e health check | reconciliar e aplicar reversão | coberto |
@@ -42,6 +81,7 @@ Este snapshot é um ponto de referência, não uma garantia permanente. O painel
 | chargeback sem tratamento | persistência e sincronização | alertas de abertura/prazo | workflow de documentação e reconciliação | coberto |
 | prazo de chargeback perdido | deadline persistente | warning 72h, critical 24h/vencido | priorizar documentação e submissão | coberto |
 | reconciliação parada | cron separado | `reconciliation_stalled`, health check | reparar cron/dispatch antes de casos individuais | coberto |
+| falha transitória do gateway | retry + idempotência | erro persistido e escalada na 3ª falha | nova reconciliação quando o gateway voltar | coberto e validado em sandbox |
 | health check parado | cron próprio | scanner independente | restaurar cron e exigir nova execução healthy | coberto |
 | alerta não entregue | retries do notificador | `failedAlerts` e dashboard | restaurar Resend e retry controlado | coberto |
 | acesso direto a tabelas financeiras | revogação de grants + RLS | contrato de segurança | manter acesso apenas por RPC/Edge Function | coberto |
@@ -75,11 +115,20 @@ Este snapshot é um ponto de referência, não uma garantia permanente. O painel
 - `manage-mercado-pago-chargeback-documentation`;
 - `manage-payment-creation-control`.
 
+### Infraestrutura sandbox de validação
+
+- `mercado-pago-sandbox-webhook`;
+- `reconcile-mercado-pago-sandbox`;
+- `mercado_pago_sandbox_webhook_events`;
+- `mercado_pago_sandbox_reconciliation_candidates`.
+
+Esses componentes são isolados das tabelas financeiras de produção e usam credenciais de teste.
+
 ## Controles de segurança validados
 
-- 0 das 12 tabelas financeiras operacionais concede acesso direto a `anon` ou `authenticated`;
-- as 12 permanecem acessíveis ao `service_role` para fluxos internos;
-- nenhuma RPC financeira é executável por `anon`;
+- 0 das tabelas financeiras operacionais concede acesso direto a `anon` ou `authenticated`;
+- tabelas financeiras permanecem acessíveis ao `service_role` apenas quando necessário para fluxos internos;
+- nenhuma RPC financeira técnica é executável por `anon`;
 - RPCs exclusivamente de servidor são `service_role` only;
 - operações administrativas expostas ao navegador usam MFA/AAL2;
 - reconciliação manual mantém o aluno limitado ao próprio `student_id` e exige MFA para o escopo administrativo;
@@ -96,10 +145,11 @@ O domínio financeiro possui contratos determinísticos para:
 - idempotência do frontend e do provedor;
 - criação/validação de pagamentos;
 - heartbeat e reconciliação;
+- concorrência webhook x reconciliador;
 - refunds;
 - chargebacks;
 - documentação de chargebacks;
-- sandbox read-only;
+- sandbox e convergência;
 - webhooks e replay;
 - health check financeiro;
 - superfície de acesso e MFA;
@@ -109,25 +159,23 @@ O workflow `Payment contracts` roda essas verificações em mudanças relacionad
 
 ## Riscos residuais
 
-### 1. Dependência de serviços externos
+### 1. Primeiro cartão real ainda não observado
 
-Mercado Pago, Supabase e Resend permanecem dependências externas. O sistema detecta e contém grande parte das falhas, mas não pode garantir disponibilidade do provedor.
+Até 12 de setembro de 2026, produção possui pagamentos PIX aprovados, mas nenhum cartão aprovado registrado. Os mecanismos de cartão estão validados em sandbox, porém o primeiro cartão legítimo de produção ainda precisa de observação operacional completa.
 
-Mitigação: reconciliação, idempotência, health check, alertas, kill switch e procedimento de recuperação.
+Mitigação: seguir `docs/payment_first_card_production_validation.md` quando ocorrer naturalmente o primeiro pagamento por cartão. Não criar cobrança real artificial apenas para teste.
 
-### 2. Janela de requisição em voo no kill switch
+### 2. Dependência de serviços externos
+
+Mercado Pago, Supabase, Google Analytics e Resend permanecem dependências externas. O sistema detecta e contém grande parte das falhas, mas não pode garantir disponibilidade do provedor.
+
+Mitigação: reconciliação, idempotência, health check, alertas, kill switch e procedimentos de recuperação.
+
+### 3. Janela de requisição em voo no kill switch
 
 O kill switch bloqueia novas tentativas no banco antes do `INSERT`, cancela tentativas locais ainda sem `provider_payment_id` e mantém recuperação ativa. Uma requisição que já tenha ultrapassado o ponto de admissão imediatamente antes do bloqueio pode, no entanto, continuar em voo.
 
 Mitigação: após um bloqueio de emergência, acompanhar dashboard, webhooks e reconciliação até não haver transações pendentes. O procedimento está documentado em `docs/payment_kill_switch.md`.
-
-### 3. Sandbox sem transação automática destrutiva
-
-O probe automatizado atual é deliberadamente read-only e não cria contas/test payments em cada execução.
-
-Motivo: evitar efeitos externos acumulativos e depender de artefatos sandbox não descartáveis.
-
-Mitigação: contratos locais cobrem o comportamento determinístico; o probe valida credencial/API quando configurado.
 
 ### 4. Defaults gerenciados pela plataforma
 
@@ -139,15 +187,15 @@ Mitigação: criar objetos de aplicação pelas migrações do projeto, conceder
 
 ### 5. Função residual desativada
 
-A Edge Function `noop-schema-probe` permanece implantada por limitação da interface de gerenciamento disponível durante a implementação. Ela está desativada, exige JWT e responde HTTP 410 sem executar operações.
+A Edge Function `noop-schema-probe` permanece implantada por limitação histórica da interface de gerenciamento usada durante a implementação. Ela está desativada, exige JWT e responde HTTP 410 sem executar operações.
 
 Recomendação: remover definitivamente quando houver uma operação de exclusão de Edge Function disponível.
 
 ### 6. Proteção contra senhas vazadas
 
-O Security Advisor ainda aponta `Leaked Password Protection Disabled` no Supabase Auth.
+O Security Advisor ainda pode apontar `Leaked Password Protection Disabled` no Supabase Auth quando o recurso do plano não estiver disponível.
 
-Mitigação atual: MFA protege superfícies administrativas sensíveis. A habilitação da proteção contra senhas vazadas permanece uma ação de segurança global fora do domínio financeiro.
+Mitigação atual: MFA protege superfícies administrativas sensíveis. A decisão sobre esse recurso permanece fora do domínio financeiro.
 
 ## Critérios de prontidão operacional
 
