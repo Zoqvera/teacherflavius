@@ -1,6 +1,9 @@
 (function () {
   "use strict";
 
+  const PASSWORD_ACCESS_USER_IDS = Object.freeze([
+    "b6a3e909-e395-424a-a4eb-3a448f188e97"
+  ]);
   const MODULE_LOADER = Object.freeze({
     selector: 'script[src^="/module_loader.js"]',
     src: "/module_loader.js?v=20260902-1"
@@ -16,7 +19,7 @@
     authSessionService: Object.freeze({
       globalName: "AuthSessionService",
       selector: 'script[src^="/auth_session_service.js"]',
-      src: "/auth_session_service.js?v=20260911-1",
+      src: "/auth_session_service.js?v=20260912-1",
       missingMessage: "O serviço de sessão não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de sessão."
     }),
@@ -170,6 +173,10 @@
     return getStudentEnrollmentServiceModule().generateEnrollmentCode();
   }
 
+  function isPasswordAccessAllowedUser(user) {
+    return !!(user && PASSWORD_ACCESS_USER_IDS.includes(user.id));
+  }
+
   function getAuthSessionService() {
     if (authSessionService) return Promise.resolve(authSessionService);
 
@@ -318,6 +325,11 @@
     return service.updatePassword(password);
   }
 
+  async function changePassword(currentPassword, password) {
+    const service = await getAuthSessionService();
+    return service.changePassword(currentPassword, password);
+  }
+
   async function signInWithGoogle(nextPath) {
     const service = await getAuthSessionService();
     return service.signInWithGoogle(nextPath);
@@ -331,6 +343,11 @@
   async function getUserIdentities() {
     const service = await getAuthSessionService();
     return service.getUserIdentities();
+  }
+
+  async function revokeAllSessions() {
+    const service = await getAuthSessionService();
+    return service.revokeAllSessions();
   }
 
   async function signOut() {
@@ -348,6 +365,7 @@
     getClient: getClient,
     showConfigWarning: showConfigWarning,
     generateEnrollmentCode: generateEnrollmentCode,
+    isPasswordAccessAllowedUser: isPasswordAccessAllowedUser,
     getSession: getSession,
     getUser: getUser,
     isTeacherAdmin: isTeacherAdmin,
@@ -358,9 +376,11 @@
     signIn: signIn,
     requestPasswordReset: requestPasswordReset,
     updatePassword: updatePassword,
+    changePassword: changePassword,
     signInWithGoogle: signInWithGoogle,
     linkGoogleIdentity: linkGoogleIdentity,
     getUserIdentities: getUserIdentities,
+    revokeAllSessions: revokeAllSessions,
     signOut: signOut,
     signOutEverywhere: signOutEverywhere,
     getProfile: getProfile,
