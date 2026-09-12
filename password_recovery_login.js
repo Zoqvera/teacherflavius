@@ -79,7 +79,7 @@
     title.textContent = "Criar nova senha";
 
     const intro = document.createElement("p");
-    intro.textContent = "Defina uma nova senha para sua conta.";
+    intro.textContent = "Defina uma nova senha para sua conta. Ao concluir, as sessões renováveis em todos os dispositivos serão encerradas.";
 
     const form = document.createElement("form");
     form.id = "passwordRecoveryUpdateForm";
@@ -144,6 +144,13 @@
     return null;
   }
 
+  async function revokeRecoveredAccountSessions() {
+    if (!window.Auth || typeof Auth.revokeAllSessions !== "function") {
+      throw new Error("Não foi possível encerrar as sessões da conta.");
+    }
+    await Auth.revokeAllSessions();
+  }
+
   async function updatePassword(view) {
     const password = view.passwordInput.value;
     const confirmation = view.confirmationInput.value;
@@ -162,6 +169,7 @@
     setBusy(view, true);
     view.status.textContent = "";
 
+    let passwordChanged = false;
     try {
       const session = await waitForRecoverySession();
       if (!session) {
@@ -169,13 +177,19 @@
       }
 
       await Auth.updatePassword(password);
-      const client = Auth.getClient();
-      if (client) await client.auth.signOut({ scope: "local" });
-      window.location.replace(LOGIN_PATH + "?password_access=1&password_updated=1");
+      passwordChanged = true;
+      await revokeRecoveredAccountSessions();
+      window.location.replace(
+        LOGIN_PATH + "?password_access=1&password_updated=1&all_sessions=1"
+      );
     } catch (error) {
-      view.status.textContent = error && error.message
-        ? error.message
-        : "Não foi possível atualizar a senha. Solicite um novo link.";
+      if (passwordChanged) {
+        view.status.textContent = "A senha foi alterada, mas não foi possível encerrar todas as sessões. Entre novamente e use a opção SAIR DE TODOS OS DISPOSITIVOS.";
+      } else {
+        view.status.textContent = error && error.message
+          ? error.message
+          : "Não foi possível atualizar a senha. Solicite um novo link.";
+      }
       setBusy(view, false);
     }
   }
