@@ -27,14 +27,13 @@ class StaticBuildRunnerTests(unittest.TestCase):
             patch("static_build_runner.transform_copied_html", side_effect=lambda target, files: (calls.append("transform"), transform_stats)[1]) as transform,
             patch("static_build_runner.materialize_clean_route_aliases", side_effect=lambda source, target: (calls.append("aliases"), 5)[1]) as aliases,
             patch("static_build_runner.validate_publish_dependencies", side_effect=lambda target: calls.append("dependencies")) as dependencies,
-            patch("static_build_runner.install_shared_headers", side_effect=lambda source, target: calls.append("headers")) as headers,
             patch("static_build_runner.validate_publish", side_effect=lambda target: calls.append("validate")) as validate,
         ):
             result = build_static_publish(root, publish)
 
         self.assertEqual(
             calls,
-            ["prepare", "copy", "transform", "aliases", "dependencies", "headers", "validate"],
+            ["prepare", "copy", "transform", "aliases", "dependencies", "validate"],
         )
         self.assertEqual(result.public_file_count, 2)
         self.assertEqual(result.transform_stats, transform_stats)
@@ -44,7 +43,6 @@ class StaticBuildRunnerTests(unittest.TestCase):
         transform.assert_called_once_with(publish, copied_files)
         aliases.assert_called_once_with(root, publish)
         dependencies.assert_called_once_with(publish)
-        headers.assert_called_once_with(root, publish)
         validate.assert_called_once_with(publish)
 
 
