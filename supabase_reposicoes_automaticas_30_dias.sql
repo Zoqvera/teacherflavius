@@ -21,8 +21,8 @@ declare
   deleted_count integer := 0;
   inserted_count integer := 0;
 begin
-  -- Recalcula somente horários automáticos futuros sem reservas confirmadas.
-  -- Horários já reservados são preservados.
+  -- Recalcula somente horários automáticos futuros sem qualquer reserva vinculada.
+  -- Reservas confirmadas, canceladas ou históricas preservam o horário referenciado.
   delete from public.makeup_class_slots s
   where s.is_auto_generated = true
     and s.starts_at > now()
@@ -30,7 +30,6 @@ begin
       select 1
       from public.makeup_class_bookings b
       where b.slot_id = s.id
-        and b.status = 'confirmed'
     );
   get diagnostics deleted_count = row_count;
 
@@ -77,6 +76,7 @@ begin
       interval '1 day'
     ) as d
     where tc.is_active = true
+      and coalesce(tc.makeup_slots_enabled, true) = true
       and tc.class_weekday between 1 and 7
       and tc.class_start_time is not null
       and extract(isodow from d)::integer = tc.class_weekday
