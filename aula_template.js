@@ -3,12 +3,13 @@
 
   const script = document.currentScript;
   const data = script ? script.dataset : {};
+  const ANIMATED_CARDS_SELECTOR = 'script[src^="/animated_cards.js"], script[src^="animated_cards.js"]';
 
   function loadAnimationScript() {
-    if (document.querySelector('script[src^="animated_cards.js"]')) return;
+    if (document.querySelector(ANIMATED_CARDS_SELECTOR)) return;
 
     const animationScript = document.createElement("script");
-    animationScript.src = "animated_cards.js?v=20260427-3";
+    animationScript.src = "/animated_cards.js?v=20260427-3";
     animationScript.defer = true;
     document.body.appendChild(animationScript);
   }
