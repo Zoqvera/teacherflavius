@@ -92,3 +92,10 @@ test("kill switch browser management goes through JWT and MFA Edge Function", fu
   assert.match(browserSource, /functions\.invoke\("manage-payment-creation-control"/);
   assert.doesNotMatch(browserSource, /\.rpc\("set_teacher_payment_creation_enabled"/);
 });
+
+test("kill switch remains visible when MFA authorization is not ready", function () {
+  assert.match(browserSource, /function renderUnavailable\(/);
+  assert.match(browserSource, /VERIFICAÇÃO NECESSÁRIA/);
+  assert.match(browserSource, /href="\/professor\/"/);
+  assert.match(browserSource, /renderUnavailable\(documentRef\)/);
+});
