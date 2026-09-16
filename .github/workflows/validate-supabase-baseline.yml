@@ -64,7 +64,8 @@ jobs:
             supabase/baseline/10_public_schema.sql \
             supabase/baseline/20_default_privileges.sql \
             supabase/baseline/30_platform_config.sql \
-            supabase/baseline/35_preserve_referenced_auto_makeup_slots.sql
+            supabase/baseline/35_preserve_referenced_auto_makeup_slots.sql \
+            supabase/baseline/40_allow_gmail_dot_equivalent_student_links.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -152,6 +153,36 @@ jobs:
             echo '::error::Baseline synchronizer can still delete slots referenced by non-confirmed booking history.'
             exit 1
           fi
+
+      - name: Verify Gmail dot-equivalence account linking
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $gmail_link_check$
+          begin
+            if public.canonical_gmail_email('student.name@gmail.com')
+               <> public.canonical_gmail_email('studentname@gmail.com') then
+              raise exception 'Gmail dot-equivalence normalization is not active.';
+            end if;
+
+            if public.canonical_gmail_email('student.name@example.com')
+               = public.canonical_gmail_email('studentname@example.com') then
+              raise exception 'Dot-equivalence must not apply to non-Gmail domains.';
+            end if;
+
+            if has_function_privilege('anon', 'public.canonical_gmail_email(text)', 'EXECUTE')
+               or has_function_privilege('authenticated', 'public.canonical_gmail_email(text)', 'EXECUTE') then
+              raise exception 'Gmail canonicalization helper is exposed to browser roles.';
+            end if;
+          end;
+          $gmail_link_check$;
+          SQL
 
       - name: Compare restored catalog with production fingerprint
         shell: bash
