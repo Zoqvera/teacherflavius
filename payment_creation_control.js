@@ -76,6 +76,23 @@
     return panel;
   }
 
+  function renderUnavailable(documentRef) {
+    const panel = ensurePanel(documentRef);
+    if (!panel) return false;
+
+    panel.innerHTML = [
+      '<div class="panel-header">',
+      '<div><h2 id="' + PANEL_ID + 'Title">Controle de novas cobranças</h2>',
+      '<p>O kill switch exige autenticação administrativa em duas etapas (MFA/AAL2).</p></div>',
+      '<span class="status-pill status-overdue">VERIFICAÇÃO NECESSÁRIA</span>',
+      '</div>',
+      '<p>Conclua a verificação em duas etapas na Área do Professor e depois volte a esta página. O controle será liberado sem alterar pagamentos existentes.</p>',
+      '<a class="finance-button" href="/professor/">VERIFICAR MFA NA ÁREA DO PROFESSOR</a>'
+    ].join("");
+    panel.dataset.enabled = "unknown";
+    return true;
+  }
+
   function renderControl(documentRef, rawControl) {
     const control = normalizeControl(rawControl);
     const panel = ensurePanel(documentRef);
@@ -212,6 +229,7 @@
       renderControl(documentRef, control);
     } catch (error) {
       console.warn("Não foi possível carregar o controle de novas cobranças.", error);
+      renderUnavailable(documentRef);
       return false;
     }
 
@@ -236,6 +254,7 @@
     normalizeControl: normalizeControl,
     statusLabel: statusLabel,
     actionLabel: actionLabel,
+    renderUnavailable: renderUnavailable,
     renderControl: renderControl,
     requestTransition: requestTransition,
     initialize: initialize
