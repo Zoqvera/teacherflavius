@@ -1,9 +1,9 @@
 {
-  "captured_from_migration_version": "20260820225434",
+  "captured_from_migration_version": "20260916182500",
   "tables": 46,
   "constraints": 188,
   "non_constraint_indexes": 99,
-  "public_functions": 116,
+  "public_functions": 117,
   "private_functions": 1,
   "rls_policies": 85,
   "public_user_triggers": 28,

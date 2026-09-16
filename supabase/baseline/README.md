@@ -20,11 +20,12 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 2. Apply `20_default_privileges.sql`.
 3. Apply `30_platform_config.sql`.
 4. Apply `35_preserve_referenced_auto_makeup_slots.sql`.
-5. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
-6. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
-7. Restore application data separately, if a data restore is required.
-8. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
-9. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
+5. Apply `40_allow_gmail_dot_equivalent_student_links.sql`.
+6. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
+7. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
+8. Restore application data separately, if a data restore is required.
+9. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
+10. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
 
 ## Important boundaries
 
@@ -37,8 +38,8 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 
 ## Validation fingerprint
 
-`schema-fingerprint.json` is the machine-readable catalog fingerprint used to detect structural drift. Corrective function-body overlays such as `35_preserve_referenced_auto_makeup_slots.sql` do not change catalog object counts, so they do not require a fingerprint count change.
+`schema-fingerprint.json` is the machine-readable catalog fingerprint used to detect structural drift. Function-body-only overlays do not change catalog object counts. Overlay `40_allow_gmail_dot_equivalent_student_links.sql` adds one helper function, so the public-function count is intentionally incremented by one.
 
 ## Disposable restore validation
 
-Before merging baseline changes, `.github/workflows/validate-supabase-baseline.yml` starts a clean local Supabase stack in GitHub Actions, applies the committed SQL baseline in documented order without replaying the incomplete historical migrations, provisions only a dummy Vault secret, and compares the restored catalog against `schema-fingerprint.json`. Production credentials and application data are never used by this test.
+Before merging baseline changes, `.github/workflows/validate-supabase-baseline.yml` starts a clean local Supabase stack in GitHub Actions, applies the committed SQL baseline in documented order without replaying the incomplete historical migrations, provisions only a dummy Vault secret, verifies the Gmail dot-equivalence access boundary, and compares the restored catalog against `schema-fingerprint.json`. Production credentials and application data are never used by this test.
