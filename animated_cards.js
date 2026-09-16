@@ -2,8 +2,8 @@
   "use strict";
 
   const RECORDED_LESSONS_SCRIPT = Object.freeze({
-    selector: 'script[src^="class_recorded_lessons.js"]',
-    src: "class_recorded_lessons.js?v=20260429-1"
+    selector: 'script[src^="/class_recorded_lessons.js"], script[src^="class_recorded_lessons.js"]',
+    src: "/class_recorded_lessons.js?v=20260429-1"
   });
 
   const GLOBAL_LOGOUT_SCRIPT = Object.freeze({
