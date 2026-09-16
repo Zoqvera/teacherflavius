@@ -1,15 +1,6 @@
--- Geração automática de horários de reposição para os próximos 30 dias.
--- Regras de capacidade:
--- 4 alunos -> 1 vaga de reposição
--- 3 alunos -> 2 vagas de reposição
--- 2 alunos -> 3 vagas de reposição
--- 1 aluno  -> nenhuma vaga
--- A duração segue o padrão atual das reposições: 60 minutos.
-
-create extension if not exists pg_cron with schema pg_catalog;
-
-alter table public.makeup_class_slots
-  add column if not exists is_auto_generated boolean not null default false;
+-- Preserve any automatic makeup slot that is referenced by booking history.
+-- The booking foreign key uses ON DELETE RESTRICT, so cancelled bookings must
+-- protect their slot just like confirmed bookings do.
 
 create or replace function public.sync_auto_makeup_slots_30_days()
 returns jsonb
@@ -21,8 +12,6 @@ declare
   deleted_count integer := 0;
   inserted_count integer := 0;
 begin
-  -- Recalcula somente horários automáticos futuros sem qualquer reserva vinculada.
-  -- Reservas confirmadas, canceladas ou históricas preservam o horário referenciado.
   delete from public.makeup_class_slots s
   where s.is_auto_generated = true
     and s.starts_at > now()
@@ -45,10 +34,8 @@ begin
            )
       )::integer as student_count
     from public.teacher_classes tc
-    left join public.class_students cs
-      on cs.class_number = tc.class_number
-    left join public.profiles p
-      on p.id = cs.user_id
+    left join public.class_students cs on cs.class_number = tc.class_number
+    left join public.profiles p on p.id = cs.user_id
     where tc.is_active = true
     group by tc.class_number
   ), desired as (
@@ -66,10 +53,8 @@ begin
         else 0
       end::integer as capacity
     from public.teacher_classes tc
-    join student_counts sc
-      on sc.class_number = tc.class_number
-    left join public.class_resources cr
-      on cr.class_number = tc.class_number
+    join student_counts sc on sc.class_number = tc.class_number
+    left join public.class_resources cr on cr.class_number = tc.class_number
     cross join generate_series(
       (now() at time zone 'America/Sao_Paulo')::date,
       (now() at time zone 'America/Sao_Paulo')::date + 29,
@@ -84,28 +69,12 @@ begin
       and nullif(trim(cr.video_lesson_url), '') ~* '^https?://'
   )
   insert into public.makeup_class_slots (
-    class_number,
-    class_name,
-    meeting_url,
-    starts_at,
-    ends_at,
-    capacity,
-    notes,
-    is_active,
-    created_by,
-    is_auto_generated
+    class_number, class_name, meeting_url, starts_at, ends_at,
+    capacity, notes, is_active, created_by, is_auto_generated
   )
   select
-    d.class_number,
-    d.class_name,
-    d.meeting_url,
-    d.starts_at,
-    d.ends_at,
-    d.capacity,
-    null,
-    true,
-    null,
-    true
+    d.class_number, d.class_name, d.meeting_url, d.starts_at, d.ends_at,
+    d.capacity, null, true, null, true
   from desired d
   where d.starts_at > now()
     and not exists (
@@ -127,19 +96,7 @@ begin
 end;
 $$;
 
--- A função é interna e executada apenas pelo job do banco.
 revoke all on function public.sync_auto_makeup_slots_30_days() from public;
 revoke all on function public.sync_auto_makeup_slots_30_days() from anon;
 revoke all on function public.sync_auto_makeup_slots_30_days() from authenticated;
 grant execute on function public.sync_auto_makeup_slots_30_days() to postgres;
-
--- Executa diariamente às 06:15 UTC (03:15 em Brasília), mantendo sempre
--- uma janela móvel de 30 dias de reposições futuras.
-select cron.schedule(
-  'sync-auto-makeup-slots-30-days',
-  '15 6 * * *',
-  $$select public.sync_auto_makeup_slots_30_days();$$
-);
-
--- Preenche a janela imediatamente após a instalação.
-select public.sync_auto_makeup_slots_30_days();

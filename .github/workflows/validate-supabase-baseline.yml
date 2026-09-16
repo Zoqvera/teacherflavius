@@ -63,7 +63,8 @@ jobs:
           for file in \
             supabase/baseline/10_public_schema.sql \
             supabase/baseline/20_default_privileges.sql \
-            supabase/baseline/30_platform_config.sql
+            supabase/baseline/30_platform_config.sql \
+            supabase/baseline/35_preserve_referenced_auto_makeup_slots.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -130,6 +131,27 @@ jobs:
           end;
           $acl_check$;
           SQL
+
+      - name: Verify makeup-slot synchronizer preserves booking history
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          FUNCTION_DEF="$(docker exec "$DB_CONTAINER" \
+            psql -U postgres -d postgres -At -v ON_ERROR_STOP=1 \
+            -c "select pg_get_functiondef('public.sync_auto_makeup_slots_30_days()'::regprocedure);")"
+
+          printf '%s\n' "$FUNCTION_DEF" | grep -F 'where b.slot_id = s.id'
+          if printf '%s\n' "$FUNCTION_DEF" | sed -n \
+            '/delete from public.makeup_class_slots s/,/get diagnostics deleted_count = row_count;/p' \
+            | grep -Fq "b.status = 'confirmed'"
+          then
+            echo '::error::Baseline synchronizer can still delete slots referenced by non-confirmed booking history.'
+            exit 1
+          fi
 
       - name: Compare restored catalog with production fingerprint
         shell: bash
