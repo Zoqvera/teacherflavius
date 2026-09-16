@@ -8,8 +8,8 @@
   });
 
   const ASSETS = Object.freeze({
-    animatedCardsCss: "animated_cards.css?v=20260429-6",
-    animatedCardsJs: "animated_cards.js?v=20260902-3",
+    animatedCardsCss: "/animated_cards.css?v=20260429-6",
+    animatedCardsJs: "/animated_cards.js?v=20260902-3",
     accessTrackerJs: "/student_access_tracker.js?v=20260730-2",
     googleAuthCss: "/google_auth_ui.css?v=20260902-1",
     googleAuthJs: "/google_auth_ui.js?v=20260902-1",
@@ -27,6 +27,9 @@
     missingMessage: "O helper de espera de recursos não foi inicializado.",
     loadErrorMessage: "Não foi possível carregar o helper de espera de recursos."
   });
+
+  const ANIMATED_CARDS_SCRIPT_SELECTOR = 'script[src^="/animated_cards.js"], script[src^="animated_cards.js"]';
+  const ANIMATED_CARDS_STYLE_SELECTOR = 'link[href^="/animated_cards.css"], link[href^="animated_cards.css"]';
 
   function runWhenDomReady(callback) {
     if (document.readyState === "loading") {
@@ -65,11 +68,11 @@
   function loadAnimatedCards() {
     loadResourceWaiter()
       .then(function () {
-        appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
+        appendScriptOnce(ANIMATED_CARDS_SCRIPT_SELECTOR, ASSETS.animatedCardsJs);
       })
       .catch(function (error) {
         console.warn("Não foi possível preparar o helper de recursos para os assets compartilhados:", error);
-        appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
+        appendScriptOnce(ANIMATED_CARDS_SCRIPT_SELECTOR, ASSETS.animatedCardsJs);
       });
   }
 
@@ -85,7 +88,7 @@
 
   function loadSharedAssets() {
     runWhenDomReady(function () {
-      appendStylesheetOnce('link[href^="animated_cards.css"]', ASSETS.animatedCardsCss);
+      appendStylesheetOnce(ANIMATED_CARDS_STYLE_SELECTOR, ASSETS.animatedCardsCss);
       loadAnimatedCards();
       loadAccessTracker();
     });
