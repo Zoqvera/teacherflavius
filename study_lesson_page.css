@@ -4,6 +4,19 @@
   max-width: 760px;
 }
 
+.lesson-page-container .header h1 {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  font-size: clamp(34px, 5vw, 50px);
+  line-height: 1.12;
+}
+
+.lesson-section {
+  padding: 10px 4px;
+}
+
 .lesson-number-badge {
   display: inline-block;
   margin: 0 0 10px;
@@ -30,8 +43,17 @@
   padding: 22px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(12px);
+}
+
+.lesson-example-card {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.lesson-vocabulary-card {
+  background: rgba(78, 154, 236, 0.10);
+  border-color: rgba(96, 165, 250, 0.30);
 }
 
 .lesson-section-kicker {
@@ -48,6 +70,15 @@
   line-height: 1.72;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.lesson-objective-text {
+  font-style: italic;
+}
+
+.lesson-exercise-text {
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .lesson-tools {
