@@ -32,7 +32,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260912-1"></script>
   <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
-  <link rel="stylesheet" href="/study_lesson_page.css?v=20260918-2">
+  <link rel="stylesheet" href="/study_lesson_page.css?v=20260918-3">
 </head>
 <body class="auth-checking">
 <!-- Google Tag Manager (noscript) -->
@@ -48,7 +48,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <header class="header">
       <div><span class="badge">TEACHER FLÁVIO</span></div>
-      <p id="lessonNumberBadge" class="lesson-number-badge" hidden></p>
+      <p id="lessonDisplayNumber" class="lesson-display-number"></p>
       <h1 id="lessonPageTitle">Lição</h1>
       <div id="lessonPageStatus" class="status" role="status">Carregando lição...</div>
     </header>
@@ -62,8 +62,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </section>
 
       <section class="lesson-content-card lesson-example-card">
-        <p class="lesson-section-kicker">EXEMPLO</p>
+        <p class="lesson-section-kicker">LEIA O EXEMPLO ABAIXO:</p>
         <p id="lessonExample" class="lesson-rich-text"></p>
+      </section>
+
+      <section class="lesson-content-card lesson-example-card lesson-translation-card">
+        <p class="lesson-section-kicker">TRADUÇÃO..</p>
+        <p id="lessonTranslation" class="lesson-rich-text"></p>
       </section>
 
       <section class="lesson-section lesson-exercise-section">
@@ -97,8 +102,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 
   <script src="/resource_waiter.js?v=20260902-2"></script>
-  <script src="/study_lesson_service.js?v=20260918-2"></script>
-  <script src="/licao.js?v=20260918-1"></script>
+  <script src="/study_lesson_service.js?v=20260918-3"></script>
+  <script src="/licao.js?v=20260918-2"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
