@@ -206,9 +206,13 @@
     });
     if (!page) return;
 
-    const deletionEffect = Number(page.roadmap_lesson_number) > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT
-      ? " O card criado para esta lição também será removido do Roteiro de Estudos."
-      : " O card original voltará ao destino anterior quando houver PDF cadastrado.";
+    const linkedLessonNumber = Number(page.roadmap_lesson_number);
+    let deletionEffect = " Esta página não está conectada ao Roteiro de Estudos.";
+    if (linkedLessonNumber > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT) {
+      deletionEffect = " O card criado para esta lição também será removido do Roteiro de Estudos.";
+    } else if (linkedLessonNumber >= 1) {
+      deletionEffect = " O card original voltará ao destino anterior quando houver PDF cadastrado.";
+    }
     const confirmed = window.confirm(
       "Excluir a página \"" + page.title + "\"?" + deletionEffect
     );
