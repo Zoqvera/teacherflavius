@@ -31,7 +31,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
             self.assertIn(f'maxlength="{limit}"', editor)
 
     def test_database_repeats_character_and_link_constraints(self) -> None:
-        migration = self.read("supabase/migrations/20260918183000_add_study_lesson_pages.sql")
+        migration = self.read("supabase/migrations/20260918184911_add_study_lesson_pages.sql")
         for limit in (200, 500, 1000):
             self.assertIn(f"between 1 and {limit}", migration)
 
