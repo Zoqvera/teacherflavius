@@ -41,7 +41,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("public.is_teacher_admin_mfa()", migration)
 
     def test_linking_is_manual_and_optional(self) -> None:
-        editor = self.read("criar_licao.html")
+        editor = self.read("criar-licao/index.html")
         migration = self.read("supabase/migrations/20260918183000_add_study_lesson_pages.sql")
 
         self.assertIn("Não vincular agora", editor)
@@ -64,8 +64,8 @@ class StudyLessonPagesContractTests(unittest.TestCase):
 
     def test_new_private_routes_are_not_indexed(self) -> None:
         robots = self.read("robots.txt")
-        lesson = self.read("licao.html")
-        editor = self.read("criar_licao.html")
+        lesson = self.read("licao/index.html")
+        editor = self.read("criar-licao/index.html")
 
         self.assertIn("Disallow: /licao/", robots)
         self.assertIn("Disallow: /criar-licao/", robots)
