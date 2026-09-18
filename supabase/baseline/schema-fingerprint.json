@@ -2,7 +2,7 @@
   "captured_from_migration_version": "20260918183000",
   "tables": 47,
   "constraints": 197,
-  "non_constraint_indexes": 100,
+  "non_constraint_indexes": 102,
   "public_functions": 118,
   "private_functions": 1,
   "rls_policies": 89,
