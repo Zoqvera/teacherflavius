@@ -62,6 +62,55 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("StudyLessonService.lessonPageUrl", roadmap)
         self.assertIn("lessonLinks[lessonId]", roadmap)
 
+    def test_editor_can_create_a_new_roadmap_card(self) -> None:
+        editor = self.read("criar-licao/index.html")
+        service = self.read("study_lesson_service.js")
+        controller = self.read("criar_licao.js")
+
+        self.assertIn('value="0">CRIAR NOVO CARD', editor)
+        self.assertIn("NEW_ROADMAP_CARD_SENTINEL", service)
+        self.assertIn("EXISTING_ROADMAP_CARD_COUNT", service)
+        self.assertIn("CRIAR NOVO CARD", controller)
+        self.assertIn("savedPage.roadmap_lesson_number", controller)
+
+    def test_dynamic_card_migration_removes_the_24_card_ceiling(self) -> None:
+        migration = self.read("supabase/migrations/20260918190500_enable_dynamic_study_roadmap_cards.sql")
+
+        self.assertIn("drop constraint if exists study_lesson_pages_roadmap_lesson_number_check", migration)
+        self.assertIn("check (roadmap_lesson_number >= 1)", migration)
+        self.assertIn("drop constraint if exists study_roadmap_completion_lesson_number_check", migration)
+        self.assertIn("check (lesson_number >= 1)", migration)
+        self.assertIn("new.roadmap_lesson_number = 0", migration)
+        self.assertIn("pg_advisory_xact_lock", migration)
+        self.assertIn("greatest(", migration)
+
+    def test_roadmap_renders_teacher_created_cards_after_lesson_24(self) -> None:
+        roadmap = self.read("roteiro_de_estudos.html")
+
+        self.assertIn("roadmapLessonNumbers", roadmap)
+        self.assertIn("createdCards", roadmap)
+        self.assertIn("EXISTING_ROADMAP_CARD_COUNT", roadmap)
+        self.assertIn("linkedPage.title", roadmap)
+        self.assertIn("linkedPage.objective", roadmap)
+
+    def test_final_lesson_page_uses_requested_visual_hierarchy(self) -> None:
+        lesson = self.read("licao/index.html")
+        styles = self.read("study_lesson_page.css")
+
+        self.assertIn("lesson-objective-text", lesson)
+        self.assertIn("lesson-example-card", lesson)
+        self.assertIn("lesson-exercise-text", lesson)
+        self.assertIn("lesson-vocabulary-card", lesson)
+
+        self.assertIn("text-align: center", styles)
+        self.assertIn("font-size: clamp(34px, 5vw, 50px)", styles)
+        self.assertIn("font-style: italic", styles)
+        self.assertIn(".lesson-example-card", styles)
+        self.assertIn("background: rgba(255, 255, 255, 0.10)", styles)
+        self.assertIn("text-transform: uppercase", styles)
+        self.assertIn("font-weight: 700", styles)
+        self.assertIn(".lesson-vocabulary-card", styles)
+
     def test_new_private_routes_are_not_indexed(self) -> None:
         robots = self.read("robots.txt")
         lesson = self.read("licao/index.html")
