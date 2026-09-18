@@ -1,7 +1,7 @@
 {
-  "captured_from_migration_version": "20260918190500",
+  "captured_from_migration_version": "20260918192428",
   "tables": 47,
-  "constraints": 197,
+  "constraints": 199,
   "non_constraint_indexes": 102,
   "public_functions": 119,
   "private_functions": 1,

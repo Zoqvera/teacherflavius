@@ -7,9 +7,11 @@
   });
 
   const FIELD_CONFIG = Object.freeze([
+    Object.freeze({ id: "lessonNumber", countId: "lessonNumberCount", max: 50 }),
     Object.freeze({ id: "lessonTitle", countId: "lessonTitleCount", max: 200 }),
     Object.freeze({ id: "lessonObjective", countId: "lessonObjectiveCount", max: 500 }),
     Object.freeze({ id: "lessonExample", countId: "lessonExampleCount", max: 1000 }),
+    Object.freeze({ id: "lessonTranslation", countId: "lessonTranslationCount", max: 1000 }),
     Object.freeze({ id: "lessonPracticalExercise", countId: "lessonPracticalExerciseCount", max: 500 }),
     Object.freeze({ id: "lessonUsefulVocabulary", countId: "lessonUsefulVocabularyCount", max: 1000 })
   ]);
@@ -150,9 +152,11 @@
 
   function readFormPayload() {
     return {
+      lesson_number_label: document.getElementById("lessonNumber").value,
       title: document.getElementById("lessonTitle").value,
       objective: document.getElementById("lessonObjective").value,
       example: document.getElementById("lessonExample").value,
+      translation: document.getElementById("lessonTranslation").value,
       practical_exercise: document.getElementById("lessonPracticalExercise").value,
       useful_vocabulary: document.getElementById("lessonUsefulVocabulary").value,
       roadmap_lesson_number: document.getElementById("roadmapLessonNumber").value
@@ -186,9 +190,11 @@
     if (!page) return;
 
     state.editingPageId = page.id;
+    document.getElementById("lessonNumber").value = page.lesson_number_label || "";
     document.getElementById("lessonTitle").value = page.title || "";
     document.getElementById("lessonObjective").value = page.objective || "";
     document.getElementById("lessonExample").value = page.example || "";
+    document.getElementById("lessonTranslation").value = page.translation || "";
     document.getElementById("lessonPracticalExercise").value = page.practical_exercise || "";
     document.getElementById("lessonUsefulVocabulary").value = page.useful_vocabulary || "";
     rebuildRoadmapOptions(page.roadmap_lesson_number === null ? "" : page.roadmap_lesson_number);

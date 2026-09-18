@@ -68,7 +68,8 @@ jobs:
             supabase/baseline/40_allow_gmail_dot_equivalent_student_links.sql \
             supabase/baseline/42_require_live_admin_auth_session.sql \
             supabase/baseline/45_add_study_lesson_pages.sql \
-            supabase/baseline/50_enable_dynamic_study_roadmap_cards.sql
+            supabase/baseline/50_enable_dynamic_study_roadmap_cards.sql \
+            supabase/baseline/55_add_lesson_number_label_and_translation.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \

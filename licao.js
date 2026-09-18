@@ -37,19 +37,13 @@
   }
 
   function renderPage(page) {
+    document.getElementById("lessonDisplayNumber").textContent = page.lesson_number_label;
     document.getElementById("lessonPageTitle").textContent = page.title;
     document.getElementById("lessonObjective").textContent = page.objective;
     document.getElementById("lessonExample").textContent = page.example;
+    document.getElementById("lessonTranslation").textContent = page.translation;
     document.getElementById("lessonPracticalExercise").textContent = page.practical_exercise;
     document.getElementById("lessonUsefulVocabulary").textContent = page.useful_vocabulary;
-
-    const lessonNumberBadge = document.getElementById("lessonNumberBadge");
-    if (page.roadmap_lesson_number) {
-      lessonNumberBadge.textContent = "LIÇÃO " + page.roadmap_lesson_number;
-      lessonNumberBadge.hidden = false;
-    } else {
-      lessonNumberBadge.hidden = true;
-    }
 
     document.title = page.title + " - Teacher Flávio";
     document.getElementById("lessonPageContent").hidden = false;

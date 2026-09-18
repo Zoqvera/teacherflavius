@@ -19,9 +19,11 @@ class StudyLessonPagesContractTests(unittest.TestCase):
     def test_editor_enforces_requested_character_limits(self) -> None:
         editor = self.read("criar-licao/index.html")
         expected_limits = {
+            "lessonNumber": 50,
             "lessonTitle": 200,
             "lessonObjective": 500,
             "lessonExample": 1000,
+            "lessonTranslation": 1000,
             "lessonPracticalExercise": 500,
             "lessonUsefulVocabulary": 1000,
         }
@@ -93,21 +95,40 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("linkedPage.title", roadmap)
         self.assertIn("linkedPage.objective", roadmap)
 
+    def test_lesson_number_label_and_translation_are_persisted(self) -> None:
+        migration = self.read("supabase/migrations/20260918192428_add_lesson_number_label_and_translation.sql")
+        service = self.read("study_lesson_service.js")
+        editor = self.read("criar_licao.js")
+
+        self.assertIn("lesson_number_label text not null", migration)
+        self.assertIn("between 1 and 50", migration)
+        self.assertIn("translation text not null", migration)
+        self.assertIn("between 1 and 1000", migration)
+        self.assertIn("lesson_number_label", service)
+        self.assertIn("translation", service)
+        self.assertIn('lesson_number_label: document.getElementById("lessonNumber").value', editor)
+        self.assertIn('translation: document.getElementById("lessonTranslation").value', editor)
+
     def test_final_lesson_page_uses_requested_visual_hierarchy(self) -> None:
         lesson = self.read("licao/index.html")
         styles = self.read("study_lesson_page.css")
 
+        self.assertIn("lesson-display-number", lesson)
         self.assertIn("lesson-objective-text", lesson)
+        self.assertIn("LEIA O EXEMPLO ABAIXO:", lesson)
         self.assertIn("lesson-example-card", lesson)
+        self.assertIn("TRADUÇÃO..", lesson)
+        self.assertIn('id="lessonTranslation"', lesson)
         self.assertIn("lesson-exercise-text", lesson)
         self.assertIn("lesson-vocabulary-card", lesson)
 
         self.assertIn("text-align: center", styles)
         self.assertIn("font-size: clamp(34px, 5vw, 50px)", styles)
+        self.assertIn(".lesson-display-number", styles)
         self.assertIn("font-style: italic", styles)
         self.assertIn(".lesson-example-card", styles)
         self.assertIn("background: rgba(255, 255, 255, 0.10)", styles)
-        self.assertIn("text-transform: uppercase", styles)
+        self.assertGreaterEqual(styles.count("text-transform: uppercase"), 3)
         self.assertIn("font-weight: 700", styles)
         self.assertIn(".lesson-vocabulary-card", styles)
 
