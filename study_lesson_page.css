@@ -1,0 +1,105 @@
+@import url('/brand_palette.css?v=20260820-3');
+
+.lesson-page-container {
+  max-width: 760px;
+}
+
+.lesson-number-badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 5px 11px;
+  border: 1px solid rgba(96, 165, 250, 0.34);
+  border-radius: 999px;
+  color: var(--tf-blue-200, #bfdbfe);
+  background: rgba(30, 64, 175, 0.16);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+#lessonPageContent {
+  display: grid;
+  gap: 16px;
+}
+
+#lessonPageContent[hidden] {
+  display: none;
+}
+
+.lesson-content-card {
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+}
+
+.lesson-section-kicker {
+  margin-bottom: 10px;
+  color: var(--tf-blue-300, #93c5fd);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.lesson-rich-text {
+  color: var(--tf-slate-200, #e2e8f0);
+  font-size: 15px;
+  line-height: 1.72;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lesson-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.lesson-tool-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 104px;
+  padding: 18px;
+  border: 1px solid rgba(78, 154, 236, 0.28);
+  border-radius: 18px;
+  background: rgba(3, 26, 63, 0.76);
+  color: var(--tf-slate-100, #f1f5f9);
+  text-decoration: none;
+  box-shadow: var(--tf-shadow-sm);
+}
+
+.lesson-tool-card:hover {
+  border-color: rgba(78, 154, 236, 0.62);
+  background: rgba(5, 66, 136, 0.32);
+}
+
+.lesson-tool-card strong,
+.lesson-tool-card small {
+  display: block;
+}
+
+.lesson-tool-card strong {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.lesson-tool-card small {
+  margin-top: 7px;
+  color: var(--tf-slate-400, #94a3b8);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@media (max-width: 639px) {
+  .lesson-content-card {
+    padding: 18px;
+  }
+
+  .lesson-tools {
+    grid-template-columns: 1fr;
+  }
+}

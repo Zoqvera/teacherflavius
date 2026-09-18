@@ -29,6 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="supabase_config.js?v=20260428-2"></script>
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260428-2"></script>
+  <script src="/study_lesson_service.js?v=20260918-1"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260428-2">
   <style>
     .page-description {
@@ -128,6 +129,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <script>
     let currentUser = null;
     let completedLessons = new Map();
+    let linkedLessonPages = new Map();
 
     const lessonLinks = {
       "lesson-1": "https://drive.google.com/file/d/1IcPBeVjsZfm0RnqqUwhDhwoF2QY3qIA1/view?usp=sharing",
@@ -183,10 +185,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     async function waitForAuthResources() {
       for (let i = 0; i < 10; i++) {
-        if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured()) return true;
+        if (window.Auth && window.StudyLessonService && window.SUPABASE_CONFIG && Auth.isConfigured()) return true;
         await sleep(150);
       }
-      return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
+      return !!(window.Auth && window.StudyLessonService && window.SUPABASE_CONFIG && Auth.isConfigured());
     }
 
     function setStatus(text) {
@@ -194,9 +196,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     function renderLessonTitle(lessonId, title) {
-      const lessonUrl = lessonLinks[lessonId];
+      const lessonNumber = Number(lessonId.replace("lesson-", ""));
+      const linkedPage = linkedLessonPages.get(lessonNumber);
+      const lessonUrl = linkedPage
+        ? window.StudyLessonService.lessonPageUrl(linkedPage.id)
+        : lessonLinks[lessonId];
       const inner = '<span><span class="icon">📖</span>' + title + '</span><span class="arrow">›</span>';
+
       if (!lessonUrl) return '<div class="lesson-title">' + inner + '</div>';
+      if (linkedPage) return '<a class="lesson-title" href="' + lessonUrl + '">' + inner + '</a>';
       return '<a class="lesson-title" href="' + lessonUrl + '" target="_blank" rel="noopener noreferrer">' + inner + '</a>';
     }
 
@@ -239,6 +247,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }));
     }
 
+    async function loadLinkedLessonPages() {
+      const service = window.StudyLessonService.create({
+        getClient: function () {
+          return Auth.getClient();
+        }
+      });
+      const pages = await service.listLinkedPages();
+      linkedLessonPages = new Map(pages.map(function (page) {
+        return [Number(page.roadmap_lesson_number), page];
+      }));
+    }
+
 
     async function guardPage() {
       const resourcesReady = await waitForAuthResources();
@@ -258,11 +278,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       currentUser = session.user;
 
+      let completionLoaded = true;
+      let lessonPagesLoaded = true;
+
       try {
         await loadCompletedLessons();
-        setStatus("Aluno conectado: " + currentUser.email + ".");
       } catch (error) {
-        setStatus("Não foi possível carregar seus registros de conclusão.");
+        completionLoaded = false;
+        console.warn("Não foi possível carregar os registros de conclusão:", error);
+      }
+
+      try {
+        await loadLinkedLessonPages();
+      } catch (error) {
+        lessonPagesLoaded = false;
+        console.warn("Não foi possível carregar as páginas de lição:", error);
+      }
+
+      if (completionLoaded && lessonPagesLoaded) {
+        setStatus("Aluno conectado: " + currentUser.email + ".");
+      } else {
+        setStatus("Aluno conectado. Parte dos dados não pôde ser atualizada; os materiais disponíveis continuam acessíveis.");
       }
 
       document.body.classList.remove("auth-checking");
