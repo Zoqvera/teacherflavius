@@ -17,7 +17,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("CRIAR LIÇÃO", professor)
 
     def test_editor_enforces_requested_character_limits(self) -> None:
-        editor = self.read("criar_licao.html")
+        editor = self.read("criar-licao/index.html")
         expected_limits = {
             "lessonTitle": 200,
             "lessonObjective": 500,
@@ -50,7 +50,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertNotIn("roadmap_lesson_number smallint not null", migration)
 
     def test_lesson_page_contains_required_support_cards(self) -> None:
-        lesson = self.read("licao.html")
+        lesson = self.read("licao/index.html")
         self.assertIn("TRADUTOR", lesson)
         self.assertIn("https://translate.google.com/", lesson)
         self.assertIn("APRENDA A PRONUNCIAR", lesson)
