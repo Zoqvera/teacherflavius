@@ -23,16 +23,17 @@ as $function$
 declare
   next_lesson_number smallint;
   current_lesson_number smallint;
+  excluded_page_id uuid;
 begin
   if new.roadmap_lesson_number = 0 then
     perform pg_catalog.pg_advisory_xact_lock(
       pg_catalog.hashtextextended('study_lesson_pages:roadmap_card', 0)
     );
 
-    current_lesson_number := case
-      when tg_op = 'UPDATE' then old.roadmap_lesson_number
-      else null
-    end;
+    if tg_op = 'UPDATE' then
+      current_lesson_number := old.roadmap_lesson_number;
+      excluded_page_id := old.id;
+    end if;
 
     select (
       greatest(
@@ -43,8 +44,8 @@ begin
     )::smallint
     into next_lesson_number
     from public.study_lesson_pages page
-    where tg_op <> 'UPDATE'
-       or page.id <> old.id;
+    where excluded_page_id is null
+       or page.id <> excluded_page_id;
 
     new.roadmap_lesson_number = next_lesson_number;
   end if;
