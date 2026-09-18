@@ -25,6 +25,12 @@ create unique index if not exists study_lesson_pages_roadmap_lesson_number_uidx
   on public.study_lesson_pages (roadmap_lesson_number)
   where roadmap_lesson_number is not null;
 
+create index if not exists study_lesson_pages_created_by_idx
+  on public.study_lesson_pages (created_by);
+
+create index if not exists study_lesson_pages_updated_by_idx
+  on public.study_lesson_pages (updated_by);
+
 create or replace function public.set_study_lesson_page_audit_fields()
 returns trigger
 language plpgsql
