@@ -31,7 +31,6 @@ Disallow: /reposicoes-admin/
 Disallow: /reposicoes_admin.html
 Disallow: /criar-exercicio/
 Disallow: /criar-licao/
-Disallow: /criar_licao.html
 Disallow: /exercicios-dos-alunos/
 Disallow: /relatorios/
 Disallow: /radar-de-alunos/
@@ -46,7 +45,6 @@ Disallow: /planos-semanais/
 Disallow: /roteiro-de-estudos/
 Disallow: /roteiro_de_estudos.html
 Disallow: /licao/
-Disallow: /licao.html
 Disallow: /pagamento/
 Disallow: /quadro-de-turmas/
 Disallow: /quadro-de-turmas.html
