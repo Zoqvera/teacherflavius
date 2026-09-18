@@ -42,7 +42,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
 
     def test_linking_is_manual_and_optional(self) -> None:
         editor = self.read("criar-licao/index.html")
-        migration = self.read("supabase/migrations/20260918183000_add_study_lesson_pages.sql")
+        migration = self.read("supabase/migrations/20260918184911_add_study_lesson_pages.sql")
 
         self.assertIn("Não vincular agora", editor)
         self.assertIn("O vínculo é manual", editor)
