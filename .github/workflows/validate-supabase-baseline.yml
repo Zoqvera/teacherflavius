@@ -65,7 +65,8 @@ jobs:
             supabase/baseline/20_default_privileges.sql \
             supabase/baseline/30_platform_config.sql \
             supabase/baseline/35_preserve_referenced_auto_makeup_slots.sql \
-            supabase/baseline/40_allow_gmail_dot_equivalent_student_links.sql
+            supabase/baseline/40_allow_gmail_dot_equivalent_student_links.sql \
+            supabase/baseline/45_add_study_lesson_pages.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
