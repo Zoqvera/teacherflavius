@@ -23,11 +23,12 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 5. Apply `40_allow_gmail_dot_equivalent_student_links.sql`.
 6. Apply `42_require_live_admin_auth_session.sql`.
 7. Apply `45_add_study_lesson_pages.sql`.
-8. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
-9. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
-10. Restore application data separately, if a data restore is required.
-11. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
-12. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
+8. Apply `50_enable_dynamic_study_roadmap_cards.sql`.
+9. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
+10. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
+11. Restore application data separately, if a data restore is required.
+12. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
+13. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
 
 ## Important boundaries
 
@@ -40,7 +41,7 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 
 ## Validation fingerprint
 
-`schema-fingerprint.json` is the machine-readable catalog fingerprint used to detect structural drift. Function-body-only overlays do not change catalog object counts. Overlay `40_allow_gmail_dot_equivalent_student_links.sql` adds the Gmail helper, `42_require_live_admin_auth_session.sql` restores the current MFA helper, and `45_add_study_lesson_pages.sql` adds the lesson audit trigger function. The fingerprint includes all three overlays.
+`schema-fingerprint.json` is the machine-readable catalog fingerprint used to detect structural drift. Function-body-only overlays do not change catalog object counts. Overlay `40_allow_gmail_dot_equivalent_student_links.sql` adds the Gmail helper, `42_require_live_admin_auth_session.sql` restores the current MFA helper, `45_add_study_lesson_pages.sql` adds the lesson audit trigger function, and `50_enable_dynamic_study_roadmap_cards.sql` removes the fixed 24-card ceiling while preserving the same catalog object counts. The fingerprint includes these overlays.
 
 ## Disposable restore validation
 
