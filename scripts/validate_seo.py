@@ -19,6 +19,8 @@ PRIVATE_PREFIXES = (
     "/complete-cadastro/",
     "/area-do-estudante/",
     "/professor/",
+    "/criar-licao/",
+    "/licao/",
     "/perfil/",
     "/minha-turma/",
     "/frequencia/",
@@ -290,7 +292,7 @@ def validate_robots(site_root: Path, errors: list[str]) -> None:
         errors.append("robots.txt precisa declarar User-agent: *")
     if re.search(rf"(?im)^Sitemap:\s*{re.escape(SITE_ORIGIN)}/sitemap\.xml\s*$", text) is None:
         errors.append("robots.txt precisa apontar para o sitemap canônico")
-    for prefix in ("/login/", "/area-do-estudante/", "/professor/", "/mensalidades/"):
+    for prefix in ("/login/", "/area-do-estudante/", "/professor/", "/mensalidades/", "/criar-licao/", "/licao/"):
         if re.search(rf"(?im)^Disallow:\s*{re.escape(prefix)}\s*$", text) is None:
             errors.append(f"robots.txt deve bloquear crawling de {prefix}")
 
