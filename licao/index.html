@@ -1,21 +1,109 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <base href="/">
+<!-- Google Consent Mode default -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+</script>
+<!-- End Google Consent Mode default -->
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
+<!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex,nofollow">
   <title>Lição - Teacher Flávio</title>
-  <script>
-    (async function () {
-      const response = await fetch('/licao.html', { cache: 'no-store' });
-      const html = await response.text();
-      document.open();
-      document.write(html.replace('<head>', '<head>\n  <base href="/">'));
-      document.close();
-    })();
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260918-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260912-1"></script>
+  <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
+  <link rel="stylesheet" href="/study_lesson_page.css?v=20260918-1">
 </head>
-<body>
-  <p>Carregando lição...</p>
+<body class="auth-checking">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+  <div class="container lesson-page-container">
+    <div class="top-links">
+      <a class="top-link" href="/roteiro-de-estudos/">ROTEIRO DE ESTUDOS</a>
+      <a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a>
+    </div>
+
+    <header class="header">
+      <div><span class="badge">TEACHER FLÁVIO</span></div>
+      <p id="lessonNumberBadge" class="lesson-number-badge" hidden></p>
+      <h1 id="lessonPageTitle">Lição</h1>
+      <div id="lessonPageStatus" class="status" role="status">Carregando lição...</div>
+    </header>
+
+    <div class="divider"></div>
+
+    <main id="lessonPageContent" hidden>
+      <section class="lesson-content-card">
+        <p class="lesson-section-kicker">OBJETIVO DA LIÇÃO</p>
+        <p id="lessonObjective" class="lesson-rich-text"></p>
+      </section>
+
+      <section class="lesson-content-card">
+        <p class="lesson-section-kicker">EXEMPLO</p>
+        <p id="lessonExample" class="lesson-rich-text"></p>
+      </section>
+
+      <section class="lesson-content-card">
+        <p class="lesson-section-kicker">EXERCÍCIO PRÁTICO</p>
+        <p id="lessonPracticalExercise" class="lesson-rich-text"></p>
+      </section>
+
+      <section class="lesson-content-card">
+        <p class="lesson-section-kicker">VOCABULÁRIO ÚTIL</p>
+        <p id="lessonUsefulVocabulary" class="lesson-rich-text"></p>
+      </section>
+
+      <section class="lesson-tools" aria-label="Ferramentas de apoio">
+        <a class="lesson-tool-card" href="https://translate.google.com/" target="_blank" rel="noopener noreferrer">
+          <span>
+            <strong>TRADUTOR</strong>
+            <small>Abra o Google Tradutor</small>
+          </span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </a>
+
+        <a class="lesson-tool-card" href="https://www.quickpronounce.site/" target="_blank" rel="noopener noreferrer">
+          <span>
+            <strong>APRENDA A PRONUNCIAR</strong>
+            <small>Pratique a pronúncia no Quick Pronounce</small>
+          </span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </a>
+      </section>
+    </main>
+  </div>
+
+  <script src="/resource_waiter.js?v=20260902-2"></script>
+  <script src="/study_lesson_service.js?v=20260918-1"></script>
+  <script src="/licao.js?v=20260918-1"></script>
+  <script src="/animated_cards.js?v=20260428-2"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260814-1"></script>
 </body>
 </html>
