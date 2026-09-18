@@ -21,11 +21,12 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 3. Apply `30_platform_config.sql`.
 4. Apply `35_preserve_referenced_auto_makeup_slots.sql`.
 5. Apply `40_allow_gmail_dot_equivalent_student_links.sql`.
-6. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
-7. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
-8. Restore application data separately, if a data restore is required.
-9. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
-10. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
+6. Apply `45_add_study_lesson_pages.sql`.
+7. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
+8. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
+9. Restore application data separately, if a data restore is required.
+10. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
+11. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
 
 ## Important boundaries
 
