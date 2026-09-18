@@ -152,7 +152,7 @@
 
   function readFormPayload() {
     return {
-      lesson_number: document.getElementById("lessonNumber").value,
+      lesson_number_label: document.getElementById("lessonNumber").value,
       title: document.getElementById("lessonTitle").value,
       objective: document.getElementById("lessonObjective").value,
       example: document.getElementById("lessonExample").value,
@@ -190,7 +190,7 @@
     if (!page) return;
 
     state.editingPageId = page.id;
-    document.getElementById("lessonNumber").value = page.lesson_number || "";
+    document.getElementById("lessonNumber").value = page.lesson_number_label || "";
     document.getElementById("lessonTitle").value = page.title || "";
     document.getElementById("lessonObjective").value = page.objective || "";
     document.getElementById("lessonExample").value = page.example || "";
