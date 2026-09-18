@@ -4,9 +4,9 @@
   const TABLE_NAME = "study_lesson_pages";
   const EXISTING_ROADMAP_CARD_COUNT = 24;
   const NEW_ROADMAP_CARD_SENTINEL = 0;
-  const PAGE_FIELDS = "id,lesson_number,title,objective,example,translation,practical_exercise,useful_vocabulary,roadmap_lesson_number,created_at,updated_at";
+  const PAGE_FIELDS = "id,lesson_number_label,title,objective,example,translation,practical_exercise,useful_vocabulary,roadmap_lesson_number,created_at,updated_at";
   const MAX_LENGTHS = Object.freeze({
-    lesson_number: 50,
+    lesson_number_label: 50,
     title: 200,
     objective: 500,
     example: 1000,
@@ -47,7 +47,7 @@
   function normalizePayload(payload) {
     const source = payload || {};
     return {
-      lesson_number: normalizeText(source.lesson_number, "lesson_number"),
+      lesson_number_label: normalizeText(source.lesson_number_label, "lesson_number_label"),
       title: normalizeText(source.title, "title"),
       objective: normalizeText(source.objective, "objective"),
       example: normalizeText(source.example, "example"),
