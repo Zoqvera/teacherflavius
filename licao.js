@@ -37,7 +37,7 @@
   }
 
   function renderPage(page) {
-    document.getElementById("lessonDisplayNumber").textContent = page.lesson_number;
+    document.getElementById("lessonDisplayNumber").textContent = page.lesson_number_label;
     document.getElementById("lessonPageTitle").textContent = page.title;
     document.getElementById("lessonObjective").textContent = page.objective;
     document.getElementById("lessonExample").textContent = page.example;
