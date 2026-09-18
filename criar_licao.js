@@ -57,26 +57,23 @@
     });
   }
 
-  function addRoadmapOptions() {
-    const select = document.getElementById("roadmapLessonNumber");
-    if (!select || select.options.length > 1) return;
-
-    for (let lessonNumber = 1; lessonNumber <= window.StudyLessonService.ROADMAP_LESSON_COUNT; lessonNumber += 1) {
-      const option = document.createElement("option");
-      option.value = String(lessonNumber);
-      option.textContent = "Lição " + lessonNumber;
-      select.appendChild(option);
-    }
+  function appendRoadmapOption(select, value, label, disabled) {
+    const option = document.createElement("option");
+    option.value = String(value);
+    option.textContent = label;
+    option.disabled = disabled === true;
+    select.appendChild(option);
   }
 
-  function updateRoadmapAvailability() {
+  function rebuildRoadmapOptions(preferredValue) {
     const select = document.getElementById("roadmapLessonNumber");
     if (!select) return;
 
     const currentPage = state.pages.find(function (page) {
       return page.id === state.editingPageId;
     });
-    const currentLessonNumber = currentPage ? currentPage.roadmap_lesson_number : null;
+    const currentLessonNumber = currentPage ? Number(currentPage.roadmap_lesson_number) : null;
+    const selectedValue = preferredValue === undefined ? select.value : String(preferredValue || "");
 
     const occupied = new Set(
       state.pages
@@ -88,12 +85,42 @@
         })
     );
 
-    Array.from(select.options).forEach(function (option) {
-      if (!option.value) return;
-      const lessonNumber = Number(option.value);
-      option.disabled = occupied.has(lessonNumber) && lessonNumber !== Number(currentLessonNumber);
-      option.textContent = "Lição " + lessonNumber + (option.disabled ? " — já vinculada" : "");
+    select.replaceChildren();
+    appendRoadmapOption(select, "", "Não vincular agora", false);
+    appendRoadmapOption(
+      select,
+      window.StudyLessonService.NEW_ROADMAP_CARD_SENTINEL,
+      "CRIAR NOVO CARD",
+      false
+    );
+
+    for (
+      let lessonNumber = 1;
+      lessonNumber <= window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT;
+      lessonNumber += 1
+    ) {
+      const isOccupied = occupied.has(lessonNumber);
+      appendRoadmapOption(
+        select,
+        lessonNumber,
+        "Lição " + lessonNumber + (isOccupied ? " — já vinculada" : ""),
+        isOccupied
+      );
+    }
+
+    if (currentLessonNumber > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT) {
+      appendRoadmapOption(
+        select,
+        currentLessonNumber,
+        "Lição " + currentLessonNumber + " — card criado",
+        false
+      );
+    }
+
+    const hasPreferredOption = Array.from(select.options).some(function (option) {
+      return option.value === selectedValue && !option.disabled;
     });
+    select.value = hasPreferredOption ? selectedValue : "";
   }
 
   function updateCharacterCount(config) {
@@ -148,7 +175,7 @@
     document.getElementById("lessonFormTitle").textContent = "Nova página de lição";
     document.getElementById("saveLessonButton").textContent = "SALVAR LIÇÃO";
     document.getElementById("cancelEditButton").hidden = true;
-    updateRoadmapAvailability();
+    rebuildRoadmapOptions("");
     refreshCharacterCounters();
   }
 
@@ -164,14 +191,11 @@
     document.getElementById("lessonExample").value = page.example || "";
     document.getElementById("lessonPracticalExercise").value = page.practical_exercise || "";
     document.getElementById("lessonUsefulVocabulary").value = page.useful_vocabulary || "";
-    document.getElementById("roadmapLessonNumber").value = page.roadmap_lesson_number === null
-      ? ""
-      : String(page.roadmap_lesson_number);
+    rebuildRoadmapOptions(page.roadmap_lesson_number === null ? "" : page.roadmap_lesson_number);
     document.getElementById("lessonFormTitle").textContent = "Editar página de lição";
     document.getElementById("saveLessonButton").textContent = "SALVAR ALTERAÇÕES";
     document.getElementById("cancelEditButton").hidden = false;
 
-    updateRoadmapAvailability();
     refreshCharacterCounters();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -182,8 +206,15 @@
     });
     if (!page) return;
 
+    const linkedLessonNumber = Number(page.roadmap_lesson_number);
+    let deletionEffect = " Esta página não está conectada ao Roteiro de Estudos.";
+    if (linkedLessonNumber > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT) {
+      deletionEffect = " O card criado para esta lição também será removido do Roteiro de Estudos.";
+    } else if (linkedLessonNumber >= 1) {
+      deletionEffect = " O card original voltará ao destino anterior quando houver PDF cadastrado.";
+    }
     const confirmed = window.confirm(
-      "Excluir a página \"" + page.title + "\"? O card do Roteiro de Estudos voltará ao destino anterior quando houver PDF cadastrado."
+      "Excluir a página \"" + page.title + "\"?" + deletionEffect
     );
     if (!confirmed) return;
 
@@ -256,7 +287,7 @@
 
   async function loadPages() {
     state.pages = await state.service.listAllPages();
-    updateRoadmapAvailability();
+    rebuildRoadmapOptions();
     renderPages();
   }
 
@@ -271,15 +302,18 @@
 
     try {
       const payload = readFormPayload();
+      const requestedNewCard = Number(payload.roadmap_lesson_number) === window.StudyLessonService.NEW_ROADMAP_CARD_SENTINEL;
+      let savedPage;
+
       if (state.editingPageId) {
-        await state.service.updatePage(state.editingPageId, payload);
+        savedPage = await state.service.updatePage(state.editingPageId, payload);
       } else {
-        await state.service.createPage(payload);
+        savedPage = await state.service.createPage(payload);
       }
 
-      const successMessage = state.editingPageId
-        ? "Página de lição atualizada."
-        : "Página de lição criada.";
+      const successMessage = requestedNewCard
+        ? "Página salva e Lição " + savedPage.roadmap_lesson_number + " criada no Roteiro de Estudos."
+        : (state.editingPageId ? "Página de lição atualizada." : "Página de lição criada.");
       await loadPages();
       resetForm();
       setStatus(successMessage);
@@ -332,7 +366,7 @@
       await window.ProfessorMfaGate.requireAal2({ client: client });
 
       state.service = createService();
-      addRoadmapOptions();
+      rebuildRoadmapOptions("");
       bindEvents();
       await loadPages();
 

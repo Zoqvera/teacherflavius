@@ -29,7 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="supabase_config.js?v=20260428-2"></script>
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260428-2"></script>
-  <script src="/study_lesson_service.js?v=20260918-1"></script>
+  <script src="/study_lesson_service.js?v=20260918-2"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260428-2">
   <style>
     .page-description {
@@ -195,42 +195,69 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       document.getElementById("loginStatus").textContent = text;
     }
 
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
     function renderLessonTitle(lessonId, title) {
       const lessonNumber = Number(lessonId.replace("lesson-", ""));
       const linkedPage = linkedLessonPages.get(lessonNumber);
       const lessonUrl = linkedPage
         ? window.StudyLessonService.lessonPageUrl(linkedPage.id)
         : lessonLinks[lessonId];
-      const inner = '<span><span class="icon">📖</span>' + title + '</span><span class="arrow">›</span>';
+      const inner = '<span><span class="icon">📖</span>' + escapeHtml(title) + '</span><span class="arrow">›</span>';
 
       if (!lessonUrl) return '<div class="lesson-title">' + inner + '</div>';
       if (linkedPage) return '<a class="lesson-title" href="' + lessonUrl + '">' + inner + '</a>';
       return '<a class="lesson-title" href="' + lessonUrl + '" target="_blank" rel="noopener noreferrer">' + inner + '</a>';
     }
 
-    function renderLessonDescription(lessonId) {
-      const description = lessonDescriptions[lessonId];
+    function renderLessonDescription(lessonId, lessonNumber) {
+      const linkedPage = linkedLessonPages.get(lessonNumber);
+      const description = lessonDescriptions[lessonId] || (linkedPage ? linkedPage.objective : "");
       if (!description) return "";
-      return '<p class="lesson-description">' + description + '</p>';
+      return '<p class="lesson-description">' + escapeHtml(description) + '</p>';
+    }
+
+    function roadmapLessonNumbers() {
+      const originalCards = Array.from(
+        { length: window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT },
+        function (_, index) { return index + 1; }
+      );
+      const createdCards = Array.from(linkedLessonPages.keys())
+        .filter(function (lessonNumber) {
+          return lessonNumber > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT;
+        })
+        .sort(function (left, right) { return left - right; });
+
+      return originalCards.concat(createdCards);
     }
 
     function renderLessons() {
       const grid = document.getElementById("lessonsGrid");
-      const cards = [];
-      for (let i = 1; i <= 24; i++) {
-        const lessonId = "lesson-" + i;
-        const title = "Lição " + i;
+      const cards = roadmapLessonNumbers().map(function (lessonNumber) {
+        const lessonId = "lesson-" + lessonNumber;
+        const linkedPage = linkedLessonPages.get(lessonNumber);
+        const title = linkedPage && lessonNumber > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT
+          ? "Lição " + lessonNumber + " — " + linkedPage.title
+          : "Lição " + lessonNumber;
         const isDone = completedLessons.get(lessonId) === true;
-        cards.push(
+
+        return (
           '<div class="lesson-card ' + (isDone ? 'done' : '') + '" data-lesson-id="' + lessonId + '">' +
             renderLessonTitle(lessonId, title) +
-            renderLessonDescription(lessonId) +
+            renderLessonDescription(lessonId, lessonNumber) +
             '<div class="completion-row">' +
               '<span class="completion-status ' + (isDone ? 'saved' : '') + '" id="status-' + lessonId + '">' + (isDone ? 'Conclusão registrada' : 'Aguardando registro do professor') + '</span>' +
             '</div>' +
           '</div>'
         );
-      }
+      });
       grid.innerHTML = cards.join("");
     }
 

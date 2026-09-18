@@ -2,7 +2,8 @@
   "use strict";
 
   const TABLE_NAME = "study_lesson_pages";
-  const ROADMAP_LESSON_COUNT = 24;
+  const EXISTING_ROADMAP_CARD_COUNT = 24;
+  const NEW_ROADMAP_CARD_SENTINEL = 0;
   const PAGE_FIELDS = "id,title,objective,example,practical_exercise,useful_vocabulary,roadmap_lesson_number,created_at,updated_at";
   const MAX_LENGTHS = Object.freeze({
     title: 200,
@@ -35,8 +36,8 @@
     if (value === null || value === undefined || value === "") return null;
 
     const lessonNumber = Number(value);
-    if (!Number.isInteger(lessonNumber) || lessonNumber < 1 || lessonNumber > ROADMAP_LESSON_COUNT) {
-      throw new Error("Selecione uma lição válida do roteiro de estudos.");
+    if (!Number.isInteger(lessonNumber) || lessonNumber < NEW_ROADMAP_CARD_SENTINEL) {
+      throw new Error("Selecione um card válido do roteiro de estudos.");
     }
     return lessonNumber;
   }
@@ -92,7 +93,7 @@
     async function listLinkedPages() {
       const response = await requireClient()
         .from(TABLE_NAME)
-        .select("id,title,roadmap_lesson_number")
+        .select("id,title,objective,roadmap_lesson_number")
         .not("roadmap_lesson_number", "is", null)
         .order("roadmap_lesson_number", { ascending: true });
 
@@ -164,7 +165,8 @@
   window.StudyLessonService = Object.freeze({
     create: create,
     MAX_LENGTHS: MAX_LENGTHS,
-    ROADMAP_LESSON_COUNT: ROADMAP_LESSON_COUNT,
+    EXISTING_ROADMAP_CARD_COUNT: EXISTING_ROADMAP_CARD_COUNT,
+    NEW_ROADMAP_CARD_SENTINEL: NEW_ROADMAP_CARD_SENTINEL,
     isValidPageId: isValidPageId,
     lessonPageUrl: lessonPageUrl
   });
