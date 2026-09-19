@@ -1,6 +1,10 @@
 (function () {
   "use strict";
 
+  const INSTALL_FLAG = "__teacherFlaviusErrorMonitorInstalled";
+  if (window[INSTALL_FLAG]) return;
+  window[INSTALL_FLAG] = true;
+
   const ENDPOINT = "https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/app-error-report";
   const nativeFetch = typeof window.fetch === "function" ? window.fetch.bind(window) : null;
   const script = document.currentScript;
@@ -45,6 +49,11 @@
     if (path.indexOf("/auth/v1/") !== -1) return "auth";
     if (/\/functions\/v1\/(create-mercado-pago-payment|reconcile-mercado-pago-payments|mercado-pago-webhook)/.test(path)) return "payment";
     return "api";
+  }
+
+  function classifyNetworkFailure(url) {
+    const requestType = classifyRequest(url);
+    return requestType === "auth" ? "api" : requestType;
   }
 
   function shouldMonitor(url) {
@@ -191,7 +200,7 @@
       }).catch(function (error) {
         if (info && shouldMonitor(info.url)) {
           capture({
-            event_type: classifyRequest(info.url),
+            event_type: classifyNetworkFailure(info.url),
             message: text(error, "Falha de rede em " + info.url.pathname),
             error: error,
             source: info.url.href,
