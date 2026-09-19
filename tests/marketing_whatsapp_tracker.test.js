@@ -1,0 +1,125 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+
+const ACQUISITION_SESSION_KEY = "tf_acquisition_session_v1";
+
+function createStorage(values) {
+  const data = new Map(Object.entries(values || {}));
+  return {
+    getItem: function (key) { return data.has(key) ? data.get(key) : null; },
+    setItem: function (key, value) { data.set(key, String(value)); }
+  };
+}
+
+function runTracker(options) {
+  const settings = options || {};
+  const source = fs.readFileSync(path.join(__dirname, "..", "marketing_whatsapp_tracker.js"), "utf8");
+  const sessionStorage = settings.sessionStorage || createStorage();
+  const localStorage = settings.localStorage || createStorage();
+  const sentPayloads = [];
+  let clickHandler = null;
+
+  const location = {
+    pathname: settings.pathname || "/",
+    search: settings.search || "",
+    hostname: "teacherflavius.com",
+    href: "https://teacherflavius.com" + (settings.pathname || "/") + (settings.search || "")
+  };
+
+  const windowRef = {
+    location: location,
+    sessionStorage: sessionStorage,
+    localStorage: localStorage,
+    fetch: function (_url, request) {
+      sentPayloads.push(JSON.parse(request.body));
+      return Promise.resolve({ ok: true });
+    }
+  };
+
+  const documentRef = {
+    referrer: settings.referrer || "",
+    addEventListener: function (eventName, handler) {
+      if (eventName === "click") clickHandler = handler;
+    }
+  };
+
+  const context = {
+    window: windowRef,
+    document: documentRef,
+    navigator: { sendBeacon: function () { return false; } },
+    URL: URL,
+    URLSearchParams: URLSearchParams,
+    Uint8Array: Uint8Array,
+    Date: Date,
+    Math: Math,
+    JSON: JSON
+  };
+
+  vm.runInNewContext(source, context);
+
+  return {
+    sessionStorage: sessionStorage,
+    sentPayloads: sentPayloads,
+    clickWhatsapp: function () {
+      const link = {
+        id: "",
+        getAttribute: function (name) { return name === "href" ? "https://wa.me/5511999999999" : ""; },
+        closest: function (selector) { return selector === "a[href]" ? link : null; }
+      };
+      clickHandler({ target: link });
+    }
+  };
+}
+
+test("preserves ChatGPT acquisition across internal navigation before WhatsApp lead", async function () {
+  const sessionStorage = createStorage();
+
+  runTracker({
+    pathname: "/recursos/como-escolher-curso-de-ingles-online/",
+    referrer: "https://chatgpt.com/",
+    sessionStorage: sessionStorage
+  });
+
+  const capturedEntry = JSON.parse(sessionStorage.getItem(ACQUISITION_SESSION_KEY));
+  assert.equal(capturedEntry.source, "chatgpt");
+  assert.equal(capturedEntry.ai_assistant, "chatgpt");
+  assert.equal(capturedEntry.traffic_channel, "ai_assistant");
+  assert.equal(capturedEntry.landing_page, "/recursos/como-escolher-curso-de-ingles-online/");
+
+  const secondPage = runTracker({
+    pathname: "/curso-de-ingles-online/",
+    referrer: "https://teacherflavius.com/recursos/como-escolher-curso-de-ingles-online/",
+    sessionStorage: sessionStorage
+  });
+
+  secondPage.clickWhatsapp();
+  await Promise.resolve();
+
+  assert.equal(secondPage.sentPayloads.length, 1);
+  const lead = secondPage.sentPayloads[0];
+  assert.equal(lead.event_name, "generate_lead");
+  assert.equal(lead.source, "chatgpt");
+  assert.equal(lead.ai_assistant, "chatgpt");
+  assert.equal(lead.traffic_channel, "ai_assistant");
+  assert.equal(lead.landing_page, "/recursos/como-escolher-curso-de-ingles-online/");
+  assert.equal(lead.page_path, "/curso-de-ingles-online/");
+});
+
+test("captures ChatGPT UTM on page entry even without an external referrer", function () {
+  const sessionStorage = createStorage();
+
+  runTracker({
+    pathname: "/curso-de-ingles-online/",
+    search: "?utm_source=chatgpt.com&utm_medium=referral",
+    sessionStorage: sessionStorage
+  });
+
+  const capturedEntry = JSON.parse(sessionStorage.getItem(ACQUISITION_SESSION_KEY));
+  assert.equal(capturedEntry.source, "chatgpt");
+  assert.equal(capturedEntry.medium, "referral");
+  assert.equal(capturedEntry.ai_assistant, "chatgpt");
+  assert.equal(capturedEntry.landing_page, "/curso-de-ingles-online/");
+});

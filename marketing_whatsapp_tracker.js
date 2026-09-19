@@ -206,6 +206,9 @@
     });
   }
 
+  // Capture the entry source before internal navigation can replace the external referrer.
+  resolveAcquisition();
+
   document.addEventListener("click", function (event) {
     var link = event.target && event.target.closest ? event.target.closest("a[href]") : null;
     if (!link || !isWhatsappLink(link)) return;
