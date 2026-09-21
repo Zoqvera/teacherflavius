@@ -56,6 +56,19 @@
     return requestType === "auth" ? "api" : requestType;
   }
 
+  function isIgnoredResource(target) {
+    const rawUrl = target && (target.src || target.href);
+    if (!rawUrl) return false;
+
+    try {
+      const url = new URL(String(rawUrl), window.location.href);
+      return url.hostname === "static.cloudflareinsights.com"
+        && url.pathname.indexOf("/beacon.min.js") === 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
   function shouldMonitor(url) {
     if (!url) return false;
     if (url.href.indexOf(ENDPOINT) === 0) return false;
@@ -145,6 +158,7 @@
     }
     const target = event.target;
     if (target && target !== window) {
+      if (isIgnoredResource(target)) return;
       capture({
         event_type: "resource",
         message: "Falha ao carregar recurso " + String(target.tagName || "desconhecido").toLowerCase(),
