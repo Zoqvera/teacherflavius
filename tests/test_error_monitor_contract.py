@@ -31,6 +31,18 @@ class ErrorMonitorContractTests(unittest.TestCase):
             self.source,
         )
 
+    def test_cloudflare_beacon_failures_are_ignored(self) -> None:
+        self.assertIn("function isIgnoredResource(target)", self.source)
+        self.assertIn(
+            'url.hostname === "static.cloudflareinsights.com"',
+            self.source,
+        )
+        self.assertIn(
+            'url.pathname.indexOf("/beacon.min.js") === 0',
+            self.source,
+        )
+        self.assertIn("if (isIgnoredResource(target)) return;", self.source)
+
 
 if __name__ == "__main__":
     unittest.main()
