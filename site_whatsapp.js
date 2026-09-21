@@ -59,7 +59,7 @@
     const link = document.createElement("a");
     link.id = FLOAT_ID;
     link.className = "whatsapp-float";
-    link.href = buildUrl(WHATSAPP_NUMBER);
+    link.href = buildUrl(WHATSAPP_NUMBER, pageMessage());
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.setAttribute("aria-label", "Falar com o Teacher Flávio pelo WhatsApp");
@@ -78,11 +78,17 @@
     return "";
   }
 
+  function pageMessage() {
+    if (!document.body || !document.body.dataset) return WHATSAPP_MESSAGE;
+    return document.body.dataset.whatsappMessage || WHATSAPP_MESSAGE;
+  }
+
   function messageForLink(link) {
     if (link.matches && link.matches(TRIAL_LESSON_LINK_SELECTOR)) {
       return TRIAL_LESSON_WHATSAPP_MESSAGE;
     }
-    return WHATSAPP_MESSAGE;
+    const customMessage = link.getAttribute && link.getAttribute("data-whatsapp-message");
+    return customMessage || pageMessage();
   }
 
   function standardizeLink(link) {
