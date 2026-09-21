@@ -253,7 +253,10 @@
           number = (url.searchParams.get("phone") || "").replace(/\D/g, "");
         }
         if (!number) return;
-        link.href = "https://wa.me/" + number + "?text=" + encodeURIComponent(STANDARD_WHATSAPP_MESSAGE);
+        const customMessage = link.getAttribute("data-whatsapp-message");
+        const pageMessage = document.body && document.body.dataset ? document.body.dataset.whatsappMessage : "";
+        const resolvedMessage = customMessage || pageMessage || STANDARD_WHATSAPP_MESSAGE;
+        link.href = "https://wa.me/" + number + "?text=" + encodeURIComponent(resolvedMessage);
       } catch (error) {}
     });
   }
