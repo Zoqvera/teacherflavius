@@ -49,3 +49,19 @@ test("conversion dashboard requests and renders the individual CTA summary", fun
   assert.match(html, /id="metricIndividualCtaClicks"/);
   assert.match(html, /id="individualCtaTableBody"/);
 });
+
+
+test("ebook CTA is explicitly excluded from commercial lead attribution", function () {
+  const html = read("aulas-individuais/index.html");
+  const tracker = read("marketing_whatsapp_tracker.js");
+  const attribution = read("analytics_attribution.js");
+
+  assert.match(
+    html,
+    /data-marketing-cta="individual_ebook"[^>]*data-commercial-lead="false"/
+  );
+  assert.match(tracker, /function isCommercialLeadLink\(link\)/);
+  assert.match(tracker, /data-commercial-lead/);
+  assert.match(attribution, /function isCommercialLeadTarget\(target\)/);
+  assert.match(attribution, /data-commercial-lead/);
+});
