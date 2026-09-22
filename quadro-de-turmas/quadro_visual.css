@@ -46,6 +46,7 @@ h1, h2, .badge, .top-link, .class-title, .class-type-badge { font-family:'Montse
 .class-type-badge { border:1px solid rgba(96,165,250,.3) !important; color:#bfdbfe !important; background:rgba(37,99,235,.13) !important; }
 .class-type-badge.individual { color:#dbeafe !important; background:rgba(37,99,235,.12) !important; }
 .class-type-badge.quartet { color:#bfdbfe !important; }
+.class-type-badge.quintet { color:#dbeafe !important; background:rgba(37,99,235,.16) !important; }
 .class-type-badge.eight_students { color:#dbeafe !important; background:rgba(29,78,216,.13) !important; }
 .class-type-badge.unset { color:#fde68a !important; background:rgba(245,158,11,.1) !important; border-color:rgba(251,191,36,.28) !important; }
 .tf-occupancy { margin:10px 0 12px; padding:10px; border:1px solid rgba(148,163,184,.12); border-radius:11px; background:rgba(15,23,42,.42); }

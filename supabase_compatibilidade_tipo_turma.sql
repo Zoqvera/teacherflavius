@@ -1,6 +1,6 @@
 -- Restringe a matrícula para que o tipo do aluno corresponda à etiqueta da turma.
--- Aluno: INDIVIDUAL / QUARTETO / 8 ALUNOS
--- Turma (interno): individual / quartet / eight_students
+-- Aluno: INDIVIDUAL / QUARTETO / QUINTETO / 8 ALUNOS
+-- Turma (interno): individual / quartet / quintet / eight_students
 
 create or replace function public.add_teacher_class_student_by_ref(
   target_class_number integer,

@@ -55,6 +55,7 @@ A regra vigente é:
 
 - `individual`: 1 aluno;
 - `quartet`: 4 alunos;
+- `quintet`: 5 alunos;
 - turmas 73 e 75: exceção comercial de 5 alunos;
 - `eight_students`: 8 alunos.
 

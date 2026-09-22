@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const CLASS_TYPES = ["INDIVIDUAL", "QUARTETO", "8 ALUNOS"];
+  const CLASS_TYPES = ["INDIVIDUAL", "QUARTETO", "QUINTETO", "8 ALUNOS"];
   const AUTH_WAIT_OPTIONS = Object.freeze({
     maxAttempts: 20,
     delayMs: 150,

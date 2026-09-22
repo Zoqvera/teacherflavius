@@ -30,7 +30,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260503-3"></script>
   <link rel="stylesheet" href="professor.css?v=20260503-3">
-  <link rel="stylesheet" href="/quadro-de-turmas/quadro_visual.css?v=20260901-1">
+  <link rel="stylesheet" href="/quadro-de-turmas/quadro_visual.css?v=20260922-quintet-1">
   <style>
     body { align-items: flex-start; }
     .container { max-width: 1180px; }
@@ -41,6 +41,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .class-title { display: block; font-size: 14px; font-weight: bold; }
     .class-type-badge { display:inline-flex; align-items:center; border-radius:999px; padding:4px 7px; font-size:9px; font-weight:bold; letter-spacing:.4px; white-space:nowrap; }
     .class-type-badge.quartet { color:#bfdbfe; background:rgba(59,130,246,.15); border:1px solid rgba(96,165,250,.35); }
+    .class-type-badge.quintet { color:#dbeafe; background:rgba(37,99,235,.16); border:1px solid rgba(96,165,250,.42); }
     .class-type-badge.individual { color:#d8b4fe; background:rgba(168,85,247,.14); border:1px solid rgba(192,132,252,.35); }
     .class-type-badge.eight_students { color:#a7f3d0; background:rgba(16,185,129,.14); border:1px solid rgba(52,211,153,.35); }
     .class-type-badge.unset { color:#fde68a; background:rgba(245,158,11,.12); border:1px solid rgba(251,191,36,.3); }
@@ -119,6 +120,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     function getClassTypeMeta(value) {
       if (value === "quartet") return { label: "QUARTETO", css: "quartet" };
+      if (value === "quintet") return { label: "QUINTETO", css: "quintet" };
       if (value === "individual") return { label: "INDIVIDUAL", css: "individual" };
       if (value === "eight_students") return { label: "8 ALUNOS", css: "eight_students" };
       return { label: "TIPO NÃO DEFINIDO", css: "unset" };
@@ -317,8 +319,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     guardPage();
   </script>
-  <script src="animated_cards.js?v=20260807-board-types-1"></script>
-  <script src="/quadro-de-turmas/quadro_visual.js?v=20260901-1"></script>
+  <script src="animated_cards.js?v=20260922-quintet-1"></script>
+  <script src="/quadro-de-turmas/quadro_visual.js?v=20260922-quintet-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
 
