@@ -12,6 +12,11 @@ const historyMigration = fs.readFileSync(
   path.join(__dirname, "../supabase/migrations/20260910122016_preserve_trial_lesson_class_history.sql"),
   "utf8"
 );
+const enrollmentMigration = fs.readFileSync(
+  path.join(__dirname, "../supabase/migrations/20260922135728_add_trial_lesson_enrollment_conversion.sql"),
+  "utf8"
+);
+const schedulerSource = fs.readFileSync(path.join(__dirname, "../trial_lesson_scheduler.js"), "utf8");
 const professorHome = fs.readFileSync(path.join(__dirname, "../professor_home.js"), "utf8");
 
 test("normalizes WhatsApp contacts without leaking formatting into wa.me", function () {
@@ -52,6 +57,30 @@ test("labels statuses and separates upcoming appointments", function () {
     scheduler.isUpcoming({ status: "cancelled", starts_at: "2030-01-01T12:00:00Z" }, Date.parse("2029-01-01T00:00:00Z")),
     false
   );
+});
+
+
+test("allows enrollment conversion only for completed trial lessons", function () {
+  assert.equal(scheduler.canUpdateEnrollment({ status: "completed" }), true);
+  assert.equal(scheduler.canUpdateEnrollment({ status: "scheduled" }), false);
+  assert.equal(
+    scheduler.isEnrolledAfterTrial({ status: "completed", enrolled_after_trial: true }),
+    true
+  );
+  assert.equal(
+    scheduler.isEnrolledAfterTrial({ status: "completed", enrolled_after_trial: false }),
+    false
+  );
+});
+
+test("persists and protects the trial enrollment conversion flag", function () {
+  assert.match(enrollmentMigration, /enrolled_after_trial_at timestamptz/i);
+  assert.match(enrollmentMigration, /status = 'completed'/i);
+  assert.match(enrollmentMigration, /set_teacher_trial_lesson_enrollment/i);
+  assert.match(enrollmentMigration, /is_teacher_admin_mfa\(\)/i);
+  assert.match(enrollmentMigration, /grant execute on function public\.set_teacher_trial_lesson_enrollment\(uuid,boolean\) to authenticated/i);
+  assert.match(schedulerSource, /MATRICULOU/);
+  assert.match(schedulerSource, /Matricularam/);
 });
 
 test("keeps visitor data private and protects administrative RPCs with MFA", function () {
