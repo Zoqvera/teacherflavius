@@ -29,7 +29,7 @@
     Object.freeze({
       globalName: "ClassTypeBadgeRenderer",
       selector: 'script[src^="/class_type_badge_renderer.js"]',
-      src: "/class_type_badge_renderer.js?v=20260902-1",
+      src: "/class_type_badge_renderer.js?v=20260922-quintet-1",
       missingMessage: "O renderer de etiquetas de turma não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o renderer de etiquetas de turma."
     }),
