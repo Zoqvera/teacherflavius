@@ -112,7 +112,59 @@ jobs:
           grep -q '^  Referrer-Policy: strict-origin-when-cross-origin$' _site/_headers
           grep -q '^  X-Frame-Options: SAMEORIGIN$' _site/_headers
           grep -q '^  Permissions-Policy:.*microphone=(self)' _site/_headers
-          grep -q '^  Content-Security-Policy-Report-Only:.*report-uri https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/csp-report$' _site/_headers
+          grep -q '^  Content-Security-Policy-Report-Only:.*report-uri https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/csp-report          if grep -Eqi 'netlify' _site/_headers; then
+            echo 'Netlify-specific header residue found in deploy output.'
+            exit 1
+          fi
+
+      - name: Verify live HTTP redirects to HTTPS
+        shell: bash
+        run: |
+          set -euo pipefail
+          redirect=$(curl --retry 5 --retry-delay 5 --retry-all-errors --max-time 20 -sS -o /dev/null -w '%{redirect_url}' http://teacherflavius.com/)
+          echo "HTTP redirect target: ${redirect:-<none>}"
+          case "$redirect" in
+            https://teacherflavius.com/*|https://www.teacherflavius.com/*) ;;
+            *) echo 'HTTP is not redirecting to the canonical HTTPS site.'; exit 1 ;;
+          esac
+
+      - name: Enforce production response security headers
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          headers=$(curl --retry 5 --retry-delay 5 --retry-all-errors --max-time 20 -sS -I https://teacherflavius.com/ | tr -d '\r')
+          printf '%s\n' "$headers"
+
+          require_header() {
+            local pattern="$1"
+            local description="$2"
+            if ! printf '%s\n' "$headers" | grep -Eqi "$pattern"; then
+              echo "Missing or invalid production header: $description"
+              exit 1
+            fi
+          }
+
+          require_header '^content-type:.*text/html' 'Content-Type'
+          require_header '^strict-transport-security:[[:space:]]*max-age=31536000([;[:space:]]|$)' 'Strict-Transport-Security'
+          require_header '^x-content-type-options:[[:space:]]*nosniff[[:space:]]*$' 'X-Content-Type-Options'
+          require_header '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin[[:space:]]*$' 'Referrer-Policy'
+          require_header '^x-frame-options:[[:space:]]*SAMEORIGIN[[:space:]]*$' 'X-Frame-Options'
+          require_header '^permissions-policy:.*microphone=\(self\)' 'Permissions-Policy microphone policy'
+          require_header '^content-security-policy-report-only:.*report-uri https://wnigzpvgsbpjdxvjzugt\.supabase\.co/functions/v1/csp-report' 'CSP Report-Only reporting endpoint'
+
+      - name: Verify www redirects to canonical apex
+        shell: bash
+        run: |
+          set -euo pipefail
+          redirect=$(curl --retry 5 --retry-delay 5 --retry-all-errors --max-time 20 -sS -o /dev/null -w '%{redirect_url}' https://www.teacherflavius.com/)
+          echo "www redirect target: ${redirect:-<none>}"
+          case "$redirect" in
+            https://teacherflavius.com/*) ;;
+            *) echo 'www is not redirecting to the canonical apex domain.'; exit 1 ;;
+          esac
+ _site/_headers
+          grep -q '^  Content-Security-Policy-Report-Only:.*img-src .*https://cdn.jsdelivr.net' _site/_headers
           if grep -Eqi 'netlify' _site/_headers; then
             echo 'Netlify-specific header residue found in deploy output.'
             exit 1
