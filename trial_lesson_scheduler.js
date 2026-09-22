@@ -140,6 +140,19 @@
       new Date(appointment.starts_at).getTime() > (now || Date.now());
   }
 
+  function canEditAppointment(appointment) {
+    return Boolean(appointment && appointment.status === "scheduled");
+  }
+
+  function formDateTimeParts(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return Object.freeze({ date: "", time: "" });
+    const parts = saoPauloNowParts(date);
+    const hour = String(Math.floor(parts.totalMinutes / 60)).padStart(2, "0");
+    const minute = String(parts.totalMinutes % 60).padStart(2, "0");
+    return Object.freeze({ date: parts.isoDate, time: hour + ":" + minute });
+  }
+
   function canUpdateEnrollment(appointment) {
     return appointment && appointment.status === "completed";
   }
@@ -155,7 +168,7 @@
 
   function buildCard(appointment) {
     const contactUrl = whatsappUrl(appointment.whatsapp_digits || appointment.whatsapp);
-    const scheduled = appointment.status === "scheduled";
+    const scheduled = canEditAppointment(appointment);
     const completed = canUpdateEnrollment(appointment);
     const enrolledAfterTrial = isEnrolledAfterTrial(appointment);
     const actions = [
@@ -166,6 +179,7 @@
 
     if (scheduled) {
       actions.push(
+        '<button class="trial-action-button edit" type="button" data-trial-id="' + escapeHtml(appointment.id) + '" data-trial-edit="true">EDITAR</button>',
         '<button class="trial-action-button success" type="button" data-trial-id="' + escapeHtml(appointment.id) + '" data-trial-status="completed">CONCLUIR</button>',
         '<button class="trial-action-button warning" type="button" data-trial-id="' + escapeHtml(appointment.id) + '" data-trial-status="no_show">NÃO COMPARECEU</button>',
         '<button class="trial-action-button danger" type="button" data-trial-id="' + escapeHtml(appointment.id) + '" data-trial-status="cancelled">CANCELAR</button>'
@@ -250,11 +264,12 @@
     return state.classes.find(function (item) { return Number(item.class_number) === value; }) || null;
   }
 
-  function applyClassSchedule(state, documentRef) {
+  function applyClassSchedule(state, documentRef, options) {
     const chosenClass = selectedClass(state, documentRef);
     const dateInput = documentRef.getElementById("trialDate");
     const timeInput = documentRef.getElementById("trialTime");
     const classHint = documentRef.getElementById("trialClassHint");
+    const preserveDate = Boolean(options && options.preserveDate);
     if (!chosenClass) {
       timeInput.value = "";
       classHint.textContent = "Selecione uma turma para preencher automaticamente o dia e o horário.";
@@ -263,11 +278,11 @@
 
     const startTime = toText(chosenClass.class_start_time).slice(0, 5);
     timeInput.value = startTime;
-    dateInput.value = nextClassDate(chosenClass.class_weekday, startTime);
+    if (!preserveDate) dateInput.value = nextClassDate(chosenClass.class_weekday, startTime);
     classHint.textContent = "Próxima ocorrência sugerida para " + chosenClass.class_name + ".";
   }
 
-  function applyMode(state, documentRef) {
+  function applyMode(state, documentRef, options) {
     const mode = documentRef.getElementById("trialLessonMode").value;
     const classField = documentRef.getElementById("trialClassField");
     const classSelect = documentRef.getElementById("trialClassNumber");
@@ -279,7 +294,7 @@
       classSelect.required = true;
       timeInput.readOnly = true;
       timeHint.textContent = "O horário é definido automaticamente pela turma selecionada.";
-      applyClassSchedule(state, documentRef);
+      applyClassSchedule(state, documentRef, options);
       return;
     }
 
@@ -310,6 +325,71 @@
     }
     if (mode === "individual" && parseTimeMinutes(time) == null) return "Informe o horário da aula individual.";
     return "";
+  }
+
+  function findAppointment(state, appointmentId) {
+    return state.appointments.find(function (item) {
+      return item.id === appointmentId;
+    }) || null;
+  }
+
+  function setFormPresentation(documentRef, editing) {
+    documentRef.getElementById("trialFormEyebrow").textContent = editing ? "EDITANDO AGENDAMENTO" : "NOVO AGENDAMENTO";
+    documentRef.getElementById("trialFormTitle").textContent = editing ? "Editar aula experimental" : "Agendar aula experimental";
+    documentRef.getElementById("trialSubmitButton").textContent = editing ? "SALVAR ALTERAÇÕES" : "AGENDAR AULA EXPERIMENTAL";
+    documentRef.getElementById("trialCancelEditButton").hidden = !editing;
+  }
+
+  function resetForm(runtime) {
+    const documentRef = runtime.documentRef;
+    runtime.state.editingAppointmentId = null;
+    setFormPresentation(documentRef, false);
+    documentRef.getElementById("trialVisitorName").value = "";
+    documentRef.getElementById("trialEnglishLevel").value = "Não definido";
+    documentRef.getElementById("trialWhatsapp").value = "";
+    documentRef.getElementById("trialLessonMode").value = "class";
+    documentRef.getElementById("trialClassNumber").value = "";
+    documentRef.getElementById("trialDate").value = saoPauloNowParts(new Date()).isoDate;
+    documentRef.getElementById("trialTime").value = "";
+    applyMode(runtime.state, documentRef);
+  }
+
+  function populateEditForm(runtime, appointment, shouldScroll) {
+    if (!canEditAppointment(appointment)) {
+      setMessage(runtime.documentRef, "Somente aulas experimentais agendadas podem ser editadas.", "error");
+      return false;
+    }
+
+    const documentRef = runtime.documentRef;
+    const schedule = formDateTimeParts(appointment.starts_at);
+    runtime.state.editingAppointmentId = appointment.id;
+    setFormPresentation(documentRef, true);
+    documentRef.getElementById("trialVisitorName").value = appointment.visitor_name || "";
+    documentRef.getElementById("trialEnglishLevel").value = appointment.english_level || "Não definido";
+    documentRef.getElementById("trialWhatsapp").value = appointment.whatsapp || "";
+    documentRef.getElementById("trialLessonMode").value = appointment.lesson_mode || "class";
+    documentRef.getElementById("trialClassNumber").value = appointment.class_number == null ? "" : String(appointment.class_number);
+    documentRef.getElementById("trialDate").value = schedule.date;
+    documentRef.getElementById("trialTime").value = schedule.time;
+    applyMode(runtime.state, documentRef, { preserveDate: true });
+    setMessage(documentRef, "Editando a aula experimental de " + appointment.visitor_name + ".", "success");
+
+    if (shouldScroll) {
+      const form = documentRef.getElementById("trialLessonForm");
+      if (form && typeof form.scrollIntoView === "function") form.scrollIntoView({ behavior: "smooth", block: "start" });
+      const nameInput = documentRef.getElementById("trialVisitorName");
+      if (nameInput && typeof nameInput.focus === "function") nameInput.focus();
+    }
+    return true;
+  }
+
+  function startEditing(runtime, appointmentId) {
+    const appointment = findAppointment(runtime.state, appointmentId);
+    if (!appointment) {
+      setMessage(runtime.documentRef, "Aula experimental não encontrada.", "error");
+      return false;
+    }
+    return populateEditForm(runtime, appointment, true);
   }
 
   function createPayload(state, documentRef) {
@@ -349,7 +429,16 @@
     runtime.state.classes = Array.isArray(results[0].data) ? results[0].data : [];
     runtime.state.appointments = Array.isArray(results[1].data) ? results[1].data : [];
     renderClassOptions(runtime.documentRef, runtime.state.classes);
-    applyMode(runtime.state, runtime.documentRef);
+    if (runtime.state.editingAppointmentId) {
+      const editingAppointment = findAppointment(runtime.state, runtime.state.editingAppointmentId);
+      if (!editingAppointment || !canEditAppointment(editingAppointment)) {
+        resetForm(runtime);
+      } else {
+        populateEditForm(runtime, editingAppointment, false);
+      }
+    } else {
+      applyMode(runtime.state, runtime.documentRef);
+    }
     renderAppointments(runtime.documentRef, runtime.state.appointments);
   }
 
@@ -376,18 +465,29 @@
     }
 
     const button = documentRef.getElementById("trialSubmitButton");
-    setBusy(button, true, "AGENDANDO...", "AGENDAR AULA EXPERIMENTAL");
+    const appointmentId = runtime.state.editingAppointmentId;
+    const editing = Boolean(appointmentId);
+    button.disabled = true;
+    button.textContent = editing ? "SALVANDO..." : "AGENDANDO...";
+
     try {
-      const response = await runtime.client.rpc("create_teacher_trial_lesson", createPayload(runtime.state, documentRef));
+      const payload = createPayload(runtime.state, documentRef);
+      const rpcName = editing ? "update_teacher_trial_lesson" : "create_teacher_trial_lesson";
+      if (editing) payload.target_appointment_id = appointmentId;
+      const response = await runtime.client.rpc(rpcName, payload);
       if (response.error) throw response.error;
-      documentRef.getElementById("trialVisitorName").value = "";
-      documentRef.getElementById("trialWhatsapp").value = "";
-      setMessage(documentRef, "Aula experimental agendada.", "success");
+      resetForm(runtime);
       await loadData(runtime);
+      setMessage(
+        documentRef,
+        editing ? "Aula experimental atualizada." : "Aula experimental agendada.",
+        "success"
+      );
     } catch (error) {
       setMessage(documentRef, normalizeError(error), "error");
     } finally {
-      setBusy(button, false, "AGENDANDO...", "AGENDAR AULA EXPERIMENTAL");
+      button.disabled = false;
+      button.textContent = runtime.state.editingAppointmentId ? "SALVAR ALTERAÇÕES" : "AGENDAR AULA EXPERIMENTAL";
     }
   }
 
@@ -437,6 +537,10 @@
       applyClassSchedule(runtime.state, documentRef);
       setMessage(documentRef, "", "");
     });
+    documentRef.getElementById("trialCancelEditButton").addEventListener("click", function () {
+      resetForm(runtime);
+      setMessage(documentRef, "Edição cancelada.", "");
+    });
     documentRef.getElementById("trialLessonForm").addEventListener("submit", function (event) {
       event.preventDefault();
       submitAppointment(runtime).catch(function () {});
@@ -457,6 +561,12 @@
     }
 
     function onCardActionClick(event) {
+      const editButton = event.target.closest("[data-trial-id][data-trial-edit]");
+      if (editButton) {
+        startEditing(runtime, editButton.dataset.trialId);
+        return;
+      }
+
       const statusButton = event.target.closest("[data-trial-id][data-trial-status]");
       if (statusButton) {
         runCardAction(statusButton, function () {
@@ -513,7 +623,7 @@
     }
 
     await windowRef.ProfessorMfaGate.requireAal2({ client: client });
-    const state = { classes: [], appointments: [] };
+    const state = { classes: [], appointments: [], editingAppointmentId: null };
     const runtime = { windowRef: windowRef, documentRef: documentRef, client: client, state: state };
     const today = saoPauloNowParts(new Date()).isoDate;
     documentRef.getElementById("trialDate").min = today;
@@ -532,6 +642,8 @@
     isClassDateValid: isClassDateValid,
     statusLabel: statusLabel,
     isUpcoming: isUpcoming,
+    canEditAppointment: canEditAppointment,
+    formDateTimeParts: formDateTimeParts,
     canUpdateEnrollment: canUpdateEnrollment,
     isEnrolledAfterTrial: isEnrolledAfterTrial,
     validateForm: validateForm,
