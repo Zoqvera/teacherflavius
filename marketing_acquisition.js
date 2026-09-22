@@ -88,6 +88,21 @@
     return labels[value] || value || "Não identificado";
   }
 
+  function individualCtaLabel(value) {
+    var labels = {
+      individual_hero_whatsapp: "Hero — Quero aulas individuais",
+      individual_hero_details: "Hero — Ver como funciona",
+      individual_ebook: "Ebook — Ler gratuitamente",
+      individual_instagram: "Instagram — Seguir",
+      individual_availability_whatsapp: "Disponibilidade — Consultar horários",
+      individual_final_whatsapp: "CTA final — Quero aulas individuais",
+      individual_floating_whatsapp: "WhatsApp flutuante",
+      individual_footer_whatsapp: "Rodapé — WhatsApp",
+      unknown: "Não identificado"
+    };
+    return labels[value] || value || "Não identificado";
+  }
+
   function formatDate(value) {
     if (!value) return "";
     var parts = String(value).split("-");
@@ -211,6 +226,21 @@
     renderDaily(data.daily);
   }
 
+  function renderIndividualCtas(data) {
+    data = data || {};
+    setText("metricIndividualCtaClicks", number(data.total_clicks));
+    setText("metricIndividualCtaVisitors", number(data.unique_visitors));
+    setText("metricIndividualCtaCount", number(data.active_ctas));
+
+    renderTable(data.ctas, "individualCtaTableBody", "individualCtaTableWrap", "individualCtaEmpty", function (row) {
+      return "<tr>" +
+        '<td class="source-name">' + escapeHtml(individualCtaLabel(row.cta_id)) + "</td>" +
+        "<td>" + number(row.clicks) + "</td>" +
+        "<td>" + number(row.unique_visitors) + "</td>" +
+      "</tr>";
+    });
+  }
+
   function availableStudentOptions() {
     var linked = new Set(recentLeadRows.filter(function (row) { return !!row.student_id; }).map(function (row) { return String(row.student_id); }));
     return attributionStudents.filter(function (student) { return !linked.has(String(student.id)); }).map(function (student) {
@@ -305,13 +335,15 @@
       var responses = await Promise.all([
         client.rpc("get_teacher_acquisition_summary", { period_days: period }),
         client.rpc("get_teacher_recent_marketing_leads", { period_days: period }),
-        client.rpc("get_teacher_attribution_students")
+        client.rpc("get_teacher_attribution_students"),
+        client.rpc("get_teacher_individual_cta_summary", { period_days: period })
       ]);
       responses.forEach(function (response) { if (response.error) throw response.error; });
 
       attributionStudents = Array.isArray(responses[2].data) ? responses[2].data : [];
       renderSummary(responses[0].data || {});
       renderRecentLeads(responses[1].data || []);
+      renderIndividualCtas(responses[3].data || {});
       if (status) status.textContent = "Funil de conversão dos últimos " + period + " dias.";
     } catch (error) {
       console.error("Falha ao carregar conversão:", error);
