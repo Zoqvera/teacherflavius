@@ -8,6 +8,7 @@
   --trial-success: #a7f3d0;
   --trial-warning: #fde68a;
   --trial-danger: #fecaca;
+  --trial-enrollment: #93c5fd;
 }
 
 body {
@@ -96,7 +97,7 @@ body {
 
 .trial-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 18px;
 }
@@ -289,6 +290,12 @@ body {
   background: rgba(16, 185, 129, 0.1);
 }
 
+.trial-pill.enrolled {
+  color: #dbeafe;
+  border-color: rgba(96, 165, 250, 0.42);
+  background: rgba(37, 99, 235, 0.16);
+}
+
 .trial-pill.cancelled,
 .trial-pill.no_show {
   color: var(--trial-danger);
@@ -335,6 +342,12 @@ body {
   color: var(--trial-danger);
 }
 
+.trial-action-button.enrollment {
+  border-color: rgba(96, 165, 250, 0.34);
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--trial-enrollment);
+}
+
 .trial-empty {
   margin: 0;
   padding: 16px;
@@ -357,7 +370,10 @@ body {
     width: 100%;
   }
 
-  .trial-summary,
+  .trial-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .trial-form {
     grid-template-columns: 1fr;
   }
@@ -368,6 +384,10 @@ body {
 }
 
 @media (max-width: 480px) {
+  .trial-summary {
+    grid-template-columns: 1fr;
+  }
+
   .trial-panel {
     padding: 14px;
   }
