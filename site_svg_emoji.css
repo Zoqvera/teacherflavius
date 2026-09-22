@@ -1,0 +1,19 @@
+img.site-svg-emoji {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin: 0 0.04em;
+  vertical-align: -0.14em;
+  object-fit: contain;
+}
+
+.icon > img.site-svg-emoji,
+.course-tools-emoji > img.site-svg-emoji {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  img.site-svg-emoji {
+    transition: none;
+  }
+}
