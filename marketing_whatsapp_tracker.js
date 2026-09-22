@@ -10,7 +10,8 @@
   var TRACKING_EXCLUDED_KEY = "tf_marketing_tracking_excluded_v1";
   var COLLECTOR_URL = "https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/marketing-acquisition-event";
   var CLICK_DEBOUNCE_MS = 1200;
-  var lastTrackedAt = 0;
+  var INDIVIDUAL_LESSONS_PATH = "/aulas-individuais/";
+  var lastTrackedAtByEvent = Object.create(null);
 
   function safeLocalGet(key) {
     try { return window.localStorage.getItem(key); } catch (error) { return null; }
@@ -156,12 +157,24 @@
     return "page_link";
   }
 
-  function shouldSendOperationalEvent() {
+  function individualCtaId(link) {
+    if (!link || currentPath() !== INDIVIDUAL_LESSONS_PATH) return "";
+
+    var explicitId = clean(link.getAttribute("data-marketing-cta"), 80).toLowerCase();
+    if (explicitId) return explicitId;
+    if (link.id === "teacher-flavius-whatsapp-float") return "individual_floating_whatsapp";
+    if (isWhatsappLink(link) && link.closest && link.closest("#teacher-flavius-site-footer")) return "individual_footer_whatsapp";
+    return "";
+  }
+
+  function shouldSendOperationalEvent(eventName) {
     if (safeLocalGet(TRACKING_EXCLUDED_KEY) === "1") return false;
-    if (window.TeacherCroAttribution) return false;
+    if (eventName === "generate_lead" && window.TeacherCroAttribution) return false;
+
     var now = Date.now();
+    var lastTrackedAt = lastTrackedAtByEvent[eventName] || 0;
     if (now - lastTrackedAt < CLICK_DEBOUNCE_MS) return false;
-    lastTrackedAt = now;
+    lastTrackedAtByEvent[eventName] = now;
     return true;
   }
 
@@ -185,13 +198,11 @@
     }
   }
 
-  function trackWhatsappClick(link) {
-    if (!shouldSendOperationalEvent()) return;
-
+  function buildPayload(eventName, position) {
     var acquisition = resolveAcquisition();
-    sendPayload({
+    return {
       event_id: randomUuid(),
-      event_name: "generate_lead",
+      event_name: eventName,
       visitor_id: getOrCreateId(safeLocalGet, safeLocalSet, VISITOR_KEY),
       session_id: getOrCreateId(safeSessionGet, safeSessionSet, SESSION_KEY),
       source: acquisition.source,
@@ -201,9 +212,20 @@
       ai_assistant: acquisition.ai_assistant,
       page_path: currentPath(),
       landing_page: acquisition.landing_page || currentPath(),
-      link_position: linkPosition(link),
+      link_position: position,
       occurred_at: new Date().toISOString()
-    });
+    };
+  }
+
+  function trackIndividualCtaClick(link) {
+    var ctaId = individualCtaId(link);
+    if (!ctaId || !shouldSendOperationalEvent("cta_click")) return;
+    sendPayload(buildPayload("cta_click", ctaId));
+  }
+
+  function trackWhatsappClick(link) {
+    if (!shouldSendOperationalEvent("generate_lead")) return;
+    sendPayload(buildPayload("generate_lead", linkPosition(link)));
   }
 
   // Capture the entry source before internal navigation can replace the external referrer.
@@ -211,7 +233,9 @@
 
   document.addEventListener("click", function (event) {
     var link = event.target && event.target.closest ? event.target.closest("a[href]") : null;
-    if (!link || !isWhatsappLink(link)) return;
-    trackWhatsappClick(link);
+    if (!link) return;
+
+    trackIndividualCtaClick(link);
+    if (isWhatsappLink(link)) trackWhatsappClick(link);
   }, true);
 })();
