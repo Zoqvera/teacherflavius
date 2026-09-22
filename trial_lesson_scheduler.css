@@ -215,6 +215,16 @@ body {
   color: #e0e7ff;
 }
 
+.trial-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.trial-form-actions > * {
+  flex: 1 1 220px;
+}
+
 .trial-secondary-button {
   padding: 10px 16px;
   border: 1px solid rgba(148, 163, 184, 0.28);
@@ -327,6 +337,12 @@ body {
   text-decoration: none;
 }
 
+.trial-action-button.edit {
+  border-color: rgba(129, 140, 248, 0.38);
+  background: rgba(99, 102, 241, 0.12);
+  color: #c7d2fe;
+}
+
 .trial-action-button.success {
   border-color: rgba(52, 211, 153, 0.3);
   color: var(--trial-success);
@@ -380,6 +396,10 @@ body {
 
   .trial-field-wide {
     grid-column: auto;
+  }
+
+  .trial-form-actions > * {
+    flex-basis: 100%;
   }
 }
 
