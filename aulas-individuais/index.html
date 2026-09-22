@@ -60,12 +60,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link id="teacher-flavius-brand-palette" rel="stylesheet" href="/brand_palette.css?v=20260820-3">
   <link rel="stylesheet" href="/home_vacancies.css?v=20260909-1">
+  <link rel="stylesheet" href="/course_tools.css?v=20260909-1">
   <style>
     :root{--ux-navy:#02102b;--ux-navy-2:#063e7d;--ux-paper:#f7f9fc;--ux-white:#fff;--ux-text:#12213b;--ux-muted:#64748b;--ux-green:#168c4d;--ux-green-dark:#0f713d;--ux-gold:#e6bd68;--ux-line:rgba(2,16,43,.13);--ux-shadow:0 24px 70px rgba(2,16,43,.16)}
+    :root{--navy:var(--ux-navy);--navy2:var(--ux-navy-2);--paper:var(--ux-paper);--text:var(--ux-text);--muted:var(--ux-muted);--line:var(--ux-line)}
     *{box-sizing:border-box}html{scroll-behavior:smooth;overflow-x:clip}body{margin:0;min-width:320px;overflow-x:clip;background:var(--ux-paper);color:var(--ux-text);font-family:var(--tf-font-body,Inter,system-ui,sans-serif);line-height:1.6}html.tf-brand-palette body.page-individual-lessons{background:var(--ux-paper)!important;background-attachment:scroll!important;color:var(--ux-text)}a{color:inherit}.shell{width:min(1120px,calc(100% - 32px));margin:0 auto}
     .topbar{position:absolute;inset:0 0 auto;z-index:10;padding:20px 0}.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:0;color:#fff}.topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}.brand{font-family:var(--tf-font-display,Georgia,serif);font-weight:800;font-size:1.08rem;white-space:nowrap}.student-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;border:1px solid rgba(255,255,255,.45);border-radius:999px;background:rgba(255,255,255,.08);color:#fff;font-weight:800;text-decoration:none;white-space:nowrap}.student-link:hover{background:rgba(255,255,255,.16)}
     .hero{position:relative;overflow:hidden;background:radial-gradient(circle at 88% 10%,rgba(78,154,236,.20),transparent 28rem),linear-gradient(135deg,#010918,var(--ux-navy) 54%,var(--ux-navy-2));color:#fff;padding:116px 0 88px}.hero-grid{display:grid;gap:46px;align-items:center;min-width:0}.hero-grid>*{min-width:0}.hero-copy{max-width:680px;min-width:0}.eyebrow{margin:0 0 14px;color:#a9d2ff;font-size:.82rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase}h1,h2,h3,p{margin-top:0}h1{max-width:100%;margin-bottom:20px;font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(2.55rem,6.7vw,4.9rem);line-height:1.02;letter-spacing:-.04em;overflow-wrap:anywhere}.hero-lead{max-width:650px;margin-bottom:28px;color:rgba(255,255,255,.84);font-size:clamp(1.05rem,2.2vw,1.3rem)}.hero-actions{display:flex;flex-wrap:wrap;gap:12px}.btn{display:inline-flex;min-height:54px;padding:14px 22px;border-radius:999px;align-items:center;justify-content:center;font-weight:900;text-decoration:none;text-align:center;transition:transform .18s ease,background .18s ease,box-shadow .18s ease}.btn:hover{transform:translateY(-2px)}.btn-primary{background:var(--ux-green);color:#fff;box-shadow:0 14px 34px rgba(22,140,77,.34)}.btn-primary:hover{background:var(--ux-green-dark)}.btn-secondary{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff}.hero-note{margin:18px 0 0;color:rgba(255,255,255,.68);font-size:.92rem}
     .section{padding:72px 0}.section-head{max-width:790px;margin:0 auto 34px;text-align:center}.section-head h2{margin-bottom:12px;color:var(--ux-navy);font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(2rem,5vw,3.5rem);line-height:1.08;letter-spacing:-.03em}.section-head p{color:var(--ux-muted);font-size:1.08rem}.benefits{display:grid;grid-template-columns:1fr;gap:14px;margin:0;padding:0;list-style:none}.benefits li{display:flex;align-items:center;gap:12px;min-height:72px;padding:17px 18px;border:1px solid var(--ux-line);border-radius:18px;background:#fff;color:var(--ux-text)!important;font-weight:800;box-shadow:0 8px 25px rgba(2,16,43,.05)}.benefits li span{color:var(--ux-text)!important}.benefits .icon{font-size:1.4rem;color:var(--ux-text)!important}
+    .card{padding:24px;border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:0 9px 28px rgba(2,16,43,.055)}.card h3{margin-bottom:8px;color:var(--navy);font-size:1.08rem}
     .course-intro{padding-top:6px}.course-intro-card{display:grid;gap:24px;padding:34px;border:1px solid var(--ux-line);border-radius:26px;background:#fff;box-shadow:0 14px 42px rgba(2,16,43,.07)}.course-intro-card h2{margin-bottom:12px;color:var(--ux-navy);font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(1.8rem,4vw,2.8rem);line-height:1.1}.course-intro-card p{margin-bottom:0;color:var(--ux-muted)}.text-link{display:inline-flex;align-items:center;gap:8px;margin-top:18px;color:#075fad;font-weight:900;text-decoration-thickness:2px;text-underline-offset:4px}
     .ebook-section{padding-top:0}.ebook-card{display:grid;gap:34px;align-items:center;padding:34px;border:1px solid var(--ux-line);border-radius:28px;background:#fff;box-shadow:0 14px 42px rgba(2,16,43,.07)}.ebook-visual{display:flex;flex-direction:column;align-items:center;gap:18px}.ebook-cover{display:block;width:min(100%,320px);height:auto;border-radius:12px;box-shadow:0 20px 44px rgba(2,16,43,.22)}.ebook-button{width:min(100%,320px)}.ebook-copy h2{margin-bottom:12px;color:var(--ux-navy);font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(2rem,4.6vw,3.2rem);line-height:1.08;letter-spacing:-.03em}.ebook-copy p{margin-bottom:0;color:var(--ux-muted);font-size:1.06rem}
     .offer{padding:0 0 26px}.offer-card{display:grid;gap:28px;align-items:center;padding:34px;border-radius:28px;background:var(--ux-navy);color:#fff;box-shadow:var(--ux-shadow)}.price-label{margin:0 0 4px;color:#a9d2ff;font-size:.82rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.price{margin:0;font-size:clamp(3.2rem,8vw,5.8rem);font-weight:900;line-height:1;letter-spacing:-.055em}.price-copy{margin:10px 0 0;color:rgba(255,255,255,.72)}.offer-list{display:grid;gap:8px;margin:0;padding:0;list-style:none;color:rgba(255,255,255,.9);font-weight:700}.offer-list li::before{content:"✓";margin-right:9px;color:#8ee0b1}
@@ -140,6 +143,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <li><span class="icon" aria-hidden="true">📄</span><span>Material de apoio incluído</span></li>
           <li><span class="icon" aria-hidden="true">📋</span><span>Acompanhamento do seu progresso</span></li>
         </ul>
+        <aside class="card course-tools-card" aria-labelledby="individual-course-tools-title">
+          <h3 id="individual-course-tools-title">Ferramentas necessárias</h3>
+          <div class="course-tools-list">
+            <div class="course-tools-devices">
+              <p class="course-tools-item">
+                <span class="course-tools-emoji" aria-hidden="true">📱</span>
+                <span>Celular com acesso à internet</span>
+              </p>
+              <span class="course-tools-or">ou</span>
+              <p class="course-tools-item">
+                <span class="course-tools-emoji" aria-hidden="true">💻</span>
+                <span>Computador com internet</span>
+              </p>
+            </div>
+            <span class="course-tools-plus" role="img" aria-label="mais">+</span>
+            <p class="course-tools-item">
+              <span class="course-tools-emoji" aria-hidden="true">📝</span>
+              <span>Caderno ou bloco de notas</span>
+            </p>
+            <span class="course-tools-plus" role="img" aria-label="mais">+</span>
+            <p class="course-tools-item">
+              <span class="course-tools-emoji" aria-hidden="true">🖋️</span>
+              <span>Caneta ou lápis</span>
+            </p>
+          </div>
+        </aside>
       </div>
     </section>
 
