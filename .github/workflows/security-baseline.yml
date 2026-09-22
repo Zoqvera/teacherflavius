@@ -113,6 +113,7 @@ jobs:
           grep -q '^  X-Frame-Options: SAMEORIGIN$' _site/_headers
           grep -q '^  Permissions-Policy:.*microphone=(self)' _site/_headers
           grep -q '^  Content-Security-Policy-Report-Only:.*report-uri https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/csp-report$' _site/_headers
+          grep -q '^  Content-Security-Policy-Report-Only:.*img-src .*https://cdn.jsdelivr.net' _site/_headers
           if grep -Eqi 'netlify' _site/_headers; then
             echo 'Netlify-specific header residue found in deploy output.'
             exit 1
