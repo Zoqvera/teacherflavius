@@ -4,6 +4,21 @@
   const ONLINE_WORD_PATTERN = /\bonline\b/gi;
   const TEXT_ATTRIBUTE_NAMES = ["alt", "aria-label", "placeholder", "title"];
   const SKIPPED_TEXT_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE"]);
+  // Twemoji graphics are licensed under CC-BY 4.0: https://github.com/jdecked/twemoji
+  const TWEMOJI_SCRIPT_ASSET = Object.freeze({
+    id: "teacher-flavius-twemoji",
+    src: "https://cdn.jsdelivr.net/npm/@twemoji/api@17.0.3/dist/twemoji.min.js"
+  });
+  const SVG_EMOJI_STYLESHEET_ASSET = Object.freeze({
+    id: "teacher-flavius-svg-emoji-styles",
+    href: "/site_svg_emoji.css?v=20260922-1"
+  });
+  const TWEMOJI_OPTIONS = Object.freeze({
+    base: "https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/",
+    folder: "svg",
+    ext: ".svg",
+    className: "site-svg-emoji"
+  });
 
   function assertFunction(value, name) {
     if (typeof value !== "function") throw new TypeError("SitePageRuntime requer " + name + ".");
@@ -41,6 +56,7 @@
     const windowRef = deps.windowRef || window;
     const documentRef = deps.documentRef || document;
     let publicCopyObserver = null;
+    let emojiObserver = null;
 
     function pageContext() { return windowRef.SitePageContext; }
 
@@ -116,6 +132,34 @@
         });
       });
       publicCopyObserver.observe(documentRef.documentElement, { childList: true, characterData: true, subtree: true });
+    }
+
+    function parseEmojiAsSvg(root) {
+      const twemoji = windowRef.twemoji;
+      if (!twemoji || typeof twemoji.parse !== "function" || !root) return;
+      const target = root.nodeType === 3 ? root.parentElement : root;
+      if (!target || (target.tagName && SKIPPED_TEXT_TAGS.has(target.tagName))) return;
+      twemoji.parse(target, TWEMOJI_OPTIONS);
+    }
+
+    function observeEmojiContent() {
+      const target = documentRef.body || documentRef.documentElement;
+      if (!windowRef.MutationObserver || !target || emojiObserver) return;
+      emojiObserver = new windowRef.MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          if (mutation.type === "characterData") { parseEmojiAsSvg(mutation.target); return; }
+          mutation.addedNodes.forEach(parseEmojiAsSvg);
+        });
+      });
+      emojiObserver.observe(target, { childList: true, characterData: true, subtree: true });
+    }
+
+    function initializeSvgEmojiRendering() {
+      deps.loadStylesheetAsset(SVG_EMOJI_STYLESHEET_ASSET);
+      deps.loadScriptAsset(TWEMOJI_SCRIPT_ASSET, function () {
+        parseEmojiAsSvg(documentRef.body || documentRef.documentElement);
+        observeEmojiContent();
+      });
     }
 
     function loadAccessibility() { deps.loadStylesheetAsset(stylesheetAssets.accessibility); deps.loadScriptAsset(scriptAssets.accessibility); }
@@ -208,6 +252,7 @@
       removeLegacyBillingConfigurationUi();
       if (windowRef.SiteBranding) windowRef.SiteBranding.install();
       loadAccessibility();
+      initializeSvgEmojiRendering();
       if (!pageContext().isHomePage()) loadMobileTopNavigation();
       initializeEnrollmentGuard();
       initializeWhatsappUi();
