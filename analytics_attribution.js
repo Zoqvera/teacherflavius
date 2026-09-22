@@ -285,6 +285,11 @@
     }
   }
 
+  function isCommercialLeadTarget(target) {
+    if (!target || !isWhatsappHref(target.getAttribute("href"))) return false;
+    return clean(target.getAttribute("data-commercial-lead"), 20).toLowerCase() !== "false";
+  }
+
   function whatsappPosition(element) {
     if (!element) return "unknown";
     if (element.id === "teacher-flavius-whatsapp-float") return "floating_button";
@@ -322,7 +327,7 @@
 
   document.addEventListener("click", function (event) {
     var target = event.target && event.target.closest ? event.target.closest("a[href]") : null;
-    if (!target || !isWhatsappHref(target.getAttribute("href"))) return;
+    if (!isCommercialLeadTarget(target)) return;
     trackWhatsappLead(target);
   }, true);
 
