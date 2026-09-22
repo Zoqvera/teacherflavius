@@ -12,7 +12,7 @@
   <script src="/auth.js?v=20260730-1"></script>
   <link rel="stylesheet" href="/professor.css?v=20260820-1">
   <link rel="stylesheet" href="/professor_mfa_gate.css?v=20260909-1">
-  <link rel="stylesheet" href="/trial_lesson_scheduler.css?v=20260922-1">
+  <link rel="stylesheet" href="/trial_lesson_scheduler.css?v=20260922-2">
 </head>
 <body class="auth-checking">
   <main class="trial-shell">
@@ -37,7 +37,7 @@
     <section class="trial-panel" aria-labelledby="trialFormTitle">
       <div class="trial-section-heading">
         <div>
-          <span class="trial-eyebrow">NOVO AGENDAMENTO</span>
+          <span id="trialFormEyebrow" class="trial-eyebrow">NOVO AGENDAMENTO</span>
           <h2 id="trialFormTitle">Agendar aula experimental</h2>
         </div>
       </div>
@@ -93,7 +93,10 @@
           <small id="trialTimeHint">O horário será definido pela turma selecionada.</small>
         </label>
 
-        <button id="trialSubmitButton" class="trial-primary-button trial-field-wide" type="submit">AGENDAR AULA EXPERIMENTAL</button>
+        <div class="trial-form-actions trial-field-wide">
+          <button id="trialSubmitButton" class="trial-primary-button" type="submit">AGENDAR AULA EXPERIMENTAL</button>
+          <button id="trialCancelEditButton" class="trial-secondary-button" type="button" hidden>CANCELAR EDIÇÃO</button>
+        </div>
       </form>
     </section>
 
@@ -120,7 +123,7 @@
 
   <script src="/professor_mfa_service.js?v=20260909-1"></script>
   <script src="/professor_mfa_gate.js?v=20260909-1"></script>
-  <script src="/trial_lesson_scheduler.js?v=20260922-1"></script>
+  <script src="/trial_lesson_scheduler.js?v=20260922-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
   <script src="/site_runtime_config.js?v=20260903-1"></script>
