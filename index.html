@@ -96,7 +96,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   <link id="teacher-flavius-brand-palette" rel="stylesheet" href="/brand_palette.css?v=20260820-3">
   <style>
-    :root{--ux-navy:#02102b;--ux-navy-2:#063e7d;--ux-paper:#f7f9fc;--ux-white:#fff;--ux-text:#12213b;--ux-muted:#64748b;--ux-gold:#e6bd68;--ux-line:rgba(2,16,43,.13);--ux-shadow:0 24px 70px rgba(2,16,43,.16)}
+    :root{--ux-navy:#02102b;--ux-navy-2:#063e7d;--ux-paper:#f7f9fc;--ux-white:#fff;--ux-text:#12213b;--ux-muted:#64748b;--ux-gold:#e6bd68;--ux-line:rgba(2,16,43,.13);--ux-shadow:0 24px 70px rgba(2,16,43,.16);--choice-student-bg:#eaf4ff;--choice-group-bg:#cfe7ff;--choice-individual-bg:#1e5fa8}
     *{box-sizing:border-box}
     html{overflow-x:clip}
     body{margin:0;min-width:320px;background:var(--ux-paper);color:var(--ux-text);font-family:var(--tf-font-body,Inter,system-ui,sans-serif);line-height:1.6}
@@ -110,13 +110,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .hero-lead{max-width:720px;margin:0;color:rgba(255,255,255,.82);font-size:clamp(1.05rem,2.2vw,1.28rem)}
     .choices{padding:54px 0 34px}
     .choices-grid{display:grid;grid-template-columns:1fr;gap:18px}
-    .choice-card{display:flex;min-height:230px;padding:28px;border:1px solid var(--ux-line);border-radius:26px;background:#fff;text-decoration:none;box-shadow:0 14px 42px rgba(2,16,43,.07);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-    .choice-card:hover{transform:translateY(-4px);border-color:rgba(6,62,125,.34);box-shadow:var(--ux-shadow)}
+    .choice-card{display:flex;min-height:230px;padding:28px;border:1px solid var(--choice-border,var(--ux-line));border-radius:26px;background:var(--choice-bg,#fff);text-decoration:none;box-shadow:0 14px 42px rgba(2,16,43,.07);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+    .choice-card:hover{transform:translateY(-4px);border-color:var(--choice-hover-border,rgba(6,62,125,.34));box-shadow:var(--ux-shadow)}
     .choice-card:focus-visible{outline:4px solid var(--ux-gold);outline-offset:4px}
+    .choice-card--student{--choice-bg:var(--choice-student-bg);--choice-border:#b7d7f7;--choice-hover-border:#78b5ec;--choice-title:#061a3a;--choice-copy:#47627e;--choice-kicker:#315c89}
+    .choice-card--group{--choice-bg:var(--choice-group-bg);--choice-border:#91c2ee;--choice-hover-border:#5c9fdb;--choice-title:#061a3a;--choice-copy:#3f5e7c;--choice-kicker:#285984}
+    .choice-card--individual{--choice-bg:var(--choice-individual-bg);--choice-border:#1b548f;--choice-hover-border:#a9d2ff;--choice-title:#fff;--choice-copy:#eaf4ff;--choice-kicker:#d8e9ff}
     .choice-content{display:flex;flex-direction:column;width:100%}
-    .choice-kicker{margin:0 0 12px;color:#0968bc;font-size:.78rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
-    .choice-card h2{margin-bottom:12px;color:var(--ux-navy);font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(1.6rem,3vw,2.15rem);line-height:1.08}
-    .choice-card p{margin-bottom:24px;color:var(--ux-muted)}
+    .choice-kicker{margin:0 0 12px;color:var(--choice-kicker,#0968bc);font-size:.78rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+    .choice-card h2{margin-bottom:12px;color:var(--choice-title,var(--ux-navy));font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(1.6rem,3vw,2.15rem);line-height:1.08}
+    .choice-card p{margin-bottom:24px;color:var(--choice-copy,var(--ux-muted))}
     .context{padding:30px 0 76px}
     .context-card{max-width:900px;margin:0 auto;padding:34px;border:1px solid var(--ux-line);border-radius:26px;background:#fff;box-shadow:0 14px 42px rgba(2,16,43,.06)}
     .context-card h2{margin-bottom:14px;color:var(--ux-navy);font-family:var(--tf-font-display,Georgia,serif);font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.1}
@@ -146,7 +149,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <section class="choices" aria-label="Escolha como continuar">
       <div class="shell choices-grid">
-        <a class="choice-card" href="/login/?next=/area-do-estudante/">
+        <a class="choice-card choice-card--student" href="/login/?next=/area-do-estudante/">
           <div class="choice-content">
             <p class="choice-kicker">Área do estudante</p>
             <h2>JÁ SOU ALUNO</h2>
@@ -154,7 +157,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </a>
 
-        <a class="choice-card" href="/aulas-em-grupo/">
+        <a class="choice-card choice-card--group" href="/aulas-em-grupo/">
           <div class="choice-content">
             <p class="choice-kicker">Turmas reduzidas</p>
             <h2>QUERO AULAS EM GRUPO</h2>
@@ -162,7 +165,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </a>
 
-        <a class="choice-card" href="/aulas-individuais/">
+        <a class="choice-card choice-card--individual" href="/aulas-individuais/">
           <div class="choice-content">
             <p class="choice-kicker">Acompanhamento exclusivo</p>
             <h2>QUERO AULAS INDIVIDUAIS</h2>
