@@ -140,6 +140,14 @@
       new Date(appointment.starts_at).getTime() > (now || Date.now());
   }
 
+  function canUpdateEnrollment(appointment) {
+    return appointment && appointment.status === "completed";
+  }
+
+  function isEnrolledAfterTrial(appointment) {
+    return canUpdateEnrollment(appointment) && appointment.enrolled_after_trial === true;
+  }
+
   function normalizeError(error) {
     const message = toText(error && error.message).trim();
     return message || "Não foi possível concluir a operação.";
@@ -148,6 +156,8 @@
   function buildCard(appointment) {
     const contactUrl = whatsappUrl(appointment.whatsapp_digits || appointment.whatsapp);
     const scheduled = appointment.status === "scheduled";
+    const completed = canUpdateEnrollment(appointment);
+    const enrolledAfterTrial = isEnrolledAfterTrial(appointment);
     const actions = [
       contactUrl
         ? '<a class="trial-whatsapp-link" href="' + escapeHtml(contactUrl) + '" target="_blank" rel="noopener noreferrer">ABRIR WHATSAPP</a>'
@@ -162,6 +172,15 @@
       );
     }
 
+    if (completed) {
+      actions.push(
+        '<button class="trial-action-button enrollment" type="button" data-trial-id="' + escapeHtml(appointment.id) +
+        '" data-trial-enrolled="' + (enrolledAfterTrial ? "false" : "true") + '">' +
+        (enrolledAfterTrial ? 'REMOVER "MATRICULOU"' : 'REGISTRAR MATRÍCULA') +
+        '</button>'
+      );
+    }
+
     return '<article class="trial-card">' +
       '<div class="trial-card-header">' +
         '<div><h3>' + escapeHtml(appointment.visitor_name) + '</h3>' +
@@ -171,6 +190,7 @@
       '<div class="trial-card-meta">' +
         '<span class="trial-pill">Nível ' + escapeHtml(appointment.english_level) + '</span>' +
         '<span class="trial-pill">' + escapeHtml(modeLabel(appointment)) + '</span>' +
+        (enrolledAfterTrial ? '<span class="trial-pill enrolled">MATRICULOU</span>' : '') +
       '</div>' +
       '<p class="trial-card-contact"><strong>WhatsApp:</strong> ' + escapeHtml(appointment.whatsapp) + '</p>' +
       '<div class="trial-card-actions">' + actions.join("") + '</div>' +
@@ -205,11 +225,13 @@
       return localDate === today;
     }).length;
     const completed = appointments.filter(function (item) { return item.status === "completed"; }).length;
+    const enrolledAfterTrial = appointments.filter(isEnrolledAfterTrial).length;
     const summary = documentRef.getElementById("trialSummary");
     summary.innerHTML =
       '<article class="trial-summary-card"><span>Próximas</span><strong>' + upcoming.length + '</strong></article>' +
       '<article class="trial-summary-card"><span>Hoje</span><strong>' + scheduledToday + '</strong></article>' +
-      '<article class="trial-summary-card"><span>Concluídas</span><strong>' + completed + '</strong></article>';
+      '<article class="trial-summary-card"><span>Concluídas</span><strong>' + completed + '</strong></article>' +
+      '<article class="trial-summary-card"><span>Matricularam</span><strong>' + enrolledAfterTrial + '</strong></article>';
   }
 
   function renderClassOptions(documentRef, classes) {
@@ -369,6 +391,25 @@
     }
   }
 
+  async function updateEnrollment(runtime, appointmentId, enrolled) {
+    const confirmation = enrolled
+      ? "Registrar que esta pessoa se matriculou após a aula experimental?"
+      : 'Remover a informação "MATRICULOU" desta aula experimental?';
+    if (runtime.windowRef.confirm && !runtime.windowRef.confirm(confirmation)) return;
+
+    const response = await runtime.client.rpc("set_teacher_trial_lesson_enrollment", {
+      target_appointment_id: appointmentId,
+      target_enrolled: enrolled
+    });
+    if (response.error) throw response.error;
+    setMessage(
+      runtime.documentRef,
+      enrolled ? 'Informação "MATRICULOU" registrada.' : 'Informação "MATRICULOU" removida.',
+      "success"
+    );
+    await loadData(runtime);
+  }
+
   async function updateStatus(runtime, appointmentId, status) {
     const labels = {
       completed: "Marcar esta aula experimental como concluída?",
@@ -404,11 +445,9 @@
       refresh(runtime).catch(function () {});
     });
 
-    function onStatusClick(event) {
-      const button = event.target.closest("[data-trial-id][data-trial-status]");
-      if (!button) return;
+    function runCardAction(button, action) {
       button.disabled = true;
-      updateStatus(runtime, button.dataset.trialId, button.dataset.trialStatus)
+      action()
         .catch(function (error) {
           setMessage(documentRef, normalizeError(error), "error");
         })
@@ -417,8 +456,28 @@
         });
     }
 
-    documentRef.getElementById("trialUpcomingList").addEventListener("click", onStatusClick);
-    documentRef.getElementById("trialHistoryList").addEventListener("click", onStatusClick);
+    function onCardActionClick(event) {
+      const statusButton = event.target.closest("[data-trial-id][data-trial-status]");
+      if (statusButton) {
+        runCardAction(statusButton, function () {
+          return updateStatus(runtime, statusButton.dataset.trialId, statusButton.dataset.trialStatus);
+        });
+        return;
+      }
+
+      const enrollmentButton = event.target.closest("[data-trial-id][data-trial-enrolled]");
+      if (!enrollmentButton) return;
+      runCardAction(enrollmentButton, function () {
+        return updateEnrollment(
+          runtime,
+          enrollmentButton.dataset.trialId,
+          enrollmentButton.dataset.trialEnrolled === "true"
+        );
+      });
+    }
+
+    documentRef.getElementById("trialUpcomingList").addEventListener("click", onCardActionClick);
+    documentRef.getElementById("trialHistoryList").addEventListener("click", onCardActionClick);
   }
 
   function wait(milliseconds, windowRef) {
@@ -473,6 +532,8 @@
     isClassDateValid: isClassDateValid,
     statusLabel: statusLabel,
     isUpcoming: isUpcoming,
+    canUpdateEnrollment: canUpdateEnrollment,
+    isEnrolledAfterTrial: isEnrolledAfterTrial,
     validateForm: validateForm,
     initialize: initialize
   });
