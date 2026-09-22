@@ -16,6 +16,10 @@ const enrollmentMigration = fs.readFileSync(
   path.join(__dirname, "../supabase/migrations/20260922135728_add_trial_lesson_enrollment_conversion.sql"),
   "utf8"
 );
+const editingMigration = fs.readFileSync(
+  path.join(__dirname, "../supabase/migrations/20260922200208_add_trial_lesson_editing.sql"),
+  "utf8"
+);
 const schedulerSource = fs.readFileSync(path.join(__dirname, "../trial_lesson_scheduler.js"), "utf8");
 const professorHome = fs.readFileSync(path.join(__dirname, "../professor_home.js"), "utf8");
 
@@ -59,6 +63,31 @@ test("labels statuses and separates upcoming appointments", function () {
   );
 });
 
+
+test("converts scheduled timestamps to editable Sao Paulo form values", function () {
+  assert.deepEqual(
+    scheduler.formDateTimeParts("2026-09-22T18:30:00Z"),
+    { date: "2026-09-22", time: "15:30" }
+  );
+});
+
+test("allows editing only while a trial lesson is scheduled", function () {
+  assert.equal(scheduler.canEditAppointment({ status: "scheduled" }), true);
+  assert.equal(scheduler.canEditAppointment({ status: "completed" }), false);
+  assert.equal(scheduler.canEditAppointment({ status: "cancelled" }), false);
+});
+
+test("protects trial lesson editing with MFA and scheduled-only validation", function () {
+  assert.match(editingMigration, /update_teacher_trial_lesson/i);
+  assert.match(editingMigration, /is_teacher_admin_mfa\(\)/i);
+  assert.match(editingMigration, /appointment_status <> 'scheduled'/i);
+  assert.match(editingMigration, /tc\.class_type in \('quartet', 'eight_students'\)/i);
+  assert.match(editingMigration, /revoke all on function public\.update_teacher_trial_lesson/i);
+  assert.match(editingMigration, /grant execute on function public\.update_teacher_trial_lesson/i);
+  assert.match(schedulerSource, /data-trial-edit="true"/);
+  assert.match(schedulerSource, /update_teacher_trial_lesson/);
+  assert.match(schedulerSource, /SALVAR ALTERAÇÕES/);
+});
 
 test("allows enrollment conversion only for completed trial lessons", function () {
   assert.equal(scheduler.canUpdateEnrollment({ status: "completed" }), true);
