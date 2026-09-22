@@ -24,7 +24,7 @@ function getClassDisplayName(classItem) {
 }
 
 function getClassTypeMeta(value) {
-  if (value === "quartet") return { label:"QUARTETO", css:"quartet" };
+  if (value === "quartet") return { label:"QUARTETO", css:"quartet" };\n  if (value === "quintet") return { label:"QUINTETO", css:"quintet" };
   if (value === "eight_students") return { label:"8 ALUNOS", css:"eight-students" };
   if (value === "individual") return { label:"INDIVIDUAL", css:"individual" };
   return { label:"TIPO NÃO DEFINIDO", css:"unset" };
@@ -82,7 +82,7 @@ function renderClassCard(classItem) {
     '<p class="class-meta">Alunos inscritos: ' + studentCount + ' · ' + escapeHtml(scheduleText) + '</p>' +
     '<div class="config-editor">' +
       '<label class="full">Nome da turma<input class="class-config-time" data-class-name-input="' + escapeHtml(classNumber) + '" type="text" value="' + escapeHtml(className) + '" maxlength="120"></label>' +
-      '<label>Etiqueta da turma<select class="class-config-select" data-class-type-select="' + escapeHtml(classNumber) + '"><option value=""' + (!classItem.class_type ? ' selected' : '') + '>Selecione</option><option value="quartet"' + (classItem.class_type === 'quartet' ? ' selected' : '') + '>QUARTETO</option><option value="eight_students"' + (classItem.class_type === 'eight_students' ? ' selected' : '') + '>8 ALUNOS</option><option value="individual"' + (classItem.class_type === 'individual' ? ' selected' : '') + '>INDIVIDUAL</option></select></label>' +
+      '<label>Etiqueta da turma<select class="class-config-select" data-class-type-select="' + escapeHtml(classNumber) + '"><option value=""' + (!classItem.class_type ? ' selected' : '') + '>Selecione</option><option value="quartet"' + (classItem.class_type === 'quartet' ? ' selected' : '') + '>QUARTETO</option><option value="quintet"' + (classItem.class_type === 'quintet' ? ' selected' : '') + '>QUINTETO</option><option value="eight_students"' + (classItem.class_type === 'eight_students' ? ' selected' : '') + '>8 ALUNOS</option><option value="individual"' + (classItem.class_type === 'individual' ? ' selected' : '') + '>INDIVIDUAL</option></select></label>' +
       '<label>Dia semanal<select class="class-config-select" data-class-weekday-select="' + escapeHtml(classNumber) + '">' + weekdayOptions(classItem.class_weekday) + '</select></label>' +
       '<label>Horário<input class="class-config-time" data-class-time-input="' + escapeHtml(classNumber) + '" type="time" value="' + escapeHtml(timeValue) + '"></label>' +
       '<div class="schedule-help">Você pode alterar o nome, o tipo, o dia e o horário sem recriar a turma. O horário é usado em MINHA SEMANA para mostrar a próxima aula.</div>' +
@@ -129,7 +129,7 @@ async function createClass(event) {
 
   if (!classType) {
     message.className = "error";
-    message.textContent = "Selecione se a turma é INDIVIDUAL, QUARTETO ou 8 ALUNOS.";
+    message.textContent = "Selecione se a turma é INDIVIDUAL, QUARTETO, QUINTETO ou 8 ALUNOS.";
     return;
   }
   if ((weekday && !startTime) || (!weekday && startTime)) {
@@ -174,7 +174,7 @@ async function saveClassConfig(classNumber, button) {
   const startTime = timeInput && timeInput.value ? timeInput.value : null;
 
   if (!className) { alert("Digite um nome para a turma."); return; }
-  if (!classType) { alert("Selecione INDIVIDUAL, QUARTETO ou 8 ALUNOS antes de salvar."); return; }
+  if (!classType) { alert("Selecione INDIVIDUAL, QUARTETO, QUINTETO ou 8 ALUNOS antes de salvar."); return; }
   if ((weekday && !startTime) || (!weekday && startTime)) { alert("Informe o dia e o horário juntos, ou deixe ambos vazios."); return; }
 
   button.disabled = true;
