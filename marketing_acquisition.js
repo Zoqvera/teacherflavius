@@ -93,7 +93,7 @@
       individual_hero_whatsapp: "Hero — Quero aulas individuais",
       individual_hero_details: "Hero — Ver como funciona",
       individual_ebook: "Ebook — Ler gratuitamente",
-      individual_instagram: "Instagram — Seguir",
+      individual_instagram: "Instagram — Abrir perfil",
       individual_availability_whatsapp: "Disponibilidade — Consultar horários",
       individual_final_whatsapp: "CTA final — Quero aulas individuais",
       individual_floating_whatsapp: "WhatsApp flutuante",
