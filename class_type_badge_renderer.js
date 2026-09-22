@@ -20,6 +20,15 @@
       };
     }
 
+    if (value === "quintet") {
+      return {
+        label: "QUINTETO",
+        color: "#dbeafe",
+        background: "rgba(37,99,235,.16)",
+        border: "rgba(96,165,250,.42)"
+      };
+    }
+
     if (value === "individual") {
       return {
         label: "INDIVIDUAL",
