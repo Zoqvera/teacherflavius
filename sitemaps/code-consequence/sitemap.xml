@@ -1,0 +1,1809 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en" />
+    <changefreq>daily</changefreq>
+    <priority>1</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en" />
+    <changefreq>daily</changefreq>
+    <priority>1</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/news</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/news" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/news" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/news" />
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/news</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/news" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/news" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/news" />
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/analysis</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/analysis" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/analysis" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/analysis" />
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/analysis</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/analysis" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/analysis" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/analysis" />
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/ai-monitor</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/ai-monitor" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/ai-monitor" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/ai-monitor" />
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/ai-monitor</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/ai-monitor" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/ai-monitor" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/ai-monitor" />
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/weekly</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/weekly" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/weekly" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/weekly" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/weekly</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/weekly" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/weekly" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/weekly" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/dossiers</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/dossiers" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/dossiers" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/dossiers" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/dossiers</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/dossiers" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/dossiers" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/dossiers" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives" />
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives" />
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/organizations</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/organizations</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/topics</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics" />
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/topics</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics" />
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/radar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/radar" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/radar" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/radar" />
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/radar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/radar" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/radar" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/radar" />
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/data</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/data" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/data" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/data" />
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/data</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/data" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/data" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/data" />
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events" />
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events" />
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/about</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/about" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/about" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/about" />
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/about</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/about" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/about" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/about" />
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/methodology</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/methodology" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/methodology" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/methodology" />
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/methodology</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/methodology" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/methodology" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/methodology" />
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/weekly/2026-W38</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/weekly/2026-W38" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/weekly/2026-W38" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/weekly/2026-W38" />
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/weekly/2026-W38</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/weekly/2026-W38" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/weekly/2026-W38" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/weekly/2026-W38" />
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/weekly/2026-W36</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/weekly/2026-W36" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/weekly/2026-W36" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/weekly/2026-W36" />
+    <lastmod>2026-09-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/weekly/2026-W36</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/weekly/2026-W36" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/weekly/2026-W36" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/weekly/2026-W36" />
+    <lastmod>2026-09-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/almannaromur-is-1k1a7mb</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/almannaromur-is-1k1a7mb" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/almannaromur-is-1k1a7mb" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/almannaromur-is-1k1a7mb" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/almannaromur-is-1k1a7mb</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/almannaromur-is-1k1a7mb" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/almannaromur-is-1k1a7mb" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/almannaromur-is-1k1a7mb" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/athenarc-gr-scx022</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/athenarc-gr-scx022" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/athenarc-gr-scx022" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/athenarc-gr-scx022" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/athenarc-gr-scx022</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/athenarc-gr-scx022" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/athenarc-gr-scx022" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/athenarc-gr-scx022" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/caf-com-1mbxd6c</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/caf-com-1mbxd6c" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/caf-com-1mbxd6c" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/caf-com-1mbxd6c" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/caf-com-1mbxd6c</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/caf-com-1mbxd6c" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/caf-com-1mbxd6c" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/caf-com-1mbxd6c" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/dfki-de-g9huxk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/dfki-de-g9huxk" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/dfki-de-g9huxk" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/dfki-de-g9huxk" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/dfki-de-g9huxk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/dfki-de-g9huxk" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/dfki-de-g9huxk" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/dfki-de-g9huxk" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1ijb4d1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1ijb4d1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1ijb4d1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1ijb4d1" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1ijb4d1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1ijb4d1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1ijb4d1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1ijb4d1" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1so0gjb</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1so0gjb" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1so0gjb" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1so0gjb" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1so0gjb</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1so0gjb" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1so0gjb" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1so0gjb" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1wcnpjp</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1wcnpjp" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1wcnpjp" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1wcnpjp" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1wcnpjp</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1wcnpjp" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-1wcnpjp" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-1wcnpjp" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-fjapnq</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-fjapnq" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-fjapnq" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-fjapnq" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-fjapnq</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-fjapnq" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-fjapnq" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-fjapnq" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-i83xns</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-i83xns" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-i83xns" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-i83xns" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-i83xns</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-i83xns" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digital-strategy-ec-europa-eu-i83xns" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digital-strategy-ec-europa-eu-i83xns" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/digitallibrary-un-org-1gqzplx</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digitallibrary-un-org-1gqzplx" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digitallibrary-un-org-1gqzplx" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digitallibrary-un-org-1gqzplx" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/digitallibrary-un-org-1gqzplx</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/digitallibrary-un-org-1gqzplx" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/digitallibrary-un-org-1gqzplx" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/digitallibrary-un-org-1gqzplx" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/etda-or-th-1rblfqe</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/etda-or-th-1rblfqe" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/etda-or-th-1rblfqe" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/etda-or-th-1rblfqe" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/etda-or-th-1rblfqe</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/etda-or-th-1rblfqe" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/etda-or-th-1rblfqe" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/etda-or-th-1rblfqe" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-jme6pj</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-jme6pj" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/eur-lex-europa-eu-jme6pj" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-jme6pj" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/eur-lex-europa-eu-jme6pj</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-jme6pj" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/eur-lex-europa-eu-jme6pj" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-jme6pj" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-xir4qx</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-xir4qx" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/eur-lex-europa-eu-xir4qx" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-xir4qx" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/eur-lex-europa-eu-xir4qx</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-xir4qx" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/eur-lex-europa-eu-xir4qx" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/eur-lex-europa-eu-xir4qx" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-c9zhas</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-c9zhas" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/europarl-europa-eu-c9zhas" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-c9zhas" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/europarl-europa-eu-c9zhas</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-c9zhas" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/europarl-europa-eu-c9zhas" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-c9zhas" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-krla6y</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-krla6y" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/europarl-europa-eu-krla6y" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-krla6y" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/europarl-europa-eu-krla6y</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-krla6y" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/europarl-europa-eu-krla6y" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/europarl-europa-eu-krla6y" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/gobierno-aw-10olvf4</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/gobierno-aw-10olvf4" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/gobierno-aw-10olvf4" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/gobierno-aw-10olvf4" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/gobierno-aw-10olvf4</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/gobierno-aw-10olvf4" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/gobierno-aw-10olvf4" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/gobierno-aw-10olvf4" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/gov-vg-10wqnxk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/gov-vg-10wqnxk" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/gov-vg-10wqnxk" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/gov-vg-10wqnxk" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/gov-vg-10wqnxk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/gov-vg-10wqnxk" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/gov-vg-10wqnxk" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/gov-vg-10wqnxk" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/nstda-or-th-14dvgb1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/nstda-or-th-14dvgb1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/nstda-or-th-14dvgb1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/nstda-or-th-14dvgb1" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/nstda-or-th-14dvgb1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/nstda-or-th-14dvgb1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/nstda-or-th-14dvgb1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/nstda-or-th-14dvgb1" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/oecd-ai-ybi8m</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/oecd-ai-ybi8m" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/oecd-ai-ybi8m" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/oecd-ai-ybi8m" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/oecd-ai-ybi8m</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/oecd-ai-ybi8m" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/oecd-ai-ybi8m" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/oecd-ai-ybi8m" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/oecd-org-1akr26j</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/oecd-org-1akr26j" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/oecd-org-1akr26j" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/oecd-org-1akr26j" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/oecd-org-1akr26j</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/oecd-org-1akr26j" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/oecd-org-1akr26j" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/oecd-org-1akr26j" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/oeil-europarl-europa-eu-1kuylka</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/oeil-europarl-europa-eu-1kuylka" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/oeil-europarl-europa-eu-1kuylka" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/oeil-europarl-europa-eu-1kuylka" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/oeil-europarl-europa-eu-1kuylka</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/oeil-europarl-europa-eu-1kuylka" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/oeil-europarl-europa-eu-1kuylka" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/oeil-europarl-europa-eu-1kuylka" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/stjornarradid-is-rr6en3</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/stjornarradid-is-rr6en3" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/stjornarradid-is-rr6en3" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/stjornarradid-is-rr6en3" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/stjornarradid-is-rr6en3</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/stjornarradid-is-rr6en3" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/stjornarradid-is-rr6en3" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/stjornarradid-is-rr6en3" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/unesco-org-16ucjci</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-16ucjci" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-16ucjci" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-16ucjci" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-16ucjci</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-16ucjci" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-16ucjci" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-16ucjci" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1v8mkl4</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1v8mkl4" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-1v8mkl4" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1v8mkl4" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-1v8mkl4</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1v8mkl4" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-1v8mkl4" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1v8mkl4" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1wak4ua</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1wak4ua" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-1wak4ua" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1wak4ua" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-1wak4ua</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1wak4ua" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-1wak4ua" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-1wak4ua" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/unesco-org-67grsc</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-67grsc" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-67grsc" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-67grsc" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-67grsc</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-67grsc" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-67grsc" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-67grsc" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/unesco-org-d6ifvw</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-d6ifvw" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-d6ifvw" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-d6ifvw" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-d6ifvw</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-d6ifvw" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-d6ifvw" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-d6ifvw" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/unesco-org-jbjz3v</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-jbjz3v" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-jbjz3v" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-jbjz3v" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-jbjz3v</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-jbjz3v" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-jbjz3v" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-jbjz3v" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/unesco-org-q4os2c</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-q4os2c" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-q4os2c" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-q4os2c" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-q4os2c</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-q4os2c" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-q4os2c" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-q4os2c" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/sources/unesco-org-s5ir5q</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-s5ir5q" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-s5ir5q" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-s5ir5q" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-s5ir5q</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-s5ir5q" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/sources/unesco-org-s5ir5q" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/sources/unesco-org-s5ir5q" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/organizations/commonwealth-parliamentary-association-united-kingdom-branch</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations/commonwealth-parliamentary-association-united-kingdom-branch" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations/commonwealth-parliamentary-association-united-kingdom-branch" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations/commonwealth-parliamentary-association-united-kingdom-branch" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/organizations/commonwealth-parliamentary-association-united-kingdom-branch</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations/commonwealth-parliamentary-association-united-kingdom-branch" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations/commonwealth-parliamentary-association-united-kingdom-branch" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations/commonwealth-parliamentary-association-united-kingdom-branch" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/organizations/european-commission</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations/european-commission" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations/european-commission" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations/european-commission" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/organizations/european-commission</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations/european-commission" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations/european-commission" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations/european-commission" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/organizations/european-union</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations/european-union" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations/european-union" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations/european-union" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/organizations/european-union</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations/european-union" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations/european-union" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations/european-union" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/organizations/unesco</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations/unesco" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations/unesco" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations/unesco" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/organizations/unesco</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/organizations/unesco" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/organizations/unesco" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/organizations/unesco" />
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/topics/power-democracy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/power-democracy" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/power-democracy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/power-democracy" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/topics/power-democracy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/power-democracy" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/power-democracy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/power-democracy" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/topics/work-economy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/work-economy" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/work-economy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/work-economy" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/topics/work-economy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/work-economy" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/work-economy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/work-economy" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/topics/rights-society</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/rights-society" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/rights-society" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/rights-society" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/topics/rights-society</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/rights-society" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/rights-society" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/rights-society" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/topics/governance-regulation</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/governance-regulation" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/governance-regulation" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/governance-regulation" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/topics/governance-regulation</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/governance-regulation" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/governance-regulation" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/governance-regulation" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/topics/infrastructure-planet</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/infrastructure-planet" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/infrastructure-planet" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/infrastructure-planet" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/topics/infrastructure-planet</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/infrastructure-planet" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/infrastructure-planet" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/infrastructure-planet" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/topics/science-technology</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/science-technology" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/science-technology" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/science-technology" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/topics/science-technology</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/topics/science-technology" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/topics/science-technology" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/topics/science-technology" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/articles/environmental-footprint-is-a-policy-question</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/articles/environmental-footprint-is-a-policy-question" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/articles/environmental-footprint-is-a-policy-question" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/articles/environmental-footprint-is-a-policy-question" />
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/articles/environmental-footprint-is-a-policy-question</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/articles/environmental-footprint-is-a-policy-question" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/articles/environmental-footprint-is-a-policy-question" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/articles/environmental-footprint-is-a-policy-question" />
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/articles/ai-government-governance-gap</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/articles/ai-government-governance-gap" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/articles/ai-government-governance-gap" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/articles/ai-government-governance-gap" />
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/articles/ai-government-governance-gap</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/articles/ai-government-governance-gap" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/articles/ai-government-governance-gap" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/articles/ai-government-governance-gap" />
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/articles/global-ai-governance-multilateral-phase</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/articles/global-ai-governance-multilateral-phase" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/articles/global-ai-governance-multilateral-phase" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/articles/global-ai-governance-multilateral-phase" />
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/articles/global-ai-governance-multilateral-phase</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/articles/global-ai-governance-multilateral-phase" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/articles/global-ai-governance-multilateral-phase" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/articles/global-ai-governance-multilateral-phase" />
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/apply-ai-strategy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/apply-ai-strategy" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/apply-ai-strategy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/apply-ai-strategy" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/apply-ai-strategy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/apply-ai-strategy" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/apply-ai-strategy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/apply-ai-strategy" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/coalition-for-linguistic-diversity-in-artificial-intelligence</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/coalition-for-linguistic-diversity-in-artificial-intelligence" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/coalition-for-linguistic-diversity-in-artificial-intelligence" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/coalition-for-linguistic-diversity-in-artificial-intelligence" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/coalition-for-linguistic-diversity-in-artificial-intelligence</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/coalition-for-linguistic-diversity-in-artificial-intelligence" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/coalition-for-linguistic-diversity-in-artificial-intelligence" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/coalition-for-linguistic-diversity-in-artificial-intelligence" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/common-european-language-data-space-lds</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/common-european-language-data-space-lds" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/common-european-language-data-space-lds" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/common-european-language-data-space-lds" />
+    <lastmod>2026-09-02T01:02:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/common-european-language-data-space-lds</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/common-european-language-data-space-lds" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/common-european-language-data-space-lds" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/common-european-language-data-space-lds" />
+    <lastmod>2026-09-02T01:02:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/cpa-uk-unesco-caribbean-ai-workshop</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/cpa-uk-unesco-caribbean-ai-workshop" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/cpa-uk-unesco-caribbean-ai-workshop" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/cpa-uk-unesco-caribbean-ai-workshop" />
+    <lastmod>2026-09-02T06:33:13.580Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/cpa-uk-unesco-caribbean-ai-workshop</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/cpa-uk-unesco-caribbean-ai-workshop" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/cpa-uk-unesco-caribbean-ai-workshop" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/cpa-uk-unesco-caribbean-ai-workshop" />
+    <lastmod>2026-09-02T06:33:13.580Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/declaration-of-santo-domingo-and-regional-roadmap-for-ethical-artificial</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/declaration-of-santo-domingo-and-regional-roadmap-for-ethical-artificial" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/declaration-of-santo-domingo-and-regional-roadmap-for-ethical-artificial" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/declaration-of-santo-domingo-and-regional-roadmap-for-ethical-artificial" />
+    <lastmod>2026-09-02T01:02:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/declaration-of-santo-domingo-and-regional-roadmap-for-ethical-artificial</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/declaration-of-santo-domingo-and-regional-roadmap-for-ethical-artificial" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/declaration-of-santo-domingo-and-regional-roadmap-for-ethical-artificial" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/declaration-of-santo-domingo-and-regional-roadmap-for-ethical-artificial" />
+    <lastmod>2026-09-02T01:02:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/eu-ai-act-enforcement-framework</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/eu-ai-act-enforcement-framework" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/eu-ai-act-enforcement-framework" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/eu-ai-act-enforcement-framework" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/eu-ai-act-enforcement-framework</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/eu-ai-act-enforcement-framework" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/eu-ai-act-enforcement-framework" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/eu-ai-act-enforcement-framework" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/european-ai-office</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/european-ai-office" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/european-ai-office" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/european-ai-office" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/european-ai-office</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/european-ai-office" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/european-ai-office" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/european-ai-office" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/european-union-artificial-intelligence-act</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/european-union-artificial-intelligence-act" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/european-union-artificial-intelligence-act" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/european-union-artificial-intelligence-act" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/european-union-artificial-intelligence-act</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/european-union-artificial-intelligence-act" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/european-union-artificial-intelligence-act" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/european-union-artificial-intelligence-act" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/thailand-ai-readiness-assessment-unesco-ram</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/thailand-ai-readiness-assessment-unesco-ram" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/thailand-ai-readiness-assessment-unesco-ram" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/thailand-ai-readiness-assessment-unesco-ram" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/thailand-ai-readiness-assessment-unesco-ram</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/thailand-ai-readiness-assessment-unesco-ram" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/thailand-ai-readiness-assessment-unesco-ram" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/thailand-ai-readiness-assessment-unesco-ram" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/initiatives/unesco-recommendation-on-the-ethics-of-artificial-intelligence</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/unesco-recommendation-on-the-ethics-of-artificial-intelligence" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/unesco-recommendation-on-the-ethics-of-artificial-intelligence" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/unesco-recommendation-on-the-ethics-of-artificial-intelligence" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/initiatives/unesco-recommendation-on-the-ethics-of-artificial-intelligence</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/initiatives/unesco-recommendation-on-the-ethics-of-artificial-intelligence" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/initiatives/unesco-recommendation-on-the-ethics-of-artificial-intelligence" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/initiatives/unesco-recommendation-on-the-ethics-of-artificial-intelligence" />
+    <lastmod>2026-09-02T00:47:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/03d4d7d9fac4775865fe2f255e9f4b534e832923162404cc074e6bbb4e001056</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/03d4d7d9fac4775865fe2f255e9f4b534e832923162404cc074e6bbb4e001056" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/03d4d7d9fac4775865fe2f255e9f4b534e832923162404cc074e6bbb4e001056" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/03d4d7d9fac4775865fe2f255e9f4b534e832923162404cc074e6bbb4e001056" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/03d4d7d9fac4775865fe2f255e9f4b534e832923162404cc074e6bbb4e001056</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/03d4d7d9fac4775865fe2f255e9f4b534e832923162404cc074e6bbb4e001056" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/03d4d7d9fac4775865fe2f255e9f4b534e832923162404cc074e6bbb4e001056" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/03d4d7d9fac4775865fe2f255e9f4b534e832923162404cc074e6bbb4e001056" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/171d1749bc734c56aa120a2c32e2a03853c114d5de968c6e730a93c84c2145a2</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/171d1749bc734c56aa120a2c32e2a03853c114d5de968c6e730a93c84c2145a2" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/171d1749bc734c56aa120a2c32e2a03853c114d5de968c6e730a93c84c2145a2" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/171d1749bc734c56aa120a2c32e2a03853c114d5de968c6e730a93c84c2145a2" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/171d1749bc734c56aa120a2c32e2a03853c114d5de968c6e730a93c84c2145a2</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/171d1749bc734c56aa120a2c32e2a03853c114d5de968c6e730a93c84c2145a2" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/171d1749bc734c56aa120a2c32e2a03853c114d5de968c6e730a93c84c2145a2" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/171d1749bc734c56aa120a2c32e2a03853c114d5de968c6e730a93c84c2145a2" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/24570dd9e01d385f67213a403a8f51a43d265db1110918ea1c1acda332e1ffc3</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/24570dd9e01d385f67213a403a8f51a43d265db1110918ea1c1acda332e1ffc3" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/24570dd9e01d385f67213a403a8f51a43d265db1110918ea1c1acda332e1ffc3" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/24570dd9e01d385f67213a403a8f51a43d265db1110918ea1c1acda332e1ffc3" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/24570dd9e01d385f67213a403a8f51a43d265db1110918ea1c1acda332e1ffc3</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/24570dd9e01d385f67213a403a8f51a43d265db1110918ea1c1acda332e1ffc3" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/24570dd9e01d385f67213a403a8f51a43d265db1110918ea1c1acda332e1ffc3" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/24570dd9e01d385f67213a403a8f51a43d265db1110918ea1c1acda332e1ffc3" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/2b6c4e29873ef3635b1609396ec6f24505debc6aa542e49fdcf5dec7da2e9371</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/2b6c4e29873ef3635b1609396ec6f24505debc6aa542e49fdcf5dec7da2e9371" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/2b6c4e29873ef3635b1609396ec6f24505debc6aa542e49fdcf5dec7da2e9371" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/2b6c4e29873ef3635b1609396ec6f24505debc6aa542e49fdcf5dec7da2e9371" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/2b6c4e29873ef3635b1609396ec6f24505debc6aa542e49fdcf5dec7da2e9371</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/2b6c4e29873ef3635b1609396ec6f24505debc6aa542e49fdcf5dec7da2e9371" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/2b6c4e29873ef3635b1609396ec6f24505debc6aa542e49fdcf5dec7da2e9371" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/2b6c4e29873ef3635b1609396ec6f24505debc6aa542e49fdcf5dec7da2e9371" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/30fcbc4780f2a5e41930cd1c65dddf416a29366b8abca3e071c6f0cf9c1f25e7</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/30fcbc4780f2a5e41930cd1c65dddf416a29366b8abca3e071c6f0cf9c1f25e7" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/30fcbc4780f2a5e41930cd1c65dddf416a29366b8abca3e071c6f0cf9c1f25e7" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/30fcbc4780f2a5e41930cd1c65dddf416a29366b8abca3e071c6f0cf9c1f25e7" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/30fcbc4780f2a5e41930cd1c65dddf416a29366b8abca3e071c6f0cf9c1f25e7</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/30fcbc4780f2a5e41930cd1c65dddf416a29366b8abca3e071c6f0cf9c1f25e7" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/30fcbc4780f2a5e41930cd1c65dddf416a29366b8abca3e071c6f0cf9c1f25e7" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/30fcbc4780f2a5e41930cd1c65dddf416a29366b8abca3e071c6f0cf9c1f25e7" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/3982b0e9badbf47a36b632aa5035b7937becbb635123b99ca7793b44dcb83d2e</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/3982b0e9badbf47a36b632aa5035b7937becbb635123b99ca7793b44dcb83d2e" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/3982b0e9badbf47a36b632aa5035b7937becbb635123b99ca7793b44dcb83d2e" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/3982b0e9badbf47a36b632aa5035b7937becbb635123b99ca7793b44dcb83d2e" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/3982b0e9badbf47a36b632aa5035b7937becbb635123b99ca7793b44dcb83d2e</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/3982b0e9badbf47a36b632aa5035b7937becbb635123b99ca7793b44dcb83d2e" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/3982b0e9badbf47a36b632aa5035b7937becbb635123b99ca7793b44dcb83d2e" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/3982b0e9badbf47a36b632aa5035b7937becbb635123b99ca7793b44dcb83d2e" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/48ab861ef119e5c4f32a1ddff537de226832497814d44e0a95e1a07c166af431</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/48ab861ef119e5c4f32a1ddff537de226832497814d44e0a95e1a07c166af431" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/48ab861ef119e5c4f32a1ddff537de226832497814d44e0a95e1a07c166af431" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/48ab861ef119e5c4f32a1ddff537de226832497814d44e0a95e1a07c166af431" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/48ab861ef119e5c4f32a1ddff537de226832497814d44e0a95e1a07c166af431</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/48ab861ef119e5c4f32a1ddff537de226832497814d44e0a95e1a07c166af431" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/48ab861ef119e5c4f32a1ddff537de226832497814d44e0a95e1a07c166af431" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/48ab861ef119e5c4f32a1ddff537de226832497814d44e0a95e1a07c166af431" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/4a4b35e206c1fdbaa9ffa3f525f6e2300bfc087445a8161789bd4b5dba7091f8</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/4a4b35e206c1fdbaa9ffa3f525f6e2300bfc087445a8161789bd4b5dba7091f8" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/4a4b35e206c1fdbaa9ffa3f525f6e2300bfc087445a8161789bd4b5dba7091f8" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/4a4b35e206c1fdbaa9ffa3f525f6e2300bfc087445a8161789bd4b5dba7091f8" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/4a4b35e206c1fdbaa9ffa3f525f6e2300bfc087445a8161789bd4b5dba7091f8</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/4a4b35e206c1fdbaa9ffa3f525f6e2300bfc087445a8161789bd4b5dba7091f8" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/4a4b35e206c1fdbaa9ffa3f525f6e2300bfc087445a8161789bd4b5dba7091f8" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/4a4b35e206c1fdbaa9ffa3f525f6e2300bfc087445a8161789bd4b5dba7091f8" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/50ce3be9d0015240c90fb6d6976e90c6675ba0dbd28bcea9a5d8c138d30fd998</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/50ce3be9d0015240c90fb6d6976e90c6675ba0dbd28bcea9a5d8c138d30fd998" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/50ce3be9d0015240c90fb6d6976e90c6675ba0dbd28bcea9a5d8c138d30fd998" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/50ce3be9d0015240c90fb6d6976e90c6675ba0dbd28bcea9a5d8c138d30fd998" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/50ce3be9d0015240c90fb6d6976e90c6675ba0dbd28bcea9a5d8c138d30fd998</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/50ce3be9d0015240c90fb6d6976e90c6675ba0dbd28bcea9a5d8c138d30fd998" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/50ce3be9d0015240c90fb6d6976e90c6675ba0dbd28bcea9a5d8c138d30fd998" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/50ce3be9d0015240c90fb6d6976e90c6675ba0dbd28bcea9a5d8c138d30fd998" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/61e754a122dc035cdef7968cc1a83a9bcc667003deea854b93bac7798b0f2a20</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/61e754a122dc035cdef7968cc1a83a9bcc667003deea854b93bac7798b0f2a20" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/61e754a122dc035cdef7968cc1a83a9bcc667003deea854b93bac7798b0f2a20" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/61e754a122dc035cdef7968cc1a83a9bcc667003deea854b93bac7798b0f2a20" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/61e754a122dc035cdef7968cc1a83a9bcc667003deea854b93bac7798b0f2a20</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/61e754a122dc035cdef7968cc1a83a9bcc667003deea854b93bac7798b0f2a20" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/61e754a122dc035cdef7968cc1a83a9bcc667003deea854b93bac7798b0f2a20" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/61e754a122dc035cdef7968cc1a83a9bcc667003deea854b93bac7798b0f2a20" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/657c034b702e14ca83578734f983b0eda8d024aceb54d01b06048229fa812d1c</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/657c034b702e14ca83578734f983b0eda8d024aceb54d01b06048229fa812d1c" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/657c034b702e14ca83578734f983b0eda8d024aceb54d01b06048229fa812d1c" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/657c034b702e14ca83578734f983b0eda8d024aceb54d01b06048229fa812d1c" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/657c034b702e14ca83578734f983b0eda8d024aceb54d01b06048229fa812d1c</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/657c034b702e14ca83578734f983b0eda8d024aceb54d01b06048229fa812d1c" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/657c034b702e14ca83578734f983b0eda8d024aceb54d01b06048229fa812d1c" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/657c034b702e14ca83578734f983b0eda8d024aceb54d01b06048229fa812d1c" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/65dca502203c19a0fb03ad78f12a118cd3c9040919f8c224759ac72174a56144</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/65dca502203c19a0fb03ad78f12a118cd3c9040919f8c224759ac72174a56144" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/65dca502203c19a0fb03ad78f12a118cd3c9040919f8c224759ac72174a56144" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/65dca502203c19a0fb03ad78f12a118cd3c9040919f8c224759ac72174a56144" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/65dca502203c19a0fb03ad78f12a118cd3c9040919f8c224759ac72174a56144</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/65dca502203c19a0fb03ad78f12a118cd3c9040919f8c224759ac72174a56144" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/65dca502203c19a0fb03ad78f12a118cd3c9040919f8c224759ac72174a56144" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/65dca502203c19a0fb03ad78f12a118cd3c9040919f8c224759ac72174a56144" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/68ff28ce8ee9cc8585c348df72472cafcbf52b55f0690e802cc4d7ad35370686</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/68ff28ce8ee9cc8585c348df72472cafcbf52b55f0690e802cc4d7ad35370686" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/68ff28ce8ee9cc8585c348df72472cafcbf52b55f0690e802cc4d7ad35370686" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/68ff28ce8ee9cc8585c348df72472cafcbf52b55f0690e802cc4d7ad35370686" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/68ff28ce8ee9cc8585c348df72472cafcbf52b55f0690e802cc4d7ad35370686</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/68ff28ce8ee9cc8585c348df72472cafcbf52b55f0690e802cc4d7ad35370686" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/68ff28ce8ee9cc8585c348df72472cafcbf52b55f0690e802cc4d7ad35370686" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/68ff28ce8ee9cc8585c348df72472cafcbf52b55f0690e802cc4d7ad35370686" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/7013659e176f7ea829f0bf540da771dc738260054f0635064e503e002fe5b597</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/7013659e176f7ea829f0bf540da771dc738260054f0635064e503e002fe5b597" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/7013659e176f7ea829f0bf540da771dc738260054f0635064e503e002fe5b597" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/7013659e176f7ea829f0bf540da771dc738260054f0635064e503e002fe5b597" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/7013659e176f7ea829f0bf540da771dc738260054f0635064e503e002fe5b597</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/7013659e176f7ea829f0bf540da771dc738260054f0635064e503e002fe5b597" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/7013659e176f7ea829f0bf540da771dc738260054f0635064e503e002fe5b597" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/7013659e176f7ea829f0bf540da771dc738260054f0635064e503e002fe5b597" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/7b19578083e11c2ab27cda1ba27190d154be3b60b40a1fd204797e200a70d423</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/7b19578083e11c2ab27cda1ba27190d154be3b60b40a1fd204797e200a70d423" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/7b19578083e11c2ab27cda1ba27190d154be3b60b40a1fd204797e200a70d423" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/7b19578083e11c2ab27cda1ba27190d154be3b60b40a1fd204797e200a70d423" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/7b19578083e11c2ab27cda1ba27190d154be3b60b40a1fd204797e200a70d423</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/7b19578083e11c2ab27cda1ba27190d154be3b60b40a1fd204797e200a70d423" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/7b19578083e11c2ab27cda1ba27190d154be3b60b40a1fd204797e200a70d423" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/7b19578083e11c2ab27cda1ba27190d154be3b60b40a1fd204797e200a70d423" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/8086164606e08a200e8ad5d479cc254e3809615c8bdd97a3a50b05bfc5b25ac7</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/8086164606e08a200e8ad5d479cc254e3809615c8bdd97a3a50b05bfc5b25ac7" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/8086164606e08a200e8ad5d479cc254e3809615c8bdd97a3a50b05bfc5b25ac7" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/8086164606e08a200e8ad5d479cc254e3809615c8bdd97a3a50b05bfc5b25ac7" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/8086164606e08a200e8ad5d479cc254e3809615c8bdd97a3a50b05bfc5b25ac7</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/8086164606e08a200e8ad5d479cc254e3809615c8bdd97a3a50b05bfc5b25ac7" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/8086164606e08a200e8ad5d479cc254e3809615c8bdd97a3a50b05bfc5b25ac7" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/8086164606e08a200e8ad5d479cc254e3809615c8bdd97a3a50b05bfc5b25ac7" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/8153810c6b5293994dc8e170169052c281b8abc084a91e70bde58dc97bd249d1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/8153810c6b5293994dc8e170169052c281b8abc084a91e70bde58dc97bd249d1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/8153810c6b5293994dc8e170169052c281b8abc084a91e70bde58dc97bd249d1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/8153810c6b5293994dc8e170169052c281b8abc084a91e70bde58dc97bd249d1" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/8153810c6b5293994dc8e170169052c281b8abc084a91e70bde58dc97bd249d1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/8153810c6b5293994dc8e170169052c281b8abc084a91e70bde58dc97bd249d1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/8153810c6b5293994dc8e170169052c281b8abc084a91e70bde58dc97bd249d1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/8153810c6b5293994dc8e170169052c281b8abc084a91e70bde58dc97bd249d1" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/862ae35b3385bb13393082944e97a89be87d97025aa4c72a109b78e7a4b41b5b</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/862ae35b3385bb13393082944e97a89be87d97025aa4c72a109b78e7a4b41b5b" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/862ae35b3385bb13393082944e97a89be87d97025aa4c72a109b78e7a4b41b5b" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/862ae35b3385bb13393082944e97a89be87d97025aa4c72a109b78e7a4b41b5b" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/862ae35b3385bb13393082944e97a89be87d97025aa4c72a109b78e7a4b41b5b</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/862ae35b3385bb13393082944e97a89be87d97025aa4c72a109b78e7a4b41b5b" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/862ae35b3385bb13393082944e97a89be87d97025aa4c72a109b78e7a4b41b5b" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/862ae35b3385bb13393082944e97a89be87d97025aa4c72a109b78e7a4b41b5b" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/89e7afecc80d167fa21464cad30950c31a9a7ae2160f1815238cd4a8191c5c47</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/89e7afecc80d167fa21464cad30950c31a9a7ae2160f1815238cd4a8191c5c47" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/89e7afecc80d167fa21464cad30950c31a9a7ae2160f1815238cd4a8191c5c47" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/89e7afecc80d167fa21464cad30950c31a9a7ae2160f1815238cd4a8191c5c47" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/89e7afecc80d167fa21464cad30950c31a9a7ae2160f1815238cd4a8191c5c47</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/89e7afecc80d167fa21464cad30950c31a9a7ae2160f1815238cd4a8191c5c47" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/89e7afecc80d167fa21464cad30950c31a9a7ae2160f1815238cd4a8191c5c47" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/89e7afecc80d167fa21464cad30950c31a9a7ae2160f1815238cd4a8191c5c47" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/991e496c7e8d99450aa557e5120f56f6fc103e9f61eaa63126ac642917ed538f</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/991e496c7e8d99450aa557e5120f56f6fc103e9f61eaa63126ac642917ed538f" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/991e496c7e8d99450aa557e5120f56f6fc103e9f61eaa63126ac642917ed538f" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/991e496c7e8d99450aa557e5120f56f6fc103e9f61eaa63126ac642917ed538f" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/991e496c7e8d99450aa557e5120f56f6fc103e9f61eaa63126ac642917ed538f</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/991e496c7e8d99450aa557e5120f56f6fc103e9f61eaa63126ac642917ed538f" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/991e496c7e8d99450aa557e5120f56f6fc103e9f61eaa63126ac642917ed538f" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/991e496c7e8d99450aa557e5120f56f6fc103e9f61eaa63126ac642917ed538f" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/a6b74100a7da30bab3d34dd0f62c9122a1a1d1db105869e85ed04babb5bf139d</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/a6b74100a7da30bab3d34dd0f62c9122a1a1d1db105869e85ed04babb5bf139d" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/a6b74100a7da30bab3d34dd0f62c9122a1a1d1db105869e85ed04babb5bf139d" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/a6b74100a7da30bab3d34dd0f62c9122a1a1d1db105869e85ed04babb5bf139d" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/a6b74100a7da30bab3d34dd0f62c9122a1a1d1db105869e85ed04babb5bf139d</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/a6b74100a7da30bab3d34dd0f62c9122a1a1d1db105869e85ed04babb5bf139d" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/a6b74100a7da30bab3d34dd0f62c9122a1a1d1db105869e85ed04babb5bf139d" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/a6b74100a7da30bab3d34dd0f62c9122a1a1d1db105869e85ed04babb5bf139d" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/b1b92066ba3fc301c622d0f6fc5d53dd60aa0432276746a9e1d188e0d5d56fd7</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/b1b92066ba3fc301c622d0f6fc5d53dd60aa0432276746a9e1d188e0d5d56fd7" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/b1b92066ba3fc301c622d0f6fc5d53dd60aa0432276746a9e1d188e0d5d56fd7" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/b1b92066ba3fc301c622d0f6fc5d53dd60aa0432276746a9e1d188e0d5d56fd7" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/b1b92066ba3fc301c622d0f6fc5d53dd60aa0432276746a9e1d188e0d5d56fd7</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/b1b92066ba3fc301c622d0f6fc5d53dd60aa0432276746a9e1d188e0d5d56fd7" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/b1b92066ba3fc301c622d0f6fc5d53dd60aa0432276746a9e1d188e0d5d56fd7" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/b1b92066ba3fc301c622d0f6fc5d53dd60aa0432276746a9e1d188e0d5d56fd7" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/b34dc49a6872341230058658bb61ec4690c2f90ccd910b69e2d72d0b99ec579b</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/b34dc49a6872341230058658bb61ec4690c2f90ccd910b69e2d72d0b99ec579b" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/b34dc49a6872341230058658bb61ec4690c2f90ccd910b69e2d72d0b99ec579b" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/b34dc49a6872341230058658bb61ec4690c2f90ccd910b69e2d72d0b99ec579b" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/b34dc49a6872341230058658bb61ec4690c2f90ccd910b69e2d72d0b99ec579b</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/b34dc49a6872341230058658bb61ec4690c2f90ccd910b69e2d72d0b99ec579b" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/b34dc49a6872341230058658bb61ec4690c2f90ccd910b69e2d72d0b99ec579b" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/b34dc49a6872341230058658bb61ec4690c2f90ccd910b69e2d72d0b99ec579b" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/be2e0f306993fcb6463b62faced572fc78b8af1aa7f5be2645a2e49181dc3cb6</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/be2e0f306993fcb6463b62faced572fc78b8af1aa7f5be2645a2e49181dc3cb6" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/be2e0f306993fcb6463b62faced572fc78b8af1aa7f5be2645a2e49181dc3cb6" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/be2e0f306993fcb6463b62faced572fc78b8af1aa7f5be2645a2e49181dc3cb6" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/be2e0f306993fcb6463b62faced572fc78b8af1aa7f5be2645a2e49181dc3cb6</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/be2e0f306993fcb6463b62faced572fc78b8af1aa7f5be2645a2e49181dc3cb6" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/be2e0f306993fcb6463b62faced572fc78b8af1aa7f5be2645a2e49181dc3cb6" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/be2e0f306993fcb6463b62faced572fc78b8af1aa7f5be2645a2e49181dc3cb6" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/c25e9d563f8aaabc3169d0c7d73d7319090fe9f1f5b5dc505cd01e2b7f46ec19</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c25e9d563f8aaabc3169d0c7d73d7319090fe9f1f5b5dc505cd01e2b7f46ec19" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c25e9d563f8aaabc3169d0c7d73d7319090fe9f1f5b5dc505cd01e2b7f46ec19" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c25e9d563f8aaabc3169d0c7d73d7319090fe9f1f5b5dc505cd01e2b7f46ec19" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/c25e9d563f8aaabc3169d0c7d73d7319090fe9f1f5b5dc505cd01e2b7f46ec19</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c25e9d563f8aaabc3169d0c7d73d7319090fe9f1f5b5dc505cd01e2b7f46ec19" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c25e9d563f8aaabc3169d0c7d73d7319090fe9f1f5b5dc505cd01e2b7f46ec19" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c25e9d563f8aaabc3169d0c7d73d7319090fe9f1f5b5dc505cd01e2b7f46ec19" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/c4ba3c384035b362583ccccceeefb7228c847ae38d85a99b503eae7d6265a4b4</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c4ba3c384035b362583ccccceeefb7228c847ae38d85a99b503eae7d6265a4b4" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c4ba3c384035b362583ccccceeefb7228c847ae38d85a99b503eae7d6265a4b4" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c4ba3c384035b362583ccccceeefb7228c847ae38d85a99b503eae7d6265a4b4" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/c4ba3c384035b362583ccccceeefb7228c847ae38d85a99b503eae7d6265a4b4</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c4ba3c384035b362583ccccceeefb7228c847ae38d85a99b503eae7d6265a4b4" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c4ba3c384035b362583ccccceeefb7228c847ae38d85a99b503eae7d6265a4b4" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c4ba3c384035b362583ccccceeefb7228c847ae38d85a99b503eae7d6265a4b4" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/c682ddbfcadd34a01c10a89d1189f6970b0717ca174716e1ca62a2921db41bf1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c682ddbfcadd34a01c10a89d1189f6970b0717ca174716e1ca62a2921db41bf1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c682ddbfcadd34a01c10a89d1189f6970b0717ca174716e1ca62a2921db41bf1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c682ddbfcadd34a01c10a89d1189f6970b0717ca174716e1ca62a2921db41bf1" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/c682ddbfcadd34a01c10a89d1189f6970b0717ca174716e1ca62a2921db41bf1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c682ddbfcadd34a01c10a89d1189f6970b0717ca174716e1ca62a2921db41bf1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c682ddbfcadd34a01c10a89d1189f6970b0717ca174716e1ca62a2921db41bf1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c682ddbfcadd34a01c10a89d1189f6970b0717ca174716e1ca62a2921db41bf1" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/c7591476b805db9b215f046df63b4bed037fde8a9887b5fa4024a34bcf12c504</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c7591476b805db9b215f046df63b4bed037fde8a9887b5fa4024a34bcf12c504" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c7591476b805db9b215f046df63b4bed037fde8a9887b5fa4024a34bcf12c504" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c7591476b805db9b215f046df63b4bed037fde8a9887b5fa4024a34bcf12c504" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/c7591476b805db9b215f046df63b4bed037fde8a9887b5fa4024a34bcf12c504</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c7591476b805db9b215f046df63b4bed037fde8a9887b5fa4024a34bcf12c504" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c7591476b805db9b215f046df63b4bed037fde8a9887b5fa4024a34bcf12c504" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c7591476b805db9b215f046df63b4bed037fde8a9887b5fa4024a34bcf12c504" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/c85bce7f2444d8dab0f2ac160e4751bf29e1ad5e5c814d83750ce03cadc64252</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c85bce7f2444d8dab0f2ac160e4751bf29e1ad5e5c814d83750ce03cadc64252" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c85bce7f2444d8dab0f2ac160e4751bf29e1ad5e5c814d83750ce03cadc64252" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c85bce7f2444d8dab0f2ac160e4751bf29e1ad5e5c814d83750ce03cadc64252" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/c85bce7f2444d8dab0f2ac160e4751bf29e1ad5e5c814d83750ce03cadc64252</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/c85bce7f2444d8dab0f2ac160e4751bf29e1ad5e5c814d83750ce03cadc64252" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/c85bce7f2444d8dab0f2ac160e4751bf29e1ad5e5c814d83750ce03cadc64252" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/c85bce7f2444d8dab0f2ac160e4751bf29e1ad5e5c814d83750ce03cadc64252" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/d4fdc06a05844d90bb3fcb235888b84647971bdd6f4abeea06ecd2566860407d</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/d4fdc06a05844d90bb3fcb235888b84647971bdd6f4abeea06ecd2566860407d" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/d4fdc06a05844d90bb3fcb235888b84647971bdd6f4abeea06ecd2566860407d" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/d4fdc06a05844d90bb3fcb235888b84647971bdd6f4abeea06ecd2566860407d" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/d4fdc06a05844d90bb3fcb235888b84647971bdd6f4abeea06ecd2566860407d</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/d4fdc06a05844d90bb3fcb235888b84647971bdd6f4abeea06ecd2566860407d" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/d4fdc06a05844d90bb3fcb235888b84647971bdd6f4abeea06ecd2566860407d" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/d4fdc06a05844d90bb3fcb235888b84647971bdd6f4abeea06ecd2566860407d" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/d6ae442b88d933bb4c62f6c2c8b1fa724875d1119abe133563e88d0225239421</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/d6ae442b88d933bb4c62f6c2c8b1fa724875d1119abe133563e88d0225239421" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/d6ae442b88d933bb4c62f6c2c8b1fa724875d1119abe133563e88d0225239421" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/d6ae442b88d933bb4c62f6c2c8b1fa724875d1119abe133563e88d0225239421" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/d6ae442b88d933bb4c62f6c2c8b1fa724875d1119abe133563e88d0225239421</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/d6ae442b88d933bb4c62f6c2c8b1fa724875d1119abe133563e88d0225239421" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/d6ae442b88d933bb4c62f6c2c8b1fa724875d1119abe133563e88d0225239421" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/d6ae442b88d933bb4c62f6c2c8b1fa724875d1119abe133563e88d0225239421" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/d990b16688ca47963b3beea11044ce7f602d69f4b34f3cd4136da7bc3b583d3d</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/d990b16688ca47963b3beea11044ce7f602d69f4b34f3cd4136da7bc3b583d3d" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/d990b16688ca47963b3beea11044ce7f602d69f4b34f3cd4136da7bc3b583d3d" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/d990b16688ca47963b3beea11044ce7f602d69f4b34f3cd4136da7bc3b583d3d" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/d990b16688ca47963b3beea11044ce7f602d69f4b34f3cd4136da7bc3b583d3d</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/d990b16688ca47963b3beea11044ce7f602d69f4b34f3cd4136da7bc3b583d3d" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/d990b16688ca47963b3beea11044ce7f602d69f4b34f3cd4136da7bc3b583d3d" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/d990b16688ca47963b3beea11044ce7f602d69f4b34f3cd4136da7bc3b583d3d" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/de749ad33d1abb57d2c7675ca88a2f3b00404152f66f96116f6fc5564e180460</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/de749ad33d1abb57d2c7675ca88a2f3b00404152f66f96116f6fc5564e180460" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/de749ad33d1abb57d2c7675ca88a2f3b00404152f66f96116f6fc5564e180460" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/de749ad33d1abb57d2c7675ca88a2f3b00404152f66f96116f6fc5564e180460" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/de749ad33d1abb57d2c7675ca88a2f3b00404152f66f96116f6fc5564e180460</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/de749ad33d1abb57d2c7675ca88a2f3b00404152f66f96116f6fc5564e180460" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/de749ad33d1abb57d2c7675ca88a2f3b00404152f66f96116f6fc5564e180460" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/de749ad33d1abb57d2c7675ca88a2f3b00404152f66f96116f6fc5564e180460" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/dfed44b5859ae6b701086b65224efcfa5c4eeb88adc822a13f09dab7d9753b01</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/dfed44b5859ae6b701086b65224efcfa5c4eeb88adc822a13f09dab7d9753b01" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/dfed44b5859ae6b701086b65224efcfa5c4eeb88adc822a13f09dab7d9753b01" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/dfed44b5859ae6b701086b65224efcfa5c4eeb88adc822a13f09dab7d9753b01" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/dfed44b5859ae6b701086b65224efcfa5c4eeb88adc822a13f09dab7d9753b01</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/dfed44b5859ae6b701086b65224efcfa5c4eeb88adc822a13f09dab7d9753b01" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/dfed44b5859ae6b701086b65224efcfa5c4eeb88adc822a13f09dab7d9753b01" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/dfed44b5859ae6b701086b65224efcfa5c4eeb88adc822a13f09dab7d9753b01" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/e29ea355d5501638574095ca516093724e6543447a1c99226c832892c8632d59</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/e29ea355d5501638574095ca516093724e6543447a1c99226c832892c8632d59" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/e29ea355d5501638574095ca516093724e6543447a1c99226c832892c8632d59" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/e29ea355d5501638574095ca516093724e6543447a1c99226c832892c8632d59" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/e29ea355d5501638574095ca516093724e6543447a1c99226c832892c8632d59</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/e29ea355d5501638574095ca516093724e6543447a1c99226c832892c8632d59" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/e29ea355d5501638574095ca516093724e6543447a1c99226c832892c8632d59" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/e29ea355d5501638574095ca516093724e6543447a1c99226c832892c8632d59" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/e6175b1e2d70df375f72db3404c7de723c3b0e39c1bb67056eacbfec5f891bef</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/e6175b1e2d70df375f72db3404c7de723c3b0e39c1bb67056eacbfec5f891bef" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/e6175b1e2d70df375f72db3404c7de723c3b0e39c1bb67056eacbfec5f891bef" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/e6175b1e2d70df375f72db3404c7de723c3b0e39c1bb67056eacbfec5f891bef" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/e6175b1e2d70df375f72db3404c7de723c3b0e39c1bb67056eacbfec5f891bef</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/e6175b1e2d70df375f72db3404c7de723c3b0e39c1bb67056eacbfec5f891bef" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/e6175b1e2d70df375f72db3404c7de723c3b0e39c1bb67056eacbfec5f891bef" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/e6175b1e2d70df375f72db3404c7de723c3b0e39c1bb67056eacbfec5f891bef" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/e8be25714461b009c19f35b405eb4e16a5216ba7d964c059aa7c7c74601bdccf</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/e8be25714461b009c19f35b405eb4e16a5216ba7d964c059aa7c7c74601bdccf" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/e8be25714461b009c19f35b405eb4e16a5216ba7d964c059aa7c7c74601bdccf" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/e8be25714461b009c19f35b405eb4e16a5216ba7d964c059aa7c7c74601bdccf" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/e8be25714461b009c19f35b405eb4e16a5216ba7d964c059aa7c7c74601bdccf</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/e8be25714461b009c19f35b405eb4e16a5216ba7d964c059aa7c7c74601bdccf" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/e8be25714461b009c19f35b405eb4e16a5216ba7d964c059aa7c7c74601bdccf" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/e8be25714461b009c19f35b405eb4e16a5216ba7d964c059aa7c7c74601bdccf" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/ed05a71db7c8119b4d6564215cfe7f71b1b1cbd86520fb2d096f9c99b2fbff69</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/ed05a71db7c8119b4d6564215cfe7f71b1b1cbd86520fb2d096f9c99b2fbff69" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/ed05a71db7c8119b4d6564215cfe7f71b1b1cbd86520fb2d096f9c99b2fbff69" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/ed05a71db7c8119b4d6564215cfe7f71b1b1cbd86520fb2d096f9c99b2fbff69" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/ed05a71db7c8119b4d6564215cfe7f71b1b1cbd86520fb2d096f9c99b2fbff69</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/ed05a71db7c8119b4d6564215cfe7f71b1b1cbd86520fb2d096f9c99b2fbff69" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/ed05a71db7c8119b4d6564215cfe7f71b1b1cbd86520fb2d096f9c99b2fbff69" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/ed05a71db7c8119b4d6564215cfe7f71b1b1cbd86520fb2d096f9c99b2fbff69" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/f14ee877b5b52a193db56868d3f626d75f9ca9faa633c24fd49d8b135e266ba1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/f14ee877b5b52a193db56868d3f626d75f9ca9faa633c24fd49d8b135e266ba1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/f14ee877b5b52a193db56868d3f626d75f9ca9faa633c24fd49d8b135e266ba1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/f14ee877b5b52a193db56868d3f626d75f9ca9faa633c24fd49d8b135e266ba1" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/f14ee877b5b52a193db56868d3f626d75f9ca9faa633c24fd49d8b135e266ba1</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/f14ee877b5b52a193db56868d3f626d75f9ca9faa633c24fd49d8b135e266ba1" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/f14ee877b5b52a193db56868d3f626d75f9ca9faa633c24fd49d8b135e266ba1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/f14ee877b5b52a193db56868d3f626d75f9ca9faa633c24fd49d8b135e266ba1" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/f1ce8d6045e767425ed87ddbe3f5f485351bd742911c96a648a6e57547f0183c</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/f1ce8d6045e767425ed87ddbe3f5f485351bd742911c96a648a6e57547f0183c" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/f1ce8d6045e767425ed87ddbe3f5f485351bd742911c96a648a6e57547f0183c" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/f1ce8d6045e767425ed87ddbe3f5f485351bd742911c96a648a6e57547f0183c" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/f1ce8d6045e767425ed87ddbe3f5f485351bd742911c96a648a6e57547f0183c</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/f1ce8d6045e767425ed87ddbe3f5f485351bd742911c96a648a6e57547f0183c" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/f1ce8d6045e767425ed87ddbe3f5f485351bd742911c96a648a6e57547f0183c" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/f1ce8d6045e767425ed87ddbe3f5f485351bd742911c96a648a6e57547f0183c" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/en/events/fdc045fb86cd67cb5956abe31342d779377f69fb5de62e5fd8c7e0bc19bb4de5</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/fdc045fb86cd67cb5956abe31342d779377f69fb5de62e5fd8c7e0bc19bb4de5" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/fdc045fb86cd67cb5956abe31342d779377f69fb5de62e5fd8c7e0bc19bb4de5" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/fdc045fb86cd67cb5956abe31342d779377f69fb5de62e5fd8c7e0bc19bb4de5" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zoqvera.github.io/code-consequence/pt-BR/events/fdc045fb86cd67cb5956abe31342d779377f69fb5de62e5fd8c7e0bc19bb4de5</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zoqvera.github.io/code-consequence/en/events/fdc045fb86cd67cb5956abe31342d779377f69fb5de62e5fd8c7e0bc19bb4de5" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://zoqvera.github.io/code-consequence/pt-BR/events/fdc045fb86cd67cb5956abe31342d779377f69fb5de62e5fd8c7e0bc19bb4de5" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://zoqvera.github.io/code-consequence/en/events/fdc045fb86cd67cb5956abe31342d779377f69fb5de62e5fd8c7e0bc19bb4de5" />
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>
