@@ -130,6 +130,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="summary-card chatgpt"><span>Receita via ChatGPT</span><strong id="metricChatgptRevenue">R$ 0,00</strong><small>Receita atribuída ao ChatGPT</small></div>
       </section>
 
+      <section class="panel" aria-labelledby="individual-cta-title">
+        <h2 id="individual-cta-title">CTAs — Aulas individuais</h2>
+        <p class="muted">Cliques nos botões de ação da página de aulas individuais dentro do período selecionado.</p>
+        <div class="summary-grid" aria-label="Resumo dos CTAs das aulas individuais">
+          <div class="summary-card"><span>Total de cliques</span><strong id="metricIndividualCtaClicks">0</strong><small>Todos os CTAs monitorados</small></div>
+          <div class="summary-card"><span>Pessoas que clicaram</span><strong id="metricIndividualCtaVisitors">0</strong><small>Visitantes únicos com clique</small></div>
+          <div class="summary-card"><span>CTAs acionados</span><strong id="metricIndividualCtaCount">0</strong><small>Botões com pelo menos um clique</small></div>
+        </div>
+        <div id="individualCtaEmpty" class="empty">Nenhum clique em CTA das aulas individuais registrado no período.</div>
+        <div id="individualCtaTableWrap" class="table-wrap" hidden>
+          <table>
+            <thead><tr><th>CTA</th><th>Cliques</th><th>Pessoas que clicaram</th></tr></thead>
+            <tbody id="individualCtaTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="panel" aria-labelledby="commercial-funnel-title">
         <h2 id="commercial-funnel-title">Fechamento do funil comercial</h2>
         <div id="recentLeadsEmpty" class="empty">Nenhum clique de WhatsApp encontrado no período.</div>
@@ -170,7 +187,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </section>
 
       <section class="panel">
-        <h2>CTAs que geraram cliques</h2>
+        <h2>CTAs de WhatsApp que geraram leads</h2>
         <div id="ctaEmpty" class="empty">Nenhum clique registrado no período.</div>
         <div id="ctaTableWrap" class="table-wrap" hidden>
           <table>
@@ -182,7 +199,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </main>
   </div>
 
-  <script src="/marketing_acquisition.js?v=20260901-2"></script>
+  <script src="/marketing_acquisition.js?v=20260922-individual-cta-1"></script>
   <script src="/marketing_tracking_control.js?v=20260904-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>

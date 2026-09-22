@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.3";
 
-const ALLOWED_EVENTS = new Set(["page_view", "generate_lead"]);
+const ALLOWED_EVENTS = new Set(["page_view", "generate_lead", "cta_click"]);
 const ALLOWED_CHANNELS = new Set(["ai_assistant", "organic_search", "paid_search", "social", "referral", "campaign", "direct"]);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -123,7 +123,8 @@ Deno.serve(async (req: Request) => {
     const channelCandidate = (safeText(input.traffic_channel, 50) ?? "direct").toLowerCase();
     const trafficChannel = ALLOWED_CHANNELS.has(channelCandidate) ? channelCandidate : "referral";
     const aiAssistant = safeText(input.ai_assistant, 50)?.toLowerCase() ?? null;
-    const linkPosition = eventName === "generate_lead" ? safeText(input.link_position, 80)?.toLowerCase() ?? "unknown" : null;
+    const tracksLinkPosition = eventName === "generate_lead" || eventName === "cta_click";
+    const linkPosition = tracksLinkPosition ? safeText(input.link_position, 80)?.toLowerCase() ?? "unknown" : null;
 
     const { error } = await admin.from("marketing_acquisition_events").insert({
       event_id: eventId,

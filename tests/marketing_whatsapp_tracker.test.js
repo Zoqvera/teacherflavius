@@ -38,6 +38,7 @@ function runTracker(options) {
       return Promise.resolve({ ok: true });
     }
   };
+  if (settings.teacherCroAttribution) windowRef.TeacherCroAttribution = settings.teacherCroAttribution;
 
   const documentRef = {
     referrer: settings.referrer || "",
@@ -60,16 +61,32 @@ function runTracker(options) {
 
   vm.runInNewContext(source, context);
 
+  function clickLink(linkOptions) {
+    const linkSettings = linkOptions || {};
+    const containers = new Set(linkSettings.containers || []);
+    const link = {
+      id: linkSettings.id || "",
+      textContent: linkSettings.textContent || "",
+      getAttribute: function (name) {
+        if (name === "href") return linkSettings.href || "#";
+        if (name === "data-marketing-cta") return linkSettings.marketingCta || "";
+        if (name === "aria-label") return linkSettings.ariaLabel || "";
+        return "";
+      },
+      closest: function (selector) {
+        if (selector === "a[href]") return link;
+        return containers.has(selector) ? {} : null;
+      }
+    };
+    clickHandler({ target: link });
+  }
+
   return {
     sessionStorage: sessionStorage,
     sentPayloads: sentPayloads,
+    clickLink: clickLink,
     clickWhatsapp: function () {
-      const link = {
-        id: "",
-        getAttribute: function (name) { return name === "href" ? "https://wa.me/5511999999999" : ""; },
-        closest: function (selector) { return selector === "a[href]" ? link : null; }
-      };
-      clickHandler({ target: link });
+      clickLink({ href: "https://wa.me/5511999999999" });
     }
   };
 }
@@ -122,4 +139,80 @@ test("captures ChatGPT UTM on page entry even without an external referrer", fun
   assert.equal(capturedEntry.medium, "referral");
   assert.equal(capturedEntry.ai_assistant, "chatgpt");
   assert.equal(capturedEntry.landing_page, "/curso-de-ingles-online/");
+});
+
+
+test("tracks a non-WhatsApp CTA on the individual lessons page without creating a lead", function () {
+  const tracker = runTracker({ pathname: "/aulas-individuais/" });
+
+  tracker.clickLink({
+    href: "#como-funciona",
+    marketingCta: "individual_hero_details",
+    containers: [".hero"]
+  });
+
+  assert.equal(tracker.sentPayloads.length, 1);
+  assert.equal(tracker.sentPayloads[0].event_name, "cta_click");
+  assert.equal(tracker.sentPayloads[0].link_position, "individual_hero_details");
+  assert.equal(tracker.sentPayloads[0].page_path, "/aulas-individuais/");
+});
+
+test("tracks an individual lessons WhatsApp CTA separately from the commercial lead", function () {
+  const tracker = runTracker({ pathname: "/aulas-individuais/" });
+
+  tracker.clickLink({
+    href: "https://wa.me/5511999999999",
+    marketingCta: "individual_hero_whatsapp",
+    containers: [".hero"]
+  });
+
+  assert.equal(tracker.sentPayloads.length, 2);
+  assert.equal(tracker.sentPayloads[0].event_name, "cta_click");
+  assert.equal(tracker.sentPayloads[0].link_position, "individual_hero_whatsapp");
+  assert.equal(tracker.sentPayloads[1].event_name, "generate_lead");
+  assert.equal(tracker.sentPayloads[1].link_position, "hero");
+});
+
+test("tracks the dynamically injected WhatsApp button on the individual lessons page", function () {
+  const tracker = runTracker({ pathname: "/aulas-individuais/" });
+
+  tracker.clickLink({
+    id: "teacher-flavius-whatsapp-float",
+    href: "https://wa.me/5511999999999"
+  });
+
+  assert.equal(tracker.sentPayloads.length, 2);
+  assert.equal(tracker.sentPayloads[0].event_name, "cta_click");
+  assert.equal(tracker.sentPayloads[0].link_position, "individual_floating_whatsapp");
+  assert.equal(tracker.sentPayloads[1].event_name, "generate_lead");
+  assert.equal(tracker.sentPayloads[1].link_position, "floating_button");
+});
+
+test("does not track individual CTA clicks on other pages", function () {
+  const tracker = runTracker({ pathname: "/aulas-em-grupo/" });
+
+  tracker.clickLink({
+    href: "#como-funciona",
+    marketingCta: "individual_hero_details",
+    containers: [".hero"]
+  });
+
+  assert.equal(tracker.sentPayloads.length, 0);
+});
+
+test("keeps CTA monitoring active when consent analytics owns WhatsApp lead tracking", function () {
+  const tracker = runTracker({
+    pathname: "/aulas-individuais/",
+    teacherCroAttribution: {}
+  });
+
+  tracker.clickLink({
+    href: "https://wa.me/5511999999999",
+    marketingCta: "individual_final_whatsapp",
+    containers: [".final-cta"]
+  });
+
+  assert.equal(tracker.sentPayloads.length, 1);
+  assert.equal(tracker.sentPayloads[0].event_name, "cta_click");
+  assert.equal(tracker.sentPayloads[0].link_position, "individual_final_whatsapp");
 });
