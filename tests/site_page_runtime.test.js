@@ -86,8 +86,8 @@ function createRuntime(options) {
 
 test("loads public home runtime without clean URL script", function () {
   const result = createRuntime({ path: "/", home: true, publicPage: true });
-  assert.deepEqual(result.scriptCalls, ["sitePageContext", "siteBranding", "siteEnrollmentGuard", "accessibility", "siteWhatsapp", "marketingWhatsappTracker", "footerCore"]);
-  assert.deepEqual(result.stylesheetCalls, ["accessibilityStyles"]);
+  assert.deepEqual(result.scriptCalls, ["sitePageContext", "siteBranding", "siteEnrollmentGuard", "accessibility", "teacher-flavius-twemoji", "siteWhatsapp", "marketingWhatsappTracker", "footerCore"]);
+  assert.deepEqual(result.stylesheetCalls, ["accessibilityStyles", "teacher-flavius-svg-emoji-styles"]);
   assert.deepEqual(result.events.idleTimeouts, [1200]);
   assert.deepEqual(result.events.enrollment, [false]);
   assert.deepEqual(result.events.whatsapp, [false]);
@@ -119,6 +119,8 @@ test("loads portal chain in the expected order", function () {
   assert.equal(result.scriptCalls.includes("paymentChargebackDocumentation"), false);
   assert.equal(result.scriptCalls.includes("paymentWebhookLog"), false);
   assert.equal(result.scriptCalls.includes("systemHealthReportsIntegration"), false);
+  assert.equal(result.scriptCalls.includes("teacher-flavius-twemoji"), true);
+  assert.equal(result.stylesheetCalls.includes("teacher-flavius-svg-emoji-styles"), true);
   assert.deepEqual(result.events.enrollment, [true]);
   assert.deepEqual(result.events.whatsapp, [true]);
   assert.deepEqual(result.events.idleTimeouts, []);
