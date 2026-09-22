@@ -70,6 +70,7 @@ function runTracker(options) {
       getAttribute: function (name) {
         if (name === "href") return linkSettings.href || "#";
         if (name === "data-marketing-cta") return linkSettings.marketingCta || "";
+        if (name === "data-commercial-lead") return linkSettings.commercialLead || "";
         if (name === "aria-label") return linkSettings.ariaLabel || "";
         return "";
       },
@@ -215,4 +216,19 @@ test("keeps CTA monitoring active when consent analytics owns WhatsApp lead trac
   assert.equal(tracker.sentPayloads.length, 1);
   assert.equal(tracker.sentPayloads[0].event_name, "cta_click");
   assert.equal(tracker.sentPayloads[0].link_position, "individual_final_whatsapp");
+});
+
+
+test("ebook CTA never creates a commercial lead even if its destination becomes WhatsApp", function () {
+  const tracker = runTracker({ pathname: "/aulas-individuais/" });
+
+  tracker.clickLink({
+    href: "https://wa.me/5511999999999",
+    marketingCta: "individual_ebook",
+    commercialLead: "false"
+  });
+
+  assert.equal(tracker.sentPayloads.length, 1);
+  assert.equal(tracker.sentPayloads[0].event_name, "cta_click");
+  assert.equal(tracker.sentPayloads[0].link_position, "individual_ebook");
 });
