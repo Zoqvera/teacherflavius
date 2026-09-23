@@ -71,7 +71,9 @@ grant select, insert, update, delete on table private.student_regular_lesson_can
 create index if not exists student_regular_lesson_cancellations_date_idx
   on private.student_regular_lesson_cancellations (lesson_date, class_number);
 
-create or replace function public.get_teacher_students_of_day()
+drop function public.get_teacher_students_of_day();
+
+create function public.get_teacher_students_of_day()
 returns table (
   entry_id uuid,
   lesson_kind text,
@@ -80,7 +82,8 @@ returns table (
   whatsapp text,
   class_number integer,
   class_name text,
-  starts_at timestamptz
+  starts_at timestamptz,
+  lesson_to_present text
 )
 language plpgsql
 stable
@@ -95,7 +98,263 @@ begin
   end if;
 
   return query
-  with regular_lessons as (
+  with lesson_progress as (
+    select
+      clr.user_id,
+      max(substring(clr.lesson_code from 2)::integer)
+        filter (where clr.lesson_code ~ '^L[0-9]+
+
+create or replace function public.set_teacher_day_student_whatsapp(
+  target_lesson_kind text,
+  target_entry_id uuid,
+  target_whatsapp text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  normalized_kind text := lower(btrim(coalesce(target_lesson_kind, '')));
+  normalized_digits text := regexp_replace(coalesce(target_whatsapp, ''), '[^0-9]', '', 'g');
+  target_date date := (now() at time zone 'America/Sao_Paulo')::date;
+  resolved_student_id uuid;
+  trial_whatsapp text;
+begin
+  if not coalesce(public.is_teacher_admin_mfa(), false) then
+    raise exception 'MFA do professor é obrigatório.' using errcode = '42501';
+  end if;
+
+  if char_length(normalized_digits) not between 10 and 15 then
+    raise exception 'Informe um número de WhatsApp válido.' using errcode = '22023';
+  end if;
+
+  if normalized_kind = 'regular' then
+    select cs.user_id
+      into resolved_student_id
+    from public.class_students cs
+    join public.teacher_classes tc
+      on tc.class_number = cs.class_number
+     and tc.is_active = true
+    join public.profiles p
+      on p.id = cs.user_id
+    where cs.id = target_entry_id
+      and cs.user_id is not null
+      and tc.class_weekday = extract(isodow from target_date)::smallint
+      and tc.class_start_time is not null
+      and coalesce(p.enrolled, false) = true
+      and coalesce(p.archived, false) = false;
+
+    if not found then
+      raise exception 'Aula regular de hoje não encontrada.' using errcode = 'P0002';
+    end if;
+
+    update public.profiles
+    set whatsapp = normalized_digits
+    where id = resolved_student_id;
+  elsif normalized_kind = 'makeup' then
+    select booking.student_id
+      into resolved_student_id
+    from public.makeup_class_bookings booking
+    join public.makeup_class_slots slot on slot.id = booking.slot_id
+    where booking.id = target_entry_id
+      and booking.status = 'confirmed'
+      and slot.is_active = true
+      and (slot.starts_at at time zone 'America/Sao_Paulo')::date = target_date;
+
+    if not found then
+      raise exception 'Reposição de hoje não encontrada.' using errcode = 'P0002';
+    end if;
+
+    update public.profiles
+    set whatsapp = normalized_digits
+    where id = resolved_student_id;
+  elsif normalized_kind = 'trial' then
+    trial_whatsapp := case
+      when char_length(normalized_digits) in (10, 11) then '+55' || normalized_digits
+      else normalized_digits
+    end;
+
+    update private.trial_lesson_appointments appointment
+    set whatsapp = trial_whatsapp,
+        updated_at = now()
+    where appointment.id = target_entry_id
+      and appointment.status = 'scheduled'
+      and (appointment.starts_at at time zone 'America/Sao_Paulo')::date = target_date;
+
+    if not found then
+      raise exception 'Aula experimental de hoje não encontrada.' using errcode = 'P0002';
+    end if;
+  else
+    raise exception 'Tipo de aula inválido.' using errcode = '22023';
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'lesson_kind', normalized_kind,
+    'whatsapp_digits',
+      case
+        when normalized_kind = 'trial' and char_length(normalized_digits) in (10, 11)
+          then '55' || normalized_digits
+        else normalized_digits
+      end
+  );
+end;
+$function$;
+
+revoke all on function public.set_teacher_day_student_whatsapp(text,uuid,text)
+  from public, anon, authenticated;
+grant execute on function public.set_teacher_day_student_whatsapp(text,uuid,text)
+  to authenticated;
+
+create or replace function public.cancel_teacher_day_lesson(
+  target_lesson_kind text,
+  target_entry_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  normalized_kind text := lower(btrim(coalesce(target_lesson_kind, '')));
+  target_date date := (now() at time zone 'America/Sao_Paulo')::date;
+  resolved_student_id uuid;
+  resolved_class_number integer;
+  cancellation_inserted integer := 0;
+begin
+  if not coalesce(public.is_teacher_admin_mfa(), false) then
+    raise exception 'MFA do professor é obrigatório.' using errcode = '42501';
+  end if;
+
+  if normalized_kind = 'regular' then
+    select cs.user_id, cs.class_number
+      into resolved_student_id, resolved_class_number
+    from public.class_students cs
+    join public.teacher_classes tc
+      on tc.class_number = cs.class_number
+     and tc.is_active = true
+    join public.profiles p
+      on p.id = cs.user_id
+    where cs.id = target_entry_id
+      and cs.user_id is not null
+      and tc.class_weekday = extract(isodow from target_date)::smallint
+      and tc.class_start_time is not null
+      and coalesce(p.enrolled, false) = true
+      and coalesce(p.archived, false) = false;
+
+    if not found then
+      raise exception 'Aula regular de hoje não encontrada.' using errcode = 'P0002';
+    end if;
+
+    insert into private.student_regular_lesson_cancellations (
+      student_id,
+      class_number,
+      lesson_date,
+      cancelled_by
+    )
+    values (
+      resolved_student_id,
+      resolved_class_number,
+      target_date,
+      auth.uid()
+    )
+    on conflict (student_id, class_number, lesson_date) do nothing;
+
+    get diagnostics cancellation_inserted = row_count;
+
+    if cancellation_inserted > 0 then
+      insert into public.student_frequency (
+        user_id,
+        class_date,
+        attendance_status,
+        class_notes
+      )
+      values (
+        resolved_student_id,
+        target_date,
+        'Faltou',
+        '[Turma ' || resolved_class_number || '] Não compareceu na aula.'
+      );
+    end if;
+  elsif normalized_kind = 'makeup' then
+    update public.makeup_class_bookings booking
+    set status = 'cancelled',
+        cancelled_at = now()
+    where booking.id = target_entry_id
+      and booking.status = 'confirmed'
+      and exists (
+        select 1
+        from public.makeup_class_slots slot
+        where slot.id = booking.slot_id
+          and (slot.starts_at at time zone 'America/Sao_Paulo')::date = target_date
+      )
+    returning booking.student_id, booking.class_number
+      into resolved_student_id, resolved_class_number;
+
+    if not found then
+      raise exception 'Reposição confirmada de hoje não encontrada.' using errcode = 'P0002';
+    end if;
+
+    insert into public.student_frequency (
+      user_id,
+      class_date,
+      attendance_status,
+      class_notes
+    )
+    values (
+      resolved_student_id,
+      target_date,
+      'Faltou',
+      '[Turma ' || resolved_class_number || '] Não compareceu na aula.'
+    );
+
+    insert into public.makeup_class_email_notifications (
+      booking_id,
+      notification_type
+    )
+    values (
+      target_entry_id,
+      'cancellation'
+    )
+    on conflict (booking_id, notification_type) do nothing;
+  elsif normalized_kind = 'trial' then
+    update private.trial_lesson_appointments appointment
+    set status = 'no_show',
+        enrolled_after_trial_at = null,
+        enrolled_after_trial_by = null,
+        updated_at = now()
+    where appointment.id = target_entry_id
+      and appointment.status = 'scheduled'
+      and (appointment.starts_at at time zone 'America/Sao_Paulo')::date = target_date;
+
+    if not found then
+      raise exception 'Aula experimental de hoje não encontrada.' using errcode = 'P0002';
+    end if;
+  else
+    raise exception 'Tipo de aula inválido.' using errcode = '22023';
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'lesson_kind', normalized_kind,
+    'entry_id', target_entry_id,
+    'attendance_recorded', true
+  );
+end;
+$function$;
+
+revoke all on function public.cancel_teacher_day_lesson(text,uuid)
+  from public, anon, authenticated;
+grant execute on function public.cancel_teacher_day_lesson(text,uuid)
+  to authenticated;
+) as max_lesson_number
+    from public.class_lesson_records clr
+    where clr.user_id is not null
+      and clr.class_date < target_date
+    group by clr.user_id
+  ),
+  regular_lessons as (
     select
       cs.id as entry_id,
       'regular'::text as lesson_kind,
@@ -104,13 +363,20 @@ begin
       nullif(btrim(p.whatsapp), '')::text as whatsapp,
       tc.class_number,
       tc.class_name::text as class_name,
-      ((target_date + tc.class_start_time) at time zone 'America/Sao_Paulo') as starts_at
+      ((target_date + tc.class_start_time) at time zone 'America/Sao_Paulo') as starts_at,
+      case
+        when progress.max_lesson_number is null then 'L1'
+        when progress.max_lesson_number >= 74 then 'Concluído'
+        else 'L' || (progress.max_lesson_number + 1)::text
+      end::text as lesson_to_present
     from public.teacher_classes tc
     join public.class_students cs
       on cs.class_number = tc.class_number
      and cs.user_id is not null
     join public.profiles p
       on p.id = cs.user_id
+    left join lesson_progress progress
+      on progress.user_id = p.id
     where tc.is_active = true
       and tc.class_weekday = extract(isodow from target_date)::smallint
       and tc.class_start_time is not null
@@ -138,12 +404,19 @@ begin
       nullif(btrim(profile.whatsapp), '')::text as whatsapp,
       booking.class_number,
       booking.class_name::text as class_name,
-      slot.starts_at
+      slot.starts_at,
+      case
+        when progress.max_lesson_number is null then 'L1'
+        when progress.max_lesson_number >= 74 then 'Concluído'
+        else 'L' || (progress.max_lesson_number + 1)::text
+      end::text as lesson_to_present
     from public.makeup_class_bookings booking
     join public.makeup_class_slots slot
       on slot.id = booking.slot_id
     left join public.profiles profile
       on profile.id = booking.student_id
+    left join lesson_progress progress
+      on progress.user_id = booking.student_id
     where booking.status = 'confirmed'
       and slot.is_active = true
       and (slot.starts_at at time zone 'America/Sao_Paulo')::date = target_date
@@ -163,7 +436,8 @@ begin
           else 'Aula experimental'
         end
       )::text as class_name,
-      appointment.starts_at
+      appointment.starts_at,
+      null::text as lesson_to_present
     from private.trial_lesson_appointments appointment
     where appointment.status = 'scheduled'
       and (appointment.starts_at at time zone 'America/Sao_Paulo')::date = target_date
@@ -175,7 +449,8 @@ begin
          daily.whatsapp,
          daily.class_number,
          daily.class_name,
-         daily.starts_at
+         daily.starts_at,
+         daily.lesson_to_present
   from (
     select * from regular_lessons
     union all
