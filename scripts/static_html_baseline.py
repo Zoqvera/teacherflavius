@@ -25,7 +25,8 @@ def inject_site_baseline(html: str, relative: Path) -> tuple[str, bool]:
     if "/error_monitor.js" not in lower_html:
         status_attribute = ' data-page-status="404"' if relative.as_posix() == "404.html" else ""
         additions.append(f'  <script defer src="{ERROR_MONITOR_SRC}"{status_attribute}></script>')
-    if "/mobile_top_navigation.js" not in lower_html:
+    has_page_runtime = "/site_page_runtime.js" in lower_html
+    if "/mobile_top_navigation.js" not in lower_html and not has_page_runtime:
         additions.append(
             f'  <script id="{STANDARD_NAVIGATION_ID}" defer src="{STANDARD_NAVIGATION_SRC}"></script>'
         )
