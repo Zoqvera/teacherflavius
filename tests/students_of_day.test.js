@@ -24,13 +24,15 @@ const studentsScript = fs.readFileSync(
   path.join(root, "alunos-do-dia/alunos_do_dia.js"),
   "utf8"
 );
+const studentsWhatsapp = require("../alunos-do-dia/whatsapp_contact.js");
 const studentsOfDay = require("../alunos-do-dia/alunos_do_dia.js");
 
 test("builds the requested WhatsApp confirmation message", function () {
   assert.equal(
-    studentsOfDay.DEFAULT_MESSAGE,
+    studentsWhatsapp.MESSAGE,
     "Olá, você tem aula hoje. Você confirma sua participação?"
   );
+  assert.equal(studentsOfDay.DEFAULT_MESSAGE, studentsWhatsapp.MESSAGE);
   assert.equal(studentsOfDay.whatsappNumber("(34) 99999-9999"), "5534999999999");
   assert.equal(
     studentsOfDay.whatsappUrl("(34) 99999-9999"),
@@ -163,4 +165,36 @@ test("renders the lesson to present only for regular and makeup cards", function
   assert.match(regular, /L12/);
   assert.match(makeup, /L8/);
   assert.equal(trial, "");
+});
+
+test("refreshes every day WhatsApp link immediately before navigation", function () {
+  const attributes = {
+    href: "https://wa.me/5534999999999?text=" + encodeURIComponent("mensagem antiga")
+  };
+  const anchor = {
+    dataset: { whatsappNumber: "5534999999999" },
+    ownerDocument: { baseURI: "https://teacherflavius.com/alunos-do-dia/" },
+    getAttribute: function (name) { return attributes[name] || ""; },
+    setAttribute: function (name, value) { attributes[name] = value; }
+  };
+
+  const refreshed = studentsWhatsapp.refreshLink(anchor);
+  assert.equal(refreshed, studentsWhatsapp.buildUrl("5534999999999"));
+  assert.equal(attributes.href, refreshed);
+  assert.match(
+    decodeURIComponent(attributes.href),
+    /Olá, você tem aula hoje\. Você confirma sua participação\?/
+  );
+  assert.doesNotMatch(decodeURIComponent(attributes.href), /mensagem antiga/);
+});
+
+test("installs delegated correction for all FALAR NO WHATSAPP links", function () {
+  const whatsappModule = fs.readFileSync(
+    path.join(root, "alunos-do-dia/whatsapp_contact.js"),
+    "utf8"
+  );
+  assert.match(whatsappModule, /closest\("a\.day-whatsapp-link"\)/);
+  assert.match(studentsScript, /data-whatsapp-number/);
+  assert.match(page, /whatsapp_contact\.js\?v=20260923-1/);
+  assert.match(page, /alunos_do_dia\.js\?v=20260923-4/);
 });
