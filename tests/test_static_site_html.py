@@ -76,6 +76,8 @@ class StaticSiteHtmlTests(unittest.TestCase):
         self.assertEqual(transformed.count('name="viewport"'), 1)
         self.assertEqual(transformed.count("/responsive_compat.css"), 1)
         self.assertEqual(transformed.count("/error_monitor.js"), 1)
+        self.assertEqual(transformed.count("/mobile_top_navigation.js"), 1)
+        self.assertEqual(transformed.count('id="teacher-flavius-mobile-top-navigation"'), 1)
         self.assertNotIn('data-page-status="404"', transformed)
 
     def test_marks_404_error_monitor(self) -> None:
