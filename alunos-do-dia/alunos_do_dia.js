@@ -21,7 +21,7 @@
 
   const TIME_ZONE = "America/Sao_Paulo";
   const PAGE_PATH = "/alunos-do-dia/";
-  const DEFAULT_MESSAGE = "Olá, hoje você tem aula. Você vai poder participar?";
+  const DEFAULT_MESSAGE = "Olá, você tem aula hoje. Você confirma sua participação?";
 
   function toText(value) {
     return value == null ? "" : String(value);
