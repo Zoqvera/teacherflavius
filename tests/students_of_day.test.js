@@ -16,6 +16,10 @@ const cancellationAttendanceMigration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260923174203_record_no_show_on_day_cancel.sql"),
   "utf8"
 );
+const lessonDisplayMigration = fs.readFileSync(
+  path.join(root, "supabase/migrations/20260923175712_add_lesson_to_students_of_day.sql"),
+  "utf8"
+);
 const studentsScript = fs.readFileSync(
   path.join(root, "alunos-do-dia/alunos_do_dia.js"),
   "utf8"
@@ -115,4 +119,48 @@ test("keeps regular cancellation attendance idempotent", function () {
 
 test("confirms that cancellation also records absence in the interface", function () {
   assert.match(studentsScript, /Aula cancelada e ausência registrada\./);
+});
+
+test("calculates the lesson to present from numeric lesson history before today", function () {
+  assert.match(lessonDisplayMigration, /lesson_to_present text/i);
+  assert.match(lessonDisplayMigration, /clr\.class_date < target_date/i);
+  assert.match(lessonDisplayMigration, /clr\.lesson_code ~ '\^L\[0-9\]\+\$'/i);
+  assert.match(lessonDisplayMigration, /when progress\.max_lesson_number is null then 'L1'/i);
+  assert.match(lessonDisplayMigration, /when progress\.max_lesson_number >= 74 then 'Concluído'/i);
+  assert.match(lessonDisplayMigration, /'L' \|\| \(progress\.max_lesson_number \+ 1\)::text/i);
+});
+
+test("returns lessons for regular and makeup entries but not trial lessons", function () {
+  assert.match(
+    lessonDisplayMigration,
+    /'regular'::text[\s\S]*as lesson_to_present/i
+  );
+  assert.match(
+    lessonDisplayMigration,
+    /'makeup'::text[\s\S]*as lesson_to_present/i
+  );
+  assert.match(
+    lessonDisplayMigration,
+    /'trial'::text[\s\S]*null::text as lesson_to_present/i
+  );
+});
+
+test("renders the lesson to present only for regular and makeup cards", function () {
+  const regular = studentsOfDay.lessonToPresentHtml({
+    lesson_kind: "regular",
+    lesson_to_present: "L12"
+  });
+  const makeup = studentsOfDay.lessonToPresentHtml({
+    lesson_kind: "makeup",
+    lesson_to_present: "L8"
+  });
+  const trial = studentsOfDay.lessonToPresentHtml({
+    lesson_kind: "trial",
+    lesson_to_present: null
+  });
+
+  assert.match(regular, /LIÇÃO A APRESENTAR/);
+  assert.match(regular, /L12/);
+  assert.match(makeup, /L8/);
+  assert.equal(trial, "");
 });
