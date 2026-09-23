@@ -29,13 +29,13 @@ const studentsOfDay = require("../alunos-do-dia/alunos_do_dia.js");
 test("builds the requested WhatsApp confirmation message", function () {
   assert.equal(
     studentsOfDay.DEFAULT_MESSAGE,
-    "Olá, hoje você tem aula. Você vai poder participar?"
+    "Olá, você tem aula hoje. Você confirma sua participação?"
   );
   assert.equal(studentsOfDay.whatsappNumber("(34) 99999-9999"), "5534999999999");
   assert.equal(
     studentsOfDay.whatsappUrl("(34) 99999-9999"),
     "https://wa.me/5534999999999?text=" +
-      encodeURIComponent("Olá, hoje você tem aula. Você vai poder participar?")
+      encodeURIComponent("Olá, você tem aula hoje. Você confirma sua participação?")
   );
 });
 
