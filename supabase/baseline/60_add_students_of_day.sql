@@ -1,3 +1,57 @@
+create table if not exists private.trial_lesson_appointments (
+  id uuid primary key default gen_random_uuid(),
+  visitor_name text not null,
+  english_level text not null,
+  whatsapp text not null,
+  whatsapp_digits text generated always as (regexp_replace(whatsapp, '[^0-9]', '', 'g')) stored,
+  lesson_mode text not null,
+  class_number integer references public.teacher_classes(class_number) on update cascade on delete set null,
+  class_name_snapshot text,
+  starts_at timestamptz not null,
+  status text not null default 'scheduled',
+  created_by uuid not null references auth.users(id) on delete restrict,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  enrolled_after_trial_at timestamptz,
+  enrolled_after_trial_by uuid references auth.users(id) on delete set null,
+  constraint trial_lesson_visitor_name_check
+    check (char_length(btrim(visitor_name)) between 2 and 120),
+  constraint trial_lesson_level_check
+    check (english_level in ('A1','A2','B1','B2','C1','C2','Não definido')),
+  constraint trial_lesson_whatsapp_check
+    check (char_length(whatsapp_digits) between 8 and 15),
+  constraint trial_lesson_mode_check
+    check (lesson_mode in ('class','individual')),
+  constraint trial_lesson_status_check
+    check (status in ('scheduled','completed','cancelled','no_show')),
+  constraint trial_lesson_class_mode_check
+    check (
+      (lesson_mode = 'class' and class_name_snapshot is not null)
+      or
+      (lesson_mode = 'individual' and class_number is null and class_name_snapshot is null)
+    ),
+  constraint trial_lesson_enrollment_completed_check
+    check (enrolled_after_trial_at is null or status = 'completed')
+);
+
+alter table private.trial_lesson_appointments enable row level security;
+
+revoke all on table private.trial_lesson_appointments from public, anon, authenticated;
+grant select, insert, update, delete on table private.trial_lesson_appointments to service_role;
+
+create index if not exists trial_lesson_appointments_class_number_idx
+  on private.trial_lesson_appointments (class_number)
+  where class_number is not null;
+create index if not exists trial_lesson_appointments_created_by_idx
+  on private.trial_lesson_appointments (created_by);
+create index if not exists trial_lesson_appointments_starts_at_idx
+  on private.trial_lesson_appointments (starts_at desc);
+create index if not exists trial_lesson_appointments_status_starts_at_idx
+  on private.trial_lesson_appointments (status, starts_at desc);
+create unique index if not exists trial_lesson_appointments_unique_active_person_time_idx
+  on private.trial_lesson_appointments (whatsapp_digits, starts_at)
+  where status <> 'cancelled';
+
 create table if not exists private.student_regular_lesson_cancellations (
   id uuid primary key default gen_random_uuid(),
   student_id uuid not null references auth.users(id) on delete cascade,
