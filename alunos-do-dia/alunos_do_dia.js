@@ -238,7 +238,7 @@
       });
       if (response.error) throw response.error;
       await loadStudents(runtime);
-      setMessage(runtime.documentRef, "Aula cancelada.", "success");
+      setMessage(runtime.documentRef, "Aula cancelada e ausência registrada.", "success");
     } catch (error) {
       setMessage(runtime.documentRef, normalizeError(error), "error");
       button.disabled = false;
