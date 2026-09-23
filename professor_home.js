@@ -156,16 +156,16 @@ function ensureProfessorDashboardCard(config) {
 
 function ensureDynamicProfessorCards() {
   ensureProfessorDashboardCard({
-    id: "alunos-do-dia",
-    href: "/alunos-do-dia/",
-    label: "ALUNOS DO DIA",
-    beforeId: "aulas-experimentais"
-  });
-  ensureProfessorDashboardCard({
     id: "aulas-experimentais",
     href: "/aulas-experimentais/",
     label: "AULAS EXPERIMENTAIS",
     beforeId: "reposicoes"
+  });
+  ensureProfessorDashboardCard({
+    id: "alunos-do-dia",
+    href: "/alunos-do-dia/",
+    label: "ALUNOS DO DIA",
+    beforeId: "aulas-experimentais"
   });
   ensureProfessorDashboardCard({
     id: "marketing-acquisition",
