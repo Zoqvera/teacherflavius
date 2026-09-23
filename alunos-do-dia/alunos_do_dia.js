@@ -1,7 +1,10 @@
 (function (root, factory) {
   "use strict";
 
-  const api = factory();
+  const whatsappApi = typeof module === "object" && module.exports
+    ? require("./whatsapp_contact.js")
+    : root && root.StudentsOfDayWhatsApp;
+  const api = factory(whatsappApi);
   if (typeof module === "object" && module.exports) module.exports = api;
   if (!root) return;
 
@@ -16,12 +19,14 @@
       start();
     }
   }
-})(typeof window !== "undefined" ? window : null, function () {
+})(typeof window !== "undefined" ? window : null, function (whatsappApi) {
   "use strict";
+
+  if (!whatsappApi) throw new Error("Dependência de WhatsApp não carregada.");
 
   const TIME_ZONE = "America/Sao_Paulo";
   const PAGE_PATH = "/alunos-do-dia/";
-  const DEFAULT_MESSAGE = "Olá, você tem aula hoje. Você confirma sua participação?";
+  const DEFAULT_MESSAGE = whatsappApi.MESSAGE;
 
   function toText(value) {
     return value == null ? "" : String(value);
@@ -37,19 +42,15 @@
   }
 
   function whatsappDigits(value) {
-    return toText(value).replace(/\D/g, "");
+    return whatsappApi.digits(value);
   }
 
   function whatsappNumber(value) {
-    const digits = whatsappDigits(value);
-    if (digits.length === 10 || digits.length === 11) return "55" + digits;
-    return digits;
+    return whatsappApi.normalizeNumber(value);
   }
 
   function whatsappUrl(value) {
-    const number = whatsappNumber(value);
-    if (number.length < 12 || number.length > 15) return "";
-    return "https://wa.me/" + number + "?text=" + encodeURIComponent(DEFAULT_MESSAGE);
+    return whatsappApi.buildUrl(value);
   }
 
   function lessonKindLabel(kind) {
@@ -126,7 +127,8 @@
     const kind = toText(item.lesson_kind);
     const contactUrl = whatsappUrl(item.whatsapp);
     const contactAction = contactUrl
-      ? '<a class="day-whatsapp-link" href="' + escapeHtml(contactUrl) + '" target="_blank" rel="noopener noreferrer">FALAR NO WHATSAPP</a>'
+      ? '<a class="day-whatsapp-link" data-whatsapp-number="' + escapeHtml(whatsappNumber(item.whatsapp)) +
+        '" href="' + escapeHtml(contactUrl) + '" target="_blank" rel="noopener noreferrer">FALAR NO WHATSAPP</a>'
       : '<button class="day-add-whatsapp-button" type="button" data-add-whatsapp="true">ADICIONAR WHATSAPP</button>';
 
     return '<article class="day-card" data-entry-id="' + escapeHtml(item.entry_id) + '" data-lesson-kind="' + escapeHtml(kind) + '">' +

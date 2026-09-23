@@ -62,6 +62,7 @@ module.exports = [
       "analytics_forms.js",
       "analytics_payments.js",
       "trial_lesson_scheduler.js",
+      "alunos-do-dia/whatsapp_contact.js",
       "alunos-do-dia/alunos_do_dia.js",
       "payment_operations_dashboard.js",
       "payment_refund_operations.js",
