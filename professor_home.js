@@ -162,6 +162,12 @@ function ensureDynamicProfessorCards() {
     beforeId: "reposicoes"
   });
   ensureProfessorDashboardCard({
+    id: "alunos-do-dia",
+    href: "/alunos-do-dia/",
+    label: "ALUNOS DO DIA",
+    beforeId: "aulas-experimentais"
+  });
+  ensureProfessorDashboardCard({
     id: "marketing-acquisition",
     href: "/marketing_acquisition/",
     label: "CONVERSÃO",
