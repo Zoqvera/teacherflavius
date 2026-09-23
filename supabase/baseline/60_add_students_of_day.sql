@@ -71,7 +71,9 @@ grant select, insert, update, delete on table private.student_regular_lesson_can
 create index if not exists student_regular_lesson_cancellations_date_idx
   on private.student_regular_lesson_cancellations (lesson_date, class_number);
 
-create or replace function public.get_teacher_students_of_day()
+drop function if exists public.get_teacher_students_of_day();
+
+create function public.get_teacher_students_of_day()
 returns table (
   entry_id uuid,
   lesson_kind text,
@@ -80,7 +82,8 @@ returns table (
   whatsapp text,
   class_number integer,
   class_name text,
-  starts_at timestamptz
+  starts_at timestamptz,
+  lesson_to_present text
 )
 language plpgsql
 stable
@@ -95,7 +98,17 @@ begin
   end if;
 
   return query
-  with regular_lessons as (
+  with lesson_progress as (
+    select
+      clr.user_id,
+      max(substring(clr.lesson_code from 2)::integer)
+        filter (where clr.lesson_code ~ '^L[0-9]+$') as max_lesson_number
+    from public.class_lesson_records clr
+    where clr.user_id is not null
+      and clr.class_date < target_date
+    group by clr.user_id
+  ),
+  regular_lessons as (
     select
       cs.id as entry_id,
       'regular'::text as lesson_kind,
@@ -104,13 +117,20 @@ begin
       nullif(btrim(p.whatsapp), '')::text as whatsapp,
       tc.class_number,
       tc.class_name::text as class_name,
-      ((target_date + tc.class_start_time) at time zone 'America/Sao_Paulo') as starts_at
+      ((target_date + tc.class_start_time) at time zone 'America/Sao_Paulo') as starts_at,
+      case
+        when progress.max_lesson_number is null then 'L1'
+        when progress.max_lesson_number >= 74 then 'Concluído'
+        else 'L' || (progress.max_lesson_number + 1)::text
+      end::text as lesson_to_present
     from public.teacher_classes tc
     join public.class_students cs
       on cs.class_number = tc.class_number
      and cs.user_id is not null
     join public.profiles p
       on p.id = cs.user_id
+    left join lesson_progress progress
+      on progress.user_id = p.id
     where tc.is_active = true
       and tc.class_weekday = extract(isodow from target_date)::smallint
       and tc.class_start_time is not null
@@ -138,12 +158,19 @@ begin
       nullif(btrim(profile.whatsapp), '')::text as whatsapp,
       booking.class_number,
       booking.class_name::text as class_name,
-      slot.starts_at
+      slot.starts_at,
+      case
+        when progress.max_lesson_number is null then 'L1'
+        when progress.max_lesson_number >= 74 then 'Concluído'
+        else 'L' || (progress.max_lesson_number + 1)::text
+      end::text as lesson_to_present
     from public.makeup_class_bookings booking
     join public.makeup_class_slots slot
       on slot.id = booking.slot_id
     left join public.profiles profile
       on profile.id = booking.student_id
+    left join lesson_progress progress
+      on progress.user_id = booking.student_id
     where booking.status = 'confirmed'
       and slot.is_active = true
       and (slot.starts_at at time zone 'America/Sao_Paulo')::date = target_date
@@ -163,7 +190,8 @@ begin
           else 'Aula experimental'
         end
       )::text as class_name,
-      appointment.starts_at
+      appointment.starts_at,
+      null::text as lesson_to_present
     from private.trial_lesson_appointments appointment
     where appointment.status = 'scheduled'
       and (appointment.starts_at at time zone 'America/Sao_Paulo')::date = target_date
@@ -175,7 +203,8 @@ begin
          daily.whatsapp,
          daily.class_number,
          daily.class_name,
-         daily.starts_at
+         daily.starts_at,
+         daily.lesson_to_present
   from (
     select * from regular_lessons
     union all

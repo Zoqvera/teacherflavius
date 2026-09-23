@@ -114,6 +114,14 @@
       '<article class="day-summary-card"><span>Experimentais</span><strong>' + counts.trial + '</strong></article>';
   }
 
+  function lessonToPresentHtml(item) {
+    const lesson = toText(item && item.lesson_to_present).trim();
+    if (!lesson || toText(item && item.lesson_kind) === "trial") return "";
+    return '<div class="day-lesson-to-present"><span>LIÇÃO A APRESENTAR</span><strong>' +
+      escapeHtml(lesson) +
+      '</strong></div>';
+  }
+
   function buildCard(item) {
     const kind = toText(item.lesson_kind);
     const contactUrl = whatsappUrl(item.whatsapp);
@@ -131,6 +139,7 @@
           '<span>' + escapeHtml(formatTime(item.starts_at)) + '</span>' +
           '<span>' + escapeHtml(item.class_name || "Turma não definida") + '</span>' +
         '</div>' +
+        lessonToPresentHtml(item) +
       '</div>' +
       '<div class="day-card-actions">' +
         contactAction +
@@ -353,6 +362,7 @@
     whatsappNumber: whatsappNumber,
     whatsappUrl: whatsappUrl,
     lessonKindLabel: lessonKindLabel,
+    lessonToPresentHtml: lessonToPresentHtml,
     formatTime: formatTime,
     initialize: initialize
   });
