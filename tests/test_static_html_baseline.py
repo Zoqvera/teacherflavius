@@ -28,6 +28,17 @@ class StaticHtmlBaselineTests(unittest.TestCase):
         self.assertEqual(transformed.count('id="teacher-flavius-mobile-top-navigation"'), 1)
         self.assertNotIn('data-page-status="404"', transformed)
 
+    def test_uses_page_runtime_as_the_navigation_loader_when_present(self) -> None:
+        html = (
+            "<html><head><script src='/site_page_runtime.js?v=test'></script></head>"
+            "<body></body></html>"
+        )
+        transformed, enhanced = inject_site_baseline(html, Path("login/index.html"))
+
+        self.assertTrue(enhanced)
+        self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
+        self.assertEqual(transformed.count("/site_page_runtime.js"), 1)
+
     def test_is_idempotent(self) -> None:
         html = "<html><head></head><body></body></html>"
         first, first_enhanced = inject_site_baseline(html, Path("index.html"))
