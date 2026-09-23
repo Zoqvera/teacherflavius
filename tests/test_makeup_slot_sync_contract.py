@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MIGRATION = ROOT / "supabase/migrations/20260916081057_preserve_referenced_auto_makeup_slots.sql"
+MIGRATION = ROOT / "supabase/migrations/20260923142610_add_three_makeup_spots.sql"
 BASELINE_OVERLAY = ROOT / "supabase/baseline/35_preserve_referenced_auto_makeup_slots.sql"
 LEGACY_INSTALLER = ROOT / "supabase_reposicoes_automaticas_30_dias.sql"
 BASELINE_WORKFLOW = ROOT / ".github/workflows/validate-supabase-baseline.yml"
@@ -37,6 +37,21 @@ class MakeupSlotSyncContractTests(unittest.TestCase):
                     "and coalesce(tc.makeup_slots_enabled, true) = true",
                     sql,
                 )
+
+    def test_synchronizer_adds_three_makeup_only_spots(self) -> None:
+        expected_formula = "then (5 - sc.student_count) + 3"
+        for path in self.synchronizer_sources():
+            with self.subTest(path=path.relative_to(ROOT)):
+                sql = path.read_text(encoding="utf-8")
+                self.assertIn(expected_formula, sql)
+                self.assertNotIn("private.get_class_operational_capacity", sql)
+
+    def test_current_migration_updates_future_auto_slots_idempotently(self) -> None:
+        sql = MIGRATION.read_text(encoding="utf-8")
+        self.assertIn("update public.makeup_class_slots s", sql)
+        self.assertIn("s.is_auto_generated = true", sql)
+        self.assertIn("s.starts_at > now()", sql)
+        self.assertIn("s.capacity is distinct from d.capacity", sql)
 
     def test_disaster_recovery_applies_integrity_overlay(self) -> None:
         workflow = BASELINE_WORKFLOW.read_text(encoding="utf-8")
