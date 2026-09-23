@@ -6,6 +6,7 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const page = fs.readFileSync(path.join(root, "alunos-do-dia/index.html"), "utf8");
 const area = fs.readFileSync(path.join(root, "area_do_estudante.html"), "utf8");
+const professorHome = fs.readFileSync(path.join(root, "professor_home.js"), "utf8");
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 const migration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260923150718_add_students_of_day.sql"),
@@ -38,13 +39,11 @@ test("keeps the students-of-day page private from search engines", function () {
   assert.equal(sitemap.includes("/alunos-do-dia/"), false);
 });
 
-test("adds the card only inside the professor section of the student area", function () {
-  const sectionStart = area.indexOf('id="professorAreaSection"');
-  const sectionEnd = area.indexOf("</section>", sectionStart);
-  const professorSection = area.slice(sectionStart, sectionEnd);
-  assert.ok(sectionStart >= 0);
-  assert.match(professorSection, /href="\/alunos-do-dia\/"/);
-  assert.match(professorSection, /data-teacher-students-today-card="true"/);
+test("keeps the students-of-day card in the professor dashboard only", function () {
+  assert.doesNotMatch(area, /href="\/alunos-do-dia\/"/);
+  assert.match(professorHome, /id:\s*"alunos-do-dia"/);
+  assert.match(professorHome, /href:\s*"\/alunos-do-dia\/"/);
+  assert.match(professorHome, /label:\s*"ALUNOS DO DIA"/);
 });
 
 test("protects all students-of-day RPCs with teacher MFA", function () {
