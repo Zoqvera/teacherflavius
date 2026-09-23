@@ -39,6 +39,26 @@ class StaticHtmlBaselineTests(unittest.TestCase):
         self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
         self.assertEqual(transformed.count("/site_page_runtime.js"), 1)
 
+    def test_skips_direct_navigation_on_document_loader_shells(self) -> None:
+        html = (
+            "<html><head><script>document.write(html)</script></head>"
+            "<body>Carregando...</body></html>"
+        )
+        transformed, enhanced = inject_site_baseline(html, Path("login/index.html"))
+
+        self.assertTrue(enhanced)
+        self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
+
+    def test_skips_direct_navigation_on_immediate_redirect_shells(self) -> None:
+        html = (
+            '<html><head><meta http-equiv="refresh" content="0;url=/login/"></head>'
+            "<body></body></html>"
+        )
+        transformed, enhanced = inject_site_baseline(html, Path("acesso-aluno/index.html"))
+
+        self.assertTrue(enhanced)
+        self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
+
     def test_is_idempotent(self) -> None:
         html = "<html><head></head><body></body></html>"
         first, first_enhanced = inject_site_baseline(html, Path("index.html"))
