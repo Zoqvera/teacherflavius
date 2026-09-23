@@ -71,7 +71,7 @@ grant select, insert, update, delete on table private.student_regular_lesson_can
 create index if not exists student_regular_lesson_cancellations_date_idx
   on private.student_regular_lesson_cancellations (lesson_date, class_number);
 
-drop function public.get_teacher_students_of_day();
+drop function if exists public.get_teacher_students_of_day();
 
 create function public.get_teacher_students_of_day()
 returns table (
