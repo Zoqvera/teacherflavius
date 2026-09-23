@@ -88,7 +88,11 @@
     });
 
     return found.filter(function (source) {
-      return visibleActions(source).length >= 1;
+      var actionCount = visibleActions(source).length;
+      if (source.matches(".top") && !source.matches("[data-mobile-menu-source],.topbar-actions,.top-links,.header-actions,.nav-actions")) {
+        return actionCount >= 2;
+      }
+      return actionCount >= 1;
     });
   }
 
@@ -147,6 +151,11 @@
 
   function ensureNavigationSource() {
     var existing = chooseSource();
+    if (existing && existing.id !== FALLBACK_SOURCE_ID) {
+      var fallback = document.getElementById(FALLBACK_SOURCE_ID);
+      if (fallback) fallback.remove();
+      return existing;
+    }
     if (existing) return existing;
     createFallbackSource();
     return chooseSource();
