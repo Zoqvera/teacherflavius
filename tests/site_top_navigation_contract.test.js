@@ -36,10 +36,10 @@ test("uses SVG controls rather than character icons", function () {
   assert.doesNotMatch(navigation, />×</);
 });
 
-test("loads the standardized menu on the home and key portal pages", function () {
+test("keeps the home without the standardized top menu and preserves it on portal pages", function () {
   const version = "/mobile_top_navigation.js?v=20260922-standard-menu-1";
   assert.equal(runtimeConfig.includes(version), true);
-  assert.equal(home.includes(version), true);
+  assert.equal(home.includes(version), false);
   assert.equal(studentArea.includes(version), true);
   assert.equal(myClass.includes(version), true);
 });
