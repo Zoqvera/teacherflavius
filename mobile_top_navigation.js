@@ -1,12 +1,23 @@
 (function () {
   "use strict";
 
-  if (window.__teacherFlaviusMobileTopNavigationLoaded) return;
+  if (window.__teacherFlaviusSiteTopNavigationLoaded) return;
+  window.__teacherFlaviusSiteTopNavigationLoaded = true;
   window.__teacherFlaviusMobileTopNavigationLoaded = true;
 
   var BAR_ID = "tf-mobile-top-navigation";
   var OVERLAY_ID = "tf-mobile-top-menu-overlay";
   var STYLE_ID = "tf-mobile-top-navigation-styles";
+  var FALLBACK_SOURCE_ID = "tf-standard-navigation-source";
+  var FALLBACK_LINKS = Object.freeze([
+    Object.freeze({ href: "/", label: "HOME" }),
+    Object.freeze({ href: "/aulas-em-grupo/", label: "AULAS EM GRUPO" }),
+    Object.freeze({ href: "/aulas-individuais/", label: "AULAS INDIVIDUAIS" }),
+    Object.freeze({ href: "/area-do-estudante/", label: "ÁREA DO ESTUDANTE" })
+  ]);
+  var MENU_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var CLOSE_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+  var ARROW_ICON_SVG = '<svg class="tf-top-nav-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
   var SOURCE_SELECTORS = [
     "[data-mobile-menu-source]",
     ".topbar-actions",
@@ -77,7 +88,11 @@
     });
 
     return found.filter(function (source) {
-      return visibleActions(source).length >= 2;
+      var actionCount = visibleActions(source).length;
+      if (source.matches(".top") && !source.matches("[data-mobile-menu-source],.topbar-actions,.top-links,.header-actions,.nav-actions")) {
+        return actionCount >= 2;
+      }
+      return actionCount >= 1;
     });
   }
 
@@ -85,11 +100,65 @@
     var candidates = candidateSources();
     if (!candidates.length) return null;
 
-    candidates.sort(function (a, b) {
+    var realSources = candidates.filter(function (source) {
+      return source.id !== FALLBACK_SOURCE_ID;
+    });
+    var pool = realSources.length ? realSources : candidates;
+
+    pool.sort(function (a, b) {
       return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
     });
 
-    return candidates[0];
+    return pool[0];
+  }
+
+  function normalizePathname(value) {
+    var path = String(value || "/").toLowerCase();
+    if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+    return path || "/";
+  }
+
+  function navigationHost() {
+    return document.querySelector(".container") ||
+      document.querySelector(".shell") ||
+      document.querySelector("main") ||
+      document.body;
+  }
+
+  function createFallbackSource() {
+    if (!document.body || document.getElementById(FALLBACK_SOURCE_ID)) return;
+
+    var source = document.createElement("nav");
+    source.id = FALLBACK_SOURCE_ID;
+    source.className = "top-links";
+    source.setAttribute("data-mobile-menu-source", "true");
+    source.setAttribute("aria-label", "Navegação principal");
+
+    var currentPath = normalizePathname(window.location.pathname);
+    FALLBACK_LINKS.forEach(function (item) {
+      if (normalizePathname(item.href) === currentPath) return;
+      var link = document.createElement("a");
+      link.className = "top-link";
+      link.href = item.href;
+      link.textContent = item.label;
+      source.appendChild(link);
+    });
+
+    var host = navigationHost();
+    if (!host) return;
+    host.insertBefore(source, host.firstChild || null);
+  }
+
+  function ensureNavigationSource() {
+    var existing = chooseSource();
+    if (existing && existing.id !== FALLBACK_SOURCE_ID) {
+      var fallback = document.getElementById(FALLBACK_SOURCE_ID);
+      if (fallback) fallback.remove();
+      return existing;
+    }
+    if (existing) return existing;
+    createFallbackSource();
+    return chooseSource();
   }
 
   function installStyles() {
@@ -103,7 +172,9 @@
       "#" + BAR_ID + "{display:flex!important;align-items:center;justify-content:flex-end;width:100%;margin:0 0 22px;padding:0 2px;position:relative;z-index:1200;font-family:var(--tf-font-body,Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif)}",
       "#" + BAR_ID + " .tf-mobile-nav-toggle{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:10px 17px;border:1px solid rgba(78,154,236,.46);border-radius:14px;background:rgba(5,66,136,.18);color:#e8f2ff;font:800 12px/1.2 var(--tf-font-display,Inter,system-ui,sans-serif);letter-spacing:.02em;box-shadow:0 8px 24px rgba(2,16,43,.16);cursor:pointer;transition:background 160ms ease,border-color 160ms ease,transform 160ms ease}",
       "#" + BAR_ID + " .tf-mobile-nav-toggle:hover{background:rgba(14,91,177,.28);border-color:rgba(78,154,236,.70);transform:translateY(-1px)}",
-      "#" + BAR_ID + " .tf-mobile-nav-toggle-icon{font-size:18px;line-height:1}",
+      "#" + BAR_ID + " .tf-mobile-nav-toggle-icon{display:inline-flex;width:18px;height:18px;line-height:1}",
+      "#" + BAR_ID + " .tf-top-nav-svg,#" + OVERLAY_ID + " .tf-top-nav-svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
+      "#" + OVERLAY_ID + " .tf-top-nav-arrow{width:18px;height:18px;flex:0 0 18px;margin-left:12px;fill:none;stroke:#4e9aec;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
       "#" + BAR_ID + " button:focus-visible,#" + OVERLAY_ID + " a:focus-visible,#" + OVERLAY_ID + " button:focus-visible{outline:3px solid #4e9aec!important;outline-offset:3px!important}",
       "#" + OVERLAY_ID + "{display:none;position:fixed!important;inset:0!important;z-index:2147482500;padding:18px!important;background:rgba(2,6,23,.72);backdrop-filter:blur(6px)}",
       "#" + OVERLAY_ID + ".is-open{display:flex!important;align-items:center!important;justify-content:center!important}",
@@ -114,10 +185,10 @@
       "#" + OVERLAY_ID + " .tf-mobile-menu-list{display:grid;gap:9px}",
       "#" + OVERLAY_ID + " .tf-mobile-menu-item{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:52px;padding:13px 15px;border:1px solid rgba(78,154,236,.22);border-radius:14px;background:rgba(5,66,136,.18);color:#e2e8f0;font:750 13px/1.35 var(--tf-font-display,Inter,system-ui,sans-serif);text-align:left;text-decoration:none;cursor:pointer}",
       "#" + OVERLAY_ID + " .tf-mobile-menu-item:hover{background:rgba(14,91,177,.24);border-color:rgba(78,154,236,.38)}",
-      "#" + OVERLAY_ID + " .tf-mobile-menu-item::after{content:'›';margin-left:12px;color:#4e9aec;font-size:21px;line-height:1}",
+      "#" + OVERLAY_ID + " .tf-mobile-menu-item-label{min-width:0}",
       "#" + OVERLAY_ID + " .tf-mobile-menu-item.tf-mobile-menu-danger{margin-top:5px;border-color:rgba(248,113,113,.40);background:rgba(248,113,113,.10);color:#fca5a5}",
       "#" + OVERLAY_ID + " .tf-mobile-menu-item.tf-mobile-menu-danger:hover{background:rgba(248,113,113,.16);border-color:rgba(248,113,113,.58)}",
-      "#" + OVERLAY_ID + " .tf-mobile-menu-item.tf-mobile-menu-danger::after{content:'';margin:0}",
+      "#" + OVERLAY_ID + " .tf-mobile-menu-item.tf-mobile-menu-danger .tf-top-nav-arrow{display:none}",
       "body.tf-mobile-menu-open{overflow:hidden!important}",
       "@media(max-width:720px){#" + BAR_ID + "{margin-bottom:20px}#" + OVERLAY_ID + " .tf-mobile-menu-sheet{width:min(100%,520px);padding:18px}}",
       "@media(max-width:380px){#" + BAR_ID + " .tf-mobile-nav-toggle{min-height:42px;padding:9px 13px;font-size:11px}}",
@@ -185,7 +256,15 @@
     }
 
     proxy.className = "tf-mobile-menu-item" + (isDangerAction(original) ? " tf-mobile-menu-danger" : "");
-    proxy.textContent = label;
+    var labelNode = document.createElement("span");
+    labelNode.className = "tf-mobile-menu-item-label";
+    labelNode.textContent = label;
+    proxy.appendChild(labelNode);
+    if (!isDangerAction(original)) {
+      var arrow = document.createElement("span");
+      arrow.innerHTML = ARROW_ICON_SVG;
+      proxy.appendChild(arrow.firstChild);
+    }
     proxy.setAttribute("data-tf-mobile-menu-proxy", "true");
     if (original.hasAttribute("aria-label")) proxy.setAttribute("aria-label", original.getAttribute("aria-label"));
     return proxy;
@@ -202,7 +281,7 @@
       '<div class="tf-mobile-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="tf-mobile-menu-title">',
       '  <div class="tf-mobile-menu-head">',
       '    <h2 class="tf-mobile-menu-title" id="tf-mobile-menu-title">Menu</h2>',
-      '    <button class="tf-mobile-menu-close" type="button" aria-label="Fechar menu">×</button>',
+      '    <button class="tf-mobile-menu-close" type="button" aria-label="Fechar menu"></button>',
       '  </div>',
       '  <div class="tf-mobile-menu-list"></div>',
       '</div>'
@@ -215,6 +294,7 @@
 
     var closeButton = overlay.querySelector(".tf-mobile-menu-close");
     if (closeButton) {
+      closeButton.innerHTML = CLOSE_ICON_SVG;
       closeButton.addEventListener("click", function (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -242,7 +322,7 @@
     toggle.className = "tf-mobile-nav-toggle";
     toggle.setAttribute("aria-controls", OVERLAY_ID);
     toggle.setAttribute("aria-expanded", "false");
-    toggle.innerHTML = '<span class="tf-mobile-nav-toggle-icon" aria-hidden="true">☰</span><span>Menu</span>';
+    toggle.innerHTML = '<span class="tf-mobile-nav-toggle-icon" aria-hidden="true">' + MENU_ICON_SVG + '</span><span>Menu</span>';
     toggle.addEventListener("click", openMenu);
     bar.appendChild(toggle);
 
@@ -265,14 +345,14 @@
     installStudentAreaShortcut();
     installStyles();
 
-    var source = chooseSource();
+    var source = ensureNavigationSource();
     if (!source) {
       clearEnhancement();
       return;
     }
 
     var actions = visibleActions(source);
-    if (actions.length < 2) {
+    if (actions.length < 1) {
       clearEnhancement();
       return;
     }

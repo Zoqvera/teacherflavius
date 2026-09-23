@@ -12,10 +12,11 @@
   });
 
   function loadMobileTopNavigation() {
-    if (window.__teacherFlaviusMobileTopNavigationLoaded) return;
+    if (window.__teacherFlaviusSiteTopNavigationLoaded || window.__teacherFlaviusMobileTopNavigationLoaded) return;
     if (document.querySelector('script[src*="mobile_top_navigation.js"]')) return;
     const script = document.createElement("script");
-    script.src = "/mobile_top_navigation.js?v=20260820-desktop-menu-1";
+    script.id = "teacher-flavius-mobile-top-navigation";
+    script.src = "/mobile_top_navigation.js?v=20260922-standard-menu-1";
     script.defer = true;
     document.head.appendChild(script);
   }

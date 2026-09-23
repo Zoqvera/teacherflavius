@@ -24,7 +24,40 @@ class StaticHtmlBaselineTests(unittest.TestCase):
         self.assertEqual(transformed.count('name="viewport"'), 1)
         self.assertEqual(transformed.count("/responsive_compat.css"), 1)
         self.assertEqual(transformed.count("/error_monitor.js"), 1)
+        self.assertEqual(transformed.count("/mobile_top_navigation.js"), 1)
+        self.assertEqual(transformed.count('id="teacher-flavius-mobile-top-navigation"'), 1)
         self.assertNotIn('data-page-status="404"', transformed)
+
+    def test_uses_page_runtime_as_the_navigation_loader_when_present(self) -> None:
+        html = (
+            "<html><head><script src='/site_page_runtime.js?v=test'></script></head>"
+            "<body></body></html>"
+        )
+        transformed, enhanced = inject_site_baseline(html, Path("login/index.html"))
+
+        self.assertTrue(enhanced)
+        self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
+        self.assertEqual(transformed.count("/site_page_runtime.js"), 1)
+
+    def test_skips_direct_navigation_on_document_loader_shells(self) -> None:
+        html = (
+            "<html><head><script>document.write(html)</script></head>"
+            "<body>Carregando...</body></html>"
+        )
+        transformed, enhanced = inject_site_baseline(html, Path("login/index.html"))
+
+        self.assertTrue(enhanced)
+        self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
+
+    def test_skips_direct_navigation_on_immediate_redirect_shells(self) -> None:
+        html = (
+            '<html><head><meta http-equiv="refresh" content="0;url=/login/"></head>'
+            "<body></body></html>"
+        )
+        transformed, enhanced = inject_site_baseline(html, Path("acesso-aluno/index.html"))
+
+        self.assertTrue(enhanced)
+        self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
 
     def test_is_idempotent(self) -> None:
         html = "<html><head></head><body></body></html>"
