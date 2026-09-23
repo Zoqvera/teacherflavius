@@ -61,6 +61,8 @@ A regra vigente é:
 
 A turma 48 voltou à capacidade padrão de quarteto. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas, na troca de turma e na reativação de aluno arquivado.
 
+A capacidade de reposição é independente da capacidade de matrícula regular. Nos horários automáticos de reposição, são acrescentadas três vagas exclusivas para reposição à regra anterior: turmas com 4 alunos oferecem 4 vagas de reposição, com 3 alunos oferecem 5 e com 2 alunos oferecem 6. Esse cálculo não modifica `private.get_class_operational_capacity()` nem permite novas matrículas regulares acima do limite da turma.
+
 `class_students` também possui uma constraint garantindo exatamente uma referência de sujeito: `user_id` ou `invite_id`, nunca ambos e nunca nenhum.
 
 ## Probes sintéticos
