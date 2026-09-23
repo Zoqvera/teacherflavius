@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Alunos do dia - Teacher Flávio</title>
+  <link rel="canonical" href="/alunos-do-dia/">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260715-1"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/professor.css?v=20260820-1">
+  <link rel="stylesheet" href="/professor_mfa_gate.css?v=20260909-1">
+  <link rel="stylesheet" href="/alunos-do-dia/alunos_do_dia.css?v=20260923-1">
+</head>
+<body class="auth-checking">
+  <main class="day-shell">
+    <nav class="top-links" aria-label="Navegação principal">
+      <a class="top-link" href="/">HOME</a>
+      <a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a>
+      <a class="top-link" href="/professor/">ÁREA DO PROFESSOR</a>
+    </nav>
+
+    <header class="day-header">
+      <div>
+        <span class="day-eyebrow">TEACHER FLÁVIO</span>
+        <h1>Alunos do dia</h1>
+        <p id="dayDateLabel">Carregando a agenda de hoje...</p>
+      </div>
+      <button id="refreshStudentsButton" class="day-secondary-button" type="button">ATUALIZAR</button>
+    </header>
+
+    <p id="dayMessage" class="day-message" role="status" hidden></p>
+
+    <section id="daySummary" class="day-summary" aria-label="Resumo das aulas do dia"></section>
+
+    <section class="day-panel" aria-labelledby="studentsTodayTitle">
+      <div class="day-section-heading">
+        <div>
+          <span class="day-eyebrow">AGENDA DE HOJE</span>
+          <h2 id="studentsTodayTitle">Alunos com aula</h2>
+        </div>
+      </div>
+      <div id="studentsTodayList" class="day-list" aria-live="polite">
+        <p class="day-empty">Carregando alunos...</p>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="whatsappDialog" class="day-dialog" aria-labelledby="whatsappDialogTitle">
+    <form id="whatsappForm" class="day-dialog-card">
+      <div class="day-dialog-heading">
+        <div>
+          <span class="day-eyebrow">CONTATO</span>
+          <h2 id="whatsappDialogTitle">Adicionar WhatsApp</h2>
+        </div>
+        <button id="whatsappDialogClose" class="day-dialog-close" type="button" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <p id="whatsappStudentName" class="day-dialog-student"></p>
+      <label class="day-field">
+        <span>Número com DDD</span>
+        <input id="whatsappInput" type="tel" inputmode="tel" autocomplete="off" maxlength="24" placeholder="Ex.: 34 99999-9999" required>
+      </label>
+      <div class="day-dialog-actions">
+        <button id="whatsappSaveButton" class="day-primary-button" type="submit">SALVAR WHATSAPP</button>
+        <button id="whatsappCancelButton" class="day-secondary-button" type="button">CANCELAR</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/professor_mfa_service.js?v=20260909-1"></script>
+  <script src="/professor_mfa_gate.js?v=20260909-1"></script>
+  <script src="/alunos-do-dia/alunos_do_dia.js?v=20260923-1"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260814-1"></script>
+</body>
+</html>
