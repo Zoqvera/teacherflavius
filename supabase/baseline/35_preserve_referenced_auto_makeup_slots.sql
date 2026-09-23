@@ -46,10 +46,9 @@ begin
       d::date as class_date,
       ((d::date + tc.class_start_time) at time zone 'America/Sao_Paulo') as starts_at,
       (((d::date + tc.class_start_time) + interval '1 hour') at time zone 'America/Sao_Paulo') as ends_at,
-      case sc.student_count
-        when 4 then 1
-        when 3 then 2
-        when 2 then 3
+      case
+        when sc.student_count between 2 and 4
+          then (5 - sc.student_count) + 3
         else 0
       end::integer as capacity
     from public.teacher_classes tc
