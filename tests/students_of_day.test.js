@@ -12,6 +12,14 @@ const migration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260923150718_add_students_of_day.sql"),
   "utf8"
 );
+const cancellationAttendanceMigration = fs.readFileSync(
+  path.join(root, "supabase/migrations/20260923174203_record_no_show_on_day_cancel.sql"),
+  "utf8"
+);
+const studentsScript = fs.readFileSync(
+  path.join(root, "alunos-do-dia/alunos_do_dia.js"),
+  "utf8"
+);
 const studentsOfDay = require("../alunos-do-dia/alunos_do_dia.js");
 
 test("builds the requested WhatsApp confirmation message", function () {
@@ -73,4 +81,38 @@ test("cancelling a regular lesson is occurrence-specific and does not change enr
 test("manual WhatsApp registration updates the appropriate student record", function () {
   assert.match(migration, /update public\.profiles[\s\S]*set whatsapp = normalized_digits/i);
   assert.match(migration, /update private\.trial_lesson_appointments appointment[\s\S]*set whatsapp = trial_whatsapp/i);
+});
+
+test("records a no-show when a regular or makeup lesson is cancelled from students of day", function () {
+  assert.match(cancellationAttendanceMigration, /attendance_status[\s\S]*'Faltou'/i);
+  assert.match(cancellationAttendanceMigration, /Não compareceu na aula\./);
+  assert.match(cancellationAttendanceMigration, /insert into public\.student_frequency/i);
+  assert.match(
+    cancellationAttendanceMigration,
+    /returning booking\.student_id, booking\.class_number[\s\S]*into resolved_student_id, resolved_class_number/i
+  );
+});
+
+test("marks cancelled trial lessons as no-show", function () {
+  assert.match(
+    cancellationAttendanceMigration,
+    /update private\.trial_lesson_appointments appointment[\s\S]*set status = 'no_show'/i
+  );
+  assert.doesNotMatch(
+    cancellationAttendanceMigration,
+    /update private\.trial_lesson_appointments appointment[\s\S]*set status = 'cancelled'/i
+  );
+});
+
+test("keeps regular cancellation attendance idempotent", function () {
+  assert.match(
+    cancellationAttendanceMigration,
+    /on conflict \(student_id, class_number, lesson_date\) do nothing/i
+  );
+  assert.match(cancellationAttendanceMigration, /get diagnostics cancellation_inserted = row_count/i);
+  assert.match(cancellationAttendanceMigration, /if cancellation_inserted > 0 then/i);
+});
+
+test("confirms that cancellation also records absence in the interface", function () {
+  assert.match(studentsScript, /Aula cancelada e ausência registrada\./);
 });

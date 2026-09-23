@@ -307,6 +307,7 @@ declare
   target_date date := (now() at time zone 'America/Sao_Paulo')::date;
   resolved_student_id uuid;
   resolved_class_number integer;
+  cancellation_inserted integer := 0;
 begin
   if not coalesce(public.is_teacher_admin_mfa(), false) then
     raise exception 'MFA do professor é obrigatório.' using errcode = '42501';
@@ -345,6 +346,23 @@ begin
       auth.uid()
     )
     on conflict (student_id, class_number, lesson_date) do nothing;
+
+    get diagnostics cancellation_inserted = row_count;
+
+    if cancellation_inserted > 0 then
+      insert into public.student_frequency (
+        user_id,
+        class_date,
+        attendance_status,
+        class_notes
+      )
+      values (
+        resolved_student_id,
+        target_date,
+        'Faltou',
+        '[Turma ' || resolved_class_number || '] Não compareceu na aula.'
+      );
+    end if;
   elsif normalized_kind = 'makeup' then
     update public.makeup_class_bookings booking
     set status = 'cancelled',
@@ -356,11 +374,26 @@ begin
         from public.makeup_class_slots slot
         where slot.id = booking.slot_id
           and (slot.starts_at at time zone 'America/Sao_Paulo')::date = target_date
-      );
+      )
+    returning booking.student_id, booking.class_number
+      into resolved_student_id, resolved_class_number;
 
     if not found then
       raise exception 'Reposição confirmada de hoje não encontrada.' using errcode = 'P0002';
     end if;
+
+    insert into public.student_frequency (
+      user_id,
+      class_date,
+      attendance_status,
+      class_notes
+    )
+    values (
+      resolved_student_id,
+      target_date,
+      'Faltou',
+      '[Turma ' || resolved_class_number || '] Não compareceu na aula.'
+    );
 
     insert into public.makeup_class_email_notifications (
       booking_id,
@@ -373,7 +406,7 @@ begin
     on conflict (booking_id, notification_type) do nothing;
   elsif normalized_kind = 'trial' then
     update private.trial_lesson_appointments appointment
-    set status = 'cancelled',
+    set status = 'no_show',
         enrolled_after_trial_at = null,
         enrolled_after_trial_by = null,
         updated_at = now()
@@ -391,7 +424,8 @@ begin
   return jsonb_build_object(
     'ok', true,
     'lesson_kind', normalized_kind,
-    'entry_id', target_entry_id
+    'entry_id', target_entry_id,
+    'attendance_recorded', true
   );
 end;
 $function$;
