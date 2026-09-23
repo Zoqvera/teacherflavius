@@ -15,6 +15,7 @@
     if (window.__teacherFlaviusSiteTopNavigationLoaded || window.__teacherFlaviusMobileTopNavigationLoaded) return;
     if (document.querySelector('script[src*="mobile_top_navigation.js"]')) return;
     const script = document.createElement("script");
+    script.id = "teacher-flavius-mobile-top-navigation";
     script.src = "/mobile_top_navigation.js?v=20260922-standard-menu-1";
     script.defer = true;
     document.head.appendChild(script);
