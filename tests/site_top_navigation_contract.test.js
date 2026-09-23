@@ -12,20 +12,20 @@ const myClass = fs.readFileSync(path.join(root, "minha_turma.html"), "utf8");
 const profileStudents = fs.readFileSync(path.join(root, "perfil_dos_alunos.html"), "utf8");
 
 test("uses the profile-students menu pattern as the global navigation model", function () {
-  assert.match(profileStudents, /class="top-links"/);
-  assert.match(navigation, /SOURCE_SELECTORS/);
-  assert.match(navigation, /\\.top-links/);
-  assert.match(navigation, /tf-mobile-top-menu-overlay/);
-  assert.match(navigation, /tf-mobile-nav-toggle/);
+  assert.equal(profileStudents.includes('class="top-links"'), true);
+  assert.equal(navigation.includes("SOURCE_SELECTORS"), true);
+  assert.equal(navigation.includes('".top-links"'), true);
+  assert.equal(navigation.includes("tf-mobile-top-menu-overlay"), true);
+  assert.equal(navigation.includes("tf-mobile-nav-toggle"), true);
 });
 
 test("creates a standardized fallback menu when a page has no navigation source", function () {
-  assert.match(navigation, /FALLBACK_SOURCE_ID/);
-  assert.match(navigation, /ensureNavigationSource/);
-  assert.match(navigation, /visibleActions\\(source\\)\\.length >= 1/);
-  assert.match(navigation, /href: "\\/aulas-em-grupo\\/"/);
-  assert.match(navigation, /href: "\\/aulas-individuais\\/"/);
-  assert.match(navigation, /href: "\\/area-do-estudante\\/"/);
+  assert.equal(navigation.includes("FALLBACK_SOURCE_ID"), true);
+  assert.equal(navigation.includes("ensureNavigationSource"), true);
+  assert.equal(navigation.includes("actionCount >= 1"), true);
+  assert.equal(navigation.includes('href: "/aulas-em-grupo/"'), true);
+  assert.equal(navigation.includes('href: "/aulas-individuais/"'), true);
+  assert.equal(navigation.includes('href: "/area-do-estudante/"'), true);
 });
 
 test("uses SVG controls rather than character icons", function () {
