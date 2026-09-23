@@ -1,8 +1,10 @@
 -- Geração automática de horários de reposição para os próximos 30 dias.
--- Regras de capacidade:
--- 4 alunos -> 1 vaga de reposição
--- 3 alunos -> 2 vagas de reposição
--- 2 alunos -> 3 vagas de reposição
+-- Regras de capacidade de reposição:
+-- A capacidade de matrícula regular da turma não é alterada.
+-- Cada horário automático recebe três vagas extras exclusivas para reposição.
+-- 4 alunos -> 4 vagas de reposição
+-- 3 alunos -> 5 vagas de reposição
+-- 2 alunos -> 6 vagas de reposição
 -- 1 aluno  -> nenhuma vaga
 -- A duração segue o padrão atual das reposições: 60 minutos.
 
@@ -59,10 +61,9 @@ begin
       d::date as class_date,
       ((d::date + tc.class_start_time) at time zone 'America/Sao_Paulo') as starts_at,
       (((d::date + tc.class_start_time) + interval '1 hour') at time zone 'America/Sao_Paulo') as ends_at,
-      case sc.student_count
-        when 4 then 1
-        when 3 then 2
-        when 2 then 3
+      case
+        when sc.student_count between 2 and 4
+          then (5 - sc.student_count) + 3
         else 0
       end::integer as capacity
     from public.teacher_classes tc
