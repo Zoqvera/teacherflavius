@@ -8,6 +8,10 @@ const capacityMigration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260910132830_centralize_class_capacity_rules.sql"),
   "utf8"
 );
+const wedTenCapacityMigration = fs.readFileSync(
+  path.join(root, "supabase/migrations/20260923173256_increase_wed_10_capacity.sql"),
+  "utf8"
+);
 const healthMigration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260910132938_add_operational_data_quality_health.sql"),
   "utf8"
@@ -25,6 +29,12 @@ test("centralizes operational class capacity", function () {
   assert.match(capacityMigration, /when tc\.class_type = 'individual' then 1/);
   assert.match(capacityMigration, /when tc\.class_type = 'quartet' then 4/);
   assert.match(capacityMigration, /when tc\.class_type = 'eight_students' then 8/);
+});
+
+test("keeps the Wednesday 10h class at an explicit five-student exception", function () {
+  assert.match(wedTenCapacityMigration, /class_number in \(55, 73, 75\)/);
+  assert.match(wedTenCapacityMigration, /when tc\.class_type = 'quartet' then 4/);
+  assert.match(wedTenCapacityMigration, /when tc\.class_type = 'quintet' then 5/);
 });
 
 test("promotes class subject reference to a database invariant", function () {
