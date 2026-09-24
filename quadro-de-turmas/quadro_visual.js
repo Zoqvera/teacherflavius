@@ -5,7 +5,7 @@
     var badge = card.querySelector('.class-type-badge');
     if (!badge) return null;
     if (badge.classList.contains('individual')) return 1;
-    if (badge.classList.contains('quartet')) return 4;
+    if (badge.classList.contains('quartet')) return 5;
     if (badge.classList.contains('quintet')) return 5;
     if (badge.classList.contains('eight_students')) return 8;
     return null;
