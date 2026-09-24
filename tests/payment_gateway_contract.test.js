@@ -15,6 +15,9 @@ const syncSource = read("supabase/functions/_shared/mercado_pago_payment_sync.ts
 const gatewayFailureMigration = read(
   "supabase/migrations/20260911025109_capture_mercado_pago_policy_gateway_failures.sql",
 );
+const tuitionOverrideMigration = read(
+  "supabase/migrations/20260924013000_add_monthly_tuition_amount_override.sql",
+);
 
 test("payment creation preserves server-side amount and provider idempotency contracts", () => {
   assert.match(createPaymentSource, /\.from\("monthly_tuition"\)/);
@@ -22,6 +25,25 @@ test("payment creation preserves server-side amount and provider idempotency con
   assert.match(createPaymentSource, /"X-Idempotency-Key": idempotencyKey/);
   assert.match(createPaymentSource, /external_reference:\s*attempt\.id/);
   assert.match(createPaymentSource, /process_mercado_pago_payment/);
+});
+
+test("monthly tuition generation preserves explicit amount overrides", () => {
+  assert.match(
+    tuitionOverrideMigration,
+    /add column if not exists amount_override numeric\(10,2\)/,
+  );
+  assert.match(
+    tuitionOverrideMigration,
+    /coalesce\(\s*public\.monthly_tuition\.amount_override,\s*excluded\.amount_due\s*\)/,
+  );
+  assert.match(
+    tuitionOverrideMigration,
+    /public\.monthly_tuition\.amount_override is null/,
+  );
+  assert.match(
+    tuitionOverrideMigration,
+    /public\.monthly_tuition\.payment_date is null/,
+  );
 });
 
 test("payment creation distinguishes Pix and card policy failures", () => {
