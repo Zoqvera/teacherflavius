@@ -174,7 +174,10 @@
 
   function shouldSendOperationalEvent(eventName) {
     if (safeLocalGet(TRACKING_EXCLUDED_KEY) === "1") return false;
-    if (eventName === "generate_lead" && window.TeacherCroAttribution) return false;
+    var attributionOwnsLeadTracking =
+      window.TeacherCroAttribution &&
+      window.TeacherCroAttribution.tracks_first_party_leads === true;
+    if (eventName === "generate_lead" && attributionOwnsLeadTracking) return false;
 
     var now = Date.now();
     var lastTrackedAt = lastTrackedAtByEvent[eventName] || 0;
