@@ -42,6 +42,8 @@
     return path === "/" ||
       path === "/index.html" ||
       path.indexOf("/curso-de-ingles-online") === 0 ||
+      path.indexOf("/aulas-em-grupo") === 0 ||
+      path.indexOf("/aulas-individuais") === 0 ||
       path.indexOf("/sobre") === 0 ||
       path.indexOf("/recursos") === 0 ||
       path.indexOf("/quero-conhecer") === 0 ||
@@ -339,7 +341,8 @@
     getParams: attributionParams,
     ai_assistant: aiReferral || "not_set",
     acquisition: acquisition,
-    site_area: siteArea()
+    site_area: siteArea(),
+    tracks_first_party_leads: isAcquisitionPage()
   };
 
   sendFirstPartyEvent("page_view");

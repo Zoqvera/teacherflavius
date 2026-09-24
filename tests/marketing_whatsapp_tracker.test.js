@@ -204,7 +204,7 @@ test("does not track individual CTA clicks on other pages", function () {
 test("keeps CTA monitoring active when consent analytics owns WhatsApp lead tracking", function () {
   const tracker = runTracker({
     pathname: "/aulas-individuais/",
-    teacherCroAttribution: {}
+    teacherCroAttribution: { tracks_first_party_leads: true }
   });
 
   tracker.clickLink({
@@ -218,6 +218,23 @@ test("keeps CTA monitoring active when consent analytics owns WhatsApp lead trac
   assert.equal(tracker.sentPayloads[0].link_position, "individual_final_whatsapp");
 });
 
+
+test("falls back to operational WhatsApp lead tracking when attribution does not own the page", function () {
+  const tracker = runTracker({
+    pathname: "/aulas-em-grupo/",
+    teacherCroAttribution: { tracks_first_party_leads: false }
+  });
+
+  tracker.clickLink({
+    href: "https://wa.me/5511999999999",
+    containers: [".hero"]
+  });
+
+  assert.equal(tracker.sentPayloads.length, 1);
+  assert.equal(tracker.sentPayloads[0].event_name, "generate_lead");
+  assert.equal(tracker.sentPayloads[0].link_position, "hero");
+  assert.equal(tracker.sentPayloads[0].page_path, "/aulas-em-grupo/");
+});
 
 test("ebook CTA never creates a commercial lead even if its destination becomes WhatsApp", function () {
   const tracker = runTracker({ pathname: "/aulas-individuais/" });
