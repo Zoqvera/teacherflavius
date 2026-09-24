@@ -13,7 +13,7 @@
   function getClassTypeVisual(value) {
     if (value === "quartet" || value === "group") {
       return {
-        label: "QUARTETO",
+        label: "GRUPO",
         color: "#bfdbfe",
         background: "rgba(59,130,246,.15)",
         border: "rgba(96,165,250,.35)"

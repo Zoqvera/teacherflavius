@@ -175,7 +175,7 @@
       '<div class="cro-proof-item">Aula experimental gratuita</div>',
       '<div class="cro-proof-item">Mais de 15 anos de experiência</div>',
       '<div class="cro-proof-item">Certificação CELTA</div>',
-      '<div class="cro-proof-item">Turmas de até 4 alunos</div>',
+      '<div class="cro-proof-item">Turmas de até 5 alunos</div>',
       '</div>'
     ].join("");
     hero.insertAdjacentElement("afterend", strip);

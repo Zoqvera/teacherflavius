@@ -24,7 +24,7 @@ function getClassDisplayName(classItem) {
 }
 
 function getClassTypeMeta(value) {
-  if (value === "quartet") return { label:"QUARTETO", css:"quartet" };\n  if (value === "quintet") return { label:"QUINTETO", css:"quintet" };
+  if (value === "quartet") return { label:"GRUPO", css:"quartet" };\n  if (value === "quintet") return { label:"QUINTETO", css:"quintet" };
   if (value === "eight_students") return { label:"8 ALUNOS", css:"eight-students" };
   if (value === "individual") return { label:"INDIVIDUAL", css:"individual" };
   return { label:"TIPO NÃO DEFINIDO", css:"unset" };

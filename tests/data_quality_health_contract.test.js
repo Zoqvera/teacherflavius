@@ -12,6 +12,10 @@ const wedTenCapacityMigration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260923173256_increase_wed_10_capacity.sql"),
   "utf8"
 );
+const groupCapacityMigration = fs.readFileSync(
+  path.join(root, "supabase/migrations/20260924120059_set_group_capacity_five_and_update_offer_content.sql"),
+  "utf8"
+);
 const healthMigration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260910132938_add_operational_data_quality_health.sql"),
   "utf8"
@@ -31,10 +35,12 @@ test("centralizes operational class capacity", function () {
   assert.match(capacityMigration, /when tc\.class_type = 'eight_students' then 8/);
 });
 
-test("keeps the Wednesday 10h class at an explicit five-student exception", function () {
+test("moves every small group class to five-student capacity", function () {
   assert.match(wedTenCapacityMigration, /class_number in \(55, 73, 75\)/);
-  assert.match(wedTenCapacityMigration, /when tc\.class_type = 'quartet' then 4/);
-  assert.match(wedTenCapacityMigration, /when tc\.class_type = 'quintet' then 5/);
+  assert.match(groupCapacityMigration, /when tc\.class_type in \('quartet', 'quintet'\) then 5/);
+  assert.match(groupCapacityMigration, /greatest\(0, 5 - cc\.occupied_spots\)/);
+  assert.match(groupCapacityMigration, /cc\.occupied_spots < 5/);
+  assert.match(groupCapacityMigration, /turmas de até cinco alunos/);
 });
 
 test("promotes class subject reference to a database invariant", function () {

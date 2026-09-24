@@ -54,9 +54,8 @@ A capacidade operacional foi centralizada em `private.get_class_operational_capa
 A regra vigente é:
 
 - `individual`: 1 aluno;
-- `quartet`: 4 alunos;
+- `quartet`: 5 alunos;
 - `quintet`: 5 alunos;
-- turmas 55, 73 e 75: exceção operacional de 5 alunos;
 - `eight_students`: 8 alunos.
 
 A turma 48 voltou à capacidade padrão de quarteto. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas, na troca de turma e na reativação de aluno arquivado.
