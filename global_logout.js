@@ -6,6 +6,19 @@
 
   const BUTTON_ID = "globalLogoutButton";
   const STYLE_ID = "globalLogoutStyles";
+  const NAVIGATION_SELECTORS = Object.freeze([
+    ".tf-mobile-nav-source-active",
+    "[data-mobile-menu-source]",
+    ".topbar-actions",
+    ".top-links",
+    ".header-actions",
+    ".nav-actions",
+    ".trial-nav",
+    ".payment-nav",
+    ".site-header .nav",
+    ".top"
+  ]);
+  let navigationObserver = null;
   const SCRIPT_LOAD_OPTIONS = Object.freeze({
     timeoutMs: null,
     resolveOnError: false
@@ -16,7 +29,7 @@
     if (document.querySelector('script[src*="mobile_top_navigation.js"]')) return;
     const script = document.createElement("script");
     script.id = "teacher-flavius-mobile-top-navigation";
-    script.src = "/mobile_top_navigation.js?v=20260922-standard-menu-1";
+    script.src = "/mobile_top_navigation.js?v=20260924-single-menu-1";
     script.defer = true;
     document.head.appendChild(script);
   }
@@ -115,6 +128,28 @@
     document.head.appendChild(style);
   }
 
+  function findNavigationContainer() {
+    for (const selector of NAVIGATION_SELECTORS) {
+      const navigation = document.querySelector(selector);
+      if (navigation) return navigation;
+    }
+    return null;
+  }
+
+  function moveLogoutIntoNavigation() {
+    const button = findExistingButton();
+    const navigation = findNavigationContainer();
+    if (!button || !navigation || button.parentElement === navigation) return;
+    navigation.appendChild(button);
+    button.classList.remove("global-logout-fallback");
+  }
+
+  function observeNavigationContainer() {
+    if (navigationObserver || !window.MutationObserver || !document.documentElement) return;
+    navigationObserver = new MutationObserver(moveLogoutIntoNavigation);
+    navigationObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
+
   function findExistingButton() {
     return document.getElementById(BUTTON_ID) ||
       document.querySelector("[data-auth-logout]") ||
@@ -145,7 +180,7 @@
 
   function getOrCreateButton() {
     let button = findExistingButton();
-    const navigation = document.querySelector(".topbar-actions") || document.querySelector(".top-links") || document.querySelector(".top");
+    const navigation = findNavigationContainer();
 
     if (!button) {
       button = document.createElement("button");
@@ -183,10 +218,12 @@
     injectStyles();
     button = getOrCreateButton();
     button.hidden = false;
+    moveLogoutIntoNavigation();
   }
 
   async function initialize() {
     loadMobileTopNavigation();
+    observeNavigationContainer();
     ensureAuthentication(async function () {
       if (!window.Auth || !window.Auth.isConfigured || !window.Auth.isConfigured()) return;
 
