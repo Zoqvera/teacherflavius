@@ -24,6 +24,9 @@
     ".top-links",
     ".header-actions",
     ".nav-actions",
+    ".trial-nav",
+    ".payment-nav",
+    ".site-header .nav",
     ".top"
   ];
   var currentSource = null;
