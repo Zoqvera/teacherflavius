@@ -46,7 +46,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="header"><div><span class="badge">TEACHER FLÁVIO</span></div><h1>Horários Disponíveis</h1><div id="pageStatus" class="status">Carregando turmas com vagas...</div></div>
     <div class="divider"></div>
     <main id="content" hidden>
-      <p class="intro">Veja abaixo as turmas em grupo disponíveis para mudança. São exibidas somente turmas com vagas. A capacidade padrão é de 4 alunos; excepcionalmente, a turma de quinta-feira às 21h aceita 5.</p>
+      <p class="intro">Veja abaixo as turmas em grupo disponíveis para mudança. São exibidas somente turmas com vagas. A capacidade padrão é de 5 alunos.</p>
       <div id="currentClass" class="current-class">Carregando sua turma atual...</div>
       <section class="summary">
         <div class="summary-card"><span>TURMAS DISPONÍVEIS</span><strong id="classesCount">0</strong></div>
@@ -83,7 +83,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         await refresh(false);
       }
     }
-    function classCapacity(row){return Number(row.class_number)===73?5:4;}
+    function classCapacity(){return 5;}
     function render(rows){
       document.getElementById('classesCount').textContent=String(rows.length);
       document.getElementById('spotsCount').textContent=String(rows.reduce(function(sum,row){return sum+Number(row.available_spots||0);},0));
