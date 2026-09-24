@@ -26,6 +26,10 @@ const studentsScript = fs.readFileSync(
 );
 const studentsWhatsapp = require("../alunos-do-dia/whatsapp_contact.js");
 const studentsOfDay = require("../alunos-do-dia/alunos_do_dia.js");
+const professorIconsScript = fs.readFileSync(
+  path.join(root, "professor/professor_icons.js"),
+  "utf8"
+);
 
 test("builds the requested WhatsApp confirmation message", function () {
   assert.equal(
@@ -197,4 +201,12 @@ test("installs delegated correction for all FALAR NO WHATSAPP links", function (
   assert.match(studentsScript, /data-whatsapp-number/);
   assert.match(page, /whatsapp_contact\.js\?v=20260923-1/);
   assert.match(page, /alunos_do_dia\.js\?v=20260923-4/);
+});
+
+test("provides an SVG icon for the Alunos do dia professor card", function () {
+  assert.match(
+    professorIconsScript,
+    /'alunos-do-dia': '<svg[^']+<\/svg>'/
+  );
+  assert.match(page, /professor_icons\.js\?v=20260924-1/);
 });
