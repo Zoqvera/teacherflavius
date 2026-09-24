@@ -21,6 +21,10 @@ const lessonDisplayMigration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260923175712_add_lesson_to_students_of_day.sql"),
   "utf8"
 );
+const activeStudentsMigration = fs.readFileSync(
+  path.join(root, "supabase/migrations/20260924193744_filter_archived_students_from_students_of_day.sql"),
+  "utf8"
+);
 const studentsScript = fs.readFileSync(
   path.join(root, "alunos-do-dia/alunos_do_dia.js"),
   "utf8"
@@ -80,6 +84,13 @@ test("collects regular lessons, makeup bookings and trial lessons", function () 
   assert.match(migration, /from private\.trial_lesson_appointments appointment/i);
   assert.match(migration, /appointment\.status = 'scheduled'/i);
   assert.match(migration, /booking\.status = 'confirmed'/i);
+});
+
+test("excludes inactive and archived students from makeup lessons", function () {
+  assert.match(
+    activeStudentsMigration,
+    /makeup_lessons as \([\s\S]*join public\.profiles profile[\s\S]*coalesce\(profile\.enrolled, false\) = true[\s\S]*coalesce\(profile\.archived, false\) = false/i
+  );
 });
 
 test("cancelling a regular lesson is occurrence-specific and does not change enrollment capacity", function () {

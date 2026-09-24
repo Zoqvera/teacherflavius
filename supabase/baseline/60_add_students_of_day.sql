@@ -167,12 +167,14 @@ begin
     from public.makeup_class_bookings booking
     join public.makeup_class_slots slot
       on slot.id = booking.slot_id
-    left join public.profiles profile
+    join public.profiles profile
       on profile.id = booking.student_id
     left join lesson_progress progress
       on progress.user_id = booking.student_id
     where booking.status = 'confirmed'
       and slot.is_active = true
+      and coalesce(profile.enrolled, false) = true
+      and coalesce(profile.archived, false) = false
       and (slot.starts_at at time zone 'America/Sao_Paulo')::date = target_date
   ),
   trial_lessons as (
