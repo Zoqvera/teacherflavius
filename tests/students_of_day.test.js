@@ -7,6 +7,7 @@ const root = path.join(__dirname, "..");
 const page = fs.readFileSync(path.join(root, "alunos-do-dia/index.html"), "utf8");
 const area = fs.readFileSync(path.join(root, "area_do_estudante.html"), "utf8");
 const professorHome = fs.readFileSync(path.join(root, "professor_home.js"), "utf8");
+const professorPage = fs.readFileSync(path.join(root, "professor.html"), "utf8");
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 const migration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260923150718_add_students_of_day.sql"),
@@ -26,6 +27,10 @@ const studentsScript = fs.readFileSync(
 );
 const studentsWhatsapp = require("../alunos-do-dia/whatsapp_contact.js");
 const studentsOfDay = require("../alunos-do-dia/alunos_do_dia.js");
+const professorIconsScript = fs.readFileSync(
+  path.join(root, "professor/professor_icons.js"),
+  "utf8"
+);
 
 test("builds the requested WhatsApp confirmation message", function () {
   assert.equal(
@@ -197,4 +202,12 @@ test("installs delegated correction for all FALAR NO WHATSAPP links", function (
   assert.match(studentsScript, /data-whatsapp-number/);
   assert.match(page, /whatsapp_contact\.js\?v=20260923-1/);
   assert.match(page, /alunos_do_dia\.js\?v=20260923-4/);
+});
+
+test("provides an SVG icon for the Alunos do dia professor card", function () {
+  assert.match(
+    professorIconsScript,
+    /'alunos-do-dia': '<svg[^']+<\/svg>'/
+  );
+  assert.match(professorPage, /professor_icons\.js\?v=20260924-1/);
 });
