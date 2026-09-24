@@ -7,6 +7,7 @@ const root = path.join(__dirname, "..");
 const page = fs.readFileSync(path.join(root, "alunos-do-dia/index.html"), "utf8");
 const area = fs.readFileSync(path.join(root, "area_do_estudante.html"), "utf8");
 const professorHome = fs.readFileSync(path.join(root, "professor_home.js"), "utf8");
+const professorPage = fs.readFileSync(path.join(root, "professor.html"), "utf8");
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 const migration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260923150718_add_students_of_day.sql"),
@@ -208,5 +209,5 @@ test("provides an SVG icon for the Alunos do dia professor card", function () {
     professorIconsScript,
     /'alunos-do-dia': '<svg[^']+<\/svg>'/
   );
-  assert.match(page, /professor_icons\.js\?v=20260924-1/);
+  assert.match(professorPage, /professor_icons\.js\?v=20260924-1/);
 });
