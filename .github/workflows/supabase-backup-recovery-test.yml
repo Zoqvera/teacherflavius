@@ -48,7 +48,7 @@ jobs:
           sudo apt-get install -y -qq postgresql-client
 
       - name: Download encrypted backup artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: supabase-*
           path: ${{ runner.temp }}/teacherflavius-backup-artifact

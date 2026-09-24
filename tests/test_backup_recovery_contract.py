@@ -42,7 +42,7 @@ class BackupRecoveryContractTests(unittest.TestCase):
         self.assertIn("Encrypted Supabase logical backup", workflow)
         self.assertIn("github.event.workflow_run.conclusion == 'success'", workflow)
         self.assertIn("actions: read", workflow)
-        self.assertIn("actions/download-artifact@v4", workflow)
+        self.assertIn("actions/download-artifact@v8", workflow)
         self.assertIn("run-id: ${{ env.BACKUP_RUN_ID }}", workflow)
         self.assertIn("bash scripts/verify_supabase_backup_restore.sh", workflow)
 
