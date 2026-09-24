@@ -11,24 +11,24 @@ O projeto combina frontend estático em HTML, CSS e JavaScript com Supabase para
 
 ## Estado atual
 
-Em 17 de setembro de 2026, a plataforma possui:
+Em 24 de setembro de 2026, a plataforma possui:
 
 - frontend estático publicado pelo GitHub Pages com domínio próprio;
 - pipeline de build, materialização e validação do HTML antes da publicação;
-- autenticação Supabase com Google OAuth e fluxos controlados por senha;
-- política de senha com mínimo de 12 caracteres, throttling progressivo, recuperação com mensagens neutras e revogação global de sessões após recuperação;
-- MFA/AAL2 e validação de sessão ativa para operações administrativas sensíveis;
-- timeout local de inatividade para sessões administrativas;
-- vinculação segura de identidades, inclusive normalização de variantes de endereços Gmail, preservando matrícula, turma e histórico acadêmico;
+- autenticação Supabase com Google OAuth, senha, MFA/AAL2 e controles de sessão administrativa;
 - banco PostgreSQL protegido por RLS, grants de menor privilégio, RPCs e objetos privados de servidor;
 - módulos acadêmicos de alunos, turmas, frequência, lições, exercícios, flashcards, roteiro de estudos e reposições;
-- preservação do progresso de exercícios em arquivamento/desarquivamento e vinculação de identidade;
-- sincronização automática de horários de reposição preservando slots referenciados pelo histórico;
-- módulo financeiro com mensalidades, Pix/cartão, reconciliação, reembolsos, chargebacks, health financeiro e kill switch de novas cobranças;
-- analytics de pagamentos server-side condicionado ao consentimento, com outbox e dispatcher para GA4;
+- páginas de lição gerenciáveis no Roteiro de Estudos, com criação dinâmica de cards, numeração editorial, tradução e fallback para PDFs;
+- classificação de turmas `INDIVIDUAL`, `QUARTETO`, `QUINTETO` e `8 ALUNOS`, com compatibilidade entre aluno e turma;
+- capacidade adicional específica para reservas de reposição, separada da ocupação regular da turma;
+- módulo **Alunos do dia** na Área do Professor, com agenda diária, lição a apresentar, contato por WhatsApp e registro de falta ao cancelar aula;
+- gestão de aulas experimentais com edição de agendamentos e registro de conversão em matrícula;
+- módulo financeiro com mensalidades, overrides mensais preservados, Pix/cartão, reconciliação, reembolsos, chargebacks, health financeiro e kill switch de novas cobranças;
+- páginas comerciais específicas para aulas individuais e aulas em grupo ao vivo, integradas ao funil de aquisição e ao SEO;
+- analytics de pagamentos server-side condicionado ao consentimento e monitoramento específico de CTAs comerciais;
 - sincronização de exercícios recebidos por Google Forms;
 - observabilidade com monitor de erros, CSP reporting, health interno, probes sintéticos e verificação externa de disponibilidade;
-- suíte automatizada de qualidade em JavaScript e Python, contratos dedicados de autenticação e pagamentos e amostragem estabilizada do Lighthouse;
+- suíte automatizada de qualidade em JavaScript e Python, contratos dedicados de autenticação, pagamentos e fluxos operacionais;
 - backup lógico criptografado do Supabase, teste automatizado de restauração e baseline versionado para disaster recovery.
 
 Os experimentos históricos de **pronúncia com IA** e **MCP V1** permanecem adiados e não fazem parte da aplicação ativa.
@@ -40,7 +40,7 @@ flowchart TB
   User["Visitante / Aluno / Professor"] --> Pages["GitHub Pages\nteacherflavius.com"]
   Pages --> Browser["HTML + CSS + JavaScript"]
 
-  Browser --> Runtime["Runtime compartilhado\nloaders, guards, analytics, footer"]
+  Browser --> Runtime["Runtime compartilhado\nloaders, guards, analytics, navegação, footer"]
   Browser --> Auth["Supabase Auth\nGoogle + senha + sessão + MFA"]
   Browser --> Database["Supabase PostgreSQL\nRLS + RPCs + least privilege"]
   Browser --> MercadoPagoJS["Mercado Pago.js v2\nCheckout Bricks"]
@@ -78,6 +78,8 @@ Componentes centrais:
 | `responsive_compat.css` | baseline responsivo |
 | `brand_palette.css` | tokens da identidade visual |
 
+A navegação compartilhada é centralizada e materializada/carregada de forma consistente nas páginas publicadas, evitando duplicação de comportamento entre áreas do site.
+
 ### Backend no Supabase
 
 O Supabase fornece Auth, PostgreSQL, RLS, grants explícitos, RPCs, schema `private`, Edge Functions em TypeScript/Deno, Vault e Cron.
@@ -104,7 +106,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | CI/CD e operações | GitHub Actions |
 | Backup | Supabase CLI/`pg_dump`, GnuPG AES-256 e restore automatizado |
 
-> O projeto **não utiliza Netlify**. Resíduos, configurações e acoplamentos históricos desse provedor foram removidos. A publicação de produção permanece no GitHub Pages; artefatos de headers estáticos são mantidos de forma provider-neutral quando necessários para validação/portabilidade.
+> O projeto **não utiliza Netlify**. A publicação de produção permanece no GitHub Pages. Não introduza dependências, configuração ou acoplamento com Netlify.
 
 ## Experiências da plataforma
 
@@ -112,8 +114,10 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 
 | Rota | Finalidade |
 | --- | --- |
-| `/` | home pública |
+| `/` | hub público dos formatos de aula |
 | `/curso-de-ingles-online/` | página pública do curso |
+| `/aulas-em-grupo/` | aulas em grupo ao vivo |
+| `/aulas-individuais/` | aulas individuais |
 | `/quero-conhecer/` | apresentação comercial e captação |
 | `/matricula/` | matrícula e onboarding |
 | `/login/` | autenticação |
@@ -127,7 +131,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/perfil/` | dados pessoais, histórico e segurança da conta |
 | `/minha-turma/` | turma, videoaula, materiais e gravações |
 | `/frequencia/` | lições e frequência |
-| `/roteiro-de-estudos/` | roteiro e progresso individual |
+| `/roteiro-de-estudos/` | roteiro, páginas de lição e progresso individual |
 | `/exercicios-diarios/` | exercícios publicados |
 | `/flashcards/` | decks, prática e repetição espaçada |
 | `/reposicoes/` | consulta, reserva e cancelamento de reposições |
@@ -140,6 +144,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | Rota | Finalidade |
 | --- | --- |
 | `/professor/` | painel principal |
+| `/alunos-do-dia/` | agenda operacional diária dos alunos |
 | `/perfil-dos-alunos/` | gestão de alunos e dados acadêmicos |
 | `/turmas/` | gestão de turmas |
 | `/quadro-de-turmas.html` | visão operacional das turmas |
@@ -158,29 +163,23 @@ Operações administrativas sensíveis exigem identidade de professor, AAL2/MFA 
 
 ### Autenticação, identidade e segurança de conta
 
-O sistema suporta Google OAuth e fluxos autorizados por senha. A camada de autenticação foi endurecida para reduzir abuso e perda de sessão/identidade:
-
-- senha mínima de 12 caracteres em cadastro, recuperação e alteração;
-- política de acesso por senha centralizada;
-- reautenticação com senha atual para alteração voluntária;
-- revogação global de sessões após recuperação de senha;
-- opção de logout global da conta;
-- throttling progressivo no login por senha e cooldown de recuperação;
-- mensagens neutras na recuperação para reduzir enumeração de contas;
-- timeout local de inatividade administrativa;
-- MFA/AAL2 para mutações cross-user e leitura de dados administrativos sensíveis;
-- verificação de sessão Auth ativa em operações administrativas privilegiadas;
-- exclusão de conta protegida internamente por MFA;
-- health de autenticação integrado ao painel de saúde;
-- contratos dedicados de CI para regressões de autenticação.
+O sistema suporta Google OAuth e fluxos autorizados por senha. A camada de autenticação inclui senha mínima de 12 caracteres, reautenticação para alteração voluntária, revogação global após recuperação, logout global, throttling progressivo, mensagens neutras de recuperação, timeout de inatividade administrativa, MFA/AAL2 para operações sensíveis e contratos dedicados de CI.
 
 A vinculação de uma identidade Google a matrícula existente preserva dados acadêmicos. Variantes equivalentes de Gmail com diferenças de pontos são normalizadas com validações de segurança para evitar perda de matrícula, turma e progresso.
 
 ### Alunos, turmas, lições e exercícios
 
-O domínio acadêmico cobre alunos ativos/arquivados, turmas, horários, capacidade, materiais, frequência, lições, exercícios e roteiro individual.
+O domínio acadêmico cobre alunos ativos/arquivados, turmas, horários, capacidade, materiais, frequência, lições, exercícios e roteiro individual. O histórico é persistente: arquivar/desarquivar aluno e vincular identidades não deve apagar progresso.
 
-O histórico é tratado como dado persistente: arquivar/desarquivar aluno e vincular identidades não deve apagar progresso. A reconciliação de conclusões históricas associa registros aos IDs atuais dos exercícios sem sobrescrever progresso já existente.
+As turmas suportam classificações `INDIVIDUAL`, `QUARTETO`, `QUINTETO` e `8 ALUNOS`. A compatibilidade de matrícula entre o tipo do aluno e o tipo da turma é validada no backend. Exceções operacionais de capacidade devem permanecer documentadas e cobertas por testes.
+
+O Roteiro de Estudos suporta páginas de lição gerenciáveis e expansão dinâmica além do conjunto inicial de lições. O conteúdo pode incluir número editorial, tradução e fallback para materiais em PDF.
+
+### Alunos do dia e aulas experimentais
+
+O painel **Alunos do dia** concentra a operação diária do professor: lista os alunos previstos, informa a lição a apresentar, oferece contato por WhatsApp e registra falta quando uma aula é cancelada pelo fluxo correspondente.
+
+A gestão de aulas experimentais permite editar agendamentos e registrar se a aula resultou em matrícula, fornecendo sinal de conversão para a operação comercial.
 
 ### Flashcards
 
@@ -188,24 +187,13 @@ O módulo possui decks por aluno, cards ordenados, prática registrada e repeti�
 
 ### Reposições
 
-O módulo administra horários, capacidade, reserva, cancelamento e devolução de vagas. A sincronização automática preserva slots referenciados por qualquer histórico de reserva, evitando falhas de integridade em jobs agendados.
+O módulo administra horários, capacidade, reserva, cancelamento e devolução de vagas. A capacidade de reposição possui vagas adicionais próprias, sem alterar a capacidade regular da turma. A sincronização automática preserva slots referenciados pelo histórico.
 
 Consulte [CONFIGURAR_REPOSICOES.md](CONFIGURAR_REPOSICOES.md).
 
 ### Mensalidades e pagamentos
 
-O domínio financeiro inclui:
-
-- mensalidades, valores, vencimentos e histórico;
-- Pix e cartão via Mercado Pago;
-- idempotência e validação de concorrência no settlement;
-- webhook assinado e reconciliação;
-- escalonamento de falhas repetidas de reconciliação;
-- reembolsos e chargebacks;
-- health financeiro e alertas;
-- kill switch de novas cobranças com orientação visível quando MFA ainda não está pronto;
-- analytics server-side consentido por meio de outbox e dispatcher;
-- protocolos operacionais para primeira transação real, primeiro reembolso real e rotação de credenciais.
+O domínio financeiro inclui mensalidades, valores e vencimentos, overrides mensais preservados, Pix e cartão via Mercado Pago, idempotência, validação de concorrência, webhook assinado, reconciliação, reembolsos, chargebacks, health financeiro, alertas, kill switch e analytics server-side consentido.
 
 Documentação principal:
 
@@ -222,15 +210,17 @@ Documentação principal:
 - [docs/payment_first_real_refund_validation.md](docs/payment_first_real_refund_validation.md)
 - [docs/payment_provider_decision_gate.md](docs/payment_provider_decision_gate.md)
 
-### Privacidade e analytics
+### Aquisição, SEO e analytics
 
-Consent Mode é aplicado antes da ativação de analytics. O envio server-side de eventos financeiros respeita o consentimento capturado e usa uma outbox própria; dados de pagamento não devem ser enviados indiscriminadamente ao GA4.
+A home funciona como hub dos formatos de aula. Páginas comerciais específicas atendem aulas individuais e aulas em grupo, com indexação, sitemap, metadados sociais e CTAs rastreados conforme o papel de cada página no funil.
+
+Consent Mode é aplicado antes da ativação de analytics. Eventos financeiros server-side respeitam o consentimento capturado. Recursos editoriais não comerciais podem ser explicitamente excluídos do funil para não inflar métricas de aquisição.
 
 Dados reais nunca devem ser adicionados a issues, commits, PRs, fixtures públicas, logs ou documentação.
 
 ### Observabilidade
 
-A aplicação mantém captura de erros, CSP reporting, probes sintéticos, health interno e verificação externa de disponibilidade. `/saude-do-sistema/` consolida sinais administrativos, incluindo health de autenticação e pagamentos.
+A aplicação mantém captura de erros, CSP reporting, probes sintéticos, health interno e verificação externa de disponibilidade. O monitor filtra ruído conhecido de rede/telemetria para reduzir falsos positivos. `/saude-do-sistema/` consolida sinais administrativos, incluindo health de autenticação e pagamentos.
 
 Detalhes: [docs/system_health_monitoring.md](docs/system_health_monitoring.md).
 
@@ -297,7 +287,7 @@ Abra <http://localhost:8000>. Não use `file://`.
 npm run quality
 ```
 
-O comando cobre sintaxe JavaScript, ESLint, testes Node e testes Python. Contratos especializados complementam a suíte para autenticação, pagamentos, segurança, build e runtime.
+O comando cobre sintaxe JavaScript, ESLint, testes Node e testes Python. Contratos especializados complementam a suíte para autenticação, pagamentos, segurança, build, runtime e fluxos operacionais.
 
 ### Simular publicação
 
@@ -314,7 +304,7 @@ python3 -m http.server 4173 --directory _site
 
 GitHub Actions valida PRs e mudanças em `main` com gates de Clean Code, autenticação, segurança, acessibilidade, responsividade, URLs, SEO, performance, build estático, produção, pagamentos, system health e backup/recovery.
 
-O Lighthouse usa aquecimento e cinco amostras medidas para reduzir flutuação do runner sem relaxar o guardrail de LCP existente.
+O Lighthouse usa aquecimento e múltiplas amostras medidas para reduzir flutuação do runner sem relaxar os guardrails de performance.
 
 Fluxo esperado:
 
@@ -377,6 +367,7 @@ Registro: [docs/decisions/2026-09-10-mcp-v1-deferred.md](docs/decisions/2026-09-
 - adicionar/atualizar testes para contratos relevantes;
 - evitar duplicação de lógica;
 - preservar histórico acadêmico e financeiro em operações de ciclo de vida;
+- preservar overrides financeiros explícitos ao recalcular ou regenerar mensalidades;
 - não aplicar SQL histórico indiscriminadamente;
 - não publicar secrets ou dados pessoais;
 - manter README e runbooks sincronizados com a implementação vigente;
