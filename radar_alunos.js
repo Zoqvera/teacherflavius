@@ -98,9 +98,9 @@
   }
 
   function riskLabel(level) {
-    if (level === "red") return "🔴 INTERVENÇÃO NECESSÁRIA";
-    if (level === "yellow") return "🟡 ATENÇÃO";
-    return "🟢 EM DIA";
+    if (level === "red") return "INTERVENÇÃO NECESSÁRIA";
+    if (level === "yellow") return "ATENÇÃO";
+    return "EM DIA";
   }
 
   function groupByUser(rows) {
