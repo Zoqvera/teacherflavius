@@ -82,11 +82,15 @@ function renderClassCard(classItem) {
     '<div class="class-card-title"><span><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-6h6v6"/></svg></span>' + escapeHtml(className) + '</span><span class="class-type-badge ' + typeMeta.css + '">' + typeMeta.label + '</span></div>' +
     '<p class="class-meta">Alunos inscritos: ' + studentCount + ' · ' + escapeHtml(scheduleText) + '</p>' +
     '<div class="config-editor">' +
-      '<label class="full">Nome da turma<input class="class-config-time" data-class-name-input="' + escapeHtml(classNumber) + '" type="text" value="' + escapeHtml(className) + '" maxlength="120"></label>' +
-      '<label>Etiqueta da turma<select class="class-config-select" data-class-type-select="' + escapeHtml(classNumber) + '"><option value=""' + (!classItem.class_type ? ' selected' : '') + '>Selecione</option><option value="quartet"' + (classItem.class_type === 'quartet' ? ' selected' : '') + '>QUARTETO</option><option value="quintet"' + (classItem.class_type === 'quintet' ? ' selected' : '') + '>QUINTETO</option><option value="eight_students"' + (classItem.class_type === 'eight_students' ? ' selected' : '') + '>8 ALUNOS</option><option value="individual"' + (classItem.class_type === 'individual' ? ' selected' : '') + '>INDIVIDUAL</option></select></label>' +
+      '<div class="class-name-editor full">' +
+        '<label>Nome da turma<input class="class-config-time" data-class-name-input="' + escapeHtml(classNumber) + '" type="text" value="' + escapeHtml(className) + '" maxlength="120" autocomplete="off"></label>' +
+        '<button class="class-name-save-button" type="button" data-save-class-name="' + escapeHtml(classNumber) + '">SALVAR NOME</button>' +
+        '<div class="class-name-status" data-class-name-status="' + escapeHtml(classNumber) + '" role="status" aria-live="polite"></div>' +
+      '</div>' +
+      '<label>Etiqueta da turma<select class="class-config-select" data-class-type-select="' + escapeHtml(classNumber) + '"><option value=""' + (!classItem.class_type ? ' selected' : '') + '>Selecione</option><option value="quartet"' + (classItem.class_type === 'quartet' ? ' selected' : '') + '>GRUPO</option><option value="quintet"' + (classItem.class_type === 'quintet' ? ' selected' : '') + '>QUINTETO</option><option value="eight_students"' + (classItem.class_type === 'eight_students' ? ' selected' : '') + '>8 ALUNOS</option><option value="individual"' + (classItem.class_type === 'individual' ? ' selected' : '') + '>INDIVIDUAL</option></select></label>' +
       '<label>Dia semanal<select class="class-config-select" data-class-weekday-select="' + escapeHtml(classNumber) + '">' + weekdayOptions(classItem.class_weekday) + '</select></label>' +
       '<label>Horário<input class="class-config-time" data-class-time-input="' + escapeHtml(classNumber) + '" type="time" value="' + escapeHtml(timeValue) + '"></label>' +
-      '<div class="schedule-help">Você pode alterar o nome, o tipo, o dia e o horário sem recriar a turma. O horário é usado em MINHA SEMANA para mostrar a próxima aula.</div>' +
+      '<div class="schedule-help">O nome pode ser salvo separadamente. Tipo, dia e horário são salvos pelo botão de configuração. O horário é usado em MINHA SEMANA para mostrar a próxima aula.</div>' +
       '<button class="config-save-button full" type="button" data-save-class-config="' + escapeHtml(classNumber) + '">SALVAR CONFIGURAÇÃO</button>' +
     '</div>' +
     '<div class="class-actions"><a class="open-class-button" href="turma.html?id=' + encodeURIComponent(classNumber) + '">ABRIR TURMA</a><button class="remove-class-button" type="button" data-class-number="' + escapeHtml(classNumber) + '" data-class-name="' + escapeHtml(className) + '">EXCLUIR TURMA</button></div>' +
@@ -164,18 +168,57 @@ async function createClass(event) {
   }
 }
 
-async function saveClassConfig(classNumber, button) {
+function setClassNameStatus(classNumber, message, type) {
+  const status = document.querySelector('[data-class-name-status="' + CSS.escape(String(classNumber)) + '"]');
+  if (!status) return;
+  status.className = "class-name-status" + (type ? " " + type : "");
+  status.textContent = message || "";
+}
+
+async function saveClassName(classNumber, button) {
   const nameInput = document.querySelector('[data-class-name-input="' + CSS.escape(String(classNumber)) + '"]');
+  const className = nameInput ? nameInput.value.trim() : "";
+
+  if (!className) {
+    setClassNameStatus(classNumber, "Digite um nome para a turma.", "error");
+    if (nameInput) nameInput.focus();
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "SALVANDO...";
+  setClassNameStatus(classNumber, "Salvando nome...", "");
+
+  try {
+    const updateResponse = await Auth.getClient()
+      .from("teacher_classes")
+      .update({
+        class_name: className,
+        updated_at: new Date().toISOString()
+      })
+      .eq("class_number", Number(classNumber))
+      .eq("is_active", true);
+
+    if (updateResponse.error) throw updateResponse.error;
+
+    setClassNameStatus(classNumber, "Nome atualizado.", "success");
+    await renderClasses();
+  } catch (error) {
+    setClassNameStatus(classNumber, "Não foi possível atualizar o nome: " + (error.message || "erro desconhecido") + ".", "error");
+    button.disabled = false;
+    button.textContent = "SALVAR NOME";
+  }
+}
+
+async function saveClassConfig(classNumber, button) {
   const typeSelect = document.querySelector('[data-class-type-select="' + CSS.escape(String(classNumber)) + '"]');
   const weekdaySelect = document.querySelector('[data-class-weekday-select="' + CSS.escape(String(classNumber)) + '"]');
   const timeInput = document.querySelector('[data-class-time-input="' + CSS.escape(String(classNumber)) + '"]');
-  const className = nameInput ? nameInput.value.trim() : "";
   const classType = typeSelect ? typeSelect.value : "";
   const weekday = weekdaySelect && weekdaySelect.value ? Number(weekdaySelect.value) : null;
   const startTime = timeInput && timeInput.value ? timeInput.value : null;
 
-  if (!className) { alert("Digite um nome para a turma."); return; }
-  if (!classType) { alert("Selecione INDIVIDUAL, QUARTETO, QUINTETO ou 8 ALUNOS antes de salvar."); return; }
+  if (!classType) { alert("Selecione INDIVIDUAL, GRUPO, QUINTETO ou 8 ALUNOS antes de salvar."); return; }
   if ((weekday && !startTime) || (!weekday && startTime)) { alert("Informe o dia e o horário juntos, ou deixe ambos vazios."); return; }
 
   button.disabled = true;
@@ -185,7 +228,6 @@ async function saveClassConfig(classNumber, button) {
     const typeResponse = await client.rpc("set_teacher_class_type", { target_class_number:Number(classNumber), target_class_type:classType });
     if (typeResponse.error) throw typeResponse.error;
     const updateResponse = await client.from("teacher_classes").update({
-      class_name: className,
       class_weekday: weekday,
       class_start_time: startTime,
       updated_at: new Date().toISOString()
@@ -218,6 +260,9 @@ async function deleteClass(classNumber, className, button) {
 function attachClassButtons() {
   document.querySelectorAll(".remove-class-button").forEach(function (button) {
     button.addEventListener("click", function () { deleteClass(button.dataset.classNumber, button.dataset.className, button); });
+  });
+  document.querySelectorAll("[data-save-class-name]").forEach(function (button) {
+    button.addEventListener("click", function () { saveClassName(button.dataset.saveClassName, button); });
   });
   document.querySelectorAll("[data-save-class-config]").forEach(function (button) {
     button.addEventListener("click", function () { saveClassConfig(button.dataset.saveClassConfig, button); });
