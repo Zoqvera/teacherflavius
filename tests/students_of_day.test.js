@@ -201,7 +201,7 @@ test("installs delegated correction for all FALAR NO WHATSAPP links", function (
   assert.match(whatsappModule, /closest\("a\.day-whatsapp-link"\)/);
   assert.match(studentsScript, /data-whatsapp-number/);
   assert.match(page, /whatsapp_contact\.js\?v=20260923-1/);
-  assert.match(page, /alunos_do_dia\.js\?v=20260923-4/);
+  assert.match(page, /alunos_do_dia\.js\?v=20260925-stepup-1/);
 });
 
 test("provides an SVG icon for the Alunos do dia professor card", function () {
