@@ -95,6 +95,15 @@ test("loads public home runtime without clean URL script", function () {
   assert.equal(result.events.standardizedLinks, 1);
 });
 
+
+test("does not load compact navigation on login routes", function () {
+  const cleanLogin = createRuntime({ path: "/login/", publicPage: false });
+  const legacyLogin = createRuntime({ path: "/login.html", publicPage: false });
+
+  assert.equal(cleanLogin.scriptCalls.includes("mobileTopNavigation"), false);
+  assert.equal(legacyLogin.scriptCalls.includes("mobileTopNavigation"), false);
+});
+
 test("loads clean URLs before footer on regular public pages", function () {
   const result = createRuntime({ path: "/curso/", publicPage: true });
   assert.deepEqual(result.scriptCalls.slice(-2), ["cleanUrls", "footerCore"]);
