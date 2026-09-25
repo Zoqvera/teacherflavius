@@ -247,13 +247,20 @@
       });
     }
 
+
+    function shouldLoadMobileTopNavigation() {
+      const path = String(pageContext().currentPath() || "/").toLowerCase();
+      if (pageContext().isHomePage()) return false;
+      return path !== "/login/" && path !== "/login.html";
+    }
+
     function initializeUi() {
       if (pageContext().isPublicMarketingPage()) { normalizePublicCopy(); observePublicCopy(); }
       removeLegacyBillingConfigurationUi();
       if (windowRef.SiteBranding) windowRef.SiteBranding.install();
       loadAccessibility();
       initializeSvgEmojiRendering();
-      if (!pageContext().isHomePage()) loadMobileTopNavigation();
+      if (shouldLoadMobileTopNavigation()) loadMobileTopNavigation();
       initializeEnrollmentGuard();
       initializeWhatsappUi();
     }
