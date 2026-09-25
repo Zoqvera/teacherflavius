@@ -66,6 +66,23 @@ function formatEnrollmentDate(value: string): string {
   }
 }
 
+function displayValue(value: unknown, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  const normalized = value.trim();
+  return normalized || fallback;
+}
+
+function escapeHtml(value: string): string {
+  const replacements: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  };
+  return value.replace(/[&<>"']/g, (character) => replacements[character]);
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
@@ -134,7 +151,7 @@ Deno.serve(async (request: Request) => {
 
   const { data: student, error: studentError } = await supabase
     .from("profiles")
-    .select("id, enrolled")
+    .select("id, name, whatsapp, enrolled")
     .eq("id", notification.student_id)
     .single();
 
@@ -149,20 +166,29 @@ Deno.serve(async (request: Request) => {
   }
 
   const enrolledAt = formatEnrollmentDate(notification.created_at);
+  const studentName = displayValue(student.name, "Não informado");
+  const studentWhatsapp = displayValue(student.whatsapp, "Não informado");
+  const studentNameHtml = escapeHtml(studentName);
+  const studentWhatsappHtml = escapeHtml(studentWhatsapp);
+
   const textBody = [
     "Um novo aluno concluiu a matrícula no site.",
     "",
+    `Nome: ${studentName}`,
+    `WhatsApp: ${studentWhatsapp}`,
     `Data da matrícula: ${enrolledAt}`,
     "",
-    "Consulte os dados necessários em Área do Professor → Alunos.",
+    "Os demais dados cadastrais permanecem disponíveis somente na Área do Professor.",
   ].join("\n");
 
   const htmlBody = `
     <div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033;max-width:620px;margin:0 auto">
       <h1 style="font-size:22px;margin-bottom:18px">Nova matrícula concluída</h1>
       <p>Um novo aluno concluiu a matrícula no site.</p>
+      <p><strong>Nome:</strong> ${studentNameHtml}</p>
+      <p><strong>WhatsApp:</strong> ${studentWhatsappHtml}</p>
       <p><strong>Data da matrícula:</strong> ${enrolledAt}</p>
-      <p style="margin-top:22px;color:#667085;font-size:13px">Por privacidade, os dados cadastrais não são duplicados neste e-mail. Consulte-os em Área do Professor → Alunos.</p>
+      <p style="margin-top:22px;color:#667085;font-size:13px">Este e-mail administrativo inclui somente nome, WhatsApp e data da matrícula. Os demais dados cadastrais permanecem disponíveis somente na Área do Professor.</p>
     </div>
   `;
 
