@@ -2,7 +2,7 @@
   "use strict";
 
   const PAYMENT_NOTICE_SCRIPT_ID = "teacher-flavius-payment-notice-script";
-  const PAYMENT_NOTICE_SCRIPT_SRC = "/student_payment_notice.js?v=20260819-1";
+  const PAYMENT_NOTICE_SCRIPT_SRC = "/student_payment_notice.js?v=20260925-auth-runtime-1";
   const SUPABASE_AUTH_STORAGE_KEY = "sb-wnigzpvgsbpjdxvjzugt-auth-token";
   const IDLE_CALLBACK_TIMEOUT_MS = 1800;
   const FALLBACK_DELAY_MS = 600;
@@ -29,6 +29,8 @@
       path === "/quero-conhecer" ||
       path === "/quero-conhecer/" ||
       path.indexOf("/curso-de-ingles-online") === 0 ||
+      path.indexOf("/aulas-em-grupo") === 0 ||
+      path.indexOf("/aulas-individuais") === 0 ||
       path.indexOf("/recursos") === 0 ||
       path.indexOf("/sobre") === 0 ||
       path.indexOf("/landing-page") === 0;

@@ -33,6 +33,8 @@ test("identifica páginas de vendas incluindo variante legada", function () {
   assert.equal(context.isSalesPage("/quero_conhecer"), true);
   assert.equal(context.isSalesPage("/quero_conhecer" + ".html"), true);
   assert.equal(context.isSalesPage("/curso-de-ingles-online/"), true);
+  assert.equal(context.isSalesPage("/aulas-em-grupo/"), true);
+  assert.equal(context.isSalesPage("/aulas-individuais/"), true);
   assert.equal(context.isSalesPage("/landing-page/campanha/"), true);
   assert.equal(context.isSalesPage("/perfil/"), false);
 });
@@ -43,6 +45,8 @@ test("classifica páginas públicas sem incluir rotas do portal", function () {
   assert.equal(context.isPublicMarketingPage("/cookies/"), true);
   assert.equal(context.isPublicMarketingPage("/termos/"), true);
   assert.equal(context.isPublicMarketingPage("/recursos/"), true);
+  assert.equal(context.isPublicMarketingPage("/aulas-em-grupo/"), true);
+  assert.equal(context.isPublicMarketingPage("/aulas-individuais/"), true);
   assert.equal(context.isPublicMarketingPage("/area-do-estudante/"), false);
   assert.equal(context.isPublicMarketingPage("/professor/"), false);
 });

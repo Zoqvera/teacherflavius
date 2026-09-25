@@ -4,7 +4,7 @@
   const RENDERER_SCRIPT_SELECTOR = 'script[src*="site_footer_renderer.js"]';
   const RENDERER_SCRIPT_SRC = "/site_footer_renderer.js?v=20260902-1";
   const PAYMENT_NOTICE_LOADER_SCRIPT_ID = "teacher-flavius-payment-notice-loader-script";
-  const PAYMENT_NOTICE_LOADER_SCRIPT_SRC = "/student_payment_notice_loader.js?v=20260902-1";
+  const PAYMENT_NOTICE_LOADER_SCRIPT_SRC = "/student_payment_notice_loader.js?v=20260925-auth-runtime-1";
 
   function rendererIsReady() {
     return !!window.SiteFooterRenderer;

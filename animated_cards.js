@@ -8,7 +8,7 @@
 
   const GLOBAL_LOGOUT_SCRIPT = Object.freeze({
     selector: 'script[src^="/global_logout.js"], script[src^="global_logout.js"]',
-    src: "/global_logout.js?v=20260924-single-menu-1"
+    src: "/global_logout.js?v=20260925-auth-runtime-1"
   });
 
   const FEATURE_MODULES = Object.freeze([
