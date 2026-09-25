@@ -5,24 +5,23 @@ const PROFESSOR_AUTH_MAX_ATTEMPTS = 40;
 const PROFESSOR_AUTH_RETRY_DELAY_MS = 100;
 const PROFESSOR_PATH = "/professor/";
 const LOGIN_PATH = "/login/";
-const PROFESSOR_MFA_CSS = "/professor_mfa_gate.css?v=20260909-1";
-const PROFESSOR_MFA_MODULES = Object.freeze({
+const PROFESSOR_STEP_UP_CSS = "/professor_mfa_gate.css?v=20260909-1";
+const PROFESSOR_STEP_UP_MODULES = Object.freeze({
   service: Object.freeze({
     globalName: "ProfessorMfaService",
     selector: 'script[src^="/professor_mfa_service.js"]',
     src: "/professor_mfa_service.js?v=20260909-1",
-    missingMessage: "O serviço MFA do professor não foi inicializado.",
-    loadErrorMessage: "Não foi possível carregar o serviço MFA do professor."
+    missingMessage: "O serviço de verificação adicional não foi inicializado.",
+    loadErrorMessage: "Não foi possível carregar o serviço de verificação adicional."
   }),
   gate: Object.freeze({
     globalName: "ProfessorMfaGate",
     selector: 'script[src^="/professor_mfa_gate.js"]',
     src: "/professor_mfa_gate.js?v=20260909-1",
-    missingMessage: "O gate MFA do professor não foi inicializado.",
-    loadErrorMessage: "Não foi possível carregar o gate MFA do professor."
+    missingMessage: "A verificação adicional não foi inicializada.",
+    loadErrorMessage: "Não foi possível carregar a verificação adicional."
   })
 });
-
 function applyProfessorCardOrder(grid) {
   if (!grid) return;
   try {
@@ -199,18 +198,45 @@ function waitForProfessorAuthResources() {
   });
 }
 
-function appendProfessorMfaStyles() {
+function professorStepUpRequested() {
+  return new URLSearchParams(window.location.search).get("mfa") === "1";
+}
+
+function professorStepUpNextPath() {
+  const requested = new URLSearchParams(window.location.search).get("next") || PROFESSOR_PATH;
+  return window.Auth.normalizeNextPath(requested, PROFESSOR_PATH);
+}
+
+function appendProfessorStepUpStyles() {
   if (document.querySelector('link[href^="/professor_mfa_gate.css"]')) return;
   const stylesheet = document.createElement("link");
   stylesheet.rel = "stylesheet";
-  stylesheet.href = PROFESSOR_MFA_CSS;
+  stylesheet.href = PROFESSOR_STEP_UP_CSS;
   document.head.appendChild(stylesheet);
 }
 
-async function loadProfessorMfaGate() {
-  appendProfessorMfaStyles();
-  await window.ModuleLoader.loadGlobalModule(PROFESSOR_MFA_MODULES.service);
-  return window.ModuleLoader.loadGlobalModule(PROFESSOR_MFA_MODULES.gate);
+async function loadProfessorStepUpGate() {
+  appendProfessorStepUpStyles();
+  await window.ModuleLoader.loadGlobalModule(PROFESSOR_STEP_UP_MODULES.service);
+  return window.ModuleLoader.loadGlobalModule(PROFESSOR_STEP_UP_MODULES.gate);
+}
+
+async function runProfessorStepUp(client) {
+  if (!professorStepUpRequested()) return false;
+
+  const gate = await loadProfessorStepUpGate();
+  await gate.requireAal2({ client: client });
+
+  const nextPath = professorStepUpNextPath();
+  if (nextPath !== PROFESSOR_PATH) {
+    window.location.replace(nextPath);
+    return true;
+  }
+
+  if (window.history && typeof window.history.replaceState === "function") {
+    window.history.replaceState({}, document.title, PROFESSOR_PATH);
+  }
+  return false;
 }
 
 function showProfessorAccessFailure(status, menu, message) {
@@ -249,12 +275,11 @@ async function guardProfessorHome() {
       return;
     }
 
-    const mfaGate = await loadProfessorMfaGate();
-    await mfaGate.requireAal2({ client: client });
+    const redirectedAfterStepUp = await runProfessorStepUp(client);
+    if (redirectedAfterStepUp) return;
 
     if (status) {
-      status.textContent = "Professor autenticado com verificação em duas etapas: " +
-        currentProfessorSession.user.email + ".";
+      status.textContent = "Professor autenticado: " + currentProfessorSession.user.email + ".";
     }
     document.body.classList.remove("auth-checking");
   } catch (error) {
