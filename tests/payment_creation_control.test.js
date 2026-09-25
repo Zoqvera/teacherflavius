@@ -96,6 +96,6 @@ test("kill switch browser management goes through JWT and MFA Edge Function", fu
 test("kill switch remains visible when MFA authorization is not ready", function () {
   assert.match(browserSource, /function renderUnavailable\(/);
   assert.match(browserSource, /VERIFICAÇÃO NECESSÁRIA/);
-  assert.match(browserSource, /href="\/professor\/"/);
+  assert.match(browserSource, /href="\/professor\/\?mfa=1&amp;next=%2Fmensalidades%2F"/);
   assert.match(browserSource, /renderUnavailable\(documentRef\)/);
 });
