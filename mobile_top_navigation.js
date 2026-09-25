@@ -1,12 +1,17 @@
 (function () {
   "use strict";
 
-  function isHomePage() {
+  function isNavigationExcludedPage() {
     var path = String(window.location.pathname || "/").toLowerCase();
-    return path === "/" || path === "/index.html";
+    return path === "/" ||
+      path === "/index.html" ||
+      path === "/login" ||
+      path === "/login/" ||
+      path === "/login.html" ||
+      path === "/login/index.html";
   }
 
-  function removeHomeNavigationArtifacts() {
+  function removeNavigationArtifacts() {
     var bar = document.getElementById("tf-mobile-top-navigation");
     var overlay = document.getElementById("tf-mobile-top-menu-overlay");
 
@@ -20,11 +25,11 @@
     if (document.body) document.body.classList.remove("tf-mobile-menu-open");
   }
 
-  if (isHomePage()) {
+  if (isNavigationExcludedPage()) {
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", removeHomeNavigationArtifacts, { once: true });
+      document.addEventListener("DOMContentLoaded", removeNavigationArtifacts, { once: true });
     } else {
-      removeHomeNavigationArtifacts();
+      removeNavigationArtifacts();
     }
     return;
   }
