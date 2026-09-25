@@ -2,6 +2,28 @@
   "use strict";
 
   const SCRIPT_LOAD_TIMEOUT_MS = 6000;
+  const AUTH_DEPENDENCIES = Object.freeze([
+    Object.freeze({
+      selector: 'script[src*="supabase_client_service.js"]',
+      src: "/supabase_client_service.js?v=20260902-1",
+      isReady: function () { return !!window.SupabaseClientService; }
+    }),
+    Object.freeze({
+      selector: 'script[src*="auth_navigation_service.js"]',
+      src: "/auth_navigation_service.js?v=20260902-1",
+      isReady: function () { return !!window.AuthNavigationService; }
+    }),
+    Object.freeze({
+      selector: 'script[src*="student_data_utils.js"]',
+      src: "/student_data_utils.js?v=20260902-1",
+      isReady: function () { return !!window.StudentDataUtils; }
+    }),
+    Object.freeze({
+      selector: 'script[src*="student_enrollment_service.js"]',
+      src: "/student_enrollment_service.js?v=20260902-1",
+      isReady: function () { return !!window.StudentEnrollmentService; }
+    })
+  ]);
   const FEATURE_MODULES = Object.freeze([
     Object.freeze({
       globalName: "StudentPaymentService",
@@ -43,8 +65,30 @@
     return results.every(Boolean);
   }
 
+  function authRuntimeIsReady() {
+    return !!(
+      window.Auth &&
+      window.SUPABASE_CONFIG &&
+      window.SupabaseClientService &&
+      window.AuthNavigationService &&
+      window.StudentDataUtils &&
+      window.StudentEnrollmentService &&
+      Auth.getClient &&
+      Auth.getSession &&
+      Auth.isConfigured
+    );
+  }
+
+  async function ensureAuthDependencies() {
+    for (const dependency of AUTH_DEPENDENCIES) {
+      const ready = await loadScript(dependency.selector, dependency.src, dependency.isReady);
+      if (!ready) return false;
+    }
+    return true;
+  }
+
   async function ensureAuthentication() {
-    if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured && Auth.isConfigured()) return true;
+    if (authRuntimeIsReady() && Auth.isConfigured()) return true;
 
     const supabaseReady = await loadScript(
       'script[src*="@supabase/supabase-js"]',
@@ -59,6 +103,7 @@
       function () { return !!window.SUPABASE_CONFIG; }
     );
     if (!configReady) return false;
+    if (!(await ensureAuthDependencies())) return false;
 
     const authReady = await loadScript(
       'script[src*="auth.js"]',
@@ -66,7 +111,7 @@
       function () { return !!(window.Auth && Auth.getClient && Auth.getSession && Auth.isConfigured); }
     );
 
-    return !!(authReady && Auth.isConfigured && Auth.isConfigured());
+    return !!(authReady && authRuntimeIsReady() && Auth.isConfigured());
   }
 
   function createPaymentService() {
