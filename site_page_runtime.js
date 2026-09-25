@@ -253,8 +253,8 @@
       if (pageContext().isHomePage()) return false;
       return path !== "/login" &&
         path !== "/login/" &&
-        path !== "/login.html" &&
-        path !== "/login/index.html";
+        path !== "/login" + "." + "html" &&
+        path !== "/login/index" + "." + "html";
     }
 
     function initializeUi() {
