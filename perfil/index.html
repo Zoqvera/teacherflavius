@@ -26,42 +26,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu Perfil - Teacher Flávio</title>
   <link rel="canonical" href="/perfil/">
-  <script>
-    (async function () {
-      const response = await fetch('/perfil.html', { cache: 'no-store' });
-      let html = await response.text();
-
-      html = html
-        .replace(
-          '          <script src="/module_loader.js?v=20260902-2"></script>\n<script src="auth.js?v=20260819-1"></script>',
-          '<script src="auth.js?v=20260912-1"></script>\n  <script src="/student_profile_optional.js?v=20260902-1"></script>'
-        )
-        .replace(
-          '<label for="pixKey">Chave PIX</label>',
-          '<label for="pixKey">Chave PIX <span style="color:#94a3b8;font-weight:normal">(opcional)</span></label>'
-        )
-        .replace(
-          '<input id="pixKey" type="text" required />',
-          '<input id="pixKey" type="text" />'
-        )
-        .replace(
-          'A chave PIX é usada apenas em situações em que o professor precise fazer reembolso de algum valor para o aluno.',
-          'Opcional. Informe apenas se quiser deixar uma chave disponível para eventuais reembolsos.'
-        )
-        .replace(
-          '<div class="availability-block">',
-          '<div id="disponibilidade" class="availability-block">'
-        )
-        .replace(
-          'Marque todos os dias e horários, de segunda a sexta, em que você estará disponível para fazer aulas de inglês.',
-          'Informe os dias e horários em que você costuma estar disponível. Você pode alterar essa informação quando quiser.'
-        );
-
-      document.open();
-      document.write(html.replace('<head>', '<head>\n  <base href="/">'));
-      document.close();
-    })();
-  </script>
+  <script defer src="/perfil/loader.js?v=20260924-1"></script>
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -69,7 +34,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-  <p>Carregando perfil...</p>
+  <p id="profileLoadingMessage">Carregando perfil...</p>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
 
