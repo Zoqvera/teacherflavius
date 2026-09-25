@@ -29,6 +29,8 @@
       path === "/quero-conhecer" ||
       path === "/quero-conhecer/" ||
       path.indexOf("/curso-de-ingles-online") === 0 ||
+      path.indexOf("/aulas-em-grupo") === 0 ||
+      path.indexOf("/aulas-individuais") === 0 ||
       path.indexOf("/recursos") === 0 ||
       path.indexOf("/sobre") === 0 ||
       path.indexOf("/landing-page") === 0;
