@@ -5,24 +5,6 @@ const PROFESSOR_AUTH_MAX_ATTEMPTS = 40;
 const PROFESSOR_AUTH_RETRY_DELAY_MS = 100;
 const PROFESSOR_PATH = "/professor/";
 const LOGIN_PATH = "/login/";
-const PROFESSOR_MFA_CSS = "/professor_mfa_gate.css?v=20260909-1";
-const PROFESSOR_MFA_MODULES = Object.freeze({
-  service: Object.freeze({
-    globalName: "ProfessorMfaService",
-    selector: 'script[src^="/professor_mfa_service.js"]',
-    src: "/professor_mfa_service.js?v=20260909-1",
-    missingMessage: "O serviço MFA do professor não foi inicializado.",
-    loadErrorMessage: "Não foi possível carregar o serviço MFA do professor."
-  }),
-  gate: Object.freeze({
-    globalName: "ProfessorMfaGate",
-    selector: 'script[src^="/professor_mfa_gate.js"]',
-    src: "/professor_mfa_gate.js?v=20260909-1",
-    missingMessage: "O gate MFA do professor não foi inicializado.",
-    loadErrorMessage: "Não foi possível carregar o gate MFA do professor."
-  })
-});
-
 function applyProfessorCardOrder(grid) {
   if (!grid) return;
   try {
@@ -199,20 +181,6 @@ function waitForProfessorAuthResources() {
   });
 }
 
-function appendProfessorMfaStyles() {
-  if (document.querySelector('link[href^="/professor_mfa_gate.css"]')) return;
-  const stylesheet = document.createElement("link");
-  stylesheet.rel = "stylesheet";
-  stylesheet.href = PROFESSOR_MFA_CSS;
-  document.head.appendChild(stylesheet);
-}
-
-async function loadProfessorMfaGate() {
-  appendProfessorMfaStyles();
-  await window.ModuleLoader.loadGlobalModule(PROFESSOR_MFA_MODULES.service);
-  return window.ModuleLoader.loadGlobalModule(PROFESSOR_MFA_MODULES.gate);
-}
-
 function showProfessorAccessFailure(status, menu, message) {
   if (status) status.textContent = message;
   if (menu) menu.hidden = true;
@@ -249,12 +217,8 @@ async function guardProfessorHome() {
       return;
     }
 
-    const mfaGate = await loadProfessorMfaGate();
-    await mfaGate.requireAal2({ client: client });
-
     if (status) {
-      status.textContent = "Professor autenticado com verificação em duas etapas: " +
-        currentProfessorSession.user.email + ".";
+      status.textContent = "Professor autenticado: " + currentProfessorSession.user.email + ".";
     }
     document.body.classList.remove("auth-checking");
   } catch (error) {
