@@ -597,8 +597,7 @@
   async function waitForDependencies(windowRef) {
     for (let attempt = 0; attempt < 30; attempt += 1) {
       if (
-        windowRef.Auth && typeof windowRef.Auth.getClient === "function" &&
-        windowRef.ProfessorMfaGate && typeof windowRef.ProfessorMfaGate.requireAal2 === "function"
+        windowRef.Auth && typeof windowRef.Auth.getClient === "function"
       ) return true;
       await wait(150, windowRef);
     }
@@ -622,7 +621,6 @@
       return false;
     }
 
-    await windowRef.ProfessorMfaGate.requireAal2({ client: client });
     const state = { classes: [], appointments: [], editingAppointmentId: null };
     const runtime = { windowRef: windowRef, documentRef: documentRef, client: client, state: state };
     const today = saoPauloNowParts(new Date()).isoDate;

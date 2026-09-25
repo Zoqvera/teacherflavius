@@ -296,9 +296,7 @@
     return Boolean(
       windowRef.Auth &&
       typeof windowRef.Auth.getClient === "function" &&
-      typeof windowRef.Auth.getSession === "function" &&
-      windowRef.ProfessorMfaGate &&
-      typeof windowRef.ProfessorMfaGate.requireAal2 === "function"
+      typeof windowRef.Auth.getSession === "function"
     );
   }
 
@@ -333,15 +331,6 @@
     const adminResponse = await client.rpc("is_teacher_admin");
     if (adminResponse.error || adminResponse.data !== true) {
       windowRef.location.href = "/area-do-estudante/";
-      return false;
-    }
-
-    await windowRef.ProfessorMfaGate.requireAal2({ client: client });
-
-    const mfaResponse = await client.rpc("is_teacher_admin_mfa");
-    if (mfaResponse.error || mfaResponse.data !== true) {
-      documentRef.body.classList.remove("auth-checking");
-      setMessage(documentRef, "A sessão administrativa não possui MFA válido.", "error");
       return false;
     }
 

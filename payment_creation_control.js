@@ -87,7 +87,7 @@
       '<span class="status-pill status-overdue">VERIFICAÇÃO NECESSÁRIA</span>',
       '</div>',
       '<p>Conclua a verificação em duas etapas na Área do Professor e depois volte a esta página. O controle será liberado sem alterar pagamentos existentes.</p>',
-      '<a class="finance-button" href="/professor/">VERIFICAR MFA NA ÁREA DO PROFESSOR</a>'
+      '<a class="finance-button" href="/professor/?mfa=1&amp;next=%2Fmensalidades%2F">FAZER VERIFICAÇÃO ADICIONAL</a>'
     ].join("");
     panel.dataset.enabled = "unknown";
     return true;
