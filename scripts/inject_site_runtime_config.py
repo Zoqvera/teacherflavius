@@ -7,7 +7,7 @@ from html_script_dependency import resolve_site_root
 from html_script_dependency_runtime import process_site as process_html_site
 from script_dependency_spec import ScriptDependencySpec
 
-SITE_RUNTIME_CONFIG_SRC = "/site_runtime_config.js?v=20260903-1"
+SITE_RUNTIME_CONFIG_SRC = "/site_runtime_config.js?v=20260925-auth-runtime-1"
 SPEC = ScriptDependencySpec(
     dependency_src=SITE_RUNTIME_CONFIG_SRC,
     dependency_filename="site_runtime_config.js",
