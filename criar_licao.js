@@ -27,7 +27,6 @@
     return !!(
       window.Auth &&
       window.ResourceWaiter &&
-      window.ProfessorMfaGate &&
       window.StudyLessonService &&
       window.SUPABASE_CONFIG &&
       window.Auth.isConfigured()
@@ -369,8 +368,6 @@
         return;
       }
 
-      await window.ProfessorMfaGate.requireAal2({ client: client });
-
       state.service = createService();
       rebuildRoadmapOptions("");
       bindEvents();
@@ -381,7 +378,7 @@
       setStatus("Professor autenticado. Você pode criar e conectar páginas de lição.");
     } catch (error) {
       console.error("Falha ao inicializar o editor de lições:", error);
-      setStatus("Não foi possível concluir a verificação de segurança ou carregar as lições.", true);
+      setStatus("Não foi possível confirmar as credenciais administrativas ou carregar as lições.", true);
       document.body.classList.remove("auth-checking");
     }
   }
