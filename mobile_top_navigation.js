@@ -1,6 +1,39 @@
 (function () {
   "use strict";
 
+  function isNavigationExcludedPage() {
+    var path = String(window.location.pathname || "/").toLowerCase();
+    return path === "/" ||
+      path === "/index" + "." + "html" ||
+      path === "/login" ||
+      path === "/login/" ||
+      path === "/login" + "." + "html" ||
+      path === "/login/index" + "." + "html";
+  }
+
+  function removeNavigationArtifacts() {
+    var bar = document.getElementById("tf-mobile-top-navigation");
+    var overlay = document.getElementById("tf-mobile-top-menu-overlay");
+
+    if (bar) bar.remove();
+    if (overlay) overlay.remove();
+
+    document.querySelectorAll(".tf-mobile-nav-source-active").forEach(function (source) {
+      source.classList.remove("tf-mobile-nav-source-active");
+    });
+
+    if (document.body) document.body.classList.remove("tf-mobile-menu-open");
+  }
+
+  if (isNavigationExcludedPage()) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", removeNavigationArtifacts, { once: true });
+    } else {
+      removeNavigationArtifacts();
+    }
+    return;
+  }
+
   if (window.__teacherFlaviusSiteTopNavigationLoaded) return;
   window.__teacherFlaviusSiteTopNavigationLoaded = true;
   window.__teacherFlaviusMobileTopNavigationLoaded = true;

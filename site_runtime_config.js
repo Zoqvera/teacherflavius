@@ -15,7 +15,7 @@
     privacyConsent: freezeAsset({ id: "teacher-flavius-privacy-consent", src: "/privacy_consent.js?v=20260820-2" }),
     sitePrivacyAnalytics: freezeAsset({ id: "teacher-flavius-site-privacy-analytics", src: "/site_privacy_analytics.js?v=20260902-1" }),
     sitePageRuntime: freezeAsset({ id: "teacher-flavius-site-page-runtime", src: "/site_page_runtime.js?v=20260910-system-health-1" }),
-    mobileTopNavigation: freezeAsset({ id: "teacher-flavius-mobile-top-navigation", src: "/mobile_top_navigation.js?v=20260924-single-menu-1" }),
+    mobileTopNavigation: freezeAsset({ id: "teacher-flavius-mobile-top-navigation", src: "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1" }),
     footerCore: freezeAsset({ id: "teacher-flavius-site-footer-core", src: "/site_footer_core.js?v=20260820-privacy-1" }),
     cleanUrls: freezeAsset({ id: "teacher-flavius-clean-urls", src: "/clean_urls.js?v=20260910-reports-extensionless-1" }),
     googleOnlyAccess: freezeAsset({ id: "teacher-flavius-google-only-access", src: "/google_only_access.js?v=20260819-1" }),

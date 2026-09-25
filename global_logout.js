@@ -24,12 +24,23 @@
     resolveOnError: false
   });
 
+  function isNavigationExcludedPage() {
+    const path = String(window.location.pathname || "/").toLowerCase();
+    return path === "/" ||
+      path === "/index" + "." + "html" ||
+      path === "/login" ||
+      path === "/login/" ||
+      path === "/login" + "." + "html" ||
+      path === "/login/index" + "." + "html";
+  }
+
   function loadMobileTopNavigation() {
+    if (isNavigationExcludedPage()) return;
     if (window.__teacherFlaviusSiteTopNavigationLoaded || window.__teacherFlaviusMobileTopNavigationLoaded) return;
     if (document.querySelector('script[src*="mobile_top_navigation.js"]')) return;
     const script = document.createElement("script");
     script.id = "teacher-flavius-mobile-top-navigation";
-    script.src = "/mobile_top_navigation.js?v=20260924-single-menu-1";
+    script.src = "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1";
     script.defer = true;
     document.head.appendChild(script);
   }

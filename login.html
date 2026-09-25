@@ -40,6 +40,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="/auth.js?v=20260912-1"></script>
   <link rel="stylesheet" href="/login/login_visual.css?v=20260901-1">
+  <style id="login-navigation-exclusion">
+    #tf-mobile-top-navigation,
+    #tf-mobile-top-menu-overlay,
+    #tf-standard-navigation-source {
+      display: none !important;
+    }
+    body.tf-mobile-menu-open {
+      overflow: auto !important;
+    }
+  </style>
 </head>
 <body class="login-page">
 <!-- Google Tag Manager (noscript) -->

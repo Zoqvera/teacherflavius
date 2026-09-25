@@ -63,11 +63,19 @@ test("uses SVG controls rather than character icons", function () {
 });
 
 test("keeps the home without the standardized top menu and preserves it on portal pages", function () {
-  const version = "/mobile_top_navigation.js?v=20260924-single-menu-1";
+  const version = "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1";
   assert.equal(runtimeConfig.includes(version), true);
   assert.equal(home.includes(version), false);
-  assert.equal(studentArea.includes(version), true);
-  assert.equal(myClass.includes(version), true);
+  assert.equal(studentArea.includes("/mobile_top_navigation.js"), true);
+  assert.equal(myClass.includes("/mobile_top_navigation.js"), true);
+});
+
+test("hard-blocks compact navigation on home and login even if another script tries to load it", function () {
+  assert.match(navigation, /function isNavigationExcludedPage\(\)/);
+  assert.match(navigation, /path === "\/login\/"/);
+  assert.match(navigation, /path === "\/login" \+ "\." \+ "html"/);
+  assert.match(navigation, /removeNavigationArtifacts/);
+  assert.match(globalLogout, /if \(isNavigationExcludedPage\(\)\) return;/);
 });
 
 test("consolidates legacy navigation sources into the single standard menu", function () {
