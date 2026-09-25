@@ -24,7 +24,8 @@ function getClassDisplayName(classItem) {
 }
 
 function getClassTypeMeta(value) {
-  if (value === "quartet") return { label:"GRUPO", css:"quartet" };\n  if (value === "quintet") return { label:"QUINTETO", css:"quintet" };
+  if (value === "quartet") return { label:"GRUPO", css:"quartet" };
+  if (value === "quintet") return { label:"QUINTETO", css:"quintet" };
   if (value === "eight_students") return { label:"8 ALUNOS", css:"eight-students" };
   if (value === "individual") return { label:"INDIVIDUAL", css:"individual" };
   return { label:"TIPO NÃO DEFINIDO", css:"unset" };
@@ -78,7 +79,7 @@ function renderClassCard(classItem) {
   const scheduleText = classItem.class_weekday && classItem.class_start_time ? weekdayLabel(classItem.class_weekday) + ", " + timeLabel(classItem.class_start_time) : "Horário semanal não definido";
 
   return '<div class="class-card" data-class-number="' + escapeHtml(classNumber) + '">' +
-    '<div class="class-card-title"><span><span class="icon">🏫</span>' + escapeHtml(className) + '</span><span class="class-type-badge ' + typeMeta.css + '">' + typeMeta.label + '</span></div>' +
+    '<div class="class-card-title"><span><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-6h6v6"/></svg></span>' + escapeHtml(className) + '</span><span class="class-type-badge ' + typeMeta.css + '">' + typeMeta.label + '</span></div>' +
     '<p class="class-meta">Alunos inscritos: ' + studentCount + ' · ' + escapeHtml(scheduleText) + '</p>' +
     '<div class="config-editor">' +
       '<label class="full">Nome da turma<input class="class-config-time" data-class-name-input="' + escapeHtml(classNumber) + '" type="text" value="' + escapeHtml(className) + '" maxlength="120"></label>' +
