@@ -10,6 +10,7 @@ const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const studentArea = fs.readFileSync(path.join(root, "area_do_estudante.html"), "utf8");
 const myClass = fs.readFileSync(path.join(root, "minha_turma.html"), "utf8");
 const profileStudents = fs.readFileSync(path.join(root, "perfil_dos_alunos.html"), "utf8");
+const classDetail = fs.readFileSync(path.join(root, "turma.html"), "utf8");
 const trialPage = fs.readFileSync(path.join(root, "aulas-experimentais/index.html"), "utf8");
 const paymentPage = fs.readFileSync(path.join(root, "pagamento/index.html"), "utf8");
 const aboutPage = fs.readFileSync(path.join(root, "sobre/index.html"), "utf8");
@@ -33,6 +34,15 @@ test("renders the profile-students standardized menu without flashing legacy lin
   assert.match(profileStudents, /\.tf-nav-pending \.top-links \{ visibility: hidden; \}/);
   assert.equal(profileStudents.includes(version), true);
   assert.match(profileStudents, /document\.documentElement\.classList\.remove\("tf-nav-pending"\)/);
+});
+
+
+test("uses the compact menu from first paint on every class detail page", function () {
+  const version = "/mobile_top_navigation.js?v=20260924-single-menu-1";
+  assert.match(classDetail, /<html lang="pt-BR" class="tf-nav-pending">/);
+  assert.match(classDetail, /\.tf-nav-pending \.top-links \{ visibility: hidden; \}/);
+  assert.equal(classDetail.includes(version), true);
+  assert.match(classDetail, /document\.documentElement\.classList\.remove\("tf-nav-pending"\)/);
 });
 
 test("creates a standardized fallback menu when a page has no navigation source", function () {
