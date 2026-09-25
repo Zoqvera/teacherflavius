@@ -6,6 +6,7 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const migration = fs.readFileSync(path.join(root, "supabase/migrations/20260910030206_add_global_system_health_monitoring.sql"), "utf8");
 const bootstrapFix = fs.readFileSync(path.join(root, "supabase/migrations/20260910030731_prevent_system_health_bootstrap_false_alert.sql"), "utf8");
+const resourceBurstFix = fs.readFileSync(path.join(root, "supabase/migrations/20260925135003_corroborate_resource_error_bursts.sql"), "utf8");
 const syntheticProbe = fs.readFileSync(path.join(root, "supabase/functions/system-synthetic-probe/index.ts"), "utf8");
 const dashboardFunction = fs.readFileSync(path.join(root, "supabase/functions/get-system-health-dashboard/index.ts"), "utf8");
 const notifier = fs.readFileSync(path.join(root, "supabase/functions/notify-system-health-alert/index.ts"), "utf8");
@@ -63,4 +64,11 @@ test("watchdog has bootstrap grace and remains independently scheduled", functio
   assert.match(bootstrapFix, /bootstrap_grace/);
   assert.match(migration, /system-health-watchdog/);
   assert.match(migration, /4,14,24,34,44,54 \* \* \* \*/);
+});
+
+
+test("resource burst alerts require repeated evidence from the same resource", function () {
+  assert.match(resourceBurstFix, /resource_top_fingerprint_count/);
+  assert.match(resourceBurstFix, /resource_errors_15m >= 15 and resource_top_fingerprint_count >= 5/);
+  assert.match(resourceBurstFix, /resource_top_fingerprint_count_15m/);
 });
