@@ -1,6 +1,34 @@
 (function () {
   "use strict";
 
+  function isHomePage() {
+    var path = String(window.location.pathname || "/").toLowerCase();
+    return path === "/" || path === "/index.html";
+  }
+
+  function removeHomeNavigationArtifacts() {
+    var bar = document.getElementById("tf-mobile-top-navigation");
+    var overlay = document.getElementById("tf-mobile-top-menu-overlay");
+
+    if (bar) bar.remove();
+    if (overlay) overlay.remove();
+
+    document.querySelectorAll(".tf-mobile-nav-source-active").forEach(function (source) {
+      source.classList.remove("tf-mobile-nav-source-active");
+    });
+
+    if (document.body) document.body.classList.remove("tf-mobile-menu-open");
+  }
+
+  if (isHomePage()) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", removeHomeNavigationArtifacts, { once: true });
+    } else {
+      removeHomeNavigationArtifacts();
+    }
+    return;
+  }
+
   if (window.__teacherFlaviusSiteTopNavigationLoaded) return;
   window.__teacherFlaviusSiteTopNavigationLoaded = true;
   window.__teacherFlaviusMobileTopNavigationLoaded = true;
