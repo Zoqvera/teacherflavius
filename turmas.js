@@ -197,12 +197,14 @@ async function saveClassName(classNumber, button) {
         updated_at: new Date().toISOString()
       })
       .eq("class_number", Number(classNumber))
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .select("class_number,class_name")
+      .single();
 
     if (updateResponse.error) throw updateResponse.error;
 
-    setClassNameStatus(classNumber, "Nome atualizado.", "success");
     await renderClasses();
+    setClassNameStatus(classNumber, "Nome atualizado.", "success");
   } catch (error) {
     setClassNameStatus(classNumber, "Não foi possível atualizar o nome: " + (error.message || "erro desconhecido") + ".", "error");
     button.disabled = false;
@@ -263,6 +265,14 @@ function attachClassButtons() {
   });
   document.querySelectorAll("[data-save-class-name]").forEach(function (button) {
     button.addEventListener("click", function () { saveClassName(button.dataset.saveClassName, button); });
+  });
+  document.querySelectorAll("[data-class-name-input]").forEach(function (input) {
+    input.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      const button = document.querySelector('[data-save-class-name="' + CSS.escape(String(input.dataset.classNameInput)) + '"]');
+      if (button && !button.disabled) saveClassName(input.dataset.classNameInput, button);
+    });
   });
   document.querySelectorAll("[data-save-class-config]").forEach(function (button) {
     button.addEventListener("click", function () { saveClassConfig(button.dataset.saveClassConfig, button); });
