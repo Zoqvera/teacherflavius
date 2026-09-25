@@ -295,6 +295,66 @@ body {
   font-size: 11px !important;
 }
 
+.class-name-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid rgba(78,154,236,.18);
+  border-radius: 12px;
+  background: rgba(9,104,188,.06);
+}
+
+.class-name-editor label {
+  margin: 0 !important;
+}
+
+.class-name-save-button {
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1px solid rgba(78,154,236,.52);
+  border-radius: var(--tf-radius-md, 12px);
+  background: rgba(9,104,188,.16);
+  color: #dbeafe;
+  font: 800 12px/1.2 var(--tf-font-display, "Montserrat", sans-serif);
+  letter-spacing: .025em;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.class-name-save-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(78,154,236,.72);
+  background: rgba(9,104,188,.25);
+}
+
+.class-name-save-button:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
+.class-name-save-button:focus-visible {
+  outline: 3px solid rgba(191,219,254,.55);
+  outline-offset: 3px;
+}
+
+.class-name-status {
+  grid-column: 1 / -1;
+  min-height: 18px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.class-name-status.success {
+  color: #86efac;
+}
+
+.class-name-status.error {
+  color: #fca5a5;
+}
+
 .config-save-button {
   min-height: 44px;
   border: 1px solid rgba(78,154,236,.42) !important;
@@ -388,7 +448,8 @@ body {
 
   .form-grid,
   .config-editor,
-  .class-actions {
+  .class-actions,
+  .class-name-editor {
     grid-template-columns: 1fr !important;
   }
 
