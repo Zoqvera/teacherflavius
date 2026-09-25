@@ -157,27 +157,6 @@
     studyGrid.appendChild(createStudentResourcesCard());
   }
 
-  function countAvailabilitySlots(profile) {
-    const availability = profile && profile.availability && typeof profile.availability === "object"
-      ? profile.availability
-      : {};
-
-    return Object.keys(availability).reduce(function (total, day) {
-      const daySlots = Array.isArray(availability[day]) ? availability[day].length : 0;
-      return total + daySlots;
-    }, 0);
-  }
-
-  function updateProfileSetupPrompt(profile) {
-    const prompt = document.getElementById("profileSetupPrompt");
-    if (prompt) prompt.hidden = isProfessorSession() || countAvailabilitySlots(profile) > 0;
-  }
-
-  function hideProfileSetupPrompt() {
-    const prompt = document.getElementById("profileSetupPrompt");
-    if (prompt) prompt.hidden = true;
-  }
-
   function closeOverdueModal() {
     const modal = document.getElementById("overdueModal");
     if (modal) modal.hidden = true;
@@ -226,10 +205,7 @@
     await detectProfessorSession();
     updateProfessorAreaVisibility();
 
-    if (isProfessorSession()) {
-      closeOverdueModal();
-      hideProfileSetupPrompt();
-    }
+    if (isProfessorSession()) closeOverdueModal();
 
     document.body.classList.remove("auth-checking");
     return true;
@@ -355,17 +331,14 @@
 
     if (isProfessorSession()) {
       closeOverdueModal();
-      hideProfileSetupPrompt();
       return;
     }
 
     try {
       const profile = await Auth.getProfile();
-      updateProfileSetupPrompt(profile);
       await showOverdueActivityIfNeeded(profile);
     } catch (error) {
       console.error("Não foi possível carregar o ciclo semanal do aluno:", error);
-      hideProfileSetupPrompt();
       closeOverdueModal();
     }
   }
