@@ -15,6 +15,8 @@ const trialPage = fs.readFileSync(path.join(root, "aulas-experimentais/index.htm
 const paymentPage = fs.readFileSync(path.join(root, "pagamento/index.html"), "utf8");
 const aboutPage = fs.readFileSync(path.join(root, "sobre/index.html"), "utf8");
 const globalLogout = fs.readFileSync(path.join(root, "global_logout.js"), "utf8");
+const paymentNotice = fs.readFileSync(path.join(root, "student_payment_notice.js"), "utf8");
+const paymentNoticeLoader = fs.readFileSync(path.join(root, "student_payment_notice_loader.js"), "utf8");
 
 test("uses the profile-students menu pattern as the global navigation model", function () {
   assert.equal(profileStudents.includes('class="top-links"'), true);
@@ -95,4 +97,19 @@ test("keeps logout inside the navigation source instead of as a second visible c
   assert.match(globalLogout, /"\.trial-nav"/);
   assert.match(globalLogout, /"\.payment-nav"/);
   assert.match(globalLogout, /"\.site-header \.nav"/);
+});
+
+
+test("loads required auth dependencies before dynamic authentication", function () {
+  ["supabase_client_service.js", "auth_navigation_service.js", "student_data_utils.js", "student_enrollment_service.js"].forEach(function (dependency) {
+    assert.equal(globalLogout.includes(dependency), true);
+    assert.equal(paymentNotice.includes(dependency), true);
+  });
+  assert.equal(globalLogout.includes("loadAuthDependencies"), true);
+  assert.equal(paymentNotice.includes("ensureAuthDependencies"), true);
+});
+
+test("treats lesson landing pages as public in the payment notice loader", function () {
+  assert.equal(paymentNoticeLoader.includes('path.indexOf("/aulas-em-grupo") === 0'), true);
+  assert.equal(paymentNoticeLoader.includes('path.indexOf("/aulas-individuais") === 0'), true);
 });
