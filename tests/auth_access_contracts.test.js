@@ -43,26 +43,24 @@ function guardOptions(overrides) {
   }, overrides || {});
 }
 
-test("student access dashboard loads the MFA gate before its application script", function () {
+test("student access dashboard does not preload MFA for routine administration", function () {
   const html = read("acessos_dos_alunos.html");
-  const serviceIndex = html.indexOf("/professor_mfa_service.js");
-  const gateIndex = html.indexOf("/professor_mfa_gate.js");
   const appIndex = html.indexOf("acessos_dos_alunos.js");
 
-  assert.ok(serviceIndex >= 0, "MFA service must be loaded");
-  assert.ok(gateIndex > serviceIndex, "MFA gate must load after its service");
-  assert.ok(appIndex > gateIndex, "dashboard application must load after the MFA gate");
+  assert.ok(appIndex >= 0, "dashboard application must load");
+  assert.equal(html.includes("/professor_mfa_service.js"), false);
+  assert.equal(html.includes("/professor_mfa_gate.js"), false);
 });
 
-test("student access dashboard requires AAL2 before revealing administrative data", function () {
+test("student access dashboard validates teacher role before revealing administrative data", function () {
   const source = read("acessos_dos_alunos.js");
   const adminCheckIndex = source.indexOf("state.accessService.isTeacherAdmin()");
-  const mfaIndex = source.indexOf("await requireAdministrativeMfa();");
   const revealIndex = source.indexOf("state.renderer.showDashboard();");
 
   assert.ok(adminCheckIndex >= 0, "teacher role check must exist");
-  assert.ok(mfaIndex > adminCheckIndex, "MFA must follow teacher role validation");
-  assert.ok(revealIndex > mfaIndex, "administrative UI must remain hidden until AAL2");
+  assert.ok(revealIndex > adminCheckIndex, "administrative UI must remain hidden until the teacher role is confirmed");
+  assert.equal(source.includes("ProfessorMfaGate"), false);
+  assert.equal(source.includes("requireAdministrativeMfa"), false);
 });
 
 test("incomplete student profile is redirected to onboarding", async function () {
