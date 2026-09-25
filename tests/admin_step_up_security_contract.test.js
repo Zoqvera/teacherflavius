@@ -37,8 +37,8 @@ test("routine professor pages do not request AAL2 on initial load", function () 
 test("database migration moves routine admin policies and functions to teacher role authorization", function () {
   assert.match(migration, /replace\(next_qual, 'public\.is_teacher_admin_mfa\(\)', 'public\.is_teacher_admin\(\)'\)/);
   assert.match(migration, /replace\(function_record\.definition,[\s\S]*'public\.is_teacher_admin_mfa\(\)',[\s\S]*'public\.is_teacher_admin\(\)'/);
-  assert.match(migration, /'teacher_classes'/);
-  assert.match(migration, /'study_lesson_pages'/);
+  assert.match(migration, /from pg_policies/);
+  assert.match(migration, /tablename <> all/);
 });
 
 test("sensitive financial and privacy surfaces remain outside routine authorization conversion", function () {
