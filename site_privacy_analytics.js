@@ -13,8 +13,10 @@
 
   function loadAnalyticsSequence() {
     settings.loadScriptAsset(settings.assets.analyticsAttribution, function () {
-      settings.loadScriptAsset(settings.assets.analytics, function () {
-        settings.loadScriptAsset(settings.assets.cro);
+      settings.loadScriptAsset(settings.assets.openaiPixel, function () {
+        settings.loadScriptAsset(settings.assets.analytics, function () {
+          settings.loadScriptAsset(settings.assets.cro);
+        });
       });
     });
   }

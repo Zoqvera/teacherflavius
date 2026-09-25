@@ -12,8 +12,9 @@
     cro: freezeAsset({ id: "teacher-flavius-cro", src: "/cro.js?v=20260820-1" }),
     analytics: freezeAsset({ id: "teacher-flavius-analytics", src: "/analytics.js?v=20260912-server-1" }),
     analyticsAttribution: freezeAsset({ id: "teacher-flavius-analytics-attribution", src: "/analytics_attribution.js?v=20260924-whatsapp-coverage-1" }),
+    openaiPixel: freezeAsset({ id: "teacher-flavius-openai-pixel", src: "/openai_pixel.js?v=20260925-1" }),
     privacyConsent: freezeAsset({ id: "teacher-flavius-privacy-consent", src: "/privacy_consent.js?v=20260820-2" }),
-    sitePrivacyAnalytics: freezeAsset({ id: "teacher-flavius-site-privacy-analytics", src: "/site_privacy_analytics.js?v=20260902-1" }),
+    sitePrivacyAnalytics: freezeAsset({ id: "teacher-flavius-site-privacy-analytics", src: "/site_privacy_analytics.js?v=20260925-openai-pixel-1" }),
     sitePageRuntime: freezeAsset({ id: "teacher-flavius-site-page-runtime", src: "/site_page_runtime.js?v=20260910-system-health-1" }),
     mobileTopNavigation: freezeAsset({ id: "teacher-flavius-mobile-top-navigation", src: "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1" }),
     footerCore: freezeAsset({ id: "teacher-flavius-site-footer-core", src: "/site_footer_core.js?v=20260925-auth-runtime-1" }),
@@ -42,6 +43,7 @@
   const privacyAnalyticsAssets = Object.freeze({
     privacyConsent: scriptAssets.privacyConsent,
     analyticsAttribution: scriptAssets.analyticsAttribution,
+    openaiPixel: scriptAssets.openaiPixel,
     analytics: scriptAssets.analytics,
     cro: scriptAssets.cro
   });
