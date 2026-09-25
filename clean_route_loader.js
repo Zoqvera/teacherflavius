@@ -13,6 +13,7 @@
     "/in-on-at/": "/in_on_at.html",
     "/meu-progresso/": "/meu_progresso.html",
     "/ordenar-simple-present/": "/ordenar_simple_present.html",
+    "/perfil/": "/perfil.html",
     "/quadro-de-turmas/": "/quadro-de-turmas.html",
     "/quarta-feira-15h/": "/quarta-feira-15h.html",
     "/quarta-feira-17h/": "/quarta-feira-17h.html",
@@ -48,6 +49,39 @@
     "/turma/": "/turma.html"
   };
 
+
+  function customizeProfileHtml(html) {
+    return html
+      .replace(
+        '          <script src="/module_loader.js?v=20260902-2"></script>\n<script src="auth.js?v=20260819-1"></script>',
+        '<script src="auth.js?v=20260912-1"></script>\n  <script src="/student_profile_optional.js?v=20260902-1"></script>'
+      )
+      .replace(
+        '<label for="pixKey">Chave PIX</label>',
+        '<label for="pixKey">Chave PIX <span style="color:#94a3b8;font-weight:normal">(opcional)</span></label>'
+      )
+      .replace(
+        '<input id="pixKey" type="text" required />',
+        '<input id="pixKey" type="text" />'
+      )
+      .replace(
+        "A chave PIX é usada apenas em situações em que o professor precise fazer reembolso de algum valor para o aluno.",
+        "Opcional. Informe apenas se quiser deixar uma chave disponível para eventuais reembolsos."
+      )
+      .replace(
+        '<div class="availability-block">',
+        '<div id="disponibilidade" class="availability-block">'
+      )
+      .replace(
+        "Marque todos os dias e horários, de segunda a sexta, em que você estará disponível para fazer aulas de inglês.",
+        "Informe os dias e horários em que você costuma estar disponível. Você pode alterar essa informação quando quiser."
+      );
+  }
+
+  const ROUTE_TRANSFORMS = {
+    "/perfil/": customizeProfileHtml,
+  };
+
   function routeKey(pathname) {
     let key = pathname || "/";
     if (!key.endsWith("/")) key += "/";
@@ -55,13 +89,16 @@
   }
 
   async function load() {
-    const source = ROUTES[routeKey(window.location.pathname)];
+    const key = routeKey(window.location.pathname);
+    const source = ROUTES[key];
     if (!source) return;
 
     try {
       const response = await fetch(source, { cache: "no-store" });
       if (!response.ok) throw new Error("HTTP " + response.status);
       let html = await response.text();
+      const transform = ROUTE_TRANSFORMS[key];
+      if (transform) html = transform(html);
       if (/<head[\s>]/i.test(html)) html = html.replace(/<head([^>]*)>/i, '<head$1><base href="/">');
       else html = '<base href="/">' + html;
       document.open();
