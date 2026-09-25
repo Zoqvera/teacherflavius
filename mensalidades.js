@@ -124,6 +124,17 @@ async function assertAdminAccess() {
   return response.data === true;
 }
 
+async function hasFinancialStepUp() {
+  const response = await Auth.getClient().rpc("is_teacher_admin_mfa");
+  if (response.error) throw response.error;
+  return response.data === true;
+}
+
+function redirectToFinancialStepUp() {
+  const nextPath = "/mensalidades/";
+  window.location.replace("/professor/?mfa=1&next=" + encodeURIComponent(nextPath));
+}
+
 async function reconcileMercadoPagoPayments() {
   const response = await Auth.getClient().functions.invoke("reconcile-mercado-pago-payments", {
     body: {}
@@ -540,7 +551,14 @@ async function initializePage() {
       return;
     }
 
-    status.textContent = "Administrador autenticado: " + currentAdminSession.user.email + ".";
+    const financialStepUpReady = await hasFinancialStepUp();
+    if (!financialStepUpReady) {
+      status.textContent = "Verificação adicional necessária para abrir o controle financeiro.";
+      redirectToFinancialStepUp();
+      return;
+    }
+
+    status.textContent = "Administrador autenticado com verificação adicional: " + currentAdminSession.user.email + ".";
     document.body.classList.remove("auth-checking");
     let reconciliation = {};
     try {
