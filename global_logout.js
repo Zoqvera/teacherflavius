@@ -19,6 +19,28 @@
     ".top"
   ]);
   let navigationObserver = null;
+  const AUTH_DEPENDENCIES = Object.freeze([
+    Object.freeze({
+      selector: 'script[src*="supabase_client_service.js"]',
+      src: "/supabase_client_service.js?v=20260902-1",
+      isReady: function () { return !!window.SupabaseClientService; }
+    }),
+    Object.freeze({
+      selector: 'script[src*="auth_navigation_service.js"]',
+      src: "/auth_navigation_service.js?v=20260902-1",
+      isReady: function () { return !!window.AuthNavigationService; }
+    }),
+    Object.freeze({
+      selector: 'script[src*="student_data_utils.js"]',
+      src: "/student_data_utils.js?v=20260902-1",
+      isReady: function () { return !!window.StudentDataUtils; }
+    }),
+    Object.freeze({
+      selector: 'script[src*="student_enrollment_service.js"]',
+      src: "/student_enrollment_service.js?v=20260902-1",
+      isReady: function () { return !!window.StudentEnrollmentService; }
+    })
+  ]);
   const SCRIPT_LOAD_OPTIONS = Object.freeze({
     timeoutMs: null,
     resolveOnError: false
@@ -59,8 +81,32 @@
     });
   }
 
+  function authRuntimeIsReady() {
+    return !!(
+      window.Auth &&
+      window.SupabaseClientService &&
+      window.AuthNavigationService &&
+      window.StudentDataUtils &&
+      window.StudentEnrollmentService &&
+      window.Auth.getSession &&
+      window.Auth.signOut &&
+      window.Auth.isConfigured
+    );
+  }
+
+  function loadAuthDependencies(index, callback) {
+    if (index >= AUTH_DEPENDENCIES.length) {
+      callback();
+      return;
+    }
+
+    loadScript(AUTH_DEPENDENCIES[index], function () {
+      loadAuthDependencies(index + 1, callback);
+    });
+  }
+
   function ensureAuthentication(callback) {
-    if (window.Auth && window.Auth.getSession && window.Auth.signOut) {
+    if (authRuntimeIsReady()) {
       callback();
       return;
     }
@@ -75,11 +121,13 @@
         src: "/supabase_config.js?v=20260716-logout-1",
         isReady: function () { return !!window.SUPABASE_CONFIG; }
       }, function () {
-        loadScript({
-          selector: 'script[src*="auth.js"]',
-          src: "/auth.js?v=20260716-logout-1",
-          isReady: function () { return !!(window.Auth && window.Auth.getSession && window.Auth.signOut); }
-        }, callback);
+        loadAuthDependencies(0, function () {
+          loadScript({
+            selector: 'script[src*="auth.js"]',
+            src: "/auth.js?v=20260925-runtime-deps-1",
+            isReady: authRuntimeIsReady
+          }, callback);
+        });
       });
     });
   }
