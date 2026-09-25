@@ -73,7 +73,7 @@ test("keeps the home without the standardized top menu and preserves it on porta
 test("hard-blocks compact navigation on home and login even if another script tries to load it", function () {
   assert.match(navigation, /function isNavigationExcludedPage\(\)/);
   assert.match(navigation, /path === "\/login\/"/);
-  assert.match(navigation, /path === "\/login\.html"/);
+  assert.match(navigation, /path === "\/login" \+ "\." \+ "html"/);
   assert.match(navigation, /removeNavigationArtifacts/);
   assert.match(globalLogout, /if \(isNavigationExcludedPage\(\)\) return;/);
 });
