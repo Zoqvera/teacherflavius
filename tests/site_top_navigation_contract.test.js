@@ -26,6 +26,15 @@ test("uses the profile-students menu pattern as the global navigation model", fu
   assert.equal(navigation.includes("tf-mobile-nav-toggle"), true);
 });
 
+
+test("renders the profile-students standardized menu without flashing legacy links", function () {
+  const version = "/mobile_top_navigation.js?v=20260924-single-menu-1";
+  assert.match(profileStudents, /<html lang="pt-BR" class="tf-nav-pending">/);
+  assert.match(profileStudents, /\.tf-nav-pending \.top-links \{ visibility: hidden; \}/);
+  assert.equal(profileStudents.includes(version), true);
+  assert.match(profileStudents, /document\.documentElement\.classList\.remove\("tf-nav-pending"\)/);
+});
+
 test("creates a standardized fallback menu when a page has no navigation source", function () {
   assert.equal(navigation.includes("FALLBACK_SOURCE_ID"), true);
   assert.equal(navigation.includes("ensureNavigationSource"), true);
