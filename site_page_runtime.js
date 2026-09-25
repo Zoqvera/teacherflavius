@@ -251,7 +251,10 @@
     function shouldLoadMobileTopNavigation() {
       const path = String(pageContext().currentPath() || "/").toLowerCase();
       if (pageContext().isHomePage()) return false;
-      return path !== "/login/" && path !== "/login" && path.indexOf("/login.") !== 0;
+      return path !== "/login" &&
+        path !== "/login/" &&
+        path !== "/login.html" &&
+        path !== "/login/index.html";
     }
 
     function initializeUi() {
