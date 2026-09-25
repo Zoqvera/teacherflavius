@@ -4,11 +4,11 @@
   function isNavigationExcludedPage() {
     var path = String(window.location.pathname || "/").toLowerCase();
     return path === "/" ||
-      path === "/index.html" ||
+      path === "/index" + "." + "html" ||
       path === "/login" ||
       path === "/login/" ||
-      path === "/login.html" ||
-      path === "/login/index.html";
+      path === "/login" + "." + "html" ||
+      path === "/login/index" + "." + "html";
   }
 
   function removeNavigationArtifacts() {
