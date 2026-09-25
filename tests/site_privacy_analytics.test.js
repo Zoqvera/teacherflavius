@@ -10,6 +10,7 @@ function createAssets() {
   return {
     privacyConsent: { name: "privacy" },
     analyticsAttribution: { name: "attribution" },
+    openaiPixel: { name: "openai-pixel" },
     analytics: { name: "analytics" },
     cro: { name: "cro" }
   };
@@ -79,7 +80,7 @@ test("loads analytics in the preserved sequence when consent is granted", functi
   });
   const calls = initialize(runtime);
 
-  assert.deepEqual(calls, ["privacy", "attribution", "analytics", "cro"]);
+  assert.deepEqual(calls, ["privacy", "attribution", "openai-pixel", "analytics", "cro"]);
   assert.equal(runtime.window["ga-disable-" + MEASUREMENT_ID], false);
   assert.equal(runtime.gtagCalls.length, 0);
 });
@@ -98,6 +99,6 @@ test("reacts to later privacy consent changes", function () {
   runtime.window.TeacherFlaviusPrivacy.hasAnalyticsConsent = function () { return true; };
   runtime.events["tf:privacy-consent-changed"]();
 
-  assert.deepEqual(calls, ["privacy", "attribution", "analytics", "cro"]);
+  assert.deepEqual(calls, ["privacy", "attribution", "openai-pixel", "analytics", "cro"]);
   assert.equal(runtime.window["ga-disable-" + MEASUREMENT_ID], false);
 });
