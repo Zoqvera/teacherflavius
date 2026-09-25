@@ -18,8 +18,9 @@ const EXPECTED_SCRIPT_ASSETS = {
   cro: ["teacher-flavius-cro", "/cro.js?v=20260820-1"],
   analytics: ["teacher-flavius-analytics", "/analytics.js?v=20260912-server-1"],
   analyticsAttribution: ["teacher-flavius-analytics-attribution", "/analytics_attribution.js?v=20260924-whatsapp-coverage-1"],
+  openaiPixel: ["teacher-flavius-openai-pixel", "/openai_pixel.js?v=20260925-1"],
   privacyConsent: ["teacher-flavius-privacy-consent", "/privacy_consent.js?v=20260820-2"],
-  sitePrivacyAnalytics: ["teacher-flavius-site-privacy-analytics", "/site_privacy_analytics.js?v=20260902-1"],
+  sitePrivacyAnalytics: ["teacher-flavius-site-privacy-analytics", "/site_privacy_analytics.js?v=20260925-openai-pixel-1"],
   sitePageRuntime: ["teacher-flavius-site-page-runtime", "/site_page_runtime.js?v=20260910-system-health-1"],
   mobileTopNavigation: ["teacher-flavius-mobile-top-navigation", "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1"],
   footerCore: ["teacher-flavius-site-footer-core", "/site_footer_core.js?v=20260925-auth-runtime-1"],
@@ -62,6 +63,7 @@ test("preserves stylesheet and privacy analytics asset contracts", function () {
   assert.equal(config.stylesheetAssets.accessibility.href, "/accessibility.css?v=20260820-1");
   assert.equal(config.privacyAnalyticsAssets.privacyConsent, config.scriptAssets.privacyConsent);
   assert.equal(config.privacyAnalyticsAssets.analyticsAttribution, config.scriptAssets.analyticsAttribution);
+  assert.equal(config.privacyAnalyticsAssets.openaiPixel, config.scriptAssets.openaiPixel);
   assert.equal(config.privacyAnalyticsAssets.analytics, config.scriptAssets.analytics);
   assert.equal(config.privacyAnalyticsAssets.cro, config.scriptAssets.cro);
 });
