@@ -10,7 +10,7 @@ Este documento é o inventário operacional de dados pessoais do teacherflavius.
 - separar dados necessários à prestação do serviço de dados opcionais de Analytics;
 - aplicar RLS, menor privilégio e funções de servidor para operações privilegiadas;
 - não enviar CPF, WhatsApp, e-mail, chave PIX ou conteúdo de formulário para Analytics;
-- não duplicar dados cadastrais em e-mails administrativos quando eles já estiverem disponíveis no portal;
+- limitar dados cadastrais em e-mails administrativos ao mínimo necessário para a finalidade operacional e ao destinatário administrativo configurado;
 - manter PII operacional fora do código-fonte e do histórico Git sempre que possível;
 - eliminar ou anonimizar dados quando a finalidade terminar, ressalvadas hipóteses legais de conservação;
 - automatizar apenas expurgos com finalidade operacional clara e prazo definido;
@@ -72,7 +72,7 @@ Esse status é um controle operacional; não equivale a uma certificação jurí
 | --- | --- | --- | --- | --- |
 | Google Analytics | navegação, eventos e atributos técnicos | GA4 possui controles de retenção; para propriedade padrão há opções como 2 ou 14 meses | só carrega após consentimento; publicidade negada; alvo operacional é conferir 2 meses e reset por nova atividade desligado | pendente |
 | Supabase | Auth, DB, Storage, Edge Functions e logs | logs de plataforma dependem do plano; DB/Storage dependem do ciclo definido pelo controlador | expurgos próprios no Postgres; reduzir PII em logs das Edge Functions | pendente |
-| Resend | endereço e conteúdo de e-mail | política pública não fornece um prazo único para todo conteúdo enviado | matrícula administrativa não duplica mais dados cadastrais; respostas de erro do provedor não são gravadas no console | pendente |
+| Resend | endereço e conteúdo de e-mail | política pública não fornece um prazo único para todo conteúdo enviado | a notificação administrativa de matrícula inclui nome, WhatsApp e data da matrícula; CPF, e-mail, código de matrícula e chave PIX ficam fora da mensagem; respostas de erro do provedor não são gravadas no console | pendente |
 | Mercado Pago | dados necessários ao pagamento | conforme necessidade operacional e obrigações aplicáveis | tokenização; sem PAN/CVV local; resposta persistida reduzida a IDs/status/valor/método/datas | verificado tecnicamente |
 | Google Forms / Sheets | e-mail, exercício e data de conclusão | respostas permanecem na conta Google até limpeza/configuração do proprietário | cópia diagnóstica local expira em 90 dias; aliases são consultados no banco, não no código | pendente |
 | Azure Speech | áudio de pronúncia e texto de referência | documentação oficial informa ausência de retenção do conteúdo enviado no Pronunciation Assessment em tempo real | qualquer cópia que permanece depois da resposta é mantida pelo próprio portal no Supabase | verificado tecnicamente |
@@ -83,7 +83,7 @@ Esse status é um controle operacional; não equivale a uma certificação jurí
 
 ### Resend
 
-A notificação administrativa de nova matrícula deixou de incluir nome, e-mail e WhatsApp do aluno. Ela informa apenas que uma matrícula foi concluída e orienta o professor a consultar os dados na área autenticada.
+Por decisão operacional do controlador, a notificação administrativa de nova matrícula inclui o nome e o WhatsApp do aluno, além da data da matrícula. CPF, e-mail, código de matrícula e chave PIX continuam fora da mensagem. O envio é destinado somente ao endereço administrativo configurado em `ENROLLMENT_NOTIFICATION_EMAIL`.
 
 O remetente genérico `resend-email` não registra mais o corpo de erro devolvido pelo provedor; apenas o código HTTP é registrado. O frontend recebe somente `ok` e, quando disponível, o identificador técnico do envio.
 

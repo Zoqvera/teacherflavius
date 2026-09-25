@@ -6,7 +6,7 @@ O código desta funcionalidade possui três partes:
 2. `supabase/functions/notify-new-enrollment/index.ts` envia o e-mail pelo Resend.
 3. Um Database Webhook do Supabase chama a função quando uma notificação entra na fila.
 
-O e-mail inclui somente nome, e-mail, WhatsApp, código e data da matrícula. CPF e chave Pix não são enviados.
+O e-mail inclui nome, WhatsApp e data da matrícula. CPF, e-mail, código de matrícula e chave Pix não são enviados.
 
 ## 1. Preparar o Resend
 
