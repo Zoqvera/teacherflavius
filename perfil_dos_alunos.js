@@ -402,11 +402,27 @@ async function refreshStudentBillingMap(options) {
   }
 }
 
+function getTeacherClassName(classItem) {
+  return classItem.class_name || ("Turma " + classItem.class_number);
+}
+
+function compareTeacherClassesByName(firstClass, secondClass) {
+  return getTeacherClassName(firstClass).localeCompare(
+    getTeacherClassName(secondClass),
+    "pt-BR",
+    { numeric: true, sensitivity: "base" }
+  );
+}
+
 async function loadTeacherClasses() {
   const client = Auth.getClient();
   const response = await client.rpc("get_teacher_classes");
   if (response.error) throw response.error;
-  teacherClasses = response.data || [];
+
+  teacherClasses = (response.data || [])
+    .slice()
+    .sort(compareTeacherClassesByName);
+
   return teacherClasses;
 }
 
@@ -421,7 +437,7 @@ async function loadStudentClassMap() {
     (response.data || []).forEach(function (row) {
       const refId = row.student_ref_id || row.user_id || row.invite_id || row.id;
       const refType = row.student_ref_type || (row.user_id ? "user" : "invite");
-      const className = classItem.class_name || ("Turma " + classItem.class_number);
+      const className = getTeacherClassName(classItem);
       [
         getStudentMapKey(refType, refId),
         row.user_id ? getStudentMapKey("user", row.user_id) : null,
@@ -476,7 +492,7 @@ function openClassAssignmentModal(refId, refType, studentName) {
       select.innerHTML = '<option value="">Nenhuma turma criada</option>';
     } else {
       select.innerHTML = '<option value="">Selecione uma turma</option>' + teacherClasses.map(function (item) {
-        return '<option value="' + escapeHtml(item.class_number) + '">' + escapeHtml(item.class_name || ("Turma " + item.class_number)) + '</option>';
+        return '<option value="' + escapeHtml(item.class_number) + '">' + escapeHtml(getTeacherClassName(item)) + '</option>';
       }).join("");
     }
   }
