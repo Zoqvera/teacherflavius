@@ -26,7 +26,7 @@
     siteBranding: freezeAsset({ id: "teacher-flavius-site-branding", src: "/site_branding.js?v=20260902-1" }),
     siteEnrollmentGuard: freezeAsset({ id: "teacher-flavius-site-enrollment-guard", src: "/site_enrollment_guard.js?v=20260902-1" }),
     marketingTrackingControl: freezeAsset({ id: "teacher-flavius-marketing-tracking-control", src: "/marketing_tracking_control.js?v=20260904-1" }),
-    marketingWhatsappTracker: freezeAsset({ id: "teacher-flavius-marketing-whatsapp-tracker", src: "/marketing_whatsapp_tracker.js?v=20260926-openai-conversion-1" }),
+    marketingWhatsappTracker: freezeAsset({ id: "teacher-flavius-marketing-whatsapp-tracker", src: "/marketing_whatsapp_tracker.js?v=20260926-openai-lead-1" }),
     paymentCreationControl: freezeAsset({ id: "teacher-flavius-payment-creation-control", src: "/payment_creation_control.js?v=20260910-1" }),
     paymentOperationsDashboard: freezeAsset({ id: "teacher-flavius-payment-operations-dashboard", src: "/payment_operations_dashboard.js?v=20260910-1" }),
     paymentRefundOperations: freezeAsset({ id: "teacher-flavius-payment-refund-operations", src: "/payment_refund_operations.js?v=20260909-1" }),
