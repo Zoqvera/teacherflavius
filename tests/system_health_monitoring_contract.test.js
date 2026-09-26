@@ -7,6 +7,7 @@ const root = path.join(__dirname, "..");
 const migration = fs.readFileSync(path.join(root, "supabase/migrations/20260910030206_add_global_system_health_monitoring.sql"), "utf8");
 const bootstrapFix = fs.readFileSync(path.join(root, "supabase/migrations/20260910030731_prevent_system_health_bootstrap_false_alert.sql"), "utf8");
 const resourceBurstFix = fs.readFileSync(path.join(root, "supabase/migrations/20260925135003_corroborate_resource_error_bursts.sql"), "utf8");
+const openAiCspFix = fs.readFileSync(path.join(root, "supabase/migrations/20260926002809_exclude_approved_openai_pixel_csp_from_health.sql"), "utf8");
 const syntheticProbe = fs.readFileSync(path.join(root, "supabase/functions/system-synthetic-probe/index.ts"), "utf8");
 const dashboardFunction = fs.readFileSync(path.join(root, "supabase/functions/get-system-health-dashboard/index.ts"), "utf8");
 const notifier = fs.readFileSync(path.join(root, "supabase/functions/notify-system-health-alert/index.ts"), "utf8");
@@ -71,4 +72,11 @@ test("resource burst alerts require repeated evidence from the same resource", f
   assert.match(resourceBurstFix, /resource_top_fingerprint_count/);
   assert.match(resourceBurstFix, /resource_errors_15m >= 15 and resource_top_fingerprint_count >= 5/);
   assert.match(resourceBurstFix, /resource_top_fingerprint_count_15m/);
+});
+
+
+test("approved OpenAI pixel CSP reports do not degrade system health", function () {
+  assert.match(openAiCspFix, /https:\/\/bzrcdn\.openai\.com\/%/);
+  assert.match(openAiCspFix, /https:\/\/bzr\.openai\.com\/%/);
+  assert.match(openAiCspFix, /csp_actionable_15m/);
 });

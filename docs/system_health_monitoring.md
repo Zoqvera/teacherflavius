@@ -100,7 +100,7 @@ Os thresholds são operacionais, não métricas de produto. Eles devem ser recal
 
 Os eventos continuam sendo armazenados integralmente em `public.csp_violation_reports`. Para cálculo de saúde, ocorrências cujo `blocked_uri` começa com `https://static.cloudflareinsights.com/` são atualmente classificadas como ruído conhecido do beacon do Cloudflare e não entram em `csp_actionable_15m`.
 
-Essa exclusão é específica e deliberada. O pixel da OpenAI usa explicitamente `https://bzrcdn.openai.com` para carregar o SDK/configuração e `https://bzr.openai.com` para enviar eventos; esses hosts fazem parte da allowlist CSP porque são dependências intencionais e consentidas do site. Outras origens bloqueadas continuam acionáveis. Se o comportamento do beacon ou do pixel mudar, a regra precisa ser reavaliada em vez de ampliar genericamente a allowlist.
+Essa exclusão é específica e deliberada. O pixel da OpenAI usa explicitamente `https://bzrcdn.openai.com` para carregar o SDK/configuração e `https://bzr.openai.com` para enviar eventos; esses hosts fazem parte da allowlist CSP porque são dependências intencionais e consentidas do site. Relatórios CSP desses dois hosts também permanecem armazenados, mas não entram em `csp_actionable_15m`, evitando que clientes com política antiga em cache gerem falso alerta durante a propagação. Outras origens bloqueadas continuam acionáveis. Se o comportamento do beacon ou do pixel mudar, a regra precisa ser reavaliada em vez de ampliar genericamente a allowlist.
 
 ## Jobs monitorados
 
