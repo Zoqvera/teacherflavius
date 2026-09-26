@@ -20,6 +20,7 @@ function runTracker(options) {
   const sessionStorage = settings.sessionStorage || createStorage();
   const localStorage = settings.localStorage || createStorage();
   const sentPayloads = [];
+  const openAiPixelCalls = [];
   let clickHandler = null;
 
   const location = {
@@ -39,6 +40,11 @@ function runTracker(options) {
     }
   };
   if (settings.teacherCroAttribution) windowRef.TeacherCroAttribution = settings.teacherCroAttribution;
+  if (settings.openAiPixelAvailable) {
+    windowRef.oaiq = function () {
+      openAiPixelCalls.push(Array.from(arguments));
+    };
+  }
 
   const documentRef = {
     referrer: settings.referrer || "",
@@ -85,6 +91,7 @@ function runTracker(options) {
   return {
     sessionStorage: sessionStorage,
     sentPayloads: sentPayloads,
+    openAiPixelCalls: openAiPixelCalls,
     clickLink: clickLink,
     clickWhatsapp: function () {
       clickLink({ href: "https://wa.me/5511999999999" });
@@ -248,4 +255,65 @@ test("ebook CTA never creates a commercial lead even if its destination becomes 
   assert.equal(tracker.sentPayloads.length, 1);
   assert.equal(tracker.sentPayloads[0].event_name, "cta_click");
   assert.equal(tracker.sentPayloads[0].link_position, "individual_ebook");
+});
+
+
+test("sends the OpenAI custom conversion event for a commercial WhatsApp click", function () {
+  const tracker = runTracker({
+    pathname: "/aulas-em-grupo/",
+    openAiPixelAvailable: true
+  });
+
+  tracker.clickLink({
+    href: "https://wa.me/5511999999999",
+    containers: [".hero"]
+  });
+
+  assert.equal(tracker.openAiPixelCalls.length, 1);
+  assert.equal(tracker.openAiPixelCalls[0][0], "measure");
+  assert.equal(tracker.openAiPixelCalls[0][1], "custom");
+  assert.equal(tracker.openAiPixelCalls[0][2].type, "custom");
+  assert.equal(tracker.openAiPixelCalls[0][3].custom_event_name, "whatsapp_click");
+});
+
+test("does not send the OpenAI event before the Pixel is available", function () {
+  const tracker = runTracker({ pathname: "/aulas-em-grupo/" });
+
+  tracker.clickLink({
+    href: "https://wa.me/5511999999999",
+    containers: [".hero"]
+  });
+
+  assert.equal(tracker.openAiPixelCalls.length, 0);
+});
+
+test("measures the OpenAI conversion even when first-party lead tracking is owned elsewhere", function () {
+  const tracker = runTracker({
+    pathname: "/aulas-em-grupo/",
+    openAiPixelAvailable: true,
+    teacherCroAttribution: { tracks_first_party_leads: true }
+  });
+
+  tracker.clickLink({
+    href: "https://wa.me/5511999999999",
+    containers: [".hero"]
+  });
+
+  assert.equal(tracker.sentPayloads.length, 0);
+  assert.equal(tracker.openAiPixelCalls.length, 1);
+  assert.equal(tracker.openAiPixelCalls[0][3].custom_event_name, "whatsapp_click");
+});
+
+test("does not measure excluded WhatsApp links as OpenAI conversions", function () {
+  const tracker = runTracker({
+    pathname: "/aulas-em-grupo/",
+    openAiPixelAvailable: true
+  });
+
+  tracker.clickLink({
+    href: "https://wa.me/5511999999999",
+    commercialLead: "false"
+  });
+
+  assert.equal(tracker.openAiPixelCalls.length, 0);
 });
