@@ -258,7 +258,7 @@ test("ebook CTA never creates a commercial lead even if its destination becomes 
 });
 
 
-test("sends the OpenAI custom conversion event for a commercial WhatsApp click", function () {
+test("sends OpenAI custom and standard lead events for a commercial WhatsApp click", function () {
   const tracker = runTracker({
     pathname: "/aulas-em-grupo/",
     openAiPixelAvailable: true
@@ -269,11 +269,14 @@ test("sends the OpenAI custom conversion event for a commercial WhatsApp click",
     containers: [".hero"]
   });
 
-  assert.equal(tracker.openAiPixelCalls.length, 1);
+  assert.equal(tracker.openAiPixelCalls.length, 2);
   assert.equal(tracker.openAiPixelCalls[0][0], "measure");
   assert.equal(tracker.openAiPixelCalls[0][1], "custom");
   assert.equal(tracker.openAiPixelCalls[0][2].type, "custom");
   assert.equal(tracker.openAiPixelCalls[0][3].custom_event_name, "whatsapp_click");
+  assert.equal(tracker.openAiPixelCalls[1][0], "measure");
+  assert.equal(tracker.openAiPixelCalls[1][1], "lead_created");
+  assert.equal(tracker.openAiPixelCalls[1][2].type, "customer_action");
 });
 
 test("does not send the OpenAI event before the Pixel is available", function () {
@@ -300,8 +303,10 @@ test("measures the OpenAI conversion even when first-party lead tracking is owne
   });
 
   assert.equal(tracker.sentPayloads.length, 0);
-  assert.equal(tracker.openAiPixelCalls.length, 1);
+  assert.equal(tracker.openAiPixelCalls.length, 2);
   assert.equal(tracker.openAiPixelCalls[0][3].custom_event_name, "whatsapp_click");
+  assert.equal(tracker.openAiPixelCalls[1][1], "lead_created");
+  assert.equal(tracker.openAiPixelCalls[1][2].type, "customer_action");
 });
 
 test("does not measure excluded WhatsApp links as OpenAI conversions", function () {
