@@ -231,22 +231,31 @@
     sendPayload(buildPayload("cta_click", ctaId));
   }
 
-  function measureOpenAiWhatsappClick() {
+  function sendOpenAiMeasurement() {
     if (typeof window.oaiq !== "function") return;
     try {
-      window.oaiq(
-        "measure",
-        "custom",
-        { type: "custom" },
-        { custom_event_name: "whatsapp_click" }
-      );
+      window.oaiq.apply(window, arguments);
     } catch {
       /* Conversion measurement must never block navigation. */
     }
   }
 
+  function measureOpenAiWhatsappLead() {
+    sendOpenAiMeasurement(
+      "measure",
+      "custom",
+      { type: "custom" },
+      { custom_event_name: "whatsapp_click" }
+    );
+    sendOpenAiMeasurement(
+      "measure",
+      "lead_created",
+      { type: "customer_action" }
+    );
+  }
+
   function trackWhatsappClick(link) {
-    measureOpenAiWhatsappClick();
+    measureOpenAiWhatsappLead();
     if (!shouldSendOperationalEvent("generate_lead")) return;
     sendPayload(buildPayload("generate_lead", linkPosition(link)));
   }
