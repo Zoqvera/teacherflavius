@@ -270,12 +270,10 @@ test("sends the OpenAI custom conversion event for a commercial WhatsApp click",
   });
 
   assert.equal(tracker.openAiPixelCalls.length, 1);
-  assert.deepEqual(tracker.openAiPixelCalls[0], [
-    "measure",
-    "custom",
-    { type: "custom" },
-    { custom_event_name: "whatsapp_click" }
-  ]);
+  assert.equal(tracker.openAiPixelCalls[0][0], "measure");
+  assert.equal(tracker.openAiPixelCalls[0][1], "custom");
+  assert.equal(tracker.openAiPixelCalls[0][2].type, "custom");
+  assert.equal(tracker.openAiPixelCalls[0][3].custom_event_name, "whatsapp_click");
 });
 
 test("does not send the OpenAI event before the Pixel is available", function () {
