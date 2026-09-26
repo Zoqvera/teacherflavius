@@ -231,7 +231,22 @@
     sendPayload(buildPayload("cta_click", ctaId));
   }
 
+  function measureOpenAiWhatsappClick() {
+    if (typeof window.oaiq !== "function") return;
+    try {
+      window.oaiq(
+        "measure",
+        "custom",
+        { type: "custom" },
+        { custom_event_name: "whatsapp_click" }
+      );
+    } catch {
+      /* Conversion measurement must never block navigation. */
+    }
+  }
+
   function trackWhatsappClick(link) {
+    measureOpenAiWhatsappClick();
     if (!shouldSendOperationalEvent("generate_lead")) return;
     sendPayload(buildPayload("generate_lead", linkPosition(link)));
   }
