@@ -254,7 +254,7 @@ async function synchronizeWebhookEvent(options: {
   resourceId: string;
   providerPaymentId: string;
   chargebackId: string;
-  eventId: string;
+  sourceWebhookEventId: string;
 }): Promise<JsonRecord> {
   if (options.eventType === CHARGEBACK_EVENT_TYPE) {
     return await synchronizeMercadoPagoChargeback({
@@ -262,7 +262,7 @@ async function synchronizeWebhookEvent(options: {
       accessToken: options.accessToken,
       chargebackId: options.chargebackId,
       expectedPaymentId: options.providerPaymentId,
-      sourceWebhookEventId: options.eventId,
+      sourceWebhookEventId: options.sourceWebhookEventId,
     });
   }
 
@@ -458,7 +458,7 @@ Deno.serve(async (request: Request) => {
       resourceId,
       providerPaymentId,
       chargebackId,
-      eventId,
+      sourceWebhookEventId: eventId,
     });
 
     await finishWebhook(supabaseAdmin, eventId, "processed");
