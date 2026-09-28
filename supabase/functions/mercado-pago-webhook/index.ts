@@ -10,9 +10,24 @@ import {
   PaymentSyncError,
   synchronizeMercadoPagoPayment,
 } from "../_shared/mercado_pago_payment_sync.ts";
+import {
+  SubscriptionSyncError,
+  synchronizeMercadoPagoAuthorizedPayment,
+  synchronizeMercadoPagoSubscription,
+  trySynchronizeMercadoPagoSubscriptionPayment,
+} from "../_shared/mercado_pago_subscription_sync.ts";
 
 const encoder = new TextEncoder();
 const CHARGEBACK_EVENT_TYPE = "topic_chargebacks_wh";
+const SUBSCRIPTION_EVENT_TYPE = "subscription_preapproval";
+const AUTHORIZED_PAYMENT_EVENT_TYPE = "subscription_authorized_payment";
+const SUPPORTED_EVENT_TYPES = new Set([
+  "",
+  "payment",
+  CHARGEBACK_EVENT_TYPE,
+  SUBSCRIPTION_EVENT_TYPE,
+  AUTHORIZED_PAYMENT_EVENT_TYPE,
+]);
 
 type RegisteredWebhook = {
   event_id?: string;
@@ -53,18 +68,21 @@ async function sha256Hex(value: string): Promise<string> {
 
 async function buildDeduplicationKey(options: {
   providerEventId: string;
-  providerPaymentId: string;
+  providerResourceId: string;
   eventType: string;
   action: string;
   eventCreatedAt: string;
   bodyText: string;
 }): Promise<string> {
-  if (options.providerEventId) return await sha256Hex(`mercado_pago|notification|${options.providerEventId}`);
+  if (options.providerEventId) {
+    return await sha256Hex(`mercado_pago|notification|${options.providerEventId}`);
+  }
+
   const bodyFingerprint = await sha256Hex(options.bodyText);
   return await sha256Hex([
     "mercado_pago",
     "fallback",
-    options.providerPaymentId,
+    options.providerResourceId,
     options.eventType,
     options.action,
     options.eventCreatedAt,
@@ -76,8 +94,11 @@ function constantTimeEqual(first: string, second: string): boolean {
   const firstBytes = encoder.encode(first.toLowerCase());
   const secondBytes = encoder.encode(second.toLowerCase());
   if (firstBytes.length !== secondBytes.length) return false;
+
   let difference = 0;
-  for (let index = 0; index < firstBytes.length; index += 1) difference |= firstBytes[index] ^ secondBytes[index];
+  for (let index = 0; index < firstBytes.length; index += 1) {
+    difference |= firstBytes[index] ^ secondBytes[index];
+  }
   return difference === 0;
 }
 
@@ -92,7 +113,10 @@ async function validateSignature(
   const receivedSignatures = signatureParts
     .filter((part) => part.startsWith("v1="))
     .map((part) => part.slice(3));
-  if (!timestamp || !/^\d+$/.test(timestamp) || !receivedSignatures.length || !secret) return false;
+
+  if (!timestamp || !/^\d+$/.test(timestamp) || !receivedSignatures.length || !secret) {
+    return false;
+  }
 
   const normalizedDataId = dataId && /[A-Z]/.test(dataId) ? dataId.toLowerCase() : dataId;
   const manifest = [
@@ -100,6 +124,7 @@ async function validateSignature(
     xRequestId ? `request-id:${xRequestId};` : "",
     `ts:${timestamp};`,
   ].join("");
+
   const key = await crypto.subtle.importKey(
     "raw",
     encoder.encode(secret),
@@ -150,6 +175,7 @@ async function registerWebhook(
     target_action: options.action || null,
     target_metadata: options.metadata ?? {},
   });
+
   if (error || !isRecord(data) || typeof data.event_id !== "string") {
     throw new Error(error?.message || "Unable to persist webhook event");
   }
@@ -177,14 +203,90 @@ function processingIsFresh(value: unknown): boolean {
 }
 
 function errorCode(error: unknown): string {
-  if (error instanceof PaymentSyncError || error instanceof ChargebackSyncError) return error.code;
+  if (
+    error instanceof PaymentSyncError
+    || error instanceof ChargebackSyncError
+    || error instanceof SubscriptionSyncError
+  ) {
+    return error.code;
+  }
   return "unexpected_processing_error";
 }
 
 function errorHttpStatus(code: string): number {
   if (code.includes("gateway_")) return 502;
-  if (code.includes("mismatch") || code.includes("invalid") || code.includes("ambiguous")) return 422;
+  if (
+    code.includes("mismatch")
+    || code.includes("invalid")
+    || code.includes("ambiguous")
+    || code.includes("not_found")
+  ) {
+    return 422;
+  }
   return 500;
+}
+
+async function synchronizePaymentEvent(options: {
+  supabaseAdmin: ReturnType<typeof createClient>;
+  accessToken: string;
+  paymentId: string;
+}): Promise<JsonRecord> {
+  try {
+    return await synchronizeMercadoPagoPayment(options);
+  } catch (error) {
+    if (
+      !(error instanceof PaymentSyncError)
+      || !["attempt_mismatch", "attempt_load_failed"].includes(error.code)
+    ) {
+      throw error;
+    }
+
+    const subscriptionResult = await trySynchronizeMercadoPagoSubscriptionPayment(options);
+    if (subscriptionResult) return subscriptionResult;
+    throw error;
+  }
+}
+
+async function synchronizeWebhookEvent(options: {
+  supabaseAdmin: ReturnType<typeof createClient>;
+  accessToken: string;
+  eventType: string;
+  resourceId: string;
+  providerPaymentId: string;
+  chargebackId: string;
+  sourceWebhookEventId: string;
+}): Promise<JsonRecord> {
+  if (options.eventType === CHARGEBACK_EVENT_TYPE) {
+    return await synchronizeMercadoPagoChargeback({
+      supabaseAdmin: options.supabaseAdmin,
+      accessToken: options.accessToken,
+      chargebackId: options.chargebackId,
+      expectedPaymentId: options.providerPaymentId,
+      sourceWebhookEventId: options.sourceWebhookEventId,
+    });
+  }
+
+  if (options.eventType === SUBSCRIPTION_EVENT_TYPE) {
+    return await synchronizeMercadoPagoSubscription({
+      supabaseAdmin: options.supabaseAdmin,
+      accessToken: options.accessToken,
+      subscriptionId: options.resourceId,
+    });
+  }
+
+  if (options.eventType === AUTHORIZED_PAYMENT_EVENT_TYPE) {
+    return await synchronizeMercadoPagoAuthorizedPayment({
+      supabaseAdmin: options.supabaseAdmin,
+      accessToken: options.accessToken,
+      authorizedPaymentId: options.resourceId,
+    });
+  }
+
+  return await synchronizePaymentEvent({
+    supabaseAdmin: options.supabaseAdmin,
+    accessToken: options.accessToken,
+    paymentId: options.providerPaymentId,
+  });
 }
 
 Deno.serve(async (request: Request) => {
@@ -194,6 +296,7 @@ Deno.serve(async (request: Request) => {
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") ?? "";
   const webhookSecret = Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET") ?? "";
+
   if (!supabaseUrl || !secretKey || !accessToken || !webhookSecret) {
     console.error("Missing environment variables for Mercado Pago webhook");
     return jsonResponse({ error: "Server configuration is incomplete" }, 500);
@@ -203,7 +306,9 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const requestUrl = new URL(request.url);
-  const rawQueryDataId = requestUrl.searchParams.get("data.id") ?? requestUrl.searchParams.get("data_id") ?? "";
+  const rawQueryDataId = requestUrl.searchParams.get("data.id")
+    ?? requestUrl.searchParams.get("data_id")
+    ?? "";
   const queryDataId = cleanIdentifier(rawQueryDataId, 128);
   const xSignature = request.headers.get("x-signature") ?? "";
   const rawRequestId = request.headers.get("x-request-id") ?? "";
@@ -242,7 +347,10 @@ Deno.serve(async (request: Request) => {
       });
       await finishWebhook(supabaseAdmin, logged.event_id!, "failed", "invalid_json");
     } catch (error) {
-      console.error("Unable to log invalid Mercado Pago JSON", error instanceof Error ? error.message : error);
+      console.error(
+        "Unable to log invalid Mercado Pago JSON",
+        error instanceof Error ? error.message : error,
+      );
     }
     return jsonResponse({ error: "Invalid JSON body" }, 400);
   }
@@ -251,16 +359,15 @@ Deno.serve(async (request: Request) => {
   const eventType = cleanString(payload.type, 50).toLowerCase();
   const action = cleanString(payload.action, 100).toLowerCase();
   const providerEventId = cleanIdentifier(payload.id, 128);
-  const chargebackId = eventType === CHARGEBACK_EVENT_TYPE
-    ? (queryDataId || cleanIdentifier(payloadData.id, 128))
-    : "";
+  const resourceId = queryDataId || cleanIdentifier(payloadData.id, 128);
+  const chargebackId = eventType === CHARGEBACK_EVENT_TYPE ? resourceId : "";
   const providerPaymentId = eventType === CHARGEBACK_EVENT_TYPE
     ? cleanIdentifier(payloadData.payment_id, 128)
-    : (queryDataId || cleanIdentifier(payloadData.id, 128));
+    : (eventType === "" || eventType === "payment" ? resourceId : "");
   const eventCreatedAt = cleanString(payload.date_created, 60);
   const deduplicationKey = await buildDeduplicationKey({
     providerEventId,
-    providerPaymentId,
+    providerResourceId: resourceId,
     eventType,
     action,
     eventCreatedAt,
@@ -280,39 +387,62 @@ Deno.serve(async (request: Request) => {
         source: "mercado_pago_webhook",
         signature_valid: true,
         event_created_at: eventCreatedAt || null,
+        provider_resource_id: resourceId || null,
         chargeback_id: chargebackId || null,
       },
     });
   } catch (error) {
-    console.error("Unable to persist Mercado Pago webhook", error instanceof Error ? error.message : error);
+    console.error(
+      "Unable to persist Mercado Pago webhook",
+      error instanceof Error ? error.message : error,
+    );
     return jsonResponse({ error: "Unable to persist webhook event" }, 500);
   }
 
   const eventId = logged.event_id!;
-  if (eventType && eventType !== "payment" && eventType !== CHARGEBACK_EVENT_TYPE) {
+  if (!SUPPORTED_EVENT_TYPES.has(eventType)) {
     await finishWebhook(supabaseAdmin, eventId, "ignored");
     return jsonResponse({ ok: true, ignored: eventType });
   }
-  if (!providerPaymentId) {
+
+  if ((eventType === "" || eventType === "payment") && !providerPaymentId) {
     await finishWebhook(supabaseAdmin, eventId, "failed", "payment_id_missing");
     return jsonResponse({ error: "Payment ID is missing" }, 400);
   }
-  if (eventType === CHARGEBACK_EVENT_TYPE && !chargebackId) {
-    await finishWebhook(supabaseAdmin, eventId, "failed", "chargeback_id_missing");
-    return jsonResponse({ error: "Chargeback ID is missing" }, 400);
+
+  if (eventType === CHARGEBACK_EVENT_TYPE && (!chargebackId || !providerPaymentId)) {
+    await finishWebhook(supabaseAdmin, eventId, "failed", "chargeback_identifier_missing");
+    return jsonResponse({ error: "Chargeback identifiers are missing" }, 400);
+  }
+
+  if (
+    (eventType === SUBSCRIPTION_EVENT_TYPE || eventType === AUTHORIZED_PAYMENT_EVENT_TYPE)
+    && !resourceId
+  ) {
+    await finishWebhook(supabaseAdmin, eventId, "failed", "subscription_resource_id_missing");
+    return jsonResponse({ error: "Subscription resource ID is missing" }, 400);
   }
 
   if (logged.status === "processed" || logged.status === "ignored") {
-    return jsonResponse({ ok: true, duplicate: true, delivery_count: logged.delivery_count ?? 1 });
+    return jsonResponse({
+      ok: true,
+      duplicate: true,
+      delivery_count: logged.delivery_count ?? 1,
+    });
   }
+
   if (logged.status === "processing" && processingIsFresh(logged.last_processing_started_at)) {
     return jsonResponse({ ok: true, duplicate: true, processing: true });
   }
 
-  const { error: beginError } = await supabaseAdmin.rpc("begin_mercado_pago_webhook_processing", {
-    target_event_id: eventId,
-    target_is_replay: false,
-  });
+  const { error: beginError } = await supabaseAdmin.rpc(
+    "begin_mercado_pago_webhook_processing",
+    {
+      target_event_id: eventId,
+      target_is_replay: false,
+    },
+  );
+
   if (beginError) {
     if (beginError.message.includes("já está em processamento")) {
       return jsonResponse({ ok: true, duplicate: true, processing: true });
@@ -321,32 +451,33 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
-    const result = eventType === CHARGEBACK_EVENT_TYPE
-      ? await synchronizeMercadoPagoChargeback({
-        supabaseAdmin,
-        accessToken,
-        chargebackId,
-        expectedPaymentId: providerPaymentId,
-        sourceWebhookEventId: eventId,
-      })
-      : await synchronizeMercadoPagoPayment({
-        supabaseAdmin,
-        accessToken,
-        paymentId: providerPaymentId,
-      });
+    const result = await synchronizeWebhookEvent({
+      supabaseAdmin,
+      accessToken,
+      eventType,
+      resourceId,
+      providerPaymentId,
+      chargebackId,
+      sourceWebhookEventId: eventId,
+    });
 
     await finishWebhook(supabaseAdmin, eventId, "processed");
     return jsonResponse({
       ok: true,
       event_type: eventType || "payment",
-      status: result.provider_status ?? result.operational_status ?? null,
+      status: result.provider_status ?? result.operational_status ?? result.payment_status ?? null,
+      conflict_code: result.conflict_code ?? null,
     });
   } catch (error) {
     const code = errorCode(error);
     try {
       await finishWebhook(supabaseAdmin, eventId, "failed", code);
     } catch (finishError) {
-      console.error("Unable to mark webhook as failed", eventId, finishError instanceof Error ? finishError.message : finishError);
+      console.error(
+        "Unable to mark webhook as failed",
+        eventId,
+        finishError instanceof Error ? finishError.message : finishError,
+      );
     }
 
     if (code.includes("gateway_")) {
@@ -354,11 +485,19 @@ Deno.serve(async (request: Request) => {
         supabaseAdmin,
         "gateway_failure",
         `webhook_${code}`.slice(0, 160),
-        providerPaymentId,
-        { source: eventType === CHARGEBACK_EVENT_TYPE ? "chargeback_webhook" : "payment_webhook" },
+        providerPaymentId || null,
+        {
+          source: "mercado_pago_webhook",
+          event_type: eventType || "payment",
+          provider_resource_id: resourceId || null,
+        },
       );
     }
+
     console.error("Unable to apply Mercado Pago webhook", eventId, code);
-    return jsonResponse({ error: "Unable to process Mercado Pago event", code }, errorHttpStatus(code));
+    return jsonResponse(
+      { error: "Unable to process Mercado Pago event", code },
+      errorHttpStatus(code),
+    );
   }
 });
