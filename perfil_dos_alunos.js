@@ -1,3 +1,5 @@
+const MAX_STUDENT_CLASS_ASSIGNMENTS = 2;
+
 let currentProfessorSession = null;
 let teacherClasses = [];
 let studentClassMap = new Map();
@@ -84,6 +86,11 @@ function hasAvailability(student) {
   });
 }
 
+function getAssignedClassEntries(refId, refType) {
+  const entries = studentClassMap.get(getStudentMapKey(refType, refId)) || [];
+  return entries.slice();
+}
+
 function getAssignedClasses(student) {
   const refId = getStudentRefId(student);
   const refType = getStudentRefType(student);
@@ -95,9 +102,10 @@ function getAssignedClasses(student) {
 
   const classes = [];
   possibleKeys.forEach(function (key) {
-    const values = studentClassMap.get(key) || [];
-    values.forEach(function (className) {
-      if (!classes.includes(className)) classes.push(className);
+    const entries = studentClassMap.get(key) || [];
+    entries.forEach(function (entry) {
+      const className = entry.className;
+      if (className && !classes.includes(className)) classes.push(className);
     });
   });
 
@@ -437,14 +445,20 @@ async function loadStudentClassMap() {
     (response.data || []).forEach(function (row) {
       const refId = row.student_ref_id || row.user_id || row.invite_id || row.id;
       const refType = row.student_ref_type || (row.user_id ? "user" : "invite");
-      const className = getTeacherClassName(classItem);
+      const classEntry = {
+        classNumber: Number(classItem.class_number),
+        className: getTeacherClassName(classItem)
+      };
       [
         getStudentMapKey(refType, refId),
         row.user_id ? getStudentMapKey("user", row.user_id) : null,
         row.invite_id ? getStudentMapKey("invite", row.invite_id) : null
       ].filter(Boolean).forEach(function (key) {
         const current = map.get(key) || [];
-        if (!current.includes(className)) current.push(className);
+        const alreadyMapped = current.some(function (entry) {
+          return entry.classNumber === classEntry.classNumber;
+        });
+        if (!alreadyMapped) current.push(classEntry);
         map.set(key, current);
       });
     });
@@ -475,26 +489,60 @@ async function deleteStudent(userId, studentName, button) {
 }
 
 function openClassAssignmentModal(refId, refType, studentName) {
-  selectedStudentForClass = { refId: refId, refType: refType, studentName: studentName };
+  const assignedClasses = getAssignedClassEntries(refId, refType);
+  const assignedClassNumbers = new Set(assignedClasses.map(function (entry) {
+    return entry.classNumber;
+  }));
+  const availableClasses = teacherClasses.filter(function (item) {
+    return !assignedClassNumbers.has(Number(item.class_number));
+  });
+  const reachedLimit = assignedClasses.length >= MAX_STUDENT_CLASS_ASSIGNMENTS;
+
+  selectedStudentForClass = {
+    refId: refId,
+    refType: refType,
+    studentName: studentName,
+    assignedClasses: assignedClasses
+  };
+
   const modal = document.getElementById("classAssignmentModal");
   const nameLabel = document.getElementById("classAssignmentStudentName");
+  const currentClassesLabel = document.getElementById("classAssignmentCurrentClasses");
   const message = document.getElementById("classAssignmentMessage");
   const select = document.getElementById("classAssignmentSelect");
+  const button = document.getElementById("saveClassAssignmentButton");
 
   if (nameLabel) nameLabel.textContent = "Aluno: " + studentName;
+  if (currentClassesLabel) {
+    const classNames = assignedClasses.map(function (entry) { return entry.className; });
+    currentClassesLabel.textContent = classNames.length
+      ? "Turmas atuais (" + classNames.length + "/" + MAX_STUDENT_CLASS_ASSIGNMENTS + "): " + classNames.join(", ")
+      : "Turmas atuais: nenhuma (0/" + MAX_STUDENT_CLASS_ASSIGNMENTS + ").";
+  }
+
   if (message) {
-    message.className = "empty";
-    message.textContent = "";
+    message.className = reachedLimit ? "empty" : "empty";
+    message.textContent = reachedLimit
+      ? "O aluno já está vinculado ao limite de 2 turmas. Remova um vínculo pela página da turma para adicionar outra."
+      : "";
   }
 
   if (select) {
-    if (!teacherClasses.length) {
-      select.innerHTML = '<option value="">Nenhuma turma criada</option>';
+    select.disabled = reachedLimit || availableClasses.length === 0;
+    if (reachedLimit) {
+      select.innerHTML = '<option value="">Limite de 2 turmas atingido</option>';
+    } else if (!availableClasses.length) {
+      select.innerHTML = '<option value="">Nenhuma turma disponível</option>';
     } else {
-      select.innerHTML = '<option value="">Selecione uma turma</option>' + teacherClasses.map(function (item) {
+      select.innerHTML = '<option value="">Selecione a nova turma</option>' + availableClasses.map(function (item) {
         return '<option value="' + escapeHtml(item.class_number) + '">' + escapeHtml(getTeacherClassName(item)) + '</option>';
       }).join("");
     }
+  }
+
+  if (button) {
+    button.disabled = reachedLimit || availableClasses.length === 0;
+    button.textContent = "ADICIONAR TURMA";
   }
 
   if (modal) {
@@ -544,10 +592,10 @@ async function saveClassAssignment() {
     closeClassAssignmentModal();
   } catch (error) {
     message.className = "error";
-    message.textContent = "Não foi possível atribuir a turma: " + (error.message || "erro desconhecido") + ". Execute supabase_pre_matriculas_turmas.sql no Supabase.";
+    message.textContent = "Não foi possível adicionar a turma: " + (error.message || "erro desconhecido") + ".";
   } finally {
     button.disabled = false;
-    button.textContent = "SALVAR TURMA";
+    button.textContent = "ADICIONAR TURMA";
   }
 }
 
@@ -716,7 +764,7 @@ function renderProfileCard(student) {
       '<p><b>Disponibilidade para aulas:</b></p>' + formatAvailability(student) +
     '</div>' +
     '<div class="student-actions">' +
-      '<button class="delete-button assign-class-button" type="button" data-ref-id="' + escapeHtml(refId) + '" data-ref-type="' + escapeHtml(refType) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">TURMA</button>' +
+      '<button class="delete-button assign-class-button" type="button" data-ref-id="' + escapeHtml(refId) + '" data-ref-type="' + escapeHtml(refType) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">ADICIONAR TURMA</button>' +
       billingButton +
       editButton +
       deleteButton +
