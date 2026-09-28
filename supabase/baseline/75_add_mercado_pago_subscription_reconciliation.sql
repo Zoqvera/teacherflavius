@@ -85,7 +85,7 @@ create or replace function public.preserve_financial_subject_ref()
 returns trigger
 language plpgsql
 set search_path = 'public', 'pg_temp'
-as $
+as $$
 begin
   if new.student_id is not null then
     new.subject_ref := new.student_id;
@@ -94,7 +94,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 
 revoke all on function public.preserve_financial_subject_ref()
   from public, anon, authenticated;
