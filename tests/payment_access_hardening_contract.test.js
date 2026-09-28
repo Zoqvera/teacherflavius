@@ -37,6 +37,7 @@ const SERVER_ONLY_RPCS = [
 
 const PAYMENT_EDGE_FUNCTIONS = [
   "create-mercado-pago-payment/index.ts",
+  "create-mercado-pago-subscription/index.ts",
   "mercado-pago-webhook/index.ts",
   "reconcile-mercado-pago-payments/index.ts",
   "reconcile-mercado-pago-automated/index.ts",
@@ -86,6 +87,7 @@ test("payment Edge Functions never read the legacy service-role key directly", (
 test("core payment functions prefer the new Supabase secret-key bundle", () => {
   [
     "create-mercado-pago-payment/index.ts",
+    "create-mercado-pago-subscription/index.ts",
     "mercado-pago-webhook/index.ts",
     "reconcile-mercado-pago-payments/index.ts",
     "reconcile-mercado-pago-automated/index.ts",
