@@ -81,6 +81,26 @@ begin
 end;
 $$;
 
+create or replace function public.preserve_financial_subject_ref()
+returns trigger
+language plpgsql
+set search_path = 'public', 'pg_temp'
+as $
+begin
+  if new.student_id is not null then
+    new.subject_ref := new.student_id;
+  elsif new.subject_ref is null then
+    raise exception 'subject_ref é obrigatório para registros financeiros.';
+  end if;
+  return new;
+end;
+$;
+
+revoke all on function public.preserve_financial_subject_ref()
+  from public, anon, authenticated;
+grant execute on function public.preserve_financial_subject_ref()
+  to service_role;
+
 create trigger subscription_authorized_payments_subject_ref
 before insert or update of student_id, subject_ref
 on public.subscription_authorized_payments
