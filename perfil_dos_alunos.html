@@ -450,7 +450,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <form id="studentBillingForm">
         <label for="studentMonthlyFee" class="modal-help">Valor mensal (R$)</label>
         <input id="studentMonthlyFee" class="class-select" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ex.: 50,00" required>
-        <p class="billing-modal-note">O professor define apenas o valor mensal. O vencimento é escolhido pelo aluno e o início da cobrança é calculado automaticamente pelo sistema.</p>
+
+        <label for="studentDueDay" class="modal-help">Dia de vencimento</label>
+        <select id="studentDueDay" class="class-select" required>
+          <option value="">Selecione o dia de vencimento</option>
+        </select>
+
+        <p class="billing-modal-note">O dia de vencimento é obrigatório e segue as opções calculadas pelo sistema a partir da data da matrícula.</p>
 
         <div id="studentBillingMessage" class="empty" role="status" aria-live="polite"></div>
 
@@ -463,7 +469,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 
   <script src="perfil_dos_alunos.js?v=20260927-two-classes-1"></script>
-  <script src="/perfil_dos_alunos_vencimento.js?v=20260908-3"></script>
+  <script src="/perfil_dos_alunos_vencimento.js?v=20260928-required-due-day-1"></script>
   <script src="perfil_dos_alunos_archive.js?v=20260807-archive-1"></script>
   <script src="perfil_dos_alunos_licoes.js?v=20260807-lessons-1"></script>
   <script src="animated_cards.js?v=20260429-8"></script>

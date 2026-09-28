@@ -26,8 +26,10 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Validate two-class assignment contract
-        run: node --test tests/student_two_class_links_contract.test.js
+      - name: Validate application database contracts
+        run: |
+          node --test tests/student_two_class_links_contract.test.js
+          node --test tests/tuition_due_day_required_contract.test.js
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
