@@ -644,17 +644,24 @@ async function saveStudentBilling(event) {
   if (!selectedStudentForBilling) return;
 
   const input = document.getElementById("studentMonthlyFee");
+  const dueDayField = document.getElementById("studentDueDay");
   const button = document.getElementById("saveStudentBillingButton");
   const fee = Number(String(input ? input.value : "").replace(",", "."));
+  const dueDay = Number(dueDayField ? dueDayField.value : "");
 
   if (!Number.isFinite(fee) || fee <= 0) {
     setStudentBillingMessage("Informe um valor de mensalidade maior que zero.", "error");
     return;
   }
 
+  if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
+    setStudentBillingMessage("Selecione um dia de vencimento.", "error");
+    if (dueDayField) dueDayField.focus();
+    return;
+  }
+
   const selection = selectedStudentForBilling;
   const settings = selection.settings || {};
-  const dueDay = Number(settings.due_day);
   const startMonth = settings.billing_start_month || getCurrentBillingMonth();
   const active = settings.monthly_fee == null ? true : settings.billing_active === true;
 
@@ -667,7 +674,7 @@ async function saveStudentBilling(event) {
     const response = await client.rpc("save_student_billing_settings", {
       target_student_id: selection.studentId,
       target_monthly_fee: fee,
-      target_due_day: Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31 ? dueDay : 10,
+      target_due_day: dueDay,
       target_billing_start_month: startMonth,
       target_active: active,
       target_notes: settings.billing_notes || ""
