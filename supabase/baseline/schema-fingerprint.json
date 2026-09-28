@@ -3,7 +3,7 @@
   "tables": 49,
   "constraints": 231,
   "non_constraint_indexes": 107,
-  "public_functions": 127,
+  "public_functions": 128,
   "private_functions": 1,
   "rls_policies": 89,
   "public_user_triggers": 33,
