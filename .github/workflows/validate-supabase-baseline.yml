@@ -31,6 +31,7 @@ jobs:
           node --test tests/student_two_class_links_contract.test.js
           node --test tests/tuition_due_day_required_contract.test.js
           node --test tests/payment_subscription_foundation.test.js
+          node --test tests/payment_subscription_reconciliation.test.js
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -83,7 +84,8 @@ jobs:
             supabase/baseline/55_add_lesson_number_label_and_translation.sql \
             supabase/baseline/60_add_students_of_day.sql \
             supabase/baseline/65_allow_student_two_class_links.sql \
-            supabase/baseline/70_add_mercado_pago_subscription_foundation.sql
+            supabase/baseline/70_add_mercado_pago_subscription_foundation.sql \\
+            supabase/baseline/75_add_mercado_pago_subscription_reconciliation.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
