@@ -521,7 +521,7 @@ function openClassAssignmentModal(refId, refType, studentName) {
   }
 
   if (message) {
-    message.className = reachedLimit ? "empty" : "empty";
+    message.className = "empty";
     message.textContent = reachedLimit
       ? "O aluno já está vinculado ao limite de 2 turmas. Remova um vínculo pela página da turma para adicionar outra."
       : "";
