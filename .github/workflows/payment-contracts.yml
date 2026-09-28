@@ -32,6 +32,7 @@ on:
       - "supabase/functions/dispatch-payment-analytics/**"
       - "supabase/functions/_shared/mercado_pago_payment_sync.ts"
       - "supabase/functions/_shared/mercado_pago_chargeback_sync.ts"
+      - "supabase/functions/_shared/mercado_pago_subscription_sync.ts"
       - "supabase/migrations/*payment*"
       - "supabase/migrations/*chargeback*"
       - "supabase/migrations/*subscription*"
@@ -75,6 +76,7 @@ on:
       - "supabase/functions/dispatch-payment-analytics/**"
       - "supabase/functions/_shared/mercado_pago_payment_sync.ts"
       - "supabase/functions/_shared/mercado_pago_chargeback_sync.ts"
+      - "supabase/functions/_shared/mercado_pago_subscription_sync.ts"
       - "supabase/migrations/*payment*"
       - "supabase/migrations/*chargeback*"
       - "supabase/migrations/*subscription*"
@@ -144,6 +146,7 @@ jobs:
           tests/payment_workflow_contract.test.js
           tests/payment_server_analytics_contract.test.js
           tests/payment_subscription_foundation.test.js
+          tests/payment_subscription_reconciliation.test.js
 
   sandbox-credential-probe:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
