@@ -11,6 +11,14 @@ const migration = fs.readFileSync(
 const profileScript = fs.readFileSync(path.join(root, "perfil_dos_alunos.js"), "utf8");
 const profilePage = fs.readFileSync(path.join(root, "perfil_dos_alunos.html"), "utf8");
 const studentClassScript = fs.readFileSync(path.join(root, "minha_turma.js"), "utf8");
+const restoreOverlay = fs.readFileSync(
+  path.join(root, "supabase", "baseline", "65_allow_student_two_class_links.sql"),
+  "utf8"
+);
+const restoreWorkflow = fs.readFileSync(
+  path.join(root, ".github", "workflows", "validate-supabase-baseline.yml"),
+  "utf8"
+);
 
 test("database permits at most two class links per student", function () {
   assert.match(migration, /drop index if exists public\.class_students_one_class_per_user_idx/i);
@@ -57,4 +65,15 @@ test("student profile UI exposes a second class assignment", function () {
 
 test("student class page continues to render every assigned class", function () {
   assert.match(studentClassScript, /rows\.map\(renderClassCard\)\.join\(""\)/);
+});
+
+test("disaster recovery baseline preserves the two-class model", function () {
+  assert.match(restoreOverlay, /drop index if exists public\.class_students_one_class_per_user_idx/i);
+  assert.match(restoreOverlay, /enforce_class_students_max_two_classes_trigger/i);
+  assert.match(restoreOverlay, /add_teacher_class_student_by_ref__mfa_inner/i);
+  assert.match(
+    restoreOverlay,
+    /revoke all on function public\.add_teacher_class_student_by_ref__mfa_inner\(integer, text, text\)/
+  );
+  assert.match(restoreWorkflow, /supabase\/baseline\/65_allow_student_two_class_links\.sql/);
 });
