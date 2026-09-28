@@ -21,6 +21,14 @@ jobs:
       - name: Check out pull request
         uses: actions/checkout@v7
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Validate two-class assignment contract
+        run: node --test tests/student_two_class_links_contract.test.js
+
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
         with:
@@ -70,7 +78,8 @@ jobs:
             supabase/baseline/45_add_study_lesson_pages.sql \
             supabase/baseline/50_enable_dynamic_study_roadmap_cards.sql \
             supabase/baseline/55_add_lesson_number_label_and_translation.sql \
-            supabase/baseline/60_add_students_of_day.sql
+            supabase/baseline/60_add_students_of_day.sql \
+            supabase/baseline/65_allow_student_two_class_links.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
