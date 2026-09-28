@@ -216,6 +216,11 @@ begin
 end;
 $function$;
 
+revoke all on function public.add_teacher_class_student_by_ref__mfa_inner(integer, text, text)
+  from public, anon, authenticated;
+grant execute on function public.add_teacher_class_student_by_ref__mfa_inner(integer, text, text)
+  to service_role;
+
 create or replace function public.migrate_invite_records_to_user()
 returns trigger
 language plpgsql
