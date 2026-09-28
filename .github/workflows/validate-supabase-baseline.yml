@@ -82,7 +82,7 @@ jobs:
             supabase/baseline/50_enable_dynamic_study_roadmap_cards.sql \
             supabase/baseline/55_add_lesson_number_label_and_translation.sql \
             supabase/baseline/60_add_students_of_day.sql \
-            supabase/baseline/65_allow_student_two_class_links.sql \\
+            supabase/baseline/65_allow_student_two_class_links.sql \
             supabase/baseline/70_add_mercado_pago_subscription_foundation.sql
           do
             echo "Applying $file"
