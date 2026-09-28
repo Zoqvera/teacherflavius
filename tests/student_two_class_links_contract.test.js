@@ -10,6 +10,10 @@ const migration = fs.readFileSync(
 );
 const profileScript = fs.readFileSync(path.join(root, "perfil_dos_alunos.js"), "utf8");
 const profilePage = fs.readFileSync(path.join(root, "perfil_dos_alunos.html"), "utf8");
+const switchMigration = fs.readFileSync(
+  path.join(root, "supabase", "migrations", "20260928020716_protect_multi_class_self_service_switch.sql"),
+  "utf8"
+);
 const studentClassScript = fs.readFileSync(path.join(root, "minha_turma.js"), "utf8");
 const restoreOverlay = fs.readFileSync(
   path.join(root, "supabase", "baseline", "65_allow_student_two_class_links.sql"),
@@ -67,10 +71,23 @@ test("student class page continues to render every assigned class", function () 
   assert.match(studentClassScript, /rows\.map\(renderClassCard\)\.join\(""\)/);
 });
 
+test("self-service switching cannot erase two active class links", function () {
+  assert.match(switchMigration, /if current_class_count > 1 then/i);
+  assert.match(
+    switchMigration,
+    /A troca deve ser feita pelo professor para preservar os dois vínculos\./
+  );
+  assert.match(
+    switchMigration,
+    /where user_id = caller_id\s+and class_number = old_class_number;/i
+  );
+});
+
 test("disaster recovery baseline preserves the two-class model", function () {
   assert.match(restoreOverlay, /drop index if exists public\.class_students_one_class_per_user_idx/i);
   assert.match(restoreOverlay, /enforce_class_students_max_two_classes_trigger/i);
   assert.match(restoreOverlay, /add_teacher_class_student_by_ref__mfa_inner/i);
+  assert.match(restoreOverlay, /if current_class_count > 1 then/i);
   assert.match(
     restoreOverlay,
     /revoke all on function public\.add_teacher_class_student_by_ref__mfa_inner\(integer, text, text\)/
