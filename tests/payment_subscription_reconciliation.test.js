@@ -34,6 +34,10 @@ test("recurring invoices are preserved as server-only financial records", () => 
     migration,
     /grant select, insert, update, delete on table public\.subscription_authorized_payments to service_role/i,
   );
+  const baseline = read(
+    "supabase/baseline/75_add_mercado_pago_subscription_reconciliation.sql",
+  );
+  assert.match(baseline, /create or replace function public\.preserve_financial_subject_ref\(\)/i);
 });
 
 test("subscription reconciliation derives tuition cycle from the provider debit date", () => {
