@@ -242,6 +242,7 @@ Deno.serve(async (request: Request) => {
   const publishableKey = getDefaultKey("SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_ANON_KEY");
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const mercadoPagoAccessToken = normalizeAccessToken(Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN"));
+  const mercadoPagoPublicKey = (Deno.env.get("MERCADO_PAGO_PUBLIC_KEY") ?? "").trim();
   const authorization = request.headers.get("Authorization") ?? "";
 
   if (!supabaseUrl || !publishableKey || !secretKey) {
@@ -336,9 +337,14 @@ Deno.serve(async (request: Request) => {
   const currentSubscription = await loadCurrentSubscription(supabaseAdmin, user.id);
 
   if (action === "preview") {
+    const subscriptionCheckoutEnabled = subscriptionsEnabled()
+      && !!mercadoPagoAccessToken
+      && !!mercadoPagoPublicKey;
+
     return jsonResponse(request, {
       ok: true,
-      subscriptions_enabled: subscriptionsEnabled(),
+      subscriptions_enabled: subscriptionCheckoutEnabled,
+      public_key: subscriptionCheckoutEnabled ? mercadoPagoPublicKey : null,
       amount,
       currency_id: "BRL",
       due_day: dueDay,
