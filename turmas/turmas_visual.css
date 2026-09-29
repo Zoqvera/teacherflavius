@@ -313,20 +313,26 @@ body {
 .class-name-save-button {
   min-height: 46px;
   padding: 10px 14px;
-  border: 1px solid rgba(78,154,236,.52);
+  border: 1px solid rgba(78,154,236,.46);
   border-radius: var(--tf-radius-md, 12px);
-  background: rgba(9,104,188,.16);
+  background: linear-gradient(180deg, rgba(9,104,188,.18), rgba(5,66,136,.12));
   color: #dbeafe;
   font: 800 12px/1.2 var(--tf-font-display, "Montserrat", sans-serif);
   letter-spacing: .025em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
   cursor: pointer;
-  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .class-name-save-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: rgba(78,154,236,.72);
-  background: rgba(9,104,188,.25);
+  border-color: rgba(78,154,236,.68);
+  background: linear-gradient(180deg, rgba(9,104,188,.27), rgba(5,66,136,.18));
+  box-shadow: 0 8px 18px rgba(5,66,136,.14), inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.class-name-save-button:active:not(:disabled) {
+  transform: translateY(0) scale(.99);
 }
 
 .class-name-save-button:disabled {
@@ -356,19 +362,29 @@ body {
 }
 
 .config-save-button {
-  min-height: 44px;
-  border: 1px solid rgba(78,154,236,.42) !important;
-  background: rgba(9,104,188,.12) !important;
-  color: #bfdbfe !important;
+  min-height: 46px;
+  padding: 11px 14px !important;
+  border: 1px solid rgba(78,154,236,.58) !important;
+  border-radius: var(--tf-radius-md, 12px) !important;
+  background: linear-gradient(135deg, #0968bc, #054288) !important;
+  color: #fff !important;
   font-size: 12px;
-  letter-spacing: .025em;
-  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+  font-weight: 800;
+  letter-spacing: .035em;
+  box-shadow: 0 8px 22px rgba(5,66,136,.2);
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .config-save-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: rgba(78,154,236,.64) !important;
-  background: rgba(9,104,188,.2) !important;
+  border-color: rgba(78,154,236,.76) !important;
+  background: linear-gradient(135deg, #0b75cf, #06509e) !important;
+  box-shadow: 0 12px 28px rgba(5,66,136,.28);
+}
+
+.config-save-button:active:not(:disabled) {
+  transform: translateY(0) scale(.99);
 }
 
 .config-save-button:disabled,
@@ -475,6 +491,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .class-card,
+  .class-name-save-button,
   .config-save-button,
   .open-class-button,
   .remove-class-button,
