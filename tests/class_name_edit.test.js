@@ -34,5 +34,5 @@ test("supports keyboard save and visible feedback for class names", function () 
 
 test("busts cached class editing assets", function () {
   assert.match(classesPage, /turmas\.js\?v=20260925-rename-1/);
-  assert.match(cleanRoutePage, /turmas_visual\.css\?v=20260925-rename-1/);
+  assert.match(cleanRoutePage, /turmas_visual\.css\?v=20260929-save-buttons-1/);
 });
