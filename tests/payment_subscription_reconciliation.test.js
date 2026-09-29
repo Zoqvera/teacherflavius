@@ -75,6 +75,13 @@ test("subscription synchronizer re-fetches authoritative Mercado Pago resources"
   assert.match(syncSource, /authorized_payment_reference_mismatch/);
 });
 
+test("provider canceled status maps to the local cancelled lifecycle state", () => {
+  assert.match(
+    syncSource,
+    /status === "canceled" \|\| status === "cancelled"\) return "cancelled"/,
+  );
+});
+
 test("production webhook processes both subscription event topics", () => {
   assert.match(webhookSource, /subscription_preapproval/);
   assert.match(webhookSource, /subscription_authorized_payment/);
