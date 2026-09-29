@@ -87,7 +87,8 @@ jobs:
             supabase/baseline/65_allow_student_two_class_links.sql \
             supabase/baseline/70_add_mercado_pago_subscription_foundation.sql \
             supabase/baseline/75_add_mercado_pago_subscription_reconciliation.sql \
-            supabase/baseline/80_add_mercado_pago_subscription_sandbox.sql
+            supabase/baseline/80_add_mercado_pago_subscription_sandbox.sql \
+            supabase/baseline/85_hide_trial_lessons_from_students_of_day.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -173,6 +174,26 @@ jobs:
             | grep -Fq "b.status = 'confirmed'"
           then
             echo '::error::Baseline synchronizer can still delete slots referenced by non-confirmed booking history.'
+            exit 1
+          fi
+
+      - name: Verify students-of-day excludes trial appointments
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          FUNCTION_DEF="$(docker exec "$DB_CONTAINER" \
+            psql -U postgres -d postgres -At -v ON_ERROR_STOP=1 \
+            -c "select pg_get_functiondef('public.get_teacher_students_of_day()'::regprocedure);")"
+
+          printf '%s\n' "$FUNCTION_DEF" | grep -F 'regular_lessons'
+          printf '%s\n' "$FUNCTION_DEF" | grep -F 'makeup_lessons'
+          if printf '%s\n' "$FUNCTION_DEF" | grep -Fq 'trial_lesson_appointments'
+          then
+            echo '::error::Students-of-day baseline still includes trial appointments.'
             exit 1
           fi
 
