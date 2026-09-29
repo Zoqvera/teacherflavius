@@ -86,7 +86,7 @@ jobs:
             supabase/baseline/60_add_students_of_day.sql \
             supabase/baseline/65_allow_student_two_class_links.sql \
             supabase/baseline/70_add_mercado_pago_subscription_foundation.sql \
-            supabase/baseline/75_add_mercado_pago_subscription_reconciliation.sql \\
+            supabase/baseline/75_add_mercado_pago_subscription_reconciliation.sql \
             supabase/baseline/80_add_mercado_pago_subscription_sandbox.sql
           do
             echo "Applying $file"
