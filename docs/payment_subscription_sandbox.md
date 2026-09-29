@@ -38,31 +38,24 @@ When selected, the job:
 7. when a payment exists, validates it through `/v1/payments/{id}`;
 8. cancels the test subscription in a `finally` block.
 
-For subscription testing, prefer credentials from an application created while signed in to a Mercado Pago seller test account. Configure these GitHub secrets:
+For the current stage-mode subscription test, configure these GitHub secrets with the test credentials from the subscription application:
 
-- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN`;
-- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY`;
-- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL`.
+- `MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN`;
+- `MERCADO_PAGO_SUBSCRIPTION_STAGE_PUBLIC_KEY`.
 
-The access token and public key are the credentials of that seller test-account application. The payer e-mail belongs to a separate buyer test account. Generic payment sandbox secrets remain as fallback only.
+The test request always uses `payer_email=test_payer@testuser.com`, matching the current Mercado Pago authorized-subscription example. The stage flow sends `X-scope: stage`.
+
+The probe performs a read-only credential preflight before tokenizing the card. The subscription creation request retries HTTP 502/503/504 twice with the same idempotency key, so transient gateway failures do not create duplicate subscriptions.
 
 ## Sandbox Webhook
 
-Configure the test-mode Webhook URL in Mercado Pago as:
+The isolated endpoint remains available at:
 
 `https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/mercado-pago-subscription-sandbox-webhook`
 
-Enable these test topics:
+Some subscription applications do not expose Webhook configuration in the Mercado Pago application panel. The API smoke test therefore does not depend on Webhook delivery. Webhook validation is a separate acceptance step when Mercado Pago exposes a supported notification configuration for the application.
 
-- `subscription_preapproval`;
-- `subscription_authorized_payment`.
-
-For the dedicated subscription test application, configure the Supabase Edge Function secrets:
-
-- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN`;
-- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_WEBHOOK_SECRET`.
-
-The legacy `MERCADO_PAGO_TEST_ACCESS_TOKEN` and `MERCADO_PAGO_TEST_WEBHOOK_SECRET` remain fallback values for compatibility.
+For provider re-fetches, the Edge Function prefers `MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN`. Existing sandbox credentials remain fallback values for compatibility.
 
 For every signed event it:
 
@@ -84,8 +77,8 @@ The sandbox is considered ready for production activation when a controlled run 
 - provider lookup confirms the same subscription;
 - `live_mode=false`;
 - the subscription is canceled during cleanup;
-- at least one signed `subscription_preapproval` notification is persisted;
-- if an authorized invoice is generated during the test window, its payment is also confirmed with `live_mode=false`;
+- if an authorized invoice is generated during the test window, its payment is confirmed with `live_mode=false`;
+- Webhook delivery is validated separately when a supported subscription notification configuration is available;
 - no rows are created in production subscription or tuition tables.
 
 The recurring creation feature flag remains disabled until these checks are completed.
