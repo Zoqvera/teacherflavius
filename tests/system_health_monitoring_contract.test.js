@@ -8,6 +8,7 @@ const migration = fs.readFileSync(path.join(root, "supabase/migrations/202609100
 const bootstrapFix = fs.readFileSync(path.join(root, "supabase/migrations/20260910030731_prevent_system_health_bootstrap_false_alert.sql"), "utf8");
 const resourceBurstFix = fs.readFileSync(path.join(root, "supabase/migrations/20260925135003_corroborate_resource_error_bursts.sql"), "utf8");
 const openAiCspFix = fs.readFileSync(path.join(root, "supabase/migrations/20260926002809_exclude_approved_openai_pixel_csp_from_health.sql"), "utf8");
+const twemojiCspFix = fs.readFileSync(path.join(root, "supabase/migrations/20260929180500_exclude_approved_twemoji_csp_from_health.sql"), "utf8");
 const syntheticProbe = fs.readFileSync(path.join(root, "supabase/functions/system-synthetic-probe/index.ts"), "utf8");
 const dashboardFunction = fs.readFileSync(path.join(root, "supabase/functions/get-system-health-dashboard/index.ts"), "utf8");
 const notifier = fs.readFileSync(path.join(root, "supabase/functions/notify-system-health-alert/index.ts"), "utf8");
@@ -79,4 +80,13 @@ test("approved OpenAI pixel CSP reports do not degrade system health", function 
   assert.match(openAiCspFix, /https:\/\/bzrcdn\.openai\.com\/%/);
   assert.match(openAiCspFix, /https:\/\/bzr\.openai\.com\/%/);
   assert.match(openAiCspFix, /csp_actionable_15m/);
+});
+
+test("approved Twemoji SVG CSP reports do not degrade system health", function () {
+  assert.match(
+    twemojiCspFix,
+    /https:\/\/cdn\.jsdelivr\.net\/gh\/jdecked\/twemoji@17\.0\.3\/assets\/svg\/%/
+  );
+  assert.match(twemojiCspFix, /csp_actionable_15m/);
+  assert.match(twemojiCspFix, /CSP actionable filter was not updated/);
 });
