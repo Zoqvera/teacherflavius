@@ -46,6 +46,7 @@ on:
   push:
     branches:
       - main
+      - qa/mercado-pago-subscription-e2e
     paths:
       - "pagamento/**"
       - "analytics.js"
@@ -150,7 +151,7 @@ jobs:
           tests/payment_subscription_checkout.test.js
 
   sandbox-credential-probe:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/qa/mercado-pago-subscription-e2e'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
