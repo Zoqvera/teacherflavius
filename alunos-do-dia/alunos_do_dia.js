@@ -27,6 +27,7 @@
   const TIME_ZONE = "America/Sao_Paulo";
   const PAGE_PATH = "/alunos-do-dia/";
   const DEFAULT_MESSAGE = whatsappApi.MESSAGE;
+  const DISPLAYED_LESSON_KINDS = new Set(["regular", "makeup"]);
 
   function toText(value) {
     return value == null ? "" : String(value);
@@ -56,10 +57,16 @@
   function lessonKindLabel(kind) {
     const labels = {
       regular: "AULA REGULAR",
-      makeup: "REPOSIÇÃO",
-      trial: "AULA EXPERIMENTAL"
+      makeup: "REPOSIÇÃO"
     };
     return labels[kind] || "AULA";
+  }
+
+  function filterDisplayedLessons(items) {
+    if (!Array.isArray(items)) return [];
+    return items.filter(function (item) {
+      return DISPLAYED_LESSON_KINDS.has(toText(item && item.lesson_kind));
+    });
   }
 
   function formatTime(value) {
@@ -98,8 +105,7 @@
     const counts = {
       total: items.length,
       regular: 0,
-      makeup: 0,
-      trial: 0
+      makeup: 0
     };
 
     items.forEach(function (item) {
@@ -111,13 +117,12 @@
     documentRef.getElementById("daySummary").innerHTML =
       '<article class="day-summary-card"><span>Total</span><strong>' + counts.total + '</strong></article>' +
       '<article class="day-summary-card"><span>Regulares</span><strong>' + counts.regular + '</strong></article>' +
-      '<article class="day-summary-card"><span>Reposições</span><strong>' + counts.makeup + '</strong></article>' +
-      '<article class="day-summary-card"><span>Experimentais</span><strong>' + counts.trial + '</strong></article>';
+      '<article class="day-summary-card"><span>Reposições</span><strong>' + counts.makeup + '</strong></article>';
   }
 
   function lessonToPresentHtml(item) {
     const lesson = toText(item && item.lesson_to_present).trim();
-    if (!lesson || toText(item && item.lesson_kind) === "trial") return "";
+    if (!lesson) return "";
     return '<div class="day-lesson-to-present"><span>LIÇÃO A APRESENTAR</span><strong>' +
       escapeHtml(lesson) +
       '</strong></div>';
@@ -183,7 +188,7 @@
   async function loadStudents(runtime) {
     const response = await runtime.client.rpc("get_teacher_students_of_day");
     if (response.error) throw response.error;
-    runtime.state.items = Array.isArray(response.data) ? response.data : [];
+    runtime.state.items = filterDisplayedLessons(response.data);
     renderStudents(runtime.documentRef, runtime.state.items);
   }
 
@@ -353,6 +358,7 @@
     whatsappNumber: whatsappNumber,
     whatsappUrl: whatsappUrl,
     lessonKindLabel: lessonKindLabel,
+    filterDisplayedLessons: filterDisplayedLessons,
     lessonToPresentHtml: lessonToPresentHtml,
     formatTime: formatTime,
     initialize: initialize
