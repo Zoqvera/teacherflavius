@@ -35,6 +35,7 @@ test("subscription sandbox evidence is isolated and service-role only", () => {
 });
 
 test("subscription sandbox webhook never mutates production financial state", () => {
+  assert.match(webhook, /MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN/);
   assert.match(webhook, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN/);
   assert.match(webhook, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_WEBHOOK_SECRET/);
   assert.match(webhook, /MERCADO_PAGO_TEST_ACCESS_TOKEN/);
@@ -65,17 +66,21 @@ test("sandbox webhook validates provider state after HMAC validation", () => {
 });
 
 test("subscription probe creates only a sandbox subscription and always cancels it", () => {
-  assert.match(probe, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN/);
-  assert.match(probe, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY/);
-  assert.match(probe, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL/);
-  assert.match(probe, /MERCADO_PAGO_TEST_ACCESS_TOKEN/);
-  assert.match(probe, /MERCADO_PAGO_TEST_PUBLIC_KEY/);
+  assert.match(probe, /MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN/);
+  assert.match(probe, /MERCADO_PAGO_SUBSCRIPTION_STAGE_PUBLIC_KEY/);
+  assert.match(probe, /test_payer@testuser\.com/);
+  assert.doesNotMatch(probe, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN/);
+  assert.doesNotMatch(probe, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY/);
+  assert.doesNotMatch(probe, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL/);
   assert.match(probe, /MercadoPagoProbe\.createCardToken/);
   assert.match(probe, /holderName: "APRO"/);
   assert.match(probe, /sandbox-subscription-/);
   assert.match(probe, /url: PREAPPROVAL_ENDPOINT/);
   assert.match(probe, /"X-scope": "stage"/);
   assert.match(probe, /status: "authorized"/);
+  assert.match(probe, /RETRYABLE_HTTP_STATUSES/);
+  assert.match(probe, /RETRY_DELAYS_MS/);
+  assert.match(probe, /MercadoPagoProbe\.probeCredential/);
   assert.match(probe, /body: \{ status: "canceled" \}/);
   assert.match(probe, /authorized_payments\/search/);
   assert.doesNotMatch(probe, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEYS/);
@@ -87,8 +92,8 @@ test("subscription sandbox probe can only run from an explicit workflow dispatch
     workflow,
     /github\.event_name == 'workflow_dispatch' && inputs\.run_subscription_probe == true/,
   );
-  assert.match(workflow, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN/);
-  assert.match(workflow, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY/);
-  assert.match(workflow, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL/);
+  assert.match(workflow, /MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN/);
+  assert.match(workflow, /MERCADO_PAGO_SUBSCRIPTION_STAGE_PUBLIC_KEY/);
+  assert.doesNotMatch(workflow, /MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL/);
   assert.match(workflow, /node scripts\/mercado_pago_subscription_sandbox_probe\.js/);
 });
