@@ -29,11 +29,12 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 11. Apply `65_allow_student_two_class_links.sql`.
 12. Apply `70_add_mercado_pago_subscription_foundation.sql`.
 13. Apply `75_add_mercado_pago_subscription_reconciliation.sql`.
-14. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
-15. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
-16. Restore application data separately, if a data restore is required.
-17. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
-18. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
+14. Apply `80_add_mercado_pago_subscription_sandbox.sql`.
+15. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
+16. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
+17. Restore application data separately, if a data restore is required.
+18. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
+19. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
 
 ## Important boundaries
 
@@ -46,7 +47,7 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 
 ## Validation fingerprint
 
-`schema-fingerprint.json` is the machine-readable catalog fingerprint used to detect structural drift. Function-body-only overlays do not change catalog object counts. Overlay `40_allow_gmail_dot_equivalent_student_links.sql` adds the Gmail helper, `42_require_live_admin_auth_session.sql` restores the current MFA helper, `45_add_study_lesson_pages.sql` adds the lesson audit trigger function, `50_enable_dynamic_study_roadmap_cards.sql` removes the fixed 24-card ceiling, `55_add_lesson_number_label_and_translation.sql` adds the lesson number label and translation constraints, `60_add_students_of_day.sql` restores the students-of-day query, and `65_allow_student_two_class_links.sql` removes the legacy one-class indexes and restores the two-class assignment invariant. Overlay `70_add_mercado_pago_subscription_foundation.sql` adds the server-only recurring-subscription persistence layer and its integrity constraints. Overlay `75_add_mercado_pago_subscription_reconciliation.sql` adds recurring invoice persistence, financial-history preservation, and atomic reconciliation into monthly tuition. The fingerprint includes these overlays.
+`schema-fingerprint.json` is the machine-readable catalog fingerprint used to detect structural drift. Function-body-only overlays do not change catalog object counts. Overlay `40_allow_gmail_dot_equivalent_student_links.sql` adds the Gmail helper, `42_require_live_admin_auth_session.sql` restores the current MFA helper, `45_add_study_lesson_pages.sql` adds the lesson audit trigger function, `50_enable_dynamic_study_roadmap_cards.sql` removes the fixed 24-card ceiling, `55_add_lesson_number_label_and_translation.sql` adds the lesson number label and translation constraints, `60_add_students_of_day.sql` restores the students-of-day query, and `65_allow_student_two_class_links.sql` removes the legacy one-class indexes and restores the two-class assignment invariant. Overlay `70_add_mercado_pago_subscription_foundation.sql` adds the server-only recurring-subscription persistence layer and its integrity constraints. Overlay `75_add_mercado_pago_subscription_reconciliation.sql` adds recurring invoice persistence, financial-history preservation, and atomic reconciliation into monthly tuition. Overlay `80_add_mercado_pago_subscription_sandbox.sql` adds isolated, service-role-only evidence storage for subscription sandbox Webhooks without touching production financial tables. The fingerprint includes these overlays.
 
 ## Disposable restore validation
 

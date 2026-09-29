@@ -1,8 +1,8 @@
 {
-  "captured_from_migration_version": "20260928225003",
-  "tables": 49,
-  "constraints": 231,
-  "non_constraint_indexes": 107,
+  "captured_from_migration_version": "20260929024500",
+  "tables": 50,
+  "constraints": 248,
+  "non_constraint_indexes": 109,
   "public_functions": 128,
   "private_functions": 1,
   "rls_policies": 89,
