@@ -43,7 +43,7 @@ As invariantes monitoradas incluem:
 - mensalidade cujo `subject_ref` diverge do aluno;
 - tentativa de pagamento cuja referência diverge da mensalidade.
 
-Três classes são registradas apenas como métricas informativas porque podem representar histórico legítimo: vínculo de aluno arquivado a turma, configuração de cobrança ainda ativa para aluno arquivado e mais de um registro de lição para o mesmo aluno/encontro.
+O vínculo de aluno arquivado a turma deve permanecer em zero. O banco remove automaticamente esses vínculos no arquivamento e bloqueia novas associações enquanto o aluno estiver arquivado. A métrica `archived_class_memberships_info` permanece disponível como diagnóstico. Configuração de cobrança ainda ativa para aluno arquivado e mais de um registro de lição para o mesmo aluno/encontro continuam sendo métricas informativas, pois podem representar histórico legítimo.
 
 Findings inequívocos são classificados como `warning` ou `critical`. Alertas são deduplicados pelo código + conteúdo do finding. O health check não corrige registros automaticamente.
 
@@ -58,7 +58,7 @@ A regra vigente é:
 - `quintet`: 5 alunos;
 - `eight_students`: 8 alunos.
 
-A turma 48 voltou à capacidade padrão de quarteto. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas, na troca de turma e na reativação de aluno arquivado.
+A turma 48 voltou à capacidade padrão de quarteto. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas e na troca de turma.
 
 A capacidade de reposição é independente da capacidade de matrícula regular. Nos horários automáticos de reposição, são acrescentadas três vagas exclusivas para reposição à regra anterior: turmas com 4 alunos oferecem 4 vagas de reposição, com 3 alunos oferecem 5 e com 2 alunos oferecem 6. Esse cálculo não modifica `private.get_class_operational_capacity()` nem permite novas matrículas regulares acima do limite da turma.
 
