@@ -21,6 +21,10 @@ const lessonDisplayMigration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260923175712_add_lesson_to_students_of_day.sql"),
   "utf8"
 );
+const dayVisibilityMigration = fs.readFileSync(
+  path.join(root, "supabase/migrations/20260929175500_hide_trial_lessons_from_students_of_day.sql"),
+  "utf8"
+);
 const studentsScript = fs.readFileSync(
   path.join(root, "alunos-do-dia/alunos_do_dia.js"),
   "utf8"
@@ -46,10 +50,10 @@ test("builds the requested WhatsApp confirmation message", function () {
   );
 });
 
-test("supports regular, makeup and trial lesson labels", function () {
+test("supports only regular and makeup lesson labels on the students-of-day page", function () {
   assert.equal(studentsOfDay.lessonKindLabel("regular"), "AULA REGULAR");
   assert.equal(studentsOfDay.lessonKindLabel("makeup"), "REPOSIÇÃO");
-  assert.equal(studentsOfDay.lessonKindLabel("trial"), "AULA EXPERIMENTAL");
+  assert.equal(studentsOfDay.lessonKindLabel("trial"), "AULA");
 });
 
 test("keeps the students-of-day page private from search engines", function () {
@@ -74,12 +78,27 @@ test("protects all students-of-day RPCs with teacher MFA", function () {
   assert.match(migration, /grant execute on function public\.get_teacher_students_of_day\(\) to authenticated/i);
 });
 
-test("collects regular lessons, makeup bookings and trial lessons", function () {
-  assert.match(migration, /from public\.teacher_classes tc/i);
-  assert.match(migration, /from public\.makeup_class_bookings booking/i);
-  assert.match(migration, /from private\.trial_lesson_appointments appointment/i);
-  assert.match(migration, /appointment\.status = 'scheduled'/i);
-  assert.match(migration, /booking\.status = 'confirmed'/i);
+test("final students-of-day query collects regular lessons and makeup bookings only", function () {
+  assert.match(dayVisibilityMigration, /from public\.teacher_classes tc/i);
+  assert.match(dayVisibilityMigration, /from public\.makeup_class_bookings booking/i);
+  assert.match(dayVisibilityMigration, /booking\.status = 'confirmed'/i);
+  assert.doesNotMatch(dayVisibilityMigration, /trial_lessons/i);
+  assert.doesNotMatch(dayVisibilityMigration, /private\.trial_lesson_appointments/i);
+  assert.doesNotMatch(dayVisibilityMigration, /'trial'::text/i);
+});
+
+test("filters unexpected lesson kinds before rendering the students-of-day page", function () {
+  const filtered = studentsOfDay.filterDisplayedLessons([
+    { entry_id: "1", lesson_kind: "regular" },
+    { entry_id: "2", lesson_kind: "trial" },
+    { entry_id: "3", lesson_kind: "makeup" }
+  ]);
+
+  assert.deepEqual(
+    filtered.map(function (item) { return item.lesson_kind; }),
+    ["regular", "makeup"]
+  );
+  assert.doesNotMatch(studentsScript, /<span>Experimentais<\/span>/);
 });
 
 test("cancelling a regular lesson is occurrence-specific and does not change enrollment capacity", function () {
@@ -201,7 +220,7 @@ test("installs delegated correction for all FALAR NO WHATSAPP links", function (
   assert.match(whatsappModule, /closest\("a\.day-whatsapp-link"\)/);
   assert.match(studentsScript, /data-whatsapp-number/);
   assert.match(page, /whatsapp_contact\.js\?v=20260923-1/);
-  assert.match(page, /alunos_do_dia\.js\?v=20260925-stepup-1/);
+  assert.match(page, /alunos_do_dia\.js\?v=20260929-trial-filter-1/);
 });
 
 test("provides an SVG icon for the Alunos do dia professor card", function () {
