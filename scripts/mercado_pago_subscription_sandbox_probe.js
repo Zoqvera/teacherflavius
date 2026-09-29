@@ -151,12 +151,8 @@ async function cancelSubscription(accessToken, subscriptionId) {
 
 function settingsFromEnvironment(env) {
   return {
-    accessToken:
-      env.MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN
-      || env.MERCADO_PAGO_TEST_ACCESS_TOKEN,
-    publicKey:
-      env.MERCADO_PAGO_SUBSCRIPTION_STAGE_PUBLIC_KEY
-      || env.MERCADO_PAGO_TEST_PUBLIC_KEY,
+    accessToken: env.MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN,
+    publicKey: env.MERCADO_PAGO_SUBSCRIPTION_STAGE_PUBLIC_KEY,
     payerEmail: DEFAULT_PAYER_EMAIL,
     amount: env.MERCADO_PAGO_TEST_AMOUNT || String(DEFAULT_AMOUNT),
     pollIntervalMs: env.MERCADO_PAGO_SUBSCRIPTION_POLL_INTERVAL_MS,
@@ -186,6 +182,13 @@ async function runSubscriptionProbe(options) {
   );
   if (payerEmail !== DEFAULT_PAYER_EMAIL) {
     throw new Error("Subscription sandbox probe must use the documented stage payer e-mail.");
+  }
+
+  const credentialProbe = await MercadoPagoProbe.probeCredential({
+    token: accessToken
+  });
+  if (!credentialProbe || credentialProbe.ok !== true) {
+    throw new Error("Subscription stage credential preflight failed.");
   }
 
   const amount = positiveNumber(settings.amount, DEFAULT_AMOUNT);
