@@ -100,7 +100,11 @@ Os thresholds são operacionais, não métricas de produto. Eles devem ser recal
 
 Os eventos continuam sendo armazenados integralmente em `public.csp_violation_reports`. Para cálculo de saúde, ocorrências cujo `blocked_uri` começa com `https://static.cloudflareinsights.com/` são atualmente classificadas como ruído conhecido do beacon do Cloudflare e não entram em `csp_actionable_15m`.
 
-Essa exclusão é específica e deliberada. O pixel da OpenAI usa explicitamente `https://bzrcdn.openai.com` para carregar o SDK/configuração e `https://bzr.openai.com` para enviar eventos; esses hosts fazem parte da allowlist CSP porque são dependências intencionais e consentidas do site. Relatórios CSP desses dois hosts também permanecem armazenados, mas não entram em `csp_actionable_15m`, evitando que clientes com política antiga em cache gerem falso alerta durante a propagação. Outras origens bloqueadas continuam acionáveis. Se o comportamento do beacon ou do pixel mudar, a regra precisa ser reavaliada em vez de ampliar genericamente a allowlist.
+Essa exclusão é específica e deliberada. O pixel da OpenAI usa explicitamente `https://bzrcdn.openai.com` para carregar o SDK/configuração e `https://bzr.openai.com` para enviar eventos; esses hosts fazem parte da allowlist CSP porque são dependências intencionais e consentidas do site. Relatórios CSP desses dois hosts também permanecem armazenados, mas não entram em `csp_actionable_15m`, evitando que clientes com política antiga em cache gerem falso alerta durante a propagação.
+
+Os SVGs do Twemoji são carregados apenas do prefixo versionado `https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/svg/`, que já está coberto pela diretiva `img-src` da política CSP vigente. Relatórios desse prefixo também são mantidos para auditoria, mas ficam fora de `csp_actionable_15m` porque podem ser emitidos por documentos ainda usando uma política anterior em cache. A exclusão não abrange outros caminhos ou versões do jsDelivr.
+
+Outras origens bloqueadas continuam acionáveis. Se o comportamento de qualquer dependência aprovada mudar, a regra precisa ser reavaliada em vez de ampliar genericamente a allowlist.
 
 ## Jobs monitorados
 
