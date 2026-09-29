@@ -109,7 +109,8 @@ function safeDate(value: unknown): string | null {
 
 function normalizeSubscriptionStatus(value: unknown): SubscriptionStatus {
   const status = cleanString(value, 40).toLowerCase();
-  if (status === "authorized" || status === "paused" || status === "cancelled") return status;
+  if (status === "canceled" || status === "cancelled") return "cancelled";
+  if (status === "authorized" || status === "paused") return status;
   return "pending";
 }
 
