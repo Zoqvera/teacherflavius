@@ -67,7 +67,7 @@ The administrative webhook replay endpoint remains protected by teacher MFA and 
 Before enabling recurring subscriptions:
 
 1. configure the Mercado Pago webhook integration to send `subscription_preapproval` and `subscription_authorized_payment` to the existing production webhook URL;
-2. complete the student-facing subscription checkout;
+2. validate the student-facing subscription checkout with Mercado Pago test credentials;
 3. add pause/cancel management;
-4. validate the complete flow with Mercado Pago test credentials;
+4. validate the complete recurring flow end to end;
 5. only then enable `MERCADO_PAGO_SUBSCRIPTIONS_ENABLED=true`.
