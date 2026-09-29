@@ -38,7 +38,13 @@ When selected, the job:
 7. when a payment exists, validates it through `/v1/payments/{id}`;
 8. cancels the test subscription in a `finally` block.
 
-The job uses the existing GitHub test secrets and never uses production Mercado Pago credentials.
+For subscription testing, prefer credentials from an application created while signed in to a Mercado Pago seller test account. Configure these GitHub secrets:
+
+- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN`;
+- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY`;
+- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL`.
+
+The access token and public key are the credentials of that seller test-account application. The payer e-mail belongs to a separate buyer test account. Generic payment sandbox secrets remain as fallback only.
 
 ## Sandbox Webhook
 
@@ -51,7 +57,12 @@ Enable these test topics:
 - `subscription_preapproval`;
 - `subscription_authorized_payment`.
 
-The function requires the existing `MERCADO_PAGO_TEST_WEBHOOK_SECRET` and `MERCADO_PAGO_TEST_ACCESS_TOKEN`.
+For the dedicated subscription test application, configure the Supabase Edge Function secrets:
+
+- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN`;
+- `MERCADO_PAGO_SUBSCRIPTION_SANDBOX_WEBHOOK_SECRET`.
+
+The legacy `MERCADO_PAGO_TEST_ACCESS_TOKEN` and `MERCADO_PAGO_TEST_WEBHOOK_SECRET` remain fallback values for compatibility.
 
 For every signed event it:
 

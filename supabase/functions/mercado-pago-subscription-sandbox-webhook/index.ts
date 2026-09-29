@@ -408,8 +408,16 @@ Deno.serve(async (request: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
-  const accessToken = (Deno.env.get("MERCADO_PAGO_TEST_ACCESS_TOKEN") ?? "").trim();
-  const webhookSecret = (Deno.env.get("MERCADO_PAGO_TEST_WEBHOOK_SECRET") ?? "").trim();
+  const accessToken = (
+    Deno.env.get("MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN")
+    ?? Deno.env.get("MERCADO_PAGO_TEST_ACCESS_TOKEN")
+    ?? ""
+  ).trim();
+  const webhookSecret = (
+    Deno.env.get("MERCADO_PAGO_SUBSCRIPTION_SANDBOX_WEBHOOK_SECRET")
+    ?? Deno.env.get("MERCADO_PAGO_TEST_WEBHOOK_SECRET")
+    ?? ""
+  ).trim();
 
   if (!supabaseUrl || !secretKey || !accessToken || !webhookSecret) {
     console.error("Missing subscription sandbox webhook configuration");
