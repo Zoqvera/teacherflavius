@@ -10,6 +10,9 @@ const REFERENCE_PREFIX = "sandbox-subscription-";
 const DEFAULT_AMOUNT = 10;
 const DEFAULT_POLL_INTERVAL_MS = 15000;
 const DEFAULT_POLL_ATTEMPTS = 16;
+const DEFAULT_PAYER_EMAIL = "test_payer@testuser.com";
+const RETRYABLE_HTTP_STATUSES = new Set([502, 503, 504]);
+const RETRY_DELAYS_MS = [2000, 5000];
 
 function cleanString(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -33,29 +36,46 @@ function sleep(milliseconds) {
 }
 
 async function requestJson(options) {
-  const response = await fetch(options.url, {
-    method: options.method || "GET",
-    headers: options.headers,
-    body: options.body == null ? undefined : JSON.stringify(options.body),
-    signal: AbortSignal.timeout(options.timeoutMs || 10000)
-  });
+  const retryDelays = options.retryDelaysMs || [];
+  let attempt = 0;
 
-  let payload = null;
-  try {
-    payload = await response.json();
-  } catch (_error) {
-    payload = null;
-  }
+  while (true) {
+    const response = await fetch(options.url, {
+      method: options.method || "GET",
+      headers: options.headers,
+      body: options.body == null ? undefined : JSON.stringify(options.body),
+      signal: AbortSignal.timeout(options.timeoutMs || 10000)
+    });
 
-  if (!response.ok) {
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (_error) {
+      payload = null;
+    }
+
+    if (response.ok) return payload || {};
+
+    const canRetry =
+      RETRYABLE_HTTP_STATUSES.has(response.status)
+      && attempt < retryDelays.length;
+
+    if (canRetry) {
+      await sleep(retryDelays[attempt]);
+      attempt += 1;
+      continue;
+    }
+
     const detail = payload && (payload.message || payload.error || payload.cause);
+    const requestId =
+      cleanString(response.headers.get("x-request-id"))
+      || cleanString(response.headers.get("x-correlation-id"));
     throw new Error(
       options.phase + " failed with HTTP " + response.status
       + (detail ? ": " + JSON.stringify(detail).slice(0, 400) : "")
+      + (requestId ? " [request_id=" + requestId + "]" : "")
     );
   }
-
-  return payload || {};
 }
 
 function authHeaders(accessToken, extra) {
@@ -131,15 +151,9 @@ async function cancelSubscription(accessToken, subscriptionId) {
 
 function settingsFromEnvironment(env) {
   return {
-    accessToken:
-      env.MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN
-      || env.MERCADO_PAGO_TEST_ACCESS_TOKEN,
-    publicKey:
-      env.MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY
-      || env.MERCADO_PAGO_TEST_PUBLIC_KEY,
-    payerEmail:
-      env.MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL
-      || env.MERCADO_PAGO_TEST_PAYER_EMAIL,
+    accessToken: env.MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN,
+    publicKey: env.MERCADO_PAGO_SUBSCRIPTION_STAGE_PUBLIC_KEY,
+    payerEmail: DEFAULT_PAYER_EMAIL,
     amount: env.MERCADO_PAGO_TEST_AMOUNT || String(DEFAULT_AMOUNT),
     pollIntervalMs: env.MERCADO_PAGO_SUBSCRIPTION_POLL_INTERVAL_MS,
     pollAttempts: env.MERCADO_PAGO_SUBSCRIPTION_POLL_ATTEMPTS,
@@ -156,16 +170,27 @@ async function runSubscriptionProbe(options) {
   const settings = options || {};
   const accessToken = requireSetting(
     settings.accessToken,
-    "MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN",
+    "MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN",
   );
   const publicKey = requireSetting(
     settings.publicKey,
-    "MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY",
+    "MERCADO_PAGO_SUBSCRIPTION_STAGE_PUBLIC_KEY",
   );
   const payerEmail = requireSetting(
     settings.payerEmail,
-    "MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL",
+    "subscription stage payer e-mail",
   );
+  if (payerEmail !== DEFAULT_PAYER_EMAIL) {
+    throw new Error("Subscription sandbox probe must use the documented stage payer e-mail.");
+  }
+
+  const credentialProbe = await MercadoPagoProbe.probeCredential({
+    token: accessToken
+  });
+  if (!credentialProbe || credentialProbe.ok !== true) {
+    throw new Error("Subscription stage credential preflight failed.");
+  }
+
   const amount = positiveNumber(settings.amount, DEFAULT_AMOUNT);
   const pollIntervalMs = positiveNumber(settings.pollIntervalMs, DEFAULT_POLL_INTERVAL_MS);
   const pollAttempts = Math.max(
@@ -193,6 +218,7 @@ async function runSubscriptionProbe(options) {
       headers: authHeaders(accessToken, {
         "X-Idempotency-Key": idempotencyKey
       }),
+      retryDelaysMs: RETRY_DELAYS_MS,
       body: {
         reason: "TeacherFlavius subscription sandbox probe",
         external_reference: externalReference,
@@ -299,6 +325,7 @@ if (require.main === module) {
 module.exports = Object.freeze({
   AUTHORIZED_PAYMENT_SEARCH_ENDPOINT,
   DEFAULT_AMOUNT,
+  DEFAULT_PAYER_EMAIL,
   PAYMENT_ENDPOINT,
   PREAPPROVAL_ENDPOINT,
   REFERENCE_PREFIX,

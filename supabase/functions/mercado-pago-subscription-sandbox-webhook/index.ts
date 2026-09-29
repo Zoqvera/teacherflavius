@@ -409,7 +409,8 @@ Deno.serve(async (request: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const accessToken = (
-    Deno.env.get("MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN")
+    Deno.env.get("MERCADO_PAGO_SUBSCRIPTION_STAGE_ACCESS_TOKEN")
+    ?? Deno.env.get("MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN")
     ?? Deno.env.get("MERCADO_PAGO_TEST_ACCESS_TOKEN")
     ?? ""
   ).trim();
