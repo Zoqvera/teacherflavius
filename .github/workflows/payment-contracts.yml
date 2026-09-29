@@ -147,6 +147,7 @@ jobs:
           tests/payment_server_analytics_contract.test.js
           tests/payment_subscription_foundation.test.js
           tests/payment_subscription_reconciliation.test.js
+          tests/payment_subscription_checkout.test.js
 
   sandbox-credential-probe:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
