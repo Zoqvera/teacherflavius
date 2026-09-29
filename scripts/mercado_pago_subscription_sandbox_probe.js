@@ -131,9 +131,15 @@ async function cancelSubscription(accessToken, subscriptionId) {
 
 function settingsFromEnvironment(env) {
   return {
-    accessToken: env.MERCADO_PAGO_TEST_ACCESS_TOKEN,
-    publicKey: env.MERCADO_PAGO_TEST_PUBLIC_KEY,
-    payerEmail: env.MERCADO_PAGO_TEST_PAYER_EMAIL,
+    accessToken:
+      env.MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN
+      || env.MERCADO_PAGO_TEST_ACCESS_TOKEN,
+    publicKey:
+      env.MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY
+      || env.MERCADO_PAGO_TEST_PUBLIC_KEY,
+    payerEmail:
+      env.MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL
+      || env.MERCADO_PAGO_TEST_PAYER_EMAIL,
     amount: env.MERCADO_PAGO_TEST_AMOUNT || String(DEFAULT_AMOUNT),
     pollIntervalMs: env.MERCADO_PAGO_SUBSCRIPTION_POLL_INTERVAL_MS,
     pollAttempts: env.MERCADO_PAGO_SUBSCRIPTION_POLL_ATTEMPTS,
@@ -148,9 +154,18 @@ function settingsFromEnvironment(env) {
 
 async function runSubscriptionProbe(options) {
   const settings = options || {};
-  const accessToken = requireSetting(settings.accessToken, "MERCADO_PAGO_TEST_ACCESS_TOKEN");
-  const publicKey = requireSetting(settings.publicKey, "MERCADO_PAGO_TEST_PUBLIC_KEY");
-  const payerEmail = requireSetting(settings.payerEmail, "MERCADO_PAGO_TEST_PAYER_EMAIL");
+  const accessToken = requireSetting(
+    settings.accessToken,
+    "MERCADO_PAGO_SUBSCRIPTION_SANDBOX_ACCESS_TOKEN",
+  );
+  const publicKey = requireSetting(
+    settings.publicKey,
+    "MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PUBLIC_KEY",
+  );
+  const payerEmail = requireSetting(
+    settings.payerEmail,
+    "MERCADO_PAGO_SUBSCRIPTION_SANDBOX_PAYER_EMAIL",
+  );
   const amount = positiveNumber(settings.amount, DEFAULT_AMOUNT);
   const pollIntervalMs = positiveNumber(settings.pollIntervalMs, DEFAULT_POLL_INTERVAL_MS);
   const pollAttempts = Math.max(
