@@ -52,6 +52,10 @@ create table public.conversation_question_completions (
 create index conversation_question_completions_student_idx
   on public.conversation_question_completions (student_id, question_id);
 
+create index conversation_question_completions_marked_by_idx
+  on public.conversation_question_completions (marked_by)
+  where marked_by is not null;
+
 alter table public.conversation_question_completions enable row level security;
 
 grant select, insert, delete on table public.conversation_question_completions to authenticated;
