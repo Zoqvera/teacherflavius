@@ -78,6 +78,7 @@ test("teacher can add and reorder questions without exposing student controls", 
 test("disaster-recovery baseline includes Conversation Questions", function () {
   assert.match(baseline, /create table public\.conversation_questions/i);
   assert.match(baseline, /create table public\.conversation_question_completions/i);
+  assert.match(baseline, /conversation_question_completions_marked_by_idx/i);
   assert.match(baseline, /\('How are you\?', 1\)/);
   assert.match(
     baseline,
