@@ -17,6 +17,7 @@ const sitemap = read("sitemap.xml");
 const migration = read(
   "supabase/migrations/20260930154500_add_conversation_questions.sql"
 );
+const baseline = read("supabase/baseline/90_add_conversation_questions.sql");
 
 test("keeps Conversation Questions private from search engines", function () {
   assert.match(page, /<meta name="robots" content="noindex, nofollow">/i);
