@@ -3,6 +3,8 @@ module.exports = [
     files: [
       "accessibility.js",
       "area_do_estudante.js",
+      "conversation_questions_service.js",
+      "conversation-questions/app.js",
       "acessos_dos_alunos.js",
       "professor_home.js",
       "resource_waiter.js",
