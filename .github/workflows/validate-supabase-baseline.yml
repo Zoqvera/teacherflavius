@@ -89,6 +89,7 @@ jobs:
             supabase/baseline/75_add_mercado_pago_subscription_reconciliation.sql \
             supabase/baseline/80_add_mercado_pago_subscription_sandbox.sql \
             supabase/baseline/85_hide_trial_lessons_from_students_of_day.sql
+            supabase/baseline/90_add_conversation_questions.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
