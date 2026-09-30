@@ -73,3 +73,13 @@ test("teacher can add and reorder questions without exposing student controls", 
   assert.match(migration, /security invoker/i);
   assert.match(migration, /grant execute on function public\.move_conversation_question\(uuid, text\) to authenticated/i);
 });
+
+test("disaster-recovery baseline includes Conversation Questions", function () {
+  assert.match(baseline, /create table public\.conversation_questions/i);
+  assert.match(baseline, /create table public\.conversation_question_completions/i);
+  assert.match(baseline, /\('How are you\?', 1\)/);
+  assert.match(
+    baseline,
+    /\('What is something most people do not know about you\?', 99\)/
+  );
+});
