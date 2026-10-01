@@ -223,11 +223,21 @@
       });
       if (response.error) throw response.error;
 
-      const referenceMonth = typeof getCurrentBillingMonth === "function"
+      const currentBillingMonth = typeof getCurrentBillingMonth === "function"
         ? getCurrentBillingMonth()
-        : new Date().toISOString().slice(0, 7) + "-01";
+        : new Intl.DateTimeFormat("en-CA", {
+          timeZone: SAO_PAULO_TIME_ZONE,
+          year: "numeric",
+          month: "2-digit"
+        }).format(new Date()) + "-01";
+      const billingStartMonth = response.data && response.data.billing_start_month
+        ? String(response.data.billing_start_month).slice(0, 10)
+        : currentBillingMonth;
+      const generationMonth = billingStartMonth > currentBillingMonth
+        ? billingStartMonth
+        : currentBillingMonth;
       const generation = await client.rpc("generate_monthly_tuition", {
-        target_reference_month: referenceMonth
+        target_reference_month: generationMonth
       });
 
       if (typeof refreshStudentBillingMap === "function") {
