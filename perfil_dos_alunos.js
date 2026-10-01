@@ -681,8 +681,16 @@ async function saveStudentBilling(event) {
     });
     if (response.error) throw response.error;
 
+    const currentBillingMonth = getCurrentBillingMonth();
+    const billingStartMonth = response.data && response.data.billing_start_month
+      ? String(response.data.billing_start_month).slice(0, 10)
+      : currentBillingMonth;
+    const generationMonth = billingStartMonth > currentBillingMonth
+      ? billingStartMonth
+      : currentBillingMonth;
+
     const generation = await client.rpc("generate_monthly_tuition", {
-      target_reference_month: getCurrentBillingMonth()
+      target_reference_month: generationMonth
     });
 
     const refreshed = await refreshStudentBillingMap({ showSuccess: !generation.error });

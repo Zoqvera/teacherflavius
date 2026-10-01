@@ -131,6 +131,7 @@ stable
 as $$
 declare
   current_user_id uuid := auth.uid();
+  local_today date := timezone('America/Sao_Paulo', now())::date;
 begin
   if current_user_id is null then
     raise exception 'É necessário entrar na conta para consultar mensalidades.';
@@ -143,8 +144,11 @@ begin
     mt.due_date,
     mt.amount_due,
     case
-      when mt.due_date < current_date then 'overdue'
-      when mt.due_date <= current_date + 7 then 'due_soon'
+      when mt.due_date < local_today then 'overdue'
+      when mt.due_date = local_today then 'due_today'
+      when mt.due_date = local_today + 1 then 'due_tomorrow'
+      when mt.due_date = local_today + 2 then 'due_in_two_days'
+      when mt.due_date <= local_today + 7 then 'due_soon'
       else 'open'
     end::text,
     latest_attempt.id,
@@ -152,6 +156,8 @@ begin
     latest_attempt.status,
     latest_attempt.status_detail
   from public.monthly_tuition mt
+  left join public.student_billing_settings settings
+    on settings.student_id = current_user_id
   left join lateral (
     select
       attempt.id,
@@ -166,7 +172,11 @@ begin
   ) latest_attempt on true
   where mt.student_id = current_user_id
     and mt.payment_date is null
-    and mt.reference_month <= date_trunc('month', current_date)::date
+    and not mt.is_exempt
+    and (
+      mt.reference_month <= date_trunc('month', local_today)::date
+      or mt.reference_month = settings.billing_start_month
+    )
   order by mt.due_date asc, mt.reference_month asc;
 end;
 $$;
