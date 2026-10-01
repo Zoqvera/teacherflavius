@@ -33,6 +33,7 @@ jobs:
           node --test tests/payment_subscription_foundation.test.js
           node --test tests/payment_subscription_reconciliation.test.js
           node --test tests/payment_subscription_sandbox_contract.test.js
+          node --test tests/enrollment_access_code.test.js
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -90,7 +91,8 @@ jobs:
             supabase/baseline/80_add_mercado_pago_subscription_sandbox.sql \
             supabase/baseline/85_hide_trial_lessons_from_students_of_day.sql \
             supabase/baseline/90_add_conversation_questions.sql \
-            supabase/baseline/95_unlock_next_tuition_two_days_after_payment.sql
+            supabase/baseline/95_unlock_next_tuition_two_days_after_payment.sql \
+            supabase/baseline/100_require_enrollment_access_code.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
