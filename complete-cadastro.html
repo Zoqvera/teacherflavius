@@ -32,7 +32,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script src="auth.js?v=20260818-google-auth-1"></script>
   <script src="/student_profile_optional.js?v=20260902-1"></script>
   <script src="/student_tuition_due_day.js?v=20260908-2"></script>
-  <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20260901-1" />
+  <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20261001-access-code-1" />
 </head>
 <body class="enrollment-onboarding">
 <!-- Google Tag Manager (noscript) -->
@@ -49,9 +49,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </header>
 
       <div class="onboarding-progress" aria-label="Etapas de acesso">
-        <div class="progress-step is-done"><strong aria-hidden="true">✓</strong><span>Conta Google</span></div>
-        <div class="progress-step is-current"><strong aria-hidden="true">2</strong><span>Dados essenciais</span></div>
-        <div class="progress-step"><strong aria-hidden="true">3</strong><span>Acesso liberado</span></div>
+        <div class="progress-step is-done" data-progress-step="google"><strong aria-hidden="true">✓</strong><span>Conta Google</span></div>
+        <div class="progress-step is-current" data-progress-step="code"><strong aria-hidden="true">2</strong><span>Código de matrícula</span></div>
+        <div class="progress-step" data-progress-step="data"><strong aria-hidden="true">3</strong><span>Dados essenciais</span></div>
+        <div class="progress-step" data-progress-step="access"><strong aria-hidden="true">4</strong><span>Acesso liberado</span></div>
       </div>
 
       <div class="account-note">
@@ -59,7 +60,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span>Você não precisa criar uma senha. Disponibilidade de horários e chave PIX poderão ser informadas depois, em <strong>Meu Perfil</strong>, sem bloquear seu primeiro acesso.</span>
       </div>
 
-      <form id="completeProfileForm">
+      <form id="enrollmentAccessForm" novalidate>
+        <section class="form-section" aria-labelledby="enrollmentAccessTitle">
+          <div class="section-heading">
+            <h2 id="enrollmentAccessTitle">Código de matrícula</h2>
+            <p>Informe o código recebido do professor pelo WhatsApp para liberar o preenchimento da matrícula.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="field full">
+              <label class="field-label" for="enrollmentAccessCode">Código</label>
+              <input id="enrollmentAccessCode" type="password" autocomplete="off" maxlength="64" required />
+              <div class="field-note">O código é validado com segurança antes de liberar os dados da matrícula.</div>
+            </div>
+          </div>
+        </section>
+
+        <div id="enrollmentAccessMessage" class="message" role="alert" aria-live="polite"></div>
+        <button id="enrollmentAccessButton" type="submit">VALIDAR CÓDIGO</button>
+      </form>
+
+      <form id="completeProfileForm" hidden>
         <section class="form-section" aria-labelledby="personalDataTitle">
           <div class="section-heading">
             <h2 id="personalDataTitle">Dados do estudante</h2>
@@ -146,6 +167,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return Auth.normalizeNextPath(params.get("next"), "/area-do-estudante/");
     }
 
+    function setEnrollmentAccessState(authorized) {
+      const accessForm = document.getElementById("enrollmentAccessForm");
+      const profileForm = document.getElementById("completeProfileForm");
+      const codeStep = document.querySelector('[data-progress-step="code"]');
+      const dataStep = document.querySelector('[data-progress-step="data"]');
+
+      accessForm.hidden = authorized;
+      profileForm.hidden = !authorized;
+
+      if (authorized) {
+        codeStep.classList.remove("is-current");
+        codeStep.classList.add("is-done");
+        codeStep.querySelector("strong").textContent = "✓";
+        dataStep.classList.add("is-current");
+      } else {
+        codeStep.classList.add("is-current");
+        dataStep.classList.remove("is-current");
+      }
+    }
+
+    async function hasEnrollmentAccess() {
+      const response = await Auth.getClient().rpc("has_my_enrollment_access");
+      if (response.error) throw response.error;
+      return response.data === true;
+    }
+
     async function initialize() {
       const user = await Auth.requireAuth({ skipProfileCheck: true });
       if (!user) return;
@@ -154,15 +201,51 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         window.location.replace(getNextPath());
         return;
       }
+
       document.getElementById("name").value = profile.name || user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name) || "";
       document.getElementById("email").value = user.email || profile.email || "";
       document.getElementById("birthDate").value = formatBirthDateFromIso(profile.date_of_birth || "");
       document.getElementById("cpf").value = formatCpf(profile.cpf || "");
       document.getElementById("whatsapp").value = profile.whatsapp || "";
+
+      setEnrollmentAccessState(await hasEnrollmentAccess());
     }
 
     document.getElementById("cpf").addEventListener("input", function () { this.value = formatCpf(this.value); });
     document.getElementById("birthDate").addEventListener("input", function () { this.value = formatBirthDateInput(this.value); });
+
+    document.getElementById("enrollmentAccessForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const message = document.getElementById("enrollmentAccessMessage");
+      const button = document.getElementById("enrollmentAccessButton");
+      const codeInput = document.getElementById("enrollmentAccessCode");
+
+      message.textContent = "";
+      button.disabled = true;
+      button.textContent = "VALIDANDO...";
+
+      try {
+        const response = await Auth.getClient().rpc("authorize_my_enrollment", {
+          target_access_code: codeInput.value
+        });
+        if (response.error) throw response.error;
+
+        const result = response.data || {};
+        if (result.ok !== true) {
+          throw new Error(result.error || "Não foi possível validar o código de matrícula.");
+        }
+
+        codeInput.value = "";
+        setEnrollmentAccessState(true);
+        document.getElementById("name").focus();
+      } catch (error) {
+        message.textContent = error.message || "Não foi possível validar o código de matrícula.";
+        codeInput.select();
+      } finally {
+        button.disabled = false;
+        button.textContent = "VALIDAR CÓDIGO";
+      }
+    });
 
     document.getElementById("completeProfileForm").addEventListener("submit", async function (event) {
       event.preventDefault();
@@ -173,6 +256,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       button.textContent = "LIBERANDO ACESSO...";
 
       try {
+        if (!await hasEnrollmentAccess()) {
+          setEnrollmentAccessState(false);
+          throw new Error("Valide o código de matrícula antes de continuar.");
+        }
+
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
         const user = await Auth.getUser();
         if (!user) throw new Error("Sua sessão expirou. Entre novamente com Google.");
