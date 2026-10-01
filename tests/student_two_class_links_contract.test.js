@@ -64,7 +64,7 @@ test("student profile UI exposes a second class assignment", function () {
   assert.match(profileScript, /ADICIONAR TURMA/);
   assert.match(profilePage, /id="classAssignmentCurrentClasses"/);
   assert.match(profilePage, /Cada aluno pode estar vinculado a até duas turmas\./);
-  assert.match(profilePage, /perfil_dos_alunos\.js\?v=20260927-two-classes-1/);
+  assert.match(profilePage, /perfil_dos_alunos\.js\?v=20261001-immediate-payment-1/);
 });
 
 test("student class page continues to render every assigned class", function () {
