@@ -65,6 +65,19 @@ test("recovery overlay provisions the tuition due-date profile columns", functio
   assert.match(recoveryOverlay, /add column if not exists tuition_due_day_source text/);
 });
 
+test("recovery overlay recreates tuition due-date validation and helper RPCs", function () {
+  assert.match(recoveryOverlay, /profiles_tuition_due_day_check/);
+  assert.match(recoveryOverlay, /calculate_tuition_due_day_options\(target_anchor_date date\)/);
+  assert.match(recoveryOverlay, /get_my_tuition_due_day_options\(\)/);
+  assert.match(recoveryOverlay, /grant execute on function public\.get_my_tuition_due_day_options\(\) to authenticated, service_role/);
+});
+
+test("recovery overlay protects tuition due-date fields from direct student writes", function () {
+  assert.match(recoveryOverlay, /create or replace function public\.protect_profile_security_fields\(\)/);
+  assert.match(recoveryOverlay, /new\.tuition_due_day := old\.tuition_due_day/);
+  assert.match(recoveryOverlay, /new\.tuition_due_day_source := old\.tuition_due_day_source/);
+});
+
 test("automatic due dates are valid profile sources and recovery applies the overlay", function () {
   assert.match(
     migration,
