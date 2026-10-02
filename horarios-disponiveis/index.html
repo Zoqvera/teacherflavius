@@ -46,7 +46,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="header"><div><span class="badge">TEACHER FLÁVIO</span></div><h1>Horários Disponíveis</h1><div id="pageStatus" class="status">Carregando turmas com vagas...</div></div>
     <div class="divider"></div>
     <main id="content" hidden>
-      <p class="intro">Veja abaixo as turmas em grupo disponíveis para mudança. São exibidas somente turmas com vagas. A capacidade padrão é de 5 alunos.</p>
+      <p class="intro">Veja abaixo as turmas em grupo disponíveis para mudança. São exibidas somente turmas com vagas. Turmas classificadas como QUINTETO aceitam até 8 alunos.</p>
       <div id="currentClass" class="current-class">Carregando sua turma atual...</div>
       <section class="summary">
         <div class="summary-card"><span>TURMAS DISPONÍVEIS</span><strong id="classesCount">0</strong></div>
@@ -83,12 +83,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         await refresh(false);
       }
     }
-    function classCapacity(){return 5;}
+    function classCapacity(row){return Number(row.occupied_spots||0)+Number(row.available_spots||0);}
     function render(rows){
       document.getElementById('classesCount').textContent=String(rows.length);
       document.getElementById('spotsCount').textContent=String(rows.reduce(function(sum,row){return sum+Number(row.available_spots||0);},0));
       const list=document.getElementById('scheduleList');
-      if(!rows.length){list.innerHTML='<div class="empty">No momento não há outras turmas em grupo com 1 ou 2 vagas disponíveis.</div>';return;}
+      if(!rows.length){list.innerHTML='<div class="empty">No momento não há outras turmas em grupo com vagas disponíveis.</div>';return;}
       list.innerHTML=rows.map(function(row){
         const spots=Number(row.available_spots||0);
         const occupied=Number(row.occupied_spots||0);

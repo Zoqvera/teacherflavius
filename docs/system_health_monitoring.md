@@ -55,10 +55,10 @@ A regra vigente é:
 
 - `individual`: 1 aluno;
 - `quartet`: 5 alunos;
-- `quintet`: 5 alunos;
+- `quintet`: 8 alunos;
 - `eight_students`: 8 alunos.
 
-A turma 48 voltou à capacidade padrão de quarteto. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas e na troca de turma.
+Toda turma `quintet` usa capacidade operacional fixa de 8 alunos, inclusive quando existe um override legado diferente. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas e na troca de turma.
 
 A capacidade de reposição é independente da capacidade de matrícula regular. Nos horários automáticos de reposição, são acrescentadas três vagas exclusivas para reposição à regra anterior: turmas com 4 alunos oferecem 4 vagas de reposição, com 3 alunos oferecem 5 e com 2 alunos oferecem 6. Esse cálculo não modifica `private.get_class_operational_capacity()` nem permite novas matrículas regulares acima do limite da turma.
 
