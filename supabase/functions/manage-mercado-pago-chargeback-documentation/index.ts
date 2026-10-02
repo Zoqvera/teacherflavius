@@ -58,7 +58,7 @@ async function adminActorId(options: {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const [{ data: isAdmin, error: adminError }, userResult] = await Promise.all([
-    client.rpc("is_teacher_admin_mfa"),
+    client.rpc("is_teacher_admin"),
     client.auth.getUser(token),
   ]);
   if (adminError || isAdmin !== true || userResult.error || !userResult.data.user?.id) return "";
