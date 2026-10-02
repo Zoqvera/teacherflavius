@@ -37,3 +37,23 @@ test("migration fails if a confirmed invalid due date remains", function () {
   );
   assert.match(migration, /Ainda existem cobranças abertas anteriores à matrícula/);
 });
+
+test("recovery baseline allows the dedicated due-date correction audit action", function () {
+  const baseline = fs.readFileSync(
+    path.join(
+      __dirname,
+      "..",
+      "supabase/baseline/135_allow_tuition_due_date_correction_audit.sql"
+    ),
+    "utf8"
+  );
+  const workflow = fs.readFileSync(
+    path.join(__dirname, "..", ".github/workflows/validate-supabase-baseline.yml"),
+    "utf8"
+  );
+  assert.match(baseline, /due_date_corrected_after_enrollment/);
+  assert.match(
+    workflow,
+    /supabase\/baseline\/135_allow_tuition_due_date_correction_audit\.sql/
+  );
+});
