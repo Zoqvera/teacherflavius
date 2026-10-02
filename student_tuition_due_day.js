@@ -99,7 +99,7 @@
       input.type = "radio";
       input.name = "tuitionDueDay";
       input.value = String(dueDay);
-      input.required = state.selectedDueDay == null;
+      input.required = false;
       input.checked = state.selectedDueDay === dueDay;
       input.disabled = state.selectedDueDay != null;
 
@@ -116,7 +116,7 @@
     const note = document.createElement("p");
     note.className = "tuition-due-day-note";
     note.textContent = state.selectedDueDay == null
-      ? "Escolha uma das três opções. A cobrança começa no mês da matrícula; se a opção escolhida cair no mês seguinte, a cobrança começa no mês seguinte. O valor é definido pelo professor."
+      ? "A escolha é opcional. Se você não selecionar uma opção, o sistema definirá a primeira data de vencimento para 7 dias após a data da matrícula. O valor é definido pelo professor."
       : "Vencimento já registrado: dia " + state.selectedDueDay + ". O início da cobrança foi definido automaticamente pelo sistema.";
     section.appendChild(note);
 
@@ -141,16 +141,12 @@
 
     await mount();
     const selectedDueDay = getSelectedInputValue();
-    if (!Number.isInteger(selectedDueDay)) {
-      throw new Error("Escolha uma das três opções de vencimento da mensalidade.");
-    }
-
     const response = await getClient().rpc("set_my_tuition_due_day", {
-      target_due_day: selectedDueDay
+      target_due_day: Number.isInteger(selectedDueDay) ? selectedDueDay : null
     });
     if (response.error) throw response.error;
 
-    state.selectedDueDay = Number(response.data && response.data.due_day || selectedDueDay);
+    state.selectedDueDay = Number(response.data && response.data.due_day);
     state.firstDueDate = response.data && response.data.first_due_date || state.firstDueDate;
     return state.selectedDueDay;
   }
