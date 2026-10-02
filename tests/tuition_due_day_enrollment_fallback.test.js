@@ -13,6 +13,9 @@ const migration = read(
   "supabase/migrations/20261002015000_auto_assign_tuition_due_seven_days_after_enrollment.sql"
 );
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
+const recoveryOverlay = read(
+  "supabase/baseline/110_auto_assign_tuition_due_seven_days_after_enrollment.sql"
+);
 
 test("student may finish enrollment without explicitly selecting a due day", function () {
   assert.match(dueDayScript, /input\.required = false/);
@@ -52,6 +55,27 @@ test("profile activation also fails safe to seven days if the browser flow is by
     /new\.tuition_due_day := extract\(day from automatic_first_due_date\)::smallint/
   );
   assert.match(migration, /new\.tuition_due_day_source := 'system'/);
+});
+
+test("recovery overlay provisions the tuition due-date profile columns", function () {
+  assert.match(recoveryOverlay, /add column if not exists tuition_due_day smallint/);
+  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_anchor_date date/);
+  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_selected_at timestamptz/);
+  assert.match(recoveryOverlay, /add column if not exists tuition_first_due_date date/);
+  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_source text/);
+});
+
+test("recovery overlay recreates tuition due-date validation and helper RPCs", function () {
+  assert.match(recoveryOverlay, /profiles_tuition_due_day_check/);
+  assert.match(recoveryOverlay, /calculate_tuition_due_day_options\(target_anchor_date date\)/);
+  assert.match(recoveryOverlay, /get_my_tuition_due_day_options\(\)/);
+  assert.match(recoveryOverlay, /grant execute on function public\.get_my_tuition_due_day_options\(\) to authenticated, service_role/);
+});
+
+test("recovery overlay protects tuition due-date fields from direct student writes", function () {
+  assert.match(recoveryOverlay, /create or replace function public\.protect_profile_security_fields\(\)/);
+  assert.match(recoveryOverlay, /new\.tuition_due_day := old\.tuition_due_day/);
+  assert.match(recoveryOverlay, /new\.tuition_due_day_source := old\.tuition_due_day_source/);
 });
 
 test("automatic due dates are valid profile sources and recovery applies the overlay", function () {
