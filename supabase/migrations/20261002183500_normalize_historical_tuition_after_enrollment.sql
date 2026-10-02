@@ -1,6 +1,21 @@
 -- Normalize settled tuition rows only when the enrollment date is backed by
 -- the enrollment notification trail. Preserve the original value in the audit log.
 
+alter table public.monthly_tuition_events
+  drop constraint if exists monthly_tuition_events_action_check;
+
+alter table public.monthly_tuition_events
+  add constraint monthly_tuition_events_action_check
+  check (action = any (array[
+    'payment_recorded'::text,
+    'payment_reversed'::text,
+    'payment_reinstated'::text,
+    'tuition_exempted'::text,
+    'tuition_exemption_reversed'::text,
+    'duplicate_payment_detected'::text,
+    'due_date_corrected_after_enrollment'::text
+  ]));
+
 update public.profiles
 set enrolled_at = timestamptz '2026-04-30 11:18:00-03'
 where id = 'd6374ecd-db53-42e1-b909-83f46d4fc7d0'
