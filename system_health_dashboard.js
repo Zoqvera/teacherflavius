@@ -57,12 +57,10 @@
     auth_active_student_unconfirmed: "Aluno ativo com conta não confirmada",
     auth_active_student_without_identity: "Aluno ativo sem identidade Auth",
     auth_admin_missing_user: "Administrador sem conta Auth",
-    auth_admin_without_verified_mfa: "Administrador sem MFA verificado",
     auth_profile_email_mismatch: "E-mail do perfil divergente da autenticação",
     auth_google_link_missing_user: "Vínculo Google sem conta Auth",
     auth_google_link_missing_profile: "Vínculo Google sem perfil",
     auth_google_link_cleanup_pending: "Limpeza de vínculo Google pendente",
-    auth_stale_unverified_mfa_factor: "Fator MFA não verificado e antigo"
   });
 
   function toString(value) {
@@ -284,10 +282,7 @@
 
   async function waitForDependencies(windowRef) {
     for (let attempt = 0; attempt < 30; attempt += 1) {
-      if (
-        windowRef.Auth && typeof windowRef.Auth.getClient === "function" &&
-        windowRef.ProfessorMfaGate && typeof windowRef.ProfessorMfaGate.requireAal2 === "function"
-      ) return true;
+      if (windowRef.Auth && typeof windowRef.Auth.getClient === "function") return true;
       await wait(150, windowRef);
     }
     return false;
@@ -343,7 +338,6 @@
       return false;
     }
 
-    await windowRef.ProfessorMfaGate.requireAal2({ client: client });
     const runtime = { windowRef: windowRef, documentRef: documentRef, client: client };
     const button = documentRef.getElementById("healthRefreshButton");
     if (button && !button.dataset.healthBound) {
