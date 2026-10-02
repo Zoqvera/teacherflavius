@@ -229,7 +229,7 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const [{ data: isAdmin, error: adminError }, { data: userData, error: userError }] = await Promise.all([
-    userClient.rpc("is_teacher_admin_mfa"),
+    userClient.rpc("is_teacher_admin"),
     userClient.auth.getUser(),
   ]);
   if (adminError || isAdmin !== true || userError || !userData.user?.id) {
