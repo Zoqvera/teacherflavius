@@ -161,7 +161,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const actorId = await adminActorId({ supabaseUrl, anonKey, authorization });
-  if (!actorId) return jsonResponse(request, { error: "Administrative MFA is required" }, 403);
+  if (!actorId) return jsonResponse(request, { error: "Administrative access is required" }, 403);
 
   const action = cleanString(body.action, 40).toLowerCase();
   const command = buildCommand(action, body, actorId);
