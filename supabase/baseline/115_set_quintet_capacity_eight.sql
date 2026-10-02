@@ -1,5 +1,15 @@
 -- Recovery overlay for QUINTETO capacity = 8.
 
+alter table public.teacher_classes
+  add column if not exists capacity_override smallint;
+
+alter table public.teacher_classes
+  drop constraint if exists teacher_classes_capacity_override_range;
+
+alter table public.teacher_classes
+  add constraint teacher_classes_capacity_override_range
+  check (capacity_override is null or capacity_override between 1 and 50);
+
 update public.teacher_classes
 set capacity_override = 8,
     updated_at = now()
