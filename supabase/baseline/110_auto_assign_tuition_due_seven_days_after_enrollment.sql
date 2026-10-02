@@ -8,14 +8,77 @@ alter table public.profiles
   add column if not exists tuition_due_day_source text;
 
 alter table public.profiles
+  drop constraint if exists profiles_tuition_due_day_check,
   drop constraint if exists profiles_tuition_due_day_source_check;
 
 alter table public.profiles
+  add constraint profiles_tuition_due_day_check
+  check (tuition_due_day is null or tuition_due_day between 1 and 31),
   add constraint profiles_tuition_due_day_source_check
   check (
     tuition_due_day_source is null
     or tuition_due_day_source in ('student', 'admin', 'legacy', 'system')
   );
+
+create or replace function public.calculate_tuition_due_day_options(target_anchor_date date)
+returns smallint[]
+language sql
+immutable
+set search_path to 'public', 'pg_temp'
+as $function$
+  select array[
+    extract(day from target_anchor_date)::smallint,
+    extract(day from (target_anchor_date + 5))::smallint,
+    extract(day from (target_anchor_date + 8))::smallint
+  ];
+$function$;
+
+revoke execute on function public.calculate_tuition_due_day_options(date)
+  from public, anon, authenticated;
+
+create or replace function public.get_my_tuition_due_day_options()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path to 'public', 'pg_temp'
+as $function$
+declare
+  profile_row public.profiles%rowtype;
+  anchor_date date;
+  due_day_options smallint[];
+begin
+  if auth.uid() is null then
+    raise exception 'Faça login para escolher o vencimento.' using errcode = '42501';
+  end if;
+
+  select p.*
+  into profile_row
+  from public.profiles p
+  where p.id = auth.uid();
+
+  if profile_row.id is null or coalesce(profile_row.archived, false) then
+    raise exception 'Perfil de aluno ativo não encontrado.';
+  end if;
+
+  anchor_date := coalesce(
+    profile_row.tuition_due_day_anchor_date,
+    timezone('America/Sao_Paulo', profile_row.created_at)::date,
+    timezone('America/Sao_Paulo', now())::date
+  );
+  due_day_options := public.calculate_tuition_due_day_options(anchor_date);
+
+  return jsonb_build_object(
+    'anchor_date', anchor_date,
+    'selected_due_day', profile_row.tuition_due_day,
+    'first_due_date', profile_row.tuition_first_due_date,
+    'options', to_jsonb(due_day_options)
+  );
+end;
+$function$;
+
+revoke execute on function public.get_my_tuition_due_day_options() from public, anon;
+grant execute on function public.get_my_tuition_due_day_options() to authenticated, service_role;
 
 create or replace function public.set_my_tuition_due_day(target_due_day integer)
 returns jsonb
@@ -229,6 +292,62 @@ begin
 
     if new.exercise_schedule_start_date is null then
       new.exercise_schedule_start_date := (now() at time zone 'America/Sao_Paulo')::date;
+    end if;
+  end if;
+
+  return new;
+end;
+$function$;
+
+
+create or replace function public.protect_profile_security_fields()
+returns trigger
+language plpgsql
+set search_path to 'public', 'pg_temp'
+as $function$
+declare
+  requester_email text := nullif(auth.jwt() ->> 'email', '');
+begin
+  if current_user = 'authenticated'
+     and auth.uid() is not null
+     and not coalesce(public.is_teacher_admin(), false)
+  then
+    if tg_op = 'INSERT' then
+      new.email := requester_email;
+      new.created_at := now();
+      new.enrollment_code := null;
+      new.enrolled := false;
+      new.exercise_schedule_start_date := null;
+      new.archived := false;
+      new.archived_at := null;
+      new.class_type := null;
+      new.first_portal_access_at := null;
+      new.last_portal_access_at := null;
+      new.tuition_due_day := null;
+      new.tuition_due_day_anchor_date := null;
+      new.tuition_due_day_selected_at := null;
+      new.tuition_first_due_date := null;
+      new.tuition_due_day_source := null;
+    elsif tg_op = 'UPDATE' then
+      if coalesce(old.archived, false) = true then
+        raise exception 'Esta conta foi encerrada e não pode ser reativada pelo portal.' using errcode = '42501';
+      end if;
+
+      new.email := old.email;
+      new.created_at := old.created_at;
+      new.enrollment_code := old.enrollment_code;
+      new.enrolled := old.enrolled;
+      new.exercise_schedule_start_date := old.exercise_schedule_start_date;
+      new.archived := old.archived;
+      new.archived_at := old.archived_at;
+      new.class_type := old.class_type;
+      new.first_portal_access_at := old.first_portal_access_at;
+      new.last_portal_access_at := old.last_portal_access_at;
+      new.tuition_due_day := old.tuition_due_day;
+      new.tuition_due_day_anchor_date := old.tuition_due_day_anchor_date;
+      new.tuition_due_day_selected_at := old.tuition_due_day_selected_at;
+      new.tuition_first_due_date := old.tuition_first_due_date;
+      new.tuition_due_day_source := old.tuition_due_day_source;
     end if;
   end if;
 
