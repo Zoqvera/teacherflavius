@@ -14,7 +14,7 @@ const migration = read(
 );
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 
-test("every visible enrollment identity field is required", function () {
+test("every personal enrollment identity field is required", function () {
   assert.match(page, /id="enrollmentAccessCode"[^>]*required/);
   assert.doesNotMatch(page, /id="enrollmentAccessForm"[^>]*novalidate/);
   assert.match(page, /id="name"[^>]*required/);
@@ -22,7 +22,7 @@ test("every visible enrollment identity field is required", function () {
   assert.match(page, /id="birthDate"[^>]*required/);
   assert.match(page, /id="cpf"[^>]*required/);
   assert.match(page, /id="whatsapp"[^>]*required/);
-  assert.match(dueDay, /input\.required = state\.selectedDueDay == null/);
+  assert.match(dueDay, /input\.required = false/);
 });
 
 test("database activation rejects missing personal enrollment fields", function () {
