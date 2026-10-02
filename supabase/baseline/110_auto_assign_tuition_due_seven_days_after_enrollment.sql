@@ -1,6 +1,13 @@
 -- Recovery overlay for the seven-day automatic tuition due-date fallback.
 
 alter table public.profiles
+  add column if not exists tuition_due_day smallint,
+  add column if not exists tuition_due_day_anchor_date date,
+  add column if not exists tuition_due_day_selected_at timestamptz,
+  add column if not exists tuition_first_due_date date,
+  add column if not exists tuition_due_day_source text;
+
+alter table public.profiles
   drop constraint if exists profiles_tuition_due_day_source_check;
 
 alter table public.profiles
