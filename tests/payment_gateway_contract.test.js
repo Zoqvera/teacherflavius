@@ -89,15 +89,17 @@ test("shared synchronization re-queries Mercado Pago and validates local payment
   assert.match(syncSource, /process_mercado_pago_payment/);
 });
 
-test("administrative replay uses MFA and current gateway state instead of stored payload", () => {
-  assert.match(replaySource, /rpc\("is_teacher_admin_mfa"\)/);
+test("administrative replay uses teacher admin authorization and current gateway state instead of stored payload", () => {
+  assert.match(replaySource, /rpc\("is_teacher_admin"\)/);
+  assert.doesNotMatch(replaySource, /rpc\("is_teacher_admin_mfa"\)/);
   assert.match(replaySource, /synchronizeMercadoPagoPayment/);
   assert.match(replaySource, /provider_payment_id/);
   assert.doesNotMatch(replaySource, /stored_payload|raw_payload|payload_body/);
 });
 
-test("webhook listing requires administrative MFA and exposes a bounded technical history", () => {
-  assert.match(listSource, /rpc\("is_teacher_admin_mfa"\)/);
+test("webhook listing requires teacher admin authorization and exposes a bounded technical history", () => {
+  assert.match(listSource, /rpc\("is_teacher_admin"\)/);
+  assert.doesNotMatch(listSource, /rpc\("is_teacher_admin_mfa"\)/);
   assert.match(listSource, /\.from\("payment_webhook_events"\)/);
   assert.match(listSource, /Math\.min/);
   assert.match(listSource, /id, provider_payment_id, event_type, action, status, delivery_count/);
