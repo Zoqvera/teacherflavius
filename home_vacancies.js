@@ -37,23 +37,54 @@
     return minute === 0 ? `${hour}h` : `${hour}h${String(minute).padStart(2, "0")}`;
   }
 
+  function isSoldOut(row) {
+    return row && (row.sold_out === true || String(row.sold_out).toLowerCase() === "true");
+  }
+
+  function classLabel(row) {
+    return row && row.class_type === "individual" ? "Aula individual" : "Turma em grupo";
+  }
+
+  function renderSummary(rows) {
+    const availableRows = rows.filter((row) => !isSoldOut(row));
+    const soldOutRows = rows.filter(isSoldOut);
+    const availableSpots = availableRows.reduce(
+      (sum, row) => sum + Number(row.available_spots || 0),
+      0
+    );
+
+    const availableText = `${availableRows.length} ${availableRows.length === 1 ? "turma disponível" : "turmas disponíveis"}`;
+    const spotsText = `${availableSpots} ${availableSpots === 1 ? "vaga" : "vagas"}`;
+    const soldOutText = `${soldOutRows.length} ${soldOutRows.length === 1 ? "turma com vagas esgotadas" : "turmas com vagas esgotadas"}`;
+
+    summary.textContent = `${availableText} · ${spotsText} · ${soldOutText}.`;
+  }
+
+  function renderClassCard(row) {
+    const soldOut = isSoldOut(row);
+    const spots = soldOut ? 0 : Number(row.available_spots || 0);
+    const ribbon = soldOut
+      ? '<span class="home-vacancy-ribbon" aria-label="Vagas esgotadas">VAGAS ESGOTADAS</span>'
+      : "";
+    const cardClass = soldOut ? "home-vacancy-item is-sold-out" : "home-vacancy-item";
+
+    return '<article class="' + cardClass + '">' +
+      ribbon +
+      '<div class="home-vacancy-details"><strong>' + escapeHtml(formatWeekday(row.class_weekday)) + '</strong>' +
+      '<span>' + escapeHtml(formatTime(row.class_start_time)) + ' · aula de 60 minutos · ' + escapeHtml(classLabel(row)) + '</span></div>' +
+      '<div class="home-vacancy-count"><b>' + spots + '</b><span>' + (spots === 1 ? 'vaga' : 'vagas') + '</span></div>' +
+    '</article>';
+  }
+
   function renderVacancies(rows) {
     if (!Array.isArray(rows) || rows.length === 0) {
-      summary.textContent = "No momento, não há turmas em grupo dentro dos critérios de exibição com vagas abertas.";
-      list.innerHTML = '<div class="home-vacancies-empty">Novas vagas aparecem aqui automaticamente conforme as turmas são atualizadas.</div>';
+      summary.textContent = "No momento, não há turmas cadastradas para exibição.";
+      list.innerHTML = '<div class="home-vacancies-empty">A disponibilidade será exibida aqui quando houver turmas cadastradas.</div>';
       return;
     }
 
-    const totalSpots = rows.reduce((sum, row) => sum + Number(row.available_spots || 0), 0);
-    summary.textContent = `${rows.length} ${rows.length === 1 ? "turma com vaga" : "turmas com vagas"} · ${totalSpots} ${totalSpots === 1 ? "vaga disponível" : "vagas disponíveis"}.`;
-
-    list.innerHTML = rows.map((row) => {
-      const spots = Number(row.available_spots || 0);
-      return '<article class="home-vacancy-item">' +
-        '<div><strong>' + escapeHtml(formatWeekday(row.class_weekday)) + '</strong><span>' + escapeHtml(formatTime(row.class_start_time)) + ' · aula de 60 minutos</span></div>' +
-        '<div class="home-vacancy-count"><b>' + spots + '</b><span>' + (spots === 1 ? 'vaga' : 'vagas') + '</span></div>' +
-      '</article>';
-    }).join("");
+    renderSummary(rows);
+    list.innerHTML = rows.map(renderClassCard).join("");
   }
 
   async function fetchVacancies() {
