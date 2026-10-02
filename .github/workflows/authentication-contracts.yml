@@ -17,7 +17,7 @@ on:
       - "privacy_requests.js"
       - "supabase/migrations/**"
       - "tests/auth*.test.js"
-      - "tests/auth_admin_single_factor_contract.test.js"
+      - "tests/admin_step_up_security_contract.test.js"
       - "tests/student_data_utils.test.js"
       - "tests/student_enrollment_service.test.js"
       - "tests/account_deletion_security_contracts.test.js"
@@ -71,7 +71,7 @@ jobs:
             tests/auth_password_change.test.js \
             tests/auth_guard_service.test.js \
             tests/auth_access_contracts.test.js \
-            tests/auth_admin_single_factor_contract.test.js \
+            tests/admin_step_up_security_contract.test.js \
             tests/student_data_utils.test.js \
             tests/student_enrollment_service.test.js \
             tests/account_deletion_security_contracts.test.js
