@@ -13,6 +13,9 @@ const migration = read(
   "supabase/migrations/20261002015000_auto_assign_tuition_due_seven_days_after_enrollment.sql"
 );
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
+const recoveryOverlay = read(
+  "supabase/baseline/110_auto_assign_tuition_due_seven_days_after_enrollment.sql"
+);
 
 test("student may finish enrollment without explicitly selecting a due day", function () {
   assert.match(dueDayScript, /input\.required = false/);
@@ -52,6 +55,14 @@ test("profile activation also fails safe to seven days if the browser flow is by
     /new\.tuition_due_day := extract\(day from automatic_first_due_date\)::smallint/
   );
   assert.match(migration, /new\.tuition_due_day_source := 'system'/);
+});
+
+test("recovery overlay provisions the tuition due-date profile columns", function () {
+  assert.match(recoveryOverlay, /add column if not exists tuition_due_day smallint/);
+  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_anchor_date date/);
+  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_selected_at timestamptz/);
+  assert.match(recoveryOverlay, /add column if not exists tuition_first_due_date date/);
+  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_source text/);
 });
 
 test("automatic due dates are valid profile sources and recovery applies the overlay", function () {
