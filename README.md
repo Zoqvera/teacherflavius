@@ -15,7 +15,7 @@ Em 1º de outubro de 2026, a plataforma possui:
 
 - frontend estático publicado pelo GitHub Pages com domínio próprio;
 - pipeline de build, materialização e validação do HTML antes da publicação;
-- autenticação Supabase com Google OAuth, senha, controles de sessão e MFA/AAL2 por step-up nas operações de maior risco;
+- autenticação Supabase com Google OAuth, senha e controles de sessão administrativa;
 - banco PostgreSQL protegido por RLS, grants de menor privilégio, RPCs e objetos privados de servidor;
 - módulos acadêmicos de alunos, turmas, frequência, lições, exercícios, flashcards, roteiro de estudos, Conversation Questions e reposições;
 - páginas de lição gerenciáveis no Roteiro de Estudos, com cards dinâmicos, numeração editorial, tradução e fallback para PDFs;
@@ -40,7 +40,7 @@ flowchart TB
   Pages --> Browser["HTML + CSS + JavaScript"]
 
   Browser --> Runtime["Runtime compartilhado\nloaders, guards, analytics, navegação, footer"]
-  Browser --> Auth["Supabase Auth\nGoogle + senha + sessão + MFA"]
+  Browser --> Auth["Supabase Auth\nGoogle + senha + sessão"]
   Browser --> Database["Supabase PostgreSQL\nRLS + RPCs + least privilege"]
   Browser --> MercadoPagoJS["Mercado Pago.js v2\nCheckout Bricks"]
   Browser --> Analytics["GTM + GA4 + OpenAI Pixel\nConsent Mode"]
@@ -92,7 +92,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | Build/materialização | Python 3 + scripts próprios |
 | Qualidade JS | Node.js 22, Node Test Runner e ESLint 9 |
 | Cliente de dados | `@supabase/supabase-js` v2 |
-| Autenticação | Supabase Auth + Google OAuth + senha + MFA |
+| Autenticação | Supabase Auth + Google OAuth + senha |
 | Banco | PostgreSQL do Supabase |
 | Autorização | RLS, grants de menor privilégio e RPCs |
 | Backend server-side | Supabase Edge Functions / Deno |
@@ -152,12 +152,12 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/reposicoes-admin/` | horários e reservas de reposição |
 | `/criar-exercicio/` | publicação de exercícios |
 | `/exercicios-dos-alunos/` | acompanhamento de atividades |
-| `/acessos-dos-alunos/` | relatório de acesso protegido por MFA |
+| `/acessos-dos-alunos/` | relatório de acesso administrativo |
 | `/relatorios/` | relatórios administrativos |
 | `/saude-do-sistema/` | saúde operacional consolidada |
 | `/solicitacoes-de-privacidade/` | solicitações de privacidade |
 
-A Área do Professor exige identidade administrativa válida. Operações rotineiras usam AAL1; finanças, saúde do sistema, privacidade e demais ações de maior risco acionam step-up MFA/AAL2 e validam a sessão Supabase correspondente ao JWT.
+A Área do Professor exige identidade administrativa válida e sessão Supabase autenticada. Os processos administrativos usam a mesma autorização de professor, enquanto operações de servidor mantêm controles adicionais de menor privilégio.
 
 ## Domínios funcionais
 
@@ -173,10 +173,10 @@ O sistema suporta Google OAuth e fluxos autorizados por senha. A camada de auten
 - throttling progressivo no login por senha e cooldown de recuperação;
 - mensagens neutras na recuperação para reduzir enumeração de contas;
 - timeout local de inatividade administrativa;
-- step-up MFA/AAL2 para finanças, saúde do sistema, privacidade e outras operações de maior risco;
-- AAL1 para rotinas administrativas de baixo risco, incluindo configuração de mensalidades, sem reduzir a proteção de registros, estornos, isenções e reconciliação;
+- autorização administrativa uniforme para finanças, saúde do sistema, privacidade e demais rotinas do professor;
+- controles de menor privilégio, confirmação explícita e trilhas de auditoria para registros, estornos, isenções e reconciliação;
 - verificação de sessão Auth ativa em operações administrativas privilegiadas;
-- exclusão de conta protegida internamente por MFA;
+- exclusão de conta protegida por autorização administrativa e validações internas;
 - health de autenticação integrado ao painel de saúde;
 - contratos dedicados de CI para regressões de autenticação.
 
@@ -224,7 +224,7 @@ O domínio financeiro inclui:
 - escalonamento de falhas repetidas de reconciliação;
 - reembolsos e chargebacks;
 - health financeiro e alertas;
-- kill switch de novas cobranças com orientação visível quando MFA ainda não está pronto;
+- kill switch de novas cobranças protegido por autorização administrativa e confirmação textual;
 - analytics server-side consentido por meio de outbox e dispatcher;
 - infraestrutura de assinaturas recorrentes com estado server-only, checkout tokenizado e conciliação dos tópicos `subscription_preapproval`, `subscription_authorized_payment` e `payment`;
 - feature flag `MERCADO_PAGO_SUBSCRIPTIONS_ENABLED`, desativada por padrão até a liberação operacional;
@@ -369,7 +369,7 @@ Princípios vigentes:
 - nenhum secret operacional no repositório público;
 - menor privilégio para `anon` e `authenticated`;
 - RLS e grants como camadas independentes;
-- AAL1 para rotinas administrativas e step-up MFA/AAL2 com sessão ativa para operações de maior risco;
+- sessão administrativa autenticada para as rotinas do professor, com menor privilégio e auditoria nas operações sensíveis;
 - `service_role` exclusiva de servidor;
 - schema `private` para rotinas/dados de servidor;
 - autenticação própria para webhooks máquina-a-máquina;
