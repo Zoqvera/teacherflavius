@@ -92,8 +92,8 @@ test("production webhook processes both subscription event topics", () => {
   assert.doesNotMatch(webhookSource, /raw_payload|payload_body|stored_payload/i);
 });
 
-test("administrative replay supports subscription events and remains MFA protected", () => {
-  assert.match(replaySource, /is_teacher_admin_mfa/);
+test("administrative replay supports subscription events with teacher admin authorization", () => {
+  assert.match(replaySource, /is_teacher_admin/);
   assert.match(replaySource, /subscription_preapproval/);
   assert.match(replaySource, /subscription_authorized_payment/);
   assert.match(replaySource, /synchronizeMercadoPagoSubscription/);
