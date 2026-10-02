@@ -18,6 +18,9 @@ const migration = read(
   "supabase/migrations/20260930154500_add_conversation_questions.sql"
 );
 const baseline = read("supabase/baseline/90_add_conversation_questions.sql");
+const insertionMigration = read(
+  "supabase/migrations/20261002220825_add_surname_and_spelling_conversation_questions.sql"
+);
 
 test("keeps Conversation Questions private from search engines", function () {
   assert.match(page, /<meta name="robots" content="noindex, nofollow">/i);
@@ -34,7 +37,7 @@ test("links Conversation Questions from professor and student dashboards", funct
   assert.match(professorIcons, /'conversation-questions':\s*'<svg/);
 });
 
-test("seeds the normalized list with 99 questions", function () {
+test("historical migration seeds the original 99 questions", function () {
   const seededQuestions = migration.match(/\('(?:[^']|'')*',\s*\d+\)/g) || [];
   assert.equal(seededQuestions.length, 99);
   assert.match(migration, /\('How are you\?', 1\)/);
@@ -75,13 +78,27 @@ test("teacher can add and reorder questions without exposing student controls", 
   assert.match(migration, /grant execute on function public\.move_conversation_question\(uuid, text\) to authenticated/i);
 });
 
-test("disaster-recovery baseline includes Conversation Questions", function () {
+test("inserts surname and spelling prompts after question 07 without replacing existing rows", function () {
+  assert.match(insertionMigration, /set display_order = display_order \+ 2/);
+  assert.match(insertionMigration, /where display_order >= 8/);
+  assert.match(insertionMigration, /\('What''s your surname\?', 8\)/);
+  assert.match(insertionMigration, /\('How do you spell your name\?', 9\)/);
+  assert.match(insertionMigration, /question_text = 'What is your full name\?'[\s\S]*display_order = 8/);
+  assert.doesNotMatch(insertionMigration, /delete from public\.conversation_questions/i);
+});
+
+test("disaster-recovery baseline contains the canonical 101-question seed", function () {
+  const seededQuestions = baseline.match(/\('(?:[^']|'')*',\s*\d+\)/g) || [];
+  assert.equal(seededQuestions.length, 101);
   assert.match(baseline, /create table public\.conversation_questions/i);
   assert.match(baseline, /create table public\.conversation_question_completions/i);
   assert.match(baseline, /conversation_question_completions_marked_by_idx/i);
-  assert.match(baseline, /\('How are you\?', 1\)/);
+  assert.match(baseline, /\('Are you married or single\?', 7\)/);
+  assert.match(baseline, /\('What''s your surname\?', 8\)/);
+  assert.match(baseline, /\('How do you spell your name\?', 9\)/);
+  assert.match(baseline, /\('What is your full name\?', 10\)/);
   assert.match(
     baseline,
-    /\('What is something most people do not know about you\?', 99\)/
+    /\('What is something most people do not know about you\?', 101\)/
   );
 });
