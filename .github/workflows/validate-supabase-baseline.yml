@@ -100,7 +100,8 @@ jobs:
             supabase/baseline/105_require_all_enrollment_fields.sql \
             supabase/baseline/110_auto_assign_tuition_due_seven_days_after_enrollment.sql \
             supabase/baseline/115_set_quintet_capacity_eight.sql \
-            supabase/baseline/120_limit_course_vacancies_to_three.sql
+            supabase/baseline/120_limit_course_vacancies_to_three.sql \
+            supabase/baseline/125_show_sold_out_course_classes.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
