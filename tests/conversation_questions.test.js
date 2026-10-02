@@ -21,6 +21,9 @@ const baseline = read("supabase/baseline/90_add_conversation_questions.sql");
 const insertionMigration = read(
   "supabase/migrations/20261002220825_add_surname_and_spelling_conversation_questions.sql"
 );
+const contactInsertionMigration = read(
+  "supabase/migrations/20261002224031_add_phone_and_address_conversation_questions.sql"
+);
 
 test("keeps Conversation Questions private from search engines", function () {
   assert.match(page, /<meta name="robots" content="noindex, nofollow">/i);
@@ -87,9 +90,18 @@ test("inserts surname and spelling prompts after question 07 without replacing e
   assert.doesNotMatch(insertionMigration, /delete from public\.conversation_questions/i);
 });
 
-test("disaster-recovery baseline contains the canonical 101-question seed", function () {
+test("inserts phone and address prompts after question 14 without replacing existing rows", function () {
+  assert.match(contactInsertionMigration, /set display_order = display_order \+ 2/);
+  assert.match(contactInsertionMigration, /where display_order >= 15/);
+  assert.match(contactInsertionMigration, /\('What''s you phone number\?', 15\)/);
+  assert.match(contactInsertionMigration, /\('What''s your address\?', 16\)/);
+  assert.match(contactInsertionMigration, /question_text = 'Do you have any pets\?'[\s\S]*display_order = 14/);
+  assert.doesNotMatch(contactInsertionMigration, /delete from public\.conversation_questions/i);
+});
+
+test("disaster-recovery baseline contains the canonical 103-question seed", function () {
   const seededQuestions = baseline.match(/\('(?:[^']|'')*',\s*\d+\)/g) || [];
-  assert.equal(seededQuestions.length, 101);
+  assert.equal(seededQuestions.length, 103);
   assert.match(baseline, /create table public\.conversation_questions/i);
   assert.match(baseline, /create table public\.conversation_question_completions/i);
   assert.match(baseline, /conversation_question_completions_marked_by_idx/i);
@@ -97,8 +109,12 @@ test("disaster-recovery baseline contains the canonical 101-question seed", func
   assert.match(baseline, /\('What''s your surname\?', 8\)/);
   assert.match(baseline, /\('How do you spell your name\?', 9\)/);
   assert.match(baseline, /\('What is your full name\?', 10\)/);
+  assert.match(baseline, /\('Do you have any pets\?', 14\)/);
+  assert.match(baseline, /\('What''s you phone number\?', 15\)/);
+  assert.match(baseline, /\('What''s your address\?', 16\)/);
+  assert.match(baseline, /\('What languages do you speak\?', 17\)/);
   assert.match(
     baseline,
-    /\('What is something most people do not know about you\?', 101\)/
+    /\('What is something most people do not know about you\?', 103\)/
   );
 });
