@@ -14,6 +14,10 @@ const classesPage = fs.readFileSync(path.join(root, "turmas.html"), "utf8");
 const classVisual = fs.readFileSync(path.join(root, "turmas/turmas_visual.js"), "utf8");
 const boardVisual = fs.readFileSync(path.join(root, "quadro-de-turmas/quadro_visual.js"), "utf8");
 const badgeRenderer = fs.readFileSync(path.join(root, "class_type_badge_renderer.js"), "utf8");
+const currentCapacityMigration = fs.readFileSync(
+  path.join(root, "supabase", "migrations", "20261002031500_set_quintet_capacity_eight.sql"),
+  "utf8"
+);
 
 test("adds quintet as a valid student and class classification", function () {
   assert.match(migration, /'INDIVIDUAL', 'QUARTETO', 'QUINTETO', '8 ALUNOS'/);
@@ -28,8 +32,15 @@ test("exposes quintet in teacher classification controls", function () {
   assert.match(classesPage, /option value="quintet">QUINTETO<\/option>/);
 });
 
-test("renders quintet with a five-student capacity", function () {
-  assert.match(classVisual, /classList\.contains\("quintet"\)\) return 5/);
-  assert.match(boardVisual, /classList\.contains\('quintet'\)\) return 5/);
+test("renders quintet with an eight-student capacity", function () {
+  assert.match(classVisual, /classList\.contains\("quintet"\)\) return 8/);
+  assert.match(boardVisual, /classList\.contains\('quintet'\)\) return 8/);
   assert.match(badgeRenderer, /label: "QUINTETO"/);
+});
+
+test("current capacity rule fixes every quintet at eight students", function () {
+  assert.match(currentCapacityMigration, /where class_type = 'quintet'/);
+  assert.match(currentCapacityMigration, /set capacity_override = 8/);
+  assert.match(currentCapacityMigration, /when tc\.class_type = 'quintet' then 8/);
+  assert.match(currentCapacityMigration, /tc\.class_type in \('quartet', 'quintet'\)/);
 });
