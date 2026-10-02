@@ -37,6 +37,7 @@ jobs:
           node --test tests/enrollment_required_fields.test.js
           node --test tests/tuition_due_day_enrollment_fallback.test.js
           node --test tests/quintet_capacity_eight_contract.test.js
+          node --test tests/course_vacancy_visibility_contract.test.js
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -98,7 +99,8 @@ jobs:
             supabase/baseline/100_require_enrollment_access_code.sql \
             supabase/baseline/105_require_all_enrollment_fields.sql \
             supabase/baseline/110_auto_assign_tuition_due_seven_days_after_enrollment.sql \
-            supabase/baseline/115_set_quintet_capacity_eight.sql
+            supabase/baseline/115_set_quintet_capacity_eight.sql \
+            supabase/baseline/120_limit_course_vacancies_to_three.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
