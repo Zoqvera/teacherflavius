@@ -690,12 +690,13 @@ with invalid_schedule as (
       )
     )
 )
-update public.profiles p
+update public.student_billing_settings s
 set
-  tuition_due_day_anchor_date = timezone('America/Sao_Paulo', p.enrolled_at)::date,
-  tuition_first_due_date = invalid_schedule.corrected_first_due
+  billing_start_month = date_trunc('month', invalid_schedule.corrected_first_due)::date,
+  updated_at = now()
 from invalid_schedule
-where p.id = invalid_schedule.id;
+where s.student_id = invalid_schedule.id
+  and s.billing_start_month < date_trunc('month', invalid_schedule.corrected_first_due)::date;
 
 with invalid_schedule as (
   select
@@ -725,13 +726,12 @@ with invalid_schedule as (
       )
     )
 )
-update public.student_billing_settings s
+update public.profiles p
 set
-  billing_start_month = date_trunc('month', invalid_schedule.corrected_first_due)::date,
-  updated_at = now()
+  tuition_due_day_anchor_date = timezone('America/Sao_Paulo', p.enrolled_at)::date,
+  tuition_first_due_date = invalid_schedule.corrected_first_due
 from invalid_schedule
-where s.student_id = invalid_schedule.id
-  and s.billing_start_month < date_trunc('month', invalid_schedule.corrected_first_due)::date;
+where p.id = invalid_schedule.id;
 
 do $repair_guard$
 begin
