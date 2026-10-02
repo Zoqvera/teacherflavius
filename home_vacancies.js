@@ -62,7 +62,7 @@
       throw new Error("Configuração de vagas indisponível");
     }
 
-    const response = await fetch(`${config.url}/rest/v1/rpc/get_public_quartet_vacancies`, {
+    const response = await fetch(`${config.url}/rest/v1/rpc/get_public_course_vacancies`, {
       method: "POST",
       cache: "no-store",
       headers: {
