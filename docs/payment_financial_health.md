@@ -40,7 +40,7 @@ O scanner de alertas também cria `financial_health_check` crítico se o própri
 
 `get_teacher_payment_operations_dashboard` inclui o último estado persistido em `financial_health`. A interface `/mensalidades/` mostra o estado como `SAUDÁVEL`, `ATENÇÃO`, `CRÍTICO` ou `ATRASADO`, além da data da última execução e da contagem de invariantes críticas/em atenção.
 
-O RPC continua protegido por `is_teacher_admin_mfa()`, exigindo conta administrativa do professor com AAL2.
+O RPC continua protegido por autorização administrativa do professor com sessão autenticada válida.
 
 ## Testes seguros
 
