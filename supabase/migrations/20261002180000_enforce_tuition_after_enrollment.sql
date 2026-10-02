@@ -832,3 +832,42 @@ before insert or update of student_id, due_date, payment_date, is_exempt
 on public.monthly_tuition
 for each row
 execute function public.reject_open_tuition_before_enrollment();
+
+
+do $final_validation$
+begin
+  if exists (
+    select 1
+    from public.profiles p
+    where coalesce(p.enrolled, false) = true
+      and coalesce(p.archived, false) = false
+      and p.enrolled_at is null
+  ) then
+    raise exception 'Existem alunos ativos sem data de matrícula registrada.';
+  end if;
+
+  if exists (
+    select 1
+    from public.monthly_tuition mt
+    join public.profiles p on p.id = mt.student_id
+    where mt.payment_date is null
+      and not mt.is_exempt
+      and p.enrolled_at is not null
+      and mt.due_date <= timezone('America/Sao_Paulo', p.enrolled_at)::date
+  ) then
+    raise exception 'Ainda existem mensalidades abertas com vencimento no dia ou antes da matrícula.';
+  end if;
+
+  if exists (
+    select 1
+    from public.profiles p
+    where coalesce(p.enrolled, false) = true
+      and coalesce(p.archived, false) = false
+      and p.enrolled_at is not null
+      and p.tuition_first_due_date is not null
+      and p.tuition_first_due_date <= timezone('America/Sao_Paulo', p.enrolled_at)::date
+  ) then
+    raise exception 'Ainda existem primeiros vencimentos no dia ou antes da matrícula.';
+  end if;
+end;
+$final_validation$;
