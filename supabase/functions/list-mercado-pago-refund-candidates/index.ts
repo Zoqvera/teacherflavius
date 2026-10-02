@@ -86,7 +86,7 @@ Deno.serve(async (request: Request) => {
     global: { headers: { Authorization: authorization } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: isAdmin, error: adminError } = await userClient.rpc("is_teacher_admin_mfa");
+  const { data: isAdmin, error: adminError } = await userClient.rpc("is_teacher_admin");
   if (adminError || isAdmin !== true) {
     return jsonResponse(request, { error: "Administrative MFA is required" }, 403);
   }
