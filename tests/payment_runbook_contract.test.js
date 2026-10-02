@@ -130,10 +130,10 @@ test("credential rotation runbook never requires sharing secret values", () => {
   assert.match(credentialRotation, /kill switch de \*\*novas cobranças\*\*/i);
 });
 
-test("first real refund protocol requires legitimate need, MFA, stable idempotency and convergence", () => {
+test("first real refund protocol requires legitimate need, admin authorization, stable idempotency and convergence", () => {
   assert.match(firstRefundProtocol, /necessidade legítima de devolução/i);
   assert.match(firstRefundProtocol, /Não criar nem reembolsar uma transação real apenas para testar/i);
-  assert.match(firstRefundProtocol, /MFA\/AAL2/);
+  assert.match(firstRefundProtocol, /sessão administrativa válida/i);
   assert.match(firstRefundProtocol, /REEMBOLSAR/);
   assert.match(firstRefundProtocol, /reutilizar a mesma `idempotency_key`/);
   assert.match(firstRefundProtocol, /reconsultar o Mercado Pago \*\*antes\*\*/i);

@@ -124,7 +124,7 @@ O dashboard também mostra o estado do `system-synthetic-probe` e do `system-hea
 
 As tabelas do monitor ficam no schema `private`. `anon` e `authenticated` não recebem grants diretos. As RPCs internas são exclusivamente `service_role`.
 
-A interface administrativa chama `get-system-health-dashboard`, que exige JWT válido e `is_teacher_admin_mfa() = true`. Portanto, o navegador não recebe acesso às tabelas privadas nem às RPCs internas.
+A interface administrativa chama `get-system-health-dashboard`, que exige JWT válido e identidade administrativa autorizada. Portanto, o navegador não recebe acesso às tabelas privadas nem às RPCs internas.
 
 As Edge Functions chamadas pelo banco (`system-synthetic-probe` e `notify-system-health-alert`) não usam JWT porque são endpoints máquina-a-máquina. Ambas exigem `x-webhook-secret`, comparado em tempo constante com o segredo esperado.
 

@@ -58,7 +58,7 @@ async function adminActorId(options: {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const [{ data: isAdmin, error: adminError }, userResult] = await Promise.all([
-    client.rpc("is_teacher_admin_mfa"),
+    client.rpc("is_teacher_admin"),
     client.auth.getUser(token),
   ]);
   if (adminError || isAdmin !== true || userResult.error || !userResult.data.user?.id) return "";
@@ -161,7 +161,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const actorId = await adminActorId({ supabaseUrl, anonKey, authorization });
-  if (!actorId) return jsonResponse(request, { error: "Administrative MFA is required" }, 403);
+  if (!actorId) return jsonResponse(request, { error: "Administrative access is required" }, 403);
 
   const action = cleanString(body.action, 40).toLowerCase();
   const command = buildCommand(action, body, actorId);

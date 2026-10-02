@@ -72,8 +72,9 @@ test("refund internals are service-role only and foreign keys are indexed", () =
   assert.match(accessMigration, /grant execute on function public\.list_mercado_pago_refund_candidates\(date\) to service_role/);
 });
 
-test("refund endpoint requires MFA and a deliberate confirmation", () => {
-  assert.match(edgeFunction, /is_teacher_admin_mfa/);
+test("refund endpoint requires teacher admin authorization and a deliberate confirmation", () => {
+  assert.match(edgeFunction, /is_teacher_admin/);
+  assert.doesNotMatch(edgeFunction, /is_teacher_admin_mfa/);
   assert.match(edgeFunction, /REFUND_CONFIRMATION = "REEMBOLSAR"/);
   assert.match(edgeFunction, /begin_mercado_pago_refund/);
   assert.match(edgeFunction, /finish_mercado_pago_refund/);
@@ -93,8 +94,9 @@ test("refund endpoint reconciles provider state before and after refund", () => 
   assert.match(edgeFunction, /record_mercado_pago_reconciliation_failure/);
 });
 
-test("candidate listing is protected by JWT-compatible MFA and returns minimum fields", () => {
-  assert.match(listingFunction, /is_teacher_admin_mfa/);
+test("candidate listing requires teacher admin authorization and returns minimum fields", () => {
+  assert.match(listingFunction, /is_teacher_admin/);
+  assert.doesNotMatch(listingFunction, /is_teacher_admin_mfa/);
   assert.match(listingFunction, /list_mercado_pago_refund_candidates/);
   assert.match(listingFunction, /tuition_id: row\.tuition_id/);
   assert.match(listingFunction, /refund_status:/);

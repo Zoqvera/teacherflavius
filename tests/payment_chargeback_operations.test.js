@@ -140,12 +140,14 @@ test("open chargebacks have signed periodic reconciliation", () => {
   assert.match(scheduleMigration, /dispatch_mercado_pago_chargeback_reconciliation/);
 });
 
-test("administrative listing and documentation commands are MFA protected", () => {
-  assert.match(listing, /is_teacher_admin_mfa/);
+test("administrative listing and documentation commands require teacher admin authorization", () => {
+  assert.match(listing, /is_teacher_admin/);
+  assert.doesNotMatch(listing, /is_teacher_admin_mfa/);
   assert.match(listing, /list_mercado_pago_chargeback_documentation_cases/);
   assert.match(listing, /case_id: row\.chargeback_id/);
   assert.doesNotMatch(listing, /provider_payment_id: row\.provider_payment_id/);
-  assert.match(manager, /is_teacher_admin_mfa/);
+  assert.match(manager, /is_teacher_admin/);
+  assert.doesNotMatch(manager, /is_teacher_admin_mfa/);
   assert.match(manager, /DOCUMENTAÇÃO ENVIADA/);
   assert.match(documentationMigration, /revoke all on function public\.list_mercado_pago_chargeback_documentation_cases\(date\) from public, anon, authenticated/);
   assert.match(documentationMigration, /grant execute on function public\.mark_mercado_pago_chargeback_documentation_submitted\(uuid,uuid\) to service_role/);

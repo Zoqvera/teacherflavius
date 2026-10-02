@@ -82,9 +82,8 @@ test("final kill switch RPCs are service-role only", function () {
   assert.match(edgeMigration, /drop function if exists public\.set_teacher_payment_creation_enabled\(boolean, text\);/);
 });
 
-test("kill switch browser management goes through JWT and MFA Edge Function", function () {
+test("kill switch browser management goes through an authenticated Edge Function", function () {
   assert.match(edgeSource, /auth\.getUser\(token\)/);
-  assert.match(edgeSource, /rpc\("is_teacher_admin_mfa"\)/);
   assert.match(edgeSource, /get_payment_creation_control_internal/);
   assert.match(edgeSource, /set_payment_creation_enabled_internal/);
   assert.match(edgeSource, /SUPABASE_PUBLISHABLE_KEYS/);
@@ -93,9 +92,10 @@ test("kill switch browser management goes through JWT and MFA Edge Function", fu
   assert.doesNotMatch(browserSource, /\.rpc\("set_teacher_payment_creation_enabled"/);
 });
 
-test("kill switch remains visible when MFA authorization is not ready", function () {
+test("kill switch remains visible when administrative authorization is unavailable", function () {
   assert.match(browserSource, /function renderUnavailable\(/);
-  assert.match(browserSource, /VERIFICAÇÃO NECESSÁRIA/);
-  assert.match(browserSource, /href="\/professor\/\?mfa=1&amp;next=%2Fmensalidades%2F"/);
+  assert.match(browserSource, /ACESSO INDISPONÍVEL/);
+  assert.doesNotMatch(browserSource, /MFA\/AAL2/);
+  assert.doesNotMatch(browserSource, /\?mfa=1/);
   assert.match(browserSource, /renderUnavailable\(documentRef\)/);
 });

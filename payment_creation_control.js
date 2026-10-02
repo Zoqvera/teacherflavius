@@ -83,11 +83,10 @@
     panel.innerHTML = [
       '<div class="panel-header">',
       '<div><h2 id="' + PANEL_ID + 'Title">Controle de novas cobranças</h2>',
-      '<p>O kill switch exige autenticação administrativa em duas etapas (MFA/AAL2).</p></div>',
-      '<span class="status-pill status-overdue">VERIFICAÇÃO NECESSÁRIA</span>',
+      '<p>Não foi possível validar a autorização administrativa para este controle.</p></div>',
+      '<span class="status-pill status-overdue">ACESSO INDISPONÍVEL</span>',
       '</div>',
-      '<p>Conclua a verificação em duas etapas na Área do Professor e depois volte a esta página. O controle será liberado sem alterar pagamentos existentes.</p>',
-      '<a class="finance-button" href="/professor/?mfa=1&amp;next=%2Fmensalidades%2F">FAZER VERIFICAÇÃO ADICIONAL</a>'
+      '<p>Atualize a página. Se o problema persistir, verifique a sessão administrativa.</p>'
     ].join("");
     panel.dataset.enabled = "unknown";
     return true;

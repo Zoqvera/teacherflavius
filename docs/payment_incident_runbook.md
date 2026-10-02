@@ -70,7 +70,7 @@ Um pagamento permanece `created`, `pending`, `authorized`, `in_process` ou `in_m
 ### Recuperação
 
 - para aluno: a reconciliação manual só pode consultar tentativas do próprio `student_id`;
-- para professor: a reconciliação ampla exige sessão administrativa MFA/AAL2;
+- para professor: a reconciliação ampla exige sessão administrativa válida;
 - a reconciliação deve consultar **o estado atual no Mercado Pago** e então aplicar o resultado localmente;
 - não crie uma nova cobrança enquanto existir uma tentativa ativa cujo estado ainda não foi esclarecido.
 

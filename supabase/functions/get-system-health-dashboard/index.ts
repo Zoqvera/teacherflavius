@@ -62,12 +62,12 @@ Deno.serve(async (request: Request) => {
   const { data: userData, error: userError } = await userClient.auth.getUser(token);
   if (userError || !userData.user) return json(request, { error: "Sessão inválida ou expirada." }, 401);
 
-  const { data: isAdmin, error: adminCheckError } = await userClient.rpc("is_teacher_admin_mfa");
+  const { data: isAdmin, error: adminCheckError } = await userClient.rpc("is_teacher_admin");
   if (adminCheckError) {
-    console.error("Unable to verify teacher MFA for system health dashboard", adminCheckError.message);
+    console.error("Unable to verify teacher admin access for system health dashboard", adminCheckError.message);
     return json(request, { error: "Não foi possível verificar a autorização." }, 500);
   }
-  if (isAdmin !== true) return json(request, { error: "MFA do professor é obrigatório." }, 403);
+  if (isAdmin !== true) return json(request, { error: "Acesso administrativo do professor obrigatório." }, 403);
 
   const { data, error } = await admin.rpc("get_system_health_dashboard_internal");
   if (error) {

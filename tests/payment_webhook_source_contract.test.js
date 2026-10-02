@@ -22,16 +22,18 @@ test("safe replay re-fetches provider state instead of replaying stored payload"
   const sharedSync = read("supabase/functions/_shared/mercado_pago_payment_sync.ts");
 
   assert.match(source, /synchronizeMercadoPagoPayment/);
-  assert.match(source, /is_teacher_admin_mfa/);
+  assert.match(source, /is_teacher_admin/);
+  assert.doesNotMatch(source, /is_teacher_admin_mfa/);
   assert.doesNotMatch(source, /payload\s*:/i);
   assert.match(sharedSync, /api\.mercadopago\.com\/v1\/payments/);
   assert.match(sharedSync, /process_mercado_pago_payment/);
 });
 
-test("webhook audit listing is protected by JWT and administrative MFA in source", () => {
+test("webhook audit listing is protected by JWT and teacher admin authorization in source", () => {
   const source = read("supabase/functions/list-payment-webhooks/index.ts");
 
-  assert.match(source, /is_teacher_admin_mfa/);
+  assert.match(source, /is_teacher_admin/);
+  assert.doesNotMatch(source, /is_teacher_admin_mfa/);
   assert.match(source, /payment_webhook_events/);
   assert.doesNotMatch(source, /deduplication_key/);
   assert.doesNotMatch(source, /request_id/);

@@ -99,14 +99,14 @@ test("core payment functions prefer the new Supabase secret-key bundle", () => {
   });
 });
 
-test("manual reconciliation requires MFA for broad teacher access", () => {
+test("manual reconciliation requires teacher admin authorization for broad access", () => {
   const source = fs.readFileSync(
     path.join(root, "supabase/functions/reconcile-mercado-pago-payments/index.ts"),
     "utf8"
   );
 
   assert.match(source, /getDefaultKey\("SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_ANON_KEY"\)/);
-  assert.match(source, /rpc\("is_teacher_admin_mfa"\)/);
-  assert.doesNotMatch(source, /rpc\("is_teacher_admin"\)/);
+  assert.match(source, /rpc\("is_teacher_admin"\)/);
+  assert.doesNotMatch(source, /rpc\("is_teacher_admin_mfa"\)/);
   assert.match(source, /\.eq\("student_id", user\.id\)/);
 });

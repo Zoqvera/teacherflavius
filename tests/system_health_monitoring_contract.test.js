@@ -44,10 +44,10 @@ test("synthetic probe is read only against production routes", function () {
   assert.match(syntheticProbe, /run_system_health_check_internal/);
 });
 
-test("dashboard access is JWT and MFA protected", function () {
+test("dashboard access requires JWT and teacher admin authorization", function () {
   assert.match(dashboardFunction, /Authorization/);
   assert.match(dashboardFunction, /auth\.getUser/);
-  assert.match(dashboardFunction, /is_teacher_admin_mfa/);
+  assert.match(dashboardFunction, /is_teacher_admin/);
   assert.match(dashboardFunction, /get_system_health_dashboard_internal/);
 });
 

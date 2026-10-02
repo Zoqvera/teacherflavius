@@ -86,8 +86,8 @@ O probe temporário usado exclusivamente para essa validação foi retirado depo
 | alerta não entregue | retries do notificador | `failedAlerts` e dashboard | restaurar Resend e retry controlado | coberto |
 | acesso direto a tabelas financeiras | revogação de grants + RLS | contrato de segurança | manter acesso apenas por RPC/Edge Function | coberto |
 | RPC técnica chamada pelo cliente | revogação de `EXECUTE` | contrato de segurança | service-role only | coberto |
-| escopo administrativo sem MFA | wrappers MFA e AAL2 | Security/contract tests | reautenticar com MFA | coberto no domínio financeiro |
-| necessidade de conter novas cobranças | kill switch server-side antes do `INSERT` | painel administrativo e auditoria de eventos | bloquear/reativar por Edge Function JWT+MFA sem parar recuperação | coberto |
+| escopo administrativo sem autorização válida | validação de identidade administrativa | Security/contract tests | renovar a sessão administrativa | coberto no domínio financeiro |
+| necessidade de conter novas cobranças | kill switch server-side antes do `INSERT` | painel administrativo e auditoria de eventos | bloquear/reativar por Edge Function com JWT administrativo sem parar recuperação | coberto |
 | objeto futuro herdar acesso amplo | default privileges opt-in para objetos de aplicação | Security Advisor e contratos | grants explícitos somente quando necessários | coberto para objetos criados por `postgres` |
 
 ## Inventário operacional
@@ -130,9 +130,9 @@ Esses componentes são isolados das tabelas financeiras de produção e usam cre
 - tabelas financeiras permanecem acessíveis ao `service_role` apenas quando necessário para fluxos internos;
 - nenhuma RPC financeira técnica é executável por `anon`;
 - RPCs exclusivamente de servidor são `service_role` only;
-- operações administrativas expostas ao navegador usam MFA/AAL2;
-- reconciliação manual mantém o aluno limitado ao próprio `student_id` e exige MFA para o escopo administrativo;
-- o kill switch é administrado por Edge Function JWT+MFA e usa RPCs internas `service_role` only;
+- operações administrativas expostas ao navegador exigem identidade administrativa autorizada;
+- reconciliação manual mantém o aluno limitado ao próprio `student_id` e exige autorização administrativa para o escopo amplo;
+- o kill switch é administrado por Edge Function com JWT administrativo e usa RPCs internas `service_role` only;
 - crons não carregam segredos diretamente no comando;
 - segredos de dispatch ficam no Vault;
 - Edge Functions preferem o bundle atual de chaves Supabase, mantendo chaves legadas apenas como compatibilidade onde necessário;
@@ -152,7 +152,7 @@ O domínio financeiro possui contratos determinísticos para:
 - sandbox e convergência;
 - webhooks e replay;
 - health check financeiro;
-- superfície de acesso e MFA;
+- superfície de acesso administrativo;
 - kill switch de novas cobranças e default privileges.
 
 O workflow `Payment contracts` roda essas verificações em mudanças relacionadas ao domínio financeiro.
@@ -195,7 +195,7 @@ Recomendação: remover definitivamente quando houver uma operação de exclusã
 
 O Security Advisor ainda pode apontar `Leaked Password Protection Disabled` no Supabase Auth quando o recurso do plano não estiver disponível.
 
-Mitigação atual: MFA protege superfícies administrativas sensíveis. A decisão sobre esse recurso permanece fora do domínio financeiro.
+Mitigação atual: as superfícies administrativas exigem conta autorizada, sessão válida e controles de menor privilégio. A decisão sobre esse recurso permanece fora do domínio financeiro.
 
 ## Critérios de prontidão operacional
 
@@ -210,7 +210,7 @@ O módulo financeiro é considerado operacionalmente pronto enquanto todos os po
 7. acessos financeiros limitados por menor privilégio;
 8. contratos de pagamento verdes na CI;
 9. runbook atualizado quando uma nova classe de incidente for introduzida;
-10. kill switch acessível ao professor com MFA e normalmente em estado `enabled=true`.
+10. kill switch acessível ao professor autenticado e normalmente em estado `enabled=true`.
 
 ## Revisão pós-mudança
 
@@ -222,7 +222,7 @@ Qualquer alteração futura em pagamentos deve responder, antes do merge:
 - Como detectar uma operação parcialmente concluída?
 - Qual alerta/health invariant cobre a falha?
 - Qual procedimento de recuperação existe?
-- O fluxo administrativo exige MFA?
+- O fluxo administrativo exige uma sessão administrativa válida?
 - O cliente tem acesso direto a alguma nova tabela/RPC técnica?
 - O runbook precisa de um novo cenário?
 - A mudança respeita o kill switch de criação e os default privileges opt-in?

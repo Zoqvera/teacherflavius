@@ -229,11 +229,11 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const [{ data: isAdmin, error: adminError }, { data: userData, error: userError }] = await Promise.all([
-    userClient.rpc("is_teacher_admin_mfa"),
+    userClient.rpc("is_teacher_admin"),
     userClient.auth.getUser(),
   ]);
   if (adminError || isAdmin !== true || userError || !userData.user?.id) {
-    return jsonResponse(request, { error: "Administrative MFA is required" }, 403);
+    return jsonResponse(request, { error: "Administrative access is required" }, 403);
   }
 
   const supabaseAdmin = createClient(supabaseUrl, secretKey, {

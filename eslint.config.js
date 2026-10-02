@@ -48,8 +48,6 @@ module.exports = [
       "auth_session_service.js",
       "password_recovery_login.js",
       "student_area_route_guard.js",
-      "professor_mfa_service.js",
-      "professor_mfa_gate.js",
       "google_auth_renderer.js",
       "google_auth_ui.js",
       "student_profile_service.js",

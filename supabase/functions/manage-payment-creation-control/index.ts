@@ -78,13 +78,13 @@ Deno.serve(async (request: Request) => {
   const user = userData.user;
   if (userError || !user) return json(request, { error: "Sessão inválida ou expirada." }, 401);
 
-  const { data: isAdminData, error: adminError } = await supabaseAuth.rpc("is_teacher_admin_mfa");
+  const { data: isAdminData, error: adminError } = await supabaseAuth.rpc("is_teacher_admin");
   if (adminError) {
-    console.error("Unable to verify teacher MFA for payment creation control", adminError.message);
+    console.error("Unable to verify teacher admin access for payment creation control", adminError.message);
     return json(request, { error: "Não foi possível verificar a autorização." }, 500);
   }
   if (isAdminData !== true) {
-    return json(request, { error: "MFA do professor é obrigatório." }, 403);
+    return json(request, { error: "Acesso administrativo do professor obrigatório." }, 403);
   }
 
   let body: JsonRecord = {};
