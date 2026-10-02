@@ -233,7 +233,7 @@ Deno.serve(async (request: Request) => {
     userClient.auth.getUser(),
   ]);
   if (adminError || isAdmin !== true || userError || !userData.user?.id) {
-    return jsonResponse(request, { error: "Administrative MFA is required" }, 403);
+    return jsonResponse(request, { error: "Administrative access is required" }, 403);
   }
 
   const supabaseAdmin = createClient(supabaseUrl, secretKey, {
