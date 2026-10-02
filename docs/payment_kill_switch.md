@@ -8,7 +8,7 @@ O controle de novas cobranças permite interromper a criação de novos pagament
 
 O estado fica em `private.payment_creation_control`. Apenas uma linha singleton existe. Mudanças são auditadas em `private.payment_creation_control_events`.
 
-O navegador administra o estado exclusivamente pela Edge Function `manage-payment-creation-control`, implantada com `verify_jwt=true`. A função valida a sessão e exige `is_teacher_admin_mfa()` antes de usar as RPCs internas:
+O navegador administra o estado exclusivamente pela Edge Function `manage-payment-creation-control`, implantada com `verify_jwt=true`. A função valida a sessão administrativa antes de usar as RPCs internas:
 
 - `get_payment_creation_control_internal()`
 - `set_payment_creation_enabled_internal(boolean, text, uuid)`
