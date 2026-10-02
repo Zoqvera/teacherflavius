@@ -65,6 +65,7 @@ test("repairs invalid open tuition and preserves a hard database guard", functio
 });
 
 test("recovery baseline preserves the same enrollment billing invariants", function () {
+  assert.match(baseline, /add column if not exists is_exempt boolean/);
   assert.match(baseline, /add column if not exists enrolled_at timestamptz/);
   assert.match(
     baseline,
