@@ -12,6 +12,7 @@ const recoveryOverlay = read("supabase/baseline/120_limit_course_vacancies_to_th
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 const courseVacancies = read("course_vacancies.js");
 const homeVacancies = read("home_vacancies.js");
+const coursePage = read("aulas-em-grupo/index.html");
 
 test("course vacancy RPC returns only one to three available spots", function () {
   assert.match(migration, /get_public_course_vacancies\(\)/);
@@ -31,11 +32,15 @@ test("course vacancy RPC is an invoker wrapper with explicit public grants", fun
   );
 });
 
-test("course page uses the filtered RPC while home keeps its current RPC", function () {
+test("the script actually loaded by the course page uses the filtered RPC", function () {
+  assert.match(coursePage, /home_vacancies\.js\?v=20261002-course-filter-1/);
+  assert.match(homeVacancies, /\/rest\/v1\/rpc\/get_public_course_vacancies/);
+  assert.doesNotMatch(homeVacancies, /\/rest\/v1\/rpc\/get_public_quartet_vacancies/);
+});
+
+test("legacy course vacancy helper also points to the filtered RPC", function () {
   assert.match(courseVacancies, /\/rest\/v1\/rpc\/get_public_course_vacancies/);
   assert.doesNotMatch(courseVacancies, /\/rest\/v1\/rpc\/get_public_quartet_vacancies/);
-  assert.match(homeVacancies, /\/rest\/v1\/rpc\/get_public_quartet_vacancies/);
-  assert.doesNotMatch(homeVacancies, /\/rest\/v1\/rpc\/get_public_course_vacancies/);
 });
 
 test("recovery baseline preserves the course vacancy filter", function () {
