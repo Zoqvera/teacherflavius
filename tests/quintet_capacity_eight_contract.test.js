@@ -12,6 +12,13 @@ const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 const publicSchedule = read("horarios-disponiveis/index.html");
 const vacancyReport = read("relatorios_vagas_turmas.html");
 
+test("recovery overlay provisions per-class capacity overrides", function () {
+  const recoveryOverlay = read("supabase/baseline/115_set_quintet_capacity_eight.sql");
+  assert.match(recoveryOverlay, /add column if not exists capacity_override smallint/);
+  assert.match(recoveryOverlay, /teacher_classes_capacity_override_range/);
+  assert.match(recoveryOverlay, /capacity_override between 1 and 50/);
+});
+
 test("normalizes every existing quintet capacity override to eight", function () {
   assert.match(migration, /set capacity_override = 8/);
   assert.match(migration, /where class_type = 'quintet'/);
