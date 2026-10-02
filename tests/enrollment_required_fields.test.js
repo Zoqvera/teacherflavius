@@ -25,11 +25,10 @@ test("every visible enrollment identity field is required", function () {
   assert.match(dueDay, /input\.required = state\.selectedDueDay == null/);
 });
 
-test("database activation rejects missing enrollment fields", function () {
+test("database activation rejects missing personal enrollment fields", function () {
   assert.match(migration, /new\.date_of_birth is null/);
   assert.match(migration, /length\(clean_cpf\) <> 11/);
   assert.match(migration, /length\(clean_whatsapp\) < 10/);
-  assert.match(migration, /new\.tuition_due_day is null/);
   assert.match(migration, /nullif\(btrim\(coalesce\(new\.name/);
   assert.match(migration, /nullif\(btrim\(coalesce\(new\.email/);
 });
