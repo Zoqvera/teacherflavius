@@ -218,7 +218,7 @@
     var config = window.SUPABASE_CONFIG;
     if (!config || !config.url || !config.anonKey) throw new Error("Configuração indisponível");
 
-    var response = await fetch(config.url + "/rest/v1/rpc/get_public_quartet_vacancies", {
+    var response = await fetch(config.url + "/rest/v1/rpc/get_public_course_vacancies", {
       method: "POST",
       cache: "no-store",
       headers: {
