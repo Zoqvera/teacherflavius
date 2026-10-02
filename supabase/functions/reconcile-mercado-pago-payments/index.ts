@@ -209,9 +209,9 @@ Deno.serve(async (request: Request) => {
     return jsonResponse(request, { error: "Mensalidade inválida." }, 422);
   }
 
-  const { data: isAdminData, error: adminError } = await supabaseAuth.rpc("is_teacher_admin_mfa");
+  const { data: isAdminData, error: adminError } = await supabaseAuth.rpc("is_teacher_admin");
   if (adminError) {
-    console.error("Unable to verify teacher admin MFA access", adminError.message);
+    console.error("Unable to verify teacher admin access", adminError.message);
     return jsonResponse(request, { error: "Não foi possível verificar a autorização." }, 500);
   }
   const isAdmin = isAdminData === true;
