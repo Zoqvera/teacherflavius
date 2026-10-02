@@ -32,7 +32,8 @@ test("safe replay re-fetches provider state instead of replaying stored payload"
 test("webhook audit listing is protected by JWT and teacher admin authorization in source", () => {
   const source = read("supabase/functions/list-payment-webhooks/index.ts");
 
-  assert.match(source, /is_teacher_admin/);\n  assert.doesNotMatch(source, /is_teacher_admin_mfa/);
+  assert.match(source, /is_teacher_admin/);
+  assert.doesNotMatch(source, /is_teacher_admin_mfa/);
   assert.match(source, /payment_webhook_events/);
   assert.doesNotMatch(source, /deduplication_key/);
   assert.doesNotMatch(source, /request_id/);
