@@ -17,7 +17,7 @@ Antes de iniciar o primeiro refund legítimo:
 3. confirmar `provider_payment_id` e valor diretamente pelo estado autoritativo do backend;
 4. confirmar que a tentativa não está em estado terminal já revertido (`refunded`, `charged_back` ou `cancelled`);
 5. confirmar que não há chargeback aberto para o mesmo pagamento;
-6. acessar a operação como professor/admin com MFA/AAL2;
+6. acessar a operação com sessão administrativa válida;
 7. registrar um motivo operacional sem inserir PII desnecessária.
 
 ## Execução
@@ -105,7 +105,7 @@ Quando a Fase B de analytics server-side estiver ativa, a reversão autoritativa
 O gate só pode ser marcado como concluído quando todos os itens abaixo forem verdadeiros:
 
 - necessidade legítima de refund documentada;
-- MFA validado;
+- sessão administrativa válida confirmada;
 - provider recebeu/confirmou a reversão;
 - estado local convergiu;
 - `provider_refund_id` registrado quando fornecido;
