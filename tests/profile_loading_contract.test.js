@@ -82,7 +82,7 @@ test("optional profile module uses the public session API and preserves enrollme
   assert.equal(savedPayload.enrolled, true);
   assert.equal(savedPayload.enrollment_code, "ABCDE");
   assert.equal(savedPayload.pix_key, "");
-  assert.deepEqual(savedPayload.availability, {});
+  assert.deepEqual(JSON.parse(JSON.stringify(savedPayload.availability)), { seg: [], ter: [], qua: [], qui: [], sex: [] });
   assert.equal(metadataPayload.data.enrolled, true);
   assert.equal(metadataPayload.data.enrollment_code, "ABCDE");
 });
