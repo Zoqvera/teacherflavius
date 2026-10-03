@@ -157,7 +157,7 @@ begin
     auto_assigned := true;
   else
     if not (target_due_day::smallint = any(due_day_options)) then
-      raise exception 'Escolha uma das três opções de vencimento disponíveis.';
+      raise exception 'Escolha um dos três dias de vencimento disponíveis.';
     end if;
 
     chosen_first_due_date := public.first_tuition_due_date_after(
