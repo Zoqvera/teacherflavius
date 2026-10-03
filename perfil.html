@@ -214,19 +214,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       message.textContent = text || "";
     }
 
-    async function loadProfile() {
-      const user = await Auth.requireAuth();
-      if (!user) return;
+    function renderProfile(profile, user) {
+      const current = profile || {};
+      const metadata = user && user.user_metadata ? user.user_metadata : {};
+      const email = current.email || (user && user.email) || metadata.email || "Não informado";
+      const name = current.name || metadata.name || metadata.full_name || "Aluno";
+      document.getElementById("studentInfo").textContent = name + " · " + email;
+      document.getElementById("profileEmail").textContent = email;
+      document.getElementById("enrollmentCode").textContent = current.enrollment_code || metadata.enrollment_code || "Não informado";
+      document.getElementById("name").value = current.name || metadata.name || metadata.full_name || "";
+      document.getElementById("cpf").value = formatCpf(current.cpf || metadata.cpf || "");
+      document.getElementById("whatsapp").value = current.whatsapp || metadata.whatsapp || "";
+      document.getElementById("pixKey").value = current.pix_key || metadata.pix_key || "";
+      setAvailability(current.availability || metadata.availability || {});
+    }
 
-      const profile = await Auth.getProfile();
-      document.getElementById("studentInfo").textContent = `${profile.name || "Aluno"} · ${profile.email || user.email}`;
-      document.getElementById("profileEmail").textContent = profile.email || user.email || "Não informado";
-      document.getElementById("enrollmentCode").textContent = profile.enrollment_code || "Não informado";
-      document.getElementById("name").value = profile.name || "";
-      document.getElementById("cpf").value = formatCpf(profile.cpf || "");
-      document.getElementById("whatsapp").value = profile.whatsapp || "";
-      document.getElementById("pixKey").value = profile.pix_key || "";
-      setAvailability(profile.availability || {});
+    async function loadProfile() {
+      let user = null;
+      try {
+        user = await Auth.requireAuth();
+        if (!user) return;
+        renderProfile(null, user);
+        const profile = await Auth.getProfile();
+        renderProfile(profile, user);
+      } catch (error) {
+        if (user) renderProfile(null, user);
+        console.error("Não foi possível carregar o perfil:", error);
+        setMessage("Não foi possível atualizar os dados do perfil. Recarregue a página.", "error");
+      }
     }
 
     function enforceGoogleOnlyCopy() {
