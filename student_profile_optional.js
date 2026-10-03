@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  if (!window.Auth || !Auth.getClient || !Auth.getUser) return;
+  if (!window.Auth || !Auth.getClient || !Auth.getSession) return;
 
   const days = ["seg", "ter", "qua", "qui", "sex"];
   const hours = ["09", "10", "12", "13", "15", "17", "18", "20", "21"];
@@ -33,9 +33,14 @@
     return columns;
   }
 
+  async function getAuthenticatedUser() {
+    const session = await Auth.getSession();
+    return session && session.user ? session.user : null;
+  }
+
   async function saveProfile(data, mode) {
     const client = Auth.getClient();
-    const user = await Auth.getUser();
+    const user = await getAuthenticatedUser();
     if (!client || !user) throw new Error("Sua sessão expirou. Entre novamente.");
 
     const current = mode === "complete"
