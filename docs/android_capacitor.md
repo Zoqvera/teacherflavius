@@ -14,6 +14,7 @@ A camada Android do Teacher Flávio usa Capacitor 8 e reutiliza o frontend está
 - O login Google no Android usa PKCE
 - O retorno OAuth usa o deep link `com.teacherflavius.app://login-callback`
 - O código temporário retorna ao app; tokens de sessão não são transportados pelo deep link
+- A normalização pública de URLs limpas é desativada dentro do runtime nativo; o bundle Android usa caminhos locais explícitos para evitar fallback para a home
 - O site e a PWA continuam publicados pelo GitHub Pages sem depender do build Android
 
 ## Preparação do frontend
