@@ -45,7 +45,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <header class="enrollment-header">
         <div><span class="enrollment-badge">TEACHER FLÁVIO</span></div>
         <h1 id="onboardingTitle">Só mais alguns dados</h1>
-        <p class="intro">Preencha seus dados para concluir a matrícula e liberar sua Área do Estudante. O vencimento da mensalidade pode ser escolhido ou definido automaticamente pelo sistema.</p>
+        <p class="intro">Preencha seus dados para concluir a matrícula. Ao finalizar, sua primeira mensalidade ficará disponível e você será encaminhado diretamente para o pagamento.</p>
       </header>
 
       <div class="onboarding-progress" aria-label="Etapas de acesso">
@@ -129,7 +129,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </section>
 
         <div id="message" class="message" role="alert" aria-live="polite"></div>
-        <button id="submitButton" type="submit">ENTRAR NA ÁREA DO ESTUDANTE</button>
+        <button id="submitButton" type="submit">CONCLUIR MATRÍCULA E PAGAR</button>
       </form>
     </section>
   </main>
@@ -205,9 +205,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return iso;
     }
 
+    const FIRST_TUITION_PAYMENT_PATH = "/pagamento/";
+
     function getNextPath() {
       const params = new URLSearchParams(window.location.search);
       return Auth.normalizeNextPath(params.get("next"), "/area-do-estudante/");
+    }
+
+    function getPostEnrollmentPath() {
+      return FIRST_TUITION_PAYMENT_PATH;
     }
 
     function setEnrollmentAccessState(authorized) {
@@ -334,11 +340,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           whatsapp: document.getElementById("whatsapp").value.trim()
         });
 
-        window.location.replace(getNextPath());
+        window.location.replace(getPostEnrollmentPath());
       } catch (error) {
         message.textContent = error.message || "Não foi possível concluir o cadastro.";
         button.disabled = false;
-        button.textContent = "ENTRAR NA ÁREA DO ESTUDANTE";
+        button.textContent = "CONCLUIR MATRÍCULA E PAGAR";
       }
     });
 
