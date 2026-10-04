@@ -72,6 +72,15 @@ function displayValue(value: unknown, fallback: string): string {
   return normalized || fallback;
 }
 
+function formatCurrencyBRL(value: unknown): string {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "Não informado";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(amount);
+}
+
 function escapeHtml(value: string): string {
   const replacements: Record<string, string> = {
     "&": "&amp;",
@@ -165,17 +174,44 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Unable to verify enrolled student" }, 500);
   }
 
+  const { data: billing, error: billingError } = await supabase
+    .from("student_billing_settings")
+    .select("monthly_fee, classes_per_month")
+    .eq("student_id", notification.student_id)
+    .single();
+
+  if (
+    billingError ||
+    !billing ||
+    Number(billing.classes_per_month) < 1 ||
+    Number(billing.monthly_fee) <= 0
+  ) {
+    const errorMessage = billingError?.message ?? "Enrollment billing terms not found";
+    await supabase
+      .from("enrollment_email_notifications")
+      .update({ status: "failed", last_error: errorMessage.slice(0, 1000), updated_at: new Date().toISOString() })
+      .eq("id", notification.id);
+    console.error("Unable to load enrollment billing terms", notification.id, errorMessage);
+    return jsonResponse({ error: "Unable to load enrollment billing terms" }, 500);
+  }
+
   const enrolledAt = formatEnrollmentDate(notification.created_at);
   const studentName = displayValue(student.name, "Não informado");
   const studentWhatsapp = displayValue(student.whatsapp, "Não informado");
+  const classesPerMonth = Number(billing.classes_per_month);
+  const monthlyFee = formatCurrencyBRL(billing.monthly_fee);
   const studentNameHtml = escapeHtml(studentName);
   const studentWhatsappHtml = escapeHtml(studentWhatsapp);
+  const classesPerMonthHtml = escapeHtml(String(classesPerMonth));
+  const monthlyFeeHtml = escapeHtml(monthlyFee);
 
   const textBody = [
     "Um novo aluno concluiu a matrícula no site.",
     "",
     `Nome: ${studentName}`,
     `WhatsApp: ${studentWhatsapp}`,
+    `Quantidade de aulas por mês: ${classesPerMonth}`,
+    `Valor combinado com o professor: ${monthlyFee}`,
     `Data da matrícula: ${enrolledAt}`,
     "",
     "Os demais dados cadastrais permanecem disponíveis somente na Área do Professor.",
@@ -187,8 +223,10 @@ Deno.serve(async (request: Request) => {
       <p>Um novo aluno concluiu a matrícula no site.</p>
       <p><strong>Nome:</strong> ${studentNameHtml}</p>
       <p><strong>WhatsApp:</strong> ${studentWhatsappHtml}</p>
+      <p><strong>Quantidade de aulas por mês:</strong> ${classesPerMonthHtml}</p>
+      <p><strong>Valor combinado com o professor:</strong> ${monthlyFeeHtml}</p>
       <p><strong>Data da matrícula:</strong> ${enrolledAt}</p>
-      <p style="margin-top:22px;color:#667085;font-size:13px">Este e-mail administrativo inclui somente nome, WhatsApp e data da matrícula. Os demais dados cadastrais permanecem disponíveis somente na Área do Professor.</p>
+      <p style="margin-top:22px;color:#667085;font-size:13px">Este e-mail administrativo inclui somente nome, WhatsApp, quantidade de aulas, valor combinado e data da matrícula. Os demais dados cadastrais permanecem disponíveis somente na Área do Professor.</p>
     </div>
   `;
 
