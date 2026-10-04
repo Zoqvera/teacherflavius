@@ -144,6 +144,24 @@ revoke all on function public.preserve_financial_subject_ref()
 grant execute on function public.preserve_financial_subject_ref()
   to service_role;
 
+drop trigger if exists preserve_monthly_tuition_subject_ref on public.monthly_tuition;
+create trigger preserve_monthly_tuition_subject_ref
+before insert or update of student_id, subject_ref
+on public.monthly_tuition
+for each row execute function public.preserve_financial_subject_ref();
+
+drop trigger if exists preserve_tuition_payment_attempt_subject_ref on public.tuition_payment_attempts;
+create trigger preserve_tuition_payment_attempt_subject_ref
+before insert or update of student_id, subject_ref
+on public.tuition_payment_attempts
+for each row execute function public.preserve_financial_subject_ref();
+
+create index if not exists monthly_tuition_subject_ref_idx
+  on public.monthly_tuition (subject_ref, reference_month desc);
+
+create index if not exists tuition_payment_attempts_subject_ref_idx
+  on public.tuition_payment_attempts (subject_ref, created_at desc);
+
 create trigger subscription_authorized_payments_subject_ref
 before insert or update of student_id, subject_ref
 on public.subscription_authorized_payments
