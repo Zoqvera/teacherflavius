@@ -12,11 +12,27 @@
     return client;
   }
 
-  function assertQuestionText(questionText) {
-    const normalized = String(questionText || "").trim();
-    if (!normalized) throw new Error("Digite uma pergunta.");
-    if (normalized.length > 500) throw new Error("A pergunta deve ter no máximo 500 caracteres.");
+  function assertText(value, label, maxLength) {
+    const normalized = String(value || "").trim();
+    if (!normalized) throw new Error("Preencha " + label + ".");
+    if (normalized.length > maxLength) {
+      throw new Error(label + " deve ter no máximo " + maxLength + " caracteres.");
+    }
     return normalized;
+  }
+
+  function normalizeExamples(examples) {
+    if (!Array.isArray(examples) || examples.length !== 5) {
+      throw new Error("Cadastre exatamente cinco exemplos de respostas.");
+    }
+
+    return examples.map(function (example, index) {
+      return {
+        answer: assertText(example && example.answer, "a resposta " + (index + 1), 500),
+        translation: assertText(example && example.translation, "a tradução da resposta " + (index + 1), 500),
+        note: assertText(example && example.note, "a explicação da resposta " + (index + 1), 1000)
+      };
+    });
   }
 
   function completionKey(questionId, studentId) {
@@ -29,7 +45,7 @@
     async function listQuestions() {
       const response = await supabase
         .from(QUESTIONS_TABLE)
-        .select("id,question_text,display_order,created_at")
+        .select("id,question_text,question_translation,answer_examples,display_order,created_at")
         .order("display_order", { ascending: true })
         .order("id", { ascending: true });
 
@@ -94,15 +110,17 @@
       return response.data || [];
     }
 
-    async function addQuestion(questionText, displayOrder) {
-      const normalized = assertQuestionText(questionText);
+    async function addQuestion(questionCard, displayOrder) {
+      const payload = {
+        question_text: assertText(questionCard && questionCard.text, "a pergunta", 500),
+        question_translation: assertText(questionCard && questionCard.translation, "a tradução da pergunta", 500),
+        answer_examples: normalizeExamples(questionCard && questionCard.examples),
+        display_order: displayOrder
+      };
       const response = await supabase
         .from(QUESTIONS_TABLE)
-        .insert({
-          question_text: normalized,
-          display_order: displayOrder
-        })
-        .select("id,question_text,display_order,created_at")
+        .insert(payload)
+        .select("id,question_text,question_translation,answer_examples,display_order,created_at")
         .single();
 
       if (response.error) throw response.error;
