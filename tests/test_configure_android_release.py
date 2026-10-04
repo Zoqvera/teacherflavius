@@ -27,6 +27,13 @@ class ConfigureAndroidReleaseTests(unittest.TestCase):
             android_root = temp_root / "android"
             res_root = android_root / "app" / "src" / "main" / "res"
             res_root.mkdir(parents=True)
+            (res_root / "drawable").mkdir()
+            (res_root / "drawable" / "splash.png").write_bytes(b"template")
+            (res_root / "values").mkdir()
+            (res_root / "values" / "ic_launcher_background.xml").write_text(
+                '<resources><color name="ic_launcher_background">#FFFFFF</color></resources>',
+                encoding="utf-8",
+            )
 
             build_gradle = android_root / "app" / "build.gradle"
             build_gradle.write_text(
@@ -73,6 +80,7 @@ android {
                 (res_root / "drawable" / "ic_teacher_flavio_foreground.xml").is_file()
             )
             self.assertTrue((res_root / "drawable" / "splash.xml").is_file())
+            self.assertFalse((res_root / "drawable" / "splash.png").exists())
             self.assertTrue(
                 (res_root / "mipmap-anydpi-v26" / "ic_launcher.xml").is_file()
             )
@@ -82,6 +90,11 @@ android {
                     encoding="utf-8"
                 ),
             )
+            launcher_background = (
+                res_root / "values" / "ic_launcher_background.xml"
+            ).read_text(encoding="utf-8")
+            self.assertIn("#02102B", launcher_background)
+            self.assertEqual(launcher_background.count("ic_launcher_background"), 1)
 
 
 if __name__ == "__main__":
