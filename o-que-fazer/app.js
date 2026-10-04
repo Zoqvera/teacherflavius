@@ -3,7 +3,6 @@
 
   const WAIT_OPTIONS = Object.freeze({ maxAttempts: 30, delayMs: 120 });
   let service = null;
-  let currentPlan = null;
 
   function resourcesReady() {
     return !!(
@@ -72,9 +71,55 @@
     container.appendChild(link);
   }
 
+  async function handleQuestionStudied(question, button) {
+    if (!question || !question.id || question.studied || button.disabled) return;
+
+    button.disabled = true;
+    button.textContent = "REGISTRANDO...";
+
+    try {
+      await service.markQuestionStudied(question.id);
+      await loadPlan();
+    } catch (error) {
+      console.error("Falha ao registrar pergunta estudada:", error);
+      setStatus(
+        "questionsStatus",
+        error && error.message ? error.message : "Não foi possível registrar a pergunta.",
+        "error"
+      );
+      button.disabled = false;
+      button.textContent = "ESTUDEI A PERGUNTA";
+    }
+  }
+
+  function createQuestionStudyItem(question, index) {
+    const item = document.createElement("div");
+    item.className = "academic-question-study-item";
+
+    item.appendChild(window.ConversationQuestionCardRenderer.create(question, {
+      number: index + 1,
+      className: "academic-conversation-card"
+    }));
+
+    const actions = document.createElement("div");
+    actions.className = "academic-question-study-actions";
+
+    const button = document.createElement("button");
+    button.className = "academic-button " + (question.studied ? "success" : "primary");
+    button.type = "button";
+    button.disabled = !!question.studied;
+    button.textContent = question.studied ? "PERGUNTA ESTUDADA" : "ESTUDEI A PERGUNTA";
+    button.addEventListener("click", function () {
+      handleQuestionStudied(question, button);
+    });
+
+    actions.appendChild(button);
+    item.appendChild(actions);
+    return item;
+  }
+
   function renderQuestions(plan) {
     const list = document.getElementById("actionQuestionList");
-    const button = document.getElementById("questionsStudiedButton");
     const questions = Array.isArray(plan.questions) ? plan.questions : [];
     list.innerHTML = "";
 
@@ -85,38 +130,28 @@
         ? "Todas as perguntas disponíveis já foram trabalhadas."
         : "Nenhuma pergunta disponível no momento.";
       list.appendChild(item);
-      button.disabled = true;
-      button.textContent = plan.questions_complete
-        ? "PERGUNTAS CONCLUÍDAS"
-        : "ESTUDEI AS PERGUNTAS";
       setStatus("questionsStatus", "", "");
       return;
     }
 
     questions.forEach(function (question, index) {
-      list.appendChild(window.ConversationQuestionCardRenderer.create(question, {
-        number: index + 1,
-        className: "academic-conversation-card"
-      }));
+      list.appendChild(createQuestionStudyItem(question, index));
     });
 
-    if (plan.questions_studied) {
-      button.disabled = true;
-      button.textContent = "PERGUNTAS ESTUDADAS";
-      setStatus(
-        "questionsStatus",
-        "Preparação registrada. Essas perguntas permanecem aqui até serem praticadas com o professor.",
-        "success"
-      );
-    } else {
-      button.disabled = false;
-      button.textContent = "ESTUDEI AS PERGUNTAS";
-      setStatus("questionsStatus", "", "");
-    }
+    const studiedCount = questions.filter(function (question) {
+      return !!question.studied;
+    }).length;
+
+    setStatus(
+      "questionsStatus",
+      studiedCount
+        ? studiedCount + " de " + questions.length + " pergunta(s) marcada(s) como estudada(s)."
+        : "",
+      studiedCount ? "success" : ""
+    );
   }
 
   function render(plan) {
-    currentPlan = plan;
     renderLesson(plan);
     renderQuestions(plan);
     setStatus("actionPlanStatus", "Plano atualizado.", "success");
@@ -129,34 +164,6 @@
     } catch (error) {
       console.error("Falha ao carregar O QUE FAZER:", error);
       setStatus("actionPlanStatus", "Não foi possível carregar seu plano de preparação.", "error");
-    }
-  }
-
-  async function handleQuestionsStudied() {
-    const button = document.getElementById("questionsStudiedButton");
-    const questions = currentPlan && Array.isArray(currentPlan.questions)
-      ? currentPlan.questions
-      : [];
-
-    if (!questions.length || currentPlan.questions_studied) return;
-
-    button.disabled = true;
-    button.textContent = "REGISTRANDO...";
-
-    try {
-      await service.markQuestionsStudied(questions.map(function (question) {
-        return question.id;
-      }));
-      await loadPlan();
-    } catch (error) {
-      console.error("Falha ao registrar perguntas estudadas:", error);
-      setStatus(
-        "questionsStatus",
-        error && error.message ? error.message : "Não foi possível registrar as perguntas.",
-        "error"
-      );
-      button.disabled = false;
-      button.textContent = "ESTUDEI AS PERGUNTAS";
     }
   }
 
@@ -175,8 +182,6 @@
     }
 
     service = window.AcademicWorkflowService.create(window.Auth.getClient());
-    document.getElementById("questionsStudiedButton")
-      .addEventListener("click", handleQuestionsStudied);
 
     document.body.classList.remove("auth-checking");
     await loadPlan();
