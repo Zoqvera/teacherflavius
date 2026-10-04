@@ -67,9 +67,9 @@
     async function hydrateQuestions(questions) {
       if (!Array.isArray(questions) || questions.length === 0) return [];
 
-      const ids = questions
+      const ids = Array.from(new Set(questions
         .map(function (question) { return question && question.id; })
-        .filter(Boolean);
+        .filter(Boolean)));
 
       if (!ids.length) return questions;
 
@@ -113,16 +113,59 @@
     }
 
     async function markQuestionsStudied(questionIds) {
-      if (!Array.isArray(questionIds)) throw new Error("Perguntas inválidas.");
+      if (!Array.isArray(questionIds) || questionIds.length === 0) {
+        throw new Error("Perguntas inválidas.");
+      }
       return unwrap(await supabase.rpc("mark_my_questions_studied", {
         target_question_ids: questionIds
       }));
     }
 
+    async function markQuestionStudied(questionId) {
+      const normalizedQuestionId = String(questionId || "").trim();
+      if (!normalizedQuestionId) throw new Error("Pergunta inválida.");
+      return markQuestionsStudied([normalizedQuestionId]);
+    }
+
+    async function hydrateTeacherLessonPlan(items) {
+      const planItems = Array.isArray(items) ? items : [];
+      const allQuestions = [];
+
+      planItems.forEach(function (item) {
+        if (Array.isArray(item.new_questions)) {
+          allQuestions.push.apply(allQuestions, item.new_questions);
+        }
+        if (Array.isArray(item.review_questions)) {
+          allQuestions.push.apply(allQuestions, item.review_questions);
+        }
+      });
+
+      if (!allQuestions.length) return planItems;
+
+      const hydrated = await hydrateQuestions(allQuestions);
+      const byId = new Map(hydrated.map(function (question) {
+        return [question.id, question];
+      }));
+
+      function hydrateCollection(questions) {
+        return (Array.isArray(questions) ? questions : []).map(function (question) {
+          return byId.get(question.id) || question;
+        });
+      }
+
+      return planItems.map(function (item) {
+        return Object.assign({}, item, {
+          new_questions: hydrateCollection(item.new_questions),
+          review_questions: hydrateCollection(item.review_questions)
+        });
+      });
+    }
+
     async function getTeacherLessonPlan(classDate) {
-      return unwrap(await supabase.rpc("get_teacher_lesson_plan", {
+      const items = unwrap(await supabase.rpc("get_teacher_lesson_plan", {
         target_date: normalizeDate(classDate)
       })) || [];
+      return hydrateTeacherLessonPlan(items);
     }
 
     async function setAttendance(item, classDate, status) {
@@ -160,6 +203,7 @@
       getTeacherLessonPlan,
       markLessonPrepared,
       markLessonPresented,
+      markQuestionStudied,
       markQuestionsStudied,
       rateQuestion,
       setAttendance
