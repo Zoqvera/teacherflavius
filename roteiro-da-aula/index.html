@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Roteiro da Aula - Teacher Flávio</title>
+  <link rel="canonical" href="/roteiro-da-aula/">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260918-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260912-1"></script>
+  <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
+  <link rel="stylesheet" href="/academic_workflow.css?v=20261004-1">
+</head>
+<body class="auth-checking">
+  <main class="academic-shell">
+    <nav class="academic-top-links" aria-label="Navegação">
+      <a class="academic-top-link" href="/professor/">ÁREA DO PROFESSOR</a>
+      <a class="academic-top-link" href="/turmas/">TURMAS</a>
+    </nav>
+
+    <header class="academic-header">
+      <p class="academic-kicker">PAUTA OPERACIONAL</p>
+      <h1>ROTEIRO DA AULA</h1>
+      <p class="academic-description">Lições previstas, preparação dos alunos, perguntas estudadas e revisões programadas para cada aula.</p>
+      <p id="teacherPlanStatus" class="academic-status" role="status">Carregando roteiro...</p>
+    </header>
+
+    <div class="academic-toolbar">
+      <label for="teacherPlanDate" class="academic-muted">Data da aula</label>
+      <input id="teacherPlanDate" type="date">
+      <button id="reloadTeacherPlan" class="academic-button" type="button">ATUALIZAR</button>
+    </div>
+
+    <div id="teacherPlanContainer"></div>
+  </main>
+
+  <script src="/resource_waiter.js?v=20260902-2"></script>
+  <script src="/academic_workflow_service.js?v=20261004-1"></script>
+  <script src="/roteiro-da-aula/app.js?v=20261004-1"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260820-desktop-menu-1"></script>
+</body>
+</html>
