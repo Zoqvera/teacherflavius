@@ -43,6 +43,8 @@ Disallow: /meu_progresso.html
 Disallow: /minha-semana/
 Disallow: /planos-semanais/
 Disallow: /roteiro-de-estudos/
+Disallow: /o-que-fazer/
+Disallow: /roteiro-da-aula/
 Disallow: /roteiro_de_estudos.html
 Disallow: /licao/
 Disallow: /pagamento/
