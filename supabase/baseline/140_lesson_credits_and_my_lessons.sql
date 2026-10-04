@@ -169,7 +169,7 @@ begin
       and extract(isodow from lesson_day)::integer = class.class_weekday
   ), desired_credits as (
     select
-      credit_number,
+      series.credit_number::smallint as credit_number,
       occurrence.class_number,
       occurrence.class_name,
       occurrence.starts_at,
@@ -194,7 +194,7 @@ begin
     tuition_row.student_id,
     tuition_row.id,
     tuition_row.reference_month,
-    desired.credit_number::smallint,
+    desired.credit_number,
     case when desired.starts_at is null then 'available' else 'scheduled' end,
     desired.class_number,
     desired.class_name,
