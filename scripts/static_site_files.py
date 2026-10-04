@@ -20,7 +20,7 @@ PUBLIC_SPECIAL_NAMES = frozenset({"_redirects"})
 
 PUBLIC_SUFFIXES = frozenset({
     ".html", ".htm",
-    ".css", ".js", ".mjs", ".json", ".xml", ".txt",
+    ".css", ".js", ".mjs", ".json", ".webmanifest", ".xml", ".txt",
     ".ico", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif",
     ".pdf",
     ".mp3", ".wav", ".ogg", ".m4a",
