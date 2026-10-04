@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>O que fazer - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260918-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260912-1"></script>
+  <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
+  <link rel="stylesheet" href="/academic_workflow.css?v=20261004-2">
+  <link rel="stylesheet" href="/conversation_question_cards.css?v=20261004-1">
+</head>
+<body class="auth-checking">
+  <main class="academic-shell">
+    <nav class="academic-top-links" aria-label="Navegação">
+      <a class="academic-top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a>
+      <a class="academic-top-link" href="/area-do-estudante/minhas-aulas/">MINHAS AULAS</a>
+    </nav>
+
+    <header class="academic-header">
+      <p class="academic-kicker">PREPARAÇÃO DA PRÓXIMA AULA</p>
+      <h1>O QUE FAZER</h1>
+      <p class="academic-description">Aqui estão a sua próxima lição e as perguntas que precisam ser estudadas antes da aula.</p>
+      <p id="actionPlanStatus" class="academic-status" role="status">Carregando seu plano...</p>
+    </header>
+
+    <div class="academic-grid">
+      <section class="academic-panel" aria-labelledby="nextLessonTitle">
+        <p class="academic-kicker">PRÓXIMA LIÇÃO</p>
+        <h2 id="nextLessonTitle">Lição prevista</h2>
+        <div id="nextLessonContainer"></div>
+      </section>
+
+      <section class="academic-panel" aria-labelledby="questionsTitle">
+        <p class="academic-kicker">CONVERSAÇÃO</p>
+        <h2 id="questionsTitle">Perguntas para estudar</h2>
+        <p id="questionsHelp" class="academic-muted">Estude as perguntas abaixo e registre quando concluir a preparação.</p>
+        <div id="actionQuestionList" class="academic-question-card-list"></div>
+        <button id="questionsStudiedButton" class="academic-button primary" type="button" disabled>ESTUDEI AS PERGUNTAS</button>
+        <p id="questionsStatus" class="academic-status" role="status"></p>
+      </section>
+    </div>
+  </main>
+
+  <script src="/resource_waiter.js?v=20260902-2"></script>
+  <script src="/conversation_question_card_renderer.js?v=20261004-1"></script>
+  <script src="/academic_workflow_service.js?v=20261004-2"></script>
+  <script src="/o-que-fazer/app.js?v=20261004-2"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260820-ux-3"></script>
+</body>
+</html>

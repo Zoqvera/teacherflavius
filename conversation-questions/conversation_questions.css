@@ -124,22 +124,33 @@
 
 .conversation-add-form {
   display: grid;
-  gap: 8px;
+  gap: 18px;
+}
+
+.conversation-form-grid,
+.conversation-answer-example-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.conversation-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.conversation-answer-example-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .conversation-add-form label {
+  display: grid;
+  gap: 6px;
   color: var(--tf-slate-300);
   font-size: 12px;
   font-weight: 700;
 }
 
-.conversation-add-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-}
-
-.conversation-add-row input {
+.conversation-add-form input,
+.conversation-add-form textarea {
   width: 100%;
   min-height: 46px;
   padding: 11px 13px;
@@ -151,12 +162,48 @@
   font: inherit;
 }
 
-.conversation-add-row input:focus {
+.conversation-add-form textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.conversation-add-form input:focus,
+.conversation-add-form textarea:focus {
   border-color: rgba(78, 154, 236, .78);
   box-shadow: 0 0 0 3px rgba(78, 154, 236, .12);
 }
 
-.conversation-add-row button,
+.conversation-form-section-title {
+  margin-bottom: 10px !important;
+  color: var(--tf-slate-200) !important;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.conversation-answer-example {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: var(--tf-radius-md);
+}
+
+.conversation-answer-example legend {
+  padding: 0 6px;
+  color: var(--tf-blue-100);
+  font-family: var(--tf-font-display);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.conversation-add-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.conversation-add-actions button,
 .conversation-order-button {
   border: 1px solid rgba(78, 154, 236, .38);
   border-radius: var(--tf-radius-sm);
@@ -171,19 +218,19 @@
     transform var(--tf-motion-fast) var(--tf-ease);
 }
 
-.conversation-add-row button {
+.conversation-add-actions button {
   min-height: 46px;
   padding: 10px 16px;
 }
 
-.conversation-add-row button:hover,
+.conversation-add-actions button:hover,
 .conversation-order-button:hover {
   transform: translateY(-1px);
   border-color: rgba(78, 154, 236, .72);
   background: rgba(9, 104, 188, .28);
 }
 
-.conversation-add-row button:disabled,
+.conversation-add-actions button:disabled,
 .conversation-order-button:disabled {
   opacity: .45;
   cursor: not-allowed;
@@ -213,11 +260,21 @@
   gap: 14px;
 }
 
-.conversation-question-card {
+.conversation-question-admin-card {
   padding: 18px;
   border: 1px solid rgba(78, 154, 236, .19);
   border-radius: var(--tf-radius-lg);
   background: rgba(2, 16, 43, .56);
+}
+
+.conversation-question-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.conversation-question-student-card {
+  display: grid;
+  gap: 16px;
 }
 
 .conversation-question-top {
@@ -284,7 +341,7 @@
 }
 
 .conversation-question-summary {
-  margin: 14px 0 10px 54px;
+  margin: 14px 0 10px;
   color: var(--tf-slate-400);
   font-size: 12px;
 }
@@ -293,7 +350,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin-left: 54px;
+  margin-left: 0;
 }
 
 .conversation-student-option {
@@ -325,17 +382,6 @@
 
 .conversation-student-option input:disabled {
   cursor: progress;
-}
-
-.conversation-question-card-student {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.conversation-question-card-student .conversation-question-heading {
-  flex: 1 1 auto;
 }
 
 .conversation-student-progress {
@@ -380,8 +426,7 @@
   }
 
   .conversation-header,
-  .conversation-list-heading,
-  .conversation-question-card-student {
+  .conversation-list-heading {
     align-items: stretch;
     flex-direction: column;
   }
@@ -391,7 +436,8 @@
     text-align: left;
   }
 
-  .conversation-add-row {
+  .conversation-form-grid,
+  .conversation-answer-example-grid {
     grid-template-columns: 1fr;
   }
 
@@ -401,7 +447,7 @@
   }
 
   .conversation-order-controls {
-    margin-left: 54px;
+    margin-left: 0;
   }
 
   .conversation-list-heading p {
@@ -421,7 +467,7 @@
 
   .conversation-student-progress {
     align-self: flex-start;
-    margin-left: 54px;
+    margin-left: 0;
   }
 }
 
@@ -446,7 +492,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .conversation-add-row button,
+  .conversation-add-actions button,
   .conversation-order-button {
     transition: none;
   }

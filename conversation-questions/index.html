@@ -10,7 +10,8 @@
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260730-1"></script>
   <link rel="stylesheet" href="/aula_template.css?v=20260430-3">
-  <link rel="stylesheet" href="/conversation-questions/conversation_questions.css?v=20260930-1">
+  <link rel="stylesheet" href="/conversation_question_cards.css?v=20261004-1">
+  <link rel="stylesheet" href="/conversation-questions/conversation_questions.css?v=20261004-2">
 </head>
 <body class="auth-checking conversation-page">
   <main class="conversation-shell">
@@ -43,17 +44,36 @@
         <p>Novas perguntas entram no final da lista e podem ser reposicionadas pelos controles de ordem.</p>
       </div>
       <form id="conversationQuestionForm" class="conversation-add-form">
-        <label for="conversationQuestionInput">Nova pergunta</label>
-        <div class="conversation-add-row">
-          <input
-            id="conversationQuestionInput"
-            type="text"
-            maxlength="500"
-            autocomplete="off"
-            placeholder="Ex.: What do you usually do after work?"
-            required
-          >
-          <button type="submit">ADICIONAR</button>
+        <div class="conversation-form-grid">
+          <label>
+            <span>Nova pergunta</span>
+            <input
+              id="conversationQuestionInput"
+              type="text"
+              maxlength="500"
+              autocomplete="off"
+              placeholder="Ex.: What do you usually do after work?"
+              required
+            >
+          </label>
+          <label>
+            <span>Tradução da pergunta</span>
+            <input
+              id="conversationQuestionTranslationInput"
+              type="text"
+              maxlength="500"
+              autocomplete="off"
+              placeholder="Ex.: O que você costuma fazer depois do trabalho?"
+              required
+            >
+          </label>
+        </div>
+        <div>
+          <p class="conversation-form-section-title">Exemplos de respostas</p>
+          <div id="conversationAnswerExamples" class="conversation-answer-example-grid"></div>
+        </div>
+        <div class="conversation-add-actions">
+          <button type="submit">ADICIONAR CARD</button>
         </div>
       </form>
     </section>
@@ -71,8 +91,9 @@
   </main>
 
   <script src="/resource_waiter.js?v=20260902-2"></script>
-  <script src="/conversation_questions_service.js?v=20260930-1"></script>
-  <script src="/conversation-questions/app.js?v=20260930-1"></script>
+  <script src="/conversation_question_card_renderer.js?v=20261004-1"></script>
+  <script src="/conversation_questions_service.js?v=20261004-2"></script>
+  <script src="/conversation-questions/app.js?v=20261004-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
   <script src="/site_runtime_config.js?v=20260903-1"></script>

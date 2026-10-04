@@ -76,7 +76,7 @@ test("students can read only their own completion rows while teachers can manage
 
 test("teacher can add and reorder questions without exposing student controls", function () {
   assert.match(page, /id="conversationQuestionForm"/);
-  assert.match(app, /state\.service\.addQuestion\(text, maxOrder \+ 1\)/);
+  assert.match(app, /state\.service\.addQuestion\(questionCard, maxOrder \+ 1\)/);
   assert.match(app, /state\.service\.moveQuestion\(questionId, direction\)/);
   assert.match(migration, /security invoker/i);
   assert.match(migration, /grant execute on function public\.move_conversation_question\(uuid, text\) to authenticated/i);
