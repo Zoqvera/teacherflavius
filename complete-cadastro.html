@@ -113,6 +113,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <label class="field-label" for="whatsapp">WhatsApp</label>
               <input id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" required />
             </div>
+
+            <div class="field">
+              <label class="field-label" for="classesPerMonth">Quantidade de aulas por mês</label>
+              <input id="classesPerMonth" type="number" min="1" max="31" step="1" inputmode="numeric" required />
+              <div class="field-note">Informe a quantidade de aulas combinada com o professor.</div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="monthlyFee">Valor combinado com o professor</label>
+              <input id="monthlyFee" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: 150,00" required />
+              <div class="field-note">Informe o valor mensal em reais.</div>
+            </div>
           </div>
         </section>
 
@@ -140,6 +152,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function formatBirthDateFromIso(value) {
       const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
       return match ? match[3] + "/" + match[2] + "/" + match[1] : "";
+    }
+
+    function parseMonthlyFee(value) {
+      const raw = String(value || "")
+        .trim()
+        .replace(/^R\$\s*/i, "")
+        .replace(/\s/g, "");
+
+      const normalized = raw.includes(",")
+        ? raw.replace(/\./g, "").replace(",", ".")
+        : /^\d+\.\d{1,2}$/.test(raw)
+          ? raw
+          : raw.replace(/\./g, "");
+
+      if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
+        throw new Error("Informe o valor combinado com o professor em reais.");
+      }
+
+      const amount = Number(normalized);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("O valor combinado com o professor deve ser maior que zero.");
+      }
+      return Math.round(amount * 100) / 100;
+    }
+
+    function parseClassesPerMonth(value) {
+      const amount = Number(value);
+      if (!Number.isInteger(amount) || amount < 1 || amount > 31) {
+        throw new Error("Informe a quantidade de aulas por mês entre 1 e 31.");
+      }
+      return amount;
     }
 
     function parseBirthDate(value) {
@@ -262,6 +305,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
+        const classesPerMonth = parseClassesPerMonth(document.getElementById("classesPerMonth").value);
+        const monthlyFee = parseMonthlyFee(document.getElementById("monthlyFee").value);
         const user = await Auth.getUser();
         if (!user) throw new Error("Sua sessão expirou. Entre novamente com Google.");
 
@@ -272,6 +317,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           .select("date_of_birth")
           .single();
         if (birthResponse.error) throw birthResponse.error;
+
+        if (window.StudentTuitionDueDay && typeof window.StudentTuitionDueDay.saveSelection === "function") {
+          await window.StudentTuitionDueDay.saveSelection();
+        }
+
+        const billingTermsResponse = await Auth.getClient().rpc("set_my_enrollment_billing_terms", {
+          target_classes_per_month: classesPerMonth,
+          target_monthly_fee: monthlyFee
+        });
+        if (billingTermsResponse.error) throw billingTermsResponse.error;
 
         await Auth.completeProfile({
           name: document.getElementById("name").value.trim(),

@@ -116,7 +116,7 @@
     const note = document.createElement("p");
     note.className = "tuition-due-day-note";
     note.textContent = state.selectedDueDay == null
-      ? "A escolha é opcional. Se você não selecionar uma opção, o sistema definirá a primeira data de vencimento para 7 dias após a data da matrícula. O valor é definido pelo professor."
+      ? "A escolha é opcional. Se você não selecionar uma opção, o sistema definirá a primeira data de vencimento para 7 dias após a data da matrícula. O valor e a quantidade de aulas são os dados combinados com o professor e informados nesta matrícula."
       : "Vencimento já registrado: dia " + state.selectedDueDay + ". O início da cobrança foi definido automaticamente pelo sistema.";
     section.appendChild(note);
 
