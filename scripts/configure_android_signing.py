@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ANDROID_ROOT = ROOT / "android"
 KEYSTORE_RELATIVE_PATH = Path("keystore") / "teacher-flavio-upload.jks"
+SIGNING_PROPERTIES_RELATIVE_PATH = Path("keystore") / "signing.properties"
 REQUIRED_ENVIRONMENT = (
     "ANDROID_KEYSTORE_BASE64",
     "ANDROID_KEYSTORE_PASSWORD",
@@ -18,9 +19,72 @@ REQUIRED_ENVIRONMENT = (
 )
 
 
+def strip_matching_quotes(value: str) -> str:
+    text = value.strip()
+    while text and text[0] in {"'", '"'}:
+        text = text[1:].strip()
+    while text and text[-1] in {"'", '"'}:
+        text = text[:-1].strip()
+    return text
+
+
+def collect_base64_lines(lines: list[str]) -> str:
+    chunks: list[str] = []
+    for line in lines:
+        candidate = line.strip().strip("\x60'\"").strip()
+        if not candidate:
+            if chunks:
+                continue
+            continue
+
+        if not re.fullmatch(r"[A-Za-z0-9+/=]+", candidate):
+            if chunks:
+                break
+            continue
+
+        if len(candidate) < 32 and not chunks:
+            continue
+        chunks.append(candidate)
+
+    return "".join(chunks)
+
+
+def normalize_secret(name: str, raw_value: str) -> str:
+    value = str(raw_value or "").strip()
+    prefix = name + "="
+    marker_index = value.find(prefix)
+
+    if marker_index >= 0:
+        tail = value[marker_index + len(prefix):]
+        if name == "ANDROID_KEYSTORE_BASE64":
+            reconstructed = collect_base64_lines(tail.splitlines())
+            if reconstructed:
+                return reconstructed
+
+        first_line = tail.splitlines()[0] if tail.splitlines() else tail
+        return strip_matching_quotes(first_line)
+
+    if name == "ANDROID_KEYSTORE_BASE64":
+        reconstructed = collect_base64_lines(value.splitlines())
+        if reconstructed:
+            return reconstructed
+
+        candidates = re.findall(
+            r"(?<![A-Za-z0-9+/])[A-Za-z0-9+/]{512,}={0,2}(?![A-Za-z0-9+/=])",
+            value,
+        )
+        if candidates:
+            return max(candidates, key=len)
+
+    candidate = strip_matching_quotes(value)
+    if candidate.startswith(prefix):
+        candidate = candidate[len(prefix):]
+    return strip_matching_quotes(candidate)
+
+
 def signing_environment() -> dict[str, str] | None:
     values = {
-        name: str(os.environ.get(name, "")).strip()
+        name: normalize_secret(name, os.environ.get(name, ""))
         for name in REQUIRED_ENVIRONMENT
     }
     if not any(values.values()):
@@ -36,10 +100,16 @@ def signing_environment() -> dict[str, str] | None:
 
 
 def decode_keystore(android_root: Path, encoded: str) -> Path:
+    compact = "".join(encoded.split())
     try:
-        payload = base64.b64decode(encoded, validate=True)
+        payload = base64.b64decode(compact, validate=True)
     except Exception as exc:
-        raise SystemExit("ANDROID_KEYSTORE_BASE64 is not valid base64.") from exc
+        charset_ok = bool(re.fullmatch(r"[A-Za-z0-9+/]*={0,2}", compact))
+        raise SystemExit(
+            "ANDROID_KEYSTORE_BASE64 is not valid base64 "
+            f"(normalized_length={len(compact)}, mod4={len(compact) % 4}, "
+            f"base64_charset={charset_ok})."
+        ) from exc
 
     if len(payload) < 256:
         raise SystemExit("Decoded Android keystore is unexpectedly small.")
@@ -51,14 +121,52 @@ def decode_keystore(android_root: Path, encoded: str) -> Path:
     return path
 
 
+def escape_properties_value(value: str) -> str:
+    escaped = (
+        value.replace("\\", "\\\\")
+        .replace("\r", "\\r")
+        .replace("\n", "\\n")
+        .replace("=", "\\=")
+        .replace(":", "\\:")
+    )
+    if escaped.startswith((" ", "#", "!")):
+        escaped = "\\" + escaped
+    return escaped
+
+
+def write_signing_properties(
+    android_root: Path,
+    environment: dict[str, str],
+) -> Path:
+    path = android_root / SIGNING_PROPERTIES_RELATIVE_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = "\n".join(
+        (
+            "storePassword="
+            + escape_properties_value(environment["ANDROID_KEYSTORE_PASSWORD"]),
+            "keyAlias=" + escape_properties_value(environment["ANDROID_KEY_ALIAS"]),
+            "keyPassword="
+            + escape_properties_value(environment["ANDROID_KEY_PASSWORD"]),
+        )
+    )
+    path.write_text(content + "\n", encoding="utf-8")
+    path.chmod(0o600)
+    return path
+
+
 def signing_config_block() -> str:
     return """
+    def signingProperties = new Properties()
+    signingProperties.load(
+        new FileInputStream(rootProject.file("keystore/signing.properties"))
+    )
+
     signingConfigs {
         release {
             storeFile rootProject.file("keystore/teacher-flavio-upload.jks")
-            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            keyAlias System.getenv("ANDROID_KEY_ALIAS")
-            keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            storePassword signingProperties.getProperty("storePassword")
+            keyAlias signingProperties.getProperty("keyAlias")
+            keyPassword signingProperties.getProperty("keyPassword")
         }
     }
 
@@ -105,6 +213,7 @@ def configure(android_root: Path) -> bool:
         raise SystemExit(f"Android app build file does not exist: {build_gradle}")
 
     decode_keystore(android_root, environment["ANDROID_KEYSTORE_BASE64"])
+    write_signing_properties(android_root, environment)
     configure_gradle(build_gradle)
     print("Android release signing configured.")
     return True
