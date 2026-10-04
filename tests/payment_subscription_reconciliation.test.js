@@ -37,6 +37,12 @@ test("recurring invoices are preserved as server-only financial records", () => 
   const baseline = read(
     "supabase/baseline/75_add_mercado_pago_subscription_reconciliation.sql",
   );
+  assert.match(baseline, /alter table public\.monthly_tuition[\s\S]*add column if not exists subject_ref uuid/i);
+  assert.match(baseline, /alter table public\.tuition_payment_attempts[\s\S]*add column if not exists subject_ref uuid/i);
+  assert.match(baseline, /monthly_tuition_student_id_fkey[\s\S]*on delete set null/i);
+  assert.match(baseline, /tuition_payment_attempts_student_id_fkey[\s\S]*on delete set null/i);
+  assert.match(baseline, /preserve_monthly_tuition_subject_ref/i);
+  assert.match(baseline, /preserve_tuition_payment_attempt_subject_ref/i);
   assert.match(baseline, /create or replace function public\.preserve_financial_subject_ref\(\)/i);
 });
 
