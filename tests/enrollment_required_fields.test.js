@@ -22,7 +22,8 @@ test("every personal enrollment identity field is required", function () {
   assert.match(page, /id="birthDate"[^>]*required/);
   assert.match(page, /id="cpf"[^>]*required/);
   assert.match(page, /id="whatsapp"[^>]*required/);
-  assert.match(dueDay, /input\.required = false/);
+  assert.match(dueDay, /select\.required = state\.selectedDueDate == null/);
+  assert.match(dueDay, /Escolha a data de vencimento da primeira mensalidade/);
 });
 
 test("database activation rejects missing personal enrollment fields", function () {
