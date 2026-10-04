@@ -16,6 +16,7 @@
       window.Auth &&
       window.ResourceWaiter &&
       window.AcademicWorkflowService &&
+      window.ConversationQuestionCardRenderer &&
       window.SUPABASE_CONFIG &&
       window.Auth.isConfigured()
     );
@@ -107,7 +108,10 @@
 
   function renderQuestionRow(question, item, classDate) {
     const row = element("div", "academic-question-row");
-    const text = element("div", "academic-question-text", question.text);
+    const questionCard = window.ConversationQuestionCardRenderer.create(question, {
+      number: question.display_order,
+      className: "academic-conversation-card academic-teacher-question-card"
+    });
     const actions = element("div", "academic-rating-actions");
     const canRate = item.attendance_status === "present";
 
@@ -127,7 +131,7 @@
       ));
     });
 
-    row.appendChild(text);
+    row.appendChild(questionCard);
     row.appendChild(actions);
     return row;
   }
