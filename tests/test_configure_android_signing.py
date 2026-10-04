@@ -31,7 +31,7 @@ class ConfigureAndroidSigningTests(unittest.TestCase):
                 "ANDROID_KEY_ALIAS",
                 "ANDROID_KEY_ALIAS='teacherflavius-upload'",
             ),
-            "'teacherflavius-upload'",
+            "teacherflavius-upload",
         )
 
     def test_leaves_release_unsigned_when_secrets_are_absent(self) -> None:
