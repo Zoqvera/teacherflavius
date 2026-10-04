@@ -2,26 +2,22 @@
 <html lang="pt-BR">
 <head>
   <base href="/">
-<!-- Google Consent Mode default -->
-<script>
-window.dataLayer = window.dataLayer || [];
-window.gtag = window.gtag || function(){dataLayer.push(arguments);};
-gtag('consent', 'default', {
-  analytics_storage: 'denied',
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  wait_for_update: 500
-});
-</script>
-<!-- End Google Consent Mode default -->
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
-<!-- End Google Tag Manager -->
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+  gtag('consent', 'default', {
+    analytics_storage: 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    wait_for_update: 500
+  });
+  </script>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,16 +29,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="/auth.js?v=20260912-1"></script>
   <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
   <link rel="stylesheet" href="/study_lesson_page.css?v=20260918-3">
+  <link rel="stylesheet" href="/academic_workflow.css?v=20261004-1">
 </head>
 <body class="auth-checking">
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <div class="container lesson-page-container">
     <div class="top-links">
-      <a class="top-link" href="/roteiro-de-estudos/">ROTEIRO DE ESTUDOS</a>
+      <a class="top-link" href="/o-que-fazer/">O QUE FAZER</a>
       <a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a>
     </div>
 
@@ -56,32 +51,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="divider"></div>
 
     <main id="lessonPageContent" hidden>
-      <section class="lesson-section lesson-objective-section">
+      <section class="lesson-section lesson-objective-section dynamic-lesson-section">
         <p class="lesson-section-kicker">OBJETIVO DA LIÇÃO</p>
         <p id="lessonObjective" class="lesson-rich-text lesson-objective-text"></p>
       </section>
 
-      <section class="lesson-content-card lesson-example-card">
+      <section class="lesson-content-card lesson-example-card dynamic-lesson-section">
         <p class="lesson-section-kicker">LEIA O EXEMPLO ABAIXO:</p>
         <p id="lessonExample" class="lesson-rich-text"></p>
       </section>
 
-      <section class="lesson-content-card lesson-example-card lesson-translation-card">
+      <section class="lesson-content-card lesson-example-card lesson-translation-card dynamic-lesson-section">
         <p class="lesson-section-kicker">TRADUÇÃO</p>
         <p id="lessonTranslation" class="lesson-rich-text"></p>
       </section>
 
-      <section class="lesson-section lesson-exercise-section">
+      <section class="lesson-section lesson-exercise-section dynamic-lesson-section">
         <p class="lesson-section-kicker">EXERCÍCIO PRÁTICO</p>
         <p id="lessonPracticalExercise" class="lesson-rich-text lesson-exercise-text"></p>
       </section>
 
-      <section class="lesson-content-card lesson-vocabulary-card">
+      <section class="lesson-content-card lesson-vocabulary-card dynamic-lesson-section">
         <p class="lesson-section-kicker">VOCABULÁRIO ÚTIL</p>
         <p id="lessonUsefulVocabulary" class="lesson-rich-text"></p>
       </section>
 
-      <section class="lesson-tools" aria-label="Ferramentas de apoio">
+      <section class="lesson-tools dynamic-lesson-section" aria-label="Ferramentas de apoio">
         <a class="lesson-tool-card" href="https://translate.google.com/" target="_blank" rel="noopener noreferrer">
           <span>
             <strong>TRADUTOR</strong>
@@ -98,12 +93,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <span class="arrow" aria-hidden="true">›</span>
         </a>
       </section>
+
+      <section id="legacyLessonMaterial" class="lesson-content-card" hidden>
+        <p class="lesson-section-kicker">MATERIAL DA LIÇÃO</p>
+        <iframe
+          id="legacyLessonFrame"
+          class="academic-lesson-frame"
+          title="Material da lição"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </section>
+
+      <section id="lessonPreparationSection" class="lesson-content-card academic-preparation-card" hidden>
+        <p class="lesson-section-kicker">PREPARAÇÃO</p>
+        <h2>Terminou de preparar esta lição?</h2>
+        <p class="lesson-rich-text">Registre sua preparação. A lição só será considerada concluída quando o professor marcar que ela foi apresentada.</p>
+        <button id="lessonPreparedButton" class="academic-button primary" type="button">ESTOU PREPARADO</button>
+        <p id="lessonPreparationStatus" class="academic-status" role="status"></p>
+      </section>
     </main>
   </div>
 
   <script src="/resource_waiter.js?v=20260902-2"></script>
   <script src="/study_lesson_service.js?v=20260918-3"></script>
-  <script src="/licao.js?v=20260918-2"></script>
+  <script src="/academic_workflow_service.js?v=20261004-1"></script>
+  <script src="/licao.js?v=20261004-1"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
