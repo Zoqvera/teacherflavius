@@ -67,6 +67,22 @@ ANDROID_KEY_PASSWORD=key-secret
             encoded,
         )
 
+    def test_rebuilds_wrapped_base64_after_assignment_marker(self) -> None:
+        encoded = "A" * 1024
+        wrapped = (
+            "ANDROID_KEYSTORE_BASE64="
+            + encoded[:400]
+            + "\n"
+            + encoded[400:800]
+            + "\n"
+            + encoded[800:]
+            + "\n\nANDROID_KEYSTORE_PASSWORD=secret"
+        )
+        self.assertEqual(
+            normalize_secret("ANDROID_KEYSTORE_BASE64", wrapped),
+            encoded,
+        )
+
     def test_leaves_release_unsigned_when_secrets_are_absent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             android_root = Path(directory) / "android"
