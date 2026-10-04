@@ -29,10 +29,10 @@ body.enrollment-onboarding{min-height:100vh;margin:0;padding:clamp(22px,4vw,48px
 .field{min-width:0}
 .field.full{grid-column:1/-1}
 label.field-label{display:block;margin:0 0 7px;color:var(--tf-slate-200);font-size:13px;font-weight:700}
-.enrollment-onboarding input[type='text'],.enrollment-onboarding input[type='email'],.enrollment-onboarding input[type='tel'],.enrollment-onboarding input[type='password']{width:100%;min-height:50px;margin:0;padding:12px 14px;border:1px solid rgba(78,154,236,.24);border-radius:var(--tf-radius-sm);background:rgba(2,16,43,.58);color:var(--tf-slate-50);font:500 15px/1.4 var(--tf-font-body);outline:none;transition:border-color var(--tf-motion-fast) var(--tf-ease),box-shadow var(--tf-motion-fast) var(--tf-ease),background-color var(--tf-motion-fast) var(--tf-ease)}
+.enrollment-onboarding input[type='text'],.enrollment-onboarding input[type='email'],.enrollment-onboarding input[type='tel'],.enrollment-onboarding input[type='password'],.enrollment-onboarding select{width:100%;min-height:50px;margin:0;padding:12px 14px;border:1px solid rgba(78,154,236,.24);border-radius:var(--tf-radius-sm);background:rgba(2,16,43,.58);color:var(--tf-slate-50);font:500 15px/1.4 var(--tf-font-body);outline:none;transition:border-color var(--tf-motion-fast) var(--tf-ease),box-shadow var(--tf-motion-fast) var(--tf-ease),background-color var(--tf-motion-fast) var(--tf-ease)}
 .enrollment-onboarding input::placeholder{color:var(--tf-slate-500)}
-.enrollment-onboarding input:hover:not([readonly]){border-color:rgba(78,154,236,.42)}
-.enrollment-onboarding input:focus-visible{border-color:var(--tf-blue-300);box-shadow:var(--tf-shadow-focus);outline:0}
+.enrollment-onboarding input:hover:not([readonly]),.enrollment-onboarding select:hover{border-color:rgba(78,154,236,.42)}
+.enrollment-onboarding input:focus-visible,.enrollment-onboarding select:focus-visible{border-color:var(--tf-blue-300);box-shadow:var(--tf-shadow-focus);outline:0}
 .enrollment-onboarding input[readonly]{color:var(--tf-slate-400);background:rgba(2,16,43,.34);cursor:not-allowed}
 .field-note{margin:7px 0 0;color:var(--tf-slate-400);font-size:12px;line-height:1.5}
 .availability-block{margin:0}
@@ -74,3 +74,6 @@ body.registration-closed{min-height:100vh;margin:0;padding:32px 16px 56px;displa
 @media(max-width:719px){body.enrollment-onboarding{padding:18px 12px 42px}.enrollment-card{padding:19px 15px;border-radius:var(--tf-radius-lg)}.onboarding-progress{grid-template-columns:1fr}.progress-step{min-height:44px}.form-section{padding:17px 14px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.availability-scroll{margin-inline:-2px}.mobile-scroll-hint{display:block}#submitButton:hover:not(:disabled){transform:none}}
 @media(max-width:380px){body.enrollment-onboarding{padding-inline:8px}.enrollment-card{padding-inline:12px}.form-section{padding-inline:11px}}
 @media(prefers-reduced-motion:reduce){.enrollment-onboarding *,body.registration-closed *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+.enrollment-onboarding select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--tf-slate-300) 50%),linear-gradient(135deg,var(--tf-slate-300) 50%,transparent 50%);background-position:calc(100% - 18px) 21px,calc(100% - 12px) 21px;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:38px}
+.enrollment-onboarding select option{background:var(--tf-navy-950);color:var(--tf-slate-50)}
