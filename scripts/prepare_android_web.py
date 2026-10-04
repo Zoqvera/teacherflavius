@@ -12,6 +12,7 @@ DEFAULT_SOURCE = ROOT / "_site"
 DEFAULT_DESTINATION = ROOT / "_android_site"
 TEXT_SUFFIXES = {".html", ".js", ".json", ".webmanifest"}
 ROOT_RELATIVE_STRING = re.compile(r'(?P<quote>["\'\x60])(?P<value>/[^"\'\x60\r\n<>]*)(?P=quote)')
+NATIVE_AUTH_BRIDGE_TAG = '<script src="/native_auth_bridge.js?v=20261004-1"></script>'
 
 
 def route_map(site_root: Path) -> dict[str, str]:
@@ -72,6 +73,18 @@ def rewrite_text(content: str, routes: dict[str, str]) -> str:
     return ROOT_RELATIVE_STRING.sub(replace, content)
 
 
+def inject_native_auth_bridge(content: str) -> str:
+    if NATIVE_AUTH_BRIDGE_TAG in content:
+        return content
+    if "</head>" not in content:
+        return content
+    return content.replace(
+        "</head>",
+        "  " + NATIVE_AUTH_BRIDGE_TAG + "\n</head>",
+        1,
+    )
+
+
 def prepare_android_web(source: Path, destination: Path) -> int:
     if not source.is_dir():
         raise SystemExit(f"Android web source does not exist: {source}")
@@ -85,10 +98,15 @@ def prepare_android_web(source: Path, destination: Path) -> int:
     for path in destination.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
             continue
+
         content = path.read_text(encoding="utf-8")
         rewritten = rewrite_text(content, routes)
+        if path.suffix.lower() == ".html":
+            rewritten = inject_native_auth_bridge(rewritten)
+
         if rewritten == content:
             continue
+
         path.write_text(rewritten, encoding="utf-8")
         changed += 1
 
