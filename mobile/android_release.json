@@ -1,0 +1,11 @@
+{
+  "applicationId": "com.teacherflavius.app",
+  "versionCode": 1,
+  "versionName": "1.0.0",
+  "brand": {
+    "sourceSvg": "assets/favicon.svg",
+    "backgroundColor": "#02102B",
+    "accentColor": "#2563EB",
+    "foregroundSecondary": "#DBEAFE"
+  }
+}
