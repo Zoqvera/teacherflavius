@@ -7,10 +7,33 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from scripts.configure_android_signing import configure
+from scripts.configure_android_signing import configure, normalize_secret
 
 
 class ConfigureAndroidSigningTests(unittest.TestCase):
+    def test_normalizes_export_style_secret_values(self) -> None:
+        self.assertEqual(
+            normalize_secret(
+                "ANDROID_KEYSTORE_BASE64",
+                "ANDROID_KEYSTORE_BASE64=YWJjZA==",
+            ),
+            "YWJjZA==",
+        )
+        self.assertEqual(
+            normalize_secret(
+                "ANDROID_KEY_ALIAS",
+                "'ANDROID_KEY_ALIAS=teacherflavius-upload'",
+            ),
+            "ANDROID_KEY_ALIAS=teacherflavius-upload",
+        )
+        self.assertEqual(
+            normalize_secret(
+                "ANDROID_KEY_ALIAS",
+                "ANDROID_KEY_ALIAS='teacherflavius-upload'",
+            ),
+            "'teacherflavius-upload'",
+        )
+
     def test_leaves_release_unsigned_when_secrets_are_absent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             android_root = Path(directory) / "android"
@@ -34,6 +57,9 @@ class ConfigureAndroidSigningTests(unittest.TestCase):
             self.assertFalse(
                 (android_root / "keystore" / "teacher-flavio-upload.jks").exists()
             )
+            self.assertFalse(
+                (android_root / "keystore" / "signing.properties").exists()
+            )
 
     def test_configures_release_signing_from_environment(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -54,11 +80,15 @@ class ConfigureAndroidSigningTests(unittest.TestCase):
             )
 
             payload = b"keystore-placeholder-" + (b"x" * 300)
+            encoded = base64.b64encode(payload).decode("ascii")
             environment = {
-                "ANDROID_KEYSTORE_BASE64": base64.b64encode(payload).decode("ascii"),
-                "ANDROID_KEYSTORE_PASSWORD": "store-secret",
-                "ANDROID_KEY_ALIAS": "teacherflavius-upload",
-                "ANDROID_KEY_PASSWORD": "key-secret",
+                "ANDROID_KEYSTORE_BASE64": "ANDROID_KEYSTORE_BASE64=" + encoded,
+                "ANDROID_KEYSTORE_PASSWORD":
+                    "ANDROID_KEYSTORE_PASSWORD=store-secret",
+                "ANDROID_KEY_ALIAS":
+                    "ANDROID_KEY_ALIAS=teacherflavius-upload",
+                "ANDROID_KEY_PASSWORD":
+                    "ANDROID_KEY_PASSWORD=key-secret",
             }
 
             with mock.patch.dict(os.environ, environment, clear=True):
@@ -68,13 +98,23 @@ class ConfigureAndroidSigningTests(unittest.TestCase):
             self.assertIn("signingConfigs", updated)
             self.assertIn("teacher-flavio-upload.jks", updated)
             self.assertIn("signingConfig signingConfigs.release", updated)
-            self.assertIn('System.getenv("ANDROID_KEYSTORE_PASSWORD")', updated)
+            self.assertIn("signing.properties", updated)
             self.assertNotIn("store-secret", updated)
             self.assertNotIn("key-secret", updated)
 
             keystore = android_root / "keystore" / "teacher-flavio-upload.jks"
             self.assertEqual(keystore.read_bytes(), payload)
             self.assertEqual(keystore.stat().st_mode & 0o777, 0o600)
+
+            properties = android_root / "keystore" / "signing.properties"
+            properties_text = properties.read_text(encoding="utf-8")
+            self.assertIn("storePassword=store-secret", properties_text)
+            self.assertIn("keyAlias=teacherflavius-upload", properties_text)
+            self.assertIn("keyPassword=key-secret", properties_text)
+            self.assertNotIn("ANDROID_KEYSTORE_PASSWORD=", properties_text)
+            self.assertNotIn("ANDROID_KEY_ALIAS=", properties_text)
+            self.assertNotIn("ANDROID_KEY_PASSWORD=", properties_text)
+            self.assertEqual(properties.stat().st_mode & 0o777, 0o600)
 
     def test_rejects_partial_signing_configuration(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
