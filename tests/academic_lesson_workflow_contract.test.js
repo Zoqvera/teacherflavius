@@ -16,6 +16,14 @@ const ambiguityFix = fs.readFileSync(
   path.join(ROOT, "supabase/migrations/20261004081746_fix_academic_occurrence_id_ambiguity.sql"),
   "utf8"
 );
+const individualQuestionStudy = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261004144423_study_questions_individually.sql"),
+  "utf8"
+);
+const individualQuestionStudyBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/170_study_questions_individually.sql"),
+  "utf8"
+);
 const studentArea = fs.readFileSync(path.join(ROOT, "area_do_estudante.html"), "utf8");
 const teacherArea = fs.readFileSync(path.join(ROOT, "professor.html"), "utf8");
 const studentPage = fs.readFileSync(path.join(ROOT, "o-que-fazer/index.html"), "utf8");
@@ -54,21 +62,25 @@ test("student preparation is distinct from teacher-confirmed completion", functi
   assert.match(lessonPage, />ESTOU PREPARADO</);
 });
 
-test("student receives questions in catalog order in batches of ten and studied questions remain pending until practice", function () {
-  for (const sql of SQL_FILES) {
+test("student studies each question individually while the ten-question batch stays stable", function () {
+  for (const sql of [individualQuestionStudy, individualQuestionStudyBaseline]) {
     assert.match(sql, /order by question\.display_order, question\.id[\s\S]*limit 10/i);
-    assert.match(
+    assert.match(sql, /'studied', candidate\.studied/i);
+    assert.match(sql, /private\.student_question_studies study_history/i);
+    assert.match(sql, /conversation_question_practice_log practice/i);
+    assert.match(sql, /selected\.question_id = any\(expected_ids\)/i);
+    assert.match(sql, /insert into private\.student_question_studies/i);
+    assert.doesNotMatch(
       sql,
-      /where study\.student_id = caller_id[\s\S]*not exists \([\s\S]*conversation_question_practice_log practice/i
-    );
-    assert.match(
-      sql,
-      /raise exception 'Suas perguntas já foram registradas e aguardam prática com o professor\.'/i
+      /Suas perguntas já foram registradas e aguardam prática com o professor/i
     );
   }
 
-  assert.match(studentApp, /markQuestionsStudied/);
-  assert.match(studentPage, /ESTUDEI AS PERGUNTAS/);
+  assert.match(studentApp, /markQuestionStudied\(question\.id\)/);
+  assert.match(studentApp, /ESTUDEI A PERGUNTA/);
+  assert.match(studentApp, /PERGUNTA ESTUDADA/);
+  assert.doesNotMatch(studentPage, /id="questionsStudiedButton"/);
+  assert.doesNotMatch(studentPage, /ESTUDEI AS PERGUNTAS/);
 });
 
 test("spaced review intervals use actually attended lesson sequences", function () {
@@ -108,7 +120,7 @@ test("student area replaces legacy study cards with O QUE FAZER", function () {
   assert.doesNotMatch(studentArea, /href="\/conversation-questions\/"/);
 });
 
-test("teacher area exposes ROTEIRO DA AULA and its workflow actions", function () {
+test("teacher area exposes only studied questions with their answer examples", function () {
   assert.match(teacherArea, /href="\/roteiro-da-aula\/"/);
   assert.match(teacherArea, />ROTEIRO DA AULA</);
   assert.match(teacherApp, /APRESENTOU/);
@@ -117,6 +129,17 @@ test("teacher area exposes ROTEIRO DA AULA and its workflow actions", function (
   assert.match(teacherApp, /BOM/);
   assert.match(teacherApp, /MÉDIO/);
   assert.match(teacherApp, /MELHORAR/);
+  assert.match(teacherApp, /ConversationQuestionCardRenderer\.create/);
+  assert.match(teacherPage, /conversation_question_card_renderer\.js/);
+  assert.match(workflowService, /hydrateTeacherLessonPlan/);
+  assert.match(workflowService, /answer_examples/);
+
+  for (const sql of SQL_FILES) {
+    assert.match(
+      sql,
+      /from private\.student_question_studies study[\s\S]*as new_questions/i
+    );
+  }
 });
 
 test("new academic pages remain private for search engines", function () {
