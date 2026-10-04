@@ -62,3 +62,4 @@ version,name
 20260820224131,fix_app_error_retention_function_security
 20260820224900,move_notification_webhook_secret_to_vault
 20260820225434,harden_notification_webhook_vault_dispatcher
+20261004080244,add_academic_lesson_workflow
