@@ -37,6 +37,8 @@ module.exports = [
       "site_asset_loader.js",
       "site_runtime_config.js",
       "site_page_runtime.js",
+      "pwa_registration.js",
+      "service-worker.js",
       "mobile_top_navigation.js",
       "site_footer.js",
       "global_logout.js",
