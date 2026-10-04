@@ -17,6 +17,10 @@ const notifier = fs.readFileSync(
   path.join(ROOT, "supabase/functions/notify-new-enrollment/index.ts"),
   "utf8"
 );
+const paymentAvailability = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/95_unlock_next_tuition_two_days_after_payment.sql"),
+  "utf8"
+);
 
 test("new enrollment form requires monthly lesson quantity and agreed fee", function () {
   assert.match(page, /id="classesPerMonth"[^>]*required/);
@@ -73,4 +77,22 @@ test("new enrollment email contains lesson quantity and agreed monthly fee", fun
   assert.match(notifier, /Quantidade de aulas por mês:/);
   assert.match(notifier, /Valor combinado com o professor:/);
   assert.match(notifier, /formatCurrencyBRL/);
+});
+
+test("student is sent directly to first tuition payment after enrollment", function () {
+  assert.match(page, /const FIRST_TUITION_PAYMENT_PATH = "\/pagamento\//);
+  assert.match(page, /window\.location\.replace\(getPostEnrollmentPath\(\)\)/);
+  assert.match(page, /CONCLUIR MATRÍCULA E PAGAR/);
+  assert.match(page, /primeira mensalidade ficará disponível/);
+});
+
+test("first tuition remains immediately visible while later cycles keep the two-day rule", function () {
+  assert.match(
+    paymentAvailability,
+    /mt\.reference_month = settings\.billing_start_month/i
+  );
+  assert.match(
+    paymentAvailability,
+    /previous_tuition\.payment_date <= local_today - 2/i
+  );
 });
