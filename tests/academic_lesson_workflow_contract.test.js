@@ -12,6 +12,10 @@ const baseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/150_add_academic_lesson_workflow.sql"),
   "utf8"
 );
+const ambiguityFix = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261004081746_fix_academic_occurrence_id_ambiguity.sql"),
+  "utf8"
+);
 const studentArea = fs.readFileSync(path.join(ROOT, "area_do_estudante.html"), "utf8");
 const teacherArea = fs.readFileSync(path.join(ROOT, "professor.html"), "utf8");
 const studentPage = fs.readFileSync(path.join(ROOT, "o-que-fazer/index.html"), "utf8");
@@ -132,5 +136,13 @@ test("new workflow code contains no prohibited site wording", function () {
 
   for (const content of files) {
     assert.doesNotMatch(content, /\bonline\b/i);
+  }
+});
+
+test("attendance synchronization uses an unambiguous occurrence identifier", function () {
+  for (const sql of [baseline, ambiguityFix]) {
+    assert.match(sql, /saved_occurrence_id uuid/i);
+    assert.match(sql, /practice\.occurrence_id = saved_occurrence_id/i);
+    assert.doesNotMatch(sql, /practice\.occurrence_id = occurrence_id/i);
   }
 });
