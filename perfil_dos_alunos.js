@@ -380,12 +380,33 @@ async function loadStudents() {
 }
 
 async function loadStudentBillingMap() {
-  const response = await Auth.getClient().rpc("get_teacher_billing_students");
-  if (response.error) throw response.error;
+  const client = Auth.getClient();
+  const responses = await Promise.all([
+    client.rpc("get_teacher_billing_students"),
+    client.rpc("get_teacher_student_lesson_plans")
+  ]);
+  const billingResponse = responses[0];
+  const lessonPlanResponse = responses[1];
+
+  if (billingResponse.error) throw billingResponse.error;
+  if (lessonPlanResponse.error) throw lessonPlanResponse.error;
+
+  const lessonPlanMap = new Map();
+  (lessonPlanResponse.data || []).forEach(function (item) {
+    if (item.student_id) {
+      lessonPlanMap.set(String(item.student_id), item.classes_per_month);
+    }
+  });
 
   const map = new Map();
-  (response.data || []).forEach(function (item) {
-    if (item.student_id) map.set(String(item.student_id), item);
+  (billingResponse.data || []).forEach(function (item) {
+    if (!item.student_id) return;
+    const studentId = String(item.student_id);
+    map.set(studentId, Object.assign({}, item, {
+      classes_per_month: lessonPlanMap.has(studentId)
+        ? lessonPlanMap.get(studentId)
+        : null
+    }));
   });
 
   studentBillingMap = map;
