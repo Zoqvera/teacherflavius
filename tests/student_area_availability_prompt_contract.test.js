@@ -23,10 +23,10 @@ test("student dashboard no longer evaluates availability for a prompt", function
 });
 
 test("student dashboard hides legacy study and replacement cards", function () {
-  assert.doesNotMatch(page, /href="\\/roteiro-de-estudos\\/"/);
+  assert.equal(page.includes('href="/roteiro-de-estudos/"'), false);
   assert.doesNotMatch(page, />ROTEIRO DE ESTUDOS</);
-  assert.doesNotMatch(page, /href="\\/conversation-questions\\/"/);
+  assert.equal(page.includes('href="/conversation-questions/"'), false);
   assert.doesNotMatch(page, />CONVERSATION QUESTIONS</);
-  assert.doesNotMatch(page, /href="\\/reposicoes\\/"/);
+  assert.equal(page.includes('href="/reposicoes/"'), false);
   assert.doesNotMatch(page, />REPOSIÇÕES</);
 });
