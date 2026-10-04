@@ -32,11 +32,23 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 14. Apply `80_add_mercado_pago_subscription_sandbox.sql`.
 15. Apply `85_hide_trial_lessons_from_students_of_day.sql`.
 16. Apply `90_add_conversation_questions.sql`.
-17. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
-18. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
-19. Restore application data separately, if a data restore is required.
-20. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
-21. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
+17. Apply `95_unlock_next_tuition_two_days_after_payment.sql`.
+18. Apply `100_require_enrollment_access_code.sql`.
+19. Apply `105_require_all_enrollment_fields.sql`.
+20. Apply `110_auto_assign_tuition_due_seven_days_after_enrollment.sql`.
+21. Apply `115_set_quintet_capacity_eight.sql`.
+22. Apply `120_limit_course_vacancies_to_three.sql`.
+23. Apply `125_show_sold_out_course_classes.sql`.
+24. Apply `130_enforce_tuition_after_enrollment.sql`.
+25. Apply `135_allow_tuition_due_date_correction_audit.sql`.
+26. Apply `140_lesson_credits_and_my_lessons.sql`.
+27. Apply `145_student_sets_enrollment_commercial_terms.sql`.
+28. Apply `150_add_academic_lesson_workflow.sql`.
+29. Provision the Vault secret named `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value.
+30. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
+31. Restore application data separately, if a data restore is required.
+32. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
+33. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
 
 ## Important boundaries
 
@@ -49,7 +61,7 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 
 ## Validation fingerprint
 
-`schema-fingerprint.json` is the machine-readable catalog fingerprint used to detect structural drift. Function-body-only overlays do not change catalog object counts. Overlay `40_allow_gmail_dot_equivalent_student_links.sql` adds the Gmail helper, `42_require_live_admin_auth_session.sql` restores the current MFA helper, `45_add_study_lesson_pages.sql` adds the lesson audit trigger function, `50_enable_dynamic_study_roadmap_cards.sql` removes the fixed 24-card ceiling, `55_add_lesson_number_label_and_translation.sql` adds the lesson number label and translation constraints, `60_add_students_of_day.sql` restores the students-of-day query, and `65_allow_student_two_class_links.sql` removes the legacy one-class indexes and restores the two-class assignment invariant. Overlay `70_add_mercado_pago_subscription_foundation.sql` adds the server-only recurring-subscription persistence layer and its integrity constraints. Overlay `75_add_mercado_pago_subscription_reconciliation.sql` adds recurring invoice persistence, financial-history preservation, and atomic reconciliation into monthly tuition. Overlay `80_add_mercado_pago_subscription_sandbox.sql` adds isolated, service-role-only evidence storage for subscription sandbox Webhooks without touching production financial tables. Overlay `85_hide_trial_lessons_from_students_of_day.sql` keeps the students-of-day query limited to regular lessons and confirmed makeups while leaving trial appointments in their dedicated workflow. Overlay `90_add_conversation_questions.sql` restores the Conversation Questions catalog, per-student progress table, RLS policies, reordering RPC, and the 99 initial questions. The fingerprint includes these overlays.
+`schema-fingerprint.json` is the machine-readable catalog fingerprint used to detect structural drift. Function-body-only overlays do not change catalog object counts. Overlay `40_allow_gmail_dot_equivalent_student_links.sql` adds the Gmail helper, `42_require_live_admin_auth_session.sql` restores the current MFA helper, `45_add_study_lesson_pages.sql` adds the lesson audit trigger function, `50_enable_dynamic_study_roadmap_cards.sql` removes the fixed 24-card ceiling, `55_add_lesson_number_label_and_translation.sql` adds the lesson number label and translation constraints, `60_add_students_of_day.sql` restores the students-of-day query, and `65_allow_student_two_class_links.sql` removes the legacy one-class indexes and restores the two-class assignment invariant. Overlay `70_add_mercado_pago_subscription_foundation.sql` adds the server-only recurring-subscription persistence layer and its integrity constraints. Overlay `75_add_mercado_pago_subscription_reconciliation.sql` adds recurring invoice persistence, financial-history preservation, and atomic reconciliation into monthly tuition. Overlay `80_add_mercado_pago_subscription_sandbox.sql` adds isolated, service-role-only evidence storage for subscription sandbox Webhooks without touching production financial tables. Overlay `85_hide_trial_lessons_from_students_of_day.sql` keeps the students-of-day query limited to regular lessons and confirmed makeups while leaving trial appointments in their dedicated workflow. Overlay `90_add_conversation_questions.sql` restores the Conversation Questions catalog, per-student progress table, RLS policies, reordering RPC, and the 99 initial questions. Overlay `150_add_academic_lesson_workflow.sql` adds private lesson-occurrence, preparation, question-study, and spaced-review records plus authenticated RPCs for the student action plan and teacher lesson plan. The fingerprint includes these overlays.
 
 ## Disposable restore validation
 
