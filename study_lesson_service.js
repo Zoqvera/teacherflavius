@@ -118,6 +118,22 @@
       return response.data || null;
     }
 
+    async function getLinkedPageByLessonNumber(lessonNumber) {
+      const normalizedLessonNumber = Number(lessonNumber);
+      if (!Number.isInteger(normalizedLessonNumber) || normalizedLessonNumber < 1) {
+        return null;
+      }
+
+      const response = await requireClient()
+        .from(TABLE_NAME)
+        .select(PAGE_FIELDS)
+        .eq("roadmap_lesson_number", normalizedLessonNumber)
+        .maybeSingle();
+
+      if (response.error) throw response.error;
+      return response.data || null;
+    }
+
     async function createPage(payload) {
       const normalized = normalizePayload(payload);
       const response = await requireClient()
@@ -160,6 +176,7 @@
       listAllPages: listAllPages,
       listLinkedPages: listLinkedPages,
       getPage: getPage,
+      getLinkedPageByLessonNumber: getLinkedPageByLessonNumber,
       createPage: createPage,
       updatePage: updatePage,
       deletePage: deletePage
