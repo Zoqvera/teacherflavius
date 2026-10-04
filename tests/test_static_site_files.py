@@ -17,6 +17,7 @@ class StaticSiteFilesTests(unittest.TestCase):
     def test_accepts_supported_public_file(self) -> None:
         self.assertTrue(is_public(Path("assets/app.js")))
         self.assertTrue(is_public(Path("index.html")))
+        self.assertTrue(is_public(Path("site.webmanifest")))
 
     def test_accepts_special_public_file_without_suffix(self) -> None:
         self.assertTrue(is_public(Path("_redirects")))
