@@ -40,7 +40,9 @@ class CapacitorAndroidContractTests(unittest.TestCase):
         self.assertIn("npm run mobile:web", scripts["mobile:android:sync"])
         self.assertIn("configure_android_deep_link.py", scripts["mobile:android:add"])
         self.assertIn("configure_android_deep_link.py", scripts["mobile:android:sync"])
+        self.assertIn("configure_android_release.py", scripts["mobile:android:sync"])
         self.assertIn("cap sync android", scripts["mobile:android:sync"])
+        self.assertIn("bundleRelease", scripts["mobile:android:bundle"])
 
     def test_android_workflow_builds_and_uploads_debug_apk(self) -> None:
         workflow = (
@@ -52,7 +54,10 @@ class CapacitorAndroidContractTests(unittest.TestCase):
         self.assertIn("platforms;android-36", workflow)
         self.assertIn("npx cap add android", workflow)
         self.assertIn("Configure OAuth deep link", workflow)
+        self.assertIn("Configure Android release", workflow)
         self.assertIn("Validate native route preparation", workflow)
+        self.assertIn("bundleRelease", workflow)
+        self.assertIn("teacher-flavio-android-release-unsigned", workflow)
         self.assertIn('android:host="login-callback"', workflow)
         self.assertIn("@capacitor/browser", workflow)
         self.assertIn("./gradlew assembleDebug", workflow)
