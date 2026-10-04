@@ -59,6 +59,14 @@ ANDROID_KEY_PASSWORD=key-secret
             "key-secret",
         )
 
+    def test_extracts_base64_from_markdown_wrapped_text(self) -> None:
+        encoded = "A" * 1024
+        wrapped = "value copied from file:\n\x60\x60\x60text\n" + encoded + "\n\x60\x60\x60"
+        self.assertEqual(
+            normalize_secret("ANDROID_KEYSTORE_BASE64", wrapped),
+            encoded,
+        )
+
     def test_leaves_release_unsigned_when_secrets_are_absent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             android_root = Path(directory) / "android"
