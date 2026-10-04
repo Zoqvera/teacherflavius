@@ -26,6 +26,9 @@ function execute(options) {
 
   const windowRef = {
     navigator: navigatorRef,
+    Capacitor: settings.native === true
+      ? { isNativePlatform: function () { return true; } }
+      : undefined,
     Event: function Event(type) { this.type = type; },
     matchMedia: function () { return { matches: settings.standalone === true }; },
     addEventListener: function (eventName, handler) {
@@ -74,6 +77,13 @@ test("registers the root-scoped service worker without HTTP cache reuse", functi
 test("does not fail when service workers are unsupported", function () {
   const result = execute({ supported: false });
   assert.equal(result.registrations.length, 0);
+});
+
+test("does not register the web service worker inside Capacitor native apps", function () {
+  const result = execute({ native: true });
+  assert.equal(result.api.isNativeCapacitorApp(result.windowRef), true);
+  assert.equal(result.registrations.length, 0);
+  assert.equal(result.api.canPromptInstall(result.windowRef), false);
 });
 
 test("waits for window load while the document is still loading", function () {

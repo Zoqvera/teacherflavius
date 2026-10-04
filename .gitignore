@@ -7,3 +7,10 @@ __pycache__/
 backups/
 *.sql.gpg
 *.tar.gz.gpg
+
+# JavaScript dependencies and native Android build outputs.
+node_modules/
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/

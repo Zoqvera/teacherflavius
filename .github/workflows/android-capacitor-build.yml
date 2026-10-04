@@ -1,0 +1,89 @@
+name: Android Capacitor build
+
+on:
+  pull_request:
+    paths:
+      - "capacitor.config.json"
+      - "package.json"
+      - "pwa_registration.js"
+      - "pwa_install_prompt.js"
+      - "site.webmanifest"
+      - "scripts/**"
+      - "tests/test_capacitor_android_contract.py"
+      - ".github/workflows/android-capacitor-build.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "capacitor.config.json"
+      - "package.json"
+      - "pwa_registration.js"
+      - "pwa_install_prompt.js"
+      - "site.webmanifest"
+      - "scripts/**"
+      - ".github/workflows/android-capacitor-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android SDK 36
+        shell: bash
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install JavaScript dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Build bundled web application
+        run: npm run mobile:web
+
+      - name: Generate Android project
+        run: npx cap add android
+
+      - name: Synchronize Capacitor Android
+        run: npx cap sync android
+
+      - name: Validate native project
+        shell: bash
+        run: |
+          test -f android/app/src/main/AndroidManifest.xml
+          test -f android/app/build.gradle
+          grep -q 'com.teacherflavius.app' android/app/build.gradle
+          test -f android/app/src/main/assets/public/index.html
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Validate debug APK
+        run: test -f android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: teacher-flavio-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7

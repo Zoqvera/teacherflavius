@@ -18,6 +18,16 @@
     );
   }
 
+  function isNativeCapacitorApp(windowRef) {
+    const targetWindow = windowRef || window;
+    const capacitor = targetWindow.Capacitor;
+    return Boolean(
+      capacitor &&
+      typeof capacitor.isNativePlatform === "function" &&
+      capacitor.isNativePlatform()
+    );
+  }
+
   function registerServiceWorker(navigatorRef) {
     const targetNavigator = navigatorRef || window.navigator;
     if (!supportsServiceWorkers(targetNavigator)) return Promise.resolve(null);
@@ -40,7 +50,9 @@
   }
 
   function canPromptInstall(windowRef) {
-    return deferredInstallPrompt !== null && !isStandalone(windowRef);
+    return deferredInstallPrompt !== null &&
+      !isStandalone(windowRef) &&
+      !isNativeCapacitorApp(windowRef);
   }
 
   function dispatchInstallAvailability(windowRef) {
@@ -96,6 +108,8 @@
     const targetWindow = windowRef || window;
     const targetDocument = documentRef || document;
 
+    if (isNativeCapacitorApp(targetWindow)) return;
+
     installLifecycleListeners(targetWindow);
 
     if (targetDocument.readyState === "complete") {
@@ -115,6 +129,7 @@
   window.TeacherFlaviusPwa = Object.freeze({
     canPromptInstall: canPromptInstall,
     installAvailabilityEvent: INSTALL_AVAILABILITY_EVENT,
+    isNativeCapacitorApp: isNativeCapacitorApp,
     isStandalone: isStandalone,
     registerServiceWorker: registerServiceWorker,
     requestInstall: requestInstall,
