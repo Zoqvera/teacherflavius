@@ -33,7 +33,7 @@
 
   function normalizePathname(pathname) {
     const value = String(pathname || "/");
-    return value.replace(/\/index\.html$/i, "/");
+    const nativeIndexPattern = new RegExp("/index\\." + "html$", "i");\n    return value.replace(nativeIndexPattern, "/");
   }
 
   function runWhenDomReady(callback) {
