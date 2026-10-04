@@ -38,6 +38,7 @@ module.exports = [
       "site_runtime_config.js",
       "site_page_runtime.js",
       "pwa_registration.js",
+      "pwa_install_prompt.js",
       "service-worker.js",
       "mobile_top_navigation.js",
       "site_footer.js",
