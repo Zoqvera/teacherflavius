@@ -2,7 +2,7 @@
   "use strict";
 
   const SAO_PAULO_TIME_ZONE = "America/Sao_Paulo";
-  const LOGIN_PATH = "/login.html?next=" + encodeURIComponent("/area-do-estudante/minhas-aulas/");
+  const LOGIN_PATH = "/login/?next=" + encodeURIComponent("/area-do-estudante/minhas-aulas/");
 
   let overview = null;
   let lessonCredits = [];
