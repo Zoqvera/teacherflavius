@@ -155,12 +155,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     function parseMonthlyFee(value) {
-      const normalized = String(value || "")
+      const raw = String(value || "")
         .trim()
         .replace(/^R\$\s*/i, "")
-        .replace(/\s/g, "")
-        .replace(/\./g, "")
-        .replace(",", ".");
+        .replace(/\s/g, "");
+
+      const normalized = raw.includes(",")
+        ? raw.replace(/\./g, "").replace(",", ".")
+        : /^\d+\.\d{1,2}$/.test(raw)
+          ? raw
+          : raw.replace(/\./g, "");
 
       if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
         throw new Error("Informe o valor combinado com o professor em reais.");
