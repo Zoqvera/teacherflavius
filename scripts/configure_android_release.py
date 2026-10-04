@@ -114,6 +114,13 @@ def colors_xml(background: str, accent: str, secondary: str) -> str:
     <color name="teacher_flavio_navy">{background}</color>
     <color name="teacher_flavio_accent">{accent}</color>
     <color name="teacher_flavio_secondary">{secondary}</color>
+</resources>
+"""
+
+
+def launcher_background_xml(background: str) -> str:
+    return f"""<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <color name="ic_launcher_background">{background}</color>
 </resources>
 """
@@ -129,6 +136,12 @@ def remove_generated_launcher_bitmaps(res_root: Path) -> None:
         for pattern in ("ic_launcher*.png", "ic_launcher*.webp"):
             for path in directory.glob(pattern):
                 path.unlink()
+
+
+def remove_generated_splash_bitmaps(res_root: Path) -> None:
+    for directory in res_root.glob("drawable*"):
+        for path in directory.glob("splash.png"):
+            path.unlink()
 
 
 def replace_release_version(build_gradle: Path, config: dict) -> None:
@@ -173,6 +186,7 @@ def configure_branding(android_root: Path, config: dict, root: Path) -> None:
     secondary = str(brand["foregroundSecondary"])
 
     remove_generated_launcher_bitmaps(res_root)
+    remove_generated_splash_bitmaps(res_root)
 
     write_text(
         res_root / "drawable" / "ic_teacher_flavio_foreground.xml",
@@ -231,6 +245,10 @@ def configure_branding(android_root: Path, config: dict, root: Path) -> None:
     write_text(
         res_root / "values" / "teacher_flavio_colors.xml",
         colors_xml(background, accent, secondary),
+    )
+    write_text(
+        res_root / "values" / "ic_launcher_background.xml",
+        launcher_background_xml(background),
     )
 
 
