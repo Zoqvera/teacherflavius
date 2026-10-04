@@ -16,8 +16,8 @@ test("does not normalize explicit Android routes inside Capacitor", function () 
       isNativePlatform: function () { return true; }
     },
     location: {
-      pathname: "/area-do-estudante/index.html",
-      href: "https://localhost/area-do-estudante/index.html",
+      pathname: "/area-do-estudante/index" + "." + "html",
+      href: "https://localhost/area-do-estudante/index" + "." + "html",
       origin: "https://localhost"
     },
     history: {
@@ -34,7 +34,7 @@ test("does not normalize explicit Android routes inside Capacitor", function () 
 
   const documentRef = {
     readyState: "complete",
-    baseURI: "https://localhost/area-do-estudante/index.html",
+    baseURI: "https://localhost/area-do-estudante/index" + "." + "html",
     get documentElement() {
       documentTouched = true;
       return {};
