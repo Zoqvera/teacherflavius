@@ -5,6 +5,7 @@
   const PAGE_PATH = "/conversation-questions/";
   const AUTH_MAX_ATTEMPTS = 40;
   const AUTH_RETRY_DELAY_MS = 100;
+  const ANSWER_EXAMPLE_COUNT = 5;
 
   const state = {
     session: null,
@@ -23,6 +24,8 @@
     ui.teacherTools = document.getElementById("teacherConversationTools");
     ui.questionForm = document.getElementById("conversationQuestionForm");
     ui.questionInput = document.getElementById("conversationQuestionInput");
+    ui.questionTranslationInput = document.getElementById("conversationQuestionTranslationInput");
+    ui.answerExamples = document.getElementById("conversationAnswerExamples");
     ui.questionList = document.getElementById("conversationQuestionList");
     ui.modeLabel = document.getElementById("conversationModeLabel");
     ui.professorLink = document.getElementById("conversationProfessorLink");
@@ -49,6 +52,7 @@
       window.Auth &&
       window.ResourceWaiter &&
       window.ConversationQuestionsService &&
+      window.ConversationQuestionCardRenderer &&
       typeof window.Auth.getSession === "function" &&
       typeof window.Auth.getClient === "function"
     );
@@ -92,21 +96,99 @@
     return student.name || student.email || "Aluno";
   }
 
-  function createQuestionHeading(question, index) {
-    const heading = document.createElement("div");
-    heading.className = "conversation-question-heading";
+  function createExampleField(index) {
+    const fieldset = document.createElement("fieldset");
+    fieldset.className = "conversation-answer-example";
+    fieldset.dataset.exampleIndex = String(index);
 
-    const number = document.createElement("span");
-    number.className = "conversation-question-number";
-    number.textContent = String(index + 1).padStart(2, "0");
+    const legend = document.createElement("legend");
+    legend.textContent = "Exemplo " + (index + 1);
+    fieldset.appendChild(legend);
 
-    const text = document.createElement("h2");
-    text.className = "conversation-question-text";
-    text.textContent = question.question_text;
+    const fields = [
+      {
+        role: "answer",
+        label: "Resposta em inglês",
+        tag: "input",
+        maxLength: 500,
+        placeholder: "Ex.: I'm doing well, thanks. And you?"
+      },
+      {
+        role: "translation",
+        label: "Tradução",
+        tag: "input",
+        maxLength: 500,
+        placeholder: "Ex.: Estou indo bem, obrigado/a. E você?"
+      },
+      {
+        role: "note",
+        label: "Explicação de uso",
+        tag: "textarea",
+        maxLength: 1000,
+        placeholder: "Explique quando e em que contexto esta resposta soa natural."
+      }
+    ];
 
-    heading.appendChild(number);
-    heading.appendChild(text);
-    return heading;
+    fields.forEach(function (field) {
+      const label = document.createElement("label");
+      const labelText = document.createElement("span");
+      labelText.textContent = field.label;
+
+      const input = document.createElement(field.tag);
+      input.dataset.role = field.role;
+      input.required = true;
+      input.maxLength = field.maxLength;
+      input.placeholder = field.placeholder;
+      if (field.tag === "input") input.type = "text";
+
+      label.appendChild(labelText);
+      label.appendChild(input);
+      fieldset.appendChild(label);
+    });
+
+    return fieldset;
+  }
+
+  function renderAnswerExampleFields() {
+    if (!ui.answerExamples || ui.answerExamples.children.length) return;
+
+    for (let index = 0; index < ANSWER_EXAMPLE_COUNT; index += 1) {
+      ui.answerExamples.appendChild(createExampleField(index));
+    }
+  }
+
+  function readRequiredField(element, label) {
+    const value = String(element && element.value || "").trim();
+    if (!value) throw new Error("Preencha " + label + ".");
+    return value;
+  }
+
+  function readAnswerExamples() {
+    return Array.from(ui.answerExamples.querySelectorAll(".conversation-answer-example"))
+      .map(function (fieldset, index) {
+        return {
+          answer: readRequiredField(
+            fieldset.querySelector('[data-role="answer"]'),
+            "a resposta " + (index + 1)
+          ),
+          translation: readRequiredField(
+            fieldset.querySelector('[data-role="translation"]'),
+            "a tradução da resposta " + (index + 1)
+          ),
+          note: readRequiredField(
+            fieldset.querySelector('[data-role="note"]'),
+            "a explicação da resposta " + (index + 1)
+          )
+        };
+      });
+  }
+
+  function readQuestionCardForm() {
+    return {
+      text: readRequiredField(ui.questionInput, "a pergunta"),
+      translation: readRequiredField(ui.questionTranslationInput, "a tradução da pergunta"),
+      examples: readAnswerExamples()
+    };
   }
 
   function createOrderButton(question, direction, disabled) {
@@ -193,13 +275,26 @@
     return label;
   }
 
+  function createQuestionContent(question, index, element, className) {
+    return window.ConversationQuestionCardRenderer.create(question, {
+      element: element,
+      className: className,
+      number: index + 1
+    });
+  }
+
   function createTeacherQuestionCard(question, index) {
     const article = document.createElement("article");
-    article.className = "conversation-question-card";
+    article.className = "conversation-question-admin-card";
 
     const top = document.createElement("div");
     top.className = "conversation-question-top";
-    top.appendChild(createQuestionHeading(question, index));
+    top.appendChild(createQuestionContent(
+      question,
+      index,
+      "div",
+      "conversation-question-content"
+    ));
 
     const controls = document.createElement("div");
     controls.className = "conversation-order-controls";
@@ -255,11 +350,14 @@
   }
 
   function createStudentQuestionCard(question, index) {
-    const article = document.createElement("article");
-    article.className = "conversation-question-card conversation-question-card-student";
-    article.appendChild(createQuestionHeading(question, index));
-    article.appendChild(createStudentProgress(question));
-    return article;
+    const card = createQuestionContent(
+      question,
+      index,
+      "article",
+      "conversation-question-student-card"
+    );
+    card.appendChild(createStudentProgress(question));
+    return card;
   }
 
   function renderQuestions() {
@@ -306,11 +404,12 @@
   async function handleAddQuestion(event) {
     event.preventDefault();
     const submit = ui.questionForm.querySelector('button[type="submit"]');
-    const text = ui.questionInput.value.trim();
+    let questionCard;
 
-    if (!text) {
-      showStatus("Digite uma pergunta antes de adicionar.", "error");
-      ui.questionInput.focus();
+    try {
+      questionCard = readQuestionCardForm();
+    } catch (error) {
+      showStatus(error.message, "error");
       return;
     }
 
@@ -320,14 +419,14 @@
       const maxOrder = state.questions.reduce(function (largest, question) {
         return Math.max(largest, Number(question.display_order) || 0);
       }, 0);
-      const question = await state.service.addQuestion(text, maxOrder + 1);
+      const question = await state.service.addQuestion(questionCard, maxOrder + 1);
       state.questions.push(question);
       state.questions.sort(function (a, b) {
         return a.display_order - b.display_order;
       });
-      ui.questionInput.value = "";
+      ui.questionForm.reset();
       renderQuestions();
-      showStatus("Nova pergunta adicionada.", "success");
+      showStatus("Novo card de pergunta adicionado.", "success");
     } catch (error) {
       showStatus(error && error.message ? error.message : "Não foi possível adicionar a pergunta.", "error");
       console.error("Falha ao adicionar Conversation Question:", error);
@@ -340,7 +439,7 @@
     ui.modeLabel.textContent = "VISÃO DO PROFESSOR";
     ui.teacherTools.hidden = false;
     ui.professorLink.hidden = false;
-    ui.listHelp.textContent = "As caixas marcadas indicam respostas já realizadas corretamente.";
+    ui.listHelp.textContent = "Cada card reúne tradução, exemplos de respostas e o progresso dos alunos.";
 
     const results = await Promise.all([
       state.service.listQuestions(),
@@ -364,7 +463,7 @@
     ui.modeLabel.textContent = "MEU PROGRESSO";
     ui.teacherTools.hidden = true;
     ui.professorLink.hidden = true;
-    ui.listHelp.textContent = "Seu progresso é mostrado ao lado de cada pergunta.";
+    ui.listHelp.textContent = "Cada card traz tradução, cinco modelos de resposta e seu progresso.";
 
     const student = await state.service.getStudentProfile(state.session.user.id);
     if (!student || student.enrolled !== true || student.archived === true) {
@@ -391,6 +490,7 @@
 
   async function initialize() {
     cacheUi();
+    renderAnswerExampleFields();
     ui.questionForm.addEventListener("submit", handleAddQuestion);
     showStatus("Carregando Conversation Questions...", "neutral");
 
