@@ -64,7 +64,9 @@ Antes da sincronização, `scripts/configure_android_deep_link.py` registra o ca
 
 O Google continua retornando primeiro para a rota HTTPS já autorizada do site. Quando `native_callback=1`, essa rota entrega apenas o authorization code ao aplicativo. O app troca esse código pela sessão usando o verificador PKCE mantido no armazenamento local do próprio aplicativo.
 
-Esse APK é apenas para validação técnica e instalação de teste. A publicação na Google Play exige uma versão release assinada e geração de AAB.
+Os builds Android usam `mobile/android_release.json` como fonte de versionamento. A versão inicial de distribuição é `1.0.0` com `versionCode 1`. O ícone e a tela de abertura nativos são gerados a partir de `assets/favicon.svg`; os formatos rasterizados ou XML exigidos pelo Android são artefatos de build, não novas fontes visuais.
+
+O workflow também gera `app-release.aab`. Nesta etapa o AAB permanece sem assinatura de distribuição. A assinatura definitiva deve usar uma upload key privada armazenada fora do repositório e conectada ao CI por segredo.
 
 ## Próximos passos
 
@@ -73,6 +75,7 @@ Após a validação do APK debug:
 1. versionar o projeto Android nativo quando começarem customizações específicas;
 2. definir ícone e splash nativos definitivos;
 3. testar autenticação, pagamentos, links externos e navegação em aparelho físico;
-4. configurar assinatura de release sem versionar credenciais;
-5. gerar AAB;
-6. preparar a ficha da Google Play e o primeiro envio.
+4. criar e proteger a upload key da Google Play;
+5. conectar a assinatura ao CI por segredo;
+6. validar o AAB assinado;
+7. preparar a ficha da Google Play e o primeiro envio.
