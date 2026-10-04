@@ -30,7 +30,7 @@ test("keeps Conversation Questions private from search engines", function () {
   assert.equal(sitemap.includes("/conversation-questions/"), false);
 });
 
-test("links Conversation Questions from professor and student dashboards", function () {
+test("links Conversation Questions only from the professor dashboard", function () {
   assert.match(
     professor,
     /href="\/conversation-questions\/"[^>]*data-card-id="conversation-questions"/
