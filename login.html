@@ -35,6 +35,33 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       } catch (_) {}
     })();
   </script>
+  <script>
+    (function returnNativeOAuthToApp() {
+      "use strict";
+
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("native_callback") !== "1") return;
+
+        const code = String(params.get("code") || "");
+        const error = String(params.get("error") || "");
+        const errorDescription = String(params.get("error_description") || "");
+        if (!code && !error) return;
+
+        const next = String(params.get("next") || "/area-do-estudante/").trim();
+        const safeNext = next.startsWith("/") && !next.startsWith("//")
+          ? next
+          : "/area-do-estudante/";
+
+        const callback = new URL("com.teacherflavius.app://login-callback");
+        if (code) callback.searchParams.set("code", code);
+        if (error) callback.searchParams.set("error", error);
+        if (errorDescription) callback.searchParams.set("error_description", errorDescription);
+        callback.searchParams.set("next", safeNext);
+        window.location.replace(callback.toString());
+      } catch (_) {}
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase_config.js?v=20260429-4"></script>
     <script src="/module_loader.js?v=20260902-2"></script>
@@ -264,6 +291,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         window.location.replace(safeNext());
       }
 
+      async function completeGoogleEntry(session) {
+        const identities = await Auth.getUserIdentities();
+        const hasGoogle = identities.some(function (identity) {
+          return identity && identity.provider === "google";
+        });
+        if (!hasGoogle) throw new Error("A sessão recebida não possui uma identidade Google válida.");
+
+        const candidate = await invokeLinkService("candidate");
+        if (candidate.show_prompt === true && candidate.enrollment_email) {
+          enrollmentEmail.textContent = candidate.enrollment_email;
+          overlay.hidden = false;
+          document.documentElement.style.overflow = "hidden";
+          linkButton.focus();
+          return;
+        }
+
+        await finishEntry(session);
+      }
+
       async function processGoogleReturn() {
         if (passwordAccessMode || params.get("google_callback") !== "1") return;
         setLoginBusy(true);
@@ -271,24 +317,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         try {
           const session = await waitForSession();
           if (!session) throw new Error("Não foi possível concluir o login com Google. Tente novamente.");
-          const identities = await Auth.getUserIdentities();
-          const hasGoogle = identities.some(function (identity) {
-            return identity && identity.provider === "google";
-          });
-          if (!hasGoogle) throw new Error("A sessão recebida não possui uma identidade Google válida.");
-          const candidate = await invokeLinkService("candidate");
-          if (candidate.show_prompt === true && candidate.enrollment_email) {
-            enrollmentEmail.textContent = candidate.enrollment_email;
-            overlay.hidden = false;
-            document.documentElement.style.overflow = "hidden";
-            linkButton.focus();
-            return;
-          }
-          await finishEntry(session);
+          await completeGoogleEntry(session);
         } catch (error) {
           loginError.textContent = error.message || "Não foi possível concluir o acesso com Google.";
           setLoginBusy(false);
         }
+      }
+
+      async function processNativeGoogleReturn() {
+        const bridge = window.TeacherFlaviusNativeAuth;
+        const code = String(params.get("native_code") || "");
+        if (!bridge || !bridge.isNativeApp(window) || !code) return false;
+
+        setLoginBusy(true);
+        loginError.textContent = "";
+
+        try {
+          const response = await Auth.getClient().auth.exchangeCodeForSession(code);
+          if (response.error) throw response.error;
+
+          const session = response.data && response.data.session
+            ? response.data.session
+            : await Auth.getSession();
+          if (!session) throw new Error("Não foi possível criar a sessão no aplicativo.");
+
+          await completeGoogleEntry(session);
+        } catch (error) {
+          loginError.textContent = error.message || "Não foi possível concluir o acesso no aplicativo.";
+          setLoginBusy(false);
+        }
+
+        return true;
       }
 
       if (passwordAccessMode) {
@@ -300,14 +359,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             loginError.textContent = "Não foi possível carregar a autenticação. Atualize a página e tente novamente.";
             return;
           }
+
           setLoginBusy(true);
           try {
-            const redirectTo = "https://teacherflavius.com/login/?google_callback=1&next=" + encodeURIComponent(safeNext());
+            const nativeBridge = window.TeacherFlaviusNativeAuth;
+            const isNative = Boolean(nativeBridge && nativeBridge.isNativeApp(window));
+            const callbackFlag = isNative ? "native_callback=1" : "google_callback=1";
+            const redirectTo = "https://teacherflavius.com/login/?" +
+              callbackFlag +
+              "&next=" +
+              encodeURIComponent(safeNext());
+
             const response = await Auth.getClient().auth.signInWithOAuth({
               provider: "google",
-              options: { redirectTo: redirectTo, queryParams: { prompt: "select_account" } }
+              options: {
+                redirectTo: redirectTo,
+                skipBrowserRedirect: isNative,
+                queryParams: { prompt: "select_account" }
+              }
             });
             if (response.error) throw response.error;
+
+            if (isNative) {
+              if (!response.data || !response.data.url) {
+                throw new Error("O Google não retornou uma URL de autenticação.");
+              }
+              await nativeBridge.openOAuthUrl(response.data.url, window);
+            }
           } catch (error) {
             loginError.textContent = error.message || "Não foi possível abrir o Google.";
             setLoginBusy(false);
@@ -332,7 +410,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         });
 
         showNotice();
-        processGoogleReturn();
+        processNativeGoogleReturn().then(function (handled) {
+          if (!handled) processGoogleReturn();
+        });
       }
     })();
   </script>
