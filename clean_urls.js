@@ -4,6 +4,14 @@
   if (window.TeacherFlaviusCleanUrlsInstalled) return;
   window.TeacherFlaviusCleanUrlsInstalled = true;
 
+  function isNativeCapacitorApp() {
+    return Boolean(
+      window.Capacitor &&
+      typeof window.Capacitor.isNativePlatform === "function" &&
+      window.Capacitor.isNativePlatform()
+    );
+  }
+
   const LEGACY_TO_CLEAN = {
     "/index.html": "/",
     "/acessos_dos_alunos.html": "/acessos-dos-alunos/",
@@ -189,6 +197,7 @@
   }
 
   function install() {
+    if (isNativeCapacitorApp()) return;
     if (redirectSpecialTopLevelRoute()) return;
     rewriteElement(document.documentElement);
     normalizeCurrentAddress();
