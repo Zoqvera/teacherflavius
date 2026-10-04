@@ -27,11 +27,18 @@ def strip_matching_quotes(value: str) -> str:
 
 
 def normalize_secret(name: str, raw_value: str) -> str:
-    value = strip_matching_quotes(str(raw_value or ""))
+    value = str(raw_value or "").strip()
     prefix = name + "="
-    if value.startswith(prefix):
-        value = value[len(prefix):]
-    return strip_matching_quotes(value)
+
+    for line in value.splitlines():
+        candidate = strip_matching_quotes(line)
+        if candidate.startswith(prefix):
+            return strip_matching_quotes(candidate[len(prefix):])
+
+    candidate = strip_matching_quotes(value)
+    if candidate.startswith(prefix):
+        candidate = candidate[len(prefix):]
+    return strip_matching_quotes(candidate)
 
 
 def signing_environment() -> dict[str, str] | None:
