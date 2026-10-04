@@ -1,4 +1,5 @@
 _site/
+_android_site/
 .netlify/
 __pycache__/
 *.pyc

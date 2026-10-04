@@ -17,7 +17,7 @@ class CapacitorAndroidContractTests(unittest.TestCase):
     def test_capacitor_uses_bundled_static_site(self) -> None:
         self.assertEqual(self.config["appId"], "com.teacherflavius.app")
         self.assertEqual(self.config["appName"], "Teacher Flávio")
-        self.assertEqual(self.config["webDir"], "_site")
+        self.assertEqual(self.config["webDir"], "_android_site")
         self.assertNotIn("url", self.config.get("server", {}))
 
     def test_capacitor_8_packages_are_pinned_together(self) -> None:
@@ -34,6 +34,7 @@ class CapacitorAndroidContractTests(unittest.TestCase):
         self.assertIn("scripts/build_static_site.py", scripts["mobile:web"])
         self.assertIn("scripts/materialize_site.py", scripts["mobile:web"])
         self.assertIn("scripts/postprocess_production.py", scripts["mobile:web"])
+        self.assertIn("scripts/prepare_android_web.py", scripts["mobile:web"])
         self.assertIn("npm run mobile:web", scripts["mobile:android:sync"])
         self.assertIn("cap sync android", scripts["mobile:android:sync"])
 
@@ -46,6 +47,7 @@ class CapacitorAndroidContractTests(unittest.TestCase):
         self.assertIn('java-version: "21"', workflow)
         self.assertIn("platforms;android-36", workflow)
         self.assertIn("npx cap add android", workflow)
+        self.assertIn("Validate native route preparation", workflow)
         self.assertIn("./gradlew assembleDebug", workflow)
         self.assertIn("actions/upload-artifact@v7", workflow)
 

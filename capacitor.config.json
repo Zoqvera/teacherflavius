@@ -1,7 +1,7 @@
 {
   "appId": "com.teacherflavius.app",
   "appName": "Teacher Flávio",
-  "webDir": "_site",
+  "webDir": "_android_site",
   "server": {
     "androidScheme": "https"
   },
