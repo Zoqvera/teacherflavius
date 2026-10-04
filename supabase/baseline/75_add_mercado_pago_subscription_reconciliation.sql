@@ -1,3 +1,46 @@
+-- Restore the financial subject reference invariants that production gained after
+-- the original reconstruction snapshot. These columns let financial history
+-- survive account deletion without retaining an active profile relationship.
+alter table public.monthly_tuition
+  add column if not exists subject_ref uuid;
+
+update public.monthly_tuition
+set subject_ref = student_id
+where subject_ref is null;
+
+alter table public.monthly_tuition
+  alter column subject_ref set not null,
+  alter column student_id drop not null;
+
+alter table public.monthly_tuition
+  drop constraint if exists monthly_tuition_student_id_fkey;
+
+alter table public.monthly_tuition
+  add constraint monthly_tuition_student_id_fkey
+  foreign key (student_id)
+  references public.profiles(id)
+  on delete set null;
+
+alter table public.tuition_payment_attempts
+  add column if not exists subject_ref uuid;
+
+update public.tuition_payment_attempts
+set subject_ref = student_id
+where subject_ref is null;
+
+alter table public.tuition_payment_attempts
+  alter column subject_ref set not null,
+  alter column student_id drop not null;
+
+alter table public.tuition_payment_attempts
+  drop constraint if exists tuition_payment_attempts_student_id_fkey;
+
+alter table public.tuition_payment_attempts
+  add constraint tuition_payment_attempts_student_id_fkey
+  foreign key (student_id)
+  references public.profiles(id)
+  on delete set null;
+
 create table public.subscription_authorized_payments (
   id uuid primary key default gen_random_uuid(),
   subscription_id uuid references public.student_subscriptions(id) on delete set null,
