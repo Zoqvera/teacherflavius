@@ -32,7 +32,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script src="auth.js?v=20260818-google-auth-1"></script>
   <script src="/student_profile_optional.js?v=20260902-1"></script>
   <script src="/student_tuition_due_day.js?v=20261002-auto-due-1"></script>
-  <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20261001-access-code-1" />
+  <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20261004-fee-plan-1" />
 </head>
 <body class="enrollment-onboarding">
 <!-- Google Tag Manager (noscript) -->
@@ -114,16 +114,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <input id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" required />
             </div>
 
-            <div class="field">
-              <label class="field-label" for="classesPerMonth">Quantidade de aulas por mês</label>
-              <input id="classesPerMonth" type="number" min="1" max="31" step="1" inputmode="numeric" required />
-              <div class="field-note">Informe a quantidade de aulas combinada com o professor.</div>
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="monthlyFee">Valor combinado com o professor</label>
-              <input id="monthlyFee" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: 150,00" required />
-              <div class="field-note">Informe o valor mensal em reais.</div>
+            <div class="field full">
+              <label class="field-label" for="monthlyFee">Valor da mensalidade</label>
+              <select id="monthlyFee" required>
+                <option value="" selected disabled>Selecione o valor</option>
+                <option value="50">R$ 50,00</option>
+                <option value="99.90">R$ 99,90</option>
+                <option value="100">R$ 100,00</option>
+                <option value="250">R$ 250,00</option>
+              </select>
+              <div class="field-note">A quantidade de aulas mensais será definida automaticamente pelo sistema a partir deste valor.</div>
             </div>
           </div>
         </section>
@@ -175,14 +175,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         throw new Error("O valor combinado com o professor deve ser maior que zero.");
       }
       return Math.round(amount * 100) / 100;
-    }
-
-    function parseClassesPerMonth(value) {
-      const amount = Number(value);
-      if (!Number.isInteger(amount) || amount < 1 || amount > 31) {
-        throw new Error("Informe a quantidade de aulas por mês entre 1 e 31.");
-      }
-      return amount;
     }
 
     function parseBirthDate(value) {
@@ -311,7 +303,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
-        const classesPerMonth = parseClassesPerMonth(document.getElementById("classesPerMonth").value);
         const monthlyFee = parseMonthlyFee(document.getElementById("monthlyFee").value);
         const user = await Auth.getUser();
         if (!user) throw new Error("Sua sessão expirou. Entre novamente com Google.");
@@ -329,7 +320,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         const billingTermsResponse = await Auth.getClient().rpc("set_my_enrollment_billing_terms", {
-          target_classes_per_month: classesPerMonth,
           target_monthly_fee: monthlyFee
         });
         if (billingTermsResponse.error) throw billingTermsResponse.error;
