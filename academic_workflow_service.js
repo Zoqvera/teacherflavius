@@ -64,8 +64,44 @@
   function create(client) {
     const supabase = requireClient(client);
 
+    async function hydrateQuestions(questions) {
+      if (!Array.isArray(questions) || questions.length === 0) return [];
+
+      const ids = questions
+        .map(function (question) { return question && question.id; })
+        .filter(Boolean);
+
+      if (!ids.length) return questions;
+
+      const response = await supabase
+        .from("conversation_questions")
+        .select("id,question_text,question_translation,answer_examples,display_order")
+        .in("id", ids);
+
+      const rows = unwrap(response) || [];
+      const byId = new Map(rows.map(function (row) {
+        return [row.id, row];
+      }));
+
+      return questions.map(function (question) {
+        const row = byId.get(question.id);
+        if (!row) return question;
+
+        return Object.assign({}, question, {
+          text: row.question_text,
+          translation: row.question_translation,
+          examples: row.answer_examples,
+          display_order: row.display_order
+        });
+      });
+    }
+
     async function getMyActionPlan() {
-      return unwrap(await supabase.rpc("get_my_action_plan"));
+      const plan = unwrap(await supabase.rpc("get_my_action_plan"));
+      if (!plan) return plan;
+
+      plan.questions = await hydrateQuestions(plan.questions);
+      return plan;
     }
 
     async function markLessonPrepared(lessonNumber) {
