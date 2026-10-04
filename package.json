@@ -35,10 +35,11 @@
     "quality": "npm run check:js && npm run lint && npm run test:node && npm run test:python",
     "probe:mercado-pago-subscription-sandbox": "node scripts/mercado_pago_subscription_sandbox_probe.js",
     "mobile:web": "python3 scripts/build_static_site.py && python3 scripts/materialize_site.py --profile publish && python3 scripts/postprocess_production.py && python3 scripts/prepare_android_web.py",
-    "mobile:android:add": "npx cap add android && python3 scripts/configure_android_deep_link.py",
-    "mobile:android:sync": "npm run mobile:web && python3 scripts/configure_android_deep_link.py && npx cap sync android",
+    "mobile:android:add": "npx cap add android && python3 scripts/configure_android_deep_link.py && python3 scripts/configure_android_release.py",
+    "mobile:android:sync": "npm run mobile:web && npx cap sync android && python3 scripts/configure_android_deep_link.py && python3 scripts/configure_android_release.py",
     "mobile:android:open": "npx cap open android",
-    "mobile:android:debug": "npm run mobile:web && python3 scripts/configure_android_deep_link.py && npx cap sync android && cd android && ./gradlew assembleDebug"
+    "mobile:android:debug": "npm run mobile:web && npx cap sync android && python3 scripts/configure_android_deep_link.py && python3 scripts/configure_android_release.py && cd android && ./gradlew assembleDebug",
+    "mobile:android:bundle": "npm run mobile:web && npx cap sync android && python3 scripts/configure_android_deep_link.py && python3 scripts/configure_android_release.py && cd android && ./gradlew bundleRelease"
   },
   "devDependencies": {
     "eslint": "9.34.0",
