@@ -14,6 +14,7 @@
     loadingPromise: null,
     anchorDate: null,
     firstLessonDate: null,
+    windowStartDate: null,
     latestDueDate: null,
     dateOptions: [],
     selectedDueDate: null
@@ -53,6 +54,7 @@
       const payload = response.data || {};
       state.anchorDate = payload.anchor_date || null;
       state.firstLessonDate = payload.first_lesson_date || null;
+      state.windowStartDate = payload.window_start_date || null;
       state.latestDueDate = payload.latest_due_date || null;
       state.dateOptions = normalizeDateOptions(payload.date_options);
       state.selectedDueDate = payload.selected_due_date || payload.first_due_date || null;
@@ -87,15 +89,15 @@
       return "Ainda não há uma primeira aula com data definida. O vencimento disponível é o dia da matrícula.";
     }
 
-    if (state.latestDueDate === state.anchorDate) {
+    if (state.dateOptions.length === 1) {
       return "Sua primeira aula está prevista para " + formatDateBr(state.firstLessonDate) +
-        ". Como ela acontece em até 6 dias, o vencimento disponível é o dia da matrícula.";
+        ". O vencimento disponível é o dia da matrícula.";
     }
 
     return "Sua primeira aula está prevista para " + formatDateBr(state.firstLessonDate) +
-      ". Escolha uma data entre " + formatDateBr(state.anchorDate) + " e " +
-      formatDateBr(state.latestDueDate) +
-      ". O último vencimento possível é 6 dias antes da primeira aula.";
+      ". Escolha o dia da matrícula ou uma das datas entre " +
+      formatDateBr(state.windowStartDate) + " e " + formatDateBr(state.latestDueDate) +
+      ", dentro dos 6 dias anteriores à primeira aula.";
   }
 
   function buildSection() {
@@ -195,6 +197,7 @@
     if (response.error) throw response.error;
 
     state.selectedDueDate = response.data && response.data.first_due_date || selectedDueDate;
+    state.windowStartDate = response.data && response.data.window_start_date || state.windowStartDate;
     state.latestDueDate = response.data && response.data.latest_due_date || state.latestDueDate;
     state.firstLessonDate = response.data && response.data.first_lesson_date || state.firstLessonDate;
     return state.selectedDueDate;
