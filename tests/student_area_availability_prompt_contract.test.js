@@ -21,3 +21,12 @@ test("student dashboard no longer evaluates availability for a prompt", function
   assert.doesNotMatch(script, /hideProfileSetupPrompt/);
   assert.doesNotMatch(script, /profileSetupPrompt/);
 });
+
+test("student dashboard hides legacy study and replacement cards", function () {
+  assert.equal(page.includes('href="/roteiro-de-estudos/"'), false);
+  assert.doesNotMatch(page, />ROTEIRO DE ESTUDOS</);
+  assert.equal(page.includes('href="/conversation-questions/"'), false);
+  assert.doesNotMatch(page, />CONVERSATION QUESTIONS</);
+  assert.equal(page.includes('href="/reposicoes/"'), false);
+  assert.doesNotMatch(page, />REPOSIÇÕES</);
+});
