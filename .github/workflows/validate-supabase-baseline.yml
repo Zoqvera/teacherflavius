@@ -110,7 +110,8 @@ jobs:
             supabase/baseline/135_allow_tuition_due_date_correction_audit.sql \
             supabase/baseline/140_lesson_credits_and_my_lessons.sql \
             supabase/baseline/145_student_sets_enrollment_commercial_terms.sql \
-            supabase/baseline/150_align_first_tuition_with_lesson_start_month.sql
+            supabase/baseline/150_align_first_tuition_with_lesson_start_month.sql \
+            supabase/baseline/155_sync_lesson_cards_and_late_cancellation.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
