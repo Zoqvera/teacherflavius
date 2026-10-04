@@ -19,16 +19,19 @@ REQUIRED_ENVIRONMENT = (
 )
 
 
+def strip_matching_quotes(value: str) -> str:
+    text = value.strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in {"'", '"'}:
+        return text[1:-1].strip()
+    return text
+
+
 def normalize_secret(name: str, raw_value: str) -> str:
-    value = str(raw_value or "").strip()
+    value = strip_matching_quotes(str(raw_value or ""))
     prefix = name + "="
     if value.startswith(prefix):
-        value = value[len(prefix):].strip()
-
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
-        value = value[1:-1].strip()
-
-    return value
+        value = value[len(prefix):]
+    return strip_matching_quotes(value)
 
 
 def signing_environment() -> dict[str, str] | None:
