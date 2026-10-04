@@ -214,3 +214,4 @@ version,name
 20261004085127,seed_conversation_question_cards_091_100
 20261004085158,seed_conversation_question_cards_101_104
 20261004085216,enforce_conversation_question_card_content
+20261004141941,derive_enrollment_lessons_from_fee
