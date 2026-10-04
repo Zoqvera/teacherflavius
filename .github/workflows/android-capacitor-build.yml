@@ -7,6 +7,10 @@ on:
       - "package.json"
       - "pwa_registration.js"
       - "pwa_install_prompt.js"
+      - "native_auth_bridge.js"
+      - "login.html"
+      - "supabase_client_service.js"
+      - "auth_infrastructure.js"
       - "site.webmanifest"
       - "scripts/**"
       - "tests/test_capacitor_android_contract.py"
@@ -70,6 +74,9 @@ jobs:
       - name: Generate Android project
         run: npx cap add android
 
+      - name: Configure OAuth deep link
+        run: python3 scripts/configure_android_deep_link.py
+
       - name: Synchronize Capacitor Android
         run: npx cap sync android
 
@@ -79,8 +86,14 @@ jobs:
           test -f android/app/src/main/AndroidManifest.xml
           test -f android/app/build.gradle
           grep -q 'com.teacherflavius.app' android/app/build.gradle
+          grep -q 'android:scheme="com.teacherflavius.app"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:host="login-callback"' android/app/src/main/AndroidManifest.xml
+          grep -q '@capacitor/app' android/app/src/main/assets/capacitor.plugins.json
+          grep -q '@capacitor/browser' android/app/src/main/assets/capacitor.plugins.json
           test -f android/app/src/main/assets/public/index.html
           grep -q '/login/index.html?next=/area-do-estudante/index.html' android/app/src/main/assets/public/index.html
+          grep -q '/native_auth_bridge.js?v=20261004-1' android/app/src/main/assets/public/index.html
+          grep -q 'native_callback=1' android/app/src/main/assets/public/login.html
 
       - name: Build debug APK
         working-directory: android

@@ -26,6 +26,8 @@ class CapacitorAndroidContractTests(unittest.TestCase):
 
         self.assertEqual(dependencies["@capacitor/core"], "8.5.2")
         self.assertEqual(dependencies["@capacitor/android"], "8.5.2")
+        self.assertEqual(dependencies["@capacitor/app"], "8.1.2")
+        self.assertEqual(dependencies["@capacitor/browser"], "8.0.5")
         self.assertEqual(dev_dependencies["@capacitor/cli"], "8.5.2")
 
     def test_mobile_scripts_build_before_sync(self) -> None:
@@ -36,6 +38,8 @@ class CapacitorAndroidContractTests(unittest.TestCase):
         self.assertIn("scripts/postprocess_production.py", scripts["mobile:web"])
         self.assertIn("scripts/prepare_android_web.py", scripts["mobile:web"])
         self.assertIn("npm run mobile:web", scripts["mobile:android:sync"])
+        self.assertIn("configure_android_deep_link.py", scripts["mobile:android:add"])
+        self.assertIn("configure_android_deep_link.py", scripts["mobile:android:sync"])
         self.assertIn("cap sync android", scripts["mobile:android:sync"])
 
     def test_android_workflow_builds_and_uploads_debug_apk(self) -> None:
@@ -47,9 +51,21 @@ class CapacitorAndroidContractTests(unittest.TestCase):
         self.assertIn('java-version: "21"', workflow)
         self.assertIn("platforms;android-36", workflow)
         self.assertIn("npx cap add android", workflow)
+        self.assertIn("Configure OAuth deep link", workflow)
         self.assertIn("Validate native route preparation", workflow)
+        self.assertIn('android:host="login-callback"', workflow)
+        self.assertIn("@capacitor/browser", workflow)
         self.assertIn("./gradlew assembleDebug", workflow)
         self.assertIn("actions/upload-artifact@v7", workflow)
+
+    def test_login_contains_native_pkce_callback_flow(self) -> None:
+        login = (ROOT / "login.html").read_text(encoding="utf-8")
+
+        self.assertIn("native_callback", login)
+        self.assertIn("native_code", login)
+        self.assertIn("skipBrowserRedirect: isNative", login)
+        self.assertIn("exchangeCodeForSession", login)
+        self.assertIn("com.teacherflavius.app://login-callback", login)
 
 
 if __name__ == "__main__":

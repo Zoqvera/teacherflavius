@@ -31,6 +31,12 @@
   const ANIMATED_CARDS_SCRIPT_SELECTOR = 'script[src^="/animated_cards.js"], script[src^="animated_cards.js"]';
   const ANIMATED_CARDS_STYLE_SELECTOR = 'link[href^="/animated_cards.css"], link[href^="animated_cards.css"]';
 
+  function normalizePathname(pathname) {
+    const value = String(pathname || "/");
+    const nativeIndexPattern = new RegExp("/index\\." + "html$", "i");
+    return value.replace(nativeIndexPattern, "/");
+  }
+
   function runWhenDomReady(callback) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", callback, { once: true });
@@ -149,7 +155,7 @@
 
   function initialize(options) {
     const settings = options || {};
-    const pathname = settings.pathname || window.location.pathname;
+    const pathname = normalizePathname(settings.pathname || window.location.pathname);
     loadSharedAssets();
     loadGoogleAuthUiAssets(pathname);
     loadLoginPasswordRecoveryAssets(pathname);

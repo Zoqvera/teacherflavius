@@ -35,7 +35,10 @@ class PrepareAndroidWebTests(unittest.TestCase):
             (source / "area-do-estudante").mkdir(parents=True)
             (source / "login" / "index.html").write_text("<h1>Login</h1>", encoding="utf-8")
             (source / "area-do-estudante" / "index.html").write_text("<h1>Aluno</h1>", encoding="utf-8")
-            home = '<a href="/login/?next=/area-do-estudante/">Entrar</a>'
+            home = (
+                '<!doctype html><html><head><title>Home</title></head>'
+                '<body><a href="/login/?next=/area-do-estudante/">Entrar</a></body></html>'
+            )
             (source / "index.html").write_text(home, encoding="utf-8")
             script = 'window.location.replace("/area-do-estudante/");'
             (source / "app.js").write_text(script, encoding="utf-8")
@@ -50,6 +53,10 @@ class PrepareAndroidWebTests(unittest.TestCase):
             self.assertIn(
                 'window.location.replace("/area-do-estudante/index.html")',
                 (destination / "app.js").read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                '/native_auth_bridge.js?v=20261004-1',
+                (destination / "index.html").read_text(encoding="utf-8"),
             )
 
 
