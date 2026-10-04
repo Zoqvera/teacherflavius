@@ -88,8 +88,8 @@ jobs:
           grep -q 'com.teacherflavius.app' android/app/build.gradle
           grep -q 'android:scheme="com.teacherflavius.app"' android/app/src/main/AndroidManifest.xml
           grep -q 'android:host="login-callback"' android/app/src/main/AndroidManifest.xml
-          grep -q '"App"' android/app/src/main/assets/capacitor.plugins.json
-          grep -q '"Browser"' android/app/src/main/assets/capacitor.plugins.json
+          grep -q '@capacitor/app' android/app/src/main/assets/capacitor.plugins.json
+          grep -q '@capacitor/browser' android/app/src/main/assets/capacitor.plugins.json
           test -f android/app/src/main/assets/public/index.html
           grep -q '/login/index.html?next=/area-do-estudante/index.html' android/app/src/main/assets/public/index.html
           grep -q '/native_auth_bridge.js?v=20261004-1' android/app/src/main/assets/public/index.html
