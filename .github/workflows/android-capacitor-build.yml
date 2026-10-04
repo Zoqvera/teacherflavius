@@ -148,7 +148,16 @@ jobs:
       - name: Verify signed release AAB
         if: steps.release-signing.outputs.configured == 'true'
         shell: bash
-        run: jarsigner -verify -strict android/app/build/outputs/bundle/release/app-release.aab
+        run: jarsigner -verify -certs android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Verify upload certificate fingerprint
+        if: steps.release-signing.outputs.configured == 'true'
+        shell: bash
+        run: |
+          EXPECTED_SHA256="$(python3 -c 'import json; print(json.load(open("mobile/android_release.json"))["uploadCertificateSha256"])')"
+          ACTUAL_SHA256="$(keytool -printcert -jarfile android/app/build/outputs/bundle/release/app-release.aab | sed -n 's/^[[:space:]]*SHA256: //p' | head -n 1)"
+          test -n "$ACTUAL_SHA256"
+          test "$ACTUAL_SHA256" = "$EXPECTED_SHA256"
 
       - name: Upload debug APK
         if: success()
