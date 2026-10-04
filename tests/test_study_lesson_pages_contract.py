@@ -51,6 +51,19 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("roadmap_lesson_number smallint", migration)
         self.assertNotIn("roadmap_lesson_number smallint not null", migration)
 
+    def test_lesson_route_fetches_full_linked_page_content(self) -> None:
+        service = self.read("study_lesson_service.js")
+        controller = self.read("licao.js")
+        lesson = self.read("licao/index.html")
+
+        self.assertIn("getLinkedPageByLessonNumber", service)
+        self.assertIn('.select(PAGE_FIELDS)', service)
+        self.assertIn('.eq("roadmap_lesson_number", normalizedLessonNumber)', service)
+        self.assertIn("service.getLinkedPageByLessonNumber(lessonNumber)", controller)
+        self.assertNotIn("service.listLinkedPages()", controller)
+        self.assertIn("study_lesson_service.js?v=20261004-full-content-1", lesson)
+        self.assertIn("licao.js?v=20261004-full-content-1", lesson)
+
     def test_lesson_page_contains_required_support_cards(self) -> None:
         lesson = self.read("licao/index.html")
         self.assertIn("TRADUTOR", lesson)

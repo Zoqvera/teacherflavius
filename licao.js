@@ -84,13 +84,6 @@
     return true;
   }
 
-  async function linkedPageForLesson(service, lessonNumber) {
-    const pages = await service.listLinkedPages();
-    return pages.find(function (page) {
-      return Number(page.roadmap_lesson_number) === lessonNumber;
-    }) || null;
-  }
-
   function disablePreparedButton(label) {
     const button = document.getElementById("lessonPreparedButton");
     button.disabled = true;
@@ -151,7 +144,7 @@
   }
 
   async function loadByLessonNumber(service, lessonNumber) {
-    const linkedPage = await linkedPageForLesson(service, lessonNumber);
+    const linkedPage = await service.getLinkedPageByLessonNumber(lessonNumber);
     if (linkedPage) {
       renderDynamicPage(linkedPage);
       await setupPreparation(lessonNumber);
