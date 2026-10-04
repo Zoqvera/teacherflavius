@@ -10,6 +10,7 @@
       window.Auth &&
       window.ResourceWaiter &&
       window.AcademicWorkflowService &&
+      window.ConversationQuestionCardRenderer &&
       window.SUPABASE_CONFIG &&
       window.Auth.isConfigured()
     );
@@ -78,7 +79,8 @@
     list.innerHTML = "";
 
     if (!questions.length) {
-      const item = document.createElement("li");
+      const item = document.createElement("p");
+      item.className = "academic-empty";
       item.textContent = plan.questions_complete
         ? "Todas as perguntas disponíveis já foram trabalhadas."
         : "Nenhuma pergunta disponível no momento.";
@@ -91,12 +93,11 @@
       return;
     }
 
-    questions.forEach(function (question) {
-      const item = document.createElement("li");
-      const text = document.createElement("span");
-      text.textContent = question.text;
-      item.appendChild(text);
-      list.appendChild(item);
+    questions.forEach(function (question, index) {
+      list.appendChild(window.ConversationQuestionCardRenderer.create(question, {
+        number: index + 1,
+        className: "academic-conversation-card"
+      }));
     });
 
     if (plan.questions_studied) {
