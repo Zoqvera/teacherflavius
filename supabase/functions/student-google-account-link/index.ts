@@ -1,7 +1,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.3";
 
-const allowedOrigin = "https://teacherflavius.com";
+const browserOrigin = "https://teacherflavius.com";
+const androidAppOrigin = "https://localhost";
+const allowedOrigins = new Set([browserOrigin, androidAppOrigin]);
+
+function isAllowedOrigin(origin: string | null) {
+  return !origin || allowedOrigins.has(origin);
+}
 
 function corsHeaders(origin: string | null) {
   const headers: Record<string, string> = {
@@ -9,7 +15,11 @@ function corsHeaders(origin: string | null) {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
   };
-  if (!origin || origin === allowedOrigin) headers["Access-Control-Allow-Origin"] = allowedOrigin;
+  if (!origin) {
+    headers["Access-Control-Allow-Origin"] = browserOrigin;
+  } else if (allowedOrigins.has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
   return headers;
 }
 
@@ -43,7 +53,7 @@ function normalizeEmail(value: unknown) {
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("Origin");
-  if (origin && origin !== allowedOrigin) return json({ error: "Origem não permitida." }, 403, origin);
+  if (!isAllowedOrigin(origin)) return json({ error: "Origem não permitida." }, 403, origin);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(origin) });
   if (req.method !== "POST") return json({ error: "Método não permitido." }, 405, origin);
 
