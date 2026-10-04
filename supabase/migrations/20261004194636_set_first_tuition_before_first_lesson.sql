@@ -7,6 +7,7 @@ create or replace function private.get_enrollment_tuition_schedule(
 )
 returns table (
   first_lesson_date date,
+  window_start_date date,
   latest_due_date date,
   due_date_options date[]
 )
@@ -43,26 +44,47 @@ as $function$
     select
       first_lesson.first_lesson_date,
       case
-        when first_lesson.first_lesson_date is null then target_enrollment_date
-        when first_lesson.first_lesson_date - 6 <= target_enrollment_date
+        when first_lesson.first_lesson_date is null
+          or first_lesson.first_lesson_date <= target_enrollment_date
           then target_enrollment_date
-        else first_lesson.first_lesson_date - 6
+        else greatest(
+          target_enrollment_date,
+          first_lesson.first_lesson_date - 6
+        )
+      end::date as window_start_date,
+      case
+        when first_lesson.first_lesson_date is null
+          or first_lesson.first_lesson_date <= target_enrollment_date
+          then target_enrollment_date
+        else first_lesson.first_lesson_date - 1
       end::date as latest_due_date
     from first_lesson
+  ),
+  generated_options as (
+    select target_enrollment_date::date as due_date
+    from bounds
+
+    union
+
+    select generated_day::date
+    from bounds
+    cross join lateral generate_series(
+      bounds.window_start_date::timestamp,
+      bounds.latest_due_date::timestamp,
+      interval '1 day'
+    ) generated_day
   )
   select
     bounds.first_lesson_date,
+    bounds.window_start_date,
     bounds.latest_due_date,
-    array(
-      select generated_day::date
-      from generate_series(
-        target_enrollment_date::timestamp,
-        bounds.latest_due_date::timestamp,
-        interval '1 day'
-      ) generated_day
-      order by generated_day
-    )::date[] as due_date_options
-  from bounds;
+    array_agg(options.due_date order by options.due_date)::date[] as due_date_options
+  from bounds
+  join generated_options options on true
+  group by
+    bounds.first_lesson_date,
+    bounds.window_start_date,
+    bounds.latest_due_date;
 $function$;
 
 revoke execute on function private.get_enrollment_tuition_schedule(uuid, date)
@@ -116,6 +138,7 @@ begin
   return jsonb_build_object(
     'anchor_date', enrollment_date,
     'first_lesson_date', schedule_row.first_lesson_date,
+    'window_start_date', schedule_row.window_start_date,
     'latest_due_date', schedule_row.latest_due_date,
     'date_options', to_jsonb(schedule_row.due_date_options),
     'options', to_jsonb(legacy_day_options),
@@ -224,6 +247,7 @@ begin
     'due_day', effective_due_day,
     'first_due_date', chosen_first_due_date,
     'first_lesson_date', schedule_row.first_lesson_date,
+    'window_start_date', schedule_row.window_start_date,
     'latest_due_date', schedule_row.latest_due_date,
     'billing_start_month', system_start_month,
     'already_selected', false,
