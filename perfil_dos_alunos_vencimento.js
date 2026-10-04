@@ -10,6 +10,10 @@
     return document.getElementById("studentDueDay");
   }
 
+  function getLessonQuantityField() {
+    return document.getElementById("studentClassesPerMonth");
+  }
+
   function getBillingSettings(studentId) {
     try {
       if (typeof studentBillingMap !== "undefined" && studentBillingMap && typeof studentBillingMap.get === "function") {
@@ -82,10 +86,12 @@
 
   function ensureDueDayField() {
     const field = getDueDayField();
+    const lessonQuantityField = getLessonQuantityField();
     const form = document.getElementById("studentBillingForm");
-    if (!field || !form) return false;
+    if (!field || !lessonQuantityField || !form) return false;
 
     field.required = true;
+    lessonQuantityField.required = true;
 
     const title = document.getElementById("studentBillingTitle");
     if (title) title.textContent = "Mensalidade";
@@ -122,6 +128,17 @@
     field.value = hasCurrentDueDay ? String(currentDueDay) : "";
   }
 
+  function populateLessonQuantity(studentId) {
+    const field = getLessonQuantityField();
+    if (!field) return;
+
+    const settings = getBillingSettings(studentId);
+    const classesPerMonth = Number(settings.classes_per_month);
+    field.value = Number.isInteger(classesPerMonth) && classesPerMonth >= 1 && classesPerMonth <= 31
+      ? String(classesPerMonth)
+      : "";
+  }
+
   function annotateBillingCards() {
     try {
       document.querySelectorAll(".student-card").forEach(function (card) {
@@ -132,13 +149,20 @@
         const settings = getBillingSettings(button.dataset.studentId);
         const dueDay = Number(settings.due_day);
         if (Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31) {
-          const suffix = " · vence dia " + dueDay;
-          if (!badge.textContent.includes("vence dia")) badge.textContent += suffix;
-          return;
+          const dueDaySuffix = " · vence dia " + dueDay;
+          if (!badge.textContent.includes("vence dia")) badge.textContent += dueDaySuffix;
+        } else if (!badge.textContent.includes("vencimento não definido")) {
+          badge.textContent += " · vencimento não definido";
         }
 
-        if (!badge.textContent.includes("vencimento não definido")) {
-          badge.textContent += " · vencimento não definido";
+        const classesPerMonth = Number(settings.classes_per_month);
+        if (Number.isInteger(classesPerMonth) && classesPerMonth >= 1 && classesPerMonth <= 31) {
+          const lessonLabel = classesPerMonth === 1 ? "1 aula/mês" : classesPerMonth + " aulas/mês";
+          if (!badge.textContent.includes("aula/mês") && !badge.textContent.includes("aulas/mês")) {
+            badge.textContent += " · " + lessonLabel;
+          }
+        } else if (!badge.textContent.includes("aulas/mês não definidas")) {
+          badge.textContent += " · aulas/mês não definidas";
         }
       });
     } catch (_) {}
@@ -156,6 +180,7 @@
 
     window.setTimeout(function () {
       populateDueDay(button.dataset.studentId);
+      populateLessonQuantity(button.dataset.studentId);
     }, 0);
   }, true);
 
@@ -175,9 +200,11 @@
 
     const feeInput = document.getElementById("studentMonthlyFee");
     const dueDayField = getDueDayField();
+    const lessonQuantityField = getLessonQuantityField();
     const button = document.getElementById("saveStudentBillingButton");
     const fee = Number(String(feeInput ? feeInput.value : "").replace(",", "."));
     const dueDay = Number(dueDayField ? dueDayField.value : "");
+    const classesPerMonth = Number(lessonQuantityField ? lessonQuantityField.value : "");
     const settings = selection.settings || getBillingSettings(selection.studentId) || {};
     const currentDueDay = Number(settings.due_day);
 
@@ -185,6 +212,14 @@
       if (typeof setStudentBillingMessage === "function") {
         setStudentBillingMessage("Informe um valor de mensalidade maior que zero.", "error");
       }
+      return;
+    }
+
+    if (!Number.isInteger(classesPerMonth) || classesPerMonth < 1 || classesPerMonth > 31) {
+      if (typeof setStudentBillingMessage === "function") {
+        setStudentBillingMessage("Informe a quantidade de aulas contratadas no mês, entre 1 e 31.", "error");
+      }
+      if (lessonQuantityField) lessonQuantityField.focus();
       return;
     }
 
@@ -223,6 +258,12 @@
       });
       if (response.error) throw response.error;
 
+      const lessonPlanResponse = await client.rpc("save_student_lesson_plan", {
+        target_student_id: selection.studentId,
+        target_classes_per_month: classesPerMonth
+      });
+      if (lessonPlanResponse.error) throw lessonPlanResponse.error;
+
       const currentBillingMonth = typeof getCurrentBillingMonth === "function"
         ? getCurrentBillingMonth()
         : new Intl.DateTimeFormat("en-CA", {
@@ -253,7 +294,11 @@
             "warning"
           );
         } else {
-          setBillingStatusMessage("Mensalidade atualizada com vencimento no dia " + dueDay + ".", "success");
+          setBillingStatusMessage(
+            "Mensalidade atualizada com vencimento no dia " + dueDay + " e " +
+            classesPerMonth + (classesPerMonth === 1 ? " aula contratada por mês." : " aulas contratadas por mês."),
+            "success"
+          );
         }
       }
       window.setTimeout(annotateBillingCards, 0);
