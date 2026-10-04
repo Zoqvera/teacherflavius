@@ -323,11 +323,18 @@
     status.hidden = true;
   }
 
+  function initializePwaInstallExperience() {
+    const installPrompt = window.TeacherFlaviusPwaInstallPrompt;
+    if (!installPrompt || typeof installPrompt.initialize !== "function") return;
+    installPrompt.initialize(window, document);
+  }
+
   async function updateStatus() {
     const isAllowed = await guardStudentArea();
     if (!isAllowed) return;
 
     clearLoginStatus();
+    initializePwaInstallExperience();
 
     if (isProfessorSession()) {
       closeOverdueModal();
