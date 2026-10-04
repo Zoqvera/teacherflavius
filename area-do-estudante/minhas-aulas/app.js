@@ -124,7 +124,15 @@
   function getLessonStatusMetadata(status) {
     if (status === "available") return { label: "CRÉDITO DISPONÍVEL", className: "available" };
     if (status === "used") return { label: "REPOSIÇÃO CONFIRMADA", className: "used" };
+    if (status === "forfeited") return { label: "CANCELADA SEM CRÉDITO", className: "forfeited" };
     return { label: "CONFIRMADA", className: "" };
+  }
+
+  function cancellationStillEarnsCredit(deadline) {
+    if (!deadline) return false;
+    const deadlineDate = new Date(deadline);
+    if (Number.isNaN(deadlineDate.getTime())) return false;
+    return Date.now() <= deadlineDate.getTime();
   }
 
   function renderLessonCards() {
@@ -140,17 +148,23 @@
         : formatDateTime(credit.starts_at);
       const deadline = formatDeadline(credit.cancellation_deadline);
       const canCancel = credit.can_cancel === true;
+      const earnsCredit = credit.status === "scheduled"
+        && cancellationStillEarnsCredit(credit.cancellation_deadline);
       const hasScheduledLesson = credit.status === "scheduled" || credit.status === "used";
       let deadlineText = "";
       if (hasScheduledLesson && deadline) {
-        deadlineText = canCancel
-          ? '<p class="deadline-note">Cancelamento disponível até ' + escapeHtml(deadline) + '.</p>'
-          : '<p class="deadline-note closed">O prazo de cancelamento desta aula foi encerrado.</p>';
+        if (credit.status === "scheduled" && canCancel && !earnsCredit) {
+          deadlineText = '<p class="deadline-note closed">Você ainda pode cancelar e liberar a vaga, mas o prazo para receber crédito terminou em ' + escapeHtml(deadline) + '.</p>';
+        } else if (canCancel) {
+          deadlineText = '<p class="deadline-note">Cancele até ' + escapeHtml(deadline) + ' para receber crédito de reposição.</p>';
+        } else {
+          deadlineText = '<p class="deadline-note closed">O prazo de cancelamento desta aula foi encerrado.</p>';
+        }
       }
 
       const actions = [];
       if (canCancel && credit.status === "scheduled") {
-        actions.push('<button class="secondary-button regular-cancel-button" type="button" data-credit-id="' + escapeHtml(credit.credit_id) + '">CANCELAR AULA</button>');
+        actions.push('<button class="secondary-button regular-cancel-button" type="button" data-credit-id="' + escapeHtml(credit.credit_id) + '" data-credit-eligible="' + (earnsCredit ? "true" : "false") + '">CANCELAR AULA</button>');
       }
       if (canCancel && credit.status === "used") {
         actions.push('<button class="secondary-button replacement-cancel-button" type="button" data-credit-id="' + escapeHtml(credit.credit_id) + '">CANCELAR REPOSIÇÃO</button>');
@@ -220,7 +234,7 @@
     '</section>' +
     '<section class="surface-card">' +
       '<h2>Minhas aulas</h2>' +
-      '<p class="card-description">Aulas confirmadas podem ser canceladas até 12 horas antes do início.</p>' +
+      '<p class="card-description">Cada aula do mês aparece em um card. O cancelamento libera a vaga daquela ocorrência; cancelamentos com 12 horas ou mais de antecedência geram crédito para reposição.</p>' +
       (configurationPending
         ? '<div class="config-note">O professor ainda precisa definir a quantidade de aulas contratadas por mês no seu perfil.</div>'
         : renderLessonCards()) +
@@ -261,14 +275,21 @@
   }
 
   async function cancelRegularLesson(button) {
-    const confirmed = window.confirm("Cancelar esta aula? O cancelamento dentro do prazo transformará a aula em um crédito para reposição.");
+    const expectsCredit = button.dataset.creditEligible === "true";
+    const confirmationMessage = expectsCredit
+      ? "Cancelar esta aula? A vaga será liberada e você receberá um crédito para reposição."
+      : "Cancelar esta aula? A vaga será liberada, mas este cancelamento não gera crédito porque faltam menos de 12 horas para o início.";
+    const confirmed = window.confirm(confirmationMessage);
     if (!confirmed) return;
 
     setButtonBusy(button, "CANCELANDO...");
     setPageMessage("", "");
     try {
-      await rpc("cancel_my_regular_lesson", { target_credit_id: button.dataset.creditId });
-      await refreshAfterAction("Aula cancelada. Um crédito de reposição foi liberado.");
+      const result = await rpc("cancel_my_regular_lesson", { target_credit_id: button.dataset.creditId });
+      const successMessage = result && result.credit_granted === true
+        ? "Aula cancelada. A vaga foi liberada e um crédito de reposição foi gerado."
+        : "Aula cancelada. A vaga foi liberada, sem geração de crédito.";
+      await refreshAfterAction(successMessage);
     } catch (error) {
       setPageMessage(error.message || "Não foi possível cancelar a aula.", "error");
       restoreButton(button);
