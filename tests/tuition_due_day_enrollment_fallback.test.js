@@ -26,28 +26,29 @@ test("enrollment UI requires an exact first-tuition due date", function () {
   assert.doesNotMatch(dueDateScript, /set_my_tuition_due_day",/);
 });
 
-test("UI explains the six-day deadline and removes the old seven-day copy", function () {
-  assert.match(page, /até o limite de 6 dias antes da primeira aula/i);
+test("UI explains the six-day pre-class window and removes the old seven-day copy", function () {
+  assert.match(page, /nos 6 dias anteriores à primeira aula/i);
   assert.doesNotMatch(page, /7 dias após a matrícula/i);
-  assert.match(dueDateScript, /O último vencimento possível é 6 dias antes da primeira aula/);
+  assert.match(dueDateScript, /dentro dos 6 dias anteriores à primeira aula/);
 });
 
-test("database builds every valid date from enrollment through first lesson minus six days", function () {
+test("database offers enrollment day plus dates in the six days before the first lesson", function () {
   for (const sql of [migration, recoveryOverlay]) {
     assert.match(sql, /private\.get_enrollment_tuition_schedule/i);
     assert.match(sql, /first_lesson\.first_lesson_date - 6/i);
-    assert.match(sql, /generate_series\(/i);
-    assert.match(sql, /target_enrollment_date::timestamp/i);
+    assert.match(sql, /first_lesson\.first_lesson_date - 1/i);
+    assert.match(sql, /select target_enrollment_date::date as due_date/i);
+    assert.match(sql, /union[\s\S]*generate_series\(/i);
+    assert.match(sql, /bounds\.window_start_date::timestamp/i);
     assert.match(sql, /bounds\.latest_due_date::timestamp/i);
   }
 });
 
-test("first lesson within six days or missing schedule falls back to enrollment day only", function () {
+test("missing or same-day first lesson limits the due date to enrollment day", function () {
   for (const sql of [migration, recoveryOverlay]) {
-    assert.match(sql, /when first_lesson\.first_lesson_date is null then target_enrollment_date/i);
     assert.match(
       sql,
-      /when first_lesson\.first_lesson_date - 6 <= target_enrollment_date[\s\S]*then target_enrollment_date/i
+      /first_lesson\.first_lesson_date is null[\s\S]*or first_lesson\.first_lesson_date <= target_enrollment_date/i
     );
   }
 });
