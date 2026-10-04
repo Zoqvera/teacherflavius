@@ -11,6 +11,9 @@ A camada Android do Teacher Flávio usa Capacitor 8 e reutiliza o frontend está
 - Conteúdo empacotado localmente no APK/AAB
 - O aplicativo não usa `server.url`
 - O service worker da PWA é desativado dentro do runtime nativo
+- O login Google no Android usa PKCE
+- O retorno OAuth usa o deep link `com.teacherflavius.app://login-callback`
+- O código temporário retorna ao app; tokens de sessão não são transportados pelo deep link
 - O site e a PWA continuam publicados pelo GitHub Pages sem depender do build Android
 
 ## Preparação do frontend
@@ -56,6 +59,10 @@ O Capacitor 8 exige Node.js 22 ou superior. Para desenvolvimento Android, use An
 ## CI
 
 O workflow `.github/workflows/android-capacitor-build.yml` gera o bundle nativo com rotas explícitas, valida a navegação principal, cria o projeto Android em ambiente descartável, sincroniza o frontend, compila `app-debug.apk` e publica o APK como artefato do GitHub Actions.
+
+Antes da sincronização, `scripts/configure_android_deep_link.py` registra o callback OAuth no `AndroidManifest.xml`. O build também valida a presença dos plugins nativos App e Browser.
+
+O Google continua retornando primeiro para a rota HTTPS já autorizada do site. Quando `native_callback=1`, essa rota entrega apenas o authorization code ao aplicativo. O app troca esse código pela sessão usando o verificador PKCE mantido no armazenamento local do próprio aplicativo.
 
 Esse APK é apenas para validação técnica e instalação de teste. A publicação na Google Play exige uma versão release assinada e geração de AAB.
 
