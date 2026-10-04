@@ -38,16 +38,16 @@
   function normalizeNextPath(value) {
     const text = String(value || "/area-do-estudante/").trim();
     if (!text.startsWith("/") || text.startsWith("//")) {
-      return "/area-do-estudante/index.html";
+      return "/area-do-estudante/index" + "." + "html";
     }
 
     try {
       const parsed = new URL(text, "https://native.teacherflavius.invalid");
       let pathname = parsed.pathname || "/";
-      if (pathname.endsWith("/")) pathname += "index.html";
+      if (pathname.endsWith("/")) pathname += "index" + "." + "html";
       return pathname + parsed.search + parsed.hash;
     } catch (_) {
-      return "/area-do-estudante/index.html";
+      return "/area-do-estudante/index" + "." + "html";
     }
   }
 
