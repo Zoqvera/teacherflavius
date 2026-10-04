@@ -12,6 +12,8 @@ on:
       - "supabase_client_service.js"
       - "auth_infrastructure.js"
       - "site.webmanifest"
+      - "assets/favicon.svg"
+      - "mobile/android_release.json"
       - "scripts/**"
       - "tests/test_capacitor_android_contract.py"
       - "tests/test_prepare_android_web.py"
@@ -80,6 +82,9 @@ jobs:
       - name: Synchronize Capacitor Android
         run: npx cap sync android
 
+      - name: Configure Android release
+        run: python3 scripts/configure_android_release.py
+
       - name: Validate native project
         shell: bash
         run: |
@@ -94,6 +99,11 @@ jobs:
           grep -q '/login/index.html?next=/area-do-estudante/index.html' android/app/src/main/assets/public/index.html
           grep -q '/native_auth_bridge.js?v=20261004-1' android/app/src/main/assets/public/index.html
           grep -q 'native_callback=1' android/app/src/main/assets/public/login.html
+          grep -q 'versionCode 1' android/app/build.gradle
+          grep -q 'versionName "1.0.0"' android/app/build.gradle
+          test -f android/app/src/main/res/drawable/ic_teacher_flavio_foreground.xml
+          test -f android/app/src/main/res/drawable/splash.xml
+          test -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
 
       - name: Build debug APK
         working-directory: android
@@ -102,10 +112,25 @@ jobs:
       - name: Validate debug APK
         run: test -f android/app/build/outputs/apk/debug/app-debug.apk
 
+      - name: Build release AAB
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Validate release AAB
+        run: test -f android/app/build/outputs/bundle/release/app-release.aab
+
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v7
         with:
           name: teacher-flavio-android-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
+      - name: Upload unsigned release AAB
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: teacher-flavio-android-release-unsigned
+          path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 7
