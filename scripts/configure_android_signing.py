@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ANDROID_ROOT = ROOT / "android"
 KEYSTORE_RELATIVE_PATH = Path("keystore") / "teacher-flavio-upload.jks"
+SIGNING_PROPERTIES_RELATIVE_PATH = Path("keystore") / "signing.properties"
 REQUIRED_ENVIRONMENT = (
     "ANDROID_KEYSTORE_BASE64",
     "ANDROID_KEYSTORE_PASSWORD",
@@ -18,9 +19,21 @@ REQUIRED_ENVIRONMENT = (
 )
 
 
+def normalize_secret(name: str, raw_value: str) -> str:
+    value = str(raw_value or "").strip()
+    prefix = name + "="
+    if value.startswith(prefix):
+        value = value[len(prefix):].strip()
+
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        value = value[1:-1].strip()
+
+    return value
+
+
 def signing_environment() -> dict[str, str] | None:
     values = {
-        name: str(os.environ.get(name, "")).strip()
+        name: normalize_secret(name, os.environ.get(name, ""))
         for name in REQUIRED_ENVIRONMENT
     }
     if not any(values.values()):
@@ -36,8 +49,9 @@ def signing_environment() -> dict[str, str] | None:
 
 
 def decode_keystore(android_root: Path, encoded: str) -> Path:
+    compact = "".join(encoded.split())
     try:
-        payload = base64.b64decode(encoded, validate=True)
+        payload = base64.b64decode(compact, validate=True)
     except Exception as exc:
         raise SystemExit("ANDROID_KEYSTORE_BASE64 is not valid base64.") from exc
 
@@ -51,14 +65,52 @@ def decode_keystore(android_root: Path, encoded: str) -> Path:
     return path
 
 
+def escape_properties_value(value: str) -> str:
+    escaped = (
+        value.replace("\\", "\\\\")
+        .replace("\r", "\\r")
+        .replace("\n", "\\n")
+        .replace("=", "\\=")
+        .replace(":", "\\:")
+    )
+    if escaped.startswith((" ", "#", "!")):
+        escaped = "\\" + escaped
+    return escaped
+
+
+def write_signing_properties(
+    android_root: Path,
+    environment: dict[str, str],
+) -> Path:
+    path = android_root / SIGNING_PROPERTIES_RELATIVE_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = "\n".join(
+        (
+            "storePassword="
+            + escape_properties_value(environment["ANDROID_KEYSTORE_PASSWORD"]),
+            "keyAlias=" + escape_properties_value(environment["ANDROID_KEY_ALIAS"]),
+            "keyPassword="
+            + escape_properties_value(environment["ANDROID_KEY_PASSWORD"]),
+        )
+    )
+    path.write_text(content + "\n", encoding="utf-8")
+    path.chmod(0o600)
+    return path
+
+
 def signing_config_block() -> str:
     return """
+    def signingProperties = new Properties()
+    signingProperties.load(
+        new FileInputStream(rootProject.file("keystore/signing.properties"))
+    )
+
     signingConfigs {
         release {
             storeFile rootProject.file("keystore/teacher-flavio-upload.jks")
-            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            keyAlias System.getenv("ANDROID_KEY_ALIAS")
-            keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            storePassword signingProperties.getProperty("storePassword")
+            keyAlias signingProperties.getProperty("keyAlias")
+            keyPassword signingProperties.getProperty("keyPassword")
         }
     }
 
@@ -105,6 +157,7 @@ def configure(android_root: Path) -> bool:
         raise SystemExit(f"Android app build file does not exist: {build_gradle}")
 
     decode_keystore(android_root, environment["ANDROID_KEYSTORE_BASE64"])
+    write_signing_properties(android_root, environment)
     configure_gradle(build_gradle)
     print("Android release signing configured.")
     return True
