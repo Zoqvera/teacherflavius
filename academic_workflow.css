@@ -325,3 +325,14 @@
     flex: 1 1 auto;
   }
 }
+
+
+.academic-question-card-list {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.academic-conversation-card {
+  background: rgba(2, 16, 43, .42);
+}
