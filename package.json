@@ -34,7 +34,7 @@
     "test:python": "python3 -m unittest discover -s tests -p 'test_*.py'",
     "quality": "npm run check:js && npm run lint && npm run test:node && npm run test:python",
     "probe:mercado-pago-subscription-sandbox": "node scripts/mercado_pago_subscription_sandbox_probe.js",
-    "mobile:web": "python3 scripts/build_static_site.py && python3 scripts/materialize_site.py --profile publish && python3 scripts/postprocess_production.py",
+    "mobile:web": "python3 scripts/build_static_site.py && python3 scripts/materialize_site.py --profile publish && python3 scripts/postprocess_production.py && python3 scripts/prepare_android_web.py",
     "mobile:android:add": "npx cap add android",
     "mobile:android:sync": "npm run mobile:web && npx cap sync android",
     "mobile:android:open": "npx cap open android",
