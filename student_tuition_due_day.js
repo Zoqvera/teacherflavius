@@ -13,9 +13,10 @@
     loaded: false,
     loadingPromise: null,
     anchorDate: null,
-    options: [],
-    selectedDueDay: null,
-    firstDueDate: null
+    firstLessonDate: null,
+    latestDueDate: null,
+    dateOptions: [],
+    selectedDueDate: null
   };
 
   function getClient() {
@@ -25,11 +26,20 @@
     return window.Auth.getClient();
   }
 
-  function normalizeOptions(value) {
+  function isIsoDate(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+  }
+
+  function normalizeDateOptions(value) {
     if (!Array.isArray(value)) return [];
     return value
-      .map(function (item) { return Number(item); })
-      .filter(function (item) { return Number.isInteger(item) && item >= 1 && item <= 31; });
+      .map(function (item) { return String(item || "").trim(); })
+      .filter(isIsoDate);
+  }
+
+  function formatDateBr(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
+    return match ? match[3] + "/" + match[2] + "/" + match[1] : "";
   }
 
   async function loadState() {
@@ -42,9 +52,10 @@
 
       const payload = response.data || {};
       state.anchorDate = payload.anchor_date || null;
-      state.options = normalizeOptions(payload.options);
-      state.selectedDueDay = payload.selected_due_day == null ? null : Number(payload.selected_due_day);
-      state.firstDueDate = payload.first_due_date || null;
+      state.firstLessonDate = payload.first_lesson_date || null;
+      state.latestDueDate = payload.latest_due_date || null;
+      state.dateOptions = normalizeDateOptions(payload.date_options);
+      state.selectedDueDate = payload.selected_due_date || payload.first_due_date || null;
       state.loaded = true;
       return state;
     })().finally(function () {
@@ -59,21 +70,32 @@
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = [
-      ".tuition-due-day-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}",
-      ".tuition-due-day-option{position:relative;display:block;cursor:pointer}",
-      ".tuition-due-day-option input{position:absolute;opacity:0;pointer-events:none}",
-      ".tuition-due-day-option span{display:flex;align-items:center;justify-content:center;min-height:52px;border:1.5px solid rgba(129,140,248,.32);border-radius:14px;background:rgba(129,140,248,.08);color:#e2e8f0;font-weight:700}",
-      ".tuition-due-day-option input:checked+span{border-color:#818cf8;background:rgba(129,140,248,.22);color:#fff;box-shadow:0 0 0 2px rgba(129,140,248,.12)}",
-      ".tuition-due-day-option input:focus-visible+span{outline:2px solid #c4b5fd;outline-offset:2px}",
-      ".tuition-due-day-note{margin-top:10px;color:#94a3b8;font-size:12px;line-height:1.5}",
-      "@media(max-width:540px){.tuition-due-day-options{grid-template-columns:1fr}}"
+      ".tuition-due-date-field{margin-top:14px}",
+      ".tuition-due-date-field label{display:block;margin-bottom:8px;color:#e2e8f0;font-weight:700}",
+      ".tuition-due-date-note{margin-top:10px;color:#94a3b8;font-size:12px;line-height:1.5}"
     ].join("");
     document.head.appendChild(style);
   }
 
-  function getSelectedInputValue() {
-    const checked = document.querySelector('input[name="tuitionDueDay"]:checked');
-    return checked ? Number(checked.value) : null;
+  function getSelectedDate() {
+    const select = document.getElementById("tuitionDueDate");
+    return select && isIsoDate(select.value) ? select.value : null;
+  }
+
+  function scheduleDescription() {
+    if (!state.firstLessonDate) {
+      return "Ainda não há uma primeira aula com data definida. O vencimento disponível é o dia da matrícula.";
+    }
+
+    if (state.latestDueDate === state.anchorDate) {
+      return "Sua primeira aula está prevista para " + formatDateBr(state.firstLessonDate) +
+        ". Como ela acontece em até 6 dias, o vencimento disponível é o dia da matrícula.";
+    }
+
+    return "Sua primeira aula está prevista para " + formatDateBr(state.firstLessonDate) +
+      ". Escolha uma data entre " + formatDateBr(state.anchorDate) + " e " +
+      formatDateBr(state.latestDueDate) +
+      ". O último vencimento possível é 6 dias antes da primeira aula.";
   }
 
   function buildSection() {
@@ -84,40 +106,58 @@
 
     const heading = document.createElement("div");
     heading.className = "section-heading";
-    heading.innerHTML = '<h2 id="tuitionDueDayTitle">Escolha o vencimento da mensalidade</h2>' +
-      '<p>Você terá três opções calculadas a partir da data da sua matrícula.</p>';
+
+    const title = document.createElement("h2");
+    title.id = "tuitionDueDayTitle";
+    title.textContent = "Escolha o vencimento da primeira mensalidade";
+
+    const description = document.createElement("p");
+    description.textContent = scheduleDescription();
+
+    heading.appendChild(title);
+    heading.appendChild(description);
     section.appendChild(heading);
 
-    const options = document.createElement("div");
-    options.className = "tuition-due-day-options";
+    const field = document.createElement("div");
+    field.className = "field full tuition-due-date-field";
 
-    state.options.forEach(function (dueDay) {
-      const label = document.createElement("label");
-      label.className = "tuition-due-day-option";
+    const label = document.createElement("label");
+    label.className = "field-label";
+    label.htmlFor = "tuitionDueDate";
+    label.textContent = "Data de vencimento";
 
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = "tuitionDueDay";
-      input.value = String(dueDay);
-      input.required = false;
-      input.checked = state.selectedDueDay === dueDay;
-      input.disabled = state.selectedDueDay != null;
+    const select = document.createElement("select");
+    select.id = "tuitionDueDate";
+    select.required = state.selectedDueDate == null;
+    select.disabled = state.selectedDueDate != null;
 
-      const text = document.createElement("span");
-      text.textContent = "Dia " + dueDay;
+    if (state.selectedDueDate == null && state.dateOptions.length > 1) {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      placeholder.textContent = "Selecione uma data";
+      select.appendChild(placeholder);
+    }
 
-      label.appendChild(input);
-      label.appendChild(text);
-      options.appendChild(label);
+    state.dateOptions.forEach(function (dueDate) {
+      const option = document.createElement("option");
+      option.value = dueDate;
+      option.textContent = formatDateBr(dueDate);
+      option.selected = state.selectedDueDate === dueDate ||
+        (state.selectedDueDate == null && state.dateOptions.length === 1);
+      select.appendChild(option);
     });
 
-    section.appendChild(options);
+    field.appendChild(label);
+    field.appendChild(select);
+    section.appendChild(field);
 
     const note = document.createElement("p");
-    note.className = "tuition-due-day-note";
-    note.textContent = state.selectedDueDay == null
-      ? "A escolha é opcional. Se você não selecionar uma opção, o sistema definirá a primeira data de vencimento para 7 dias após a data da matrícula. O valor e a quantidade de aulas são os dados combinados com o professor e informados nesta matrícula."
-      : "Vencimento já registrado: dia " + state.selectedDueDay + ". O início da cobrança foi definido automaticamente pelo sistema.";
+    note.className = "tuition-due-date-note";
+    note.textContent = state.selectedDueDate == null
+      ? "A escolha do vencimento é obrigatória. A primeira mensalidade ficará disponível assim que a matrícula for concluída."
+      : "Vencimento já registrado: " + formatDateBr(state.selectedDueDate) + ".";
     section.appendChild(note);
 
     return section;
@@ -130,6 +170,10 @@
     if (document.getElementById(SECTION_ID)) return true;
 
     await loadState();
+    if (!state.dateOptions.length && state.selectedDueDate == null) {
+      throw new Error("Não foi possível calcular as datas de vencimento.");
+    }
+
     ensureStyles();
     form.insertBefore(buildSection(), message);
     return true;
@@ -137,18 +181,23 @@
 
   async function saveSelection() {
     await loadState();
-    if (state.selectedDueDay != null) return state.selectedDueDay;
+    if (state.selectedDueDate != null) return state.selectedDueDate;
 
     await mount();
-    const selectedDueDay = getSelectedInputValue();
-    const response = await getClient().rpc("set_my_tuition_due_day", {
-      target_due_day: Number.isInteger(selectedDueDay) ? selectedDueDay : null
+    const selectedDueDate = getSelectedDate();
+    if (!selectedDueDate) {
+      throw new Error("Escolha a data de vencimento da primeira mensalidade.");
+    }
+
+    const response = await getClient().rpc("set_my_tuition_due_date", {
+      target_due_date: selectedDueDate
     });
     if (response.error) throw response.error;
 
-    state.selectedDueDay = Number(response.data && response.data.due_day);
-    state.firstDueDate = response.data && response.data.first_due_date || state.firstDueDate;
-    return state.selectedDueDay;
+    state.selectedDueDate = response.data && response.data.first_due_date || selectedDueDate;
+    state.latestDueDate = response.data && response.data.latest_due_date || state.latestDueDate;
+    state.firstLessonDate = response.data && response.data.first_lesson_date || state.firstLessonDate;
+    return state.selectedDueDate;
   }
 
   function installProfileCompletionWrapper() {
