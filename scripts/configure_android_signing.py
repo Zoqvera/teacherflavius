@@ -30,10 +30,20 @@ def normalize_secret(name: str, raw_value: str) -> str:
     value = str(raw_value or "").strip()
     prefix = name + "="
 
-    for line in value.splitlines():
-        candidate = strip_matching_quotes(line)
-        if candidate.startswith(prefix):
-            return strip_matching_quotes(candidate[len(prefix):])
+    assignment = re.search(
+        re.escape(name) + r"\s*=\s*([^\r\n\x60]+)",
+        value,
+    )
+    if assignment:
+        return strip_matching_quotes(assignment.group(1))
+
+    if name == "ANDROID_KEYSTORE_BASE64":
+        candidates = re.findall(
+            r"(?<![A-Za-z0-9+/])[A-Za-z0-9+/]{512,}={0,2}(?![A-Za-z0-9+/=])",
+            value,
+        )
+        if candidates:
+            return max(candidates, key=len)
 
     candidate = strip_matching_quotes(value)
     if candidate.startswith(prefix):
