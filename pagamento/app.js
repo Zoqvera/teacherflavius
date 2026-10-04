@@ -8,16 +8,30 @@ let statusScreenBrickController = null;
 let paymentPollTimer = null;
 let currentIdempotencyKey = null;
 
+function isNativeCapacitorApp() {
+  return Boolean(
+    window.Capacitor &&
+    typeof window.Capacitor.isNativePlatform === "function" &&
+    window.Capacitor.isNativePlatform()
+  );
+}
+
 function sleep(milliseconds) {
   return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
 }
 
 async function waitForResources() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
-    if (window.Auth && window.SUPABASE_CONFIG && window.MercadoPago && Auth.isConfigured()) return true;
+    const paymentSdkReady = isNativeCapacitorApp() || !!window.MercadoPago;
+    if (window.Auth && window.SUPABASE_CONFIG && paymentSdkReady && Auth.isConfigured()) return true;
     await sleep(250);
   }
-  return !!(window.Auth && window.SUPABASE_CONFIG && window.MercadoPago && Auth.isConfigured());
+  return !!(
+    window.Auth &&
+    window.SUPABASE_CONFIG &&
+    (isNativeCapacitorApp() || window.MercadoPago) &&
+    Auth.isConfigured()
+  );
 }
 
 function redirectToLogin() {
@@ -184,6 +198,12 @@ function renderTuitionList() {
   }).join("");
 
   list.querySelectorAll(".tuition-card").forEach(function (button) {
+    if (isNativeCapacitorApp()) {
+      button.disabled = true;
+      button.setAttribute("aria-disabled", "true");
+      return;
+    }
+
     button.addEventListener("click", function () {
       selectTuition(button.dataset.tuitionId);
     });
@@ -369,7 +389,12 @@ async function initializePage() {
   const ready = await waitForResources();
   if (!ready) {
     document.body.classList.remove("auth-checking");
-    setPageMessage("Não foi possível carregar a autenticação ou o Mercado Pago. Atualize a página.", "error");
+    setPageMessage(
+      isNativeCapacitorApp()
+        ? "Não foi possível carregar a autenticação. Atualize a página."
+        : "Não foi possível carregar a autenticação ou o Mercado Pago. Atualize a página.",
+      "error"
+    );
     return;
   }
 
@@ -392,6 +417,24 @@ async function initializePage() {
     }
     if (!pendingTuitions.length) {
       showAllPaid();
+      if (isNativeCapacitorApp()) {
+        setPageMessage("Suas mensalidades estão em dia.", "success");
+      }
+      return;
+    }
+
+    if (isNativeCapacitorApp()) {
+      document.getElementById("paymentWorkspace").hidden = false;
+      const checkoutPanel = document.querySelector(".checkout-panel");
+      if (checkoutPanel) checkoutPanel.hidden = true;
+      const subscriptionOffer = document.getElementById("subscriptionOffer");
+      if (subscriptionOffer) subscriptionOffer.hidden = true;
+      selectedTuition = null;
+      renderTuitionList();
+      setPageMessage(
+        "Consulte abaixo as mensalidades em aberto e seus vencimentos.",
+        ""
+      );
       return;
     }
 

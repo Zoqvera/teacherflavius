@@ -74,6 +74,9 @@ jobs:
           test -f _android_site/index.html
           test -f _android_site/login/index.html
           grep -q '/login/index.html?next=/area-do-estudante/index.html' _android_site/index.html
+          grep -q 'Consulte suas mensalidades' _android_site/pagamento/index.html
+          ! grep -q 'sdk.mercadopago.com' _android_site/pagamento/index.html
+          ! grep -q 'subscription_checkout.js' _android_site/pagamento/index.html
           grep -q 'href="/o-que-fazer/index.html"' _android_site/area_do_estudante.html
 
       - name: Generate Android project
@@ -119,6 +122,8 @@ jobs:
           grep -q '/login/index.html?next=/area-do-estudante/index.html' android/app/src/main/assets/public/index.html
           grep -q '/native_auth_bridge.js?v=20261004-1' android/app/src/main/assets/public/index.html
           grep -q 'native_callback=1' android/app/src/main/assets/public/login.html
+          grep -q 'Consulte suas mensalidades' android/app/src/main/assets/public/pagamento/index.html
+          ! grep -q 'sdk.mercadopago.com' android/app/src/main/assets/public/pagamento/index.html
           grep -q 'isNativeCapacitorApp' android/app/src/main/assets/public/clean_urls.js
           grep -q 'href="/o-que-fazer/index.html"' android/app/src/main/assets/public/area_do_estudante.html
           grep -q 'versionCode 1' android/app/build.gradle

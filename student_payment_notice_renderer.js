@@ -8,6 +8,14 @@
   const HTML_EXTENSION = "." + "html";
   const INDEX_SUFFIX = "/index" + HTML_EXTENSION;
 
+  function isNativeCapacitorApp() {
+    return Boolean(
+      window.Capacitor &&
+      typeof window.Capacitor.isNativePlatform === "function" &&
+      window.Capacitor.isNativePlatform()
+    );
+  }
+
   function installStyles() {
     if (document.getElementById(STYLE_ID)) return;
 
@@ -69,7 +77,12 @@
     );
     message.textContent = summary.banner;
     banner.appendChild(message);
-    banner.appendChild(createPaymentLink("", "Pagar mensalidade"));
+    banner.appendChild(
+      createPaymentLink(
+        "",
+        isNativeCapacitorApp() ? "Ver mensalidades" : "Pagar mensalidade"
+      )
+    );
     document.body.insertBefore(banner, document.body.firstChild);
   }
 
@@ -114,7 +127,10 @@
     const note = document.createElement("p");
     const actions = document.createElement("div");
     const laterButton = createButton("tf-tuition-modal__later", "", "Ver depois");
-    const paymentLink = createPaymentLink("tf-tuition-modal__pay", "Pagar agora");
+    const paymentLink = createPaymentLink(
+      "tf-tuition-modal__pay",
+      isNativeCapacitorApp() ? "Ver mensalidades" : "Pagar agora"
+    );
 
     modal.id = MODAL_ID;
     modal.setAttribute("role", "dialog");
@@ -129,7 +145,9 @@
     title.textContent = summary.title;
     description.textContent = summary.description;
     note.className = "tf-tuition-modal__note";
-    note.textContent = "O pagamento pode ser feito com Pix ou cartão de crédito em ambiente protegido pelo Mercado Pago.";
+    note.textContent = isNativeCapacitorApp()
+      ? "Consulte a situação e o vencimento em Mensalidades."
+      : "O pagamento pode ser feito com Pix ou cartão de crédito em ambiente protegido pelo Mercado Pago.";
     actions.className = "tf-tuition-modal__actions";
 
     closeButton.addEventListener("click", closeModal);

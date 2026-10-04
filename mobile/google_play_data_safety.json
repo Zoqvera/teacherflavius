@@ -1,0 +1,94 @@
+{
+  "status": "draft_requires_play_console_confirmation",
+  "encryptionInTransit": true,
+  "accountDeletion": {
+    "availableInApp": true,
+    "externalResource": "https://teacherflavius.com/privacidade/",
+    "retentionDisclosure": true
+  },
+  "dataTypes": [
+    {
+      "category": "Personal info",
+      "types": [
+        "Name",
+        "Email address",
+        "User IDs",
+        "Phone number",
+        "Other info"
+      ],
+      "collected": true,
+      "shared": false,
+      "purposes": [
+        "App functionality",
+        "Account management",
+        "Fraud prevention, security and compliance"
+      ]
+    },
+    {
+      "category": "Financial info",
+      "types": [
+        "Purchase history"
+      ],
+      "collected": true,
+      "shared": true,
+      "purposes": [
+        "App functionality",
+        "Fraud prevention, security and compliance"
+      ],
+      "sharingNote": "Financial processing records may involve Mercado Pago outside the Play-distributed Android checkout."
+    },
+    {
+      "category": "App activity",
+      "types": [
+        "App interactions",
+        "Other user-generated content"
+      ],
+      "collected": true,
+      "shared": false,
+      "purposes": [
+        "App functionality",
+        "Analytics",
+        "Personalization"
+      ]
+    },
+    {
+      "category": "Audio",
+      "types": [
+        "Voice or sound recordings"
+      ],
+      "collected": true,
+      "shared": true,
+      "purposes": [
+        "App functionality"
+      ],
+      "sharingNote": "Pronunciation activities may use Microsoft Azure Speech."
+    },
+    {
+      "category": "Device or other IDs",
+      "types": [
+        "Other device or app identifiers"
+      ],
+      "collected": true,
+      "shared": false,
+      "purposes": [
+        "App functionality",
+        "Fraud prevention, security and compliance",
+        "Analytics"
+      ],
+      "conditional": "Analytics only after consent where applicable"
+    }
+  ],
+  "thirdParties": [
+    "Supabase",
+    "Google",
+    "Microsoft Azure Speech",
+    "GitHub Pages",
+    "Resend",
+    "Mercado Pago"
+  ],
+  "notes": [
+    "Android payment checkout is disabled for Google Play distribution; the app only displays tuition status and due dates.",
+    "Google Analytics is optional and consent-gated.",
+    "Validate the final Play Console taxonomy against the exact SDK behavior of the release build before submission."
+  ]
+}

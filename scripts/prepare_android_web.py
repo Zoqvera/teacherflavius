@@ -85,6 +85,25 @@ def inject_native_auth_bridge(content: str) -> str:
     )
 
 
+def prepare_native_payment_page(content: str) -> str:
+    replacements = {
+        '<script src="https://sdk.mercadopago.com/js/v2"></script>': "",
+        '<script src="/pagamento/subscription_checkout.js?v=20260929-1"></script>': "",
+        "<h1>Pague com Pix ou cartão</h1>": "<h1>Consulte suas mensalidades</h1>",
+        "<p>O pagamento é processado pelo Mercado Pago.</p>":
+            "<p>Veja mensalidades em aberto, vencimentos e situação da sua conta.</p>",
+        "<span>Pagamento seguro</span>": "<span>Mensalidades</span>",
+    }
+    updated = content
+    for old, new in replacements.items():
+        updated = updated.replace(old, new)
+    updated = updated.replace(
+        '<div class="payment-security" aria-label="Informações de segurança">',
+        '<div class="payment-security" aria-label="Informações de segurança" hidden>',
+    )
+    return updated
+
+
 def prepare_android_web(source: Path, destination: Path) -> int:
     if not source.is_dir():
         raise SystemExit(f"Android web source does not exist: {source}")
@@ -103,6 +122,8 @@ def prepare_android_web(source: Path, destination: Path) -> int:
         rewritten = rewrite_text(content, routes)
         if path.suffix.lower() == ".html":
             rewritten = inject_native_auth_bridge(rewritten)
+            if path.relative_to(destination).as_posix() == "pagamento/index.html":
+                rewritten = prepare_native_payment_page(rewritten)
 
         if rewritten == content:
             continue
