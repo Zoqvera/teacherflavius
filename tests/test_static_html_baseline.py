@@ -23,6 +23,8 @@ class StaticHtmlBaselineTests(unittest.TestCase):
         self.assertTrue(enhanced)
         self.assertEqual(transformed.count('name="viewport"'), 1)
         self.assertEqual(transformed.count("/responsive_compat.css"), 1)
+        self.assertEqual(transformed.count("/site.webmanifest"), 1)
+        self.assertEqual(transformed.count("/pwa_registration.js"), 1)
         self.assertEqual(transformed.count("/error_monitor.js"), 1)
         self.assertEqual(transformed.count("/mobile_top_navigation.js"), 1)
         self.assertEqual(transformed.count('id="teacher-flavius-mobile-top-navigation"'), 1)
@@ -48,6 +50,7 @@ class StaticHtmlBaselineTests(unittest.TestCase):
 
         self.assertTrue(enhanced)
         self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
+        self.assertEqual(transformed.count("/pwa_registration.js"), 0)
 
     def test_skips_direct_navigation_on_immediate_redirect_shells(self) -> None:
         html = (
@@ -58,6 +61,7 @@ class StaticHtmlBaselineTests(unittest.TestCase):
 
         self.assertTrue(enhanced)
         self.assertEqual(transformed.count("/mobile_top_navigation.js"), 0)
+        self.assertEqual(transformed.count("/pwa_registration.js"), 0)
 
     def test_is_idempotent(self) -> None:
         html = "<html><head></head><body></body></html>"
