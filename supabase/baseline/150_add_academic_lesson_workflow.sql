@@ -267,7 +267,7 @@ set search_path = ''
 as $function$
 declare
   resolved record;
-  occurrence_id uuid;
+  saved_occurrence_id uuid;
   current_occurrence private.academic_lesson_occurrences%rowtype;
   frequency_id uuid;
   sequence_number integer;
@@ -309,12 +309,12 @@ begin
     class_name = excluded.class_name,
     starts_at = excluded.starts_at,
     updated_at = now()
-  returning id into occurrence_id;
+  returning id into saved_occurrence_id;
 
-  select *
+  select occurrence.*
   into current_occurrence
   from private.academic_lesson_occurrences occurrence
-  where occurrence.id = occurrence_id
+  where occurrence.id = saved_occurrence_id
   for update;
 
   if normalized_status = 'absent'
@@ -323,7 +323,7 @@ begin
        or exists (
          select 1
          from private.conversation_question_practice_log practice
-         where practice.occurrence_id = occurrence_id
+         where practice.occurrence_id = saved_occurrence_id
        )
      ) then
     raise exception 'Esta aula já possui conteúdo registrado. Desfaça esses registros antes de marcar ausência.';
@@ -385,7 +385,7 @@ begin
       attendance_sequence = sequence_number,
       attendance_record_id = frequency_id,
       updated_at = now()
-    where occurrence.id = occurrence_id;
+    where occurrence.id = saved_occurrence_id;
 
     delete from public.class_lesson_records record
     where record.class_number = resolved.class_number
@@ -399,7 +399,7 @@ begin
       attendance_sequence = null,
       attendance_record_id = frequency_id,
       updated_at = now()
-    where occurrence.id = occurrence_id;
+    where occurrence.id = saved_occurrence_id;
 
     insert into public.class_lesson_records (
       class_number,
@@ -416,7 +416,7 @@ begin
     on conflict do nothing;
   end if;
 
-  return occurrence_id;
+  return saved_occurrence_id;
 end;
 $function$;
 
