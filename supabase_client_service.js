@@ -16,6 +16,27 @@
     );
   }
 
+  function isNativeApp() {
+    return Boolean(
+      window.Capacitor &&
+      typeof window.Capacitor.isNativePlatform === "function" &&
+      window.Capacitor.isNativePlatform()
+    );
+  }
+
+  function clientOptions() {
+    if (!isNativeApp()) return undefined;
+
+    return {
+      auth: {
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+        flowType: "pkce",
+        persistSession: true
+      }
+    };
+  }
+
   function getClient() {
     if (!isConfigured()) return null;
     if (!window.supabase || !window.supabase.createClient) return null;
@@ -24,7 +45,8 @@
       const config = getConfig();
       window.teacherFlavioSupabase = window.supabase.createClient(
         config.url,
-        config.anonKey
+        config.anonKey,
+        clientOptions()
       );
     }
 
@@ -39,6 +61,7 @@
 
   window.SupabaseClientService = Object.freeze({
     isConfigured: isConfigured,
+    isNativeApp: isNativeApp,
     getClient: getClient,
     requireClient: requireClient
   });
