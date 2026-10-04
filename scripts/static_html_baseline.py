@@ -9,6 +9,9 @@ ERROR_MONITOR_SRC = "/error_monitor.js?v=20260921-1"
 STANDARD_NAVIGATION_SRC = "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1"
 STANDARD_NAVIGATION_ID = "teacher-flavius-mobile-top-navigation"
 VIEWPORT_META = '  <meta name="viewport" content="width=device-width, initial-scale=1.0">'
+PWA_MANIFEST_LINK = '  <link rel="manifest" href="/site.webmanifest">'
+PWA_REGISTRATION_SRC = "/pwa_registration.js?v=20261004-1"
+PWA_REGISTRATION_ID = "teacher-flavius-pwa-registration"
 
 
 def inject_site_baseline(html: str, relative: Path) -> tuple[str, bool]:
@@ -18,15 +21,21 @@ def inject_site_baseline(html: str, relative: Path) -> tuple[str, bool]:
 
     additions: list[str] = []
     lower_html = html.lower()
+    is_route_shell = "document.write(" in lower_html or 'http-equiv="refresh"' in lower_html
     if 'name="viewport"' not in lower_html and "name='viewport'" not in lower_html:
         additions.append(VIEWPORT_META)
     if "/responsive_compat.css" not in lower_html:
         additions.append(RESPONSIVE_COMPAT_LINK)
+    if "/site.webmanifest" not in lower_html:
+        additions.append(PWA_MANIFEST_LINK)
     if "/error_monitor.js" not in lower_html:
         status_attribute = ' data-page-status="404"' if relative.as_posix() == "404.html" else ""
         additions.append(f'  <script defer src="{ERROR_MONITOR_SRC}"{status_attribute}></script>')
+    if "/pwa_registration.js" not in lower_html and not is_route_shell:
+        additions.append(
+            f'  <script id="{PWA_REGISTRATION_ID}" defer src="{PWA_REGISTRATION_SRC}"></script>'
+        )
     has_page_runtime = "/site_page_runtime.js" in lower_html
-    is_route_shell = "document.write(" in lower_html or "http-equiv=\"refresh\"" in lower_html
     if (
         "/mobile_top_navigation.js" not in lower_html
         and not has_page_runtime
