@@ -39,6 +39,82 @@
   margin-bottom: 28px;
 }
 
+.pwa-install-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 22px;
+  padding: 16px;
+  border: 1px solid rgba(78, 154, 236, .42);
+  border-radius: var(--tf-radius-lg);
+  background: linear-gradient(145deg, rgba(5, 66, 136, .34), rgba(3, 26, 63, .86));
+  box-shadow: var(--tf-shadow-sm);
+}
+
+.pwa-install-card[hidden] {
+  display: none;
+}
+
+.pwa-install-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  color: var(--tf-blue-100);
+  background: linear-gradient(135deg, rgba(5, 66, 136, .95), rgba(78, 154, 236, .85));
+  box-shadow: 0 10px 24px rgba(9, 104, 188, .22);
+}
+
+.pwa-install-copy {
+  min-width: 0;
+}
+
+.pwa-install-copy h2 {
+  margin: 0 0 4px;
+  color: var(--tf-slate-50);
+  font-family: var(--tf-font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.pwa-install-copy p {
+  margin: 0;
+  color: var(--tf-slate-300);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pwa-install-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid rgba(78, 154, 236, .52);
+  border-radius: var(--tf-radius-sm);
+  background: var(--tf-blue-500);
+  color: var(--tf-white);
+  font-family: var(--tf-font-display);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform var(--tf-motion-fast) var(--tf-ease),
+    background-color var(--tf-motion-fast) var(--tf-ease),
+    border-color var(--tf-motion-fast) var(--tf-ease);
+}
+
+.pwa-install-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--tf-blue-100);
+  background: var(--tf-blue-700);
+}
+
+.pwa-install-button:disabled {
+  cursor: wait;
+  opacity: .68;
+  transform: none;
+}
+
 .menu-groups {
   display: grid;
   gap: 22px;
@@ -414,6 +490,18 @@
     font-size: 14px;
   }
 
+  .pwa-install-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 14px;
+  }
+
+  .pwa-install-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
   .menu-groups {
     gap: 16px;
   }
@@ -473,6 +561,10 @@
   .overdue-close,
   .student-dashboard .arrow,
   .support-arrow {
+    transition: none;
+  }
+
+  .pwa-install-button {
     transition: none;
   }
 
