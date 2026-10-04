@@ -8,80 +8,75 @@ function read(relativePath) {
 }
 
 const page = read("complete-cadastro.html");
-const dueDayScript = read("student_tuition_due_day.js");
+const dueDateScript = read("student_tuition_due_day.js");
 const migration = read(
-  "supabase/migrations/20261002015000_auto_assign_tuition_due_seven_days_after_enrollment.sql"
+  "supabase/migrations/20261004194636_set_first_tuition_before_first_lesson.sql"
+);
+const recoveryOverlay = read(
+  "supabase/baseline/175_set_first_tuition_before_first_lesson.sql"
 );
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
-const recoveryOverlay = read(
-  "supabase/baseline/110_auto_assign_tuition_due_seven_days_after_enrollment.sql"
-);
 
-test("student may finish enrollment without explicitly selecting a due day", function () {
-  assert.match(dueDayScript, /input\.required = false/);
-  assert.doesNotMatch(
-    dueDayScript,
-    /throw new Error\("Escolha uma das três opções de vencimento da mensalidade\."\)/
-  );
-  assert.match(
-    dueDayScript,
-    /target_due_day: Number\.isInteger\(selectedDueDay\) \? selectedDueDay : null/
-  );
-  assert.match(page, /7 dias após a matrícula/);
+test("enrollment UI requires an exact first-tuition due date", function () {
+  assert.match(dueDateScript, /id = "tuitionDueDate"/);
+  assert.match(dueDateScript, /select\.required = state\.selectedDueDate == null/);
+  assert.match(dueDateScript, /Escolha a data de vencimento da primeira mensalidade/);
+  assert.match(dueDateScript, /set_my_tuition_due_date/);
+  assert.match(dueDateScript, /target_due_date: selectedDueDate/);
+  assert.doesNotMatch(dueDateScript, /set_my_tuition_due_day",/);
 });
 
-test("database RPC assigns seven calendar days after enrollment anchor when omitted", function () {
-  assert.match(migration, /if target_due_day is null then/);
-  assert.match(migration, /chosen_first_due_date := anchor_date \+ 7/);
-  assert.match(
-    migration,
-    /effective_due_day := extract\(day from chosen_first_due_date\)::smallint/
-  );
-  assert.match(migration, /due_day_source := 'system'/);
-  assert.match(migration, /'auto_assigned', auto_assigned/);
+test("UI explains the six-day pre-class window and removes the old seven-day copy", function () {
+  assert.match(page, /nos 6 dias anteriores à primeira aula/i);
+  assert.doesNotMatch(page, /7 dias após a matrícula/i);
+  assert.match(dueDateScript, /dentro dos 6 dias anteriores à primeira aula/);
 });
 
-test("explicit student selection keeps the existing three-option rule", function () {
-  assert.match(migration, /calculate_tuition_due_day_options\(anchor_date\)/);
-  assert.match(migration, /target_due_day::smallint = any\(due_day_options\)/);
-  assert.match(migration, /due_day_source := 'student'/);
+test("database offers enrollment day plus dates in the six days before the first lesson", function () {
+  for (const sql of [migration, recoveryOverlay]) {
+    assert.match(sql, /private\.get_enrollment_tuition_schedule/i);
+    assert.match(sql, /first_lesson\.first_lesson_date - 6/i);
+    assert.match(sql, /first_lesson\.first_lesson_date - 1/i);
+    assert.match(sql, /select target_enrollment_date::date as due_date/i);
+    assert.match(sql, /union[\s\S]*generate_series\(/i);
+    assert.match(sql, /bounds\.window_start_date::timestamp/i);
+    assert.match(sql, /bounds\.latest_due_date::timestamp/i);
+  }
 });
 
-test("profile activation also fails safe to seven days if the browser flow is bypassed", function () {
-  assert.match(migration, /if new\.tuition_due_day is null then/);
-  assert.match(migration, /automatic_first_due_date := anchor_date \+ 7/);
-  assert.match(
-    migration,
-    /new\.tuition_due_day := extract\(day from automatic_first_due_date\)::smallint/
-  );
-  assert.match(migration, /new\.tuition_due_day_source := 'system'/);
+test("missing or same-day first lesson limits the due date to enrollment day", function () {
+  for (const sql of [migration, recoveryOverlay]) {
+    assert.match(
+      sql,
+      /first_lesson\.first_lesson_date is null[\s\S]*or first_lesson\.first_lesson_date <= target_enrollment_date/i
+    );
+  }
 });
 
-test("recovery overlay provisions the tuition due-date profile columns", function () {
-  assert.match(recoveryOverlay, /add column if not exists tuition_due_day smallint/);
-  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_anchor_date date/);
-  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_selected_at timestamptz/);
-  assert.match(recoveryOverlay, /add column if not exists tuition_first_due_date date/);
-  assert.match(recoveryOverlay, /add column if not exists tuition_due_day_source text/);
+test("exact selected due date must belong to the calculated window", function () {
+  for (const sql of [migration, recoveryOverlay]) {
+    assert.match(sql, /create or replace function public\.set_my_tuition_due_date\(target_due_date date\)/i);
+    assert.match(sql, /chosen_first_due_date = any\(schedule_row\.due_date_options\)/i);
+    assert.match(sql, /tuition_first_due_date = chosen_first_due_date/i);
+    assert.match(sql, /tuition_due_day_source = due_day_source/i);
+  }
 });
 
-test("recovery overlay recreates tuition due-date validation and helper RPCs", function () {
-  assert.match(recoveryOverlay, /profiles_tuition_due_day_check/);
-  assert.match(recoveryOverlay, /calculate_tuition_due_day_options\(target_anchor_date date\)/);
-  assert.match(recoveryOverlay, /get_my_tuition_due_day_options\(\)/);
-  assert.match(recoveryOverlay, /grant execute on function public\.get_my_tuition_due_day_options\(\) to authenticated, service_role/);
+test("browser bypass fails safe to enrollment-day payment instead of plus seven", function () {
+  for (const sql of [migration, recoveryOverlay]) {
+    assert.match(sql, /automatic_first_due_date := anchor_date/i);
+    assert.doesNotMatch(sql, /automatic_first_due_date := anchor_date \+ 7/i);
+    assert.match(sql, /first_due_date := coalesce\([\s\S]*profile_row\.tuition_first_due_date,[\s\S]*anchor_date/i);
+  }
 });
 
-test("recovery overlay protects tuition due-date fields from direct student writes", function () {
-  assert.match(recoveryOverlay, /create or replace function public\.protect_profile_security_fields\(\)/);
-  assert.match(recoveryOverlay, /new\.tuition_due_day := old\.tuition_due_day/);
-  assert.match(recoveryOverlay, /new\.tuition_due_day_source := old\.tuition_due_day_source/);
+test("legacy day-based RPC remains compatible but delegates to exact-date validation", function () {
+  for (const sql of [migration, recoveryOverlay]) {
+    assert.match(sql, /create or replace function public\.set_my_tuition_due_day\(target_due_day integer\)/i);
+    assert.match(sql, /return public\.set_my_tuition_due_date\(compatible_due_date\)/i);
+  }
 });
 
-test("automatic due dates are valid profile sources and recovery applies the overlay", function () {
-  assert.match(
-    migration,
-    /tuition_due_day_source in \('student', 'admin', 'legacy', 'system'\)/
-  );
-  assert.match(workflow, /110_auto_assign_tuition_due_seven_days_after_enrollment\.sql/);
+test("recovery applies the new tuition scheduling overlay", function () {
+  assert.match(workflow, /175_set_first_tuition_before_first_lesson\.sql/);
 });
