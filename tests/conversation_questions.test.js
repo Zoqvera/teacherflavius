@@ -36,7 +36,8 @@ test("links Conversation Questions only from the professor dashboard", function 
     /href="\/conversation-questions\/"[^>]*data-card-id="conversation-questions"/
   );
   assert.match(professor, />CONVERSATION QUESTIONS</);
-  assert.match(studentArea, /href="\/conversation-questions\/"[\s\S]*?CONVERSATION QUESTIONS/);
+  assert.equal(studentArea.includes('href="/conversation-questions/"'), false);
+  assert.equal(studentArea.includes("CONVERSATION QUESTIONS"), false);
   assert.match(professorIcons, /'conversation-questions':\s*'<svg/);
 });
 
