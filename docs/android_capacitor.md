@@ -67,7 +67,16 @@ O Google continua retornando primeiro para a rota HTTPS já autorizada do site. 
 
 Os builds Android usam `mobile/android_release.json` como fonte de versionamento. A versão inicial de distribuição é `1.0.0` com `versionCode 1`. O ícone e a tela de abertura nativos são gerados a partir de `assets/favicon.svg`; os formatos rasterizados ou XML exigidos pelo Android são artefatos de build, não novas fontes visuais.
 
-O workflow também gera `app-release.aab`. Nesta etapa o AAB permanece sem assinatura de distribuição. A assinatura definitiva deve usar uma upload key privada armazenada fora do repositório e conectada ao CI por segredo.
+O workflow também gera `app-release.aab`. Quando os Secrets de assinatura não existem, o artefato continua sendo gerado sem assinatura apenas para validação. Quando os quatro Secrets abaixo estão presentes, `scripts/configure_android_signing.py` decodifica a upload key em arquivo temporário, injeta a configuração de assinatura sem gravar senhas no `build.gradle`, executa `bundleRelease` e valida a assinatura com `jarsigner`.
+
+Secrets necessários no GitHub Actions:
+
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+A upload key e suas senhas nunca devem ser versionadas. O arquivo temporário do keystore existe somente durante o job do CI.
 
 ## Próximos passos
 
@@ -77,6 +86,6 @@ Após a validação do APK debug:
 2. definir ícone e splash nativos definitivos;
 3. testar autenticação, pagamentos, links externos e navegação em aparelho físico;
 4. criar e proteger a upload key da Google Play;
-5. conectar a assinatura ao CI por segredo;
-6. validar o AAB assinado;
+5. cadastrar os quatro Secrets no GitHub Actions;
+6. executar o workflow Android e validar o AAB assinado;
 7. preparar a ficha da Google Play e o primeiro envio.
