@@ -28,18 +28,47 @@ def strip_matching_quotes(value: str) -> str:
     return text
 
 
+def collect_base64_lines(lines: list[str]) -> str:
+    chunks: list[str] = []
+    for line in lines:
+        candidate = line.strip().strip("\x60'\"").strip()
+        if not candidate:
+            if chunks:
+                continue
+            continue
+
+        if not re.fullmatch(r"[A-Za-z0-9+/=]+", candidate):
+            if chunks:
+                break
+            continue
+
+        if len(candidate) < 32 and not chunks:
+            continue
+        chunks.append(candidate)
+
+    return "".join(chunks)
+
+
 def normalize_secret(name: str, raw_value: str) -> str:
     value = str(raw_value or "").strip()
     prefix = name + "="
+    marker_index = value.find(prefix)
 
-    assignment = re.search(
-        re.escape(name) + r"\s*=\s*([^\r\n\x60]+)",
-        value,
-    )
-    if assignment:
-        return strip_matching_quotes(assignment.group(1))
+    if marker_index >= 0:
+        tail = value[marker_index + len(prefix):]
+        if name == "ANDROID_KEYSTORE_BASE64":
+            reconstructed = collect_base64_lines(tail.splitlines())
+            if reconstructed:
+                return reconstructed
+
+        first_line = tail.splitlines()[0] if tail.splitlines() else tail
+        return strip_matching_quotes(first_line)
 
     if name == "ANDROID_KEYSTORE_BASE64":
+        reconstructed = collect_base64_lines(value.splitlines())
+        if reconstructed:
+            return reconstructed
+
         candidates = re.findall(
             r"(?<![A-Za-z0-9+/])[A-Za-z0-9+/]{512,}={0,2}(?![A-Za-z0-9+/=])",
             value,
@@ -75,7 +104,12 @@ def decode_keystore(android_root: Path, encoded: str) -> Path:
     try:
         payload = base64.b64decode(compact, validate=True)
     except Exception as exc:
-        raise SystemExit("ANDROID_KEYSTORE_BASE64 is not valid base64.") from exc
+        charset_ok = bool(re.fullmatch(r"[A-Za-z0-9+/]*={0,2}", compact))
+        raise SystemExit(
+            "ANDROID_KEYSTORE_BASE64 is not valid base64 "
+            f"(normalized_length={len(compact)}, mod4={len(compact) % 4}, "
+            f"base64_charset={charset_ok})."
+        ) from exc
 
     if len(payload) < 256:
         raise SystemExit("Decoded Android keystore is unexpectedly small.")
