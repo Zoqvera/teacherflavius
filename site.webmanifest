@@ -4,12 +4,14 @@
   "short_name": "Teacher Flávio",
   "description": "Aulas de inglês ao vivo e Área do Estudante.",
   "lang": "pt-BR",
-  "start_url": "/",
+  "start_url": "/area-do-estudante/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#02102B",
   "theme_color": "#02102B",
-  "categories": ["education"],
+  "categories": [
+    "education"
+  ],
   "icons": [
     {
       "src": "/assets/favicon-192.png",
