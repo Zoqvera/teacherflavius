@@ -34,6 +34,31 @@ class ConfigureAndroidSigningTests(unittest.TestCase):
             "teacherflavius-upload",
         )
 
+    def test_extracts_secret_from_multiline_export_block(self) -> None:
+        block = """TEACHER FLÁVIO — GOOGLE PLAY UPLOAD KEY
+
+ANDROID_KEYSTORE_BASE64=YWJjZA==
+ANDROID_KEYSTORE_PASSWORD=store-secret
+ANDROID_KEY_ALIAS=teacherflavius-upload
+ANDROID_KEY_PASSWORD=key-secret
+"""
+        self.assertEqual(
+            normalize_secret("ANDROID_KEYSTORE_BASE64", block),
+            "YWJjZA==",
+        )
+        self.assertEqual(
+            normalize_secret("ANDROID_KEYSTORE_PASSWORD", block),
+            "store-secret",
+        )
+        self.assertEqual(
+            normalize_secret("ANDROID_KEY_ALIAS", block),
+            "teacherflavius-upload",
+        )
+        self.assertEqual(
+            normalize_secret("ANDROID_KEY_PASSWORD", block),
+            "key-secret",
+        )
+
     def test_leaves_release_unsigned_when_secrets_are_absent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             android_root = Path(directory) / "android"
