@@ -6,7 +6,8 @@ A camada Android do Teacher Flávio usa Capacitor 8 e reutiliza o frontend está
 
 - App ID: `com.teacherflavius.app`
 - Nome: `Teacher Flávio`
-- Web assets: `_site/`
+- Web assets do site: `_site/`
+- Web assets empacotados no Android: `_android_site/`
 - Conteúdo empacotado localmente no APK/AAB
 - O aplicativo não usa `server.url`
 - O service worker da PWA é desativado dentro do runtime nativo
@@ -26,7 +27,7 @@ executa o mesmo pipeline usado para validar a versão de produção:
 2. materialização das dependências;
 3. pós-processamento de produção.
 
-O resultado é gravado em `_site/`, que é o `webDir` do Capacitor.
+O pipeline gera `_site/` e depois cria `_android_site/`, uma cópia específica para o runtime nativo. Nessa cópia, rotas limpas locais como `/login/` são convertidas para arquivos explícitos como `/login/index.html`, evitando o fallback do servidor local do Capacitor para o `index.html` raiz. O `webDir` do Capacitor aponta para `_android_site/`.
 
 ## Projeto Android
 
@@ -54,7 +55,7 @@ O Capacitor 8 exige Node.js 22 ou superior. Para desenvolvimento Android, use An
 
 ## CI
 
-O workflow `.github/workflows/android-capacitor-build.yml` gera o projeto Android em ambiente descartável, sincroniza o frontend, compila `app-debug.apk` e publica o APK como artefato do GitHub Actions.
+O workflow `.github/workflows/android-capacitor-build.yml` gera o bundle nativo com rotas explícitas, valida a navegação principal, cria o projeto Android em ambiente descartável, sincroniza o frontend, compila `app-debug.apk` e publica o APK como artefato do GitHub Actions.
 
 Esse APK é apenas para validação técnica e instalação de teste. A publicação na Google Play exige uma versão release assinada e geração de AAB.
 
