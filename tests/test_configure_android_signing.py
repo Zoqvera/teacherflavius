@@ -24,7 +24,7 @@ class ConfigureAndroidSigningTests(unittest.TestCase):
                 "ANDROID_KEY_ALIAS",
                 "'ANDROID_KEY_ALIAS=teacherflavius-upload'",
             ),
-            "ANDROID_KEY_ALIAS=teacherflavius-upload",
+            "teacherflavius-upload",
         )
         self.assertEqual(
             normalize_secret(
