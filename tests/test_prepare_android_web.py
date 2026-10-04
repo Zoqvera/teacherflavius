@@ -51,6 +51,10 @@ class PrepareAndroidWebTests(unittest.TestCase):
                 'window.location.replace("/area-do-estudante/index.html")',
                 (destination / "app.js").read_text(encoding="utf-8"),
             )
+            self.assertIn(
+                '/native_auth_bridge.js?v=20261004-1',
+                (destination / "index.html").read_text(encoding="utf-8"),
+            )
 
 
 if __name__ == "__main__":
