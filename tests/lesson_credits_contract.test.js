@@ -30,6 +30,15 @@ const lessonCreditAmbiguityFix = fs.readFileSync(
   "utf8"
 );
 
+const lessonCancellationFix = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261004083150_sync_lesson_cards_and_late_cancellation.sql"),
+  "utf8"
+);
+const lessonCancellationBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/155_sync_lesson_cards_and_late_cancellation.sql"),
+  "utf8"
+);
+
 test("settled tuition grants the configured monthly lesson quantity", function () {
   assert.match(migration, /classes_per_month smallint/i);
   assert.match(migration, /sync_lesson_credits_after_tuition_change/i);
@@ -37,11 +46,29 @@ test("settled tuition grants the configured monthly lesson quantity", function (
   assert.match(migration, /generate_series\(1, contracted_count::integer\)/i);
 });
 
-test("regular lesson cancellation is enforced on the server with a 12-hour cutoff", function () {
-  assert.match(migration, /create or replace function public\.cancel_my_regular_lesson/i);
-  assert.match(migration, /regular_starts_at - interval '12 hours'/i);
-  assert.match(migration, /private\.student_regular_lesson_cancellations/i);
-  assert.match(migration, /status = 'available'/i);
+test("regular cancellation always releases the occurrence before start and grants credit only with 12 hours", function () {
+  for (const sql of [lessonCancellationFix, lessonCancellationBaseline]) {
+    assert.match(sql, /if now\(\) >= credit_row\.regular_starts_at/i);
+    assert.match(sql, /student_regular_lesson_cancellations/i);
+    assert.match(sql, /credit_granted := now\(\) <= credit_row\.regular_starts_at - interval '12 hours'/i);
+    assert.match(sql, /'available' else 'forfeited'/i);
+    assert.match(sql, /when credit\.status = 'scheduled'[\s\S]*now\(\) < credit\.regular_starts_at/i);
+  }
+});
+
+test("lesson-plan changes resynchronize already-settled tuition", function () {
+  for (const sql of [lessonCancellationFix, lessonCancellationBaseline]) {
+    assert.match(sql, /sync_lesson_credits_after_plan_change/i);
+    assert.match(sql, /after insert or update of classes_per_month/i);
+    assert.match(sql, /perform private\.sync_lesson_credits_for_tuition\(tuition_record\.id\)/i);
+  }
+});
+
+test("Minhas Aulas explains late cancellation without credit and keeps the cancel action available", function () {
+  assert.match(app, /CANCELADA SEM CRÉDITO/);
+  assert.match(app, /Você ainda pode cancelar e liberar a vaga/);
+  assert.match(app, /data-credit-eligible/);
+  assert.match(app, /A vaga foi liberada, sem geração de crédito/);
 });
 
 test("replacement booking only exposes quintet occurrences with operational capacity", function () {
