@@ -336,3 +336,26 @@
 .academic-conversation-card {
   background: rgba(2, 16, 43, .42);
 }
+
+
+.academic-question-study-item {
+  display: grid;
+  gap: 10px;
+}
+
+.academic-question-study-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.academic-question-study-actions .academic-button {
+  min-width: 190px;
+}
+
+.academic-teacher-question-card {
+  min-width: 0;
+}
+
+.academic-question-row > .conversation-card {
+  min-width: 0;
+}
