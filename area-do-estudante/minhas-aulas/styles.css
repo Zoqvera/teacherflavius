@@ -1,0 +1,247 @@
+.my-classes-container {
+  max-width: 760px;
+}
+
+.my-classes-header {
+  margin-bottom: 30px;
+}
+
+.my-classes-content {
+  display: grid;
+  gap: 18px;
+}
+
+.surface-card {
+  background: rgba(3, 26, 63, 0.76);
+  border: 1px solid rgba(78, 154, 236, 0.24);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--tf-shadow-sm);
+}
+
+.surface-card h2 {
+  color: var(--tf-slate-100);
+  font-family: var(--tf-font-display);
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.card-description,
+.loading-card,
+.empty-state,
+.config-note,
+.unpaid-notice {
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.page-message {
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border: 1px solid rgba(129, 140, 248, 0.34);
+  border-radius: 14px;
+  color: #cbd5e1;
+  background: rgba(129, 140, 248, 0.10);
+  line-height: 1.5;
+}
+
+.page-message.success {
+  border-color: rgba(52, 211, 153, 0.42);
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.page-message.error,
+.page-message.warning {
+  border-color: rgba(251, 191, 36, 0.42);
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.11);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.summary-card {
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(129, 140, 248, 0.10);
+}
+
+.summary-card strong {
+  display: block;
+  color: #f1f5f9;
+  font-size: 30px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.summary-card span {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lesson-list,
+.class-list,
+.replacement-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.lesson-card,
+.class-card,
+.replacement-card {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.lesson-topline,
+.replacement-topline,
+.class-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lesson-card h3,
+.replacement-card h3,
+.class-card h3 {
+  color: #f1f5f9;
+  font-family: var(--tf-font-display);
+  font-size: 16px;
+  margin: 0;
+}
+
+.lesson-meta,
+.replacement-meta,
+.class-meta {
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.55;
+  margin-top: 8px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 6px 9px;
+  border: 1px solid rgba(129, 140, 248, 0.36);
+  color: #c4b5fd;
+  background: rgba(129, 140, 248, 0.12);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.status-pill.available {
+  border-color: rgba(52, 211, 153, 0.42);
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.status-pill.used {
+  border-color: rgba(56, 189, 248, 0.42);
+  color: #bae6fd;
+  background: rgba(14, 165, 233, 0.11);
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.action-button,
+.secondary-button,
+.link-button {
+  min-height: 42px;
+  border-radius: 11px;
+  padding: 10px 13px;
+  font-family: var(--tf-font-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: center;
+}
+
+.action-button {
+  border: 1px solid rgba(129, 140, 248, 0.52);
+  background: rgba(129, 140, 248, 0.14);
+  color: #ddd6fe;
+}
+
+.secondary-button {
+  border: 1px solid rgba(248, 113, 113, 0.50);
+  background: rgba(248, 113, 113, 0.10);
+  color: #fecaca;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(52, 211, 153, 0.42);
+  background: rgba(16, 185, 129, 0.11);
+  color: #a7f3d0;
+  text-decoration: none;
+}
+
+.action-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.deadline-note {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+.deadline-note.closed {
+  color: #fca5a5;
+}
+
+.unpaid-notice,
+.config-note {
+  margin-top: 16px;
+  border-radius: 14px;
+  padding: 15px;
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  color: #fde68a;
+}
+
+.vacancy-badge {
+  color: #a7f3d0;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@media (min-width: 620px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
