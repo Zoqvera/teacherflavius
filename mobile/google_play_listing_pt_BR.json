@@ -1,0 +1,13 @@
+{
+  "locale": "pt-BR",
+  "appName": "Teacher Flávio",
+  "shortDescription": "Acompanhe aulas, atividades, frequência, progresso e mensalidades.",
+  "fullDescription": "Teacher Flávio é o aplicativo para alunos matriculados acompanharem o curso de inglês pelo celular.\n\nNo aplicativo, o aluno pode consultar a agenda de aulas, verificar o que precisa estudar, acessar atividades e materiais, acompanhar frequência e progresso, conferir sua turma e visualizar a situação das mensalidades.\n\nPrincipais recursos:\n- Área do Estudante com acesso autenticado\n- Minha Semana e próximas aulas\n- Orientações sobre o que estudar\n- Portal de exercícios e flashcards\n- Aulas de gramática e materiais de apoio\n- Acompanhamento de frequência e progresso\n- Consulta de turma, horários e aulas\n- Consulta da situação das mensalidades\n- Perfil, privacidade e solicitações relacionadas aos dados pessoais\n\nO acesso é destinado a alunos com cadastro ativo no Teacher Flávio. A autenticação pode ser feita com uma conta Google vinculada ao cadastro.\n\nOs pagamentos não são processados pelo aplicativo Android distribuído pela Google Play. A seção Mensalidades serve para consulta de situação e vencimentos.",
+  "category": "Education",
+  "privacyPolicyUrl": "https://teacherflavius.com/privacidade/",
+  "accountDeletionUrl": "https://teacherflavius.com/privacidade/",
+  "website": "https://teacherflavius.com/",
+  "supportEmail": "PENDING",
+  "requiresLogin": true,
+  "appAccessReviewAccount": "PENDING"
+}
