@@ -21,6 +21,15 @@ const profilePage = fs.readFileSync(path.join(ROOT, "perfil_dos_alunos.html"), "
 const profileScript = fs.readFileSync(path.join(ROOT, "perfil_dos_alunos.js"), "utf8");
 const billingScript = fs.readFileSync(path.join(ROOT, "perfil_dos_alunos_vencimento.js"), "utf8");
 
+const lessonCreditBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/140_lesson_credits_and_my_lessons.sql"),
+  "utf8"
+);
+const lessonCreditAmbiguityFix = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261004071132_fix_lesson_credit_number_ambiguity.sql"),
+  "utf8"
+);
+
 test("settled tuition grants the configured monthly lesson quantity", function () {
   assert.match(migration, /classes_per_month smallint/i);
   assert.match(migration, /sync_lesson_credits_after_tuition_change/i);
@@ -72,4 +81,14 @@ test("the student area links to Minhas Aulas and the page exposes replacement co
   assert.match(page, /<h1>Minhas Aulas<\/h1>/);
   assert.match(app, /Marcar reposição/);
   assert.match(app, /MARCAR REPOSIÇÃO/);
+});
+
+test("lesson credit synchronization qualifies the generated credit number", function () {
+  const qualifiedSeriesPattern = /series\.credit_number::smallint as credit_number/i;
+  const ambiguousDesiredCreditPattern = /desired_credits as \(\s*select\s+credit_number,/i;
+
+  assert.match(lessonCreditBaseline, qualifiedSeriesPattern);
+  assert.match(lessonCreditAmbiguityFix, qualifiedSeriesPattern);
+  assert.doesNotMatch(lessonCreditBaseline, ambiguousDesiredCreditPattern);
+  assert.doesNotMatch(lessonCreditAmbiguityFix, ambiguousDesiredCreditPattern);
 });
