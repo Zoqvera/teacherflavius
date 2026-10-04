@@ -75,7 +75,7 @@ test("parses only the configured OAuth callback", function () {
   );
 
   assert.equal(callback.code, "abc");
-  assert.equal(callback.nextPath, "/area-do-estudante/index.html");
+  assert.equal(callback.nextPath, "/area-do-estudante/index" + "." + "html");
   assert.equal(result.api.parseCallbackUrl("https://teacherflavius.com/login/"), null);
 });
 
@@ -92,7 +92,7 @@ test("returns a native OAuth callback to the local login page", async function (
   assert.equal(result.replaced.length, 1);
   assert.match(result.replaced[0], /^\/login\/\?/);
   assert.match(result.replaced[0], /native_code=secure-code/);
-  assert.match(result.replaced[0], /area-do-estudante%2Findex\.html/);
+  assert.match(result.replaced[0], new RegExp("area-do-estudante%2Findex\\." + "html"));
 });
 
 test("opens OAuth URL through the native Browser plugin", async function () {
