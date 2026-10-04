@@ -54,7 +54,7 @@ class CapacitorAndroidContractTests(unittest.TestCase):
         self.assertIn("Configure OAuth deep link", workflow)
         self.assertIn("Validate native route preparation", workflow)
         self.assertIn('android:host="login-callback"', workflow)
-        self.assertIn('"Browser"', workflow)
+        self.assertIn("@capacitor/browser", workflow)
         self.assertIn("./gradlew assembleDebug", workflow)
         self.assertIn("actions/upload-artifact@v7", workflow)
 
