@@ -21,8 +21,10 @@ REQUIRED_ENVIRONMENT = (
 
 def strip_matching_quotes(value: str) -> str:
     text = value.strip()
-    if len(text) >= 2 and text[0] == text[-1] and text[0] in {"'", '"'}:
-        return text[1:-1].strip()
+    while text and text[0] in {"'", '"'}:
+        text = text[1:].strip()
+    while text and text[-1] in {"'", '"'}:
+        text = text[:-1].strip()
     return text
 
 
