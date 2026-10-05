@@ -294,6 +294,7 @@ set search_path = ''
 as $function$
 declare
   inserted_count integer := 0;
+  tuition_inserted_count integer := 0;
   current_local_date date := timezone('America/Sao_Paulo', now())::date;
 begin
   with lesson_occurrences as (
@@ -430,8 +431,8 @@ begin
   where tuition.scheduled_for <= now()
   on conflict (subscription_id, notification_type, subject_key) do nothing;
 
-  get diagnostics inserted_count = inserted_count + row_count;
-  return inserted_count;
+  get diagnostics tuition_inserted_count = row_count;
+  return inserted_count + tuition_inserted_count;
 end;
 $function$;
 
