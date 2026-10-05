@@ -122,7 +122,8 @@ jobs:
             supabase/baseline/175_set_first_tuition_before_first_lesson.sql \
             supabase/baseline/180_limit_first_tuition_to_next_day.sql \
             supabase/baseline/185_allow_enrollment_day_first_tuition.sql \
-            supabase/baseline/190_add_pwa_web_push_notifications.sql
+            supabase/baseline/190_add_pwa_web_push_notifications.sql \
+            supabase/baseline/195_initialize_pwa_web_push_keys.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -138,11 +139,6 @@ jobs:
             'restore-test-placeholder-not-a-production-secret',
             'teacherflavius_notification_webhook_secret',
             'Temporary value used only by the baseline restore CI test'
-          );
-          select vault.create_secret(
-            'restore-test-push-cron-secret',
-            'teacherflavius_web_push_cron_secret',
-            'Temporary Web Push cron value used only by the baseline restore CI test'
           );
           select vault.create_secret(
             'restore-test-vapid-private-key',
