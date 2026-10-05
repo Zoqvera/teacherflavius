@@ -189,8 +189,8 @@ Deno.serve(async (request: Request) => {
     "get_web_push_vapid_private_key",
   );
 
-  let vapidPublicKey = typeof storedPublicKey === "string" ? storedPublicKey : "";
-  let vapidPrivateKey = typeof storedPrivateKey === "string" ? storedPrivateKey : "";
+  const vapidPublicKey = typeof storedPublicKey === "string" ? storedPublicKey : "";
+  const vapidPrivateKey = typeof storedPrivateKey === "string" ? storedPrivateKey : "";
 
   if (publicKeyError || privateKeyError) {
     console.error("Unable to read Web Push VAPID configuration");
@@ -198,22 +198,7 @@ Deno.serve(async (request: Request) => {
   }
 
   if (!vapidPublicKey || !vapidPrivateKey) {
-    const generatedKeys = webpush.generateVAPIDKeys();
-    const { data: configured, error: configureError } = await supabaseAdmin.rpc(
-      "configure_web_push_vapid_keys",
-      {
-        target_public_key: generatedKeys.publicKey,
-        target_private_key: generatedKeys.privateKey,
-      },
-    );
-
-    if (configureError || configured !== true) {
-      console.error("Unable to initialize Web Push VAPID configuration");
-      return jsonResponse({ error: "Push configuration could not be initialized" }, 500);
-    }
-
-    vapidPublicKey = generatedKeys.publicKey;
-    vapidPrivateKey = generatedKeys.privateKey;
+    return jsonResponse({ ok: true, claimed: 0, configurationPending: true });
   }
 
   webpush.setVapidDetails(
