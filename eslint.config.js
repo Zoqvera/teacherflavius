@@ -40,6 +40,7 @@ module.exports = [
       "pwa_registration.js",
       "native_auth_bridge.js",
       "pwa_install_prompt.js",
+      "web_push_notifications.js",
       "service-worker.js",
       "mobile_top_navigation.js",
       "site_footer.js",
