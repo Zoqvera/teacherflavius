@@ -220,3 +220,4 @@ version,name
 20261005144218,limit_first_tuition_to_next_day
 20261005150117,allow_enrollment_day_first_tuition
 20261005151500,add_pwa_web_push_notifications
+20261005153500,initialize_pwa_web_push_keys
