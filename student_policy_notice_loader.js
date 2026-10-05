@@ -13,9 +13,9 @@
   function isExcludedPage() {
     const path = currentPath();
     return path === "/login/" ||
-      path === "/login.html" ||
+      path === "/login" ||
       path === "/complete-cadastro/" ||
-      path === "/complete-cadastro.html" ||
+      path === "/complete-cadastro" ||
       path.indexOf("/acesso-negado") === 0;
   }
 
