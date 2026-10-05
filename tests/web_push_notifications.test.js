@@ -17,12 +17,16 @@ const migration = read(
 const edgeFunction = read(
   "supabase/functions/send-student-push-notifications/index.ts"
 );
+const keyMigration = read(
+  "supabase/migrations/20261005153500_initialize_pwa_web_push_keys.sql"
+);
 const studentArea = read("area_do_estudante.html");
 
 test("PWA notification permission is user initiated and tied to the authenticated student", function () {
   assert.match(client, /Notification\.requestPermission\(\)/);
   assert.match(client, /pushManager\.subscribe/);
   assert.match(client, /userVisibleOnly:\s*true/);
+  assert.match(client, /get_web_push_vapid_public_key/);
   assert.match(client, /upsert_my_web_push_subscription/);
   assert.match(client, /delete_my_web_push_subscription/);
   assert.match(client, /Auth\.getSession\(\)/);
@@ -92,8 +96,20 @@ test("Edge Function uses pinned Web Push dependency and handles expired subscrip
   assert.match(edgeFunction, /npm:web-push@3\.6\.7/);
   assert.match(edgeFunction, /validate_web_push_dispatch_signature/);
   assert.match(edgeFunction, /get_web_push_vapid_private_key/);
+  assert.match(edgeFunction, /get_web_push_vapid_public_key/);
+  assert.match(edgeFunction, /configure_web_push_vapid_keys/);
+  assert.match(edgeFunction, /generateVAPIDKeys/);
   assert.match(edgeFunction, /claim_due_web_push_notifications/);
   assert.match(edgeFunction, /record_web_push_delivery_result/);
   assert.match(edgeFunction, /statusCode === 404 \|\| statusCode === 410/);
   assert.match(edgeFunction, /setVapidDetails/);
+});
+
+test("VAPID private material and cron secret are bootstrapped outside source control", function () {
+  assert.match(keyMigration, /extensions\.gen_random_bytes\(48\)/);
+  assert.match(keyMigration, /teacherflavius_web_push_cron_secret/);
+  assert.match(keyMigration, /configure_web_push_vapid_keys/);
+  assert.match(keyMigration, /vault\.create_secret/);
+  assert.match(keyMigration, /vault\.update_secret/);
+  assert.doesNotMatch(client, /VAPID_PRIVATE_KEY/);
 });
