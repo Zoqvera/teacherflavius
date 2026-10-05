@@ -1,10 +1,10 @@
 {
-  "captured_from_migration_version": "20261005174949",
+  "captured_from_migration_version": "20261005183000",
   "tables": 52,
   "constraints": 261,
   "non_constraint_indexes": 114,
   "public_functions": 173,
-  "private_functions": 20,
+  "private_functions": 22,
   "rls_policies": 95,
   "public_user_triggers": 42,
   "application_auth_triggers": 1,
