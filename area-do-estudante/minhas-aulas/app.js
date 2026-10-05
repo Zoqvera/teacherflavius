@@ -215,11 +215,16 @@
 
   function renderUnpaidState() {
     const classes = overview.classes || [];
+    const firstPaymentPending = overview.has_paid_before !== true;
+    const notice = firstPaymentPending
+      ? '<div class="unpaid-notice">' + escapeHtml(buildUnpaidNotice(classes)) + '</div>'
+      : '';
+
     return '<section class="surface-card">' +
       '<h2>Minhas turmas</h2>' +
       '<p class="card-description">Confira as turmas atualmente vinculadas ao seu cadastro.</p>' +
-      renderClassCards(classes, classes.length > 0) +
-      '<div class="unpaid-notice">' + escapeHtml(buildUnpaidNotice(classes)) + '</div>' +
+      renderClassCards(classes, firstPaymentPending && classes.length > 0) +
+      notice +
     '</section>';
   }
 
