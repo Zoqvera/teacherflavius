@@ -20,6 +20,12 @@ const edgeFunction = read(
 const keyMigration = read(
   "supabase/migrations/20261005153500_initialize_pwa_web_push_keys.sql"
 );
+const initializer = read(
+  "supabase/functions/initialize-web-push/index.ts"
+);
+const bootstrapHardening = read(
+  "supabase/migrations/20261005154500_harden_web_push_vapid_bootstrap.sql"
+);
 const studentArea = read("area_do_estudante.html");
 
 test("PWA notification permission is user initiated and tied to the authenticated student", function () {
@@ -97,9 +103,9 @@ test("Edge Function uses pinned Web Push dependency and handles expired subscrip
   assert.match(edgeFunction, /validate_web_push_dispatch_signature/);
   assert.match(edgeFunction, /get_web_push_vapid_private_key/);
   assert.match(edgeFunction, /get_web_push_vapid_public_key/);
-  assert.match(edgeFunction, /configure_web_push_vapid_keys/);
-  assert.match(edgeFunction, /generateVAPIDKeys/);
   assert.match(edgeFunction, /claim_due_web_push_notifications/);
+  assert.doesNotMatch(edgeFunction, /configure_web_push_vapid_keys/);
+  assert.doesNotMatch(edgeFunction, /generateVAPIDKeys/);
   assert.match(edgeFunction, /record_web_push_delivery_result/);
   assert.match(edgeFunction, /statusCode === 404 \|\| statusCode === 410/);
   assert.match(edgeFunction, /setVapidDetails/);
@@ -110,6 +116,9 @@ test("VAPID private material and cron secret are bootstrapped outside source con
   assert.match(keyMigration, /teacherflavius_web_push_cron_secret/);
   assert.match(keyMigration, /configure_web_push_vapid_keys/);
   assert.match(keyMigration, /vault\.create_secret/);
-  assert.match(keyMigration, /vault\.update_secret/);
+  assert.match(initializer, /auth\.getUser\(token\)/);
+  assert.match(initializer, /generateVAPIDKeys/);
+  assert.match(initializer, /configure_web_push_vapid_keys/);
+  assert.match(bootstrapHardening, /pg_advisory_xact_lock/);
   assert.doesNotMatch(client, /VAPID_PRIVATE_KEY/);
 });
