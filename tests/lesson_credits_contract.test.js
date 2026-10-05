@@ -38,6 +38,10 @@ const lessonCancellationBaseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/155_sync_lesson_cards_and_late_cancellation.sql"),
   "utf8"
 );
+const priorPayerNoticeFix = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261005172627_hide_unpaid_notice_for_prior_payers.sql"),
+  "utf8"
+);
 
 test("settled tuition grants the configured monthly lesson quantity", function () {
   assert.match(migration, /classes_per_month smallint/i);
@@ -92,6 +96,14 @@ test("the unpaid notice uses the enrolled class names and required wording", fun
   assert.match(app, /avise a Júlia no whatsapp/);
   assert.match(app, /O professor poderá passar sua vaga para outro aluno/);
   assert.match(app, /joinClassNames\(classNames\)/);
+});
+
+test("the first-payment warning is hidden after any settled tuition", function () {
+  assert.match(priorPayerNoticeFix, /'has_paid_before', has_paid_before/i);
+  assert.match(priorPayerNoticeFix, /payment_date is not null or coalesce\(tuition\.is_exempt, false\) = true/i);
+  assert.match(app, /const firstPaymentPending = overview\.has_paid_before !== true/);
+  assert.match(app, /renderClassCards\(classes, firstPaymentPending && classes\.length > 0\)/);
+  assert.match(priorPayerNoticeFix, /Esta ação é exclusiva para alunos que ainda não fizeram o primeiro pagamento/);
 });
 
 test("the student profile saves the contracted lesson quantity", function () {
