@@ -16,8 +16,6 @@ type PushDelivery = {
   notification_tag: string;
 };
 
-const VAPID_PUBLIC_KEY =
-  "BMf1rmftznjV3A1bjVrIbcH5juUaZvnwGBvjbURg_CdsV5F2k8MeH43iP5jsxiyl_pFuVbb_8LMsQUwN4HqBHgA";
 const AUTH_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
 const CLAIM_LIMIT = 100;
 const CONCURRENCY = 10;
@@ -184,17 +182,43 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
-  const { data: vapidPrivateKey, error: vapidError } = await supabaseAdmin.rpc(
+  const { data: storedPublicKey, error: publicKeyError } = await supabaseAdmin.rpc(
+    "get_web_push_vapid_public_key",
+  );
+  const { data: storedPrivateKey, error: privateKeyError } = await supabaseAdmin.rpc(
     "get_web_push_vapid_private_key",
   );
-  if (vapidError || typeof vapidPrivateKey !== "string" || !vapidPrivateKey) {
-    console.error("Web Push VAPID key is unavailable");
-    return jsonResponse({ error: "Push configuration is incomplete" }, 500);
+
+  let vapidPublicKey = typeof storedPublicKey === "string" ? storedPublicKey : "";
+  let vapidPrivateKey = typeof storedPrivateKey === "string" ? storedPrivateKey : "";
+
+  if (publicKeyError || privateKeyError) {
+    console.error("Unable to read Web Push VAPID configuration");
+    return jsonResponse({ error: "Push configuration is unavailable" }, 500);
+  }
+
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    const generatedKeys = webpush.generateVAPIDKeys();
+    const { data: configured, error: configureError } = await supabaseAdmin.rpc(
+      "configure_web_push_vapid_keys",
+      {
+        target_public_key: generatedKeys.publicKey,
+        target_private_key: generatedKeys.privateKey,
+      },
+    );
+
+    if (configureError || configured !== true) {
+      console.error("Unable to initialize Web Push VAPID configuration");
+      return jsonResponse({ error: "Push configuration could not be initialized" }, 500);
+    }
+
+    vapidPublicKey = generatedKeys.publicKey;
+    vapidPrivateKey = generatedKeys.privateKey;
   }
 
   webpush.setVapidDetails(
     "https://teacherflavius.com",
-    VAPID_PUBLIC_KEY,
+    vapidPublicKey,
     vapidPrivateKey,
   );
 
