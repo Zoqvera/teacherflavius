@@ -60,7 +60,7 @@ test("locks background navigation until acceptance succeeds", function () {
 test("loads on authenticated site pages and the PWA student area", function () {
   assert.match(authInfrastructure, /student_policy_notice_loader\.js/);
   assert.match(footerCore, /student_policy_notice_loader\.js/);
-  assert.match(manifest, /"start_url": "\/area-do-estudante\/" /);
+  assert.match(manifest, /"start_url": "\/area-do-estudante\/"/);
   assert.match(studentArea, /pwa_registration\.js/);
   assert.match(studentArea, /auth\.js/);
   assert.match(loader, /SUPABASE_AUTH_STORAGE_KEY/);
