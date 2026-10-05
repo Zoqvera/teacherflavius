@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APPLICATION_CRONS_SQL="'auth-account-health-check','daily-data-retention-maintenance','mercado-pago-chargeback-reconciliation','mercado-pago-reconciliation','operational-data-quality-health-check','payment-alert-health-scan','payment-financial-health-check','sync-auto-makeup-slots-30-days','system-health-watchdog','system-synthetic-probe'"
+APPLICATION_CRONS_SQL="'auth-account-health-check','daily-data-retention-maintenance','mercado-pago-chargeback-reconciliation','mercado-pago-reconciliation','operational-data-quality-health-check','payment-alert-health-scan','payment-financial-health-check','sync-auto-makeup-slots-30-days','web-push-notifications','system-health-watchdog','system-synthetic-probe'"
 STACK_STARTED=false
 
 require_environment() {
