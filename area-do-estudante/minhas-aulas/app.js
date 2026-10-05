@@ -7,6 +7,7 @@
   let overview = null;
   let lessonCredits = [];
   let replacementOptions = [];
+  let pendingLateCancellationButton = null;
 
   function sleep(milliseconds) {
     return new Promise(function (resolve) {
@@ -287,22 +288,108 @@
     setPageMessage(successMessage, "success");
   }
 
-  async function cancelRegularLesson(button) {
-    const expectsCredit = button.dataset.creditEligible === "true";
-    const confirmationMessage = expectsCredit
-      ? "Cancelar esta aula? A vaga será liberada e você receberá um crédito para reposição."
-      : "Cancelar esta aula? A vaga será liberada, mas este cancelamento não gera crédito porque faltam menos de 12 horas para o início.";
-    const confirmed = window.confirm(confirmationMessage);
-    if (!confirmed) return;
+  function getLateCancellationModalElements() {
+    return {
+      modal: document.getElementById("lateCancellationModal"),
+      closeButton: document.getElementById("lateCancellationClose"),
+      backButton: document.getElementById("lateCancellationBack"),
+      confirmButton: document.getElementById("lateCancellationConfirm"),
+      status: document.getElementById("lateCancellationStatus")
+    };
+  }
 
+  function closeLateCancellationModal() {
+    const elements = getLateCancellationModalElements();
+    if (!elements.modal) return;
+
+    elements.modal.hidden = true;
+    document.body.classList.remove("late-cancellation-modal-open");
+    if (elements.status) elements.status.textContent = "";
+    if (elements.confirmButton) restoreButton(elements.confirmButton);
+    pendingLateCancellationButton = null;
+  }
+
+  function openLateCancellationModal(button) {
+    const elements = getLateCancellationModalElements();
+    if (!elements.modal || !elements.confirmButton) return;
+
+    pendingLateCancellationButton = button;
+    if (elements.status) elements.status.textContent = "";
+    elements.modal.hidden = false;
+    document.body.classList.add("late-cancellation-modal-open");
+    elements.confirmButton.focus();
+  }
+
+  async function performRegularLessonCancellation(button) {
     setButtonBusy(button, "CANCELANDO...");
     setPageMessage("", "");
+
+    const result = await rpc("cancel_my_regular_lesson", {
+      target_credit_id: button.dataset.creditId
+    });
+    const successMessage = result && result.credit_granted === true
+      ? "Aula cancelada. A vaga foi liberada e um crédito de reposição foi gerado."
+      : "Aula cancelada. A vaga foi liberada, sem geração de crédito.";
+
+    await refreshAfterAction(successMessage);
+  }
+
+  async function confirmLateCancellation() {
+    const elements = getLateCancellationModalElements();
+    const triggerButton = pendingLateCancellationButton;
+    if (!triggerButton || !elements.confirmButton) return;
+
+    setButtonBusy(triggerButton, "CANCELANDO...");
+    setButtonBusy(elements.confirmButton, "CANCELANDO...");
+    if (elements.status) elements.status.textContent = "";
+
     try {
-      const result = await rpc("cancel_my_regular_lesson", { target_credit_id: button.dataset.creditId });
-      const successMessage = result && result.credit_granted === true
-        ? "Aula cancelada. A vaga foi liberada e um crédito de reposição foi gerado."
-        : "Aula cancelada. A vaga foi liberada, sem geração de crédito.";
-      await refreshAfterAction(successMessage);
+      await performRegularLessonCancellation(triggerButton);
+      closeLateCancellationModal();
+    } catch (error) {
+      restoreButton(triggerButton);
+      restoreButton(elements.confirmButton);
+      if (elements.status) {
+        elements.status.textContent = error.message || "Não foi possível cancelar a aula.";
+      }
+    }
+  }
+
+  function initializeLateCancellationModal() {
+    const elements = getLateCancellationModalElements();
+    if (!elements.modal || !elements.confirmButton) return;
+
+    [elements.closeButton, elements.backButton].forEach(function (button) {
+      if (button) button.addEventListener("click", closeLateCancellationModal);
+    });
+
+    elements.confirmButton.addEventListener("click", confirmLateCancellation);
+    elements.modal.addEventListener("click", function (event) {
+      if (event.target === elements.modal) closeLateCancellationModal();
+    });
+    elements.modal.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeLateCancellationModal();
+      }
+    });
+  }
+
+  async function cancelRegularLesson(button) {
+    const expectsCredit = button.dataset.creditEligible === "true";
+
+    if (!expectsCredit) {
+      openLateCancellationModal(button);
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Cancelar esta aula? A vaga será liberada e você receberá um crédito para reposição."
+    );
+    if (!confirmed) return;
+
+    try {
+      await performRegularLessonCancellation(button);
     } catch (error) {
       setPageMessage(error.message || "Não foi possível cancelar a aula.", "error");
       restoreButton(button);
@@ -375,6 +462,7 @@
   }
 
   async function initialize() {
+    initializeLateCancellationModal();
     const loginStatus = document.getElementById("loginStatus");
     const ready = await waitForAuth();
     if (!ready) {
