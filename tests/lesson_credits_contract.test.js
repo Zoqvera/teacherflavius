@@ -86,6 +86,17 @@ test("Minhas Aulas explains late cancellation without credit and keeps the cance
   assert.match(app, /Você ainda pode cancelar e liberar a vaga/);
   assert.match(app, /data-credit-eligible/);
   assert.match(app, /A vaga foi liberada, sem geração de crédito/);
+  assert.match(app, /if \(!expectsCredit\)[\s\S]*openLateCancellationModal\(button\)/);
+});
+
+test("late cancellation requires the requested popup confirmation before the RPC", function () {
+  assert.match(page, /id="lateCancellationModal"/);
+  assert.match(page, /O cancelamento das aulas a menos de 12 horas da aula é permitido, mas o valor da aula não será reembolsado e o aluno não vai poder repor a aula\./);
+  assert.match(page, /Mas não se preocupe, você pode assistir a aula gravada, basta solicitar à Júlia no whatsapp do teacher\. A solicitação do link da aula gravada deve ser feita no dia posterior à aula\./);
+  assert.match(page, /id="lateCancellationConfirm"[^>]*>CANCELAR A AULA<\/button>/);
+  assert.match(app, /pendingLateCancellationButton/);
+  assert.match(app, /confirmLateCancellation/);
+  assert.match(app, /rpc\("cancel_my_regular_lesson"/);
 });
 
 test("replacement booking only exposes quintet occurrences with operational capacity", function () {
