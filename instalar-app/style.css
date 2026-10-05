@@ -1,0 +1,166 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: #f4f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(25, 74, 146, 0.14), transparent 34rem),
+    #f4f7fb;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+.install-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.install-card {
+  width: min(100%, 520px);
+  padding: 40px 32px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(2, 16, 43, 0.12);
+  text-align: center;
+}
+
+.install-brand {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: #02102b;
+}
+
+.install-brand svg {
+  width: 42px;
+  height: 42px;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.install-eyebrow {
+  margin: 0 0 10px;
+  color: #315f9b;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+h1 {
+  margin: 0;
+  color: #02102b;
+  font-size: clamp(2rem, 8vw, 3rem);
+  line-height: 1.05;
+}
+
+.install-copy {
+  max-width: 400px;
+  margin: 18px auto 30px;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.install-button {
+  width: 100%;
+  min-height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 16px;
+  background: #02102b;
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.install-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.install-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.install-button:not(:disabled):focus-visible,
+.student-area-link:focus-visible {
+  outline: 3px solid rgba(49, 95, 155, 0.35);
+  outline-offset: 4px;
+}
+
+.install-status {
+  min-height: 24px;
+  margin: 16px 0 0;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.install-instructions {
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #eef3f9;
+  text-align: left;
+}
+
+.install-instructions h2 {
+  margin: 0 0 8px;
+  color: #02102b;
+  font-size: 1rem;
+}
+
+.install-instructions p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.student-area-link {
+  display: inline-block;
+  margin-top: 28px;
+  color: #315f9b;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+@media (max-width: 560px) {
+  .install-shell {
+    padding: 16px;
+  }
+
+  .install-card {
+    padding: 32px 22px;
+    border-radius: 22px;
+  }
+}
