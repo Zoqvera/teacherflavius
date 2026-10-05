@@ -228,9 +228,9 @@
 
     const roadmap = document.getElementById("roadmapPanel");
     if (state.nextRoadmap) {
-      roadmap.innerHTML = '<div><span class="info-kicker">ROTEIRO DE ESTUDOS</span><strong>Próxima lição: Lição ' + esc(state.nextRoadmap) + '</strong><p>Esta é a primeira lição ainda não marcada como concluída.</p></div><a class="info-button" href="/area-do-estudante/minhas-aulas/">ABRIR ROTEIRO</a>';
+      roadmap.innerHTML = '<div><span class="info-kicker">ROTEIRO DE ESTUDOS</span><strong>Próxima lição: Lição ' + esc(state.nextRoadmap) + '</strong><p>Esta é a primeira lição ainda não marcada como concluída.</p></div><a class="info-button" href="/o-que-fazer/">ABRIR ROTEIRO</a>';
     } else {
-      roadmap.innerHTML = '<div><span class="info-kicker">ROTEIRO DE ESTUDOS</span><strong>Roteiro concluído</strong><p>Todas as lições disponíveis foram concluídas.</p></div><a class="info-button" href="/area-do-estudante/minhas-aulas/">ABRIR ROTEIRO</a>';
+      roadmap.innerHTML = '<div><span class="info-kicker">ROTEIRO DE ESTUDOS</span><strong>Roteiro concluído</strong><p>Todas as lições disponíveis foram concluídas.</p></div><a class="info-button" href="/o-que-fazer/">ABRIR ROTEIRO</a>';
     }
 
     document.getElementById("pageStatus").textContent = "Olá, " + (profile.name || profile.email || "aluno") + ". Aqui está o que você precisa fazer nesta semana.";
