@@ -10,10 +10,29 @@
     return targetWindow.TeacherFlaviusPwa || null;
   }
 
+  function isNativeApp(api, windowRef) {
+    return Boolean(
+      api &&
+      typeof api.isNativeCapacitorApp === "function" &&
+      api.isNativeCapacitorApp(windowRef)
+    );
+  }
+
   function shouldShow(windowRef) {
-    const api = pwaApi(windowRef);
-    if (!api || typeof api.canPromptInstall !== "function" || typeof api.isStandalone !== "function") return false;
-    return api.canPromptInstall(windowRef) && !api.isStandalone(windowRef);
+    const targetWindow = windowRef || window;
+    const api = pwaApi(targetWindow);
+    if (!api || typeof api.isStandalone !== "function") return false;
+    return !api.isStandalone(targetWindow) && !isNativeApp(api, targetWindow);
+  }
+
+  function canPromptInstall(windowRef) {
+    const targetWindow = windowRef || window;
+    const api = pwaApi(targetWindow);
+    return Boolean(
+      api &&
+      typeof api.canPromptInstall === "function" &&
+      api.canPromptInstall(targetWindow)
+    );
   }
 
   function syncVisibility(windowRef, documentRef) {
@@ -23,6 +42,27 @@
     card.hidden = !shouldShow(windowRef);
   }
 
+  function manualInstallMessage(windowRef) {
+    const targetWindow = windowRef || window;
+    const navigatorRef = targetWindow.navigator || {};
+    const userAgent = String(navigatorRef.userAgent || "");
+    const isAppleMobile = /iPad|iPhone|iPod/.test(userAgent) ||
+      (navigatorRef.platform === "MacIntel" && navigatorRef.maxTouchPoints > 1);
+
+    if (isAppleMobile) {
+      return "No Safari, abra o menu Compartilhar e escolha Adicionar à Tela de Início.";
+    }
+
+    return "Abra o menu do navegador e escolha Instalar app ou Adicionar à tela inicial.";
+  }
+
+  function showManualInstallInstructions(windowRef) {
+    const targetWindow = windowRef || window;
+    if (typeof targetWindow.alert === "function") {
+      targetWindow.alert(manualInstallMessage(targetWindow));
+    }
+  }
+
   async function requestInstall(windowRef, documentRef) {
     const targetWindow = windowRef || window;
     const targetDocument = documentRef || document;
@@ -30,9 +70,18 @@
     const api = pwaApi(targetWindow);
     if (!button || !api || typeof api.requestInstall !== "function") return;
 
+    if (!canPromptInstall(targetWindow)) {
+      showManualInstallInstructions(targetWindow);
+      syncVisibility(targetWindow, targetDocument);
+      return;
+    }
+
     button.disabled = true;
     try {
-      await api.requestInstall(targetWindow);
+      const result = await api.requestInstall(targetWindow);
+      if (result && result.outcome === "unavailable") {
+        showManualInstallInstructions(targetWindow);
+      }
     } finally {
       button.disabled = false;
       syncVisibility(targetWindow, targetDocument);
@@ -65,6 +114,7 @@
 
   window.TeacherFlaviusPwaInstallPrompt = Object.freeze({
     initialize: initialize,
+    manualInstallMessage: manualInstallMessage,
     shouldShow: shouldShow,
     syncVisibility: syncVisibility
   });
