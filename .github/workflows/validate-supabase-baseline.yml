@@ -44,6 +44,7 @@ jobs:
           node --test tests/first_tuition_lesson_month_contract.test.js
           node --test tests/academic_lesson_workflow_contract.test.js
           node --test tests/conversation_question_cards_contract.test.js
+          node --test tests/web_push_notifications.test.js
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -120,7 +121,8 @@ jobs:
             supabase/baseline/170_study_questions_individually.sql \
             supabase/baseline/175_set_first_tuition_before_first_lesson.sql \
             supabase/baseline/180_limit_first_tuition_to_next_day.sql \
-            supabase/baseline/185_allow_enrollment_day_first_tuition.sql
+            supabase/baseline/185_allow_enrollment_day_first_tuition.sql \
+            supabase/baseline/190_add_pwa_web_push_notifications.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -136,6 +138,16 @@ jobs:
             'restore-test-placeholder-not-a-production-secret',
             'teacherflavius_notification_webhook_secret',
             'Temporary value used only by the baseline restore CI test'
+          );
+          select vault.create_secret(
+            'restore-test-push-cron-secret',
+            'teacherflavius_web_push_cron_secret',
+            'Temporary Web Push cron value used only by the baseline restore CI test'
+          );
+          select vault.create_secret(
+            'restore-test-vapid-private-key',
+            'teacherflavius_web_push_vapid_private_key',
+            'Temporary VAPID value used only by the baseline restore CI test'
           );
           SQL
 
@@ -339,14 +351,21 @@ jobs:
             ),
             'cron_jobs', (
               select count(*) from cron.job
-              where jobname = 'sync-auto-makeup-slots-30-days'
+              where jobname in (
+                'sync-auto-makeup-slots-30-days',
+                'web-push-notifications'
+              )
             ),
             'storage_buckets', (
               select count(*) from storage.buckets
             ),
             'vault_secret_names', (
               select count(*) from vault.secrets
-              where name = 'teacherflavius_notification_webhook_secret'
+              where name in (
+                'teacherflavius_notification_webhook_secret',
+                'teacherflavius_web_push_cron_secret',
+                'teacherflavius_web_push_vapid_private_key'
+              )
             )
           );
           SQL
