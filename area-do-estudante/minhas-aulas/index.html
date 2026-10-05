@@ -31,7 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260430-3"></script>
   <link rel="stylesheet" href="/aula_template.css?v=20260430-3">
-  <link rel="stylesheet" href="/area-do-estudante/minhas-aulas/styles.css?v=20261004-2">
+  <link rel="stylesheet" href="/area-do-estudante/minhas-aulas/styles.css?v=20261005-late-cancel-1">
 </head>
 <body class="auth-checking">
 <!-- Google Tag Manager (noscript) -->
@@ -59,7 +59,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </main>
   </div>
 
-  <script src="/area-do-estudante/minhas-aulas/app.js?v=20261005-2"></script>
+  <div id="lateCancellationModal" class="late-cancellation-modal" hidden>
+    <section
+      class="late-cancellation-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="lateCancellationTitle"
+      aria-describedby="lateCancellationDescription"
+    >
+      <button id="lateCancellationClose" class="late-cancellation-close" type="button" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12"></path>
+          <path d="M18 6 6 18"></path>
+        </svg>
+      </button>
+
+      <h2 id="lateCancellationTitle">Cancelamento da aula</h2>
+      <div id="lateCancellationDescription" class="late-cancellation-copy">
+        <p>O cancelamento das aulas a menos de 12 horas da aula é permitido, mas o valor da aula não será reembolsado e o aluno não vai poder repor a aula.</p>
+        <p>Mas não se preocupe, você pode assistir a aula gravada, basta solicitar à Júlia no whatsapp do teacher. A solicitação do link da aula gravada deve ser feita no dia posterior à aula.</p>
+      </div>
+
+      <p id="lateCancellationStatus" class="late-cancellation-status" role="status" aria-live="polite"></p>
+
+      <div class="late-cancellation-actions">
+        <button id="lateCancellationBack" class="late-cancellation-back" type="button">VOLTAR</button>
+        <button id="lateCancellationConfirm" class="late-cancellation-confirm" type="button">CANCELAR A AULA</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="/area-do-estudante/minhas-aulas/app.js?v=20261005-late-cancel-1"></script>
   <script src="/animated_cards.js?v=20260430-3"></script>
   <script id="teacher-flavius-mobile-top-navigation" defer src="/mobile_top_navigation.js?v=20260924-single-menu-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
