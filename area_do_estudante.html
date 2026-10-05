@@ -66,6 +66,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button id="pwaInstallButton" class="pwa-install-button" type="button">INSTALAR</button>
     </section>
 
+    <section id="pwaPushCard" class="pwa-install-card" hidden aria-labelledby="pwaPushTitle">
+      <span class="pwa-install-icon" aria-hidden="true">
+        <svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+      </span>
+      <div class="pwa-install-copy">
+        <h2 id="pwaPushTitle">Ativar notificações</h2>
+        <p id="pwaPushDescription">Receba lembretes de aulas e vencimentos de mensalidade no aplicativo.</p>
+      </div>
+      <button id="pwaPushButton" class="pwa-install-button" type="button">ATIVAR NOTIFICAÇÕES</button>
+    </section>
+
     <div class="menu-groups">
       <section id="professorAreaSection" class="menu-group single" aria-label="Área do professor" hidden>
         <div class="menu-grid">
@@ -179,6 +190,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <script src="/resource_waiter.js?v=20260902-1"></script>
   <script src="/pwa_install_prompt.js?v=20261004-1"></script>
+  <script src="/web_push_notifications.js?v=20261005-1"></script>
   <script src="area_do_estudante.js?v=20261004-pwa-install-1"></script>
   <script src="animated_cards.js?v=20260430-3"></script>
   <script id="teacher-flavius-mobile-top-navigation" defer src="/mobile_top_navigation.js?v=20260924-single-menu-1"></script>

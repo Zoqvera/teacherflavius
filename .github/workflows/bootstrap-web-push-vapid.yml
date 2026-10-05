@@ -1,0 +1,174 @@
+name: Bootstrap Web Push VAPID
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/pwa-web-push-notifications-20261005
+    paths:
+      - .github/workflows/bootstrap-web-push-vapid.yml
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Verify database credential
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${SUPABASE_DB_URL:-}"
+
+      - name: Check whether VAPID is already configured
+        id: current
+        shell: bash
+        run: |
+          set -euo pipefail
+          configured="$(
+            psql "$SUPABASE_DB_URL" -At -v ON_ERROR_STOP=1 -c "
+              select case
+                when exists (
+                  select 1
+                  from private.web_push_configuration configuration
+                  where configuration.singleton = true
+                    and nullif(configuration.vapid_public_key, '') is not null
+                )
+                and exists (
+                  select 1
+                  from vault.secrets secret
+                  where secret.name = 'teacherflavius_web_push_vapid_private_key'
+                )
+                then 'true'
+                else 'false'
+              end;
+            "
+          )"
+          echo "configured=$configured" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        if: steps.current.outputs.configured != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Generate VAPID key pair in ephemeral runner
+        if: steps.current.outputs.configured != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --package-lock=false web-push@3.6.7
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const webpush = require("web-push");
+          const output = path.join(process.env.RUNNER_TEMP, "teacherflavius-vapid.json");
+          fs.writeFileSync(output, JSON.stringify(webpush.generateVAPIDKeys()), {
+            encoding: "utf8",
+            mode: 0o600
+          });
+          NODE
+
+      - name: Store VAPID key pair in private Supabase storage
+        if: steps.current.outputs.configured != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          key_file="$RUNNER_TEMP/teacherflavius-vapid.json"
+          public_key="$(jq -r '.publicKey' "$key_file")"
+          private_key="$(jq -r '.privateKey' "$key_file")"
+
+          test -n "$public_key"
+          test -n "$private_key"
+
+          psql "$SUPABASE_DB_URL" \
+            -v ON_ERROR_STOP=1 \
+            -v vapid_public="$public_key" \
+            -v vapid_private="$private_key" <<'SQL'
+          begin;
+
+          select pg_catalog.pg_advisory_xact_lock(
+            pg_catalog.hashtext('teacherflavius-web-push-vapid')
+          );
+
+          do $block$
+          declare
+            existing_public_key text;
+            existing_secret_id uuid;
+          begin
+            select configuration.vapid_public_key
+            into existing_public_key
+            from private.web_push_configuration configuration
+            where configuration.singleton = true;
+
+            select secret.id
+            into existing_secret_id
+            from vault.secrets secret
+            where secret.name = 'teacherflavius_web_push_vapid_private_key'
+            limit 1;
+
+            if nullif(existing_public_key, '') is not null
+               or existing_secret_id is not null then
+              raise exception 'VAPID configuration changed during bootstrap; refusing rotation.';
+            end if;
+          end;
+          $block$;
+
+          insert into private.web_push_configuration (
+            singleton,
+            vapid_public_key,
+            updated_at
+          )
+          values (
+            true,
+            :'vapid_public',
+            now()
+          )
+          on conflict (singleton) do update
+          set
+            vapid_public_key = excluded.vapid_public_key,
+            updated_at = now();
+
+          select vault.create_secret(
+            :'vapid_private',
+            'teacherflavius_web_push_vapid_private_key',
+            'Private VAPID key for PWA Web Push delivery'
+          );
+
+          commit;
+          SQL
+
+          rm -f "$key_file"
+
+      - name: Verify VAPID configuration without exposing keys
+        shell: bash
+        run: |
+          set -euo pipefail
+          result="$(
+            psql "$SUPABASE_DB_URL" -At -v ON_ERROR_STOP=1 -c "
+              select case
+                when exists (
+                  select 1
+                  from private.web_push_configuration configuration
+                  where configuration.singleton = true
+                    and nullif(configuration.vapid_public_key, '') is not null
+                )
+                and exists (
+                  select 1
+                  from vault.secrets secret
+                  where secret.name = 'teacherflavius_web_push_vapid_private_key'
+                )
+                then 'ready'
+                else 'missing'
+              end;
+            "
+          )"
+          test "$result" = "ready"
