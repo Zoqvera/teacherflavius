@@ -82,11 +82,6 @@
     const client = await getAuthenticatedClient();
     if (!client) throw new Error("Faça login para ativar notificações.");
 
-    const initialization = await client.functions.invoke("initialize-web-push", {
-      body: {}
-    });
-    if (initialization.error) throw initialization.error;
-
     const response = await client.rpc("get_web_push_vapid_public_key");
     if (response.error) throw response.error;
     if (typeof response.data !== "string" || !response.data) {
