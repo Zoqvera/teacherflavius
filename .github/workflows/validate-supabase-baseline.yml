@@ -123,7 +123,8 @@ jobs:
             supabase/baseline/180_limit_first_tuition_to_next_day.sql \
             supabase/baseline/185_allow_enrollment_day_first_tuition.sql \
             supabase/baseline/190_add_pwa_web_push_notifications.sql \
-            supabase/baseline/195_initialize_pwa_web_push_keys.sql
+            supabase/baseline/195_initialize_pwa_web_push_keys.sql \
+            supabase/baseline/200_harden_web_push_vapid_bootstrap.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
