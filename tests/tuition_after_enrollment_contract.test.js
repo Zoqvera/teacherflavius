@@ -18,6 +18,20 @@ const baseline = fs.readFileSync(
   ),
   "utf8"
 );
+const currentMigration = fs.readFileSync(
+  path.join(
+    ROOT,
+    "supabase/migrations/20261005150117_allow_enrollment_day_first_tuition.sql"
+  ),
+  "utf8"
+);
+const currentBaseline = fs.readFileSync(
+  path.join(
+    ROOT,
+    "supabase/baseline/185_allow_enrollment_day_first_tuition.sql"
+  ),
+  "utf8"
+);
 const workflow = fs.readFileSync(
   path.join(ROOT, ".github/workflows/validate-supabase-baseline.yml"),
   "utf8"
@@ -32,20 +46,46 @@ test("stores an explicit enrollment timestamp and protects it from student write
   assert.match(migration, /timestamptz '2026-09-27 00:00:00-03'/);
 });
 
-test("first tuition due date is always strictly after enrollment", function () {
+test("historical migration originally required tuition after enrollment", function () {
   assert.match(
     migration,
     /create or replace function public\.first_tuition_due_date_after/
   );
   assert.match(migration, /current_candidate > target_enrollment_date/);
-  assert.match(
-    migration,
-    /public\.first_tuition_due_date_after\(\s*enrollment_date,\s*target_due_day\s*\)/
-  );
-  assert.match(
-    migration,
-    /calculated_due\.due_date > coalesce\(\s*timezone\('America\/Sao_Paulo', p\.enrolled_at\)::date/
-  );
+});
+
+test("current guard allows enrollment-day tuition but blocks earlier dates", function () {
+  for (const sql of [currentMigration, currentBaseline]) {
+    assert.match(
+      sql,
+      /new\.due_date < enrollment_date/
+    );
+    assert.doesNotMatch(
+      sql,
+      /new\.due_date <= enrollment_date/
+    );
+    assert.match(
+      sql,
+      /não pode ser anterior à data de matrícula/
+    );
+  }
+});
+
+test("monthly generation preserves the explicit first due date", function () {
+  for (const sql of [currentMigration, currentBaseline]) {
+    assert.match(
+      sql,
+      /generated_month\.reference_month::date = s\.billing_start_month/
+    );
+    assert.match(
+      sql,
+      /then p\.tuition_first_due_date/
+    );
+    assert.match(
+      sql,
+      /effective_due\.due_date >= coalesce/
+    );
+  }
 });
 
 test("repairs invalid open tuition and preserves a hard database guard", function () {
@@ -64,19 +104,19 @@ test("repairs invalid open tuition and preserves a hard database guard", functio
   );
 });
 
-test("recovery baseline preserves the same enrollment billing invariants", function () {
+test("recovery baseline preserves enrollment metadata and current billing rule", function () {
   assert.match(baseline, /add column if not exists is_exempt boolean/);
   assert.match(baseline, /add column if not exists enrolled_at timestamptz/);
-  assert.match(
-    baseline,
-    /create or replace function public\.first_tuition_due_date_after/
-  );
   assert.match(
     baseline,
     /create trigger monthly_tuition_reject_pre_enrollment_due/
   );
   assert.match(
+    currentBaseline,
+    /new\.due_date < enrollment_date/
+  );
+  assert.match(
     workflow,
-    /supabase\/baseline\/130_enforce_tuition_after_enrollment\.sql/
+    /supabase\/baseline\/185_allow_enrollment_day_first_tuition\.sql/
   );
 });

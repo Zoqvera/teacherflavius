@@ -119,7 +119,8 @@ jobs:
             supabase/baseline/165_derive_enrollment_lessons_from_fee.sql \
             supabase/baseline/170_study_questions_individually.sql \
             supabase/baseline/175_set_first_tuition_before_first_lesson.sql \
-            supabase/baseline/180_limit_first_tuition_to_next_day.sql
+            supabase/baseline/180_limit_first_tuition_to_next_day.sql \
+            supabase/baseline/185_allow_enrollment_day_first_tuition.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
