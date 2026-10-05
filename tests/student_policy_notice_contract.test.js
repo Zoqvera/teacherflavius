@@ -30,7 +30,7 @@ test("renders the exact mandatory cancellation and makeup notice", function () {
   assert.match(renderer, /REPOSIÇÃO/);
   assert.match(renderer, /pelo menos 12 horas de antecedência/);
   assert.match(renderer, /não haverá reembolso do valor e nem direito à reposição/);
-  assert.match(renderer, /solicite aqui no whatsapp o link/);
+  assert.match(renderer, /solicite no whatsapp o link um dia depois da aula/);
   assert.match(renderer, /Portanto, evite cancelar aulas!/);
   assert.match(renderer, /MINHAS AULAS/);
   assert.match(renderer, /Teacher Flávio/);

@@ -142,7 +142,7 @@
       "Caso não seja possível cancelar com 12 horas de antecedência, a aula será considerada como dada e não haverá reembolso do valor e nem direito à reposição. Mas o aluno vai poder assistir a versão gravada da aula."
     ));
     box.appendChild(paragraph(
-      "Para assistir à aula gravada solicite aqui no whatsapp o link."
+      "Para assistir à aula gravada solicite no whatsapp o link um dia depois da aula."
     ));
 
     box.appendChild(heading("h3", "REPOSIÇÃO"));
