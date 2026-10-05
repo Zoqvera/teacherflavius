@@ -1,7 +1,6 @@
 (function () {
   "use strict";
 
-  const VAPID_PUBLIC_KEY = "BMf1rmftznjV3A1bjVrIbcH5juUaZvnwGBvjbURg_CdsV5F2k8MeH43iP5jsxiyl_pFuVbb_8LMsQUwN4HqBHgA";
   const CARD_ID = "pwaPushCard";
   const TITLE_ID = "pwaPushTitle";
   const DESCRIPTION_ID = "pwaPushDescription";
@@ -79,6 +78,18 @@
     };
   }
 
+  async function loadVapidPublicKey() {
+    const client = await getAuthenticatedClient();
+    if (!client) throw new Error("Faça login para ativar notificações.");
+
+    const response = await client.rpc("get_web_push_vapid_public_key");
+    if (response.error) throw response.error;
+    if (typeof response.data !== "string" || !response.data) {
+      throw new Error("A configuração de notificações ainda não está disponível.");
+    }
+    return response.data;
+  }
+
   async function persistSubscription(subscription) {
     const client = await getAuthenticatedClient();
     const keys = getSubscriptionKeys(subscription);
@@ -127,9 +138,10 @@
     const registration = await getRegistration();
     let subscription = await registration.pushManager.getSubscription();
     if (!subscription) {
+      const vapidPublicKey = await loadVapidPublicKey();
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: decodeBase64Url(VAPID_PUBLIC_KEY)
+        applicationServerKey: decodeBase64Url(vapidPublicKey)
       });
     }
 
