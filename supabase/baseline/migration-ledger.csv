@@ -217,3 +217,4 @@ version,name
 20261004141941,derive_enrollment_lessons_from_fee
 20261004144423,study_questions_individually
 20261004194636,set_first_tuition_before_first_lesson
+20261005144218,limit_first_tuition_to_next_day

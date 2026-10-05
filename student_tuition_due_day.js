@@ -13,9 +13,6 @@
     loaded: false,
     loadingPromise: null,
     anchorDate: null,
-    firstLessonDate: null,
-    windowStartDate: null,
-    latestDueDate: null,
     dateOptions: [],
     selectedDueDate: null
   };
@@ -53,9 +50,6 @@
 
       const payload = response.data || {};
       state.anchorDate = payload.anchor_date || null;
-      state.firstLessonDate = payload.first_lesson_date || null;
-      state.windowStartDate = payload.window_start_date || null;
-      state.latestDueDate = payload.latest_due_date || null;
       state.dateOptions = normalizeDateOptions(payload.date_options);
       state.selectedDueDate = payload.selected_due_date || payload.first_due_date || null;
       state.loaded = true;
@@ -84,20 +78,22 @@
     return select && isIsoDate(select.value) ? select.value : null;
   }
 
-  function scheduleDescription() {
-    if (!state.firstLessonDate) {
-      return "Ainda não há uma primeira aula com data definida. O vencimento disponível é o dia da matrícula.";
+  function getOptionsToRender() {
+    if (
+      state.selectedDueDate != null &&
+      !state.dateOptions.includes(state.selectedDueDate)
+    ) {
+      return [state.selectedDueDate];
     }
+    return state.dateOptions;
+  }
 
-    if (state.dateOptions.length === 1) {
-      return "Sua primeira aula está prevista para " + formatDateBr(state.firstLessonDate) +
-        ". O vencimento disponível é o dia da matrícula.";
+  function getOptionLabel(dueDate, index) {
+    if (state.selectedDueDate != null && !state.dateOptions.includes(dueDate)) {
+      return formatDateBr(dueDate) + " — vencimento registrado";
     }
-
-    return "Sua primeira aula está prevista para " + formatDateBr(state.firstLessonDate) +
-      ". Escolha o dia da matrícula ou uma das datas entre " +
-      formatDateBr(state.windowStartDate) + " e " + formatDateBr(state.latestDueDate) +
-      ", dentro dos 6 dias anteriores à primeira aula.";
+    return formatDateBr(dueDate) +
+      (index === 0 ? " — dia da matrícula" : " — dia seguinte");
   }
 
   function buildSection() {
@@ -114,7 +110,8 @@
     title.textContent = "Escolha o vencimento da primeira mensalidade";
 
     const description = document.createElement("p");
-    description.textContent = scheduleDescription();
+    description.textContent =
+      "Você pode escolher somente o dia da matrícula ou o dia seguinte.";
 
     heading.appendChild(title);
     heading.appendChild(description);
@@ -133,21 +130,20 @@
     select.required = state.selectedDueDate == null;
     select.disabled = state.selectedDueDate != null;
 
-    if (state.selectedDueDate == null && state.dateOptions.length > 1) {
+    if (state.selectedDueDate == null) {
       const placeholder = document.createElement("option");
       placeholder.value = "";
       placeholder.disabled = true;
       placeholder.selected = true;
-      placeholder.textContent = "Selecione uma data";
+      placeholder.textContent = "Selecione uma das duas datas";
       select.appendChild(placeholder);
     }
 
-    state.dateOptions.forEach(function (dueDate) {
+    getOptionsToRender().forEach(function (dueDate, index) {
       const option = document.createElement("option");
       option.value = dueDate;
-      option.textContent = formatDateBr(dueDate);
-      option.selected = state.selectedDueDate === dueDate ||
-        (state.selectedDueDate == null && state.dateOptions.length === 1);
+      option.textContent = getOptionLabel(dueDate, index);
+      option.selected = state.selectedDueDate === dueDate;
       select.appendChild(option);
     });
 
@@ -158,7 +154,7 @@
     const note = document.createElement("p");
     note.className = "tuition-due-date-note";
     note.textContent = state.selectedDueDate == null
-      ? "A escolha do vencimento é obrigatória. A primeira mensalidade ficará disponível assim que a matrícula for concluída."
+      ? "A escolha é obrigatória. A primeira mensalidade ficará disponível assim que a matrícula for concluída."
       : "Vencimento já registrado: " + formatDateBr(state.selectedDueDate) + ".";
     section.appendChild(note);
 
@@ -172,8 +168,8 @@
     if (document.getElementById(SECTION_ID)) return true;
 
     await loadState();
-    if (!state.dateOptions.length && state.selectedDueDate == null) {
-      throw new Error("Não foi possível calcular as datas de vencimento.");
+    if (state.selectedDueDate == null && state.dateOptions.length !== 2) {
+      throw new Error("Não foi possível carregar as duas datas de vencimento.");
     }
 
     ensureStyles();
@@ -196,10 +192,8 @@
     });
     if (response.error) throw response.error;
 
-    state.selectedDueDate = response.data && response.data.first_due_date || selectedDueDate;
-    state.windowStartDate = response.data && response.data.window_start_date || state.windowStartDate;
-    state.latestDueDate = response.data && response.data.latest_due_date || state.latestDueDate;
-    state.firstLessonDate = response.data && response.data.first_lesson_date || state.firstLessonDate;
+    state.selectedDueDate =
+      response.data && response.data.first_due_date || selectedDueDate;
     return state.selectedDueDate;
   }
 
@@ -222,7 +216,8 @@
     mount().catch(function (error) {
       const message = document.getElementById(MESSAGE_ID);
       if (message && !message.textContent) {
-        message.textContent = error.message || "Não foi possível carregar as opções de vencimento.";
+        message.textContent =
+          error.message || "Não foi possível carregar as opções de vencimento.";
       }
     });
   }
