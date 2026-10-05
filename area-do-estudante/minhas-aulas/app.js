@@ -185,20 +185,20 @@
     }).join("") + '</div>';
   }
 
-  function renderReplacementOptions() {
-    const availableCredits = lessonCredits.filter(function (credit) {
-      return credit.status === "available";
-    });
+  function getReplacementCreditIds() {
+    if (!overview || !Array.isArray(overview.replacement_credit_ids)) return [];
+    return overview.replacement_credit_ids.filter(Boolean);
+  }
 
-    if (!availableCredits.length) {
-      return '<div class="empty-state">Você não possui crédito disponível para reposição. Ao cancelar uma aula dentro do prazo, o crédito ficará disponível aqui.</div>';
-    }
+  function renderReplacementOptions() {
+    const replacementCreditIds = getReplacementCreditIds();
+    if (!replacementCreditIds.length) return "";
 
     if (!replacementOptions.length) {
-      return '<div class="empty-state">Nenhuma turma quinteto com vaga foi encontrada nos próximos 30 dias.</div>';
+      return '<div class="empty-state">Nenhuma turma com 4 vagas disponíveis foi encontrada nos próximos 30 dias.</div>';
     }
 
-    const nextCreditId = availableCredits[0].credit_id;
+    const nextCreditId = replacementCreditIds[0];
     return '<div class="replacement-list">' + replacementOptions.map(function (option) {
       const className = option.class_name || ("Turma " + option.class_number);
       const vacancyLabel = Number(option.available_spots) === 1 ? "1 vaga" : Number(option.available_spots) + " vagas";
@@ -225,6 +225,20 @@
       '<p class="card-description">Confira as turmas atualmente vinculadas ao seu cadastro.</p>' +
       renderClassCards(classes, firstPaymentPending && classes.length > 0) +
       notice +
+    '</section>' +
+    renderReplacementSection(Number(overview.classes_per_month || 0) < 1);
+  }
+
+  function renderReplacementSection(configurationPending) {
+    const availableCredits = Number(overview && overview.available_credits || 0);
+    if (availableCredits < 1) return "";
+
+    return '<section class="surface-card">' +
+      '<h2>Marcar reposição</h2>' +
+      '<p class="card-description">Use um crédito gerado por cancelamento dentro do prazo para escolher uma turma com 4 vagas disponíveis.</p>' +
+      (configurationPending
+        ? '<div class="empty-state">As reposições serão liberadas após a configuração da quantidade de aulas contratadas.</div>'
+        : renderReplacementOptions()) +
     '</section>';
   }
 
@@ -244,13 +258,7 @@
         ? '<div class="config-note">O professor ainda precisa definir a quantidade de aulas contratadas por mês no seu perfil.</div>'
         : renderLessonCards()) +
     '</section>' +
-    '<section class="surface-card">' +
-      '<h2>Marcar reposição</h2>' +
-      '<p class="card-description">Use um crédito disponível para escolher uma vaga em outra turma quinteto.</p>' +
-      (configurationPending
-        ? '<div class="empty-state">As reposições serão liberadas após a configuração da quantidade de aulas contratadas.</div>'
-        : renderReplacementOptions()) +
-    '</section>';
+    renderReplacementSection(configurationPending);
   }
 
   function renderPage() {
