@@ -42,6 +42,10 @@ const priorPayerNoticeFix = fs.readFileSync(
   path.join(ROOT, "supabase/migrations/20261005172627_hide_unpaid_notice_for_prior_payers.sql"),
   "utf8"
 );
+const replacementEligibilityFix = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261005174949_restrict_replacement_options_to_eligible_credits.sql"),
+  "utf8"
+);
 
 test("settled tuition grants the configured monthly lesson quantity", function () {
   assert.match(migration, /classes_per_month smallint/i);
@@ -81,6 +85,18 @@ test("replacement booking only exposes quintet occurrences with operational capa
   assert.match(migration, /private\.get_class_operational_capacity/i);
   assert.match(migration, /available_spots integer/i);
   assert.match(migration, /regular_students - snapshot\.cancelled_regular_students \+ snapshot\.replacement_students/i);
+});
+
+test("replacement vacancies require an on-time cancellation credit and exactly four open spots", function () {
+  assert.match(replacementEligibilityFix, /credit\.status = 'available'/i);
+  assert.match(replacementEligibilityFix, /credit\.cancelled_at is not null/i);
+  assert.match(replacementEligibilityFix, /credit\.cancelled_at <= credit\.regular_starts_at - interval '12 hours'/i);
+  assert.match(replacementEligibilityFix, /= 4\s*order by snapshot\.starts_at/i);
+  assert.match(replacementEligibilityFix, /if available_spots <> 4 then/i);
+  assert.match(replacementEligibilityFix, /replacement_credit_ids/i);
+  assert.match(app, /getReplacementCreditIds/);
+  assert.match(app, /if \(availableCredits < 1\) return ""/);
+  assert.match(app, /turma com 4 vagas disponíveis/);
 });
 
 test("a replacement consumes a real credit and legacy creditless booking is blocked", function () {
