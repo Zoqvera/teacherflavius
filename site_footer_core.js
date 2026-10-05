@@ -5,6 +5,8 @@
   const RENDERER_SCRIPT_SRC = "/site_footer_renderer.js?v=20260902-1";
   const PAYMENT_NOTICE_LOADER_SCRIPT_ID = "teacher-flavius-payment-notice-loader-script";
   const PAYMENT_NOTICE_LOADER_SCRIPT_SRC = "/student_payment_notice_loader.js?v=20260925-auth-runtime-1";
+  const POLICY_NOTICE_LOADER_SCRIPT_ID = "teacher-flavius-policy-notice-loader-script";
+  const POLICY_NOTICE_LOADER_SCRIPT_SRC = "/student_policy_notice_loader.js?v=20261005-1";
 
   function rendererIsReady() {
     return !!window.SiteFooterRenderer;
@@ -37,6 +39,10 @@
     loadBehaviorScript(PAYMENT_NOTICE_LOADER_SCRIPT_ID, PAYMENT_NOTICE_LOADER_SCRIPT_SRC);
   }
 
+  function loadPolicyNoticeBehavior() {
+    loadBehaviorScript(POLICY_NOTICE_LOADER_SCRIPT_ID, POLICY_NOTICE_LOADER_SCRIPT_SRC);
+  }
+
   function adaptFlexHost() {
     const bodyStyle = window.getComputedStyle(document.body);
     if (bodyStyle.display.indexOf("flex") !== -1 && bodyStyle.flexDirection.indexOf("row") === 0) {
@@ -57,6 +63,7 @@
       document.body.appendChild(window.SiteFooterRenderer.buildFooter());
     }
 
+    loadPolicyNoticeBehavior();
     loadPaymentNoticeBehavior();
   }
 
