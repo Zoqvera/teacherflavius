@@ -47,6 +47,15 @@ const replacementEligibilityFix = fs.readFileSync(
   "utf8"
 );
 
+const billingCycleFix = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261005183000_align_lesson_cards_with_billing_cycle.sql"),
+  "utf8"
+);
+const billingCycleBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/220_align_lesson_cards_with_billing_cycle.sql"),
+  "utf8"
+);
+
 test("settled tuition grants the configured monthly lesson quantity", function () {
   assert.match(migration, /classes_per_month smallint/i);
   assert.match(migration, /sync_lesson_credits_after_tuition_change/i);
@@ -97,6 +106,28 @@ test("replacement vacancies require an on-time cancellation credit and exactly f
   assert.match(app, /getReplacementCreditIds/);
   assert.match(app, /if \(availableCredits < 1\) return ""/);
   assert.match(app, /turma com 4 vagas disponíveis/);
+});
+
+test("paid lesson cards follow the tuition due-date billing cycle", function () {
+  for (const sql of [billingCycleFix, billingCycleBaseline]) {
+    assert.match(sql, /create or replace function private\.get_tuition_coverage_end/i);
+    assert.match(sql, /create or replace function private\.get_active_settled_tuition_id/i);
+    assert.match(sql, /tuition\.due_date <= target_date/i);
+    assert.match(sql, /target_date < private\.get_tuition_coverage_end\(tuition\.id\)/i);
+    assert.match(sql, /tuition_row\.due_date::timestamp/i);
+    assert.match(sql, /\(coverage_end - 1\)::timestamp/i);
+    assert.match(sql, /credit\.tuition_id = active_tuition_id/i);
+    assert.doesNotMatch(sql, /generate_series\(\s*tuition_row\.reference_month::timestamp/i);
+  }
+});
+
+test("billing-cycle resynchronization preserves cancelled and replacement lesson history", function () {
+  for (const sql of [billingCycleFix, billingCycleBaseline]) {
+    assert.match(sql, /private\.lesson_credits\.cancelled_at is null/i);
+    assert.match(sql, /private\.lesson_credits\.makeup_booking_id is null/i);
+    assert.match(sql, /private\.lesson_credits\.status in \('scheduled', 'available'\)/i);
+    assert.match(sql, /perform private\.sync_lesson_credits_for_tuition\(tuition_record\.id\)/i);
+  }
 });
 
 test("a replacement consumes a real credit and legacy creditless booking is blocked", function () {
