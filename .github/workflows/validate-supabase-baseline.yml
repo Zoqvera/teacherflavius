@@ -45,6 +45,7 @@ jobs:
           node --test tests/academic_lesson_workflow_contract.test.js
           node --test tests/conversation_question_cards_contract.test.js
           node --test tests/web_push_notifications.test.js
+          node --test tests/student_policy_notice_contract.test.js
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -124,7 +125,8 @@ jobs:
             supabase/baseline/185_allow_enrollment_day_first_tuition.sql \
             supabase/baseline/190_add_pwa_web_push_notifications.sql \
             supabase/baseline/195_initialize_pwa_web_push_keys.sql \
-            supabase/baseline/200_harden_web_push_vapid_bootstrap.sql
+            supabase/baseline/200_harden_web_push_vapid_bootstrap.sql \
+            supabase/baseline/205_require_cancellation_policy_acceptance.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
