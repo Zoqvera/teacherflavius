@@ -222,3 +222,4 @@ version,name
 20261005151500,add_pwa_web_push_notifications
 20261005153500,initialize_pwa_web_push_keys
 20261005154500,harden_web_push_vapid_bootstrap
+20261005164625,require_cancellation_policy_acceptance
