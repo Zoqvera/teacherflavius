@@ -55,6 +55,14 @@ const billingCycleBaseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/220_align_lesson_cards_with_billing_cycle.sql"),
   "utf8"
 );
+const cancelledSeatReplacementFix = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261005185049_expose_cancelled_lesson_seats_for_replacement.sql"),
+  "utf8"
+);
+const cancelledSeatReplacementBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/225_expose_cancelled_lesson_seats_for_replacement.sql"),
+  "utf8"
+);
 
 test("settled tuition grants the configured monthly lesson quantity", function () {
   assert.match(migration, /classes_per_month smallint/i);
@@ -107,16 +115,24 @@ test("replacement booking only exposes quintet occurrences with operational capa
   assert.match(migration, /regular_students - snapshot\.cancelled_regular_students \+ snapshot\.replacement_students/i);
 });
 
-test("replacement vacancies require an on-time cancellation credit and exactly four open spots", function () {
+test("replacement vacancies require an on-time cancellation credit", function () {
   assert.match(replacementEligibilityFix, /credit\.status = 'available'/i);
   assert.match(replacementEligibilityFix, /credit\.cancelled_at is not null/i);
   assert.match(replacementEligibilityFix, /credit\.cancelled_at <= credit\.regular_starts_at - interval '12 hours'/i);
-  assert.match(replacementEligibilityFix, /= 4\s*order by snapshot\.starts_at/i);
-  assert.match(replacementEligibilityFix, /if available_spots <> 4 then/i);
   assert.match(replacementEligibilityFix, /replacement_credit_ids/i);
   assert.match(app, /getReplacementCreditIds/);
   assert.match(app, /if \(availableCredits < 1\) return ""/);
-  assert.match(app, /turma com 4 vagas disponíveis/);
+});
+
+test("a cancelled regular seat becomes a replacement option while ordinary vacancies retain the four-spot rule", function () {
+  for (const sql of [cancelledSeatReplacementFix, cancelledSeatReplacementBaseline]) {
+    assert.match(sql, /snapshot\.cancelled_regular_students > snapshot\.replacement_students/i);
+    assert.match(sql, /cancellation_spots_available := greatest/i);
+    assert.match(sql, /available_spots <> 4 and cancellation_spots_available < 1/i);
+    assert.match(sql, /available_spots <= 0/i);
+  }
+  assert.match(app, /vaga liberada por cancelamento ou uma turma com 4 vagas disponíveis/);
+  assert.match(app, /Nenhuma vaga de reposição disponível foi encontrada/);
 });
 
 test("paid lesson cards follow the tuition due-date billing cycle", function () {

@@ -196,7 +196,7 @@
     if (!replacementCreditIds.length) return "";
 
     if (!replacementOptions.length) {
-      return '<div class="empty-state">Nenhuma turma com 4 vagas disponíveis foi encontrada nos próximos 30 dias.</div>';
+      return '<div class="empty-state">Nenhuma vaga de reposição disponível foi encontrada nos próximos 30 dias.</div>';
     }
 
     const nextCreditId = replacementCreditIds[0];
@@ -236,7 +236,7 @@
 
     return '<section class="surface-card">' +
       '<h2>Marcar reposição</h2>' +
-      '<p class="card-description">Use um crédito gerado por cancelamento dentro do prazo para escolher uma turma com 4 vagas disponíveis.</p>' +
+      '<p class="card-description">Use um crédito gerado por cancelamento dentro do prazo para escolher uma vaga liberada por cancelamento ou uma turma com 4 vagas disponíveis.</p>' +
       (configurationPending
         ? '<div class="empty-state">As reposições serão liberadas após a configuração da quantidade de aulas contratadas.</div>'
         : renderReplacementOptions()) +

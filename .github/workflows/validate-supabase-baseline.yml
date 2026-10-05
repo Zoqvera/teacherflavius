@@ -129,7 +129,8 @@ jobs:
             supabase/baseline/205_require_cancellation_policy_acceptance.sql \
             supabase/baseline/210_hide_unpaid_notice_for_prior_payers.sql \
             supabase/baseline/215_restrict_replacement_options_to_eligible_credits.sql \
-            supabase/baseline/220_align_lesson_cards_with_billing_cycle.sql
+            supabase/baseline/220_align_lesson_cards_with_billing_cycle.sql \
+            supabase/baseline/225_expose_cancelled_lesson_seats_for_replacement.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
