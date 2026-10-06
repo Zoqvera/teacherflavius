@@ -5,6 +5,7 @@
   window.__teacherFlaviusPerfilDueDayRequiredLoaded = true;
 
   const SAO_PAULO_TIME_ZONE = "America/Sao_Paulo";
+  const dueDayOptionsByStudentId = new Map();
 
   function getDueDayField() {
     return document.getElementById("studentDueDay");
@@ -34,54 +35,32 @@
     return null;
   }
 
-  function getSaoPauloCalendarDate(value) {
-    const date = value ? new Date(value) : new Date();
-    const safeDate = Number.isNaN(date.getTime()) ? new Date() : date;
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: SAO_PAULO_TIME_ZONE,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    }).formatToParts(safeDate);
-
-    const values = {};
-    parts.forEach(function (part) {
-      if (part.type !== "literal") values[part.type] = Number(part.value);
+  function normalizeDueDayOptions(options) {
+    if (!Array.isArray(options)) return [];
+    return options.map(function (value) {
+      return Number(value);
+    }).filter(function (day, index, values) {
+      return Number.isInteger(day)
+        && day >= 1
+        && day <= 31
+        && values.indexOf(day) === index;
     });
-
-    return {
-      year: values.year,
-      month: values.month,
-      day: values.day
-    };
   }
 
-  function addCalendarDays(calendarDate, offset) {
-    const date = new Date(Date.UTC(
-      calendarDate.year,
-      calendarDate.month - 1,
-      calendarDate.day + offset
-    ));
-
-    return {
-      year: date.getUTCFullYear(),
-      month: date.getUTCMonth() + 1,
-      day: date.getUTCDate()
-    };
-  }
-
-  function calculateDueDayOptions(studentId) {
-    const student = getStudentProfile(studentId);
-    const anchorDate = getSaoPauloCalendarDate(student && student.created_at);
-    const options = [
-      anchorDate.day,
-      addCalendarDays(anchorDate, 5).day,
-      addCalendarDays(anchorDate, 8).day
-    ];
-
-    return options.filter(function (day, index) {
-      return Number.isInteger(day) && day >= 1 && day <= 31 && options.indexOf(day) === index;
+  async function loadAuthoritativeDueDayOptions(studentId) {
+    const client = Auth.getClient();
+    const response = await client.rpc("get_teacher_student_tuition_due_date_options", {
+      target_student_id: studentId
     });
+    if (response.error) throw response.error;
+
+    const options = normalizeDueDayOptions(response.data && response.data.options);
+    if (!options.length) {
+      throw new Error("Nenhuma data de primeiro vencimento foi disponibilizada pelo sistema.");
+    }
+
+    dueDayOptionsByStudentId.set(String(studentId), options);
+    return options;
   }
 
   function ensureDueDayField() {
@@ -98,7 +77,7 @@
 
     const note = form.querySelector(".billing-modal-note");
     if (note) {
-      note.textContent = "O dia de vencimento é obrigatório e segue as opções calculadas pelo sistema a partir da data da matrícula.";
+      note.textContent = "Para novos cadastros, o primeiro vencimento deve ser no dia da matrícula ou no dia seguinte. Alunos já configurados mantêm o vencimento atual enquanto ele não for alterado.";
     }
 
     const saveButton = document.getElementById("saveStudentBillingButton");
@@ -106,26 +85,45 @@
     return true;
   }
 
-  function populateDueDay(studentId) {
+  async function populateDueDay(studentId) {
     if (!ensureDueDayField()) return;
 
     const field = getDueDayField();
     const settings = getBillingSettings(studentId);
     const currentDueDay = Number(settings.due_day);
-    const hasCurrentDueDay = Number.isInteger(currentDueDay) && currentDueDay >= 1 && currentDueDay <= 31;
-    const allowedOptions = calculateDueDayOptions(studentId);
-    const options = hasCurrentDueDay && !allowedOptions.includes(currentDueDay)
-      ? [currentDueDay].concat(allowedOptions)
-      : allowedOptions.slice();
+    const hasCurrentDueDay = Number.isInteger(currentDueDay)
+      && currentDueDay >= 1
+      && currentDueDay <= 31;
 
-    field.innerHTML = '<option value="">Selecione o dia de vencimento</option>' + options.map(function (dueDay) {
-      const currentLabel = hasCurrentDueDay && dueDay === currentDueDay && !allowedOptions.includes(currentDueDay)
-        ? " (atual)"
-        : "";
-      return '<option value="' + dueDay + '">Dia ' + dueDay + currentLabel + '</option>';
-    }).join("");
+    field.disabled = true;
+    field.innerHTML = '<option value="">Carregando vencimentos...</option>';
 
-    field.value = hasCurrentDueDay ? String(currentDueDay) : "";
+    try {
+      const allowedOptions = await loadAuthoritativeDueDayOptions(studentId);
+      const options = hasCurrentDueDay && !allowedOptions.includes(currentDueDay)
+        ? [currentDueDay].concat(allowedOptions)
+        : allowedOptions.slice();
+
+      field.innerHTML = '<option value="">Selecione o dia de vencimento</option>' + options.map(function (dueDay) {
+        const currentLabel = hasCurrentDueDay && dueDay === currentDueDay && !allowedOptions.includes(currentDueDay)
+          ? " (atual)"
+          : "";
+        return '<option value="' + dueDay + '">Dia ' + dueDay + currentLabel + '</option>';
+      }).join("");
+
+      field.value = hasCurrentDueDay ? String(currentDueDay) : "";
+    } catch (error) {
+      dueDayOptionsByStudentId.delete(String(studentId));
+      field.innerHTML = '<option value="">Não foi possível carregar os vencimentos</option>';
+      if (typeof setStudentBillingMessage === "function") {
+        setStudentBillingMessage(
+          "Não foi possível carregar os vencimentos permitidos: " + (error.message || "erro desconhecido") + ".",
+          "error"
+        );
+      }
+    } finally {
+      field.disabled = false;
+    }
   }
 
   function populateLessonQuantity(studentId) {
@@ -171,7 +169,8 @@
   function isAllowedDueDay(studentId, dueDay, currentDueDay) {
     if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) return false;
     if (dueDay === currentDueDay) return true;
-    return calculateDueDayOptions(studentId).includes(dueDay);
+    const options = dueDayOptionsByStudentId.get(String(studentId)) || [];
+    return options.includes(dueDay);
   }
 
   document.addEventListener("click", function (event) {
@@ -179,7 +178,7 @@
     if (!button) return;
 
     window.setTimeout(function () {
-      populateDueDay(button.dataset.studentId);
+      void populateDueDay(button.dataset.studentId);
       populateLessonQuantity(button.dataset.studentId);
     }, 0);
   }, true);
