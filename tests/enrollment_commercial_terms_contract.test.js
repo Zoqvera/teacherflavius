@@ -4,44 +4,41 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = path.join(__dirname, "..");
-const page = fs.readFileSync(path.join(ROOT, "complete-cadastro.html"), "utf8");
-const historicalMigration = fs.readFileSync(
-  path.join(ROOT, "supabase/migrations/20261004074423_student_sets_enrollment_commercial_terms.sql"),
-  "utf8"
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+}
+
+const page = read("complete-cadastro.html");
+const historicalMigration = read(
+  "supabase/migrations/20261004074423_student_sets_enrollment_commercial_terms.sql"
 );
-const historicalBaseline = fs.readFileSync(
-  path.join(ROOT, "supabase/baseline/145_student_sets_enrollment_commercial_terms.sql"),
-  "utf8"
+const historicalBaseline = read(
+  "supabase/baseline/145_student_sets_enrollment_commercial_terms.sql"
 );
-const migration = fs.readFileSync(
-  path.join(ROOT, "supabase/migrations/20261004141941_derive_enrollment_lessons_from_fee.sql"),
-  "utf8"
+const migration = read(
+  "supabase/migrations/20261006042754_bind_enrollment_terms_to_access_code.sql"
 );
-const baseline = fs.readFileSync(
-  path.join(ROOT, "supabase/baseline/165_derive_enrollment_lessons_from_fee.sql"),
-  "utf8"
+const baseline = read(
+  "supabase/baseline/265_bind_enrollment_terms_to_access_code.sql"
 );
-const notifier = fs.readFileSync(
-  path.join(ROOT, "supabase/functions/notify-new-enrollment/index.ts"),
-  "utf8"
-);
-const paymentAvailability = fs.readFileSync(
-  path.join(ROOT, "supabase/baseline/95_unlock_next_tuition_two_days_after_payment.sql"),
-  "utf8"
+const notifier = read("supabase/functions/notify-new-enrollment/index.ts");
+const paymentAvailability = read(
+  "supabase/baseline/95_unlock_next_tuition_two_days_after_payment.sql"
 );
 
-test("new enrollment form asks only for one of the supported monthly fees", function () {
+test("new enrollment form does not let the student choose commercial terms", function () {
   assert.doesNotMatch(page, /id="classesPerMonth"/);
-  assert.doesNotMatch(page, /Quantidade de aulas por mês/);
-  assert.match(page, /<select id="monthlyFee" required>/);
-  assert.match(page, /<option value="50">R\$ 50,00<\/option>/);
-  assert.match(page, /<option value="99\.90">R\$ 99,90<\/option>/);
-  assert.match(page, /<option value="100">R\$ 100,00<\/option>/);
-  assert.match(page, /<option value="250">R\$ 250,00<\/option>/);
-  assert.match(page, /quantidade de aulas mensais será definida automaticamente/i);
+  assert.doesNotMatch(page, /id="monthlyFee"/);
+  assert.doesNotMatch(page, /parseMonthlyFee/);
+  assert.doesNotMatch(page, /target_monthly_fee:/);
+  assert.match(
+    page,
+    /código é validado com segurança e define automaticamente o valor da mensalidade e a quantidade de aulas mensais/i
+  );
 });
 
-test("enrollment saves due-day choice before commercial terms and profile activation", function () {
+test("enrollment saves due-day choice before server-authoritative commercial terms and profile activation", function () {
   const dueDayIndex = page.indexOf("StudentTuitionDueDay.saveSelection");
   const billingIndex = page.indexOf("set_my_enrollment_billing_terms");
   const profileIndex = page.indexOf("Auth.completeProfile");
@@ -49,24 +46,40 @@ test("enrollment saves due-day choice before commercial terms and profile activa
   assert.ok(dueDayIndex >= 0);
   assert.ok(billingIndex > dueDayIndex);
   assert.ok(profileIndex > billingIndex);
-  assert.doesNotMatch(page, /target_classes_per_month/);
-  assert.match(page, /target_monthly_fee: monthlyFee/);
+  assert.match(
+    page,
+    /rpc\("set_my_enrollment_billing_terms"\)/
+  );
 });
 
-test("database derives lesson quantity from the selected enrollment fee", function () {
+test("access-code authorization stores the server-authoritative monthly fee and lesson quantity", function () {
   for (const sql of [migration, baseline]) {
-    assert.match(sql, /private\.enrollment_classes_per_month_for_fee/);
-    assert.match(sql, /when 50\.00 then 4::smallint/);
-    assert.match(sql, /when 100\.00 then 8::smallint/);
-    assert.match(sql, /when 99\.90 then 4::smallint/);
-    assert.match(sql, /when 250\.00 then 4::smallint/);
+    assert.match(sql, /add column if not exists monthly_fee numeric\(10, 2\)/i);
+    assert.match(sql, /add column if not exists classes_per_month smallint/i);
+    assert.match(sql, /from vault\.decrypted_secrets secret/i);
+    assert.match(sql, /configured_plans := secret_payload::jsonb/i);
+    assert.match(sql, /selected_plan := configured_plans -> normalized_code/i);
+    assert.match(sql, /monthly_fee = authorized_monthly_fee/i);
+    assert.match(sql, /classes_per_month = authorized_classes_per_month/i);
+  }
+});
+
+test("billing RPC ignores client pricing and uses only the authorized code terms", function () {
+  for (const sql of [migration, baseline]) {
     assert.match(
       sql,
-      /create or replace function public\.set_my_enrollment_billing_terms\(\s*target_monthly_fee numeric/i
+      /target_monthly_fee numeric default null/i
     );
-    assert.doesNotMatch(sql, /target_classes_per_month integer/);
-    assert.match(sql, /derived_classes_per_month/);
-    assert.match(sql, /classes_per_month = excluded\.classes_per_month/i);
+    assert.match(
+      sql,
+      /select access\.monthly_fee, access\.classes_per_month[\s\S]*into authorized_monthly_fee, authorized_classes_per_month/i
+    );
+    assert.doesNotMatch(sql, /round\(target_monthly_fee/i);
+    assert.doesNotMatch(sql, /private\.enrollment_classes_per_month_for_fee\(target_monthly_fee/i);
+    assert.match(
+      sql,
+      /values \([\s\S]*caller_id,[\s\S]*authorized_monthly_fee,[\s\S]*authorized_classes_per_month/i
+    );
   }
 });
 
@@ -75,16 +88,28 @@ test("enrollment billing RPC remains restricted to pre-enrollment authorized stu
     assert.match(sql, /coalesce\(profile_row\.enrolled, false\)/i);
     assert.match(sql, /coalesce\(profile_row\.profile_completed, false\)/i);
     assert.match(sql, /from private\.student_enrollment_access access/i);
-    assert.match(sql, /Escolha um valor de mensalidade válido/i);
+    assert.match(
+      sql,
+      /Valide um código de matrícula com condições comerciais antes de continuar/i
+    );
   }
 });
 
-test("profile activation revalidates the fee-to-lessons mapping", function () {
+test("profile activation revalidates billing terms against the authorized access code", function () {
   for (const sql of [migration, baseline]) {
+    assert.match(
+      sql,
+      /select access\.monthly_fee, access\.classes_per_month[\s\S]*into authorized_monthly_fee, authorized_classes_per_month/i
+    );
     assert.match(sql, /select settings\.monthly_fee, settings\.classes_per_month/i);
-    assert.match(sql, /expected_classes_per_month/);
-    assert.match(sql, /billing_classes_per_month is distinct from expected_classes_per_month/i);
-    assert.match(sql, /Escolha um valor de mensalidade válido antes de concluir a matrícula/i);
+    assert.match(
+      sql,
+      /billing_monthly_fee is distinct from authorized_monthly_fee/i
+    );
+    assert.match(
+      sql,
+      /billing_classes_per_month is distinct from authorized_classes_per_month/i
+    );
   }
 });
 
@@ -96,7 +121,7 @@ test("existing enrollment activation still generates the first tuition after enr
   }
 });
 
-test("new enrollment email contains derived lesson quantity and agreed monthly fee", function () {
+test("new enrollment email contains lesson quantity and agreed monthly fee", function () {
   assert.match(notifier, /\.from\("student_billing_settings"\)/);
   assert.match(notifier, /\.select\("monthly_fee, classes_per_month"\)/);
   assert.match(notifier, /Quantidade de aulas por mês:/);

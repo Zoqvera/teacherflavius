@@ -236,3 +236,4 @@ version,name
 20261006024346,unify_lesson_cancellation_policy
 20261006033924,canonicalize_replacement_eligibility
 20261006035538,canonicalize_replacement_credit_eligibility
+20261006042754,bind_enrollment_terms_to_access_code
