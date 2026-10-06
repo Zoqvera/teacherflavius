@@ -121,6 +121,15 @@
       });
     }
 
+    card.hidden = true;
+
+    if (typeof api.refreshInstalledState === "function") {
+      Promise.resolve(api.refreshInstalledState(targetWindow)).finally(function () {
+        syncVisibility(targetWindow, targetDocument);
+      });
+      return;
+    }
+
     syncVisibility(targetWindow, targetDocument);
   }
 
