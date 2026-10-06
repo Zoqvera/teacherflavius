@@ -147,7 +147,7 @@
     note.className = "tf-tuition-modal__note";
     note.textContent = isNativeCapacitorApp()
       ? "Consulte a situação e o vencimento em Mensalidades."
-      : "O pagamento pode ser feito com Pix ou cartão de crédito em ambiente protegido pelo Mercado Pago.";
+      : "O pagamento pode ser feito com Pix ou cartão de débito em ambiente protegido pelo Mercado Pago.";
     actions.className = "tf-tuition-modal__actions";
 
     closeButton.addEventListener("click", closeModal);
