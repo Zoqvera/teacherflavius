@@ -36,6 +36,7 @@ jobs:
           node --test tests/enrollment_access_code.test.js
           node --test tests/enrollment_required_fields.test.js
           node --test tests/enrollment_class_mode_contract.test.js
+          node --test tests/enrollment_onboarding_state_contract.test.js
           node --test tests/tuition_due_day_enrollment_fallback.test.js
           node --test tests/quintet_capacity_eight_contract.test.js
           node --test tests/course_vacancy_visibility_contract.test.js
@@ -141,7 +142,8 @@ jobs:
             supabase/baseline/250_unify_first_tuition_due_rule.sql \
             supabase/baseline/255_canonicalize_replacement_eligibility.sql \
             supabase/baseline/260_canonicalize_replacement_credit_eligibility.sql \
-            supabase/baseline/265_bind_enrollment_terms_to_access_code.sql
+            supabase/baseline/265_bind_enrollment_terms_to_access_code.sql \
+            supabase/baseline/270_backend_driven_enrollment_onboarding_state.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
