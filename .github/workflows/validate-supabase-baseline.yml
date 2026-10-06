@@ -137,6 +137,7 @@ jobs:
             supabase/baseline/235_activate_first_prepaid_tuition.sql \
             supabase/baseline/240_require_enrollment_class_mode.sql \
             supabase/baseline/245_add_enrollment_class_mode_rpc.sql \
+            supabase/baseline/230_unify_lesson_cancellation_policy.sql \
             supabase/baseline/250_unify_first_tuition_due_rule.sql
           do
             echo "Applying $file"
