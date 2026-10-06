@@ -12,6 +12,7 @@
   const state = {
     loaded: false,
     loadingPromise: null,
+    enabled: null,
     anchorDate: null,
     dateOptions: [],
     selectedDueDate: null
@@ -45,6 +46,18 @@
     if (state.loadingPromise) return state.loadingPromise;
 
     state.loadingPromise = (async function () {
+      if (!window.EnrollmentOnboardingState) {
+        throw new Error("O estado da matrícula não foi inicializado.");
+      }
+
+      const onboardingState = await window.EnrollmentOnboardingState.get();
+      state.enabled = onboardingState.requiresTuitionDueDate === true;
+
+      if (!state.enabled) {
+        state.loaded = true;
+        return state;
+      }
+
       const response = await getClient().rpc("get_my_tuition_due_day_options");
       if (response.error) throw response.error;
 
@@ -168,6 +181,11 @@
     if (document.getElementById(SECTION_ID)) return true;
 
     await loadState();
+    if (!state.enabled) {
+      const existingSection = document.getElementById(SECTION_ID);
+      if (existingSection) existingSection.remove();
+      return false;
+    }
     if (state.selectedDueDate == null && state.dateOptions.length !== 2) {
       throw new Error("Não foi possível carregar as duas datas de vencimento.");
     }
@@ -179,6 +197,7 @@
 
   async function saveSelection() {
     await loadState();
+    if (!state.enabled) return null;
     if (state.selectedDueDate != null) return state.selectedDueDate;
 
     await mount();
@@ -211,19 +230,25 @@
     return true;
   }
 
-  function initialize() {
-    installProfileCompletionWrapper();
-    mount().catch(function (error) {
+  async function initialize() {
+    try {
+      await loadState();
+      if (!state.enabled) return;
+      installProfileCompletionWrapper();
+      await mount();
+    } catch (error) {
       const message = document.getElementById(MESSAGE_ID);
       if (message && !message.textContent) {
         message.textContent =
           error.message || "Não foi possível carregar as opções de vencimento.";
       }
-    });
+    }
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initialize, { once: true });
+    document.addEventListener("DOMContentLoaded", function () {
+      initialize();
+    }, { once: true });
   } else {
     initialize();
   }

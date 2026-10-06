@@ -129,10 +129,14 @@ test("new enrollment email contains lesson quantity and agreed monthly fee", fun
   assert.match(notifier, /formatCurrencyBRL/);
 });
 
-test("student is sent directly to first tuition payment after enrollment", function () {
+test("only new enrollment is sent directly to first tuition payment", function () {
   assert.match(page, /const FIRST_TUITION_PAYMENT_PATH = "\/pagamento\//);
-  assert.match(page, /window\.location\.replace\(getPostEnrollmentPath\(\)\)/);
+  assert.match(
+    page,
+    /state\.mode === NEW_ENROLLMENT_MODE[\s\S]*getPostEnrollmentPath\(\)[\s\S]*getNextPath\(\)/
+  );
   assert.match(page, /CONCLUIR MATRÍCULA E PAGAR/);
+  assert.match(page, /SALVAR DADOS E ACESSAR/);
   assert.match(page, /primeira mensalidade ficará disponível/);
 });
 

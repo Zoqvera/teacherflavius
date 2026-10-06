@@ -8,6 +8,7 @@ function read(relativePath) {
 }
 
 const page = read("complete-cadastro.html");
+const onboardingState = read("enrollment_onboarding_state.js");
 const migration = read("supabase/migrations/20261001130000_require_enrollment_access_code.sql");
 const baseline = read("supabase/baseline/100_require_enrollment_access_code.sql");
 const currentMigration = read(
@@ -18,12 +19,14 @@ const currentBaseline = read(
 );
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 
-test("onboarding fails closed until the access code is authorized", function () {
+test("new enrollment fails closed until backend state confirms access authorization", function () {
   assert.match(page, /id="enrollmentAccessForm"/);
   assert.match(page, /id="completeProfileForm" hidden/);
   assert.match(page, /type="password"/);
   assert.match(page, /rpc\("authorize_my_enrollment"/);
-  assert.match(page, /rpc\("has_my_enrollment_access"/);
+  assert.match(page, /EnrollmentOnboardingState/);
+  assert.match(onboardingState, /rpc\("get_my_enrollment_onboarding_state"\)/);
+  assert.match(page, /if \(!state\.formUnlocked\)/);
 });
 
 test("the access-code secret remains server-side in Vault", function () {
