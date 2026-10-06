@@ -47,6 +47,28 @@ collect_remote_versions() {
         order by version;"
 }
 
+report_drift() {
+  local remote_only_file="$1"
+  local local_only_file="$2"
+  local drift_found=false
+
+  if [[ -s "${remote_only_file}" ]]; then
+    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
+    sed 's/^/  - /' "${remote_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${local_only_file}" ]]; then
+    echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+    sed 's/^/  - /' "${local_only_file}"
+    drift_found=true
+  fi
+
+  if [[ "${drift_found}" == true ]]; then
+    exit 1
+  fi
+}
+
 main() {
   require_configuration
 
@@ -55,20 +77,18 @@ main() {
 
   local local_versions_file="${TEMP_DIR}/local_versions"
   local remote_versions_file="${TEMP_DIR}/remote_versions"
-  local missing_versions_file="${TEMP_DIR}/missing_versions"
+  local remote_only_file="${TEMP_DIR}/remote_only"
+  local local_only_file="${TEMP_DIR}/local_only"
 
   collect_local_versions > "${local_versions_file}"
   collect_remote_versions > "${remote_versions_file}"
 
-  comm -23 "${remote_versions_file}" "${local_versions_file}" > "${missing_versions_file}"
+  comm -23 "${remote_versions_file}" "${local_versions_file}" > "${remote_only_file}"
+  comm -13 "${remote_versions_file}" "${local_versions_file}" > "${local_only_file}"
 
-  if [[ -s "${missing_versions_file}" ]]; then
-    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
-    sed 's/^/  - /' "${missing_versions_file}"
-    exit 1
-  fi
+  report_drift "${remote_only_file}" "${local_only_file}"
 
-  echo "Supabase migration history is versioned from cutoff ${MIGRATION_DRIFT_CUTOFF} onward."
+  echo "Supabase migration history and Git are aligned from cutoff ${MIGRATION_DRIFT_CUTOFF} onward."
 }
 
 main "$@"
