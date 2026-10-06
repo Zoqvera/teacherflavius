@@ -4,7 +4,9 @@ alter table public.profiles
   add column if not exists enrolled_at timestamptz;
 
 alter table public.monthly_tuition
-  add column if not exists is_exempt boolean not null default false;
+  add column if not exists is_exempt boolean not null default false,
+  add column if not exists exempted_at timestamptz,
+  add column if not exists exemption_notes text;
 
 comment on column public.profiles.enrolled_at is
   'Momento efetivo da matrícula.';

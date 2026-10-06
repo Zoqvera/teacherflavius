@@ -1,0 +1,49 @@
+name: Supabase migration drift
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/check_supabase_migration_drift.sh"
+      - ".github/workflows/supabase-migration-drift.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/check_supabase_migration_drift.sh"
+      - ".github/workflows/supabase-migration-drift.yml"
+  schedule:
+    - cron: "11 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-migration-drift-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compare-production-history:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      MIGRATION_DRIFT_CUTOFF: "20261006000000"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Compare production migration history with Git
+        shell: bash
+        run: bash scripts/check_supabase_migration_drift.sh
