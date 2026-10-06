@@ -89,7 +89,7 @@ def prepare_native_payment_page(content: str) -> str:
     replacements = {
         '<script src="https://sdk.mercadopago.com/js/v2"></script>': "",
         '<script src="/pagamento/subscription_checkout.js?v=20260929-1"></script>': "",
-        "<h1>Pague com Pix ou cartão de débito</h1>": "<h1>Consulte suas mensalidades</h1>" ,
+        "<h1>Pague com Pix ou cartão de débito</h1>": "<h1>Consulte suas mensalidades</h1>",
         "<p>O pagamento é processado pelo Mercado Pago.</p>":
             "<p>Veja mensalidades em aberto, vencimentos e situação da sua conta.</p>",
         "<span>Pagamento seguro</span>": "<span>Mensalidades</span>",
