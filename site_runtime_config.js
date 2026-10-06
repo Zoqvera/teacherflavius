@@ -19,7 +19,7 @@
     mobileTopNavigation: freezeAsset({ id: "teacher-flavius-mobile-top-navigation", src: "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1" }),
     footerCore: freezeAsset({ id: "teacher-flavius-site-footer-core", src: "/site_footer_core.js?v=20260925-auth-runtime-1" }),
     cleanUrls: freezeAsset({ id: "teacher-flavius-clean-urls", src: "/clean_urls.js?v=20260910-reports-extensionless-1" }),
-    googleOnlyAccess: freezeAsset({ id: "teacher-flavius-google-only-access", src: "/google_only_access.js?v=20260819-1" }),
+    googleOnlyAccess: freezeAsset({ id: "teacher-flavius-google-only-access", src: "/google_only_access.js?v=20261006-profile-freeze-1" }),
     studentBirthdays: freezeAsset({ id: "teacher-flavius-student-birthdays", src: "/student_birthdays.js?v=20260819-1" }),
     studentBirthdayCelebration: freezeAsset({ id: "teacher-flavius-student-birthday-celebration", src: "/student_birthday_celebration.js?v=20260909-1" }),
     sitePageContext: freezeAsset({ id: "teacher-flavius-site-page-context", src: "/site_page_context.js?v=20260925-auth-runtime-1" }),
