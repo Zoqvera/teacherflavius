@@ -5,6 +5,14 @@ readonly ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly MIGRATIONS_DIR="${MIGRATIONS_DIR:-${ROOT_DIR}/supabase/migrations}"
 readonly MIGRATION_DRIFT_CUTOFF="${MIGRATION_DRIFT_CUTOFF:-20261006000000}"
 
+TEMP_DIR=""
+
+cleanup() {
+  if [[ -n "${TEMP_DIR}" && -d "${TEMP_DIR}" ]]; then
+    rm -rf -- "${TEMP_DIR}"
+  fi
+}
+
 require_configuration() {
   if [[ -z "${SUPABASE_DB_URL:-}" ]]; then
     echo "::error::SUPABASE_DB_URL is required to compare repository migrations with production."
@@ -23,28 +31,31 @@ require_configuration() {
 }
 
 collect_local_versions() {
-  find "${MIGRATIONS_DIR}" -maxdepth 1 -type f -name '*.sql' -printf '%f\n'     | sed -nE 's/^([0-9]{14})_.+\.sql$/\1/p'     | awk -v cutoff="${MIGRATION_DRIFT_CUTOFF}" '$1 >= cutoff'     | sort -u
+  find "${MIGRATIONS_DIR}" -maxdepth 1 -type f -name '*.sql' -printf '%f\n' \
+    | sed -nE 's/^([0-9]{14})_.+\.sql$/\1/p' \
+    | awk -v cutoff="${MIGRATION_DRIFT_CUTOFF}" '$1 >= cutoff' \
+    | sort -u
 }
 
 collect_remote_versions() {
-  psql "${SUPABASE_DB_URL}"     -AtX     -v ON_ERROR_STOP=1     -v cutoff="${MIGRATION_DRIFT_CUTOFF}"     -c "select version
+  psql "${SUPABASE_DB_URL}" \
+    -AtX \
+    -v ON_ERROR_STOP=1 \
+    -c "select version
         from supabase_migrations.schema_migrations
-        where version >= :'cutoff'
+        where version >= '${MIGRATION_DRIFT_CUTOFF}'
         order by version;"
 }
 
 main() {
   require_configuration
 
-  local local_versions_file
-  local remote_versions_file
-  local missing_versions_file
+  TEMP_DIR="$(mktemp -d)"
+  trap cleanup EXIT
 
-  local_versions_file="$(mktemp)"
-  remote_versions_file="$(mktemp)"
-  missing_versions_file="$(mktemp)"
-
-  trap 'rm -f "${local_versions_file}" "${remote_versions_file}" "${missing_versions_file}"' EXIT
+  local local_versions_file="${TEMP_DIR}/local_versions"
+  local remote_versions_file="${TEMP_DIR}/remote_versions"
+  local missing_versions_file="${TEMP_DIR}/missing_versions"
 
   collect_local_versions > "${local_versions_file}"
   collect_remote_versions > "${remote_versions_file}"
