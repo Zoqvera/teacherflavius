@@ -103,6 +103,31 @@
     return deferredInstallPrompt !== null && !isInstalled(windowRef);
   }
 
+  async function refreshInstalledState(windowRef) {
+    const targetWindow = windowRef || window;
+    if (isInstalled(targetWindow)) return true;
+
+    const navigatorRef = targetWindow.navigator || {};
+    if (typeof navigatorRef.getInstalledRelatedApps !== "function") {
+      return false;
+    }
+
+    try {
+      const relatedApps = await navigatorRef.getInstalledRelatedApps();
+      const pwaIsInstalled = Array.isArray(relatedApps) && relatedApps.some(function (app) {
+        return app && app.platform === "webapp";
+      });
+
+      if (pwaIsInstalled) {
+        recordInstallation(targetWindow);
+      }
+
+      return pwaIsInstalled;
+    } catch (_) {
+      return false;
+    }
+  }
+
   function dispatchInstallAvailability(windowRef) {
     const targetWindow = windowRef || window;
     if (typeof targetWindow.dispatchEvent !== "function" || typeof targetWindow.Event !== "function") return;
@@ -170,6 +195,7 @@
     }
 
     installLifecycleListeners(targetWindow);
+    void refreshInstalledState(targetWindow);
 
     if (targetDocument.readyState === "complete") {
       registerServiceWorker(targetWindow.navigator);
@@ -191,6 +217,7 @@
     isInstalled: isInstalled,
     isNativeCapacitorApp: isNativeCapacitorApp,
     isStandalone: isStandalone,
+    refreshInstalledState: refreshInstalledState,
     registerServiceWorker: registerServiceWorker,
     requestInstall: requestInstall,
     supportsServiceWorkers: supportsServiceWorkers
