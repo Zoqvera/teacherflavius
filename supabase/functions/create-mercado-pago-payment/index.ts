@@ -3,6 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
 type JsonRecord = Record<string, unknown>;
 type SupportedPaymentMethod = "pix" | "card";
 
+type MercadoPagoPaymentMethod = {
+  id?: string;
+  payment_type_id?: string;
+  status?: string;
+};
+
 type MercadoPagoPayment = {
   id?: string | number;
   status?: string;
@@ -192,7 +198,7 @@ async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
         text: [
           "O site detectou que o Mercado Pago recusou a criação de um pagamento por política interna.",
           "",
-          `Método: ${input.paymentMethod === "pix" ? "PIX" : "cartão de crédito"}`,
+          `Método: ${input.paymentMethod === "pix" ? "PIX" : "cartão de débito"}`,
           `HTTP do Mercado Pago: ${input.providerStatus}`,
           `Código do Mercado Pago: ${input.providerErrorCode}`,
           "",
@@ -270,6 +276,37 @@ async function fetchMercadoPagoPayment(accessToken: string, paymentId: string): 
   }
 
   return await response.json() as MercadoPagoPayment;
+}
+
+
+async function fetchMercadoPagoPaymentMethods(
+  accessToken: string,
+): Promise<MercadoPagoPaymentMethod[]> {
+  const response = await fetch("https://api.mercadopago.com/v1/payment_methods", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Mercado Pago payment methods lookup failed with HTTP ${response.status}`);
+  }
+
+  const payload = await response.json();
+  return Array.isArray(payload) ? payload as MercadoPagoPaymentMethod[] : [];
+}
+
+async function isDebitCardPaymentMethod(
+  accessToken: string,
+  paymentMethodId: string,
+): Promise<boolean> {
+  const paymentMethods = await fetchMercadoPagoPaymentMethods(accessToken);
+  return paymentMethods.some((method) =>
+    cleanString(method.id, 64).toLowerCase() === paymentMethodId &&
+    cleanString(method.payment_type_id, 40).toLowerCase() === "debit_card" &&
+    cleanString(method.status, 40).toLowerCase() !== "inactive"
+  );
 }
 
 async function synchronizePayment(
@@ -508,21 +545,62 @@ Deno.serve(async (request: Request) => {
 
   const paymentMethodId = cleanString(paymentData.payment_method_id, 64).toLowerCase();
   const tokenizedCard = cleanString(paymentData.token, 256);
-  const isPix = paymentMethodId === "pix" || selectedPaymentMethod === "pix" || selectedPaymentMethod === "bank_transfer";
-  const isCreditCard = !isPix && (
-    selectedPaymentMethod === "credit_card"
-    || selectedPaymentMethod === "creditcard"
-    || !!tokenizedCard
+  const isPix = paymentMethodId === "pix" ||
+    selectedPaymentMethod === "pix" ||
+    selectedPaymentMethod === "bank_transfer";
+  const isDebitCard = !isPix && (
+    selectedPaymentMethod === "debit_card" ||
+    selectedPaymentMethod === "debitcard"
   );
 
-  if ((!isPix && !isCreditCard) || (isPix && paymentMethodId !== "pix")) {
-    await supabaseAdmin.from("tuition_payment_attempts").update({ status: "rejected", status_detail: "unsupported_method" }).eq("id", attempt.id);
-    return jsonResponse(request, { error: "Escolha Pix ou cartão de crédito." }, 422);
+  if ((!isPix && !isDebitCard) || (isPix && paymentMethodId !== "pix")) {
+    await supabaseAdmin
+      .from("tuition_payment_attempts")
+      .update({ status: "rejected", status_detail: "unsupported_method" })
+      .eq("id", attempt.id);
+    return jsonResponse(request, { error: "Escolha Pix ou cartão de débito." }, 422);
   }
 
-  if (!isPix && (!tokenizedCard || !/^[a-z0-9_-]{2,64}$/i.test(paymentMethodId))) {
-    await supabaseAdmin.from("tuition_payment_attempts").update({ status: "rejected", status_detail: "invalid_card_data" }).eq("id", attempt.id);
-    return jsonResponse(request, { error: "Os dados do cartão estão incompletos." }, 422);
+  if (isDebitCard && (!tokenizedCard || !/^[a-z0-9_-]{2,64}$/i.test(paymentMethodId))) {
+    await supabaseAdmin
+      .from("tuition_payment_attempts")
+      .update({ status: "rejected", status_detail: "invalid_card_data" })
+      .eq("id", attempt.id);
+    return jsonResponse(request, { error: "Os dados do cartão de débito estão incompletos." }, 422);
+  }
+
+  if (isDebitCard) {
+    let debitMethodAllowed = false;
+    try {
+      debitMethodAllowed = await isDebitCardPaymentMethod(
+        mercadoPagoAccessToken,
+        paymentMethodId,
+      );
+    } catch (error) {
+      console.error(
+        "Unable to validate Mercado Pago debit-card method",
+        error instanceof Error ? error.message : error,
+      );
+      await supabaseAdmin
+        .from("tuition_payment_attempts")
+        .update({ status: "rejected", status_detail: "payment_method_validation_failed" })
+        .eq("id", attempt.id);
+      return jsonResponse(request, {
+        error: "Não foi possível validar o cartão de débito. Tente novamente mais tarde.",
+        code: "payment_method_validation_failed",
+      }, 502);
+    }
+
+    if (!debitMethodAllowed) {
+      await supabaseAdmin
+        .from("tuition_payment_attempts")
+        .update({ status: "rejected", status_detail: "credit_card_not_allowed" })
+        .eq("id", attempt.id);
+      return jsonResponse(request, {
+        error: "Cartão de crédito não é aceito. Use Pix ou cartão de débito.",
+        code: "credit_card_not_allowed",
+      }, 422);
+    }
   }
 
   const payer = isRecord(paymentData.payer) ? paymentData.payer : {};
@@ -561,7 +639,7 @@ Deno.serve(async (request: Request) => {
     },
   };
 
-  if (isCreditCard) {
+  if (isDebitCard) {
     const installments = Number(paymentData.installments);
     const issuerId = Number(paymentData.issuer_id);
     if (installments !== 1) {
