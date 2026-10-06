@@ -267,7 +267,6 @@
     '</section>' +
     '<section class="surface-card">' +
       '<h2>Minhas aulas</h2>' +
-      '<p class="card-description">Cada aula do mês aparece em um card. O cancelamento antes do início sempre libera a vaga daquela ocorrência; cancelamentos com 12 horas ou mais de antecedência também geram crédito para reposição.</p>' +
       (configurationPending
         ? '<div class="config-note">O professor ainda precisa definir a quantidade de aulas contratadas por mês no seu perfil.</div>'
         : renderLessonCards()) +
