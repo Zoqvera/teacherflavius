@@ -64,6 +64,15 @@ const cancelledSeatReplacementBaseline = fs.readFileSync(
   "utf8"
 );
 
+const unifiedCancellationPolicy = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261006024346_unify_lesson_cancellation_policy.sql"),
+  "utf8"
+);
+const unifiedCancellationPolicyBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/230_unify_lesson_cancellation_policy.sql"),
+  "utf8"
+);
+
 test("settled tuition grants the configured monthly lesson quantity", function () {
   assert.match(migration, /classes_per_month smallint/i);
   assert.match(migration, /sync_lesson_credits_after_tuition_change/i);
@@ -78,6 +87,22 @@ test("regular cancellation always releases the occurrence before start and grant
     assert.match(sql, /credit_granted := now\(\) <= credit_row\.regular_starts_at - interval '12 hours'/i);
     assert.match(sql, /'available' else 'forfeited'/i);
     assert.match(sql, /when credit\.status = 'scheduled'[\s\S]*now\(\) < credit\.regular_starts_at/i);
+  }
+});
+
+test("the canonical cancellation policy separates cancellation eligibility from credit eligibility", function () {
+  for (const sql of [unifiedCancellationPolicy, unifiedCancellationPolicyBaseline]) {
+    assert.match(sql, /create or replace function private\.lesson_can_be_cancelled/i);
+    assert.match(sql, /evaluated_at < target_starts_at/i);
+    assert.match(sql, /create or replace function private\.lesson_cancellation_grants_credit/i);
+    assert.match(sql, /evaluated_at <= target_starts_at - interval '12 hours'/i);
+    assert.match(sql, /cancel_my_regular_lesson[\s\S]*private\.lesson_can_be_cancelled/i);
+    assert.match(sql, /cancel_my_regular_lesson[\s\S]*private\.lesson_cancellation_grants_credit/i);
+    assert.match(sql, /cancel_my_lesson_replacement[\s\S]*private\.lesson_can_be_cancelled/i);
+    assert.match(sql, /cancel_my_lesson_replacement[\s\S]*private\.lesson_cancellation_grants_credit/i);
+    assert.match(sql, /when credit\.status = 'scheduled'[\s\S]*private\.lesson_can_be_cancelled\(credit\.regular_starts_at, now\(\)\)/i);
+    assert.match(sql, /when credit\.status = 'used'[\s\S]*private\.lesson_can_be_cancelled\(slot\.starts_at, now\(\)\)/i);
+    assert.doesNotMatch(sql, /O prazo para cancelamento terminou 12 horas antes da aula/i);
   }
 });
 
