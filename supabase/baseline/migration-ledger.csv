@@ -234,3 +234,4 @@ version,name
 20261006020622,add_enrollment_class_mode_rpc
 20261006022000,unify_first_tuition_due_rule
 20261006024346,unify_lesson_cancellation_policy
+20261006033924,canonicalize_replacement_eligibility

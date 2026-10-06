@@ -138,7 +138,8 @@ jobs:
             supabase/baseline/240_require_enrollment_class_mode.sql \
             supabase/baseline/245_add_enrollment_class_mode_rpc.sql \
             supabase/baseline/230_unify_lesson_cancellation_policy.sql \
-            supabase/baseline/250_unify_first_tuition_due_rule.sql
+            supabase/baseline/250_unify_first_tuition_due_rule.sql \
+            supabase/baseline/255_canonicalize_replacement_eligibility.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \

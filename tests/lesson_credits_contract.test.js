@@ -73,6 +73,15 @@ const unifiedCancellationPolicyBaseline = fs.readFileSync(
   "utf8"
 );
 
+const canonicalReplacementEligibility = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261006033924_canonicalize_replacement_eligibility.sql"),
+  "utf8"
+);
+const canonicalReplacementEligibilityBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/255_canonicalize_replacement_eligibility.sql"),
+  "utf8"
+);
+
 test("settled tuition grants the configured monthly lesson quantity", function () {
   assert.match(migration, /classes_per_month smallint/i);
   assert.match(migration, /sync_lesson_credits_after_tuition_change/i);
@@ -155,14 +164,21 @@ test("replacement vacancies require an on-time cancellation credit", function ()
   assert.match(app, /if \(availableCredits < 1\) return ""/);
 });
 
-test("a cancelled regular seat becomes a replacement option while ordinary vacancies retain the four-spot rule", function () {
-  for (const sql of [cancelledSeatReplacementFix, cancelledSeatReplacementBaseline]) {
-    assert.match(sql, /snapshot\.cancelled_regular_students > snapshot\.replacement_students/i);
-    assert.match(sql, /cancellation_spots_available := greatest/i);
-    assert.match(sql, /available_spots <> 4 and cancellation_spots_available < 1/i);
+test("replacement eligibility uses the canonical four-or-more-or-cancelled-seat rule", function () {
+  for (const sql of [canonicalReplacementEligibility, canonicalReplacementEligibilityBaseline]) {
+    assert.match(sql, /create or replace function private\.is_replacement_occurrence_eligible/i);
+    assert.match(sql, /available_spots >= 4/i);
+    assert.match(sql, /cancellation_spots_available >= 1/i);
+    assert.match(sql, /get_my_replacement_options[\s\S]*private\.is_replacement_occurrence_eligible/i);
+    assert.match(sql, /book_my_lesson_replacement[\s\S]*private\.is_replacement_occurrence_eligible/i);
+    assert.match(sql, /cancellation\.lesson_date = \(occurrence\.starts_at at time zone 'America\/Sao_Paulo'\)::date/i);
+    assert.match(sql, /cancellation\.lesson_date = \(target_starts_at at time zone 'America\/Sao_Paulo'\)::date/i);
+    assert.match(sql, /select class\.\*[\s\S]*for update/i);
     assert.match(sql, /available_spots <= 0/i);
+    assert.doesNotMatch(sql, /available_spots <> 4/i);
   }
-  assert.match(app, /vaga liberada por cancelamento ou uma turma com 4 vagas disponíveis/);
+  assert.doesNotMatch(app, /vaga liberada por cancelamento ou uma turma com 4 vagas disponíveis/);
+  assert.doesNotMatch(app, /Cada aula do mês aparece em um card/);
   assert.match(app, /Nenhuma vaga de reposição disponível foi encontrada/);
 });
 
