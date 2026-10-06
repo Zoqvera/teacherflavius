@@ -20,6 +20,11 @@ function execute(options) {
   const api = {
     installAvailabilityEvent: "teacherflavius:pwa-install-availability",
     canPromptInstall: function () { return settings.available === true; },
+    isInstalled: function () {
+      return settings.installed === true ||
+        settings.standalone === true ||
+        settings.native === true;
+    },
     isStandalone: function () { return settings.standalone === true; },
     isNativeCapacitorApp: function () { return settings.native === true; },
     requestInstall: async function () {
@@ -27,6 +32,16 @@ function execute(options) {
       return { outcome: settings.outcome || "accepted" };
     }
   };
+
+  if (settings.refreshInstalledState) {
+    api.refreshInstalledState = async function () {
+      if (typeof settings.onRefreshInstalledState === "function") {
+        await settings.onRefreshInstalledState();
+      }
+      settings.installed = settings.refreshInstalledState === true;
+      return settings.installed;
+    };
+  }
 
   const windowRef = {
     TeacherFlaviusPwa: api,
@@ -67,6 +82,9 @@ function execute(options) {
     emitAvailability: function () {
       (handlers.get(api.installAvailabilityEvent) || []).forEach(function (handler) { handler(); });
     },
+    emitAppInstalled: function () {
+      (handlers.get("appinstalled") || []).forEach(function (handler) { handler(); });
+    },
     windowRef: windowRef,
     documentRef: documentRef
   };
@@ -82,7 +100,11 @@ test("keeps install card visible before the PWA has been installed", function ()
   assert.equal(unavailable.card.hidden, false);
 });
 
-test("keeps install card hidden in standalone and native app modes", function () {
+test("keeps install card hidden after installation and in app modes", function () {
+  const installed = execute({ installed: true });
+  installed.api.initialize(installed.windowRef, installed.documentRef);
+  assert.equal(installed.card.hidden, true);
+
   const standalone = execute({ standalone: true });
   standalone.api.initialize(standalone.windowRef, standalone.documentRef);
   assert.equal(standalone.card.hidden, true);
@@ -139,5 +161,68 @@ test("remains visible when install prompt availability changes", function () {
 
   settings.available = true;
   result.emitAvailability();
+  assert.equal(result.card.hidden, false);
+});
+
+
+test("hides install card immediately when installation completes", function () {
+  const settings = { available: true, installed: false };
+  const result = execute(settings);
+  result.api.initialize(result.windowRef, result.documentRef);
+  assert.equal(result.card.hidden, false);
+
+  settings.installed = true;
+  result.emitAppInstalled();
+
+  assert.equal(result.card.hidden, true);
+});
+
+test("hides install card when persisted installation state becomes available", function () {
+  const settings = { available: false, installed: false };
+  const result = execute(settings);
+  result.api.initialize(result.windowRef, result.documentRef);
+  assert.equal(result.card.hidden, false);
+
+  settings.installed = true;
+  result.emitAvailability();
+
+  assert.equal(result.card.hidden, true);
+});
+
+
+test("keeps card hidden until installed-state verification completes", async function () {
+  let resolveRefresh;
+  const refreshPromise = new Promise(function (resolve) {
+    resolveRefresh = resolve;
+  });
+  const settings = {
+    refreshInstalledState: true,
+    onRefreshInstalledState: function () {
+      return refreshPromise;
+    }
+  };
+  const result = execute(settings);
+
+  result.api.initialize(result.windowRef, result.documentRef);
+  assert.equal(result.card.hidden, true);
+
+  resolveRefresh();
+  await refreshPromise;
+  await Promise.resolve();
+  await Promise.resolve();
+
+  assert.equal(result.card.hidden, true);
+});
+
+test("reveals card only after verification confirms the PWA is not installed", async function () {
+  const settings = { refreshInstalledState: "not-installed" };
+  const result = execute(settings);
+
+  result.api.initialize(result.windowRef, result.documentRef);
+  assert.equal(result.card.hidden, true);
+
+  await Promise.resolve();
+  await Promise.resolve();
+
   assert.equal(result.card.hidden, false);
 });

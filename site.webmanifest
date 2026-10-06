@@ -23,5 +23,12 @@
       "sizes": "512x512",
       "type": "image/png"
     }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/site.webmanifest",
+      "id": "https://teacherflavius.com/"
+    }
   ]
 }

@@ -11,6 +11,7 @@ function execute(options) {
   const registrations = [];
   const handlers = new Map();
   const dispatchedEvents = [];
+  const storageValues = new Map(Object.entries(settings.storage || {}));
   let loadHandler = null;
 
   const navigatorRef = settings.supported === false
@@ -24,8 +25,25 @@ function execute(options) {
         }
       };
 
+  if (settings.relatedApps) {
+    navigatorRef.getInstalledRelatedApps = function () {
+      return Promise.resolve(settings.relatedApps);
+    };
+  }
+
   const windowRef = {
     navigator: navigatorRef,
+    localStorage: {
+      getItem: function (key) {
+        return storageValues.has(key) ? storageValues.get(key) : null;
+      },
+      setItem: function (key, value) {
+        storageValues.set(key, String(value));
+      },
+      removeItem: function (key) {
+        storageValues.delete(key);
+      }
+    },
     Capacitor: settings.native === true
       ? { isNativePlatform: function () { return true; } }
       : undefined,
@@ -62,6 +80,7 @@ function execute(options) {
     emit: emit,
     load: function () { if (loadHandler) loadHandler(); },
     registrations: registrations,
+    storageValues: storageValues,
     windowRef: windowRef
   };
 }
@@ -138,4 +157,108 @@ test("requests installation once and clears the deferred prompt", async function
   assert.equal(promptCalls, 1);
   assert.equal(choice.outcome, "accepted");
   assert.equal(result.api.canPromptInstall(result.windowRef), false);
+});
+
+
+test("records installation when the browser confirms app installation", function () {
+  const result = execute();
+
+  result.emit("appinstalled");
+
+  assert.equal(result.api.isInstalled(result.windowRef), true);
+  assert.equal(
+    result.storageValues.get("teacherflavius:pwa-installed"),
+    "1"
+  );
+});
+
+test("records installation after an accepted install prompt", async function () {
+  const result = execute();
+
+  result.emit("beforeinstallprompt", {
+    preventDefault: function () {},
+    prompt: function () { return Promise.resolve(); },
+    userChoice: Promise.resolve({ outcome: "accepted" })
+  });
+
+  const choice = await result.api.requestInstall(result.windowRef);
+
+  assert.equal(choice.outcome, "accepted");
+  assert.equal(result.api.isInstalled(result.windowRef), true);
+  assert.equal(
+    result.storageValues.get("teacherflavius:pwa-installed"),
+    "1"
+  );
+});
+
+test("recognizes a previously installed PWA on later browser visits", function () {
+  const result = execute({
+    storage: { "teacherflavius:pwa-installed": "1" }
+  });
+
+  assert.equal(result.api.isInstalled(result.windowRef), true);
+  assert.equal(result.api.canPromptInstall(result.windowRef), false);
+});
+
+test("standalone launch records installation for future browser visits", function () {
+  const result = execute({ standalone: true });
+
+  assert.equal(result.api.isInstalled(result.windowRef), true);
+  assert.equal(
+    result.storageValues.get("teacherflavius:pwa-installed"),
+    "1"
+  );
+});
+
+test("a new beforeinstallprompt event clears a stale installed marker", function () {
+  const result = execute({
+    storage: { "teacherflavius:pwa-installed": "1" }
+  });
+
+  result.emit("beforeinstallprompt", {
+    preventDefault: function () {},
+    prompt: function () { return Promise.resolve(); },
+    userChoice: Promise.resolve({ outcome: "dismissed" })
+  });
+
+  assert.equal(result.storageValues.has("teacherflavius:pwa-installed"), false);
+  assert.equal(result.api.canPromptInstall(result.windowRef), true);
+});
+
+
+test("detects a previously installed PWA through related apps", async function () {
+  const result = execute({
+    relatedApps: [
+      {
+        platform: "webapp",
+        id: "https://teacherflavius.com/",
+        url: "/site.webmanifest"
+      }
+    ]
+  });
+
+  const installed = await result.api.refreshInstalledState(result.windowRef);
+
+  assert.equal(installed, true);
+  assert.equal(result.api.isInstalled(result.windowRef), true);
+  assert.equal(
+    result.storageValues.get("teacherflavius:pwa-installed"),
+    "1"
+  );
+});
+
+test("ignores unrelated installed applications", async function () {
+  const result = execute({
+    relatedApps: [
+      {
+        platform: "play",
+        id: "com.example.other"
+      }
+    ]
+  });
+
+  const installed = await result.api.refreshInstalledState(result.windowRef);
+
+  assert.equal(installed, false);
+  assert.equal(result.api.isInstalled(result.windowRef), false);
 });

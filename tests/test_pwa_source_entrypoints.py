@@ -24,6 +24,7 @@ class PwaSourceEntrypointTests(unittest.TestCase):
     def test_student_source_contains_install_controller(self) -> None:
         html = (ROOT / "area_do_estudante.html").read_text(encoding="utf-8")
         self.assertIn('id="pwaInstallCard"', html)
+        self.assertIn('id="pwaInstallCard" class="pwa-install-card" hidden', html)
         self.assertIn('id="pwaInstallButton"', html)
         self.assertIn('/pwa_install_prompt.js', html)
 
@@ -31,6 +32,14 @@ class PwaSourceEntrypointTests(unittest.TestCase):
         manifest = json.loads((ROOT / "site.webmanifest").read_text(encoding="utf-8"))
         self.assertEqual(manifest["start_url"], "/area-do-estudante/")
         self.assertEqual(manifest["scope"], "/")
+        self.assertIn(
+            {
+                "platform": "webapp",
+                "url": "/site.webmanifest",
+                "id": "https://teacherflavius.com/",
+            },
+            manifest["related_applications"],
+        )
 
     def test_materialization_workflow_does_not_push_to_protected_main(self) -> None:
         workflow = (

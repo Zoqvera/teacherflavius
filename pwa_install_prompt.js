@@ -21,7 +21,13 @@
   function shouldShow(windowRef) {
     const targetWindow = windowRef || window;
     const api = pwaApi(targetWindow);
-    if (!api || typeof api.isStandalone !== "function") return false;
+    if (!api) return false;
+
+    if (typeof api.isInstalled === "function") {
+      return !api.isInstalled(targetWindow);
+    }
+
+    if (typeof api.isStandalone !== "function") return false;
     return !api.isStandalone(targetWindow) && !isNativeApp(api, targetWindow);
   }
 
@@ -107,6 +113,21 @@
       targetWindow.addEventListener(api.installAvailabilityEvent, function () {
         syncVisibility(targetWindow, targetDocument);
       });
+    }
+
+    if (typeof targetWindow.addEventListener === "function") {
+      targetWindow.addEventListener("appinstalled", function () {
+        syncVisibility(targetWindow, targetDocument);
+      });
+    }
+
+    card.hidden = true;
+
+    if (typeof api.refreshInstalledState === "function") {
+      Promise.resolve(api.refreshInstalledState(targetWindow)).finally(function () {
+        syncVisibility(targetWindow, targetDocument);
+      });
+      return;
     }
 
     syncVisibility(targetWindow, targetDocument);
