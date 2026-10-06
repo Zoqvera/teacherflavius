@@ -30,6 +30,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="supabase_config.js?v=20260429-9"></script>
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260818-google-auth-1"></script>
+  <script src="/enrollment_onboarding_state.js?v=20261006-1"></script>
   <script src="/student_profile_optional.js?v=20260902-1"></script>
   <script src="/student_tuition_due_day.js?v=20261005-next-day-1"></script>
   <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20261004-fee-plan-1" />
@@ -45,7 +46,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <header class="enrollment-header">
         <div><span class="enrollment-badge">TEACHER FLÁVIO</span></div>
         <h1 id="onboardingTitle">Só mais alguns dados</h1>
-        <p class="intro">Preencha seus dados para concluir a matrícula. Ao finalizar, sua primeira mensalidade ficará disponível e você será encaminhado diretamente para o pagamento.</p>
+        <p id="onboardingIntro" class="intro">Preencha seus dados para concluir a matrícula. Ao finalizar, sua primeira mensalidade ficará disponível e você será encaminhado diretamente para o pagamento.</p>
       </header>
 
       <div class="onboarding-progress" aria-label="Etapas de acesso">
@@ -57,7 +58,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="account-note">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
-        <span>Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. A primeira mensalidade deve vencer no dia da matrícula ou no dia seguinte. Essas são as duas únicas opções de vencimento disponíveis durante a matrícula.</span>
+        <span id="onboardingAccountNote">Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. A primeira mensalidade deve vencer no dia da matrícula ou no dia seguinte. Essas são as duas únicas opções de vencimento disponíveis durante a matrícula.</span>
       </div>
 
       <form id="enrollmentAccessForm">
@@ -84,7 +85,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <section class="form-section" aria-labelledby="personalDataTitle">
           <div class="section-heading">
             <h2 id="personalDataTitle">Dados do estudante</h2>
-            <p>Todos os campos abaixo são obrigatórios para concluir a matrícula.</p>
+            <p id="personalDataDescription">Todos os campos abaixo são obrigatórios para concluir a matrícula.</p>
           </div>
 
           <div class="form-grid">
@@ -114,7 +115,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <input id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" required />
             </div>
 
-            <div class="field full">
+            <div id="classModeField" class="field full">
               <label class="field-label" for="classMode">Tipo de aula</label>
               <select id="classMode" required>
                 <option value="" selected disabled>Selecione o tipo de aula</option>
@@ -183,37 +184,75 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return FIRST_TUITION_PAYMENT_PATH;
     }
 
-    function setEnrollmentAccessState(authorized) {
-      const accessForm = document.getElementById("enrollmentAccessForm");
-      const profileForm = document.getElementById("completeProfileForm");
-      const codeStep = document.querySelector('[data-progress-step="code"]');
-      const dataStep = document.querySelector('[data-progress-step="data"]');
+    const NEW_ENROLLMENT_MODE = "new_enrollment";
+    const EXISTING_PROFILE_MODE = "existing_student_profile_completion";
+    let currentOnboardingState = null;
 
-      accessForm.hidden = authorized;
-      profileForm.hidden = !authorized;
-
-      if (authorized) {
-        codeStep.classList.remove("is-current");
-        codeStep.classList.add("is-done");
-        codeStep.querySelector("strong").textContent = "✓";
-        dataStep.classList.add("is-current");
-      } else {
-        codeStep.classList.add("is-current");
-        dataStep.classList.remove("is-current");
+    function getOnboardingStateService() {
+      if (!window.EnrollmentOnboardingState) {
+        throw new Error("O estado da matrícula não foi inicializado.");
       }
+      return window.EnrollmentOnboardingState;
     }
 
-    async function hasEnrollmentAccess() {
-      const response = await Auth.getClient().rpc("has_my_enrollment_access");
-      if (response.error) throw response.error;
-      return response.data === true;
+    async function refreshOnboardingState() {
+      currentOnboardingState = await getOnboardingStateService().refresh();
+      return currentOnboardingState;
+    }
+
+    function updateSubmitButton(state) {
+      const button = document.getElementById("submitButton");
+      button.textContent = state && state.mode === EXISTING_PROFILE_MODE
+        ? "SALVAR DADOS E ACESSAR"
+        : "CONCLUIR MATRÍCULA E PAGAR";
+    }
+
+    function configureFormForState(state) {
+      const accessForm = document.getElementById("enrollmentAccessForm");
+      const profileForm = document.getElementById("completeProfileForm");
+      const classModeField = document.getElementById("classModeField");
+      const classMode = document.getElementById("classMode");
+      const codeStep = document.querySelector('[data-progress-step="code"]');
+      const dataStep = document.querySelector('[data-progress-step="data"]');
+      const accessStep = document.querySelector('[data-progress-step="access"]');
+      const intro = document.getElementById("onboardingIntro");
+      const accountNote = document.getElementById("onboardingAccountNote");
+      const personalDataDescription = document.getElementById("personalDataDescription");
+      const existingProfile = state.mode === EXISTING_PROFILE_MODE;
+
+      codeStep.hidden = !state.requiresAccessCode;
+      accessForm.hidden = !state.requiresAccessCode || state.formUnlocked;
+      profileForm.hidden = !state.formUnlocked;
+      classModeField.hidden = !state.requiresClassMode;
+      classMode.required = state.requiresClassMode;
+
+      codeStep.classList.toggle("is-current", state.requiresAccessCode && !state.formUnlocked);
+      codeStep.classList.toggle("is-done", state.requiresAccessCode && state.formUnlocked);
+      dataStep.classList.toggle("is-current", state.formUnlocked);
+      dataStep.querySelector("strong").textContent = existingProfile ? "2" : "3";
+      accessStep.querySelector("strong").textContent = existingProfile ? "3" : "4";
+
+      if (existingProfile) {
+        intro.textContent = "Complete seus dados cadastrais para liberar seu acesso. Seu plano e suas condições financeiras já registradas serão preservados.";
+        accountNote.textContent = "Este é apenas um complemento de cadastro. Mensalidade, quantidade de aulas, tipo de aula e vencimento já registrados não serão alterados.";
+        personalDataDescription.textContent = "Preencha os dados pessoais que ainda faltam para concluir seu cadastro.";
+      } else {
+        intro.textContent = "Preencha seus dados para concluir a matrícula. Ao finalizar, sua primeira mensalidade ficará disponível e você será encaminhado diretamente para o pagamento.";
+        accountNote.textContent = "Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. A primeira mensalidade deve vencer no dia da matrícula ou no dia seguinte. Essas são as duas únicas opções de vencimento disponíveis durante a matrícula.";
+        personalDataDescription.textContent = "Todos os campos abaixo são obrigatórios para concluir a matrícula.";
+      }
+
+      updateSubmitButton(state);
     }
 
     async function initialize() {
       const user = await Auth.requireAuth({ skipProfileCheck: true });
       if (!user) return;
+
       const profile = await Auth.ensureProfileForUser(user);
-      if (profile && profile.profile_completed === true) {
+      const state = await refreshOnboardingState();
+
+      if (state.mode === "complete") {
         window.location.replace(getNextPath());
         return;
       }
@@ -230,7 +269,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             ? "individual"
             : "";
 
-      setEnrollmentAccessState(await hasEnrollmentAccess());
+      configureFormForState(state);
     }
 
     document.getElementById("cpf").addEventListener("input", function () { this.value = formatCpf(this.value); });
@@ -258,7 +297,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         codeInput.value = "";
-        setEnrollmentAccessState(true);
+        const state = await refreshOnboardingState();
+        configureFormForState(state);
         document.getElementById("name").focus();
       } catch (error) {
         message.textContent = error.message || "Não foi possível validar o código de matrícula.";
@@ -278,23 +318,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       button.textContent = "LIBERANDO ACESSO...";
 
       try {
-        if (!await hasEnrollmentAccess()) {
-          setEnrollmentAccessState(false);
+        const state = await refreshOnboardingState();
+        configureFormForState(state);
+
+        if (state.mode === "complete") {
+          window.location.replace(getNextPath());
+          return;
+        }
+
+        if (!state.formUnlocked) {
           throw new Error("Valide o código de matrícula antes de continuar.");
         }
 
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
-        const classMode = document.getElementById("classMode").value;
-        const classType = classMode === "group"
-          ? "QUINTETO"
-          : classMode === "individual"
-            ? "INDIVIDUAL"
-            : "";
-
-        if (!classType) {
-          throw new Error("Informe se você fará aulas individuais ou em grupo.");
-        }
-
         const user = await Auth.getUser();
         if (!user) throw new Error("Sua sessão expirou. Entre novamente com Google.");
 
@@ -306,23 +342,42 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           .single();
         if (birthResponse.error) throw birthResponse.error;
 
-        const classTypeResponse = await Auth.getClient().rpc(
-          "set_my_enrollment_class_mode",
-          { target_mode: classMode }
-        );
-        if (classTypeResponse.error) throw classTypeResponse.error;
+        if (state.requiresClassMode) {
+          const classMode = document.getElementById("classMode").value;
+          const classType = classMode === "group"
+            ? "QUINTETO"
+            : classMode === "individual"
+              ? "INDIVIDUAL"
+              : "";
 
-        const savedClassType = classTypeResponse.data && classTypeResponse.data.class_type;
-        if (savedClassType !== classType) {
-          throw new Error("Não foi possível registrar o tipo de aula escolhido.");
+          if (!classType) {
+            throw new Error("Informe se você fará aulas individuais ou em grupo.");
+          }
+
+          const classTypeResponse = await Auth.getClient().rpc(
+            "set_my_enrollment_class_mode",
+            { target_mode: classMode }
+          );
+          if (classTypeResponse.error) throw classTypeResponse.error;
+
+          const savedClassType = classTypeResponse.data && classTypeResponse.data.class_type;
+          if (savedClassType !== classType) {
+            throw new Error("Não foi possível registrar o tipo de aula escolhido.");
+          }
         }
 
-        if (window.StudentTuitionDueDay && typeof window.StudentTuitionDueDay.saveSelection === "function") {
+        if (
+          state.requiresTuitionDueDate &&
+          window.StudentTuitionDueDay &&
+          typeof window.StudentTuitionDueDay.saveSelection === "function"
+        ) {
           await window.StudentTuitionDueDay.saveSelection();
         }
 
-        const billingTermsResponse = await Auth.getClient().rpc("set_my_enrollment_billing_terms");
-        if (billingTermsResponse.error) throw billingTermsResponse.error;
+        if (state.requiresCommercialSetup) {
+          const billingTermsResponse = await Auth.getClient().rpc("set_my_enrollment_billing_terms");
+          if (billingTermsResponse.error) throw billingTermsResponse.error;
+        }
 
         await Auth.completeProfile({
           name: document.getElementById("name").value.trim(),
@@ -330,11 +385,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           whatsapp: document.getElementById("whatsapp").value.trim()
         });
 
-        window.location.replace(getPostEnrollmentPath());
+        window.location.replace(
+          state.mode === NEW_ENROLLMENT_MODE
+            ? getPostEnrollmentPath()
+            : getNextPath()
+        );
       } catch (error) {
         message.textContent = error.message || "Não foi possível concluir o cadastro.";
         button.disabled = false;
-        button.textContent = "CONCLUIR MATRÍCULA E PAGAR";
+        updateSubmitButton(currentOnboardingState);
       }
     });
 
