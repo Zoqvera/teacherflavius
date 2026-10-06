@@ -3,6 +3,7 @@
 
   const SERVICE_WORKER_URL = "/service-worker.js";
   const INSTALL_AVAILABILITY_EVENT = "teacherflavius:pwa-install-availability";
+  const INSTALL_STATE_STORAGE_KEY = "teacherflavius:pwa-installed";
   const REGISTRATION_OPTIONS = Object.freeze({
     scope: "/",
     updateViaCache: "none"
@@ -49,10 +50,57 @@
     return matchesDisplayMode || navigatorRef.standalone === true;
   }
 
+  function getInstallStateStorage(windowRef) {
+    const targetWindow = windowRef || window;
+    try {
+      return targetWindow.localStorage || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function hasRecordedInstallation(windowRef) {
+    const storage = getInstallStateStorage(windowRef);
+    if (!storage || typeof storage.getItem !== "function") return false;
+
+    try {
+      return storage.getItem(INSTALL_STATE_STORAGE_KEY) === "1";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function recordInstallation(windowRef) {
+    const targetWindow = windowRef || window;
+    const storage = getInstallStateStorage(targetWindow);
+
+    if (storage && typeof storage.setItem === "function") {
+      try {
+        storage.setItem(INSTALL_STATE_STORAGE_KEY, "1");
+      } catch (_) {}
+    }
+
+    dispatchInstallAvailability(targetWindow);
+  }
+
+  function clearRecordedInstallation(windowRef) {
+    const storage = getInstallStateStorage(windowRef);
+    if (!storage || typeof storage.removeItem !== "function") return;
+
+    try {
+      storage.removeItem(INSTALL_STATE_STORAGE_KEY);
+    } catch (_) {}
+  }
+
+  function isInstalled(windowRef) {
+    const targetWindow = windowRef || window;
+    return isNativeCapacitorApp(targetWindow) ||
+      isStandalone(targetWindow) ||
+      hasRecordedInstallation(targetWindow);
+  }
+
   function canPromptInstall(windowRef) {
-    return deferredInstallPrompt !== null &&
-      !isStandalone(windowRef) &&
-      !isNativeCapacitorApp(windowRef);
+    return deferredInstallPrompt !== null && !isInstalled(windowRef);
   }
 
   function dispatchInstallAvailability(windowRef) {
@@ -64,8 +112,11 @@
   function captureInstallPrompt(event, windowRef) {
     if (!event || typeof event.preventDefault !== "function") return;
     event.preventDefault();
+
+    const targetWindow = windowRef || window;
+    clearRecordedInstallation(targetWindow);
     deferredInstallPrompt = event;
-    dispatchInstallAvailability(windowRef);
+    dispatchInstallAvailability(targetWindow);
   }
 
   function clearInstallPrompt(windowRef) {
@@ -84,6 +135,9 @@
     try {
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
+      if (choice && choice.outcome === "accepted") {
+        recordInstallation(targetWindow);
+      }
       return choice || Object.freeze({ outcome: "dismissed" });
     } catch (error) {
       console.warn("Não foi possível abrir a instalação do Teacher Flávio.", error);
@@ -100,7 +154,8 @@
     });
 
     targetWindow.addEventListener("appinstalled", function () {
-      clearInstallPrompt(targetWindow);
+      deferredInstallPrompt = null;
+      recordInstallation(targetWindow);
     });
   }
 
@@ -109,6 +164,10 @@
     const targetDocument = documentRef || document;
 
     if (isNativeCapacitorApp(targetWindow)) return;
+
+    if (isStandalone(targetWindow)) {
+      recordInstallation(targetWindow);
+    }
 
     installLifecycleListeners(targetWindow);
 
@@ -129,6 +188,7 @@
   window.TeacherFlaviusPwa = Object.freeze({
     canPromptInstall: canPromptInstall,
     installAvailabilityEvent: INSTALL_AVAILABILITY_EVENT,
+    isInstalled: isInstalled,
     isNativeCapacitorApp: isNativeCapacitorApp,
     isStandalone: isStandalone,
     registerServiceWorker: registerServiceWorker,
