@@ -10,6 +10,12 @@ function read(relativePath) {
 const page = read("complete-cadastro.html");
 const migration = read("supabase/migrations/20261001130000_require_enrollment_access_code.sql");
 const baseline = read("supabase/baseline/100_require_enrollment_access_code.sql");
+const currentMigration = read(
+  "supabase/migrations/20261006042754_bind_enrollment_terms_to_access_code.sql"
+);
+const currentBaseline = read(
+  "supabase/baseline/265_bind_enrollment_terms_to_access_code.sql"
+);
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 
 test("onboarding fails closed until the access code is authorized", function () {
@@ -20,7 +26,7 @@ test("onboarding fails closed until the access code is authorized", function () 
   assert.match(page, /rpc\("has_my_enrollment_access"/);
 });
 
-test("the reusable access code is never committed to public assets or migrations", function () {
+test("the access-code secret is never committed to public assets or migrations", function () {
   assert.doesNotMatch(page, /93167!/);
   assert.doesNotMatch(migration, /93167!/);
   assert.doesNotMatch(baseline, /93167!/);
@@ -33,20 +39,37 @@ test("server authorization is bound to the authenticated Google account and rate
   assert.match(migration, /provider_name <> 'google'/);
   assert.match(migration, /failed_attempts/);
   assert.match(migration, /interval '15 minutes'/);
-  assert.match(migration, /revoke all on table private\.student_enrollment_access from public, anon, authenticated/i);
-});
-
-test("direct profile completion cannot bypass enrollment authorization", function () {
   assert.match(
     migration,
-    /from private\.student_enrollment_access access[\s\S]*access\.user_id = new\.id[\s\S]*access\.authorized_at is not null/i
-  );
-  assert.match(
-    migration,
-    /raise exception 'Valide o código de matrícula antes de concluir o cadastro\.'/i
+    /revoke all on table private\.student_enrollment_access from public, anon, authenticated/i
   );
 });
 
-test("recovery baseline applies the enrollment access overlay", function () {
+test("current authorization binds commercial terms to the validated access code", function () {
+  for (const sql of [currentMigration, currentBaseline]) {
+    assert.match(sql, /teacherflavius_enrollment_access_code/);
+    assert.match(sql, /configured_plans := secret_payload::jsonb/);
+    assert.match(sql, /selected_plan := configured_plans -> normalized_code/);
+    assert.match(sql, /authorized_monthly_fee/);
+    assert.match(sql, /authorized_classes_per_month/);
+    assert.doesNotMatch(sql, /93167/);
+    assert.doesNotMatch(sql, /94129/);
+    assert.doesNotMatch(sql, /43940/);
+  }
+});
+
+test("direct profile completion cannot bypass current enrollment authorization and terms", function () {
+  assert.match(
+    currentMigration,
+    /from private\.student_enrollment_access access[\s\S]*access\.user_id = new\.id[\s\S]*access\.authorized_at is not null[\s\S]*access\.monthly_fee is not null[\s\S]*access\.classes_per_month is not null/i
+  );
+  assert.match(
+    currentMigration,
+    /raise exception 'Valide o código de acesso à matrícula antes de concluir o cadastro\.'/i
+  );
+});
+
+test("recovery baseline applies both enrollment access overlays", function () {
   assert.match(workflow, /100_require_enrollment_access_code\.sql/);
+  assert.match(workflow, /265_bind_enrollment_terms_to_access_code\.sql/);
 });
