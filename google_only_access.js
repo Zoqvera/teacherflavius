@@ -38,14 +38,20 @@
     };
   }
 
+  const GOOGLE_LINKED_STATUS = "Conta Google vinculada. O acesso ao portal é feito somente pelo Google.";
+
   function updateProfileIdentityCopy() {
     const status = document.getElementById("googleIdentityStatus");
     const button = document.getElementById("linkGoogleButton");
+
     if (status) {
       status.classList.add("google-link-success");
-      status.textContent = "✓ Conta Google vinculada. O acesso ao portal é feito somente pelo Google.";
+      if (status.textContent !== GOOGLE_LINKED_STATUS) {
+        status.textContent = GOOGLE_LINKED_STATUS;
+      }
     }
-    if (button) button.hidden = true;
+
+    if (button && button.hidden !== true) button.hidden = true;
   }
 
   async function enforceGoogleOnly() {
