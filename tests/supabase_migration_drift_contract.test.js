@@ -55,6 +55,7 @@ test("the later canonical migration supersedes the strict 12-hour rule", () => {
 test("CI compares production migration history with committed migrations", () => {
   assert.match(driftScript, /supabase_migrations\.schema_migrations/i);
   assert.match(driftScript, /comm -23/);
+  assert.match(driftScript, /comm -13/);
   assert.match(driftScript, /MIGRATION_DRIFT_CUTOFF/);
   assert.match(driftWorkflow, /SUPABASE_DB_URL/);
   assert.match(
