@@ -425,8 +425,6 @@ async function initializePage() {
       document.getElementById("paymentWorkspace").hidden = false;
       const checkoutPanel = document.querySelector(".checkout-panel");
       if (checkoutPanel) checkoutPanel.hidden = true;
-      const subscriptionOffer = document.getElementById("subscriptionOffer");
-      if (subscriptionOffer) subscriptionOffer.hidden = true;
       selectedTuition = null;
       renderTuitionList();
       setPageMessage(
