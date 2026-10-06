@@ -40,6 +40,7 @@ jobs:
           node --test tests/course_vacancy_visibility_contract.test.js
           node --test tests/tuition_after_enrollment_contract.test.js
           node --test tests/lesson_credits_contract.test.js
+          node --test tests/manual_lesson_credit_grants_contract.test.js
           node --test tests/enrollment_commercial_terms_contract.test.js
           node --test tests/first_tuition_lesson_month_contract.test.js
           node --test tests/academic_lesson_workflow_contract.test.js
