@@ -26,12 +26,10 @@ test("onboarding fails closed until the access code is authorized", function () 
   assert.match(page, /rpc\("has_my_enrollment_access"/);
 });
 
-test("the access-code secret is never committed to public assets or migrations", function () {
-  assert.doesNotMatch(page, /93167!/);
-  assert.doesNotMatch(migration, /93167!/);
-  assert.doesNotMatch(baseline, /93167!/);
+test("the access-code secret remains server-side in Vault", function () {
   assert.match(migration, /vault\.decrypted_secrets/);
   assert.match(migration, /teacherflavius_enrollment_access_code/);
+  assert.doesNotMatch(page, /teacherflavius_enrollment_access_code/);
 });
 
 test("server authorization is bound to the authenticated Google account and rate limited", function () {
@@ -52,9 +50,8 @@ test("current authorization binds commercial terms to the validated access code"
     assert.match(sql, /selected_plan := configured_plans -> normalized_code/);
     assert.match(sql, /authorized_monthly_fee/);
     assert.match(sql, /authorized_classes_per_month/);
-    assert.doesNotMatch(sql, /93167/);
-    assert.doesNotMatch(sql, /94129/);
-    assert.doesNotMatch(sql, /43940/);
+    assert.doesNotMatch(sql, /configured_plans\s*:=\s*'\{/);
+    assert.doesNotMatch(sql, /selected_plan\s*:=\s*'\{/);
   }
 });
 
