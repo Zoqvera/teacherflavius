@@ -19,6 +19,12 @@ Function.
 O valor enviado ao Mercado Pago sempre vem de `public.monthly_tuition`. Valores
 recebidos do navegador são ignorados para impedir alteração da cobrança.
 
+A política vigente aceita somente **Pix** e **cartão de débito**. O Payment Brick não
+renderiza cartão de crédito e a Edge Function consulta `/v1/payment_methods` do
+Mercado Pago para confirmar que qualquer cartão enviado é classificado como
+`debit_card` antes de criar a cobrança. Novas assinaturas recorrentes por cartão
+permanecem desativadas.
+
 ## 1. Criar a aplicação no Mercado Pago
 
 1. Entre em [Suas integrações](https://www.mercadopago.com.br/developers/panel/app).
