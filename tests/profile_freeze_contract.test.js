@@ -82,9 +82,7 @@ test("Google-only profile copy updates are idempotent under repeated mutations",
   vm.createContext(context);
   vm.runInContext(read("google_only_access.js"), context);
 
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
+  await new Promise(function (resolve) { setImmediate(resolve); });
 
   assert.equal(typeof mutationCallback, "function");
   assert.equal(statusWrites, 1);
