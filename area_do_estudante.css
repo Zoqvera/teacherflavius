@@ -26,15 +26,6 @@
   line-height: 1.5;
 }
 
-.dashboard-intro {
-  max-width: 680px;
-  margin: 0 auto 28px;
-  color: var(--tf-slate-300);
-  text-align: center;
-  font-size: 15px;
-  line-height: 1.7;
-}
-
 .student-dashboard .divider {
   margin-bottom: 28px;
 }
@@ -482,11 +473,6 @@
   }
 
   .student-dashboard .header {
-  }
-
-  .dashboard-intro {
-    margin-bottom: 24px;
-    font-size: 14px;
   }
 
   .pwa-install-card {
