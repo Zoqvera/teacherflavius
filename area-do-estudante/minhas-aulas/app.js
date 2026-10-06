@@ -249,7 +249,6 @@
 
     return '<section class="surface-card">' +
       '<h2>Marcar reposição</h2>' +
-      '<p class="card-description">Use um crédito gerado por cancelamento dentro do prazo para escolher uma vaga liberada por cancelamento ou uma turma com 4 vagas disponíveis.</p>' +
       (configurationPending
         ? '<div class="empty-state">As reposições serão liberadas após a configuração da quantidade de aulas contratadas.</div>'
         : renderReplacementOptions()) +
