@@ -18,6 +18,9 @@ const canonicalCancellation = read(
 const driftScript = read("scripts/check_supabase_migration_drift.sh");
 const driftWorkflow = read(".github/workflows/supabase-migration-drift.yml");
 const baselineWorkflow = read(".github/workflows/validate-supabase-baseline.yml");
+const tuitionBaseline = read(
+  "supabase/baseline/130_enforce_tuition_after_enrollment.sql",
+);
 
 test("the production-only strict cancellation migration is preserved in Git", () => {
   assert.match(
@@ -65,4 +68,10 @@ test("baseline reconstruction applies the canonical cancellation policy", () => 
     baselineWorkflow,
     /supabase\/baseline\/230_unify_lesson_cancellation_policy\.sql/,
   );
+});
+
+test("baseline reconstructs tuition exemption fields required by later overlays", () => {
+  assert.match(tuitionBaseline, /add column if not exists is_exempt boolean not null default false/i);
+  assert.match(tuitionBaseline, /add column if not exists exempted_at timestamptz/i);
+  assert.match(tuitionBaseline, /add column if not exists exemption_notes text/i);
 });
