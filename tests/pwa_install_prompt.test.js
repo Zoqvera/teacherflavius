@@ -215,12 +215,8 @@ test("keeps card hidden until installed-state verification completes", async fun
 });
 
 test("reveals card only after verification confirms the PWA is not installed", async function () {
-  const settings = { refreshInstalledState: false };
+  const settings = { refreshInstalledState: "not-installed" };
   const result = execute(settings);
-  result.api.refreshInstalledState = async function () {
-    settings.installed = false;
-    return false;
-  };
 
   result.api.initialize(result.windowRef, result.documentRef);
   assert.equal(result.card.hidden, true);
