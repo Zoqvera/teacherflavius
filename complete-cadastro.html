@@ -71,7 +71,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="field full">
               <label class="field-label" for="enrollmentAccessCode">Código</label>
               <input id="enrollmentAccessCode" type="password" autocomplete="off" maxlength="64" required />
-              <div class="field-note">O código é validado com segurança antes de liberar os dados da matrícula.</div>
+              <div class="field-note">O código é validado com segurança e define automaticamente o valor da mensalidade e a quantidade de aulas mensais.</div>
             </div>
           </div>
         </section>
@@ -123,18 +123,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               </select>
               <div class="field-note">Ao escolher aulas em grupo, seu cadastro será classificado automaticamente como QUINTETO.</div>
             </div>
-
-            <div class="field full">
-              <label class="field-label" for="monthlyFee">Valor da mensalidade</label>
-              <select id="monthlyFee" required>
-                <option value="" selected disabled>Selecione o valor</option>
-                <option value="50">R$ 50,00</option>
-                <option value="99.90">R$ 99,90</option>
-                <option value="100">R$ 100,00</option>
-                <option value="250">R$ 250,00</option>
-              </select>
-              <div class="field-note">A quantidade de aulas mensais será definida automaticamente pelo sistema a partir deste valor.</div>
-            </div>
           </div>
         </section>
 
@@ -162,29 +150,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function formatBirthDateFromIso(value) {
       const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
       return match ? match[3] + "/" + match[2] + "/" + match[1] : "";
-    }
-
-    function parseMonthlyFee(value) {
-      const raw = String(value || "")
-        .trim()
-        .replace(/^R\$\s*/i, "")
-        .replace(/\s/g, "");
-
-      const normalized = raw.includes(",")
-        ? raw.replace(/\./g, "").replace(",", ".")
-        : /^\d+\.\d{1,2}$/.test(raw)
-          ? raw
-          : raw.replace(/\./g, "");
-
-      if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
-        throw new Error("Informe o valor combinado com o professor em reais.");
-      }
-
-      const amount = Number(normalized);
-      if (!Number.isFinite(amount) || amount <= 0) {
-        throw new Error("O valor combinado com o professor deve ser maior que zero.");
-      }
-      return Math.round(amount * 100) / 100;
     }
 
     function parseBirthDate(value) {
@@ -319,7 +284,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
-        const monthlyFee = parseMonthlyFee(document.getElementById("monthlyFee").value);
         const classMode = document.getElementById("classMode").value;
         const classType = classMode === "group"
           ? "QUINTETO"
@@ -357,9 +321,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           await window.StudentTuitionDueDay.saveSelection();
         }
 
-        const billingTermsResponse = await Auth.getClient().rpc("set_my_enrollment_billing_terms", {
-          target_monthly_fee: monthlyFee
-        });
+        const billingTermsResponse = await Auth.getClient().rpc("set_my_enrollment_billing_terms");
         if (billingTermsResponse.error) throw billingTermsResponse.error;
 
         await Auth.completeProfile({
