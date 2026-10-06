@@ -10,7 +10,7 @@ STANDARD_NAVIGATION_SRC = "/mobile_top_navigation.js?v=20260924-home-login-exclu
 STANDARD_NAVIGATION_ID = "teacher-flavius-mobile-top-navigation"
 VIEWPORT_META = '  <meta name="viewport" content="width=device-width, initial-scale=1.0">'
 PWA_MANIFEST_LINK = '  <link rel="manifest" href="/site.webmanifest">'
-PWA_REGISTRATION_SRC = "/pwa_registration.js?v=20261004-1"
+PWA_REGISTRATION_SRC = "/pwa_registration.js?v=20261006-1"
 PWA_REGISTRATION_ID = "teacher-flavius-pwa-registration"
 
 
