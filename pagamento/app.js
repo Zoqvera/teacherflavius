@@ -189,7 +189,7 @@ function renderTuitionList() {
     const selected = selectedTuition && selectedTuition.tuition_id === tuition.tuition_id;
     const overdue = tuition.payment_status === "overdue";
     const statusLabel = tuition.attempt_status === "pending"
-      ? "Aguardando Pix"
+      ? "Pagamento pendente"
       : (overdue ? "Vencida" : "Em aberto");
     return '<button class="tuition-card' + (selected ? ' selected' : '') + '" type="button" data-tuition-id="' + escapeHtml(tuition.tuition_id) + '">' +
       '<span class="tuition-card__top"><strong>' + escapeHtml(formatReferenceMonth(tuition.reference_month)) + '</strong><span class="tuition-card__amount">' + escapeHtml(formatCurrency(tuition.amount_due)) + '</span></span>' +
