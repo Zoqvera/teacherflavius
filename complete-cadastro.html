@@ -342,13 +342,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           .single();
         if (birthResponse.error) throw birthResponse.error;
 
-        const classTypeResponse = await Auth.getClient()
-          .from("profiles")
-          .update({ class_type: classType })
-          .eq("id", user.id)
-          .select("class_type")
-          .single();
+        const classTypeResponse = await Auth.getClient().rpc(
+          "set_my_enrollment_class_mode",
+          { target_mode: classMode }
+        );
         if (classTypeResponse.error) throw classTypeResponse.error;
+
+        const savedClassType = classTypeResponse.data && classTypeResponse.data.class_type;
+        if (savedClassType !== classType) {
+          throw new Error("Não foi possível registrar o tipo de aula escolhido.");
+        }
 
         if (window.StudentTuitionDueDay && typeof window.StudentTuitionDueDay.saveSelection === "function") {
           await window.StudentTuitionDueDay.saveSelection();
