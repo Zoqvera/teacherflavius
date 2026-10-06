@@ -10,7 +10,7 @@ function read(relativePath) {
 }
 
 const migration = read(
-  "supabase/migrations/20261006204500_fix_enrollment_billing_reference_month.sql"
+  "supabase/migrations/20261006204951_fix_enrollment_billing_reference_month.sql"
 );
 const baseline = read(
   "supabase/baseline/275_fix_enrollment_billing_reference_month.sql"
