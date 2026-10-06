@@ -147,6 +147,14 @@ test("late cancellation requires the requested popup confirmation before the RPC
   assert.match(app, /performLessonCancellation\(triggerButton\)/);
 });
 
+test("Minhas Aulas renders only future scheduled or replacement lesson cards", function () {
+  assert.match(app, /function getUpcomingLessonCredits\(credits\)/);
+  assert.match(app, /credit\.status !== "scheduled" && credit\.status !== "used"/);
+  assert.match(app, /startsAt\.getTime\(\) > now/);
+  assert.match(app, /Nenhuma próxima aula encontrada/);
+  assert.match(app, /upcomingLessons\.map\(function \(credit\)/);
+});
+
 test("replacement booking only exposes quintet occurrences with operational capacity", function () {
   assert.match(migration, /create or replace function public\.get_my_replacement_options/i);
   assert.match(migration, /class\.class_type = 'quintet'/i);

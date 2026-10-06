@@ -156,12 +156,25 @@
     return '<p class="deadline-note">' + escapeHtml(message) + '</p>';
   }
 
+  function getUpcomingLessonCredits(credits) {
+    const now = Date.now();
+
+    return (credits || []).filter(function (credit) {
+      if (credit.status !== "scheduled" && credit.status !== "used") return false;
+
+      const startsAt = new Date(credit.starts_at);
+      return !Number.isNaN(startsAt.getTime()) && startsAt.getTime() > now;
+    });
+  }
+
   function renderLessonCards() {
-    if (!lessonCredits.length) {
-      return '<div class="empty-state">Nenhuma aula foi gerada para este período.</div>';
+    const upcomingLessons = getUpcomingLessonCredits(lessonCredits);
+
+    if (!upcomingLessons.length) {
+      return '<div class="empty-state">Nenhuma próxima aula encontrada.</div>';
     }
 
-    return '<div class="lesson-list">' + lessonCredits.map(function (credit) {
+    return '<div class="lesson-list">' + upcomingLessons.map(function (credit) {
       const metadata = getLessonStatusMetadata(credit.status);
       const className = credit.class_name || credit.original_class_name || "Crédito de aula";
       const dateText = credit.status === "available"
