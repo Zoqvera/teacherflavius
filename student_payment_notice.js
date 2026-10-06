@@ -38,7 +38,7 @@
     Object.freeze({
       globalName: "StudentPaymentNoticeRenderer",
       selector: 'script[src^="/student_payment_notice_renderer.js"]',
-      src: "/student_payment_notice_renderer.js?v=20260902-1"
+      src: "/student_payment_notice_renderer.js?v=20261006-pix-debit-1"
     })
   ]);
 

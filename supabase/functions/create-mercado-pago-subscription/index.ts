@@ -139,9 +139,7 @@ function getProviderErrorCode(payload: unknown): string {
 }
 
 function subscriptionsEnabled(): boolean {
-  return (Deno.env.get("MERCADO_PAGO_SUBSCRIPTIONS_ENABLED") ?? "")
-    .trim()
-    .toLowerCase() === "true";
+  return false;
 }
 
 function getSaoPauloDateParts(): { year: number; month: number; day: number } {

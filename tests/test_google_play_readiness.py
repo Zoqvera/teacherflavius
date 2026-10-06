@@ -42,12 +42,12 @@ class GooglePlayReadinessTests(unittest.TestCase):
         self.assertIn("Exclusão de conta e dados", policy)
         self.assertIn("solicitar atendimento pelo WhatsApp", policy)
 
-    def test_android_payment_page_is_read_only_without_changing_web_checkout(self) -> None:
+    def test_android_payment_page_is_read_only_while_web_checkout_keeps_provider_sdk(self) -> None:
         source = (ROOT / "pagamento" / "index.html").read_text(encoding="utf-8")
         android = prepare_native_payment_page(source)
 
         self.assertIn("sdk.mercadopago.com", source)
-        self.assertIn("subscription_checkout.js", source)
+        self.assertNotIn("subscription_checkout.js", source)
         self.assertNotIn("sdk.mercadopago.com", android)
         self.assertNotIn("subscription_checkout.js", android)
         self.assertIn("Consulte suas mensalidades", android)

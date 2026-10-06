@@ -22,8 +22,8 @@ Em 1º de outubro de 2026, a plataforma possui:
 - turmas `INDIVIDUAL`, `QUARTETO`, `QUINTETO` e `8 ALUNOS`, overrides de capacidade e vínculo simultâneo de cada aluno com até duas turmas compatíveis;
 - módulo **Alunos do dia** para aulas regulares e reposições confirmadas, além da gestão separada de aulas experimentais e conversões;
 - oferta pública de aulas em grupo padronizada em R$ 50,00 por mês e até cinco alunos;
-- módulo financeiro com mensalidades, Pix/cartão, primeira mensalidade disponível após definição do valor e próxima competência liberada dois dias após o pagamento anterior;
-- infraestrutura de assinaturas recorrentes do Mercado Pago com checkout protegido por feature flag, conciliação de webhooks e sandbox isolado;
+- módulo financeiro com mensalidades, Pix/cartão de débito, primeira mensalidade disponível após definição do valor e próxima competência liberada dois dias após o pagamento anterior;
+- infraestrutura legada de assinaturas recorrentes do Mercado Pago preservada para histórico e conciliação, com criação de novas assinaturas desativada;
 - analytics consentido com GTM/GA4, eventos financeiros server-side e OpenAI Pixel para conversões comerciais;
 - sincronização de exercícios recebidos por Google Forms;
 - observabilidade com monitor de erros, CSP reporting, health interno, probes sintéticos e filtros estritos de ruído conhecido;
@@ -218,7 +218,7 @@ O domínio financeiro inclui:
 - escolha obrigatória do dia de vencimento, sem fallback implícito;
 - primeira mensalidade gerada e disponibilizada assim que o professor define o valor;
 - próxima competência criada após a quitação e liberada ao aluno dois dias corridos depois, sem antecipar alertas de cobrança;
-- Pix e cartão via Mercado Pago;
+- Pix e cartão de débito via Mercado Pago;
 - idempotência e validação de concorrência no settlement;
 - webhook assinado e reconciliação;
 - escalonamento de falhas repetidas de reconciliação;
@@ -226,7 +226,7 @@ O domínio financeiro inclui:
 - health financeiro e alertas;
 - kill switch de novas cobranças protegido por autorização administrativa e confirmação textual;
 - analytics server-side consentido por meio de outbox e dispatcher;
-- infraestrutura de assinaturas recorrentes com estado server-only, checkout tokenizado e conciliação dos tópicos `subscription_preapproval`, `subscription_authorized_payment` e `payment`;
+- infraestrutura de assinaturas recorrentes preservada para histórico e conciliação, sem criação de novas assinaturas enquanto a política aceita apenas Pix e cartão de débito;
 - feature flag `MERCADO_PAGO_SUBSCRIPTIONS_ENABLED`, desativada por padrão até a liberação operacional;
 - sandbox isolado e acionado manualmente, que rejeita evidências `live_mode=true` e não toca tabelas financeiras reais;
 - protocolos operacionais para primeira transação real, primeiro reembolso real e rotação de credenciais.

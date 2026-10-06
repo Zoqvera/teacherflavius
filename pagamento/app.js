@@ -189,7 +189,7 @@ function renderTuitionList() {
     const selected = selectedTuition && selectedTuition.tuition_id === tuition.tuition_id;
     const overdue = tuition.payment_status === "overdue";
     const statusLabel = tuition.attempt_status === "pending"
-      ? "Aguardando Pix"
+      ? "Pagamento pendente"
       : (overdue ? "Vencida" : "Em aberto");
     return '<button class="tuition-card' + (selected ? ' selected' : '') + '" type="button" data-tuition-id="' + escapeHtml(tuition.tuition_id) + '">' +
       '<span class="tuition-card__top"><strong>' + escapeHtml(formatReferenceMonth(tuition.reference_month)) + '</strong><span class="tuition-card__amount">' + escapeHtml(formatCurrency(tuition.amount_due)) + '</span></span>' +
@@ -219,7 +219,7 @@ function updateCheckoutHeading() {
     return;
   }
   title.textContent = formatReferenceMonth(selectedTuition.reference_month) + " · " + formatCurrency(selectedTuition.amount_due);
-  description.textContent = "Vencimento em " + formatDate(selectedTuition.due_date) + ". Escolha Pix ou cartão de crédito abaixo.";
+  description.textContent = "Vencimento em " + formatDate(selectedTuition.due_date) + ". Escolha Pix ou cartão de débito abaixo.";
 }
 
 async function renderPaymentBrick() {
@@ -240,9 +240,7 @@ async function renderPaymentBrick() {
     customization: {
       paymentMethods: {
         bankTransfer: "all",
-        creditCard: "all",
-        minInstallments: 1,
-        maxInstallments: 1
+        debitCard: "all"
       },
       visual: {
         style: { theme: "dark" }
@@ -427,8 +425,6 @@ async function initializePage() {
       document.getElementById("paymentWorkspace").hidden = false;
       const checkoutPanel = document.querySelector(".checkout-panel");
       if (checkoutPanel) checkoutPanel.hidden = true;
-      const subscriptionOffer = document.getElementById("subscriptionOffer");
-      if (subscriptionOffer) subscriptionOffer.hidden = true;
       selectedTuition = null;
       renderTuitionList();
       setPageMessage(
@@ -452,7 +448,7 @@ async function initializePage() {
 
     renderTuitionList();
     updateCheckoutHeading();
-    setPageMessage("Escolha Pix ou cartão de crédito para pagar a mensalidade selecionada.", "");
+    setPageMessage("Escolha Pix ou cartão de débito para pagar a mensalidade selecionada.", "");
     await renderPaymentBrick();
   } catch (error) {
     setPageMessage(await getFunctionError(error), "error");

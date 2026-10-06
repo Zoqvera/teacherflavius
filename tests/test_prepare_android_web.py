@@ -28,7 +28,7 @@ class PrepareAndroidWebTests(unittest.TestCase):
 
     def test_native_payment_page_removes_checkout_sdk_and_purchase_copy(self) -> None:
         source = (
-            '<h1>Pague com Pix ou cartão</h1>'
+            '<h1>Pague com Pix ou cartão de débito</h1>'
             '<p>O pagamento é processado pelo Mercado Pago.</p>'
             '<span>Pagamento seguro</span>'
             '<div class="payment-security" aria-label="Informações de segurança">'
