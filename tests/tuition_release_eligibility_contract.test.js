@@ -7,12 +7,17 @@ function read(relativePath) {
   return fs.readFileSync(path.join(__dirname, "..", relativePath), "utf8");
 }
 
-const migration = read(
-  "supabase/migrations/20261006225907_canonicalize_tuition_release_and_push_eligibility.sql"
-);
-const baseline = read(
-  "supabase/baseline/280_canonicalize_tuition_release_and_push_eligibility.sql"
-);
+const migration = [
+  read("supabase/migrations/20261006225907_canonicalize_tuition_release_and_push_eligibility.sql"),
+  read("supabase/migrations/20261006230300_align_tuition_push_enqueue_with_release_eligibility.sql"),
+  read("supabase/migrations/20261006230314_revalidate_tuition_push_before_delivery.sql")
+].join("\n");
+
+const baseline = [
+  read("supabase/baseline/280_canonicalize_tuition_release_and_push_eligibility.sql"),
+  read("supabase/baseline/285_align_tuition_push_enqueue_with_release_eligibility.sql"),
+  read("supabase/baseline/290_revalidate_tuition_push_before_delivery.sql")
+].join("\n");
 
 for (const [label, sql] of [
   ["migration", migration],
