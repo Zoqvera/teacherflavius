@@ -164,7 +164,7 @@ function policyFallbackMessage(
       " Devido à indisponibilidade momentânea do pagamento via PIX por meio do Mercado Pago, você pode enviar o valor para a chave PIX " + ALTERNATIVE_PIX_KEY + ".";
   }
 
-  return "O pagamento por cartão está temporariamente indisponível." + notification +
+  return "O pagamento por cartão de débito está temporariamente indisponível." + notification +
     " Você pode tentar novamente mais tarde ou, se preferir, pagar via PIX para a chave " + ALTERNATIVE_PIX_KEY + ".";
 }
 
