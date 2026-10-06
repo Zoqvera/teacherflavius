@@ -93,8 +93,12 @@ test("Minhas Aulas explains late cancellation without credit and keeps the cance
   assert.match(app, /CANCELADA SEM CRÉDITO/);
   assert.match(app, /Você ainda pode cancelar e liberar a vaga/);
   assert.match(app, /data-credit-eligible/);
+  assert.match(app, /data-cancellation-kind="regular"/);
+  assert.match(app, /data-cancellation-kind="replacement"/);
   assert.match(app, /A vaga foi liberada, sem geração de crédito/);
+  assert.match(app, /o crédito usado nesta reposição não será devolvido/);
   assert.match(app, /if \(!expectsCredit\)[\s\S]*openLateCancellationModal\(button\)/);
+  assert.match(app, /button\.dataset\.cancellationKind === "replacement"/);
 });
 
 test("late cancellation requires the requested popup confirmation before the RPC", function () {
@@ -105,6 +109,8 @@ test("late cancellation requires the requested popup confirmation before the RPC
   assert.match(app, /pendingLateCancellationButton/);
   assert.match(app, /confirmLateCancellation/);
   assert.match(app, /rpc\("cancel_my_regular_lesson"/);
+  assert.match(app, /rpc\("cancel_my_lesson_replacement"/);
+  assert.match(app, /performLessonCancellation\(triggerButton\)/);
 });
 
 test("replacement booking only exposes quintet occurrences with operational capacity", function () {

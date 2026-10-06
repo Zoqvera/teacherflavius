@@ -136,6 +136,26 @@
     return Date.now() <= deadlineDate.getTime();
   }
 
+  function getCancellationDeadlineText(credit, canCancel, earnsCredit, deadline) {
+    if (!deadline) return "";
+
+    if (!canCancel) {
+      return '<p class="deadline-note closed">O prazo de cancelamento desta aula foi encerrado.</p>';
+    }
+
+    if (!earnsCredit) {
+      const message = credit.status === "used"
+        ? "Você ainda pode cancelar e liberar a vaga, mas o crédito usado nesta reposição não será devolvido."
+        : "Você ainda pode cancelar e liberar a vaga, mas o prazo para receber crédito terminou em " + deadline + ".";
+      return '<p class="deadline-note closed">' + escapeHtml(message) + '</p>';
+    }
+
+    const message = credit.status === "used"
+      ? "Cancele até " + deadline + " para recuperar o crédito desta reposição."
+      : "Cancele até " + deadline + " para receber crédito de reposição.";
+    return '<p class="deadline-note">' + escapeHtml(message) + '</p>';
+  }
+
   function renderLessonCards() {
     if (!lessonCredits.length) {
       return '<div class="empty-state">Nenhuma aula foi gerada para este período.</div>';
@@ -149,26 +169,19 @@
         : formatDateTime(credit.starts_at);
       const deadline = formatDeadline(credit.cancellation_deadline);
       const canCancel = credit.can_cancel === true;
-      const earnsCredit = credit.status === "scheduled"
-        && cancellationStillEarnsCredit(credit.cancellation_deadline);
       const hasScheduledLesson = credit.status === "scheduled" || credit.status === "used";
-      let deadlineText = "";
-      if (hasScheduledLesson && deadline) {
-        if (credit.status === "scheduled" && canCancel && !earnsCredit) {
-          deadlineText = '<p class="deadline-note closed">Você ainda pode cancelar e liberar a vaga, mas o prazo para receber crédito terminou em ' + escapeHtml(deadline) + '.</p>';
-        } else if (canCancel) {
-          deadlineText = '<p class="deadline-note">Cancele até ' + escapeHtml(deadline) + ' para receber crédito de reposição.</p>';
-        } else {
-          deadlineText = '<p class="deadline-note closed">O prazo de cancelamento desta aula foi encerrado.</p>';
-        }
-      }
+      const earnsCredit = hasScheduledLesson
+        && cancellationStillEarnsCredit(credit.cancellation_deadline);
+      const deadlineText = hasScheduledLesson
+        ? getCancellationDeadlineText(credit, canCancel, earnsCredit, deadline)
+        : "";
 
       const actions = [];
       if (canCancel && credit.status === "scheduled") {
-        actions.push('<button class="secondary-button regular-cancel-button" type="button" data-credit-id="' + escapeHtml(credit.credit_id) + '" data-credit-eligible="' + (earnsCredit ? "true" : "false") + '">CANCELAR AULA</button>');
+        actions.push('<button class="secondary-button regular-cancel-button" type="button" data-cancellation-kind="regular" data-credit-id="' + escapeHtml(credit.credit_id) + '" data-credit-eligible="' + (earnsCredit ? "true" : "false") + '">CANCELAR AULA</button>');
       }
       if (canCancel && credit.status === "used") {
-        actions.push('<button class="secondary-button replacement-cancel-button" type="button" data-credit-id="' + escapeHtml(credit.credit_id) + '">CANCELAR REPOSIÇÃO</button>');
+        actions.push('<button class="secondary-button replacement-cancel-button" type="button" data-cancellation-kind="replacement" data-credit-id="' + escapeHtml(credit.credit_id) + '" data-credit-eligible="' + (earnsCredit ? "true" : "false") + '">CANCELAR REPOSIÇÃO</button>');
       }
       if (credit.status !== "available" && /^https?:\/\//i.test(String(credit.meeting_url || ""))) {
         actions.push('<a class="link-button" href="' + escapeHtml(credit.meeting_url) + '" target="_blank" rel="noopener noreferrer">ACESSAR AULA</a>');
@@ -339,6 +352,27 @@
     await refreshAfterAction(successMessage);
   }
 
+  async function performReplacementCancellation(button) {
+    setButtonBusy(button, "CANCELANDO...");
+    setPageMessage("", "");
+
+    const result = await rpc("cancel_my_lesson_replacement", {
+      target_credit_id: button.dataset.creditId
+    });
+    const successMessage = result && result.credit_granted === true
+      ? "Reposição cancelada. A vaga foi liberada e o crédito voltou a ficar disponível."
+      : "Reposição cancelada. A vaga foi liberada, mas o crédito não foi devolvido.";
+
+    await refreshAfterAction(successMessage);
+  }
+
+  async function performLessonCancellation(button) {
+    if (button.dataset.cancellationKind === "replacement") {
+      return performReplacementCancellation(button);
+    }
+    return performRegularLessonCancellation(button);
+  }
+
   async function confirmLateCancellation() {
     const elements = getLateCancellationModalElements();
     const triggerButton = pendingLateCancellationButton;
@@ -349,7 +383,7 @@
     if (elements.status) elements.status.textContent = "";
 
     try {
-      await performRegularLessonCancellation(triggerButton);
+      await performLessonCancellation(triggerButton);
       closeLateCancellationModal();
     } catch (error) {
       restoreButton(triggerButton);
@@ -402,14 +436,18 @@
   }
 
   async function cancelReplacement(button) {
+    const expectsCredit = button.dataset.creditEligible === "true";
+
+    if (!expectsCredit) {
+      openLateCancellationModal(button);
+      return;
+    }
+
     const confirmed = window.confirm("Cancelar esta reposição? O crédito voltará a ficar disponível para outra marcação.");
     if (!confirmed) return;
 
-    setButtonBusy(button, "CANCELANDO...");
-    setPageMessage("", "");
     try {
-      await rpc("cancel_my_lesson_replacement", { target_credit_id: button.dataset.creditId });
-      await refreshAfterAction("Reposição cancelada. O crédito voltou a ficar disponível.");
+      await performReplacementCancellation(button);
     } catch (error) {
       setPageMessage(error.message || "Não foi possível cancelar a reposição.", "error");
       restoreButton(button);
