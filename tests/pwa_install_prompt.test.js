@@ -33,6 +33,16 @@ function execute(options) {
     }
   };
 
+  if (settings.refreshInstalledState) {
+    api.refreshInstalledState = async function () {
+      if (typeof settings.onRefreshInstalledState === "function") {
+        await settings.onRefreshInstalledState();
+      }
+      settings.installed = settings.refreshInstalledState === true;
+      return settings.installed;
+    };
+  }
+
   const windowRef = {
     TeacherFlaviusPwa: api,
     navigator: settings.navigator || {},
@@ -177,4 +187,46 @@ test("hides install card when persisted installation state becomes available", f
   result.emitAvailability();
 
   assert.equal(result.card.hidden, true);
+});
+
+
+test("keeps card hidden until installed-state verification completes", async function () {
+  let resolveRefresh;
+  const refreshPromise = new Promise(function (resolve) {
+    resolveRefresh = resolve;
+  });
+  const settings = {
+    refreshInstalledState: true,
+    onRefreshInstalledState: function () {
+      return refreshPromise;
+    }
+  };
+  const result = execute(settings);
+
+  result.api.initialize(result.windowRef, result.documentRef);
+  assert.equal(result.card.hidden, true);
+
+  resolveRefresh();
+  await refreshPromise;
+  await Promise.resolve();
+  await Promise.resolve();
+
+  assert.equal(result.card.hidden, true);
+});
+
+test("reveals card only after verification confirms the PWA is not installed", async function () {
+  const settings = { refreshInstalledState: false };
+  const result = execute(settings);
+  result.api.refreshInstalledState = async function () {
+    settings.installed = false;
+    return false;
+  };
+
+  result.api.initialize(result.windowRef, result.documentRef);
+  assert.equal(result.card.hidden, true);
+
+  await Promise.resolve();
+  await Promise.resolve();
+
+  assert.equal(result.card.hidden, false);
 });
