@@ -25,6 +25,12 @@ function execute(options) {
         }
       };
 
+  if (settings.relatedApps) {
+    navigatorRef.getInstalledRelatedApps = function () {
+      return Promise.resolve(settings.relatedApps);
+    };
+  }
+
   const windowRef = {
     navigator: navigatorRef,
     localStorage: {
@@ -217,4 +223,42 @@ test("a new beforeinstallprompt event clears a stale installed marker", function
 
   assert.equal(result.storageValues.has("teacherflavius:pwa-installed"), false);
   assert.equal(result.api.canPromptInstall(result.windowRef), true);
+});
+
+
+test("detects a previously installed PWA through related apps", async function () {
+  const result = execute({
+    relatedApps: [
+      {
+        platform: "webapp",
+        id: "https://teacherflavius.com/",
+        url: "/site.webmanifest"
+      }
+    ]
+  });
+
+  const installed = await result.api.refreshInstalledState(result.windowRef);
+
+  assert.equal(installed, true);
+  assert.equal(result.api.isInstalled(result.windowRef), true);
+  assert.equal(
+    result.storageValues.get("teacherflavius:pwa-installed"),
+    "1"
+  );
+});
+
+test("ignores unrelated installed applications", async function () {
+  const result = execute({
+    relatedApps: [
+      {
+        platform: "play",
+        id: "com.example.other"
+      }
+    ]
+  });
+
+  const installed = await result.api.refreshInstalledState(result.windowRef);
+
+  assert.equal(installed, false);
+  assert.equal(result.api.isInstalled(result.windowRef), false);
 });
