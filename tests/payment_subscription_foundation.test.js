@@ -47,8 +47,11 @@ test("subscription creation derives commercial terms from server billing setting
   assert.doesNotMatch(functionSource, /body\.amount|body\.due_day|body\.payer_email/);
 });
 
-test("provider creation is feature-gated and idempotent", () => {
-  assert.match(functionSource, /MERCADO_PAGO_SUBSCRIPTIONS_ENABLED/);
+test("provider creation is hard-disabled while only Pix and debit are accepted", () => {
+  assert.match(
+    functionSource,
+    /function subscriptionsEnabled\(\): boolean \{\s*return false;\s*\}/,
+  );
   assert.match(functionSource, /subscriptions_not_enabled/);
   assert.match(functionSource, /https:\/\/api\.mercadopago\.com\/preapproval/);
   assert.match(functionSource, /"X-Idempotency-Key": subscription\.idempotency_key/);
