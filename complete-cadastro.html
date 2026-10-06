@@ -115,6 +115,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
 
             <div class="field full">
+              <label class="field-label" for="classMode">Tipo de aula</label>
+              <select id="classMode" required>
+                <option value="" selected disabled>Selecione o tipo de aula</option>
+                <option value="group">Aulas em grupo</option>
+                <option value="individual">Aulas individuais</option>
+              </select>
+              <div class="field-note">Ao escolher aulas em grupo, seu cadastro será classificado automaticamente como QUINTETO.</div>
+            </div>
+
+            <div class="field full">
               <label class="field-label" for="monthlyFee">Valor da mensalidade</label>
               <select id="monthlyFee" required>
                 <option value="" selected disabled>Selecione o valor</option>
@@ -248,6 +258,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       document.getElementById("birthDate").value = formatBirthDateFromIso(profile.date_of_birth || "");
       document.getElementById("cpf").value = formatCpf(profile.cpf || "");
       document.getElementById("whatsapp").value = profile.whatsapp || "";
+      document.getElementById("classMode").value =
+        profile.class_type === "QUINTETO"
+          ? "group"
+          : profile.class_type === "INDIVIDUAL"
+            ? "individual"
+            : "";
 
       setEnrollmentAccessState(await hasEnrollmentAccess());
     }
@@ -304,6 +320,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
         const monthlyFee = parseMonthlyFee(document.getElementById("monthlyFee").value);
+        const classMode = document.getElementById("classMode").value;
+        const classType = classMode === "group"
+          ? "QUINTETO"
+          : classMode === "individual"
+            ? "INDIVIDUAL"
+            : "";
+
+        if (!classType) {
+          throw new Error("Informe se você fará aulas individuais ou em grupo.");
+        }
+
         const user = await Auth.getUser();
         if (!user) throw new Error("Sua sessão expirou. Entre novamente com Google.");
 
@@ -314,6 +341,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           .select("date_of_birth")
           .single();
         if (birthResponse.error) throw birthResponse.error;
+
+        const classTypeResponse = await Auth.getClient().rpc(
+          "set_my_enrollment_class_mode",
+          { target_mode: classMode }
+        );
+        if (classTypeResponse.error) throw classTypeResponse.error;
+
+        const savedClassType = classTypeResponse.data && classTypeResponse.data.class_type;
+        if (savedClassType !== classType) {
+          throw new Error("Não foi possível registrar o tipo de aula escolhido.");
+        }
 
         if (window.StudentTuitionDueDay && typeof window.StudentTuitionDueDay.saveSelection === "function") {
           await window.StudentTuitionDueDay.saveSelection();

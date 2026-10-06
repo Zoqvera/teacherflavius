@@ -35,6 +35,7 @@ jobs:
           node --test tests/payment_subscription_sandbox_contract.test.js
           node --test tests/enrollment_access_code.test.js
           node --test tests/enrollment_required_fields.test.js
+          node --test tests/enrollment_class_mode_contract.test.js
           node --test tests/tuition_due_day_enrollment_fallback.test.js
           node --test tests/quintet_capacity_eight_contract.test.js
           node --test tests/course_vacancy_visibility_contract.test.js
@@ -132,7 +133,10 @@ jobs:
             supabase/baseline/215_restrict_replacement_options_to_eligible_credits.sql \
             supabase/baseline/220_align_lesson_cards_with_billing_cycle.sql \
             supabase/baseline/225_expose_cancelled_lesson_seats_for_replacement.sql \
-            supabase/baseline/230_support_manual_lesson_credit_grants.sql
+            supabase/baseline/230_support_manual_lesson_credit_grants.sql \
+            supabase/baseline/235_activate_first_prepaid_tuition.sql \
+            supabase/baseline/240_require_enrollment_class_mode.sql \
+            supabase/baseline/245_add_enrollment_class_mode_rpc.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
