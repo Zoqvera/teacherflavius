@@ -230,3 +230,4 @@ version,name
 20261006013429,support_manual_lesson_credit_grants
 20261006015100,activate_first_prepaid_tuition
 20261006020321,require_enrollment_class_mode
+20261006020622,add_enrollment_class_mode_rpc
