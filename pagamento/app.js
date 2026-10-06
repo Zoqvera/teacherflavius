@@ -219,7 +219,7 @@ function updateCheckoutHeading() {
     return;
   }
   title.textContent = formatReferenceMonth(selectedTuition.reference_month) + " · " + formatCurrency(selectedTuition.amount_due);
-  description.textContent = "Vencimento em " + formatDate(selectedTuition.due_date) + ". Escolha Pix ou cartão de crédito abaixo.";
+  description.textContent = "Vencimento em " + formatDate(selectedTuition.due_date) + ". Escolha Pix ou cartão de débito abaixo.";
 }
 
 async function renderPaymentBrick() {
@@ -240,9 +240,7 @@ async function renderPaymentBrick() {
     customization: {
       paymentMethods: {
         bankTransfer: "all",
-        creditCard: "all",
-        minInstallments: 1,
-        maxInstallments: 1
+        debitCard: "all"
       },
       visual: {
         style: { theme: "dark" }
@@ -452,7 +450,7 @@ async function initializePage() {
 
     renderTuitionList();
     updateCheckoutHeading();
-    setPageMessage("Escolha Pix ou cartão de crédito para pagar a mensalidade selecionada.", "");
+    setPageMessage("Escolha Pix ou cartão de débito para pagar a mensalidade selecionada.", "");
     await renderPaymentBrick();
   } catch (error) {
     setPageMessage(await getFunctionError(error), "error");
