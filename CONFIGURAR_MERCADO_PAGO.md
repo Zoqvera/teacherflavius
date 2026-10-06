@@ -1,6 +1,6 @@
 # Configurar pagamentos com Mercado Pago
 
-O portal usa o **Payment Brick** para aceitar Pix e cartão de crédito dentro do
+O portal usa o **Payment Brick** para aceitar Pix e cartão de débito dentro do
 site. Os dados completos do cartão não passam pelo banco do Teacher Flávio: o
 Mercado Pago gera um token no navegador e somente esse token é enviado à Edge
 Function.
@@ -9,7 +9,7 @@ Function.
 
 | Componente | Responsabilidade |
 | --- | --- |
-| `/pagamento/` | Checkout do aluno com Pix e cartão |
+| `/pagamento/` | Checkout do aluno com Pix e cartão de débito |
 | `student_payment_notice.js` | Faixa vermelha e pop-up de mensalidade pendente |
 | `create-mercado-pago-payment` | Valida aluno e valor, cria o pagamento e aplica aprovações imediatas |
 | `mercado-pago-webhook` | Valida a assinatura do Mercado Pago e sincroniza mudanças de status |
