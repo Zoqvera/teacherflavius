@@ -48,7 +48,7 @@
     data_quality_makeup_booking_class_mismatch: "Reposição vinculada à turma incorreta",
     data_quality_makeup_status_timestamp_mismatch: "Status de reposição inconsistente",
     data_quality_future_auto_slot_invalid_class: "Reposição automática ligada a turma inválida",
-    data_quality_lesson_orphan_class: "Registro de lição com turma inexistente",
+    data_quality_lesson_orphan_class: "Registro de lição com referência de turma inválida",
     data_quality_frequency_invalid_subject_ref: "Frequência com referência de aluno inválida",
     data_quality_tuition_subject_mismatch: "Mensalidade com referência de aluno inconsistente",
     data_quality_payment_attempt_subject_mismatch: "Tentativa de pagamento com referência inconsistente",
@@ -180,11 +180,23 @@
     const issues = documentRef.getElementById(settings.issuesId);
 
     if (summary) {
-      summary.innerHTML = [
+      const cards = [
         '<article class="health-card ' + statusClass(block.status) + '"><span>' + escapeHtml(settings.title) + '</span><strong>' + escapeHtml(healthLabel(block.status)) + '</strong></article>',
-        '<article class="health-card"><span>Findings ativos</span><strong>' + escapeHtml(block.issueCount) + '</strong></article>',
-        '<article class="health-card"><span>Última verificação</span><strong class="health-card-date">' + escapeHtml(formatDateTime(block.completedAt)) + '</strong></article>'
-      ].join("");
+        '<article class="health-card"><span>Findings ativos</span><strong>' + escapeHtml(block.issueCount) + '</strong></article>'
+      ];
+
+      if (settings.infoMetricKey && settings.infoMetricLabel) {
+        cards.push(
+          '<article class="health-card"><span>' + escapeHtml(settings.infoMetricLabel) + '</span><strong>' +
+          escapeHtml(formatMetric(block.metrics[settings.infoMetricKey])) + '</strong></article>'
+        );
+      }
+
+      cards.push(
+        '<article class="health-card"><span>Última verificação</span><strong class="health-card-date">' +
+        escapeHtml(formatDateTime(block.completedAt)) + '</strong></article>'
+      );
+      summary.innerHTML = cards.join("");
     }
     if (issues) issues.innerHTML = renderIssueRows(block.issues);
   }
@@ -193,7 +205,9 @@
     renderSpecializedHealth(documentRef, dashboard.dataQuality, {
       summaryId: "dataQualitySummary",
       issuesId: "dataQualityIssues",
-      title: "Qualidade dos dados"
+      title: "Qualidade dos dados",
+      infoMetricKey: "lesson_deleted_class_history_info",
+      infoMetricLabel: "Histórico preservado"
     });
   }
 
