@@ -72,7 +72,7 @@
   }
 
   async function handleQuestionStudied(question, button) {
-    if (!question || !question.id || question.studied || button.disabled) return;
+    if (!question || !question.id || question.studied || question.worked || button.disabled) return;
 
     button.disabled = true;
     button.textContent = "REGISTRANDO...";
@@ -105,10 +105,13 @@
     actions.className = "academic-question-study-actions";
 
     const button = document.createElement("button");
-    button.className = "academic-button " + (question.studied ? "success" : "primary");
+    const questionUnavailable = !!question.studied || !!question.worked;
+    button.className = "academic-button " + (questionUnavailable ? "success" : "primary");
     button.type = "button";
-    button.disabled = !!question.studied;
-    button.textContent = question.studied ? "PERGUNTA ESTUDADA" : "ESTUDEI A PERGUNTA";
+    button.disabled = questionUnavailable;
+    button.textContent = question.worked
+      ? "PERGUNTA JÁ TRABALHADA"
+      : (question.studied ? "PERGUNTA ESTUDADA" : "ESTUDEI A PERGUNTA");
     button.addEventListener("click", function () {
       handleQuestionStudied(question, button);
     });
