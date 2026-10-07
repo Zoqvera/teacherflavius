@@ -16,14 +16,6 @@ const ambiguityFix = fs.readFileSync(
   path.join(ROOT, "supabase/migrations/20261004081746_fix_academic_occurrence_id_ambiguity.sql"),
   "utf8"
 );
-const individualQuestionStudy = fs.readFileSync(
-  path.join(ROOT, "supabase/migrations/20261004144423_study_questions_individually.sql"),
-  "utf8"
-);
-const individualQuestionStudyBaseline = fs.readFileSync(
-  path.join(ROOT, "supabase/baseline/170_study_questions_individually.sql"),
-  "utf8"
-);
 const allConversationQuestions = fs.readFileSync(
   path.join(ROOT, "supabase/migrations/20261006235930_show_all_conversation_questions.sql"),
   "utf8"
