@@ -245,3 +245,4 @@ version,name
 20261007000727,show_all_conversation_questions
 20261007012501,enforce_quintet_only_group_classification
 20261007034238,normalize_billing_plans_and_legacy_settings
+20261007035146,resolve_reviewed_legacy_billing_plans
