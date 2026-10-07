@@ -59,6 +59,7 @@ REMOTE_ROWS
       MIGRATIONS_DIR: migrationsDir,
       MIGRATION_GIT_ROOT: gitRoot,
       MIGRATION_DRIFT_CUTOFF: cutoff,
+      MIGRATION_CHECKSUM_CUTOFF: "20261007051850",
       MIGRATION_BASE_REF: baseRef,
       PATH: `${binDir}:${process.env.PATH}`,
     },
@@ -181,6 +182,7 @@ test("CI compares version, name, and checksum instead of versions alone", () => 
   assert.doesNotMatch(driftScript, /\|\s*sort -u/);
   assert.match(driftWorkflow, /SUPABASE_DB_URL/);
   assert.match(driftWorkflow, /MIGRATION_BASE_REF/);
+  assert.match(driftWorkflow, /MIGRATION_CHECKSUM_CUTOFF/);
   assert.match(driftWorkflow, /fetch-depth:\s*0/);
   assert.match(
     driftWorkflow,
@@ -277,11 +279,11 @@ test("a previously committed migration cannot be renamed", () => {
 test("production checksum drift fails after the cutoff", () => {
   const result = runDriftCheck({
     migrations: {
-      "20261006000001_example.sql": "select 1;\n",
+      "20261007060001_example.sql": "select 1;\n",
     },
     remoteRows: [
       {
-        version: "20261006000001",
+        version: "20261007060001",
         name: "example",
         checksum: "0".repeat(64),
       },
@@ -321,11 +323,11 @@ test("a unique migration with matching production identity passes", () => {
   const sql = "\nselect 1;\n\n";
   const result = runDriftCheck({
     migrations: {
-      "20261006000003_example.sql": sql,
+      "20261007060003_example.sql": sql,
     },
     remoteRows: [
       {
-        version: "20261006000003",
+        version: "20261007060003",
         name: "example",
         checksum: canonicalChecksum(sql),
       },
