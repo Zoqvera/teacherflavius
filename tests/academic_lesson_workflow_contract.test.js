@@ -24,6 +24,14 @@ const individualQuestionStudyBaseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/170_study_questions_individually.sql"),
   "utf8"
 );
+const allConversationQuestions = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261006235930_show_all_conversation_questions.sql"),
+  "utf8"
+);
+const allConversationQuestionsBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/295_show_all_conversation_questions.sql"),
+  "utf8"
+);
 const studentArea = fs.readFileSync(path.join(ROOT, "area_do_estudante.html"), "utf8");
 const teacherArea = fs.readFileSync(path.join(ROOT, "professor.html"), "utf8");
 const studentPage = fs.readFileSync(path.join(ROOT, "o-que-fazer/index.html"), "utf8");
@@ -62,23 +70,24 @@ test("student preparation is distinct from teacher-confirmed completion", functi
   assert.match(lessonPage, />ESTOU PREPARADO</);
 });
 
-test("student studies each question individually while the ten-question batch stays stable", function () {
-  for (const sql of [individualQuestionStudy, individualQuestionStudyBaseline]) {
-    assert.match(sql, /order by question\.display_order, question\.id[\s\S]*limit 10/i);
-    assert.match(sql, /'studied', candidate\.studied/i);
-    assert.match(sql, /private\.student_question_studies study_history/i);
+test("student sees the complete Conversation Questions catalog and studies each question individually", function () {
+  for (const sql of [allConversationQuestions, allConversationQuestionsBaseline]) {
+    assert.match(sql, /from public\.conversation_questions question/i);
+    assert.match(sql, /'studied', question\.studied/i);
+    assert.match(sql, /'worked', question\.worked/i);
     assert.match(sql, /conversation_question_practice_log practice/i);
+    assert.match(sql, /conversation_question_completions completion/i);
     assert.match(sql, /selected\.question_id = any\(expected_ids\)/i);
     assert.match(sql, /insert into private\.student_question_studies/i);
-    assert.doesNotMatch(
-      sql,
-      /Suas perguntas já foram registradas e aguardam prática com o professor/i
-    );
+    assert.doesNotMatch(sql, /limit 10/i);
   }
 
+  assert.match(studentPage, /todas as Conversation Questions disponíveis para estudo/i);
   assert.match(studentApp, /markQuestionStudied\(question\.id\)/);
+  assert.match(studentApp, /question\.worked/);
   assert.match(studentApp, /ESTUDEI A PERGUNTA/);
   assert.match(studentApp, /PERGUNTA ESTUDADA/);
+  assert.match(studentApp, /PERGUNTA JÁ TRABALHADA/);
   assert.doesNotMatch(studentPage, /id="questionsStudiedButton"/);
   assert.doesNotMatch(studentPage, /ESTUDEI AS PERGUNTAS/);
 });
