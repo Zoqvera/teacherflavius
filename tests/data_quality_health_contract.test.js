@@ -84,12 +84,15 @@ test("data quality scanner covers core school invariants", function () {
   }
 });
 
-test("historical or potentially intentional data is informational only", function () {
+test("historical operational data remains informational only", function () {
   assert.match(healthMigration, /archived_class_memberships_info/);
-  assert.match(healthMigration, /active_billing_archived_students_info/);
   assert.match(healthMigration, /multiple_lesson_sessions_info/);
   assert.doesNotMatch(healthMigration, /data_quality_archived_class_memberships/);
   assert.doesNotMatch(healthMigration, /data_quality_multiple_lesson_sessions/);
+});
+
+test("archived billing remains visible to data quality monitoring", function () {
+  assert.match(healthMigration, /active_billing_archived_students_info/);
 });
 
 test("data quality health is private, scheduled and watched", function () {
