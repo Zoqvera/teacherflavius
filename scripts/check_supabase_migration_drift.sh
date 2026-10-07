@@ -5,6 +5,7 @@ readonly ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly MIGRATIONS_DIR="${MIGRATIONS_DIR:-${ROOT_DIR}/supabase/migrations}"
 readonly MIGRATION_GIT_ROOT="${MIGRATION_GIT_ROOT:-${ROOT_DIR}}"
 readonly MIGRATION_DRIFT_CUTOFF="${MIGRATION_DRIFT_CUTOFF:-20261006000000}"
+readonly MIGRATION_CHECKSUM_CUTOFF="${MIGRATION_CHECKSUM_CUTOFF:-20261007051850}"
 readonly MIGRATION_BASE_REF="${MIGRATION_BASE_REF:-}"
 
 TEMP_DIR=""
@@ -23,6 +24,16 @@ require_configuration() {
 
   if [[ ! "${MIGRATION_DRIFT_CUTOFF}" =~ ^[0-9]{14}$ ]]; then
     echo "::error::MIGRATION_DRIFT_CUTOFF must contain exactly 14 digits."
+    exit 1
+  fi
+
+  if [[ ! "${MIGRATION_CHECKSUM_CUTOFF}" =~ ^[0-9]{14}$ ]]; then
+    echo "::error::MIGRATION_CHECKSUM_CUTOFF must contain exactly 14 digits."
+    exit 1
+  fi
+
+  if [[ "${MIGRATION_CHECKSUM_CUTOFF}" < "${MIGRATION_DRIFT_CUTOFF}" ]]; then
+    echo "::error::MIGRATION_CHECKSUM_CUTOFF cannot be earlier than MIGRATION_DRIFT_CUTOFF."
     exit 1
   fi
 
@@ -283,8 +294,66 @@ compare_production_identity() {
     "${remote_records_file}" \
     "${local_records_file}" > "${joined_file}"
 
-  awk -F $'\t' '
-    $2 != $3 || $4 != $5 {
+  awk -F 
+
+  if [[ -s "${remote_only_file}" ]]; then
+    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
+    sed 's/^/  - /' "${remote_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${local_only_file}" ]]; then
+    echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+    sed 's/^/  - /' "${local_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Migration identity differs between production and Git:"
+    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
+      echo "  - ${version}"
+      if [[ "${remote_name}" != "${local_name}" ]]; then
+        echo "    production name: ${remote_name}"
+        echo "    Git name:        ${local_name}"
+      fi
+      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
+        echo "    production sha256: ${remote_checksum}"
+        echo "    Git sha256:        ${local_checksum}"
+      fi
+    done < "${mismatch_file}"
+    drift_found=true
+  fi
+
+  if [[ "${drift_found}" == true ]]; then
+    exit 1
+  fi
+}
+
+main() {
+  require_configuration
+
+  TEMP_DIR="$(mktemp -d)"
+  trap cleanup EXIT
+
+  local local_records_file="${TEMP_DIR}/local_records"
+  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
+  local remote_records_file="${TEMP_DIR}/remote_records"
+
+  collect_local_records > "${local_records_file}"
+  validate_unique_local_versions "${local_records_file}"
+  validate_historical_immutability "${local_records_file}"
+
+  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
+  collect_remote_records > "${remote_records_file}"
+
+  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
+
+  echo "Supabase migration IDs are globally unique and committed history is immutable. Production version/name matches Git from ${MIGRATION_DRIFT_CUTOFF}; checksum identity matches from ${MIGRATION_CHECKSUM_CUTOFF}."
+}
+
+main "$@"
+\t' -v checksum_cutoff="${MIGRATION_CHECKSUM_CUTOFF}" '
+    $2 != $3 || ($1 >= checksum_cutoff && $4 != $5) {
       print
     }
   ' "${joined_file}" > "${mismatch_file}"
