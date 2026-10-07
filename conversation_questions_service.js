@@ -1,7 +1,6 @@
 (function () {
   "use strict";
 
-  const COMPLETION_PAGE_SIZE = 1000;
   const QUESTIONS_TABLE = "conversation_questions";
   const COMPLETIONS_TABLE = "conversation_question_completions";
   const PROFILES_TABLE = "profiles";
@@ -53,19 +52,6 @@
       return response.data || [];
     }
 
-    async function listActiveStudents() {
-      const response = await supabase
-        .from(PROFILES_TABLE)
-        .select("id,name,email")
-        .eq("enrolled", true)
-        .eq("archived", false)
-        .order("name", { ascending: true, nullsFirst: false })
-        .order("email", { ascending: true, nullsFirst: false });
-
-      if (response.error) throw response.error;
-      return response.data || [];
-    }
-
     async function getStudentProfile(studentId) {
       const response = await supabase
         .from(PROFILES_TABLE)
@@ -75,28 +61,6 @@
 
       if (response.error) throw response.error;
       return response.data || null;
-    }
-
-    async function listAllCompletions() {
-      const rows = [];
-      let start = 0;
-
-      while (true) {
-        const response = await supabase
-          .from(COMPLETIONS_TABLE)
-          .select("question_id,student_id,completed_at")
-          .order("question_id", { ascending: true })
-          .order("student_id", { ascending: true })
-          .range(start, start + COMPLETION_PAGE_SIZE - 1);
-
-        if (response.error) throw response.error;
-        const page = response.data || [];
-        rows.push(...page);
-        if (page.length < COMPLETION_PAGE_SIZE) break;
-        start += COMPLETION_PAGE_SIZE;
-      }
-
-      return rows;
     }
 
     async function listStudentCompletions(studentId) {
@@ -139,38 +103,13 @@
       if (response.error) throw response.error;
     }
 
-    async function setCompletion(questionId, studentId, completed, teacherId) {
-      if (completed) {
-        const response = await supabase
-          .from(COMPLETIONS_TABLE)
-          .insert({
-            question_id: questionId,
-            student_id: studentId,
-            marked_by: teacherId
-          });
-        if (response.error) throw response.error;
-        return;
-      }
-
-      const response = await supabase
-        .from(COMPLETIONS_TABLE)
-        .delete()
-        .eq("question_id", questionId)
-        .eq("student_id", studentId);
-
-      if (response.error) throw response.error;
-    }
-
     return Object.freeze({
       addQuestion,
       completionKey,
       getStudentProfile,
-      listActiveStudents,
-      listAllCompletions,
       listQuestions,
       listStudentCompletions,
-      moveQuestion,
-      setCompletion
+      moveQuestion
     });
   }
 
