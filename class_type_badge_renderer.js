@@ -11,15 +11,6 @@
   }
 
   function getClassTypeVisual(value) {
-    if (value === "quartet" || value === "group") {
-      return {
-        label: "GRUPO",
-        color: "#bfdbfe",
-        background: "rgba(59,130,246,.15)",
-        border: "rgba(96,165,250,.35)"
-      };
-    }
-
     if (value === "quintet") {
       return {
         label: "QUINTETO",
@@ -35,15 +26,6 @@
         color: "#d8b4fe",
         background: "rgba(168,85,247,.14)",
         border: "rgba(192,132,252,.35)"
-      };
-    }
-
-    if (value === "eight_students") {
-      return {
-        label: "8 ALUNOS",
-        color: "#a7f3d0",
-        background: "rgba(16,185,129,.14)",
-        border: "rgba(52,211,153,.35)"
       };
     }
 
