@@ -269,11 +269,17 @@
         );
         return Promise.resolve();
       }
-      setStatus(
-        "Roteiro conferido: todos os alunos desta aula têm presença ou ausência definida.",
-        "success"
+
+      return reloadAfter(
+        function () {
+          return service.finalizeTeacherLessonSession(
+            first.class_number,
+            first.starts_at,
+            classDate
+          );
+        },
+        "Aula finalizada. A turma foi removida do roteiro desta ocorrência."
       );
-      return Promise.resolve();
     }, false);
 
     heading.appendChild(title);
