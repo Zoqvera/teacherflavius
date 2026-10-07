@@ -46,6 +46,7 @@ jobs:
           node --test tests/manual_lesson_credit_grants_contract.test.js
           node --test tests/retire_legacy_makeup_flow_contract.test.js
           node --test tests/enrollment_commercial_terms_contract.test.js
+          node --test tests/billing_plan_integrity_contract.test.js
           node --test tests/first_tuition_reference_month_contract.test.js
           node --test tests/academic_lesson_workflow_contract.test.js
           node --test tests/conversation_question_cards_contract.test.js
@@ -156,7 +157,8 @@ jobs:
             supabase/baseline/305_persist_teacher_lesson_session_finalization.sql \
             supabase/baseline/310_retire_legacy_makeup_student_flow.sql \
             supabase/baseline/315_separate_lesson_and_enrollment_cancellation.sql \
-            supabase/baseline/320_enforce_replacement_weekday_separation.sql
+            supabase/baseline/320_enforce_replacement_weekday_separation.sql \
+            supabase/baseline/325_normalize_billing_plans_and_legacy_settings.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
