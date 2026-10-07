@@ -151,7 +151,8 @@ jobs:
             supabase/baseline/285_align_tuition_push_enqueue_with_release_eligibility.sql \
             supabase/baseline/290_revalidate_tuition_push_before_delivery.sql \
             supabase/baseline/295_show_all_conversation_questions.sql \
-            supabase/baseline/300_enforce_quintet_only_group_classification.sql
+            supabase/baseline/300_enforce_quintet_only_group_classification.sql \
+            supabase/baseline/305_persist_teacher_lesson_session_finalization.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \

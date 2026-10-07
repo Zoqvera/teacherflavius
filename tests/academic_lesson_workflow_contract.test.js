@@ -24,6 +24,14 @@ const allConversationQuestionsBaseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/295_show_all_conversation_questions.sql"),
   "utf8"
 );
+const lessonSessionFinalization = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261007013738_persist_teacher_lesson_session_finalization.sql"),
+  "utf8"
+);
+const lessonSessionFinalizationBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/305_persist_teacher_lesson_session_finalization.sql"),
+  "utf8"
+);
 const studentArea = fs.readFileSync(path.join(ROOT, "area_do_estudante.html"), "utf8");
 const teacherArea = fs.readFileSync(path.join(ROOT, "professor.html"), "utf8");
 const studentPage = fs.readFileSync(path.join(ROOT, "o-que-fazer/index.html"), "utf8");
@@ -112,6 +120,24 @@ test("absence preserves academic work for a later class", function () {
       /Esta aula já possui conteúdo registrado\. Desfaça esses registros antes de marcar ausência\./i
     );
   }
+});
+
+test("finalized class sessions disappear until the next occurrence", function () {
+  for (const sql of [lessonSessionFinalization, lessonSessionFinalizationBaseline]) {
+    assert.match(sql, /create table if not exists private\.academic_class_session_finalizations/i);
+    assert.match(sql, /unique \(class_number, starts_at\)/i);
+    assert.match(sql, /create or replace function public\.finalize_teacher_lesson_session/i);
+    assert.match(sql, /attendance_status not in \('present', 'absent'\)/i);
+    assert.match(sql, /from private\.academic_class_session_finalizations finalization/i);
+    assert.match(sql, /finalization\.class_number = enriched\.class_number/i);
+    assert.match(sql, /finalization\.starts_at = enriched\.starts_at/i);
+    assert.match(sql, /revoke all on table private\.academic_class_session_finalizations[\s\S]*from public, anon, authenticated/i);
+  }
+
+  assert.match(workflowService, /finalize_teacher_lesson_session/);
+  assert.match(workflowService, /finalizeTeacherLessonSession/);
+  assert.match(teacherApp, /service\.finalizeTeacherLessonSession/);
+  assert.match(teacherApp, /Aula finalizada\. A turma foi removida do roteiro desta ocorrência\./);
 });
 
 test("student area replaces legacy study cards with O QUE FAZER", function () {
