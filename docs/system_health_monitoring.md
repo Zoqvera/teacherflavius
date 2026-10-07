@@ -54,9 +54,7 @@ A capacidade operacional foi centralizada em `private.get_class_operational_capa
 A regra vigente é:
 
 - `individual`: 1 aluno;
-- `quartet`: 5 alunos;
-- `quintet`: 8 alunos;
-- `eight_students`: 8 alunos.
+- `quintet`: 8 alunos.
 
 Toda turma `quintet` usa capacidade operacional fixa de 8 alunos, inclusive quando existe um override legado diferente. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas e na troca de turma.
 
