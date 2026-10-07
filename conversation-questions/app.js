@@ -11,7 +11,6 @@
     session: null,
     isTeacher: false,
     questions: [],
-    students: [],
     completions: new Set(),
     service: null,
     reordering: false
@@ -90,10 +89,6 @@
 
   function isCompleted(questionId, studentId) {
     return state.completions.has(completionKey(questionId, studentId));
-  }
-
-  function studentDisplayName(student) {
-    return student.name || student.email || "Aluno";
   }
 
   function createExampleField(index) {
@@ -214,67 +209,6 @@
     return button;
   }
 
-  function countQuestionCompletions(questionId) {
-    return state.students.reduce(function (total, student) {
-      return total + (isCompleted(questionId, student.id) ? 1 : 0);
-    }, 0);
-  }
-
-  function updateTeacherSummary(summary, questionId) {
-    const completed = countQuestionCompletions(questionId);
-    summary.textContent = completed + " de " + state.students.length + " alunos responderam corretamente.";
-  }
-
-  function createStudentCheckbox(question, student, summary) {
-    const label = document.createElement("label");
-    label.className = "conversation-student-option";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = isCompleted(question.id, student.id);
-    checkbox.dataset.questionId = question.id;
-    checkbox.dataset.studentId = student.id;
-
-    const name = document.createElement("span");
-    name.textContent = studentDisplayName(student);
-
-    checkbox.addEventListener("change", async function () {
-      const desired = checkbox.checked;
-      checkbox.disabled = true;
-
-      try {
-        await state.service.setCompletion(
-          question.id,
-          student.id,
-          desired,
-          state.session.user.id
-        );
-
-        const key = completionKey(question.id, student.id);
-        if (desired) state.completions.add(key);
-        else state.completions.delete(key);
-
-        updateTeacherSummary(summary, question.id);
-        showStatus(
-          desired
-            ? studentDisplayName(student) + " marcado como respondido corretamente."
-            : studentDisplayName(student) + " desmarcado nesta pergunta.",
-          "success"
-        );
-      } catch (error) {
-        checkbox.checked = !desired;
-        showStatus("Não foi possível salvar a alteração. Tente novamente.", "error");
-        console.error("Falha ao atualizar Conversation Questions:", error);
-      } finally {
-        checkbox.disabled = false;
-      }
-    });
-
-    label.appendChild(checkbox);
-    label.appendChild(name);
-    return label;
-  }
-
   function createQuestionContent(question, index, element, className) {
     return window.ConversationQuestionCardRenderer.create(question, {
       element: element,
@@ -302,29 +236,7 @@
     controls.appendChild(createOrderButton(question, "down", index === state.questions.length - 1));
     top.appendChild(controls);
 
-    const summary = document.createElement("p");
-    summary.className = "conversation-question-summary";
-    updateTeacherSummary(summary, question.id);
-
-    const students = document.createElement("div");
-    students.className = "conversation-student-grid";
-
-    state.students.forEach(function (student) {
-      students.appendChild(createStudentCheckbox(question, student, summary));
-    });
-
     article.appendChild(top);
-    article.appendChild(summary);
-
-    if (state.students.length) {
-      article.appendChild(students);
-    } else {
-      const empty = document.createElement("p");
-      empty.className = "conversation-empty";
-      empty.textContent = "Nenhum aluno ativo está disponível.";
-      article.appendChild(empty);
-    }
-
     return article;
   }
 
@@ -439,21 +351,9 @@
     ui.modeLabel.textContent = "VISÃO DO PROFESSOR";
     ui.teacherTools.hidden = false;
     ui.professorLink.hidden = false;
-    ui.listHelp.textContent = "Cada card reúne tradução, exemplos de respostas e o progresso dos alunos.";
+    ui.listHelp.textContent = "Cada card reúne a pergunta, a tradução e cinco exemplos de resposta.";
 
-    const results = await Promise.all([
-      state.service.listQuestions(),
-      state.service.listActiveStudents(),
-      state.service.listAllCompletions()
-    ]);
-
-    state.questions = results[0];
-    state.students = results[1];
-    state.completions = new Set(
-      results[2].map(function (row) {
-        return completionKey(row.question_id, row.student_id);
-      })
-    );
+    state.questions = await state.service.listQuestions();
 
     renderQuestions();
     clearStatus();
