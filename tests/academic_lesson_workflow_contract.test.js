@@ -17,7 +17,7 @@ const ambiguityFix = fs.readFileSync(
   "utf8"
 );
 const allConversationQuestions = fs.readFileSync(
-  path.join(ROOT, "supabase/migrations/20261006235930_show_all_conversation_questions.sql"),
+  path.join(ROOT, "supabase/migrations/20261007000727_show_all_conversation_questions.sql"),
   "utf8"
 );
 const allConversationQuestionsBaseline = fs.readFileSync(
