@@ -769,3 +769,15 @@ grant execute on function public.cancel_makeup_class_booking(uuid) to authentica
 
 -- O registro nesta fila dispara o webhook da Edge Function.
 -- Nao crie notificacoes diretamente pelo navegador.
+
+-- Legacy student makeup access is retired.
+-- Keep the historical bootstrap installer from reopening the obsolete student RPC surface.
+revoke execute on function public.book_makeup_class(uuid)
+  from public, anon, authenticated;
+revoke execute on function public.cancel_my_makeup_class_booking(uuid)
+  from public, anon, authenticated;
+revoke execute on function public.get_available_makeup_slots()
+  from public, anon, authenticated;
+revoke execute on function public.get_my_makeup_bookings()
+  from public, anon, authenticated;
+\n

@@ -132,7 +132,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/conversation-questions/` | perguntas de conversação e progresso persistente |
 | `/exercicios-diarios/` | exercícios publicados |
 | `/flashcards/` | decks, prática e repetição espaçada |
-| `/reposicoes/` | consulta, reserva e cancelamento de reposições |
+| `/area-do-estudante/minhas-aulas/` | aulas contratadas, cancelamentos, créditos e reposições |
 | `/pagamento/` | pagamento de mensalidades |
 | `/aulas-de-gramatica.html` | aulas e exercícios de gramática |
 | `/guia-do-estudante.html` | orientações do curso |
@@ -206,7 +206,9 @@ A rota privada `/conversation-questions/` contém 99 perguntas iniciais, progres
 
 ### Reposições
 
-O módulo administra horários, capacidade, reserva, cancelamento e devolução de vagas. A capacidade adicional de reposição é separada da ocupação regular da turma. A sincronização automática preserva slots referenciados por qualquer histórico de reserva, evitando falhas de integridade em jobs agendados.
+O fluxo do aluno é único em `/area-do-estudante/minhas-aulas/`: reposições consomem créditos elegíveis, podem ser canceladas até o início da aula e só devolvem o crédito quando o cancelamento ocorre com pelo menos 12 horas de antecedência. A rota estudantil legada `/reposicoes/` foi aposentada e apenas redireciona para **Minhas Aulas**.
+
+O painel administrativo `/reposicoes-admin/` permanece responsável pela operação da agenda. A capacidade adicional de reposição é separada da ocupação regular da turma, e a sincronização automática preserva slots referenciados por qualquer histórico de reserva.
 
 Consulte [CONFIGURAR_REPOSICOES.md](CONFIGURAR_REPOSICOES.md).
 
