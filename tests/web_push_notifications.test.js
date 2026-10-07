@@ -24,7 +24,7 @@ const initializer = read(
   "supabase/functions/initialize-web-push/index.ts"
 );
 const bootstrapHardening = read(
-  "supabase/migrations/20261005154500_harden_web_push_vapid_bootstrap.sql"
+  "supabase/migrations/20261005154016_harden_web_push_vapid_bootstrap.sql"
 );
 const studentArea = read("area_do_estudante.html");
 
