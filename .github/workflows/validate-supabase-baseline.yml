@@ -36,6 +36,7 @@ jobs:
           node --test tests/enrollment_access_code.test.js
           node --test tests/enrollment_required_fields.test.js
           node --test tests/enrollment_class_mode_contract.test.js
+          node --test tests/quintet_classification.test.js
           node --test tests/enrollment_onboarding_state_contract.test.js
           node --test tests/tuition_due_day_enrollment_fallback.test.js
           node --test tests/quintet_capacity_eight_contract.test.js
@@ -149,7 +150,8 @@ jobs:
             supabase/baseline/280_canonicalize_tuition_release_and_push_eligibility.sql \
             supabase/baseline/285_align_tuition_push_enqueue_with_release_eligibility.sql \
             supabase/baseline/290_revalidate_tuition_push_before_delivery.sql \
-            supabase/baseline/295_show_all_conversation_questions.sql
+            supabase/baseline/295_show_all_conversation_questions.sql \
+            supabase/baseline/300_enforce_quintet_only_group_classification.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
