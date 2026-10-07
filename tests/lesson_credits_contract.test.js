@@ -73,6 +73,25 @@ const unifiedCancellationPolicyBaseline = fs.readFileSync(
   "utf8"
 );
 
+const cancellationSemanticsFix = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261007030000_separate_lesson_and_enrollment_cancellation.sql"),
+  "utf8"
+);
+const cancellationSemanticsBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/315_separate_lesson_and_enrollment_cancellation.sql"),
+  "utf8"
+);
+
+function getSqlFunctionDefinition(sql, functionName) {
+  const pattern = new RegExp(
+    "create or replace function public\\." + functionName + "\\([\\s\\S]*?\\$function\\$;",
+    "i"
+  );
+  const match = sql.match(pattern);
+  assert.ok(match, "Expected SQL function " + functionName + " to exist.");
+  return match[0];
+}
+
 const canonicalReplacementEligibility = fs.readFileSync(
   path.join(ROOT, "supabase/migrations/20261006033924_canonicalize_replacement_eligibility.sql"),
   "utf8"
@@ -139,7 +158,7 @@ test("late cancellation requires the requested popup confirmation before the RPC
   assert.match(page, /id="lateCancellationModal"/);
   assert.match(page, /O cancelamento das aulas a menos de 12 horas da aula é permitido, mas o valor da aula não será reembolsado e o aluno não vai poder repor a aula\./);
   assert.match(page, /Mas não se preocupe, você pode assistir a aula gravada, basta solicitar à Júlia no whatsapp do teacher\. A solicitação do link da aula gravada deve ser feita no dia posterior à aula\./);
-  assert.match(page, /id="lateCancellationConfirm"[^>]*>CANCELAR A AULA<\/button>/);
+  assert.match(page, /id="lateCancellationConfirm"[^>]*>CANCELAR ESTA AULA<\/button>/);
   assert.match(app, /pendingLateCancellationButton/);
   assert.match(app, /confirmLateCancellation/);
   assert.match(app, /rpc\("cancel_my_regular_lesson"/);
@@ -219,12 +238,35 @@ test("a replacement consumes a real credit and legacy creditless booking is bloc
   assert.match(migration, /revoke execute on function public\.book_makeup_class\(uuid\) from public, anon, authenticated/i);
 });
 
-test("the unpaid notice uses the enrolled class names and required wording", function () {
+test("the unpaid notice distinguishes enrollment cancellation from lesson cancellation", function () {
   assert.match(app, /Você está matriculado em nosso sistema, na turma/);
-  assert.match(app, /Como você ainda não pagou pelas aulas/);
+  assert.match(app, /Como você ainda não fez o primeiro pagamento/);
+  assert.match(app, /Use CANCELAR MINHA MATRÍCULA somente se quiser sair da turma/);
+  assert.match(app, /ela não cancela apenas uma aula/i);
   assert.match(app, /avise a Júlia no whatsapp/);
-  assert.match(app, /O professor poderá passar sua vaga para outro aluno/);
   assert.match(app, /joinClassNames\(classNames\)/);
+});
+
+test("Minhas Aulas uses distinct actions for an occurrence and for enrollment", function () {
+  assert.match(app, />CANCELAR ESTA AULA<\/button>/);
+  assert.match(app, />CANCELAR MINHA MATRÍCULA<\/button>/);
+  assert.match(app, /cancel_my_unpaid_enrollment/);
+  assert.doesNotMatch(app, /cancel_my_unpaid_class/);
+  assert.match(app, /Esta ação não cancela apenas uma aula/);
+});
+
+test("only the enrollment-cancellation RPC removes the unpaid student's class membership", function () {
+  for (const sql of [cancellationSemanticsFix, cancellationSemanticsBaseline]) {
+    assert.match(sql, /create or replace function public\.cancel_my_unpaid_enrollment\(target_class_number integer\)/i);
+    assert.match(sql, /delete from public\.class_students membership/i);
+    assert.match(sql, /drop function if exists public\.cancel_my_unpaid_class\(integer\)/i);
+    assert.match(sql, /grant execute on function public\.cancel_my_unpaid_enrollment\(integer\) to authenticated, service_role/i);
+  }
+
+  for (const sql of [unifiedCancellationPolicy, unifiedCancellationPolicyBaseline]) {
+    const regularCancellation = getSqlFunctionDefinition(sql, "cancel_my_regular_lesson");
+    assert.doesNotMatch(regularCancellation, /delete\s+from\s+public\.class_students/i);
+  }
 });
 
 test("the first-payment warning is hidden after any settled tuition", function () {
