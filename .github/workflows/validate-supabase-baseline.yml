@@ -155,7 +155,8 @@ jobs:
             supabase/baseline/300_enforce_quintet_only_group_classification.sql \
             supabase/baseline/305_persist_teacher_lesson_session_finalization.sql \
             supabase/baseline/310_retire_legacy_makeup_student_flow.sql \
-            supabase/baseline/315_separate_lesson_and_enrollment_cancellation.sql
+            supabase/baseline/315_separate_lesson_and_enrollment_cancellation.sql \
+            supabase/baseline/320_enforce_replacement_weekday_separation.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -297,6 +298,52 @@ jobs:
             end if;
           end;
           $gmail_link_check$;
+          SQL
+
+      - name: Verify replacement weekday separation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $replacement_weekday_check$
+          declare
+            options_definition text;
+            booking_definition text;
+          begin
+            if has_function_privilege(
+              'anon',
+              'private.is_replacement_weekday_eligible(uuid,integer)',
+              'EXECUTE'
+            ) or has_function_privilege(
+              'authenticated',
+              'private.is_replacement_weekday_eligible(uuid,integer)',
+              'EXECUTE'
+            ) then
+              raise exception 'Replacement weekday helper is exposed to browser roles.';
+            end if;
+
+            select pg_get_functiondef(
+              'public.get_my_replacement_options()'::regprocedure
+            ) into options_definition;
+
+            select pg_get_functiondef(
+              'public.book_my_lesson_replacement(uuid,integer,timestamptz)'::regprocedure
+            ) into booking_definition;
+
+            if position('private.is_replacement_weekday_eligible' in options_definition) = 0 then
+              raise exception 'Replacement option discovery does not enforce the canonical weekday rule.';
+            end if;
+
+            if position('private.is_replacement_weekday_eligible' in booking_definition) = 0 then
+              raise exception 'Replacement booking does not enforce the canonical weekday rule.';
+            end if;
+          end;
+          $replacement_weekday_check$;
           SQL
 
       - name: Compare restored catalog with production fingerprint
