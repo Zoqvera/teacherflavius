@@ -74,7 +74,7 @@ const unifiedCancellationPolicyBaseline = fs.readFileSync(
 );
 
 const cancellationSemanticsFix = fs.readFileSync(
-  path.join(ROOT, "supabase/migrations/20261007030000_separate_lesson_and_enrollment_cancellation.sql"),
+  path.join(ROOT, "supabase/migrations/20261007025554_separate_lesson_and_enrollment_cancellation.sql"),
   "utf8"
 );
 const cancellationSemanticsBaseline = fs.readFileSync(
