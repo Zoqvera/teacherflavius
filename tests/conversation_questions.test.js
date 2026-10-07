@@ -51,9 +51,15 @@ test("historical migration seeds the original 99 questions", function () {
   );
 });
 
-test("teacher view lists active students and preserves archived progress", function () {
-  assert.match(service, /\.eq\("enrolled", true\)/);
-  assert.match(service, /\.eq\("archived", false\)/);
+test("teacher view shows question cards without the legacy student checklist", function () {
+  assert.doesNotMatch(app, /listActiveStudents/);
+  assert.doesNotMatch(app, /listAllCompletions/);
+  assert.doesNotMatch(app, /setCompletion/);
+  assert.doesNotMatch(app, /conversation-student-grid/);
+  assert.doesNotMatch(app, /conversation-student-option/);
+  assert.doesNotMatch(service, /async function listActiveStudents/);
+  assert.doesNotMatch(service, /async function listAllCompletions/);
+  assert.doesNotMatch(service, /async function setCompletion/);
   assert.match(migration, /primary key \(question_id, student_id\)/i);
   assert.doesNotMatch(migration, /archived[\s\S]{0,120}delete from public\.conversation_question_completions/i);
 });
@@ -74,10 +80,12 @@ test("students can read only their own completion rows while teachers can manage
   assert.match(app, /listStudentCompletions\(state\.session\.user\.id\)/);
 });
 
-test("teacher can add and reorder questions without exposing student controls", function () {
+test("teacher can add and reorder question cards without the student checklist", function () {
   assert.match(page, /id="conversationQuestionForm"/);
+  assert.match(page, /Cada card apresenta a pergunta e seus exemplos de resposta\./);
   assert.match(app, /state\.service\.addQuestion\(questionCard, maxOrder \+ 1\)/);
   assert.match(app, /state\.service\.moveQuestion\(questionId, direction\)/);
+  assert.match(app, /Cada card reúne a pergunta, a tradução e cinco exemplos de resposta\./);
   assert.match(migration, /security invoker/i);
   assert.match(migration, /grant execute on function public\.move_conversation_question\(uuid, text\) to authenticated/i);
 });
