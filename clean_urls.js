@@ -62,7 +62,7 @@
     "/radar_alunos.html": "/radar-de-alunos/",
     "/relatorios.html": "/relatorios/",
     "/relatorios_vagas_turmas.html": "/relatorios-vagas-turmas/",
-    "/reposicoes.html": "/reposicoes/",
+    "/reposicoes.html": "/area-do-estudante/minhas-aulas/",
     "/reposicoes_admin.html": "/reposicoes-admin/",
     "/resultados.html": "/resultados/",
     "/roteiro_de_estudos.html": "/roteiro-de-estudos/",
