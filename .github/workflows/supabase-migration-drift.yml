@@ -34,10 +34,14 @@ jobs:
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       MIGRATION_DRIFT_CUTOFF: "20261006000000"
+      MIGRATION_CHECKSUM_CUTOFF: "20261007051850"
+      MIGRATION_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Install PostgreSQL client
         run: |

@@ -1,12 +1,133 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 
 const ROOT = path.join(__dirname, "..");
+const DRIFT_SCRIPT = path.join(ROOT, "scripts/check_supabase_migration_drift.sh");
 
 function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+}
+
+function canonicalChecksum(content) {
+  return crypto
+    .createHash("sha256")
+    .update(content.trim())
+    .digest("hex");
+}
+
+function runDriftScript({
+  migrationsDir,
+  remoteRows = [],
+  cutoff = "20261006000000",
+  gitRoot = ROOT,
+  baseRef = "",
+}) {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "teacherflavius-migration-drift-"),
+  );
+  const binDir = path.join(tempRoot, "bin");
+
+  fs.mkdirSync(binDir, { recursive: true });
+
+  const psqlPath = path.join(binDir, "psql");
+  const remoteOutput = remoteRows
+    .map(({ version, name, checksum }) =>
+      [version, name, checksum].join("\t"),
+    )
+    .join("\n");
+
+  fs.writeFileSync(
+    psqlPath,
+    `#!/usr/bin/env bash
+cat <<'REMOTE_ROWS'
+${remoteOutput}
+REMOTE_ROWS
+`,
+    { mode: 0o755 },
+  );
+
+  const result = spawnSync("bash", [DRIFT_SCRIPT], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      SUPABASE_DB_URL: "postgresql://example.invalid/postgres",
+      MIGRATIONS_DIR: migrationsDir,
+      MIGRATION_GIT_ROOT: gitRoot,
+      MIGRATION_DRIFT_CUTOFF: cutoff,
+      MIGRATION_CHECKSUM_CUTOFF: "20261007051850",
+      MIGRATION_BASE_REF: baseRef,
+      PATH: `${binDir}:${process.env.PATH}`,
+    },
+  });
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+
+  return result;
+}
+
+function runDriftCheck({
+  migrations,
+  remoteRows = [],
+  cutoff = "20261006000000",
+}) {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "teacherflavius-migration-files-"),
+  );
+
+  try {
+    for (const [filename, content] of Object.entries(migrations)) {
+      fs.writeFileSync(path.join(tempRoot, filename), content);
+    }
+
+    return runDriftScript({
+      migrationsDir: tempRoot,
+      remoteRows,
+      cutoff,
+    });
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
+function createGitHistoryFixture({ filename, content }) {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "teacherflavius-migration-git-"),
+  );
+  const migrationsDir = path.join(root, "supabase", "migrations");
+
+  fs.mkdirSync(migrationsDir, { recursive: true });
+  fs.writeFileSync(path.join(migrationsDir, filename), content);
+
+  for (const args of [
+    ["init", "-q"],
+    ["config", "user.name", "Migration Test"],
+    ["config", "user.email", "migration-test@example.com"],
+    ["add", "supabase/migrations"],
+    ["commit", "-qm", "baseline migrations"],
+  ]) {
+    const result = spawnSync("git", args, {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+  }
+
+  const baseRefResult = spawnSync("git", ["rev-parse", "HEAD"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.equal(baseRefResult.status, 0, baseRefResult.stderr);
+
+  return {
+    root,
+    migrationsDir,
+    baseRef: baseRefResult.stdout.trim(),
+  };
 }
 
 const historicalStrictCancellation = read(
@@ -52,16 +173,169 @@ test("the later canonical migration supersedes the strict 12-hour rule", () => {
   );
 });
 
-test("CI compares production migration history with committed migrations", () => {
+test("CI compares version, name, and checksum instead of versions alone", () => {
   assert.match(driftScript, /supabase_migrations\.schema_migrations/i);
-  assert.match(driftScript, /comm -23/);
-  assert.match(driftScript, /comm -13/);
-  assert.match(driftScript, /MIGRATION_DRIFT_CUTOFF/);
+  assert.match(driftScript, /extensions\.digest/i);
+  assert.match(driftScript, /sha256sum/);
+  assert.match(driftScript, /validate_unique_local_versions/);
+  assert.match(driftScript, /validate_historical_immutability/);
+  assert.doesNotMatch(driftScript, /\|\s*sort -u/);
   assert.match(driftWorkflow, /SUPABASE_DB_URL/);
+  assert.match(driftWorkflow, /MIGRATION_BASE_REF/);
+  assert.match(driftWorkflow, /MIGRATION_CHECKSUM_CUTOFF/);
+  assert.match(driftWorkflow, /fetch-depth:\s*0/);
   assert.match(
     driftWorkflow,
     /bash scripts\/check_supabase_migration_drift\.sh/,
   );
+});
+
+test("duplicate migration IDs fail even before the cutoff when contents differ", () => {
+  const result = runDriftCheck({
+    migrations: {
+      "20250101000000_first.sql": "select 1;\n",
+      "20250101000000_second.sql": "select 2;\n",
+    },
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(
+    `${result.stdout}\n${result.stderr}`,
+    /Duplicate Supabase migration versions.*20250101000000/is,
+  );
+});
+
+test("duplicate migration IDs fail even when contents are identical", () => {
+  const result = runDriftCheck({
+    migrations: {
+      "20250101000000_first.sql": "select 1;\n",
+      "20250101000000_second.sql": "select 1;\n",
+    },
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(
+    `${result.stdout}\n${result.stderr}`,
+    /Duplicate Supabase migration versions.*20250101000000/is,
+  );
+});
+
+test("a previously committed migration cannot change content", () => {
+  const fixture = createGitHistoryFixture({
+    filename: "20250101000000_locked.sql",
+    content: "select 1;\n",
+  });
+
+  try {
+    fs.writeFileSync(
+      path.join(fixture.migrationsDir, "20250101000000_locked.sql"),
+      "select 2;\n",
+    );
+
+    const result = runDriftScript({
+      migrationsDir: fixture.migrationsDir,
+      gitRoot: fixture.root,
+      baseRef: fixture.baseRef,
+    });
+
+    assert.equal(result.status, 1);
+    assert.match(
+      `${result.stdout}\n${result.stderr}`,
+      /Previously committed migrations are immutable.*checksum changed/is,
+    );
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("a previously committed migration cannot be renamed", () => {
+  const fixture = createGitHistoryFixture({
+    filename: "20250101000001_locked_name.sql",
+    content: "select 1;\n",
+  });
+
+  try {
+    fs.renameSync(
+      path.join(fixture.migrationsDir, "20250101000001_locked_name.sql"),
+      path.join(fixture.migrationsDir, "20250101000001_changed_name.sql"),
+    );
+
+    const result = runDriftScript({
+      migrationsDir: fixture.migrationsDir,
+      gitRoot: fixture.root,
+      baseRef: fixture.baseRef,
+    });
+
+    assert.equal(result.status, 1);
+    assert.match(
+      `${result.stdout}\n${result.stderr}`,
+      /Previously committed migrations are immutable.*base name:.*current name:/is,
+    );
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("production checksum drift fails after the cutoff", () => {
+  const result = runDriftCheck({
+    migrations: {
+      "20261007060001_example.sql": "select 1;\n",
+    },
+    remoteRows: [
+      {
+        version: "20261007060001",
+        name: "example",
+        checksum: "0".repeat(64),
+      },
+    ],
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(
+    `${result.stdout}\n${result.stderr}`,
+    /Migration identity differs between production and Git.*sha256/is,
+  );
+});
+
+test("production name drift fails after the cutoff", () => {
+  const sql = "select 1;\n";
+  const result = runDriftCheck({
+    migrations: {
+      "20261006000002_expected_name.sql": sql,
+    },
+    remoteRows: [
+      {
+        version: "20261006000002",
+        name: "different_name",
+        checksum: canonicalChecksum(sql),
+      },
+    ],
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(
+    `${result.stdout}\n${result.stderr}`,
+    /Migration identity differs between production and Git.*production name.*Git name/is,
+  );
+});
+
+test("a unique migration with matching production identity passes", () => {
+  const sql = "\nselect 1;\n\n";
+  const result = runDriftCheck({
+    migrations: {
+      "20261007060003_example.sql": sql,
+    },
+    remoteRows: [
+      {
+        version: "20261007060003",
+        name: "example",
+        checksum: canonicalChecksum(sql),
+      },
+    ],
+  });
+
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.match(result.stdout, /migration IDs are globally unique/i);
 });
 
 test("baseline reconstruction applies the canonical cancellation policy", () => {
@@ -72,7 +346,16 @@ test("baseline reconstruction applies the canonical cancellation policy", () => 
 });
 
 test("baseline reconstructs tuition exemption fields required by later overlays", () => {
-  assert.match(tuitionBaseline, /add column if not exists is_exempt boolean not null default false/i);
-  assert.match(tuitionBaseline, /add column if not exists exempted_at timestamptz/i);
-  assert.match(tuitionBaseline, /add column if not exists exemption_notes text/i);
+  assert.match(
+    tuitionBaseline,
+    /add column if not exists is_exempt boolean not null default false/i,
+  );
+  assert.match(
+    tuitionBaseline,
+    /add column if not exists exempted_at timestamptz/i,
+  );
+  assert.match(
+    tuitionBaseline,
+    /add column if not exists exemption_notes text/i,
+  );
 });
