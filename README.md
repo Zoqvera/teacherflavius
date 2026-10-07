@@ -19,7 +19,7 @@ Em 1º de outubro de 2026, a plataforma possui:
 - banco PostgreSQL protegido por RLS, grants de menor privilégio, RPCs e objetos privados de servidor;
 - módulos acadêmicos de alunos, turmas, frequência, lições, exercícios, flashcards, roteiro de estudos, Conversation Questions e reposições;
 - páginas de lição gerenciáveis no Roteiro de Estudos, com cards dinâmicos, numeração editorial, tradução e fallback para PDFs;
-- turmas `INDIVIDUAL`, `QUARTETO`, `QUINTETO` e `8 ALUNOS`, overrides de capacidade e vínculo simultâneo de cada aluno com até duas turmas compatíveis;
+- turmas `INDIVIDUAL` e `QUINTETO`, overrides de capacidade e vínculo simultâneo de cada aluno com até duas turmas compatíveis;
 - módulo **Alunos do dia** para aulas regulares e reposições confirmadas, além da gestão separada de aulas experimentais e conversões;
 - oferta pública de aulas em grupo padronizada em R$ 50,00 por mês e até cinco alunos;
 - módulo financeiro com mensalidades, Pix/cartão de débito, primeira mensalidade disponível após definição do valor e próxima competência liberada dois dias após o pagamento anterior;
@@ -184,7 +184,7 @@ A vinculação de uma identidade Google a matrícula existente preserva dados ac
 
 ### Alunos, turmas, lições e exercícios
 
-O domínio acadêmico cobre alunos ativos/arquivados, turmas, horários, capacidade, materiais, frequência, lições, exercícios e roteiro individual. As turmas suportam `INDIVIDUAL`, `QUARTETO`, `QUINTETO` e `8 ALUNOS`, além de override explícito de capacidade quando necessário.
+O domínio acadêmico cobre alunos ativos/arquivados, turmas, horários, capacidade, materiais, frequência, lições, exercícios e roteiro individual. As turmas suportam `INDIVIDUAL` e `QUINTETO`, além de override explícito de capacidade quando necessário.
 
 Cada aluno pode pertencer simultaneamente a até duas turmas compatíveis, respeitando a capacidade de cada uma. Alunos arquivados são desvinculados automaticamente e não podem receber novos vínculos enquanto permanecerem arquivados.
 
