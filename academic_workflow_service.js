@@ -168,6 +168,24 @@
       return hydrateTeacherLessonPlan(items);
     }
 
+    async function finalizeTeacherLessonSession(classNumber, startsAt, classDate) {
+      const normalizedClassNumber = Number(classNumber);
+      const normalizedStartsAt = String(startsAt || "").trim();
+
+      if (!Number.isInteger(normalizedClassNumber) || normalizedClassNumber <= 0) {
+        throw new Error("Turma inválida.");
+      }
+      if (!normalizedStartsAt || Number.isNaN(Date.parse(normalizedStartsAt))) {
+        throw new Error("Horário da aula inválido.");
+      }
+
+      return unwrap(await supabase.rpc("finalize_teacher_lesson_session", {
+        target_class_number: normalizedClassNumber,
+        target_starts_at: normalizedStartsAt,
+        target_date: normalizeDate(classDate)
+      }));
+    }
+
     async function setAttendance(item, classDate, status) {
       return unwrap(await supabase.rpc("set_teacher_lesson_attendance", {
         target_lesson_kind: item.lesson_kind,
@@ -199,6 +217,7 @@
     }
 
     return Object.freeze({
+      finalizeTeacherLessonSession,
       getMyActionPlan,
       getTeacherLessonPlan,
       markLessonPrepared,
