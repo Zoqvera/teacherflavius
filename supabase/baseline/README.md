@@ -84,13 +84,13 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 66. Apply `330_add_reviewed_legacy_billing_plan.sql`.
 67. Apply `335_class_lesson_history_quality_semantics.sql`.
 68. Apply `340_enforce_unique_tuition_due_dates_per_student.sql`.
-75. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
-69. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
-70. Restore the existing Web Push VAPID key pair out-of-band when subscriptions must survive a disaster recovery. If no pair is restored, the Push sender can generate a new pair and students must re-enable notifications.
-71. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
-72. Restore application data separately, if a data restore is required.
-73. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
-74. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
+69. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
+70. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
+71. Restore the existing Web Push VAPID key pair out-of-band when subscriptions must survive a disaster recovery. If no pair is restored, the Push sender can generate a new pair and students must re-enable notifications.
+72. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
+73. Restore application data separately, if a data restore is required.
+74. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
+75. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
 
 ## Important boundaries
 
