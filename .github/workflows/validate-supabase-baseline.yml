@@ -54,6 +54,7 @@ jobs:
           node --test tests/web_push_notifications.test.js
           node --test tests/tuition_release_eligibility_contract.test.js
           node --test tests/student_policy_notice_contract.test.js
+          node --test tests/data_quality_lesson_history_contract.test.js
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -160,7 +161,8 @@ jobs:
             supabase/baseline/315_separate_lesson_and_enrollment_cancellation.sql \
             supabase/baseline/320_enforce_replacement_weekday_separation.sql \
             supabase/baseline/325_normalize_billing_plans_and_legacy_settings.sql \
-            supabase/baseline/330_add_reviewed_legacy_billing_plan.sql
+            supabase/baseline/330_add_reviewed_legacy_billing_plan.sql \
+            supabase/baseline/335_class_lesson_history_quality_semantics.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \

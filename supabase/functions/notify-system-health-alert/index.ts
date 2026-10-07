@@ -37,7 +37,7 @@ const SUBJECTS: Record<string, string> = {
   data_quality_makeup_booking_class_mismatch: "Alerta: reposição vinculada à turma incorreta",
   data_quality_makeup_status_timestamp_mismatch: "Alerta: status de reposição inconsistente",
   data_quality_future_auto_slot_invalid_class: "Alerta: reposição automática com turma inválida",
-  data_quality_lesson_orphan_class: "Alerta: registro de lição com turma inexistente",
+  data_quality_lesson_orphan_class: "Alerta: registro de lição com referência de turma inválida",
   data_quality_frequency_invalid_subject_ref: "Alerta crítico: frequência com referência inválida",
   data_quality_tuition_subject_mismatch: "Alerta crítico: mensalidade com referência inconsistente",
   data_quality_payment_attempt_subject_mismatch: "Alerta crítico: tentativa de pagamento inconsistente",
