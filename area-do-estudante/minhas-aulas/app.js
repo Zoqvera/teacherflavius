@@ -82,7 +82,7 @@
   function buildUnpaidNotice(classes) {
     const classNames = getClassDisplayNames(classes);
     if (!classNames.length) return "Você ainda não está matriculado em uma turma.";
-    return "Você está matriculado em nosso sistema, na turma " + joinClassNames(classNames) + ". Como você ainda não pagou pelas aulas, caso você não possa comparecer na aula, cancele a aula aqui no sistema e avise a Júlia no whatsapp. O professor poderá passar sua vaga para outro aluno e para continuar no curso você terá que escolher outra turma.";
+    return "Você está matriculado em nosso sistema, na turma " + joinClassNames(classNames) + ". Como você ainda não fez o primeiro pagamento, sua vaga fixa nesta turma continua reservada. Use CANCELAR MINHA MATRÍCULA somente se quiser sair da turma e liberar essa vaga. Essa ação remove sua matrícula da turma; ela não cancela apenas uma aula. Nesse caso, avise a Júlia no whatsapp.";
   }
 
   async function rpc(functionName, parameters) {
@@ -112,7 +112,7 @@
       const scheduleParts = [];
       if (item.class_start_time) scheduleParts.push(String(item.class_start_time).slice(0, 5));
       const action = allowCancellation
-        ? '<div class="action-row"><button class="secondary-button unpaid-cancel-button" type="button" data-class-number="' + Number(item.class_number) + '" data-class-name="' + escapeHtml(className) + '">CANCELAR AULA</button></div>'
+        ? '<div class="action-row"><button class="secondary-button enrollment-cancel-button" type="button" data-class-number="' + Number(item.class_number) + '" data-class-name="' + escapeHtml(className) + '">CANCELAR MINHA MATRÍCULA</button></div>'
         : '';
       return '<article class="class-card">' +
         '<div class="class-topline"><h3>' + escapeHtml(className) + '</h3></div>' +
@@ -191,7 +191,7 @@
 
       const actions = [];
       if (canCancel && credit.status === "scheduled") {
-        actions.push('<button class="secondary-button regular-cancel-button" type="button" data-cancellation-kind="regular" data-credit-id="' + escapeHtml(credit.credit_id) + '" data-credit-eligible="' + (earnsCredit ? "true" : "false") + '">CANCELAR AULA</button>');
+        actions.push('<button class="secondary-button regular-cancel-button" type="button" data-cancellation-kind="regular" data-credit-id="' + escapeHtml(credit.credit_id) + '" data-credit-eligible="' + (earnsCredit ? "true" : "false") + '">CANCELAR ESTA AULA</button>');
       }
       if (canCancel && credit.status === "used") {
         actions.push('<button class="secondary-button replacement-cancel-button" type="button" data-cancellation-kind="replacement" data-credit-id="' + escapeHtml(credit.credit_id) + '" data-credit-eligible="' + (earnsCredit ? "true" : "false") + '">CANCELAR REPOSIÇÃO</button>');
@@ -484,18 +484,18 @@
     }
   }
 
-  async function cancelUnpaidClass(button) {
+  async function cancelUnpaidEnrollment(button) {
     const className = button.dataset.className || "esta turma";
-    const confirmed = window.confirm("Cancelar sua vaga em " + className + "? Você será retirado desta turma e precisará escolher outra turma para continuar no curso.");
+    const confirmed = window.confirm("Cancelar sua matrícula em " + className + "? Você perderá sua vaga fixa nessa turma. Esta ação não cancela apenas uma aula. Deseja continuar?");
     if (!confirmed) return;
 
     setButtonBusy(button, "CANCELANDO...");
     setPageMessage("", "");
     try {
-      await rpc("cancel_my_unpaid_class", { target_class_number: Number(button.dataset.classNumber) });
-      await refreshAfterAction("Sua vaga nesta turma foi cancelada. Avise a Júlia no whatsapp.");
+      await rpc("cancel_my_unpaid_enrollment", { target_class_number: Number(button.dataset.classNumber) });
+      await refreshAfterAction("Sua matrícula nesta turma foi cancelada. Avise a Júlia no whatsapp.");
     } catch (error) {
-      setPageMessage(error.message || "Não foi possível cancelar sua vaga na turma.", "error");
+      setPageMessage(error.message || "Não foi possível cancelar sua matrícula na turma.", "error");
       restoreButton(button);
     }
   }
@@ -510,8 +510,8 @@
     document.querySelectorAll(".replacement-book-button").forEach(function (button) {
       button.addEventListener("click", function () { bookReplacement(button); });
     });
-    document.querySelectorAll(".unpaid-cancel-button").forEach(function (button) {
-      button.addEventListener("click", function () { cancelUnpaidClass(button); });
+    document.querySelectorAll(".enrollment-cancel-button").forEach(function (button) {
+      button.addEventListener("click", function () { cancelUnpaidEnrollment(button); });
     });
   }
 
