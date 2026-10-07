@@ -43,7 +43,7 @@ As invariantes monitoradas incluem:
 - mensalidade cujo `subject_ref` diverge do aluno;
 - tentativa de pagamento cuja referência diverge da mensalidade.
 
-O vínculo de aluno arquivado a turma deve permanecer em zero. O banco remove automaticamente esses vínculos no arquivamento e bloqueia novas associações enquanto o aluno estiver arquivado. A métrica `archived_class_memberships_info` permanece disponível como diagnóstico. Configuração de cobrança ainda ativa para aluno arquivado e mais de um registro de lição para o mesmo aluno/encontro continuam sendo métricas informativas, pois podem representar histórico legítimo.
+O vínculo de aluno arquivado a turma deve permanecer em zero. O banco remove automaticamente esses vínculos no arquivamento e bloqueia novas associações enquanto o aluno estiver arquivado. A métrica `archived_class_memberships_info` permanece disponível como diagnóstico. Da mesma forma, `active_billing_archived_students_info` é uma asserção operacional e deve permanecer em zero: o arquivamento desativa a configuração de cobrança na mesma transação e o banco rejeita sua reativação enquanto o perfil continuar arquivado. O desarquivamento não reativa a cobrança automaticamente; a configuração financeira precisa ser ativada explicitamente depois que o perfil voltar ao estado ativo. A métrica `multiple_lesson_sessions_info` permanece apenas informativa, pois pode representar histórico legítimo.
 
 Findings inequívocos são classificados como `warning` ou `critical`. Alertas são deduplicados pelo código + conteúdo do finding. O health check não corrige registros automaticamente.
 
