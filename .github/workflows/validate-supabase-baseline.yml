@@ -162,7 +162,8 @@ jobs:
             supabase/baseline/320_enforce_replacement_weekday_separation.sql \
             supabase/baseline/325_normalize_billing_plans_and_legacy_settings.sql \
             supabase/baseline/330_add_reviewed_legacy_billing_plan.sql \
-            supabase/baseline/335_class_lesson_history_quality_semantics.sql
+            supabase/baseline/335_class_lesson_history_quality_semantics.sql \
+            supabase/baseline/340_enforce_unique_tuition_due_dates_per_student.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -350,6 +351,36 @@ jobs:
             end if;
           end;
           $replacement_weekday_check$;
+          SQL
+
+      - name: Verify unique tuition due-date invariant
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $tuition_due_date_check$
+          begin
+            if not exists (
+              select 1
+              from pg_constraint constraint_row
+              join pg_class table_row
+                on table_row.oid = constraint_row.conrelid
+              join pg_namespace schema_row
+                on schema_row.oid = table_row.relnamespace
+              where schema_row.nspname = 'public'
+                and table_row.relname = 'monthly_tuition'
+                and constraint_row.conname = 'monthly_tuition_student_id_due_date_key'
+                and constraint_row.contype = 'u'
+            ) then
+              raise exception 'Unique tuition due-date invariant is missing.';
+            end if;
+          end;
+          $tuition_due_date_check$;
           SQL
 
       - name: Compare restored catalog with production fingerprint
