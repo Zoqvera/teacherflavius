@@ -29,7 +29,10 @@ ranked_duplicates as (
     ) as duplicate_rank,
     count(*) over (
       partition by tuition.student_id, tuition.due_date
-    ) as duplicate_count
+    ) as duplicate_count,
+    min(tuition.reference_month) over (
+      partition by tuition.student_id
+    ) as first_student_reference_month
   from public.monthly_tuition tuition
   join duplicate_groups duplicate
     on duplicate.student_id = tuition.student_id
