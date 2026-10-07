@@ -1,107 +1,89 @@
 # Configurar a agenda de reposições
 
-A funcionalidade possui quatro partes:
+O sistema possui um único fluxo estudantil de reposições.
 
-1. `supabase_reposicoes.sql` cria horários, reservas, permissões e a fila de e-mails.
-2. `reposicoes_admin.html` permite que o professor publique horários e acompanhe as reservas.
-3. `reposicoes.html` permite que alunos matriculados reservem e cancelem reposições futuras.
-4. `supabase/functions/notify-makeup-booking/index.ts` envia confirmações de agendamento e cancelamento pelo Resend.
+1. `/area-do-estudante/minhas-aulas/` mostra aulas, créditos elegíveis, vagas de reposição e cancelamentos.
+2. `reposicoes_admin.html` e `/reposicoes-admin/` permanecem como interface administrativa do professor.
+3. `supabase/functions/notify-makeup-booking/index.ts` envia confirmações de agendamento e cancelamento pelo Resend.
+4. `supabase_reposicoes.sql` é um instalador histórico de bootstrap. Não deve ser usado para reativar o fluxo estudantil legado em produção.
 
-Ao publicar um horário, o professor escolhe uma turma. O sistema recupera o **Link da videoaula** dessa turma e salva uma cópia junto ao horário. Todos os alunos matriculados podem visualizar e reservar qualquer vaga disponível, mesmo quando ela está associada a outra turma. A reserva e o e-mail usam exatamente o link copiado no horário escolhido.
+A antiga interface estudantil `/reposicoes/` foi aposentada. A rota permanece apenas como redirecionamento sem indexação para **Minhas Aulas**.
 
-Se a turma não tiver um link `http://` ou `https://` válido, o botão de publicação fica desabilitado e o banco também rejeita a operação. Assim, nenhum horário novo é publicado sem o link que deverá chegar ao aluno.
+## Regra canônica de cancelamento
 
-## 1. Fazer o merge e executar o SQL
+A mesma regra vale para aula regular e reposição:
 
-Primeiro faça o merge do Pull Request. Depois:
+- o aluno pode cancelar até o início da aula;
+- cancelamento com pelo menos 12 horas de antecedência libera a vaga e gera ou devolve um crédito elegível;
+- cancelamento com menos de 12 horas libera a vaga, mas não gera nem devolve crédito;
+- após o início da aula, o cancelamento pelo aluno é bloqueado.
 
-1. Abra o projeto no Supabase.
-2. Entre em **SQL Editor**.
-3. Crie uma nova consulta.
-4. Copie todo o conteúdo de `supabase_reposicoes.sql`.
-5. Clique em **Run**.
+Essa política é aplicada no backend pelas funções canônicas de créditos. A interface não deve criar regras paralelas.
 
-Execute o arquivo depois de `supabase_turmas.sql`, pois ele reutiliza as turmas, os vínculos dos alunos, `class_resources.video_lesson_url`, `is_teacher_admin()` e `set_updated_at()`.
+## Reservas legadas
 
-O arquivo é compatível com a agenda já instalada. Ao executá-lo novamente, horários antigos que já possuem reservas de uma única turma são associados a essa turma. Horários antigos que ainda não permitem identificar uma turma e um link são desativados por segurança e devem ser publicados novamente.
+Reservas futuras que existiam antes da aposentadoria da página antiga são importadas para o sistema de créditos como créditos já utilizados. Isso preserva o agendamento e permite que o aluno cancele em **Minhas Aulas** usando a mesma regra canônica.
 
-## 2. Conferir os Secrets existentes
+As RPCs estudantis legadas ficam sem permissão de execução para `public`, `anon` e `authenticated`:
 
-Não é necessário criar outra API Key no Resend. A nova função reutiliza os Secrets que já enviam o aviso de matrícula:
+- `book_makeup_class(uuid)`;
+- `cancel_my_makeup_class_booking(uuid)`;
+- `get_available_makeup_slots()`;
+- `get_my_makeup_bookings()`.
 
-- `RESEND_API_KEY`
-- `ENROLLMENT_FROM_EMAIL`
-- `ENROLLMENT_WEBHOOK_SECRET`
+A função administrativa `cancel_makeup_class_booking(uuid)` não faz parte dessa retirada e continua protegida pela autorização de professor.
 
-O valor de `ENROLLMENT_WEBHOOK_SECRET` será usado novamente no cabeçalho privado do novo webhook. Não coloque esses valores em arquivos públicos do site.
+## Publicação de horários pelo professor
 
-## 3. Publicar a nova Edge Function
+Ao publicar um horário, o professor escolhe uma turma. O sistema recupera o **Link da videoaula** dessa turma e salva uma cópia junto ao horário.
 
-Pelo terminal, dentro do repositório já vinculado ao projeto Supabase, execute:
+Se a turma não tiver um link `http://` ou `https://` válido, o botão de publicação fica desabilitado e o banco também rejeita a operação.
 
-```bash
-npx supabase functions deploy notify-makeup-booking --no-verify-jwt
-```
+## E-mails de agendamento e cancelamento
 
-Também é possível abrir **Edge Functions** no painel, escolher **Deploy a new function > Via Editor**, usar o nome `notify-makeup-booking` e colar o conteúdo de `supabase/functions/notify-makeup-booking/index.ts`.
+A Edge Function `notify-makeup-booking` reutiliza os Secrets de envio já configurados:
 
-A validação JWT fica desativada porque a chamada vem do Database Webhook. A função exige o cabeçalho `x-webhook-secret` e compara o valor com o Secret salvo no projeto.
+- `RESEND_API_KEY`;
+- `ENROLLMENT_FROM_EMAIL`;
+- `ENROLLMENT_WEBHOOK_SECRET`.
 
-Para habilitar o e-mail de cancelamento, **é necessário republicar a função `notify-makeup-booking`** com esta versão. A mesma função passa a escolher automaticamente o modelo de agendamento ou de cancelamento.
+O Database Webhook deve observar inserções em `public.makeup_class_email_notifications` e chamar:
 
-## 4. Criar o Database Webhook
+`https://SEU_PROJECT_REF.supabase.co/functions/v1/notify-makeup-booking`
 
-No painel do Supabase, abra a área de **Database Webhooks** (em algumas versões do painel ela aparece em **Integrations > Webhooks**) e crie um webhook com:
+com o cabeçalho `x-webhook-secret` correspondente a `ENROLLMENT_WEBHOOK_SECRET`.
 
-- Nome: `notify-makeup-booking`
-- Tabela: `public.makeup_class_email_notifications`
-- Evento: somente **Insert**
-- Método: `POST`
-- URL: `https://SEU_PROJECT_REF.supabase.co/functions/v1/notify-makeup-booking`
-- Cabeçalho `x-webhook-secret`: o mesmo valor de `ENROLLMENT_WEBHOOK_SECRET`
-- Cabeçalho `Content-Type`: `application/json`
+Os tipos de notificação são:
 
-Database Webhooks do Supabase são executados depois da alteração na tabela e enviam o registro inserido para a URL configurada.
+- `booking_confirmation`: confirmação do agendamento;
+- `cancellation`: confirmação do cancelamento.
 
-Se esse webhook já está funcionando, **não é necessário recriá-lo**.
+## Teste do fluxo atual
 
-## 5. Testar o fluxo completo
+1. Na área do professor, abra **AGENDA DE REPOSIÇÕES** e publique um horário futuro válido.
+2. Use um aluno que possua crédito elegível e abra **MINHAS AULAS**.
+3. Marque uma reposição e confirme que ela aparece entre as próximas aulas.
+4. Cancele uma reposição com pelo menos 12 horas de antecedência e confirme a devolução do crédito.
+5. Teste uma reposição dentro da janela de 12 horas e confirme que o cancelamento continua disponível, mas sem devolução de crédito.
+6. Confirme que a vaga é liberada e que o e-mail de cancelamento é enfileirado.
+7. Confirme que `/reposicoes/` redireciona para `/area-do-estudante/minhas-aulas/`.
 
-1. Na área do professor, abra **AGENDA DE REPOSIÇÕES**.
-2. Escolha uma turma que possua **Link da videoaula**.
-3. Confira o link recuperado na tela e publique um horário futuro com uma vaga.
-4. Entre com o usuário do aluno e abra **REPOSIÇÕES DE AULA**.
-5. Confirme que o aluno vê todos os horários disponíveis, inclusive os associados a outras turmas, e reserve um deles.
-6. Confira o e-mail de agendamento do aluno.
-7. Na seção **Minhas reposições**, cancele a reserva futura e confirme que ela passa ao estado **Cancelada**.
-8. Confira o e-mail de cancelamento e verifique se a vaga voltou aos horários disponíveis.
-9. Na área do professor, confirme que a reserva aparece como cancelada.
-
-Para diagnosticar o envio no SQL Editor:
+Para diagnosticar o envio:
 
 ```sql
 select
-  n.notification_type,
-  n.status,
-  n.attempts,
-  n.last_error,
-  n.created_at,
-  b.student_name,
-  b.student_email,
-  b.class_name,
-  b.status as booking_status
-from public.makeup_class_email_notifications n
-join public.makeup_class_bookings b on b.id = n.booking_id
-order by n.created_at desc
+  notification.notification_type,
+  notification.status,
+  notification.attempts,
+  notification.last_error,
+  notification.created_at,
+  booking.student_name,
+  booking.student_email,
+  booking.class_name,
+  booking.status as booking_status
+from public.makeup_class_email_notifications notification
+join public.makeup_class_bookings booking
+  on booking.id = notification.booking_id
+order by notification.created_at desc
 limit 20;
 ```
-
-- `booking_confirmation`: e-mail enviado quando a reposição é agendada.
-- `cancellation`: e-mail enviado quando o próprio aluno cancela uma reposição futura.
-- `pending` e `attempts = 0`: o webhook ainda não chamou a função; revise o webhook.
-- `failed`: consulte `last_error` e os logs de `notify-makeup-booking`.
-- `sent`: o Resend aceitou o envio.
-
-O envio usa uma chave de idempotência por tipo de notificação para reduzir o risco de mensagens duplicadas.
-
-O cancelamento exige a execução da versão atualizada de `supabase_reposicoes.sql`. A função de banco confere se a reserva pertence ao usuário conectado, permite cancelar somente antes do início da aula, libera a vaga e cria a notificação de cancelamento na mesma transação.
