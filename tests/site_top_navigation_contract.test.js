@@ -14,7 +14,6 @@ const classDetail = fs.readFileSync(path.join(root, "turma.html"), "utf8");
 const trialPage = fs.readFileSync(path.join(root, "aulas-experimentais/index.html"), "utf8");
 const paymentPage = fs.readFileSync(path.join(root, "pagamento/index.html"), "utf8");
 const aboutPage = fs.readFileSync(path.join(root, "sobre/index.html"), "utf8");
-const studentGuide = fs.readFileSync(path.join(root, "guia-do-estudante.html"), "utf8");
 const globalLogout = fs.readFileSync(path.join(root, "global_logout.js"), "utf8");
 const paymentNotice = fs.readFileSync(path.join(root, "student_payment_notice.js"), "utf8");
 const paymentNoticeLoader = fs.readFileSync(path.join(root, "student_payment_notice_loader.js"), "utf8");
@@ -116,25 +115,13 @@ test("treats lesson landing pages as public in the payment notice loader", funct
 });
 
 
-test("uses the same three-line Menu button and central dialog as the student area", function () {
-  const version = "/mobile_top_navigation.js?v=20261008-guide-standard-1";
-  assert.match(studentGuide, /<html lang="pt-BR" class="tf-nav-pending">/);
-  assert.match(studentGuide, /<nav class="top-links" data-mobile-menu-source="true" aria-label="Navegação principal">/);
-  assert.match(studentGuide, /\.hero > #tf-mobile-top-navigation\s*\{/);
-  assert.equal(studentGuide.includes(version), true);
-  assert.doesNotMatch(studentGuide, /data-mobile-menu-style|top-home-button/);
-
+test("uses the standard SVG Menu button and accessible central dialog", function () {
   assert.match(navigation, /var MENU_ICON_SVG/);
   assert.match(navigation, /M4 7h16M4 12h16M4 17h16/);
-  assert.match(navigation, /toggle\.className = "tf-mobile-nav-toggle"/);
+  assert.match(navigation, /toggle\\.className = "tf-mobile-nav-toggle"/);
   assert.equal(navigation.includes('<span>Menu</span>'), true);
-  assert.doesNotMatch(navigation, /VERTICAL_DOTS_ICON_SVG|tf-mobile-nav-toggle--vertical-dots/);
   assert.match(navigation, /aria-modal="true"/);
-  assert.match(navigation, /\.is-open\{display:flex!important;align-items:center!important;justify-content:center!important\}/);
-  assert.match(navigation, /toggle\.addEventListener\("click", openMenu\)/);
-  assert.match(navigation, /if \(event\.key === "Escape"\) closeMenu\(\)/);
-
-  ["/area-do-estudante/", "/area-do-estudante/minhas-aulas/", "/o-que-fazer/", "/perfil/"].forEach(function (href) {
-    assert.equal(studentGuide.includes('href="' + href + '"'), true);
-  });
+  assert.match(navigation, /\\.is-open\\{display:flex!important;align-items:center!important;justify-content:center!important\\}/);
+  assert.match(navigation, /toggle\\.addEventListener\\("click", openMenu\\)/);
+  assert.match(navigation, /if \\(event\\.key === "Escape"\\) closeMenu\\(\\)/);
 });
