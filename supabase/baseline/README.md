@@ -87,8 +87,8 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 69. Apply `345_aggregate_csp_health_by_logical_group.sql`.
 70. Apply `350_student_reviews_and_public_testimonials.sql`.
 71. Apply `355_student_paid_tuition_history.sql`.
-73. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
-72. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
+72. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
+73. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
 74. Restore the existing Web Push VAPID key pair out-of-band when subscriptions must survive a disaster recovery. If no pair is restored, the Push sender can generate a new pair and students must re-enable notifications.
 75. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
 76. Restore application data separately, if a data restore is required.
