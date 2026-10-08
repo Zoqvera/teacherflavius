@@ -17,13 +17,13 @@ AUTH_DEPENDENCIES = (
         validation_message="Dependencies must load before auth.js in: {path} (Auth navigation service)",
     ),
     ScriptDependencySpec(
-        dependency_src="/student_data_utils.js?v=20260902-1",
+        dependency_src="/student_data_utils.js?v=20261008-titlecase-2",
         dependency_filename="student_data_utils.js",
         target_filename="auth.js",
         validation_message="Dependencies must load before auth.js in: {path} (Student data utilities)",
     ),
     ScriptDependencySpec(
-        dependency_src="/student_enrollment_service.js?v=20260902-1",
+        dependency_src="/student_enrollment_service.js?v=20261008-titlecase-2",
         dependency_filename="student_enrollment_service.js",
         target_filename="auth.js",
         validation_message="Dependencies must load before auth.js in: {path} (Student enrollment service)",
