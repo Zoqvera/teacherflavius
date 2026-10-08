@@ -62,7 +62,7 @@
     if (document.querySelector('script[src*="mobile_top_navigation.js"]')) return;
     const script = document.createElement("script");
     script.id = "teacher-flavius-mobile-top-navigation";
-    script.src = "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1";
+    script.src = "/mobile_top_navigation.js?v=20261008-private-menu-1";
     script.defer = true;
     document.head.appendChild(script);
   }
