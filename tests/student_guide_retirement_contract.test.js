@@ -9,24 +9,25 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
-test("removes both student guide entrypoints from the published source", function () {
+test("deletes both student guide entrypoints", function () {
   assert.equal(fs.existsSync(path.join(root, "guia-do-estudante.html")), false);
   assert.equal(fs.existsSync(path.join(root, "guia-do-estudante/index.html")), false);
 });
 
-test("removes the student guide card and both former route aliases", function () {
+test("removes the student guide card and obsolete route aliases", function () {
   const studentArea = read("area_do_estudante.html");
-  assert.doesNotMatch(studentArea, /guiaDoEstudanteLink|href="\\/guia-do-estudante\\/"/);
+  assert.equal(studentArea.includes('id="guiaDoEstudanteLink"'), false);
+  assert.equal(studentArea.includes('href="/guia-do-estudante/"'), false);
   assert.match(studentArea, /Ajuda e informações/);
   assert.match(studentArea, /Avaliar minhas aulas/);
   assert.match(studentArea, /Ler o livro/);
 
-  assert.doesNotMatch(read("clean_route_loader.js"), /guia-do-estudante/);
-  assert.doesNotMatch(read("clean_urls.js"), /guia-do-estudante/);
+  assert.equal(read("clean_route_loader.js").includes("guia-do-estudante"), false);
+  assert.equal(read("clean_urls.js").includes("guia-do-estudante"), false);
 });
 
-test("removes outdated documentation and lets crawlers observe missing routes", function () {
-  assert.doesNotMatch(read("README.md"), /guia-do-estudante\\.html/);
-  assert.doesNotMatch(read("robots.txt"), /Disallow: \\/guia-do-estudante/);
-  assert.doesNotMatch(read("sitemap.xml"), /guia-do-estudante/);
+test("clears documentation and permits crawlers to observe the 404 response", function () {
+  assert.equal(read("README.md").includes("/guia-do-estudante.html"), false);
+  assert.equal(read("robots.txt").includes("Disallow: /guia-do-estudante"), false);
+  assert.equal(read("sitemap.xml").includes("guia-do-estudante"), false);
 });
