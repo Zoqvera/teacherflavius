@@ -17,8 +17,6 @@ Disallow: /perfil/
 Disallow: /perfil.html
 Disallow: /minha-turma/
 Disallow: /minha_turma.html
-Disallow: /frequencia/
-Disallow: /frequencia_aluno.html
 Disallow: /reposicoes/
 Disallow: /perfil-dos-alunos/
 Disallow: /perfil_dos_alunos.html

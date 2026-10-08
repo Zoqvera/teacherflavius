@@ -29,8 +29,6 @@
     "/exercicios_ordenar_frases.html": "/exercicios-ordenar-frases/",
     "/explanation_in_on_at.html": "/explanation-in-on-at/",
     "/flashcards.html": "/flashcards/",
-    "/frequencia_aluno.html": "/frequencia/",
-    "/frequência.html": "/frequencia/",
     "/guia-do-estudante.html": "/guia-do-estudante/",
     "/in_on_at.html": "/in-on-at/",
     "/login.html": "/login/",

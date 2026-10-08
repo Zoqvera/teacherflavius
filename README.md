@@ -127,7 +127,6 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/area-do-estudante/` | menu principal |
 | `/perfil/` | dados pessoais, histórico e segurança da conta |
 | `/minha-turma/` | turma, videoaula, materiais e gravações |
-| `/frequencia/` | lições e frequência |
 | `/roteiro-de-estudos/` | roteiro, páginas de lição e progresso individual |
 | `/conversation-questions/` | perguntas de conversação e progresso persistente |
 | `/exercicios-diarios/` | exercícios publicados |
