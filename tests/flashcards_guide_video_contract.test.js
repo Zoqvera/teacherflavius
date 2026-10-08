@@ -16,6 +16,8 @@ test("flashcards page embeds the requested guide video above the library heading
   assert.match(page, /youtube-nocookie\.com\/embed\/p3SvVh8QtUo\?rel=0/);
   assert.match(page, /loading="lazy"/);
   assert.match(page, /allowfullscreen/);
+  assert.match(page, /aria-label="Como usar flashcards"/);
+  assert.doesNotMatch(page, /Entenda o recurso antes de começar/);
 });
 
 test("flashcards guide video is responsive", function () {
