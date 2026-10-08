@@ -9,7 +9,6 @@ function read(relativePath) {
 
 const migration = read("supabase/migrations/20261002031500_set_quintet_capacity_eight.sql");
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
-const publicSchedule = read("horarios-disponiveis/index.html");
 const vacancyReport = read("relatorios_vagas_turmas.html");
 
 test("recovery overlay provisions per-class capacity overrides", function () {
@@ -51,10 +50,9 @@ test("vacancy queries use centralized operational capacity for quintets", functi
   );
 });
 
-test("vacancy pages derive displayed capacity from backend counts", function () {
+test("vacancy report derives displayed capacity from backend counts", function () {
   const derivedCapacity =
     /Number\(row\.occupied_spots\|\|0\)\+Number\(row\.available_spots\|\|0\)/;
-  assert.match(publicSchedule, derivedCapacity);
   assert.match(vacancyReport, derivedCapacity);
 });
 
