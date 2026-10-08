@@ -91,6 +91,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     z-index: 3;
   }
 
+  /* O acionador compacto do Guia fica no canto sem deslocar o conteúdo do hero. */
+  .hero > #tf-mobile-top-navigation {
+    position: absolute;
+    top: calc(1rem + env(safe-area-inset-top, 0px));
+    right: calc(1rem + env(safe-area-inset-right, 0px));
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+
 .bottom-home-button-wrap {
   display: flex;
   justify-content: flex-start;
@@ -459,7 +469,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <!-- ══════════════ HERO ══════════════ -->
 <section class="hero">
-  <nav class="top-links" data-mobile-menu-source="true" aria-label="Navegação principal">
+  <nav class="top-links" data-mobile-menu-source="true" data-mobile-menu-style="vertical-dots" aria-label="Navegação principal">
     <a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a>
     <a class="top-link" href="/area-do-estudante/minhas-aulas/">MINHAS AULAS</a>
     <a class="top-link" href="/o-que-fazer/">O QUE FAZER</a>
@@ -764,7 +774,7 @@ window.addEventListener('scroll', () => {
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
 
-<script id="teacher-flavius-mobile-top-navigation" src="/mobile_top_navigation.js?v=20261008-private-menu-1"></script>
+<script id="teacher-flavius-mobile-top-navigation" src="/mobile_top_navigation.js?v=20261008-guide-dots-1"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     document.documentElement.classList.remove("tf-nav-pending");
