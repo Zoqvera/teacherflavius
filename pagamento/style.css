@@ -632,7 +632,8 @@ a { color: inherit; }
 }
 
 .tuition-history[hidden],
-.tuition-history__panel[hidden] { display: none; }
+.tuition-history__panel[hidden],
+.tuition-history__panel .secondary-button[hidden] { display: none; }
 
 .tuition-history__toggle {
   display: flex;
