@@ -9,7 +9,6 @@
     "/exercicios-ordenar-frases/": "/exercicios_ordenar_frases.html",
     "/exercicios/": "/exercicios.html",
     "/explanation-in-on-at/": "/explanation_in_on_at.html",
-    "/guia-do-estudante/": "/guia-do-estudante.html",
     "/in-on-at/": "/in_on_at.html",
     "/ordenar-simple-present/": "/ordenar_simple_present.html",
     "/perfil/": "/perfil.html",
