@@ -134,7 +134,6 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/area-do-estudante/minhas-aulas/` | aulas contratadas, cancelamentos, créditos e reposições |
 | `/pagamento/` | pagamento de mensalidades |
 | `/aulas-de-gramatica.html` | aulas e exercícios de gramática |
-| `/guia-do-estudante.html` | orientações do curso |
 
 ### Professor / administração
 
