@@ -1,6 +1,3 @@
--- Aggregate repeated CSP reports into logical groups for health alerting.
--- Raw reports remain stored for audit; health degradation uses unique
--- document + directive + blocked-origin groups within the 15-minute window.
 
 do $migration$
 declare
