@@ -14,6 +14,7 @@ const classDetail = fs.readFileSync(path.join(root, "turma.html"), "utf8");
 const trialPage = fs.readFileSync(path.join(root, "aulas-experimentais/index.html"), "utf8");
 const paymentPage = fs.readFileSync(path.join(root, "pagamento/index.html"), "utf8");
 const aboutPage = fs.readFileSync(path.join(root, "sobre/index.html"), "utf8");
+const studentGuide = fs.readFileSync(path.join(root, "guia-do-estudante.html"), "utf8");
 const globalLogout = fs.readFileSync(path.join(root, "global_logout.js"), "utf8");
 const paymentNotice = fs.readFileSync(path.join(root, "student_payment_notice.js"), "utf8");
 const paymentNoticeLoader = fs.readFileSync(path.join(root, "student_payment_notice_loader.js"), "utf8");
@@ -112,4 +113,17 @@ test("loads required auth dependencies before dynamic authentication", function 
 test("treats lesson landing pages as public in the payment notice loader", function () {
   assert.equal(paymentNoticeLoader.includes('path.indexOf("/aulas-em-grupo") === 0'), true);
   assert.equal(paymentNoticeLoader.includes('path.indexOf("/aulas-individuais") === 0'), true);
+});
+
+
+test("uses the standardized restricted menu at the top of the student guide", function () {
+  const version = "/mobile_top_navigation.js?v=20261008-private-menu-1";
+  assert.match(studentGuide, /<html lang="pt-BR" class="tf-nav-pending">/);
+  assert.match(studentGuide, /<nav class="top-links" data-mobile-menu-source="true"/);
+  assert.equal(studentGuide.includes(version), true);
+  assert.doesNotMatch(studentGuide, /home-button top-home-button/);
+  assert.doesNotMatch(studentGuide, />← INÍCIO<\/a>/);
+  ["/area-do-estudante/", "/area-do-estudante/minhas-aulas/", "/o-que-fazer/", "/perfil/"].forEach(function (href) {
+    assert.equal(studentGuide.includes('href="' + href + '"'), true);
+  });
 });
