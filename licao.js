@@ -34,6 +34,15 @@
     else delete status.dataset.tone;
   }
 
+  function bindPrintLessonAction() {
+    const button = document.getElementById("printLessonButton");
+    if (!button) return;
+
+    button.addEventListener("click", function () {
+      window.print();
+    });
+  }
+
   function redirectToLogin() {
     const nextPath = window.location.pathname + window.location.search;
     window.location.href = "/login/?next=" + encodeURIComponent(nextPath);
@@ -173,6 +182,7 @@
   }
 
   async function initialize() {
+    bindPrintLessonAction();
     const ready = await window.ResourceWaiter.waitUntil(
       resourcesAreReady,
       RESOURCE_WAIT_OPTIONS
