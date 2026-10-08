@@ -1,4 +1,5 @@
 {
+  "supabase/baseline/10_public_schema.sql": "0b5aa51a624a638fe2cb5f7178a0af7450620d00",
   "supabase/baseline/115_set_quintet_capacity_eight.sql": "0590ed4d46a2d99ace13a142fa03ba338108154b",
   "supabase/baseline/120_limit_course_vacancies_to_three.sql": "64807451dbea81cbaf0b1e3a5a4f132ac68de7bb",
   "supabase/baseline/300_enforce_quintet_only_group_classification.sql": "a71d1075ec6034c2d3f870023591e33e425620fd",
