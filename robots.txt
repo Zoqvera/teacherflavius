@@ -35,7 +35,6 @@ Disallow: /exercicios-dos-alunos/
 Disallow: /relatorios/
 Disallow: /radar-de-alunos/
 Disallow: /alunos-arquivados/
-Disallow: /horarios-disponiveis/
 Disallow: /flashcards/
 Disallow: /flashcards.html
 Disallow: /meu-progresso/
