@@ -42,11 +42,17 @@
   var OVERLAY_ID = "tf-mobile-top-menu-overlay";
   var STYLE_ID = "tf-mobile-top-navigation-styles";
   var FALLBACK_SOURCE_ID = "tf-standard-navigation-source";
-  var FALLBACK_LINKS = Object.freeze([
+  var PUBLIC_FALLBACK_LINKS = Object.freeze([
     Object.freeze({ href: "/", label: "HOME" }),
     Object.freeze({ href: "/aulas-em-grupo/", label: "AULAS EM GRUPO" }),
     Object.freeze({ href: "/aulas-individuais/", label: "AULAS INDIVIDUAIS" }),
     Object.freeze({ href: "/area-do-estudante/", label: "ÁREA DO ESTUDANTE" })
+  ]);
+  var RESTRICTED_FALLBACK_LINKS = Object.freeze([
+    Object.freeze({ href: "/area-do-estudante/", label: "ÁREA DO ESTUDANTE" }),
+    Object.freeze({ href: "/area-do-estudante/minhas-aulas/", label: "MINHAS AULAS" }),
+    Object.freeze({ href: "/o-que-fazer/", label: "O QUE FAZER" }),
+    Object.freeze({ href: "/perfil/", label: "MEU PERFIL" })
   ]);
   var MENU_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
   var CLOSE_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
@@ -99,11 +105,42 @@
     });
   }
 
+  function isRestrictedCurrentPage() {
+    var context = window.SitePageContext;
+    return !!(context &&
+      typeof context.isRestrictedAreaPage === "function" &&
+      context.isRestrictedAreaPage());
+  }
+
+  function isRestrictedDestination(action) {
+    if (!action || action.tagName !== "A") return true;
+    if (!isRestrictedCurrentPage()) return true;
+
+    var href = action.getAttribute("href");
+    if (!href) return false;
+
+    try {
+      var url = new URL(href, window.location.href);
+      var context = window.SitePageContext;
+      if (url.origin !== window.location.origin) return false;
+      return !!(context &&
+        typeof context.isRestrictedAreaPage === "function" &&
+        context.isRestrictedAreaPage(String(url.pathname || "/").toLowerCase()));
+    } catch (error) {
+      return false;
+    }
+  }
+
   function visibleActions(source) {
     return directActions(source).filter(function (action) {
       if (action.hasAttribute("hidden") || action.getAttribute("aria-hidden") === "true") return false;
-      return window.getComputedStyle(action).display !== "none";
+      if (window.getComputedStyle(action).display === "none") return false;
+      return isRestrictedDestination(action);
     });
+  }
+
+  function fallbackLinksForCurrentPage() {
+    return isRestrictedCurrentPage() ? RESTRICTED_FALLBACK_LINKS : PUBLIC_FALLBACK_LINKS;
   }
 
   function isDangerAction(action) {
@@ -171,7 +208,7 @@
     source.setAttribute("aria-label", "Navegação principal");
 
     var currentPath = normalizePathname(window.location.pathname);
-    FALLBACK_LINKS.forEach(function (item) {
+    fallbackLinksForCurrentPage().forEach(function (item) {
       if (normalizePathname(item.href) === currentPath) return;
       var link = document.createElement("a");
       link.className = "top-link";
