@@ -1,7 +1,4 @@
--- Keep student-name normalization deterministic across browser and database.
--- Auth metadata is normalized by the enrollment client; the database trigger is
--- intentionally limited to student operational tables.
-
+-- Align student-name normalization with the frontend and remove the global auth.users trigger.
 create or replace function private.normalize_student_name(input_name text)
 returns text
 language plpgsql
@@ -66,5 +63,4 @@ update public.exercise_sync_events
 set student_name = private.normalize_student_name(student_name)
 where student_name is distinct from private.normalize_student_name(student_name);
 
-revoke all on function private.normalize_student_name(text)
-  from public, anon, authenticated;
+revoke all on function private.normalize_student_name(text) from public, anon, authenticated;
