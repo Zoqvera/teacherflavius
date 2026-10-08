@@ -136,11 +136,11 @@
     const noteLabel = document.createElement("label");
     noteLabel.className = "review-admin-note";
     const noteTitle = document.createElement("span");
-    noteTitle.textContent = "Observação interna opcional";
+    noteTitle.textContent = "Observação para o aluno (opcional)";
     const note = document.createElement("textarea");
     note.maxLength = 1000;
     note.value = review.moderation_note || "";
-    note.placeholder = "Use apenas se precisar registrar o motivo da decisão.";
+    note.placeholder = "Se rejeitar, use este campo para explicar ao aluno o que precisa ser ajustado.";
     noteLabel.appendChild(noteTitle);
     noteLabel.appendChild(note);
 
