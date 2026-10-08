@@ -62,3 +62,20 @@ test("profile validation does not require enrollment credentials", function () {
     utils.validateStudentInput(input, "Preencha os campos obrigatórios.");
   });
 });
+
+
+test("student names use the same title-case rule as the database", function () {
+  const utils = loadUtils();
+
+  assert.equal(utils.normalizeStudentName("  giovana   santos  "), "Giovana Santos");
+  assert.equal(utils.normalizeStudentName("JOÃO ÁLVARO"), "João Álvaro");
+  assert.equal(utils.normalizeStudentName("ana-maria"), "Ana-Maria");
+  assert.equal(utils.normalizeStudentName("ANA.MARIA"), "Ana.Maria");
+  assert.equal(utils.normalizeStudentName("ANA_MARIA"), "Ana_Maria");
+  assert.equal(utils.normalizeStudentName("D’ÁVILA"), "D’Ávila");
+  assert.equal(utils.normalizeStudentName("D'ÁVILA"), "D'Ávila");
+  assert.equal(
+    utils.normalizeStudentInput({ name: "  giovana santos " }).name,
+    "Giovana Santos"
+  );
+});

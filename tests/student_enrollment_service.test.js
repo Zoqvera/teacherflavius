@@ -83,3 +83,26 @@ test("generic signup accepts twelve characters and keeps the trusted redirect", 
   assert.equal(profileCalls.length, 1);
   assert.equal(profileCalls[0].id, "user-1");
 });
+
+
+test("generic signup persists normalized names in Auth metadata and profiles", async function () {
+  const signUpCalls = [];
+  const profileCalls = [];
+  const service = loadEnrollmentService().create({
+    requireClient: function () {
+      return createClient(signUpCalls, profileCalls);
+    },
+    getRedirectUrl: function () {
+      return "https://teacherflavius.com/perfil/";
+    }
+  });
+
+  await service.signUp(
+    "  d’ÁVILA   ana-maria ",
+    "student@example.com",
+    "123456789012"
+  );
+
+  assert.equal(signUpCalls[0].options.data.name, "D’Ávila Ana-Maria");
+  assert.equal(profileCalls[0].name, "D’Ávila Ana-Maria");
+});

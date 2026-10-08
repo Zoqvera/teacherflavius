@@ -15,12 +15,12 @@
     }),
     Object.freeze({
       selector: 'script[src*="student_data_utils.js"]',
-      src: "/student_data_utils.js?v=20260902-1",
+      src: "/student_data_utils.js?v=20261008-titlecase-2",
       isReady: function () { return !!window.StudentDataUtils; }
     }),
     Object.freeze({
       selector: 'script[src*="student_enrollment_service.js"]',
-      src: "/student_enrollment_service.js?v=20260902-1",
+      src: "/student_enrollment_service.js?v=20261008-titlecase-2",
       isReady: function () { return !!window.StudentEnrollmentService; }
     })
   ]);
