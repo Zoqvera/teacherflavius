@@ -25,10 +25,10 @@ test("restricted menus reject public, access-flow and external links", function 
   assert.match(navigation, /function isRestrictedCurrentPage\(\)/);
   assert.match(navigation, /function isRestrictedDestination\(action\)/);
   assert.match(navigation, /if \(url\.origin !== window\.location\.origin\) return false/);
-  assert.match(
-    navigation,
-    /context\.isRestrictedAreaPage\(String\(url\.pathname \|\| "\/"\)\.toLowerCase\(\)\)/
-  );
+  assert.match(navigation, /function isRestrictedPath\(pathname\)/);
+  assert.match(navigation, /return isRestrictedPath\(url\.pathname\)/);
+  assert.match(navigation, /path\.indexOf\("\/aulas-em-grupo"\) === 0/);
+  assert.match(navigation, /path\.indexOf\("\/instalar-app"\) === 0/);
   assert.match(navigation, /return isRestrictedDestination\(action\)/);
 });
 
