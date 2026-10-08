@@ -22,11 +22,25 @@
     return normalized;
   }
 
+  function normalizeStudentName(name) {
+    const normalized = String(name == null ? "" : name)
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLocaleLowerCase("pt-BR");
+
+    return normalized.replace(
+      /(^|[^\p{L}\p{N}])(\p{L})/gu,
+      function (_match, separator, letter) {
+        return separator + letter.toLocaleUpperCase("pt-BR");
+      }
+    );
+  }
+
   function normalizeStudentInput(data) {
     const source = data || {};
 
     return {
-      name: source.name || "",
+      name: normalizeStudentName(source.name),
       email: source.email || "",
       password: source.password || "",
       cpf: normalizeDigits(source.cpf),
@@ -109,6 +123,7 @@
 
   window.StudentDataUtils = Object.freeze({
     normalizeStudentInput: normalizeStudentInput,
+    normalizeStudentName: normalizeStudentName,
     validateEnrollmentPassword: validateEnrollmentPassword,
     validateStudentInput: validateStudentInput,
     buildProfilePayload: buildProfilePayload,
