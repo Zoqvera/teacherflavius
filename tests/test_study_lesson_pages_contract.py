@@ -62,7 +62,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("service.getLinkedPageByLessonNumber(lessonNumber)", controller)
         self.assertNotIn("service.listLinkedPages()", controller)
         self.assertIn("study_lesson_service.js?v=20261004-full-content-1", lesson)
-        self.assertIn("licao.js?v=20261004-full-content-1", lesson)
+        self.assertIn("licao.js?v=20261007-print-1", lesson)
 
     def test_lesson_page_contains_required_support_cards(self) -> None:
         lesson = self.read("licao/index.html")
@@ -70,6 +70,22 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("https://translate.google.com/", lesson)
         self.assertIn("APRENDA A PRONUNCIAR", lesson)
         self.assertIn("https://www.quickpronounce.site/", lesson)
+
+    def test_lesson_page_supports_black_and_white_printing(self) -> None:
+        lesson = self.read("licao/index.html")
+        controller = self.read("licao.js")
+        styles = self.read("study_lesson_page.css")
+
+        self.assertIn('id="printLessonButton"', lesson)
+        self.assertIn("IMPRIMIR LIÇÃO", lesson)
+        self.assertIn("bindPrintLessonAction", controller)
+        self.assertIn("window.print()", controller)
+        self.assertIn("@media print", styles)
+        self.assertIn("background: #fff !important", styles)
+        self.assertIn("color: #000 !important", styles)
+        self.assertIn(".lesson-page-actions", styles)
+        self.assertIn("display: none !important", styles)
+        self.assertIn("break-inside: avoid-page", styles)
 
     def test_roadmap_prefers_linked_internal_page(self) -> None:
         roadmap = self.read("roteiro_de_estudos.html")
