@@ -140,6 +140,13 @@ test("finalized class sessions disappear until the next occurrence", function ()
   assert.match(teacherApp, /Aula finalizada\. A turma foi removida do roteiro desta ocorrência\./);
 });
 
+test("O QUE FAZER links the predicted lesson card to the complete study roadmap", function () {
+  assert.match(
+    studentPage,
+    /<div id="nextLessonContainer"><\/div>\s*<a class="academic-study-roadmap-link" href="\/roteiro-de-estudos\/">Ver todas as lições no roteiro de estudos<\/a>/
+  );
+});
+
 test("student area replaces legacy study cards with O QUE FAZER", function () {
   assert.match(studentArea, /href="\/o-que-fazer\/"/);
   assert.match(studentArea, />O QUE FAZER</);
