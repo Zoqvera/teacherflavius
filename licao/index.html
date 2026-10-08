@@ -32,7 +32,7 @@
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260912-1"></script>
   <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
-  <link rel="stylesheet" href="/study_lesson_page.css?v=20260918-3">
+  <link rel="stylesheet" href="/study_lesson_page.css?v=20261007-print-1">
   <link rel="stylesheet" href="/academic_workflow.css?v=20261004-1">
 </head>
 <body class="auth-checking">
@@ -57,6 +57,15 @@
     <div class="divider"></div>
 
     <main id="lessonPageContent" hidden>
+      <section class="lesson-page-actions" aria-label="Ações da lição">
+        <button id="printLessonButton" class="lesson-print-button" type="button">
+          <svg class="lesson-print-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M7 3h10v4H7V3Zm10 16H7v2h10v-2Zm2-11H5a3 3 0 0 0-3 3v5h4v-3h12v3h4v-5a3 3 0 0 0-3-3Zm-3 9H8v-5h8v5Z" fill="currentColor"/>
+          </svg>
+          <span>IMPRIMIR LIÇÃO</span>
+        </button>
+      </section>
+
       <section class="lesson-section lesson-objective-section dynamic-lesson-section">
         <p class="lesson-section-kicker">OBJETIVO DA LIÇÃO</p>
         <p id="lessonObjective" class="lesson-rich-text lesson-objective-text"></p>
@@ -123,7 +132,7 @@
   <script src="/resource_waiter.js?v=20260902-2"></script>
   <script src="/study_lesson_service.js?v=20261004-full-content-1"></script>
   <script src="/academic_workflow_service.js?v=20261004-1"></script>
-  <script src="/licao.js?v=20261004-full-content-1"></script>
+  <script src="/licao.js?v=20261007-print-1"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
