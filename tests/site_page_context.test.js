@@ -50,3 +50,16 @@ test("classifica páginas públicas sem incluir rotas do portal", function () {
   assert.equal(context.isPublicMarketingPage("/area-do-estudante/"), false);
   assert.equal(context.isPublicMarketingPage("/professor/"), false);
 });
+
+
+test("classifica áreas restritas sem confundir fluxos públicos de acesso", function () {
+  const context = createPageContext("/area-do-estudante/");
+  assert.equal(context.isRestrictedAreaPage("/area-do-estudante/"), true);
+  assert.equal(context.isRestrictedAreaPage("/licao/"), true);
+  assert.equal(context.isRestrictedAreaPage("/perfil/"), true);
+  assert.equal(context.isRestrictedAreaPage("/professor/"), true);
+  assert.equal(context.isRestrictedAreaPage("/login/"), false);
+  assert.equal(context.isRestrictedAreaPage("/aulas-experimentais/"), false);
+  assert.equal(context.isRestrictedAreaPage("/instalar-app/"), false);
+  assert.equal(context.isRestrictedAreaPage("/aulas-em-grupo/"), false);
+});
