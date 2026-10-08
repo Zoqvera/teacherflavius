@@ -1,0 +1,30 @@
+name: SQL class taxonomy guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reject-obsolete-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Reject obsolete SQL identifiers
+        run: node scripts/check_sql_class_taxonomy.js
+
+      - name: Test guard behavior
+        run: node --test tests/sql_class_taxonomy.test.js
