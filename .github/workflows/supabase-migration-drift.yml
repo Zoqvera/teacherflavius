@@ -35,6 +35,8 @@ jobs:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       MIGRATION_DRIFT_CUTOFF: "20261006000000"
       MIGRATION_CHECKSUM_CUTOFF: "20261007051850"
+      # Compare committed migration blobs with the previous main state while
+      # production identity is checked independently against Supabase history.
       MIGRATION_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
 
     steps:
