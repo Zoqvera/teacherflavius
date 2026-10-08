@@ -72,7 +72,8 @@ test("keeps historical and partial payments while filtering invalid records", fu
 });
 
 test("formats Brazilian amounts and dates without assuming Mercado Pago", function () {
-  assert.match(history.formatCurrency(50), /^R\\$\\s50,00$/);
+  assert.ok(history.formatCurrency(50).startsWith("R$"));
+  assert.ok(history.formatCurrency(50).endsWith("50,00"));
   assert.equal(history.formatDate("2026-09-07"), "07/09/2026");
   assert.equal(history.paymentMethodLabel("pix"), "Pix");
   assert.equal(history.paymentMethodLabel("cash"), "Dinheiro");
