@@ -43,12 +43,13 @@
         { requireEnrollmentCredentials: true }
       );
 
+      const normalizedName = studentData.normalizeStudentName(name);
       const client = deps.requireClient();
       const response = await client.auth.signUp({
         email: email,
         password: password,
         options: {
-          data: { name: name },
+          data: { name: normalizedName },
           emailRedirectTo: deps.getRedirectUrl()
         }
       });
@@ -57,7 +58,7 @@
       if (response.data && response.data.user) {
         await client.from("profiles").upsert({
           id: response.data.user.id,
-          name: name,
+          name: normalizedName,
           email: email,
           profile_completed: true
         });
