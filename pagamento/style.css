@@ -619,3 +619,109 @@ a { color: inherit; }
     align-items: center;
   }
 }
+
+
+/* Histórico de mensalidades disponível mesmo sem cobranças pendentes. */
+.tuition-history {
+  margin-top: 22px;
+  border: 1px solid rgba(78, 154, 236, .26);
+  border-radius: var(--tf-radius-xl);
+  background: rgba(3, 26, 63, .82);
+  box-shadow: var(--tf-shadow-md);
+  overflow: hidden;
+}
+
+.tuition-history[hidden],
+.tuition-history__panel[hidden] { display: none; }
+
+.tuition-history__toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 94px;
+  gap: 16px;
+  padding: 22px 24px;
+  border: 0;
+  background: transparent;
+  color: var(--tf-slate-50);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tuition-history__toggle:hover { background: rgba(9, 104, 188, .11); }
+
+.tuition-history__icon {
+  display: grid;
+  flex: 0 0 46px;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  color: var(--tf-blue-100);
+  background: rgba(9, 104, 188, .18);
+}
+
+.tuition-history__icon svg,
+.tuition-history__chevron svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tuition-history__heading { display: grid; gap: 5px; flex: 1; }
+.tuition-history__heading strong {
+  font-family: var(--tf-font-display);
+  font-size: 18px;
+  letter-spacing: .06em;
+}
+.tuition-history__heading > span { color: var(--tf-slate-400); font-size: 13px; }
+.tuition-history__chevron { display: grid; place-items: center; color: var(--tf-blue-100); transition: transform .2s ease; }
+.tuition-history__toggle[aria-expanded="true"] .tuition-history__chevron { transform: rotate(180deg); }
+
+.tuition-history__panel {
+  padding: 0 24px 24px;
+  border-top: 1px solid rgba(78, 154, 236, .17);
+}
+.tuition-history__panel h2 { margin: 19px 0 8px; font: 800 18px var(--tf-font-display); }
+.tuition-history__message { margin: 0 0 14px; color: var(--tf-slate-300); font-size: 13px; line-height: 1.5; }
+.tuition-history__message[data-error="true"] { color: #fecaca; }
+.tuition-history__list { display: grid; gap: 12px; }
+.tuition-history-item {
+  padding: 16px;
+  border: 1px solid rgba(78, 154, 236, .20);
+  border-radius: var(--tf-radius-md);
+  background: rgba(5, 66, 136, .13);
+}
+.tuition-history-item__heading,
+.tuition-history-item__details { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; }
+.tuition-history-item__month { font-family: var(--tf-font-display); font-size: 15px; text-transform: capitalize; }
+.tuition-history-item__amount { font-family: var(--tf-font-display); font-size: 18px; }
+.tuition-history-item__details { margin-top: 9px; color: var(--tf-slate-300); font-size: 12px; }
+.tuition-history-item__status {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 5px 10px;
+  border-radius: var(--tf-radius-pill);
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, .12);
+  font-family: var(--tf-font-display);
+  font-size: 11px;
+  font-weight: 800;
+}
+.tuition-history-item__status[data-status="partial"] {
+  color: #fde68a;
+  background: rgba(245, 158, 11, .14);
+}
+
+@media (max-width: 639px) {
+  .tuition-history__toggle { padding: 18px; gap: 12px; }
+  .tuition-history__panel { padding: 0 18px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tuition-history__chevron { transition: none; }
+}
