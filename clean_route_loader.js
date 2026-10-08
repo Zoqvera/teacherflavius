@@ -11,7 +11,6 @@
     "/explanation-in-on-at/": "/explanation_in_on_at.html",
     "/guia-do-estudante/": "/guia-do-estudante.html",
     "/in-on-at/": "/in_on_at.html",
-    "/meu-progresso/": "/meu_progresso.html",
     "/ordenar-simple-present/": "/ordenar_simple_present.html",
     "/perfil/": "/perfil.html",
     "/quadro-de-turmas/": "/quadro-de-turmas.html",
