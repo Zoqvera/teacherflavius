@@ -29,7 +29,6 @@
     "/exercicios_ordenar_frases.html": "/exercicios-ordenar-frases/",
     "/explanation_in_on_at.html": "/explanation-in-on-at/",
     "/flashcards.html": "/flashcards/",
-    "/guia-do-estudante.html": "/guia-do-estudante/",
     "/in_on_at.html": "/in-on-at/",
     "/login.html": "/login/",
     "/matricula.html": "/matricula/",
