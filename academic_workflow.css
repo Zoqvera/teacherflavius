@@ -110,6 +110,20 @@
   color: #cbd5e1;
 }
 
+.academic-study-roadmap-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--academic-accent);
+  font-weight: 800;
+  line-height: 1.5;
+  text-underline-offset: 3px;
+}
+
+.academic-study-roadmap-link:hover,
+.academic-study-roadmap-link:focus-visible {
+  color: #a5b4fc;
+}
+
 .academic-arrow {
   font-size: 28px;
   line-height: 1;
