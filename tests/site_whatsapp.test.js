@@ -4,10 +4,16 @@ const path = require("node:path");
 const test = require("node:test");
 const vm = require("node:vm");
 
-function loadSiteWhatsapp() {
+function loadSiteWhatsapp(options) {
+  const settings = options || {};
   const source = fs.readFileSync(path.join(__dirname, "..", "site_whatsapp.js"), "utf8");
   const window = {
-    location: { href: "https://teacherflavius.com/aulas-experimentais/" }
+    location: { href: "https://teacherflavius.com/aulas-experimentais/" },
+    SitePageContext: {
+      isRestrictedAreaPage: function () {
+        return settings.restrictedArea === true;
+      }
+    }
   };
   const context = vm.createContext({
     window: window,
@@ -86,4 +92,37 @@ test("other WhatsApp links keep the existing default message", function () {
 test("buildUrl returns an empty string when no phone digits are available", function () {
   const siteWhatsapp = loadSiteWhatsapp();
   assert.equal(siteWhatsapp.buildUrl("sem telefone"), "");
+});
+
+
+test("buildUrl omits text when an explicit blank message is requested", function () {
+  const siteWhatsapp = loadSiteWhatsapp();
+  const url = new URL(siteWhatsapp.buildUrl("+55 (34) 99834-9756", ""));
+
+  assert.equal(url.origin, "https://wa.me");
+  assert.equal(url.pathname, "/5534998349756");
+  assert.equal(url.search, "");
+});
+
+test("restricted areas remove prefilled text from every WhatsApp link", function () {
+  const siteWhatsapp = loadSiteWhatsapp({ restrictedArea: true });
+  const link = createWhatsappLink(
+    "https://wa.me/5534998349756?text=" + encodeURIComponent("Mensagem antiga"),
+    false
+  );
+
+  standardizeSingleLink(siteWhatsapp, link);
+
+  const url = new URL(link.href);
+  assert.equal(url.pathname, "/5534998349756");
+  assert.equal(url.search, "");
+});
+
+test("restricted areas override trial and custom WhatsApp messages with blank text", function () {
+  const siteWhatsapp = loadSiteWhatsapp({ restrictedArea: true });
+  const trialLink = createWhatsappLink("https://wa.me/5534998349756", true);
+
+  standardizeSingleLink(siteWhatsapp, trialLink);
+
+  assert.equal(new URL(trialLink.href).search, "");
 });

@@ -19,8 +19,12 @@
   function buildUrl(number, message) {
     const phone = normalizePhone(number);
     if (!phone) return "";
-    const resolvedMessage = message || WHATSAPP_MESSAGE;
-    return "https://wa.me/" + phone + "?text=" + encodeURIComponent(resolvedMessage);
+
+    const baseUrl = "https://wa.me/" + phone;
+    const resolvedMessage = message === undefined ? WHATSAPP_MESSAGE : String(message || "").trim();
+    return resolvedMessage
+      ? baseUrl + "?text=" + encodeURIComponent(resolvedMessage)
+      : baseUrl;
   }
 
   function createFloatIcon() {
@@ -78,12 +82,22 @@
     return "";
   }
 
+  function isRestrictedAreaPage() {
+    return !!(
+      window.SitePageContext &&
+      typeof window.SitePageContext.isRestrictedAreaPage === "function" &&
+      window.SitePageContext.isRestrictedAreaPage()
+    );
+  }
+
   function pageMessage() {
+    if (isRestrictedAreaPage()) return "";
     if (!document.body || !document.body.dataset) return WHATSAPP_MESSAGE;
     return document.body.dataset.whatsappMessage || WHATSAPP_MESSAGE;
   }
 
   function messageForLink(link) {
+    if (isRestrictedAreaPage()) return "";
     if (link.matches && link.matches(TRIAL_LESSON_LINK_SELECTOR)) {
       return TRIAL_LESSON_WHATSAPP_MESSAGE;
     }

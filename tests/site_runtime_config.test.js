@@ -13,7 +13,7 @@ function loadConfig() {
 
 const EXPECTED_SCRIPT_ASSETS = {
   whatsappLeadForm: ["teacher-flavius-whatsapp-lead-form", "/whatsapp_lead_form.js?v=20260902-direct-2"],
-  siteWhatsapp: ["teacher-flavius-site-whatsapp", "/site_whatsapp.js?v=20260902-1"],
+  siteWhatsapp: ["teacher-flavius-site-whatsapp", "/site_whatsapp.js?v=20261007-private-no-prefill-1"],
   accessibility: ["teacher-flavius-accessibility", "/accessibility.js?v=20260820-1"],
   cro: ["teacher-flavius-cro", "/cro.js?v=20260820-1"],
   analytics: ["teacher-flavius-analytics", "/analytics.js?v=20260912-server-1"],
@@ -28,7 +28,7 @@ const EXPECTED_SCRIPT_ASSETS = {
   googleOnlyAccess: ["teacher-flavius-google-only-access", "/google_only_access.js?v=20261006-profile-freeze-1"],
   studentBirthdays: ["teacher-flavius-student-birthdays", "/student_birthdays.js?v=20260819-1"],
   studentBirthdayCelebration: ["teacher-flavius-student-birthday-celebration", "/student_birthday_celebration.js?v=20260909-1"],
-  sitePageContext: ["teacher-flavius-site-page-context", "/site_page_context.js?v=20260925-auth-runtime-1"],
+  sitePageContext: ["teacher-flavius-site-page-context", "/site_page_context.js?v=20261007-private-no-prefill-1"],
   siteBranding: ["teacher-flavius-site-branding", "/site_branding.js?v=20260902-1"],
   siteEnrollmentGuard: ["teacher-flavius-site-enrollment-guard", "/site_enrollment_guard.js?v=20260902-1"],
   marketingTrackingControl: ["teacher-flavius-marketing-tracking-control", "/marketing_tracking_control.js?v=20260904-1"],

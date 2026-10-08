@@ -214,13 +214,24 @@
     padding: 0;
   }
 
-  .top-links,
+  .lesson-page-container .top-links,
+  .lesson-page-container .tf-mobile-nav-source-active,
   .lesson-page-actions,
   .lesson-tools,
   #lessonPreparationSection,
   #lessonPageStatus,
+  #teacher-flavius-whatsapp-float,
+  .whatsapp-float,
+  #tf-skip-link,
+  .tf-skip-link,
+  #tf-mobile-top-navigation,
+  #tf-mobile-top-menu-overlay,
+  #globalLogoutButton,
+  [data-auth-logout],
+  #teacher-flavius-site-footer,
   footer,
-  .site-footer {
+  .site-footer,
+  .tf-site-footer {
     display: none !important;
   }
 
