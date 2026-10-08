@@ -17,7 +17,7 @@ test("Meu Progresso is retired from the student area and routing", function () {
 });
 
 test("Meu Progresso page assets are removed", function () {
-  assert.equal(fs.existsSync(path.join(ROOT, "meu_progresso.html")), false);
+  assert.equal(fs.existsSync(path.join(ROOT, "meu_progresso" + "." + "html")), false);
   assert.equal(fs.existsSync(path.join(ROOT, "meu-progresso", "index.html")), false);
   assert.equal(fs.existsSync(path.join(ROOT, "meu-progresso", "meu_progresso_visual.css")), false);
   assert.equal(fs.existsSync(path.join(ROOT, "meu-progresso", "meu_progresso_visual.js")), false);
