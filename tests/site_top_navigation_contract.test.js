@@ -121,8 +121,7 @@ test("uses the standardized restricted menu at the top of the student guide", fu
   assert.match(studentGuide, /<html lang="pt-BR" class="tf-nav-pending">/);
   assert.match(studentGuide, /<nav class="top-links" data-mobile-menu-source="true"/);
   assert.equal(studentGuide.includes(version), true);
-  assert.doesNotMatch(studentGuide, /home-button top-home-button/);
-  assert.doesNotMatch(studentGuide, />← INÍCIO<\/a>/);
+  assert.doesNotMatch(studentGuide, /top-home-button/);
   ["/area-do-estudante/", "/area-do-estudante/minhas-aulas/", "/o-que-fazer/", "/perfil/"].forEach(function (href) {
     assert.equal(studentGuide.includes('href="' + href + '"'), true);
   });
