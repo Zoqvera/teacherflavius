@@ -118,10 +118,10 @@ test("treats lesson landing pages as public in the payment notice loader", funct
 test("uses the standard SVG Menu button and accessible central dialog", function () {
   assert.match(navigation, /var MENU_ICON_SVG/);
   assert.match(navigation, /M4 7h16M4 12h16M4 17h16/);
-  assert.match(navigation, /toggle\\.className = "tf-mobile-nav-toggle"/);
+  assert.match(navigation, /toggle\.className = "tf-mobile-nav-toggle"/);
   assert.equal(navigation.includes('<span>Menu</span>'), true);
   assert.match(navigation, /aria-modal="true"/);
-  assert.match(navigation, /\\.is-open\\{display:flex!important;align-items:center!important;justify-content:center!important\\}/);
-  assert.match(navigation, /toggle\\.addEventListener\\("click", openMenu\\)/);
-  assert.match(navigation, /if \\(event\\.key === "Escape"\\) closeMenu\\(\\)/);
+  assert.match(navigation, /\.is-open\{display:flex!important;align-items:center!important;justify-content:center!important\}/);
+  assert.match(navigation, /toggle\.addEventListener\("click", openMenu\)/);
+  assert.match(navigation, /if \(event\.key === "Escape"\) closeMenu\(\)/);
 });
