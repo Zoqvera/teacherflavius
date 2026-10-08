@@ -28,6 +28,15 @@ class PwaSourceEntrypointTests(unittest.TestCase):
         self.assertIn('id="pwaInstallButton"', html)
         self.assertIn('/pwa_install_prompt.js', html)
 
+    def test_install_card_is_inside_help_and_information_card(self) -> None:
+        html = (ROOT / "area_do_estudante.html").read_text(encoding="utf-8")
+        help_start = html.index('aria-labelledby="helpTitle"')
+        help_end = html.index("</section>", help_start)
+        install_start = html.index('id="pwaInstallCard"')
+
+        self.assertGreater(install_start, help_start)
+        self.assertLess(install_start, help_end)
+
     def test_installed_app_starts_in_student_area(self) -> None:
         manifest = json.loads((ROOT / "site.webmanifest").read_text(encoding="utf-8"))
         self.assertEqual(manifest["start_url"], "/area-do-estudante/")
