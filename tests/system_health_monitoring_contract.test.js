@@ -98,7 +98,7 @@ test("CSP health aggregates repeated files by page, directive and blocked origin
   assert.match(cspAggregationFix, /csp_top_group_count_15m/i);
   assert.match(cspAggregationFix, /csp_top_group_origin/i);
   assert.match(cspAggregationFix, /'logical_group_count_15m', csp_actionable_15m/i);
-  assert.match(cspAggregationFix, /if csp_actionable_15m >= 10/i);
+  assert.match(migration, /if csp_actionable_15m >= 10/i);
 });
 
 test("CSP aggregation preserves existing narrow noise exclusions", function () {
