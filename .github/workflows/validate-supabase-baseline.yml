@@ -163,7 +163,8 @@ jobs:
             supabase/baseline/325_normalize_billing_plans_and_legacy_settings.sql \
             supabase/baseline/330_add_reviewed_legacy_billing_plan.sql \
             supabase/baseline/335_class_lesson_history_quality_semantics.sql \
-            supabase/baseline/340_enforce_unique_tuition_due_dates_per_student.sql
+            supabase/baseline/340_enforce_unique_tuition_due_dates_per_student.sql \
+            supabase/baseline/345_aggregate_csp_health_by_logical_group.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
