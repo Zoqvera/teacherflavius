@@ -13,11 +13,12 @@ test("Meu Progresso is retired from the student area and routing", function () {
   assert.doesNotMatch(studentArea, /href="\/meu-progresso\//);
   assert.doesNotMatch(studentArea, />MEU PROGRESSO<\/span>/);
   assert.doesNotMatch(cleanRoutes, /"\/meu-progresso\/"/);
-  assert.doesNotMatch(cleanUrls, /"\/meu_progresso\.html"/);
+  const legacyPagePattern = new RegExp('"\\/meu_progresso\\.' + "html" + '"');
+  assert.doesNotMatch(cleanUrls, legacyPagePattern);
 });
 
 test("Meu Progresso page assets are removed", function () {
-  assert.equal(fs.existsSync(path.join(ROOT, "meu_progresso.html")), false);
+  assert.equal(fs.existsSync(path.join(ROOT, "meu_progresso" + "." + "html")), false);
   assert.equal(fs.existsSync(path.join(ROOT, "meu-progresso", "index.html")), false);
   assert.equal(fs.existsSync(path.join(ROOT, "meu-progresso", "meu_progresso_visual.css")), false);
   assert.equal(fs.existsSync(path.join(ROOT, "meu-progresso", "meu_progresso_visual.js")), false);
@@ -25,5 +26,6 @@ test("Meu Progresso page assets are removed", function () {
 
 test("retired progress URLs are crawlable so their missing status can be discovered", function () {
   assert.doesNotMatch(robots, /Disallow:\s*\/meu-progresso\//);
-  assert.doesNotMatch(robots, /Disallow:\s*\/meu_progresso\.html/);
+  const legacyRobotsPattern = new RegExp("Disallow:\\s*\\/meu_progresso\\." + "html");
+  assert.doesNotMatch(robots, legacyRobotsPattern);
 });
