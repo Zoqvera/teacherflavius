@@ -31,7 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="/auth.js?v=20260430-3"></script>
   <script src="https://sdk.mercadopago.com/js/v2"></script>
-  <link rel="stylesheet" href="/pagamento/style.css?v=20260929-subscription-1">
+  <link rel="stylesheet" href="/pagamento/style.css?v=20261008-history-1">
 </head>
 <body class="auth-checking payment-page">
 <!-- Google Tag Manager (noscript) -->
@@ -97,6 +97,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <a href="/area-do-estudante/">VOLTAR À ÁREA DO ESTUDANTE</a>
     </section>
 
+    <section id="tuitionHistorySection" class="tuition-history" aria-label="Histórico de mensalidades" hidden>
+      <button id="tuitionHistoryToggle" class="tuition-history__toggle" type="button" aria-expanded="false" aria-controls="tuitionHistoryPanel">
+        <span class="tuition-history__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="2"/><path d="M7.5 2.5v4M16.5 2.5v4M3.5 9.5h17m-13 5 3 3 6-6"/></svg>
+        </span>
+        <span class="tuition-history__heading">
+          <strong>HISTÓRICO</strong>
+          <span>Consultar mensalidades já pagas</span>
+        </span>
+        <span class="tuition-history__chevron" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div id="tuitionHistoryPanel" class="tuition-history__panel" hidden>
+        <h2>Histórico de pagamentos</h2>
+        <p id="tuitionHistoryMessage" class="tuition-history__message" role="status" aria-live="polite"></p>
+        <div id="tuitionHistoryList" class="tuition-history__list"></div>
+      </div>
+    </section>
+
     <section class="payment-help">
       <h2>Pagamento já realizado?</h2>
       <p>Se você já pagou e a cobrança ainda aparece como pendente, faça uma nova verificação antes de entrar em contato.</p>
@@ -108,7 +128,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </main>
 
   <script src="/pagamento/payment_idempotency.js?v=20260909-1"></script>
-  <script src="/pagamento/app.js?v=20261006-pix-debit-1"></script>
+  <script src="/pagamento/tuition_history.js?v=20261008-1"></script>
+  <script src="/pagamento/app.js?v=20261008-history-1"></script>
   <script>
     (function(){
       const button=document.getElementById('verifyPaymentButton');
