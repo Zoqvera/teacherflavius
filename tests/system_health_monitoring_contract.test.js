@@ -9,6 +9,7 @@ const bootstrapFix = fs.readFileSync(path.join(root, "supabase/migrations/202609
 const resourceBurstFix = fs.readFileSync(path.join(root, "supabase/migrations/20260925135003_corroborate_resource_error_bursts.sql"), "utf8");
 const openAiCspFix = fs.readFileSync(path.join(root, "supabase/migrations/20260926002809_exclude_approved_openai_pixel_csp_from_health.sql"), "utf8");
 const twemojiCspFix = fs.readFileSync(path.join(root, "supabase/migrations/20260929180500_exclude_approved_twemoji_csp_from_health.sql"), "utf8");
+const cspAggregationFix = fs.readFileSync(path.join(root, "supabase/migrations/20261008020452_aggregate_csp_health_by_logical_group.sql"), "utf8");
 const syntheticProbe = fs.readFileSync(path.join(root, "supabase/functions/system-synthetic-probe/index.ts"), "utf8");
 const dashboardFunction = fs.readFileSync(path.join(root, "supabase/functions/get-system-health-dashboard/index.ts"), "utf8");
 const notifier = fs.readFileSync(path.join(root, "supabase/functions/notify-system-health-alert/index.ts"), "utf8");
@@ -89,4 +90,22 @@ test("approved Twemoji SVG CSP reports do not degrade system health", function (
   );
   assert.match(twemojiCspFix, /csp_actionable_15m/);
   assert.match(twemojiCspFix, /CSP actionable filter was not updated/);
+});
+
+test("CSP health aggregates repeated files by page, directive and blocked origin", function () {
+  assert.match(cspAggregationFix, /group by document_uri, directive, blocked_origin/i);
+  assert.match(cspAggregationFix, /csp_actionable_raw_15m/i);
+  assert.match(cspAggregationFix, /csp_top_group_count_15m/i);
+  assert.match(cspAggregationFix, /csp_top_group_origin/i);
+  assert.match(cspAggregationFix, /'logical_group_count_15m', csp_actionable_15m/i);
+  assert.match(cspAggregationFix, /if csp_actionable_15m >= 10/i);
+});
+
+test("CSP aggregation preserves existing narrow noise exclusions", function () {
+  assert.match(cspAggregationFix, /static\.cloudflareinsights\.com/);
+  assert.match(cspAggregationFix, /bzrcdn\.openai\.com/);
+  assert.match(cspAggregationFix, /bzr\.openai\.com/);
+  assert.match(cspAggregationFix, /twemoji@17\.0\.3\/assets\/svg/);
+  assert.doesNotMatch(cspAggregationFix, /use\.typekit\.net/);
+  assert.doesNotMatch(cspAggregationFix, /connect\.facebook\.net/);
 });
