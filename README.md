@@ -11,24 +11,24 @@ O projeto combina frontend estático em HTML, CSS e JavaScript com Supabase para
 
 ## Estado atual
 
-Em 1º de outubro de 2026, a plataforma possui:
+Em 8 de outubro de 2026, a plataforma possui:
 
-- frontend estático publicado pelo GitHub Pages com domínio próprio;
-- pipeline de build, materialização e validação do HTML antes da publicação;
-- autenticação Supabase com Google OAuth, senha e controles de sessão administrativa;
-- banco PostgreSQL protegido por RLS, grants de menor privilégio, RPCs e objetos privados de servidor;
-- módulos acadêmicos de alunos, turmas, frequência, lições, exercícios, flashcards, roteiro de estudos, Conversation Questions e reposições;
-- páginas de lição gerenciáveis no Roteiro de Estudos, com cards dinâmicos, numeração editorial, tradução e fallback para PDFs;
-- turmas `INDIVIDUAL` e `QUINTETO`, overrides de capacidade e vínculo simultâneo de cada aluno com até duas turmas compatíveis;
-- módulo **Alunos do dia** para aulas regulares e reposições confirmadas, além da gestão separada de aulas experimentais e conversões;
-- oferta pública de aulas em grupo padronizada em R$ 50,00 por mês e até cinco alunos;
-- módulo financeiro com mensalidades, Pix/cartão de débito, primeira mensalidade disponível após definição do valor e próxima competência liberada dois dias após o pagamento anterior;
-- infraestrutura legada de assinaturas recorrentes do Mercado Pago preservada para histórico e conciliação, com criação de novas assinaturas desativada;
-- analytics consentido com GTM/GA4, eventos financeiros server-side e OpenAI Pixel para conversões comerciais;
-- sincronização de exercícios recebidos por Google Forms;
-- observabilidade com monitor de erros, CSP reporting, health interno, probes sintéticos e filtros estritos de ruído conhecido;
-- suíte automatizada de qualidade em JavaScript e Python, contratos especializados e amostragem estabilizada do Lighthouse;
-- backup lógico criptografado do Supabase, teste automatizado de restauração e baseline versionado para disaster recovery.
+- frontend HTML/CSS/JavaScript no GitHub Pages, com build estático, materialização e quality gates;
+- PWA instalável com service worker conservador e notificações Web Push opt-in para aulas e mensalidades;
+- aplicativo Android Capacitor 8 com bundle local, login Google via PKCE/deep link e pipeline de APK/AAB (preparado para distribuição, não necessariamente publicado na Google Play);
+- autenticação Supabase, RLS, RPCs, Edge Functions, Vault, Cron, menor privilégio e controles de sessão;
+- matrícula de novos alunos baseada em códigos de acesso com planos definidos no servidor e complementação cadastral simplificada para alunos existentes;
+- turmas `INDIVIDUAL` e `QUINTETO`, capacidade, frequência, lições, exercícios e flashcards;
+- fluxo acadêmico **O QUE FAZER**, **MINHA SEMANA** com progressão canônica e **ROTEIRO DA AULA** para presença, apresentação, revisões e finalização;
+- Roteiro de Estudos com páginas dinâmicas, progresso, tradução e fallback para PDF;
+- Conversation Questions com catálogo extensível e estudo individual por pergunta;
+- cancelamento de aulas até o início, crédito de reposição condicionado à antecedência de 12 horas e reserva centralizada em **MINHAS AULAS**;
+- créditos de reposição contratuais ou concedidos pelo professor, com elegibilidade de vagas e dias validada no backend;
+- **Alunos do dia**, aulas experimentais, matrícula e histórico acadêmico preservado;
+- mensalidades com planos canônicos, primeira cobrança automática, liberação controlada, Pix/débito e card **HISTÓRICO** dos pagamentos;
+- infraestrutura legada de assinaturas Mercado Pago mantida somente para conciliação, sem novas assinaturas;
+- avaliações verificadas dos alunos com consentimento, moderação e exibição pública seletiva;
+- analytics consentido, Google Forms/Sheets, observabilidade, auditoria de migrações e backup criptografado com teste de restauração.
 
 Os experimentos históricos de **pronúncia com IA** e **MCP V1** permanecem adiados e não fazem parte da aplicação ativa.
 
@@ -38,15 +38,18 @@ Os experimentos históricos de **pronúncia com IA** e **MCP V1** permanecem adi
 flowchart TB
   User["Visitante / Aluno / Professor"] --> Pages["GitHub Pages\nteacherflavius.com"]
   Pages --> Browser["HTML + CSS + JavaScript"]
+  Pages --> PWA["PWA\nmanifest + service worker"]
+  Browser --> Android["Capacitor Android\nbundle local"]
 
   Browser --> Runtime["Runtime compartilhado\nloaders, guards, analytics, navegação, footer"]
   Browser --> Auth["Supabase Auth\nGoogle + senha + sessão"]
   Browser --> Database["Supabase PostgreSQL\nRLS + RPCs + least privilege"]
-  Browser --> MercadoPagoJS["Mercado Pago.js v2\nCheckout Bricks"]
+  Browser --> MercadoPagoJS["Mercado Pago.js v2\nCheckout Bricks (site/PWA)"]
   Browser --> Analytics["GTM + GA4 + OpenAI Pixel\nConsent Mode"]
 
   Database --> Functions["Supabase Edge Functions"]
   Database --> Cron["Cron / jobs operacionais"]
+  Cron --> Push["Web Push\nVAPID + opt-in"]
   Functions --> Resend["Resend\ne-mails e alertas"]
   Functions --> MercadoPagoAPI["Mercado Pago\nPayments API"]
   Functions --> GA4["GA4\nserver-side consentido"]
@@ -79,7 +82,7 @@ Componentes centrais:
 
 ### Backend no Supabase
 
-O Supabase fornece Auth, PostgreSQL, RLS, grants explícitos, RPCs, schema `private`, Edge Functions em TypeScript/Deno, Vault e Cron.
+O Supabase fornece Auth, PostgreSQL, RLS, grants explícitos, RPCs, schema `private`, Edge Functions em TypeScript/Deno, Vault e Cron. Regras de matrícula, preços, aulas, reposições e mensalidades são validadas no backend; migrations versionadas têm auditoria de identidade, nome e checksum.
 
 O navegador usa somente configuração pública. `service_role`, senhas de banco, tokens privados e segredos de terceiros nunca devem ser colocados no frontend ou versionados.
 
@@ -89,6 +92,8 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | --- | --- |
 | Hospedagem | GitHub Pages + domínio personalizado |
 | Frontend | HTML, CSS e JavaScript |
+| PWA | Manifest, Service Worker e Web Push/VAPID |
+| Android | Capacitor 8, Android SDK 36, bundle `_android_site/` |
 | Build/materialização | Python 3 + scripts próprios |
 | Qualidade JS | Node.js 22, Node Test Runner e ESLint 9 |
 | Cliente de dados | `@supabase/supabase-js` v2 |
@@ -97,10 +102,10 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | Autorização | RLS, grants de menor privilégio e RPCs |
 | Backend server-side | Supabase Edge Functions / Deno |
 | E-mail | Resend |
-| Pagamentos | Mercado Pago Checkout Bricks, Payments API e assinaturas recorrentes |
+| Pagamentos | Mercado Pago Checkout Bricks e Payments API (Pix/débito no site); assinaturas históricas para conciliação |
 | Exercícios externos | Google Forms + Google Sheets + Apps Script |
 | Analytics | Google Tag Manager + Consent Mode + GA4 server-side + OpenAI Pixel |
-| CI/CD e operações | GitHub Actions |
+| CI/CD e operações | GitHub Actions (site, Android, drift de migrações e backup) |
 | Backup | Supabase CLI/`pg_dump`, GnuPG AES-256 e restore automatizado |
 
 > O projeto **não utiliza Netlify**. Resíduos, configurações e acoplamentos históricos desse provedor foram removidos. A publicação de produção permanece no GitHub Pages; artefatos de headers estáticos são mantidos de forma provider-neutral quando necessários para validação/portabilidade.
@@ -119,43 +124,52 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/matricula/` | matrícula e onboarding |
 | `/login/` | autenticação |
 | `/acesso-aluno/` | entrada direta para a área do estudante |
+| `/instalar-app/` | instalação do PWA (rota utilitária `noindex`) |
 
 ### Aluno autenticado
 
 | Rota | Finalidade |
 | --- | --- |
-| `/area-do-estudante/` | menu principal |
-| `/perfil/` | dados pessoais, histórico e segurança da conta |
+| `/area-do-estudante/` | menu principal e card **PAGAR MENSALIDADE** |
+| `/perfil/` | dados pessoais e segurança |
+| `/minha-semana/` | próxima aula e próxima lição pela progressão canônica |
+| `/o-que-fazer/` | preparação da lição e das perguntas |
 | `/minha-turma/` | turma, videoaula, materiais e gravações |
-| `/roteiro-de-estudos/` | roteiro, páginas de lição e progresso individual |
-| `/conversation-questions/` | perguntas de conversação e progresso persistente |
+| `/roteiro-de-estudos/` | catálogo de lições e progresso |
+| `/licao/` | página de lição e preparação |
+| `/conversation-questions/` | perguntas e progresso individual |
 | `/exercicios-diarios/` | exercícios publicados |
-| `/flashcards/` | decks, prática e repetição espaçada |
-| `/area-do-estudante/minhas-aulas/` | aulas contratadas, cancelamentos, créditos e reposições |
-| `/pagamento/` | pagamento de mensalidades |
+| `/flashcards/` | decks, repetição espaçada e vídeo explicativo |
+| `/area-do-estudante/minhas-aulas/` | aulas futuras, cancelamentos, créditos e reposições |
+| `/pagamento/` | mensalidades, Pix/débito e **HISTÓRICO** de pagamentos |
+| `/avaliar-aulas/` | avaliação autenticada das aulas |
 | `/aulas-de-gramatica.html` | aulas e exercícios de gramática |
+
+As páginas estudantis **Guia do Estudante**, **Meu Progresso**, **Frequência** e **Horários Disponíveis** foram removidas, inclusive seus cards e aliases. A gestão administrativa de frequência permanece disponível.
 
 ### Professor / administração
 
 | Rota | Finalidade |
 | --- | --- |
 | `/professor/` | painel principal |
-| `/alunos-do-dia/` | agenda de aulas regulares e reposições confirmadas |
-| `/aulas-experimentais/` | agendamentos, presença e conversão de aulas experimentais |
-| `/conversation-questions/` | gestão das perguntas de conversação |
-| `/perfil-dos-alunos/` | gestão de alunos e dados acadêmicos |
+| `/alunos-do-dia/` | aulas regulares e reposições confirmadas |
+| `/roteiro-da-aula/` | presença, perguntas, revisões e finalização persistente |
+| `/aulas-experimentais/` | aulas experimentais e conversão |
+| `/conversation-questions/` | gestão e ordenação de perguntas |
+| `/avaliacoes-dos-alunos/` | moderação de avaliações |
+| `/perfil-dos-alunos/` | gestão acadêmica |
 | `/turmas/` | gestão de turmas |
-| `/quadro-de-turmas.html` | visão operacional das turmas |
+| `/quadro-de-turmas.html` | quadro operacional |
 | `/mensalidades/` | administração financeira |
-| `/reposicoes-admin/` | horários e reservas de reposição |
+| `/reposicoes-admin/` | agenda de reposições |
 | `/criar-exercicio/` | publicação de exercícios |
 | `/exercicios-dos-alunos/` | acompanhamento de atividades |
-| `/acessos-dos-alunos/` | relatório de acesso administrativo |
-| `/relatorios/` | relatórios administrativos |
-| `/saude-do-sistema/` | saúde operacional consolidada |
-| `/solicitacoes-de-privacidade/` | solicitações de privacidade |
+| `/acessos-dos-alunos/` | relatório de acesso |
+| `/relatorios/` | relatórios |
+| `/saude-do-sistema/` | saúde operacional |
+| `/solicitacoes-de-privacidade/` | privacidade |
 
-A Área do Professor exige identidade administrativa válida e sessão Supabase autenticada. Os processos administrativos usam a mesma autorização de professor, enquanto operações de servidor mantêm controles adicionais de menor privilégio.
+A Área do Professor exige identidade administrativa e sessão Supabase autenticada. Operações sensíveis usam menor privilégio e auditoria.
 
 ## Domínios funcionais
 
@@ -180,15 +194,19 @@ O sistema suporta Google OAuth e fluxos autorizados por senha. A camada de auten
 
 A vinculação de uma identidade Google a matrícula existente preserva dados acadêmicos. Variantes equivalentes de Gmail com diferenças de pontos são normalizadas com validações de segurança para evitar perda de matrícula, turma e progresso.
 
+### Matrícula e cadastro
+
+O backend diferencia matrícula nova, complementação cadastral de aluno existente e perfil completo. Alunos já matriculados completam dados pessoais sem repetir código de acesso, seleção comercial, vencimento ou pagamento.
+
+Em matrículas novas, códigos de acesso autorizam planos com mensalidade e quantidade de aulas definidas no servidor; o mapeamento fica no Supabase Vault, nunca no frontend. O aluno escolhe `INDIVIDUAL` ou `QUINTETO` e o primeiro vencimento (dia da matrícula ou dia seguinte). A primeira mensalidade é criada de modo idempotente quando valor e vencimento estão disponíveis.
+
 ### Alunos, turmas, lições e exercícios
 
-O domínio acadêmico cobre alunos ativos/arquivados, turmas, horários, capacidade, materiais, frequência, lições, exercícios e roteiro individual. As turmas suportam `INDIVIDUAL` e `QUINTETO`, além de override explícito de capacidade quando necessário.
+O domínio acadêmico cobre alunos ativos/arquivados, turmas, horários, capacidade, frequência, lições, exercícios e histórico. Somente `INDIVIDUAL` e `QUINTETO` são classificações vigentes. Cada aluno pode ter até duas turmas compatíveis; arquivamento remove vínculos, preserva histórico e desativa cobrança, que não é reativada automaticamente ao desarquivar.
 
-Cada aluno pode pertencer simultaneamente a até duas turmas compatíveis, respeitando a capacidade de cada uma. Alunos arquivados são desvinculados automaticamente e não podem receber novos vínculos enquanto permanecerem arquivados.
+**O QUE FAZER** usa `get_my_action_plan` para determinar a próxima lição e as perguntas a estudar. **MINHA SEMANA** usa a mesma progressão, sem limite local fixo de 24 lições. O Roteiro de Estudos suporta catálogo dinâmico, páginas editáveis, tradução, numeração editorial e fallback para PDF.
 
-O histórico é tratado como dado persistente: arquivar/desarquivar aluno e vincular identidades não deve apagar progresso. A reconciliação de conclusões históricas associa registros aos IDs atuais dos exercícios sem sobrescrever progresso já existente.
-
-O Roteiro de Estudos suporta páginas de lição gerenciáveis e expansão dinâmica além do conjunto inicial, com número editorial, tradução e fallback para materiais em PDF.
+Marcar `ESTOU PREPARADO` não equivale a concluir a lição. No **ROTEIRO DA AULA**, o professor registra presença/ausência, apresentação e revisão; a finalização da ocorrência persiste no backend e exige que todos os alunos tenham situação de presença definida.
 
 ### Alunos do dia e aulas experimentais
 
@@ -200,13 +218,17 @@ O módulo possui decks por aluno, cards ordenados, prática registrada e repeti�
 
 ### Conversation Questions
 
-A rota privada `/conversation-questions/` contém 99 perguntas iniciais, progresso persistente por aluno, inclusão e reordenação de perguntas e auditoria do professor. A autorização é protegida por RLS; a página usa `noindex, nofollow` e não integra o sitemap.
+O catálogo contém mais de cem perguntas e é extensível. **O QUE FAZER** permite marcar `ESTUDEI A PERGUNTA` individualmente; perguntas já trabalhadas permanecem consultáveis sem voltar como preparação inédita. O professor administra perguntas, traduções, exemplos e ordenação; os estudos e revisões aparecem no **ROTEIRO DA AULA**.
+
+Revisões pedagógicas seguem as aulas efetivamente frequentadas: `BOM` (+5), `MÉDIO` (+3) e `MELHORAR` (+1). O histórico é persistido com autenticação e RLS; a rota privada usa `noindex, nofollow`.
 
 ### Reposições
 
-O fluxo do aluno é único em `/area-do-estudante/minhas-aulas/`: reposições consomem créditos elegíveis, podem ser canceladas até o início da aula e só devolvem o crédito quando o cancelamento ocorre com pelo menos 12 horas de antecedência. A rota estudantil legada `/reposicoes/` foi aposentada e apenas redireciona para **Minhas Aulas**.
+O aluno pode cancelar uma aula regular ou reposição **até seu início**. Com pelo menos 12 horas de antecedência, a vaga é liberada e um crédito elegível é gerado ou devolvido; com menos de 12 horas, a vaga é liberada **sem crédito**. Após o início, o cancelamento é bloqueado.
 
-O painel administrativo `/reposicoes-admin/` permanece responsável pela operação da agenda. A capacidade adicional de reposição é separada da ocupação regular da turma, e a sincronização automática preserva slots referenciados por qualquer histórico de reserva.
+Créditos podem ser contratuais (cancelamento tempestivo) ou concedidos manualmente pelo professor. A reserva exige crédito elegível, dia da semana diferente dos dias de aula regular do aluno e ocorrência com **pelo menos quatro vagas operacionais** ou **vaga ainda disponível liberada por cancelamento**. Listagem e reserva usam as mesmas validações de backend e proteção transacional.
+
+O aluno gerencia tudo em `/area-do-estudante/minhas-aulas/`. A antiga `/reposicoes/` apenas redireciona, sem indexação. `/reposicoes-admin/` permanece operacional. O comando **CANCELAR ESTA AULA** não remove matrícula; **CANCELAR MINHA MATRÍCULA**, quando permitido antes do primeiro pagamento, remove o vínculo mediante confirmação própria.
 
 Consulte [CONFIGURAR_REPOSICOES.md](CONFIGURAR_REPOSICOES.md).
 
@@ -214,22 +236,18 @@ Consulte [CONFIGURAR_REPOSICOES.md](CONFIGURAR_REPOSICOES.md).
 
 O domínio financeiro inclui:
 
-- mensalidades, valores, vencimentos, overrides mensais e histórico;
-- escolha obrigatória do dia de vencimento, sem fallback implícito;
-- primeira mensalidade gerada e disponibilizada assim que o professor define o valor;
-- próxima competência criada após a quitação e liberada ao aluno dois dias corridos depois, sem antecipar alertas de cobrança;
-- Pix e cartão de débito via Mercado Pago;
-- idempotência e validação de concorrência no settlement;
-- webhook assinado e reconciliação;
-- escalonamento de falhas repetidas de reconciliação;
-- reembolsos e chargebacks;
-- health financeiro e alertas;
-- kill switch de novas cobranças protegido por autorização administrativa e confirmação textual;
-- analytics server-side consentido por meio de outbox e dispatcher;
-- infraestrutura de assinaturas recorrentes preservada para histórico e conciliação, sem criação de novas assinaturas enquanto a política aceita apenas Pix e cartão de débito;
-- feature flag `MERCADO_PAGO_SUBSCRIPTIONS_ENABLED`, desativada por padrão até a liberação operacional;
-- sandbox isolado e acionado manualmente, que rejeita evidências `live_mode=true` e não toca tabelas financeiras reais;
-- protocolos operacionais para primeira transação real, primeiro reembolso real e rotação de credenciais.
+- planos canônicos que vinculam valor e número de aulas; configurações legadas foram reconciliadas sem apagar histórico;
+- primeiro vencimento no dia da matrícula ou no dia seguinte, preservando datas históricas válidas;
+- criação automática/idempotente da primeira mensalidade quando valor e vencimento são definidos;
+- liberação de competências posteriores **dois dias após a quitação anterior**, inclusive na virada do mês, com regra canônica de vencimento efetivo e lembretes;
+- unicidade de datas de vencimento por aluno para competências diferentes;
+- Pix e cartão de **débito** no site/PWA, sem cartão de crédito nem criação de novas assinaturas recorrentes;
+- no Android destinado à Google Play, consulta de mensalidade sem checkout Mercado Pago no bundle;
+- card **HISTÓRICO** em `/pagamento/`, disponível mesmo com todas as mensalidades em dia, exibindo competência, data, valor efetivamente pago, método e identificação de pagamentos parciais;
+- idempotência, webhook assinado, reconciliação, reembolsos, chargebacks e trilhas de auditoria;
+- desativação de cobrança para alunos arquivados, sem reativação automática;
+- health, alertas, kill switch, analytics financeiro server-side consentido e sandbox isolado;
+- infraestrutura histórica de assinaturas preservada para conciliação, com `MERCADO_PAGO_SUBSCRIPTIONS_ENABLED` desativada por padrão.
 
 Documentação principal:
 
@@ -250,6 +268,22 @@ Documentação principal:
 - [docs/payment_subscription_checkout.md](docs/payment_subscription_checkout.md)
 - [docs/payment_subscription_sandbox.md](docs/payment_subscription_sandbox.md)
 
+### PWA, Web Push e Android
+
+A PWA é instalável pelo navegador ou por `/instalar-app/`. O card de instalação fica em **Ajuda e informações** e pode ser ocultado após a instalação. O service worker não armazena HTML, páginas de autenticação/pagamento nem chamadas de API.
+
+Com autorização do aluno, Web Push envia lembrete de aula cerca de **13 horas antes** e avisos de mensalidade **dois dias antes** e **no vencimento**. O backend usa VAPID, cron autenticado, retry, limpeza de subscriptions e revalidação da elegibilidade financeira. O fluxo é da PWA, não das notificações nativas do Android.
+
+O Android usa Capacitor 8, bundle local `_android_site/`, rotas explícitas para evitar fallback, Google OAuth PKCE/deep link e pipeline de APK/AAB. A assinatura exige secrets de CI. A versão Android para Google Play consulta o status financeiro sem oferecer Pix/cartão dentro do app. O projeto nativo é gerado durante o build; sua preparação **não equivale a publicação na loja**.
+
+Consulte [docs/android_capacitor.md](docs/android_capacitor.md) e [docs/google_play_release_1_0_0.md](docs/google_play_release_1_0_0.md).
+
+### Avaliações verificadas
+
+Em `/avaliar-aulas/`, alunos autenticados enviam avaliação de 1 a 5 estrelas, comentário, nome de exibição e consentimento de publicação. Há uma avaliação ativa por aluno; edições voltam à moderação e o aluno pode retirá-la. Em `/avaliacoes-dos-alunos/`, o professor aprova ou rejeita segundo critérios de segurança e privacidade, sem discriminar notas baixas.
+
+As páginas `/aulas-em-grupo/` e `/aulas-individuais/` mostram apenas avaliações aprovadas e consentidas da modalidade, sem `student_id`. Não há `Review`/`AggregateRating` estruturado nesta versão.
+
 ### Aquisição, privacidade e analytics
 
 A home funciona como hub dos formatos de aula. As páginas comerciais de aulas individuais e em grupo mantêm metadados, sitemap, dados estruturados e rastreamento coerentes com seu papel no funil.
@@ -260,7 +294,7 @@ Dados reais nunca devem ser adicionados a issues, commits, PRs, fixtures públic
 
 ### Observabilidade
 
-A aplicação mantém captura de erros, CSP reporting, probes sintéticos, health interno e verificação externa de disponibilidade. O cálculo de saúde preserva eventos brutos para auditoria, mas exclui do alerta apenas ruídos conhecidos e estritamente identificados, como assets aprovados do Twemoji e endpoints autorizados do OpenAI Pixel. `/saude-do-sistema/` consolida sinais administrativos, incluindo health de autenticação e pagamentos.
+A aplicação mantém captura de erros, CSP reporting, probes sintéticos, health interno e verificação externa de disponibilidade. Violações CSP acionáveis são agrupadas por página, diretiva e origem, mantendo a contagem bruta para auditoria. O cálculo de saúde preserva eventos brutos para auditoria, mas exclui do alerta apenas ruídos conhecidos e estritamente identificados, como assets aprovados do Twemoji e endpoints autorizados do OpenAI Pixel. `/saude-do-sistema/` consolida sinais administrativos, incluindo health de autenticação e pagamentos. Histórico legítimo de aulas de turmas desativadas é retido sem produzir falso alerta de integridade.
 
 Detalhes: [docs/system_health_monitoring.md](docs/system_health_monitoring.md).
 
@@ -285,7 +319,11 @@ Procedimento: [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md).
 | `*.js`, `*.css` | frontend e estilos |
 | `flashcards/` | módulo de flashcards |
 | `conversation-questions/` | perguntas de conversação e progresso |
-| `pagamento/` | checkout e componentes financeiros |
+| `o-que-fazer/`, `roteiro-da-aula/`, `minha-semana/` | preparação e operação pedagógica |
+| `avaliar-aulas/`, `avaliacoes-dos-alunos/` | avaliações e moderação |
+| `pagamento/` | checkout, consulta e histórico financeiro |
+| `site.webmanifest`, `service-worker.js` | instalação e runtime PWA |
+| `mobile/`, `capacitor.config.json` | Android e metadados de distribuição |
 | `integracao-google-forms/` | gestão da integração de exercícios |
 | `supabase/functions/` | Edge Functions |
 | `supabase/migrations/` | migrations |
@@ -341,9 +379,23 @@ python3 -m http.server 4173 --directory _site
 
 `_site/` é um artefato gerado para publicação/validação. O pipeline rejeita vazamento de arquivos operacionais que não pertencem ao site público.
 
+### Android (opcional)
+
+Com Node.js 22+, Android Studio e SDK 36, execute após a instalação de dependências:
+
+```bash
+npm run mobile:web
+npm run mobile:android:add
+npm run mobile:android:sync
+npm run mobile:android:debug
+npm run mobile:android:bundle
+```
+
+`mobile:web` gera `_site/` e `_android_site/`; o build Android produz APK/AAB. Para assinar e distribuir, configure os secrets de CI e siga [docs/android_capacitor.md](docs/android_capacitor.md) e [docs/google_play_release_1_0_0.md](docs/google_play_release_1_0_0.md).
+
 ## CI/CD e deploy
 
-GitHub Actions valida PRs e mudanças em `main` com gates de Clean Code, autenticação, segurança, acessibilidade, responsividade, URLs, SEO, performance, build estático, produção, pagamentos, system health e backup/recovery.
+GitHub Actions valida PRs e mudanças em `main` com gates de Clean Code, autenticação, segurança, acessibilidade, responsividade, URLs, SEO, performance, build estático, produção, pagamentos, Web Push, Android, drift de migrações Supabase, system health e backup/recovery. A verificação de materialização não faz push direto no `main` protegido.
 
 O Lighthouse usa aquecimento e cinco amostras medidas para reduzir flutuação do runner sem relaxar o guardrail de LCP existente.
 
@@ -360,7 +412,7 @@ Fluxo esperado:
 
 A hospedagem de produção é **GitHub Pages**. Não introduza configuração ou dependência de Netlify.
 
-O merge de código não substitui ações de infraestrutura no Supabase ou provedores externos. Migrações, secrets, OAuth/webhooks e deploy de Edge Functions devem seguir seus runbooks.
+O merge de código não substitui ações de infraestrutura no Supabase ou provedores externos. Migrações, secrets, OAuth/webhooks, Web Push e deploy de Edge Functions seguem seus runbooks. O CI Android não publica automaticamente na Google Play.
 
 ## Segurança
 
@@ -373,7 +425,10 @@ Princípios vigentes:
 - `service_role` exclusiva de servidor;
 - schema `private` para rotinas/dados de servidor;
 - autenticação própria para webhooks máquina-a-máquina;
-- Vault para segredos acionados pelo banco;
+- Vault para segredos acionados pelo banco, inclusive o mapeamento privado de códigos de matrícula para planos;
+- regras de preços, cancelamentos, créditos, vagas e cobrança validadas no backend;
+- avaliações públicas somente com consentimento e moderação;
+- Web Push opt-in com VAPID e jobs autenticados;
 - CSP, error monitoring e health checks;
 - kill switch financeiro sem destruição do histórico;
 - backups criptografados antes de sair do runner.
@@ -382,7 +437,7 @@ Consulte [SUPABASE_SEGURANCA.md](SUPABASE_SEGURANCA.md) e [docs/global_security_
 
 ## Configuração e secrets
 
-`supabase_config.js` contém somente valores públicos necessários ao cliente. Secrets permanecem no Supabase, GitHub Actions ou provedor correspondente.
+`supabase_config.js` contém somente valores públicos necessários ao cliente. Secrets permanecem no Supabase, GitHub Actions ou provedor correspondente. A assinatura Android usa `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` e `ANDROID_KEY_PASSWORD` como secrets de CI, nunca versionados.
 
 Nunca copie secrets para documentação, PRs, logs ou frontend.
 
@@ -409,6 +464,9 @@ Registro: [docs/decisions/2026-09-10-mcp-v1-deferred.md](docs/decisions/2026-09-
 - evitar duplicação de lógica;
 - preservar histórico acadêmico e financeiro em operações de ciclo de vida;
 - manter no máximo dois vínculos de turma por aluno e nenhum vínculo para alunos arquivados;
+- centralizar progressão acadêmica, planos, créditos e vagas em regras canônicas do backend;
+- distinguir cancelamento de aula de cancelamento de matrícula;
+- não reintroduzir páginas, cards ou aliases aposentados;
 - preservar overrides financeiros explícitos ao recalcular ou regenerar mensalidades;
 - não aplicar SQL histórico indiscriminadamente;
 - não publicar secrets ou dados pessoais;
