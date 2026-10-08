@@ -94,7 +94,12 @@ $fragment$;
     'synthetic_failed_targets', probe_failed_count,
 $fragment$;
 begin
-  select pg_get_functiondef('private.run_system_health_check(boolean)'::regprocedure)
+  if to_regprocedure('private.run_system_health_check(boolean)') is null then
+    raise notice 'Skipping CSP health aggregation overlay because private.run_system_health_check(boolean) is not present in this recovery baseline.';
+    return;
+  end if;
+
+  select pg_get_functiondef(to_regprocedure('private.run_system_health_check(boolean)'))
   into current_definition;
 
   if position(old_declaration in current_definition) = 0 then
