@@ -105,11 +105,54 @@
     });
   }
 
-  function isRestrictedCurrentPage() {
+  function normalizeRoutePath(value) {
+    return String(value || "/").toLowerCase();
+  }
+
+  function isRestrictedPath(pathname) {
+    var path = normalizeRoutePath(pathname);
     var context = window.SitePageContext;
-    return !!(context &&
-      typeof context.isRestrictedAreaPage === "function" &&
-      context.isRestrictedAreaPage());
+
+    if (context && typeof context.isRestrictedAreaPage === "function") {
+      return context.isRestrictedAreaPage(path);
+    }
+
+    var isHome = path === "/" || path === "/index" + "." + "html";
+    var isPublicMarketing = isHome ||
+      path === "/privacidade" ||
+      path === "/privacidade/" ||
+      path === "/cookies" ||
+      path === "/cookies/" ||
+      path === "/termos" ||
+      path === "/termos/" ||
+      path.indexOf("/sobre") === 0 ||
+      path.indexOf("/recursos") === 0 ||
+      path === "/quero_conhecer" ||
+      path === "/quero_conhecer" + "." + "html" ||
+      path === "/quero-conhecer" ||
+      path === "/quero-conhecer/" ||
+      path.indexOf("/curso-de-ingles-online") === 0 ||
+      path.indexOf("/aulas-em-grupo") === 0 ||
+      path.indexOf("/aulas-individuais") === 0 ||
+      path.indexOf("/landing-page") === 0;
+    var isPublicAccessFlow = path === "/login" ||
+      path === "/login/" ||
+      path === "/login" + "." + "html" ||
+      path.indexOf("/cadastro") === 0 ||
+      path.indexOf("/complete-cadastro") === 0 ||
+      path.indexOf("/matricula") === 0 ||
+      path.indexOf("/recuperar-senha") === 0 ||
+      path.indexOf("/acesso-aluno") === 0 ||
+      path.indexOf("/acesso-por-senha") === 0 ||
+      path.indexOf("/acesso-negado") === 0 ||
+      path.indexOf("/instalar-app") === 0 ||
+      path.indexOf("/aulas-experimentais") === 0;
+
+    return !isPublicMarketing && !isPublicAccessFlow;
+  }
+
+  function isRestrictedCurrentPage() {
+    return isRestrictedPath(window.location.pathname);
   }
 
   function isRestrictedDestination(action) {
@@ -121,11 +164,8 @@
 
     try {
       var url = new URL(href, window.location.href);
-      var context = window.SitePageContext;
       if (url.origin !== window.location.origin) return false;
-      return !!(context &&
-        typeof context.isRestrictedAreaPage === "function" &&
-        context.isRestrictedAreaPage(String(url.pathname || "/").toLowerCase()));
+      return isRestrictedPath(url.pathname);
     } catch (error) {
       return false;
     }
