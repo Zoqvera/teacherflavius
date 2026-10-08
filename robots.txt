@@ -50,7 +50,5 @@ Disallow: /turma.html
 Disallow: /relatorios-vagas-turmas/
 Disallow: /relatorios_vagas_turmas.html
 Disallow: /integracao-google-forms/
-Disallow: /guia-do-estudante/
-Disallow: /guia-do-estudante.html
 
 Sitemap: https://teacherflavius.com/sitemap.xml
