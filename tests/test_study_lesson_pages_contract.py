@@ -86,6 +86,13 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn(".lesson-page-actions", styles)
         self.assertIn("display: none !important", styles)
         self.assertIn("break-inside: avoid-page", styles)
+        self.assertIn("#teacher-flavius-whatsapp-float", styles)
+        self.assertIn("#tf-skip-link", styles)
+        self.assertIn("#tf-mobile-top-navigation", styles)
+        self.assertIn("#tf-mobile-top-menu-overlay", styles)
+        self.assertIn("#globalLogoutButton", styles)
+        self.assertIn(".lesson-page-container .tf-mobile-nav-source-active", styles)
+        self.assertIn("study_lesson_page.css?v=20261007-print-2", lesson)
 
     def test_roadmap_prefers_linked_internal_page(self) -> None:
         roadmap = self.read("roteiro_de_estudos.html")
