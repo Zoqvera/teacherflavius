@@ -143,7 +143,7 @@ test("finalized class sessions disappear until the next occurrence", function ()
 test("O QUE FAZER links the predicted lesson card to the complete study roadmap", function () {
   assert.match(
     studentPage,
-    /<div id="nextLessonContainer"><\/div>\s*<a class="academic-study-roadmap-link" href="\/roteiro-de-estudos\/">Ver todas as lições no roteiro de estudos<\/a>/
+    /<div id="nextLessonContainer"><\/div>\s*<a class="academic-study-roadmap-link" href="\/roteiro-de-estudos\/">Ver todas as lições<\/a>/
   );
 });
 
