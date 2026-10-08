@@ -36,7 +36,6 @@
     "/login.html": "/login/",
     "/matricula.html": "/matricula/",
     "/mensalidades.html": "/mensalidades/",
-    "/meu_progresso.html": "/meu-progresso/",
     "/minha_turma.html": "/minha-turma/",
     "/ordenar_simple_present.html": "/ordenar-simple-present/",
     "/perfil.html": "/perfil/",

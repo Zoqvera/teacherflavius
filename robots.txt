@@ -37,8 +37,6 @@ Disallow: /radar-de-alunos/
 Disallow: /alunos-arquivados/
 Disallow: /flashcards/
 Disallow: /flashcards.html
-Disallow: /meu-progresso/
-Disallow: /meu_progresso.html
 Disallow: /minha-semana/
 Disallow: /planos-semanais/
 Disallow: /roteiro-de-estudos/

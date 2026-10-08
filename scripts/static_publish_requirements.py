@@ -27,7 +27,6 @@ REQUIRED_PUBLIC_PATHS = (
     "analytics_payments.js",
     "quero-conhecer/index.html",
     "cadastro/index.html",
-    "meu-progresso/index.html",
     "recuperar-senha/index.html",
     "acesso-negado/index.html",
     "responsive_compat.css",

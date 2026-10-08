@@ -28,7 +28,6 @@ PRIVATE_PREFIXES = (
     "/mensalidades/",
     "/turmas/",
     "/flashcards/",
-    "/meu-progresso/",
     "/minha-semana/",
     "/roteiro-de-estudos/",
     "/o-que-fazer/",
