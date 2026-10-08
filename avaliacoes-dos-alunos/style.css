@@ -27,6 +27,14 @@
   color: var(--tf-slate-300);
 }
 
+.review-admin-header .review-admin-guidance {
+  max-width: 720px;
+  margin: 8px auto 0;
+  color: var(--tf-slate-400);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .review-admin-toolbar {
   display: flex;
   align-items: end;
