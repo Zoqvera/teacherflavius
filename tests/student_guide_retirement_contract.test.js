@@ -27,7 +27,7 @@ test("removes the student guide card and obsolete route aliases", function () {
 });
 
 test("clears documentation and permits crawlers to observe the 404 response", function () {
-  assert.equal(read("README.md").includes("/guia-do-estudante.html"), false);
+  assert.equal(read("README.md").includes("guia-do-estudante"), false);
   assert.equal(read("robots.txt").includes("Disallow: /guia-do-estudante"), false);
   assert.equal(read("sitemap.xml").includes("guia-do-estudante"), false);
 });
