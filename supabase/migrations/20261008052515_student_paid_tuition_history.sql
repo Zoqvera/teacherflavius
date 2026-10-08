@@ -1,5 +1,5 @@
--- Histórico de mensalidades acessível exclusivamente à conta autenticada.
--- Retorna uma linha por competência paga (sem dados de aluno nem detalhes do provedor).
+-- Histórico privado de mensalidades com pagamento registrado.
+-- Uma linha por mensalidade: evita duplicar tentativas do provedor de pagamento.
 create or replace function public.get_my_paid_tuition_history()
 returns table (
   reference_month date,
