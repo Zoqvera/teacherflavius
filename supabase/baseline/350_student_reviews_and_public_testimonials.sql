@@ -41,6 +41,10 @@ create index if not exists student_class_reviews_public_lookup_idx
 create index if not exists student_class_reviews_status_submitted_idx
   on private.student_class_reviews (status, submitted_at desc);
 
+create index if not exists student_class_reviews_reviewed_by_idx
+  on private.student_class_reviews (reviewed_by)
+  where reviewed_by is not null;
+
 revoke all on table private.student_class_reviews from public, anon, authenticated;
 grant select, insert, update, delete on table private.student_class_reviews to service_role;
 
