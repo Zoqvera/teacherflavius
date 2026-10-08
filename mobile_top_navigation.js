@@ -55,6 +55,7 @@
     Object.freeze({ href: "/perfil/", label: "MEU PERFIL" })
   ]);
   var MENU_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var KEBAB_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.8" style="fill:currentColor;stroke:none"/><circle cx="12" cy="12" r="1.8" style="fill:currentColor;stroke:none"/><circle cx="12" cy="19" r="1.8" style="fill:currentColor;stroke:none"/></svg>';
   var CLOSE_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
   var ARROW_ICON_SVG = '<svg class="tf-top-nav-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
   var SOURCE_SELECTORS = [
@@ -274,6 +275,10 @@
     return chooseSource();
   }
 
+  function isKebabVariant(source) {
+    return source && source.getAttribute("data-mobile-menu-variant") === "kebab";
+  }
+
   function installStyles() {
     if (document.getElementById(STYLE_ID)) return;
 
@@ -286,11 +291,15 @@
       "#" + BAR_ID + " .tf-mobile-nav-toggle{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:10px 17px;border:1px solid rgba(78,154,236,.46);border-radius:14px;background:rgba(5,66,136,.18);color:#e8f2ff;font:800 12px/1.2 var(--tf-font-display,Inter,system-ui,sans-serif);letter-spacing:.02em;box-shadow:0 8px 24px rgba(2,16,43,.16);cursor:pointer;transition:background 160ms ease,border-color 160ms ease,transform 160ms ease}",
       "#" + BAR_ID + " .tf-mobile-nav-toggle:hover{background:rgba(14,91,177,.28);border-color:rgba(78,154,236,.70);transform:translateY(-1px)}",
       "#" + BAR_ID + " .tf-mobile-nav-toggle-icon{display:inline-flex;width:18px;height:18px;line-height:1}",
+      "#" + BAR_ID + " .tf-mobile-nav-toggle--kebab{min-width:44px;width:44px;height:44px;min-height:44px;padding:10px;border-radius:12px}",
       "#" + BAR_ID + " .tf-top-nav-svg,#" + OVERLAY_ID + " .tf-top-nav-svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
       "#" + OVERLAY_ID + " .tf-top-nav-arrow{width:18px;height:18px;flex:0 0 18px;margin-left:12px;fill:none;stroke:#4e9aec;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
       "#" + BAR_ID + " button:focus-visible,#" + OVERLAY_ID + " a:focus-visible,#" + OVERLAY_ID + " button:focus-visible{outline:3px solid #4e9aec!important;outline-offset:3px!important}",
       "#" + OVERLAY_ID + "{display:none;position:fixed!important;inset:0!important;z-index:2147482500;padding:18px!important;background:rgba(2,6,23,.72);backdrop-filter:blur(6px)}",
       "#" + OVERLAY_ID + ".is-open{display:flex!important;align-items:center!important;justify-content:center!important}",
+      "#" + OVERLAY_ID + ".tf-mobile-menu-kebab{padding:0!important;background:transparent;backdrop-filter:none}",
+      "#" + OVERLAY_ID + ".tf-mobile-menu-kebab.is-open{display:block!important}",
+      "#" + OVERLAY_ID + ".tf-mobile-menu-kebab .tf-mobile-menu-sheet{position:absolute;top:var(--tf-kebab-top,64px);right:var(--tf-kebab-right,16px);width:min(320px,calc(100vw - 24px));max-height:min(75dvh,540px);margin:0!important;padding:14px;border-radius:16px}",
       "#" + OVERLAY_ID + " .tf-mobile-menu-sheet{width:min(100%,540px);max-height:min(82dvh,720px);margin:auto!important;overflow:auto;padding:20px;border:1px solid rgba(78,154,236,.30);border-radius:24px;background:linear-gradient(155deg,#071326,#0a2956);box-shadow:0 26px 80px rgba(2,6,23,.58);font-family:var(--tf-font-body,Inter,system-ui,sans-serif)}",
       "#" + OVERLAY_ID + " .tf-mobile-menu-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;padding:2px 2px 12px;border-bottom:1px solid rgba(148,163,184,.16)}",
       "#" + OVERLAY_ID + " .tf-mobile-menu-title{margin:0;color:#fff;font:800 19px/1.2 var(--tf-font-display,Inter,system-ui,sans-serif)}",
@@ -331,6 +340,22 @@
     }
   }
 
+  function positionKebabMenu(overlay, toggle) {
+    if (!overlay || !overlay.classList.contains("tf-mobile-menu-kebab") || !toggle) return;
+
+    var bounds = toggle.getBoundingClientRect();
+    var sheet = overlay.querySelector(".tf-mobile-menu-sheet");
+    var sheetHeight = sheet ? sheet.offsetHeight : 0;
+    var below = bounds.bottom + 8;
+    var above = bounds.top - sheetHeight - 8;
+    var preferredTop = below + sheetHeight <= window.innerHeight - 12 ? below : above;
+    var top = Math.max(12, Math.min(preferredTop, window.innerHeight - sheetHeight - 12));
+    var right = Math.max(12, window.innerWidth - bounds.right);
+
+    overlay.style.setProperty("--tf-kebab-top", Math.round(top) + "px");
+    overlay.style.setProperty("--tf-kebab-right", Math.round(right) + "px");
+  }
+
   function openMenu() {
     var overlay = document.getElementById(OVERLAY_ID);
     var toggle = document.querySelector("#" + BAR_ID + " .tf-mobile-nav-toggle");
@@ -340,6 +365,7 @@
     overlay.setAttribute("aria-hidden", "false");
     if (document.body) document.body.classList.add("tf-mobile-menu-open");
     if (toggle) toggle.setAttribute("aria-expanded", "true");
+    positionKebabMenu(overlay, toggle);
 
     var closeButton = overlay.querySelector(".tf-mobile-menu-close");
     if (closeButton) {
@@ -383,12 +409,13 @@
     return proxy;
   }
 
-  function buildOverlay(actions) {
+  function buildOverlay(actions, source) {
     var existing = document.getElementById(OVERLAY_ID);
     if (existing) existing.remove();
 
     var overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
+    if (isKebabVariant(source)) overlay.classList.add("tf-mobile-menu-kebab");
     overlay.setAttribute("aria-hidden", "true");
     overlay.innerHTML = [
       '<div class="tf-mobile-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="tf-mobile-menu-title">',
@@ -428,14 +455,19 @@
 
     var bar = document.createElement("nav");
     bar.id = BAR_ID;
+    var isKebab = isKebabVariant(source);
+    if (isKebab) bar.classList.add("tf-mobile-nav-kebab");
     bar.setAttribute("aria-label", "Menu de navegação");
 
     var toggle = document.createElement("button");
     toggle.type = "button";
-    toggle.className = "tf-mobile-nav-toggle";
+    toggle.className = "tf-mobile-nav-toggle" + (isKebab ? " tf-mobile-nav-toggle--kebab" : "");
     toggle.setAttribute("aria-controls", OVERLAY_ID);
     toggle.setAttribute("aria-expanded", "false");
-    toggle.innerHTML = '<span class="tf-mobile-nav-toggle-icon" aria-hidden="true">' + MENU_ICON_SVG + '</span><span>Menu</span>';
+    toggle.setAttribute("aria-label", isKebab ? "Abrir opções de navegação" : "Abrir menu");
+    toggle.innerHTML = '<span class="tf-mobile-nav-toggle-icon" aria-hidden="true">' +
+      (isKebab ? KEBAB_ICON_SVG : MENU_ICON_SVG) + '</span>' +
+      (isKebab ? "" : "<span>Menu</span>");
     toggle.addEventListener("click", openMenu);
     bar.appendChild(toggle);
 
@@ -475,7 +507,7 @@
     source.classList.add("tf-mobile-nav-source-active");
 
     buildBar(source);
-    buildOverlay(actions);
+    buildOverlay(actions, source);
   }
 
   function scheduleRefresh() {
@@ -511,7 +543,32 @@
   }
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") closeMenu();
+    if (event.key === "Escape") {
+      closeMenu();
+      return;
+    }
+
+    var overlay = document.getElementById(OVERLAY_ID);
+    if (event.key !== "Tab" || !overlay || !overlay.classList.contains("tf-mobile-menu-kebab") ||
+        !overlay.classList.contains("is-open")) return;
+
+    var focusable = Array.from(overlay.querySelectorAll("button, a[href]"));
+    if (!focusable.length) return;
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  window.addEventListener("resize", function () {
+    var overlay = document.getElementById(OVERLAY_ID);
+    if (!overlay || !overlay.classList.contains("is-open")) return;
+    positionKebabMenu(overlay, document.querySelector("#" + BAR_ID + " .tf-mobile-nav-toggle"));
   });
 
   if (document.readyState === "loading") {
