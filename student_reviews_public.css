@@ -1,0 +1,192 @@
+.student-reviews-section {
+  padding: 72px 0;
+  background: #eef3f9;
+}
+
+.student-reviews-section .student-reviews-head {
+  max-width: 790px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.student-reviews-section .student-reviews-kicker {
+  margin: 0 0 10px;
+  color: #075fad;
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.student-reviews-section .student-reviews-head h2 {
+  margin: 0 0 12px;
+  color: var(--ux-navy, #02102b);
+  font-family: var(--tf-font-display, Georgia, serif);
+  font-size: clamp(2rem, 5vw, 3.3rem);
+  line-height: 1.08;
+  letter-spacing: -.03em;
+}
+
+.student-reviews-section .student-reviews-head > p:last-child {
+  margin: 0;
+  color: var(--ux-muted, #64748b);
+  font-size: 1.05rem;
+}
+
+.student-reviews-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 24px;
+  padding: 13px 18px;
+  border: 1px solid rgba(2, 16, 43, .11);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ux-text, #12213b);
+  box-shadow: 0 8px 26px rgba(2, 16, 43, .06);
+}
+
+.student-reviews-summary[hidden] {
+  display: none;
+}
+
+.student-reviews-summary strong {
+  font-size: 1.15rem;
+}
+
+.student-reviews-summary span {
+  color: var(--ux-muted, #64748b);
+  font-size: .92rem;
+}
+
+.student-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.student-review-card {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid rgba(2, 16, 43, .10);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(2, 16, 43, .065);
+}
+
+.student-review-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.student-review-name {
+  min-width: 0;
+}
+
+.student-review-name strong {
+  display: block;
+  color: var(--ux-navy, #02102b);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.student-review-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  color: #168c4d;
+  font-size: .75rem;
+  font-weight: 800;
+}
+
+.student-review-verified svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.student-review-stars {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  color: #d8a525;
+}
+
+.student-review-stars svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.student-review-stars svg[data-empty="true"] {
+  color: #dbe2ea;
+}
+
+.student-review-comment {
+  margin: 0;
+  color: var(--ux-text, #12213b);
+  font-size: .98rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.student-review-date {
+  margin: 0;
+  color: var(--ux-muted, #64748b);
+  font-size: .78rem;
+}
+
+.student-reviews-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 24px 18px;
+  border: 1px dashed rgba(2, 16, 43, .18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .62);
+  color: var(--ux-muted, #64748b);
+  text-align: center;
+}
+
+@media (min-width: 720px) {
+  .student-reviews-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1040px) {
+  .student-reviews-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .student-review-card:first-child,
+  .student-review-card:nth-child(2) {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .student-reviews-section {
+    padding: 58px 0;
+  }
+
+  .student-reviews-summary {
+    width: 100%;
+    border-radius: 18px;
+  }
+
+  .student-review-card-head {
+    display: grid;
+  }
+}
