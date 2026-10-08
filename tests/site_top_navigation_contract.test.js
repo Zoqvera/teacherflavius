@@ -127,7 +127,7 @@ test("uses a vertical three-dot trigger and centered dialog in the student guide
   assert.match(navigation, /source\.getAttribute\("data-mobile-menu-style"\) === "vertical-dots"/);
   assert.match(navigation, /VERTICAL_DOTS_ICON_SVG/);
   assert.match(navigation, /tf-mobile-nav-toggle--vertical-dots/);
-  assert.match(navigation, /useVerticalDots \? '<span class="tf-mobile-nav-toggle-icon"/);
+  assert.match(navigation, /useVerticalDots\s*\? '<span class="tf-mobile-nav-toggle-icon"/);
   assert.match(navigation, /aria-modal="true"/);
   assert.match(navigation, /\.is-open\{display:flex!important;align-items:center!important;justify-content:center!important\}/);
   assert.match(navigation, /toggle\.addEventListener\("click", openMenu\)/);
