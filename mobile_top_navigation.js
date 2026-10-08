@@ -55,6 +55,7 @@
     Object.freeze({ href: "/perfil/", label: "MEU PERFIL" })
   ]);
   var MENU_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var VERTICAL_DOTS_ICON_SVG = '<svg class="tf-top-nav-dots-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
   var CLOSE_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
   var ARROW_ICON_SVG = '<svg class="tf-top-nav-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
   var SOURCE_SELECTORS = [
@@ -286,6 +287,9 @@
       "#" + BAR_ID + " .tf-mobile-nav-toggle{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:10px 17px;border:1px solid rgba(78,154,236,.46);border-radius:14px;background:rgba(5,66,136,.18);color:#e8f2ff;font:800 12px/1.2 var(--tf-font-display,Inter,system-ui,sans-serif);letter-spacing:.02em;box-shadow:0 8px 24px rgba(2,16,43,.16);cursor:pointer;transition:background 160ms ease,border-color 160ms ease,transform 160ms ease}",
       "#" + BAR_ID + " .tf-mobile-nav-toggle:hover{background:rgba(14,91,177,.28);border-color:rgba(78,154,236,.70);transform:translateY(-1px)}",
       "#" + BAR_ID + " .tf-mobile-nav-toggle-icon{display:inline-flex;width:18px;height:18px;line-height:1}",
+      "#" + BAR_ID + " .tf-mobile-nav-toggle--vertical-dots{width:48px;height:48px;min-height:48px;padding:0;border-radius:50%}",
+      "#" + BAR_ID + " .tf-mobile-nav-toggle--vertical-dots .tf-mobile-nav-toggle-icon{width:24px;height:24px;align-items:center;justify-content:center}",
+      "#" + BAR_ID + " .tf-top-nav-dots-svg{display:block;width:23px;height:23px;fill:currentColor}",
       "#" + BAR_ID + " .tf-top-nav-svg,#" + OVERLAY_ID + " .tf-top-nav-svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
       "#" + OVERLAY_ID + " .tf-top-nav-arrow{width:18px;height:18px;flex:0 0 18px;margin-left:12px;fill:none;stroke:#4e9aec;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
       "#" + BAR_ID + " button:focus-visible,#" + OVERLAY_ID + " a:focus-visible,#" + OVERLAY_ID + " button:focus-visible{outline:3px solid #4e9aec!important;outline-offset:3px!important}",
@@ -430,12 +434,16 @@
     bar.id = BAR_ID;
     bar.setAttribute("aria-label", "Menu de navegação");
 
+    var useVerticalDots = source.getAttribute("data-mobile-menu-style") === "vertical-dots";
     var toggle = document.createElement("button");
     toggle.type = "button";
-    toggle.className = "tf-mobile-nav-toggle";
+    toggle.className = "tf-mobile-nav-toggle" + (useVerticalDots ? " tf-mobile-nav-toggle--vertical-dots" : "");
     toggle.setAttribute("aria-controls", OVERLAY_ID);
     toggle.setAttribute("aria-expanded", "false");
-    toggle.innerHTML = '<span class="tf-mobile-nav-toggle-icon" aria-hidden="true">' + MENU_ICON_SVG + '</span><span>Menu</span>';
+    if (useVerticalDots) toggle.setAttribute("aria-label", "Abrir menu de navegação");
+    toggle.innerHTML = useVerticalDots
+      ? '<span class="tf-mobile-nav-toggle-icon" aria-hidden="true">' + VERTICAL_DOTS_ICON_SVG + '</span>'
+      : '<span class="tf-mobile-nav-toggle-icon" aria-hidden="true">' + MENU_ICON_SVG + '</span><span>Menu</span>';
     toggle.addEventListener("click", openMenu);
     bar.appendChild(toggle);
 

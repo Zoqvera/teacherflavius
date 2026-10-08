@@ -116,12 +116,22 @@ test("treats lesson landing pages as public in the payment notice loader", funct
 });
 
 
-test("uses the standardized restricted menu at the top of the student guide", function () {
-  const version = "/mobile_top_navigation.js?v=20261008-private-menu-1";
+test("uses a vertical three-dot trigger and centered dialog in the student guide", function () {
+  const version = "/mobile_top_navigation.js?v=20261008-guide-dots-1";
   assert.match(studentGuide, /<html lang="pt-BR" class="tf-nav-pending">/);
-  assert.match(studentGuide, /<nav class="top-links" data-mobile-menu-source="true"/);
+  assert.match(studentGuide, /<nav class="top-links" data-mobile-menu-source="true" data-mobile-menu-style="vertical-dots"/);
+  assert.match(studentGuide, /\.hero > #tf-mobile-top-navigation\s*\{/);
   assert.equal(studentGuide.includes(version), true);
   assert.doesNotMatch(studentGuide, /top-home-button/);
+
+  assert.match(navigation, /source\.getAttribute\("data-mobile-menu-style"\) === "vertical-dots"/);
+  assert.match(navigation, /VERTICAL_DOTS_ICON_SVG/);
+  assert.match(navigation, /tf-mobile-nav-toggle--vertical-dots/);
+  assert.match(navigation, /useVerticalDots\s*\? '<span class="tf-mobile-nav-toggle-icon"/);
+  assert.match(navigation, /aria-modal="true"/);
+  assert.match(navigation, /\.is-open\{display:flex!important;align-items:center!important;justify-content:center!important\}/);
+  assert.match(navigation, /toggle\.addEventListener\("click", openMenu\)/);
+  assert.match(navigation, /if \(event\.key === "Escape"\) closeMenu\(\)/);
   ["/area-do-estudante/", "/area-do-estudante/minhas-aulas/", "/o-que-fazer/", "/perfil/"].forEach(function (href) {
     assert.equal(studentGuide.includes('href="' + href + '"'), true);
   });
