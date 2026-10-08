@@ -1,6 +1,5 @@
 (function () {
   const FLASHCARD_WEEKLY_GOAL = 3;
-  const ROADMAP_TOTAL = 24;
   let currentUser = null;
 
   function sleep(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
@@ -110,11 +109,21 @@
       client.from("grammar_lessons").select("id,title,created_at").order("created_at", { ascending:true }),
       client.from("grammar_lesson_completion").select("lesson_id,completed,completed_at").eq("user_id", currentUser.id),
       client.from("student_frequency").select("class_date,attendance_status").eq("user_id", currentUser.id).gte("class_date", week.week_start).lte("class_date", week.week_end),
-      client.from("study_roadmap_completion").select("lesson_number,completed").eq("user_id", currentUser.id),
+      client.rpc("get_my_action_plan"),
       loadClassInfo()
     ]);
 
     results.slice(0, 7).forEach(function (result) { if (result.error) throw result.error; });
+
+    const actionPlan = results[6].data;
+    if (!actionPlan || typeof actionPlan !== "object" || !Object.prototype.hasOwnProperty.call(actionPlan, "lesson")) {
+      throw new Error("Não foi possível identificar a próxima lição.");
+    }
+
+    const nextRoadmap = actionPlan.lesson === null ? null : Number(actionPlan.lesson.number);
+    if (nextRoadmap !== null && (!Number.isInteger(nextRoadmap) || nextRoadmap < 1)) {
+      throw new Error("O plano acadêmico retornou uma lição inválida.");
+    }
 
     return {
       exercises: (results[0].data || []).map(function (item) {
@@ -125,7 +134,7 @@
       grammarLessons: results[3].data || [],
       grammarCompletions: results[4].data || [],
       frequency: results[5].data || [],
-      roadmap: results[6].data || [],
+      nextRoadmap: nextRoadmap,
       classInfo: results[7]
     };
   }
@@ -149,12 +158,6 @@
     const completedGrammarIds = new Set(data.grammarCompletions.filter(function (row) { return row.completed === true; }).map(function (row) { return row.lesson_id; }));
     const nextGrammar = data.grammarLessons.find(function (lesson) { return !completedGrammarIds.has(lesson.id); }) || null;
     const grammarTrackable = grammarDoneThisWeek || !!nextGrammar;
-
-    const completedRoadmap = new Set(data.roadmap.filter(function (row) { return row.completed === true; }).map(function (row) { return Number(row.lesson_number); }));
-    let nextRoadmap = null;
-    for (let number=1; number<=ROADMAP_TOTAL; number++) {
-      if (!completedRoadmap.has(number)) { nextRoadmap = number; break; }
-    }
 
     const tasks = [];
     if (classTrackable) {
@@ -203,7 +206,7 @@
       currentExercise:currentExercise,
       classInfo:data.classInfo,
       nextClass:nextClassText(data.classInfo),
-      nextRoadmap:nextRoadmap
+      nextRoadmap:data.nextRoadmap
     };
   }
 
@@ -228,7 +231,7 @@
 
     const roadmap = document.getElementById("roadmapPanel");
     if (state.nextRoadmap) {
-      roadmap.innerHTML = '<div><span class="info-kicker">ROTEIRO DE ESTUDOS</span><strong>Próxima lição: Lição ' + esc(state.nextRoadmap) + '</strong><p>Esta é a primeira lição ainda não marcada como concluída.</p></div><a class="info-button" href="/o-que-fazer/">ABRIR ROTEIRO</a>';
+      roadmap.innerHTML = '<div><span class="info-kicker">ROTEIRO DE ESTUDOS</span><strong>Próxima lição: Lição ' + esc(state.nextRoadmap) + '</strong><p>Esta é a próxima lição definida pelo seu progresso acadêmico.</p></div><a class="info-button" href="/o-que-fazer/">ABRIR ROTEIRO</a>';
     } else {
       roadmap.innerHTML = '<div><span class="info-kicker">ROTEIRO DE ESTUDOS</span><strong>Roteiro concluído</strong><p>Todas as lições disponíveis foram concluídas.</p></div><a class="info-button" href="/o-que-fazer/">ABRIR ROTEIRO</a>';
     }
