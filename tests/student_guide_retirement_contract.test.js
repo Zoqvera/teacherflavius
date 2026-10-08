@@ -31,3 +31,35 @@ test("clears documentation and permits crawlers to observe the 404 response", fu
   assert.equal(read("robots.txt").includes("Disallow: /guia-do-estudante"), false);
   assert.equal(read("sitemap.xml").includes("guia-do-estudante"), false);
 });
+
+test("finds no references to the retired guide anywhere else in the site source", function () {
+  const allowedExtensions = new Set([
+    ".html", ".js", ".mjs", ".cjs", ".ts", ".tsx",
+    ".json", ".xml", ".md", ".css", ".txt", ".py", ".sql", ".yml", ".yaml"
+  ]);
+  const excludedDirectories = new Set([
+    ".git", "node_modules", ".venv", "dist", "build", "coverage"
+  ]);
+  const thisTest = path.resolve(__filename);
+  const remainingReferences = [];
+
+  function scan(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (!excludedDirectories.has(entry.name)) scan(entryPath);
+        continue;
+      }
+      if (!entry.isFile() || !allowedExtensions.has(path.extname(entry.name))) continue;
+      if (path.resolve(entryPath) === thisTest) continue;
+
+      const content = fs.readFileSync(entryPath, "utf8");
+      if (/guia-do-estudante|guiaDoEstudanteLink|studentGuide/.test(content)) {
+        remainingReferences.push(path.relative(root, entryPath));
+      }
+    }
+  }
+
+  scan(root);
+  assert.deepEqual(remainingReferences, []);
+});
