@@ -46,11 +46,34 @@
       isGeoContentPage(path);
   }
 
+  function isPublicAccessFlowPage(pathname) {
+    const path = pathname || currentPath();
+    return path === "/login" ||
+      path === "/login/" ||
+      path === legacyPath("/login") ||
+      path.indexOf("/cadastro") === 0 ||
+      path.indexOf("/complete-cadastro") === 0 ||
+      path.indexOf("/matricula") === 0 ||
+      path.indexOf("/recuperar-senha") === 0 ||
+      path.indexOf("/acesso-aluno") === 0 ||
+      path.indexOf("/acesso-por-senha") === 0 ||
+      path.indexOf("/acesso-negado") === 0 ||
+      path.indexOf("/instalar-app") === 0 ||
+      path.indexOf("/aulas-experimentais") === 0;
+  }
+
+  function isRestrictedAreaPage(pathname) {
+    const path = pathname || currentPath();
+    return !isPublicMarketingPage(path) && !isPublicAccessFlowPage(path);
+  }
+
   window.SitePageContext = Object.freeze({
     currentPath: currentPath,
     isHomePage: isHomePage,
     isGeoContentPage: isGeoContentPage,
     isSalesPage: isSalesPage,
-    isPublicMarketingPage: isPublicMarketingPage
+    isPublicMarketingPage: isPublicMarketingPage,
+    isPublicAccessFlowPage: isPublicAccessFlowPage,
+    isRestrictedAreaPage: isRestrictedAreaPage
   });
 })();

@@ -7,7 +7,7 @@
 
   const scriptAssets = Object.freeze({
     whatsappLeadForm: freezeAsset({ id: "teacher-flavius-whatsapp-lead-form", src: "/whatsapp_lead_form.js?v=20260902-direct-2" }),
-    siteWhatsapp: freezeAsset({ id: "teacher-flavius-site-whatsapp", src: "/site_whatsapp.js?v=20260902-1" }),
+    siteWhatsapp: freezeAsset({ id: "teacher-flavius-site-whatsapp", src: "/site_whatsapp.js?v=20261007-private-no-prefill-1" }),
     accessibility: freezeAsset({ id: "teacher-flavius-accessibility", src: "/accessibility.js?v=20260820-1" }),
     cro: freezeAsset({ id: "teacher-flavius-cro", src: "/cro.js?v=20260820-1" }),
     analytics: freezeAsset({ id: "teacher-flavius-analytics", src: "/analytics.js?v=20260912-server-1" }),
@@ -22,7 +22,7 @@
     googleOnlyAccess: freezeAsset({ id: "teacher-flavius-google-only-access", src: "/google_only_access.js?v=20261006-profile-freeze-1" }),
     studentBirthdays: freezeAsset({ id: "teacher-flavius-student-birthdays", src: "/student_birthdays.js?v=20260819-1" }),
     studentBirthdayCelebration: freezeAsset({ id: "teacher-flavius-student-birthday-celebration", src: "/student_birthday_celebration.js?v=20260909-1" }),
-    sitePageContext: freezeAsset({ id: "teacher-flavius-site-page-context", src: "/site_page_context.js?v=20260925-auth-runtime-1" }),
+    sitePageContext: freezeAsset({ id: "teacher-flavius-site-page-context", src: "/site_page_context.js?v=20261007-private-no-prefill-1" }),
     siteBranding: freezeAsset({ id: "teacher-flavius-site-branding", src: "/site_branding.js?v=20260902-1" }),
     siteEnrollmentGuard: freezeAsset({ id: "teacher-flavius-site-enrollment-guard", src: "/site_enrollment_guard.js?v=20260902-1" }),
     marketingTrackingControl: freezeAsset({ id: "teacher-flavius-marketing-tracking-control", src: "/marketing_tracking_control.js?v=20260904-1" }),
