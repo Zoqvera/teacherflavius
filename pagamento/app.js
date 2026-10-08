@@ -347,6 +347,7 @@ async function refreshAfterPayment(paidTuitionId) {
 
   if (!stillPending) {
     clearPaymentAttemptKey(paidTuitionId);
+    if (window.TuitionHistory) await window.TuitionHistory.refreshIfOpen();
     if (!pendingTuitions.length) {
       showAllPaid("Seu pagamento foi confirmado. Todas as mensalidades desta conta estão em dia.");
       return true;
@@ -402,6 +403,9 @@ async function initializePage() {
     return;
   }
   document.body.classList.remove("auth-checking");
+  if (window.TuitionHistory) {
+    window.TuitionHistory.mount({ getClient: function () { return Auth.getClient(); } });
+  }
 
   try {
     await loadPendingTuitions();
