@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#02102B">
+  <title>Avaliações dos alunos - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260715-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/aula_template.css?v=20260430-3">
+  <link rel="stylesheet" href="/avaliacoes-dos-alunos/style.css?v=20261008-1">
+</head>
+<body class="auth-checking review-admin-page">
+  <main class="review-admin-shell">
+    <nav class="top-links" aria-label="Navegação principal">
+      <a class="top-link" href="/">HOME</a>
+      <a class="top-link" href="/professor/">ÁREA DO PROFESSOR</a>
+    </nav>
+
+    <header class="review-admin-header">
+      <span class="badge">TEACHER FLÁVIO</span>
+      <h1>Avaliações dos alunos</h1>
+      <p>Analise e modere os comentários enviados pelos alunos.</p>
+      <p class="review-admin-guidance">Modere por segurança, privacidade e adequação do conteúdo. Uma nota baixa, por si só, não é motivo para rejeição.</p>
+    </header>
+
+    <section class="review-admin-toolbar" aria-label="Filtros de avaliações">
+      <label>
+        <span>STATUS</span>
+        <select id="reviewStatusFilter">
+          <option value="">Todas</option>
+          <option value="pending" selected>Pendentes</option>
+          <option value="approved">Aprovadas</option>
+          <option value="rejected">Rejeitadas</option>
+        </select>
+      </label>
+      <button id="reviewRefreshButton" type="button">ATUALIZAR</button>
+    </section>
+
+    <p id="reviewAdminStatus" class="review-admin-status" role="status" aria-live="polite">
+      Carregando avaliações...
+    </p>
+
+    <section id="reviewAdminList" class="review-admin-list" aria-live="polite"></section>
+  </main>
+
+  <script src="/avaliacoes-dos-alunos/app.js?v=20261008-1"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260820-desktop-menu-1"></script>
+</body>
+</html>

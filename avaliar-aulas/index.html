@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#02102B">
+  <title>Avaliar minhas aulas - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260715-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/aula_template.css?v=20260430-3">
+  <link rel="stylesheet" href="/avaliar-aulas/style.css?v=20261008-1">
+</head>
+<body class="auth-checking review-form-page">
+  <main class="review-form-shell">
+    <nav class="top-links" aria-label="Navegação principal">
+      <a class="top-link" href="/">HOME</a>
+      <a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a>
+    </nav>
+
+    <header class="review-form-header">
+      <span class="badge">TEACHER FLÁVIO</span>
+      <h1>Avalie suas aulas</h1>
+      <p>Conte como está sendo sua experiência com as aulas de inglês.</p>
+    </header>
+
+    <p id="reviewPageStatus" class="review-page-status" role="status" aria-live="polite">
+      Carregando seus dados...
+    </p>
+
+    <section id="reviewFormPanel" class="review-form-panel" hidden aria-labelledby="reviewFormTitle">
+      <div class="review-profile-summary">
+        <div>
+          <span class="review-label">ALUNO</span>
+          <strong id="reviewStudentName">—</strong>
+        </div>
+        <div>
+          <span class="review-label">TIPO DE AULA</span>
+          <strong id="reviewLessonType">—</strong>
+        </div>
+      </div>
+
+      <div id="reviewExistingStatus" class="review-existing-status" hidden></div>
+
+      <form id="studentReviewForm">
+        <fieldset class="review-fieldset">
+          <legend id="reviewFormTitle">Sua nota</legend>
+          <p class="review-help">Escolha de 1 a 5 estrelas.</p>
+          <div class="review-rating-options" role="radiogroup" aria-label="Nota das aulas">
+            <label class="review-star-option">
+              <input type="radio" name="rating" value="1" required>
+              <span class="review-star-visual" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m12 2.5 2.9 5.88 6.49.94-4.7 4.58 1.11 6.47L12 17.32l-5.8 3.05 1.11-6.47-4.7-4.58 6.49-.94Z"/></svg>
+              </span>
+              <span>1</span>
+            </label>
+            <label class="review-star-option">
+              <input type="radio" name="rating" value="2">
+              <span class="review-star-visual" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m12 2.5 2.9 5.88 6.49.94-4.7 4.58 1.11 6.47L12 17.32l-5.8 3.05 1.11-6.47-4.7-4.58 6.49-.94Z"/></svg>
+              </span>
+              <span>2</span>
+            </label>
+            <label class="review-star-option">
+              <input type="radio" name="rating" value="3">
+              <span class="review-star-visual" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m12 2.5 2.9 5.88 6.49.94-4.7 4.58 1.11 6.47L12 17.32l-5.8 3.05 1.11-6.47-4.7-4.58 6.49-.94Z"/></svg>
+              </span>
+              <span>3</span>
+            </label>
+            <label class="review-star-option">
+              <input type="radio" name="rating" value="4">
+              <span class="review-star-visual" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m12 2.5 2.9 5.88 6.49.94-4.7 4.58 1.11 6.47L12 17.32l-5.8 3.05 1.11-6.47-4.7-4.58 6.49-.94Z"/></svg>
+              </span>
+              <span>4</span>
+            </label>
+            <label class="review-star-option">
+              <input type="radio" name="rating" value="5">
+              <span class="review-star-visual" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m12 2.5 2.9 5.88 6.49.94-4.7 4.58 1.11 6.47L12 17.32l-5.8 3.05 1.11-6.47-4.7-4.58 6.49-.94Z"/></svg>
+              </span>
+              <span>5</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="review-fieldset">
+          <legend>Como seu nome será publicado</legend>
+          <div class="review-name-options">
+            <label>
+              <input type="radio" name="displayNameMode" value="full" required>
+              <span>Nome completo</span>
+            </label>
+            <label>
+              <input type="radio" name="displayNameMode" value="first_initial">
+              <span>Primeiro nome + inicial do último sobrenome</span>
+            </label>
+          </div>
+          <p class="review-preview">Prévia: <strong id="reviewDisplayNamePreview">—</strong></p>
+        </fieldset>
+
+        <label class="review-comment-field">
+          <span>Seu comentário</span>
+          <textarea
+            id="reviewComment"
+            minlength="10"
+            maxlength="1000"
+            rows="7"
+            required
+            placeholder="Conte o que você está achando das aulas, o que melhorou ou o que mais gosta na experiência."
+          ></textarea>
+          <small><span id="reviewCommentCount">0</span>/1000 caracteres</small>
+        </label>
+
+        <label class="review-consent">
+          <input id="reviewPublicationConsent" type="checkbox" required>
+          <span>Autorizo a publicação do meu nome de exibição, comentário, nota e data nas páginas públicas das aulas do Teacher Flávio. Posso retirar minha avaliação depois.</span>
+        </label>
+
+        <div class="review-form-actions">
+          <button id="reviewSubmitButton" class="review-primary-button" type="submit">ENVIAR AVALIAÇÃO</button>
+          <button id="reviewDeleteButton" class="review-secondary-button" type="button" hidden>RETIRAR MINHA AVALIAÇÃO</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="/avaliar-aulas/app.js?v=20261008-1"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260820-ux-3"></script>
+</body>
+</html>

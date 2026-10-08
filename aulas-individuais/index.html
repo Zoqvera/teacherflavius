@@ -60,6 +60,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link id="teacher-flavius-brand-palette" rel="stylesheet" href="/brand_palette.css?v=20260820-3">
   <link rel="stylesheet" href="/home_vacancies.css?v=20260909-1">
+  <link rel="stylesheet" href="/student_reviews_public.css?v=20261008-1">
   <link rel="stylesheet" href="/course_tools.css?v=20260909-1">
   <style>
     :root{--ux-navy:#02102b;--ux-navy-2:#063e7d;--ux-paper:#f7f9fc;--ux-white:#fff;--ux-text:#12213b;--ux-muted:#64748b;--ux-green:#168c4d;--ux-green-dark:#0f713d;--ux-gold:#e6bd68;--ux-line:rgba(2,16,43,.13);--ux-shadow:0 24px 70px rgba(2,16,43,.16)}
@@ -268,6 +269,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </section>
 
+    <section class="student-reviews-section" data-student-reviews data-lesson-type="individual" aria-labelledby="individual-student-reviews-title">
+      <div class="shell">
+        <div class="student-reviews-head">
+          <p class="student-reviews-kicker">AVALIAÇÕES DOS ALUNOS</p>
+          <h2 id="individual-student-reviews-title">O que os alunos dizem</h2>
+          <p>Veja comentários recentes de alunos que fazem aulas individuais.</p>
+        </div>
+        <div class="student-reviews-summary" data-student-review-summary hidden>
+          <strong><span data-student-review-average>0,0</span> de 5</strong>
+          <span data-student-review-count>0 avaliações</span>
+        </div>
+        <div class="student-reviews-grid" data-student-review-list aria-live="polite">
+          <p class="student-reviews-empty">Carregando avaliações...</p>
+        </div>
+      </div>
+    </section>
+
     <section class="instagram-section" aria-labelledby="instagram-title">
       <div class="shell">
         <a class="instagram-card-link" href="https://www.instagram.com/teacher.flavius?igsi=MTNiZjZzdHpiNmJxZQ==" data-marketing-cta="individual_instagram" target="_blank" rel="noopener noreferrer" aria-label="Abrir o perfil @teacher.flavius no Instagram">
@@ -366,6 +384,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     })();
   </script>
   <script src="/supabase_config.js?v=20260902-1"></script>
+  <script defer src="/student_reviews_public.js?v=20261008-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
 
