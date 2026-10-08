@@ -47,6 +47,11 @@
   display: none;
 }
 
+.menu-group > .pwa-install-card {
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+
 .pwa-install-icon {
   display: inline-grid;
   place-items: center;
