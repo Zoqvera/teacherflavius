@@ -140,6 +140,12 @@ test("finalized class sessions disappear until the next occurrence", function ()
   assert.match(teacherApp, /Aula finalizada\. A turma foi removida do roteiro desta ocorrência\./);
 });
 
+test("O QUE FAZER does not render student-area or classes top buttons", function () {
+  assert.doesNotMatch(studentPage, /academic-top-links/);
+  assert.doesNotMatch(studentPage, />ÁREA DO ESTUDANTE<\/a>/);
+  assert.doesNotMatch(studentPage, />MINHAS AULAS<\/a>/);
+});
+
 test("O QUE FAZER links the predicted lesson card to the complete study roadmap", function () {
   assert.match(
     studentPage,
