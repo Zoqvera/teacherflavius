@@ -23,7 +23,6 @@ PRIVATE_PREFIXES = (
     "/licao/",
     "/perfil/",
     "/minha-turma/",
-    "/frequencia/",
     "/reposicoes/",
     "/mensalidades/",
     "/turmas/",
