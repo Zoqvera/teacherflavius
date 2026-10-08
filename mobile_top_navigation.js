@@ -42,11 +42,17 @@
   var OVERLAY_ID = "tf-mobile-top-menu-overlay";
   var STYLE_ID = "tf-mobile-top-navigation-styles";
   var FALLBACK_SOURCE_ID = "tf-standard-navigation-source";
-  var FALLBACK_LINKS = Object.freeze([
+  var PUBLIC_FALLBACK_LINKS = Object.freeze([
     Object.freeze({ href: "/", label: "HOME" }),
     Object.freeze({ href: "/aulas-em-grupo/", label: "AULAS EM GRUPO" }),
     Object.freeze({ href: "/aulas-individuais/", label: "AULAS INDIVIDUAIS" }),
     Object.freeze({ href: "/area-do-estudante/", label: "ÁREA DO ESTUDANTE" })
+  ]);
+  var RESTRICTED_FALLBACK_LINKS = Object.freeze([
+    Object.freeze({ href: "/area-do-estudante/", label: "ÁREA DO ESTUDANTE" }),
+    Object.freeze({ href: "/area-do-estudante/minhas-aulas/", label: "MINHAS AULAS" }),
+    Object.freeze({ href: "/o-que-fazer/", label: "O QUE FAZER" }),
+    Object.freeze({ href: "/perfil/", label: "MEU PERFIL" })
   ]);
   var MENU_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
   var CLOSE_ICON_SVG = '<svg class="tf-top-nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
@@ -99,11 +105,82 @@
     });
   }
 
+  function normalizeRoutePath(value) {
+    return String(value || "/").toLowerCase();
+  }
+
+  function isRestrictedPath(pathname) {
+    var path = normalizeRoutePath(pathname);
+    var context = window.SitePageContext;
+
+    if (context && typeof context.isRestrictedAreaPage === "function") {
+      return context.isRestrictedAreaPage(path);
+    }
+
+    var isHome = path === "/" || path === "/index" + "." + "html";
+    var isPublicMarketing = isHome ||
+      path === "/privacidade" ||
+      path === "/privacidade/" ||
+      path === "/cookies" ||
+      path === "/cookies/" ||
+      path === "/termos" ||
+      path === "/termos/" ||
+      path.indexOf("/sobre") === 0 ||
+      path.indexOf("/recursos") === 0 ||
+      path === "/quero_conhecer" ||
+      path === "/quero_conhecer" + "." + "html" ||
+      path === "/quero-conhecer" ||
+      path === "/quero-conhecer/" ||
+      path.indexOf("/curso-de-ingles-online") === 0 ||
+      path.indexOf("/aulas-em-grupo") === 0 ||
+      path.indexOf("/aulas-individuais") === 0 ||
+      path.indexOf("/landing-page") === 0;
+    var isPublicAccessFlow = path === "/login" ||
+      path === "/login/" ||
+      path === "/login" + "." + "html" ||
+      path.indexOf("/cadastro") === 0 ||
+      path.indexOf("/complete-cadastro") === 0 ||
+      path.indexOf("/matricula") === 0 ||
+      path.indexOf("/recuperar-senha") === 0 ||
+      path.indexOf("/acesso-aluno") === 0 ||
+      path.indexOf("/acesso-por-senha") === 0 ||
+      path.indexOf("/acesso-negado") === 0 ||
+      path.indexOf("/instalar-app") === 0 ||
+      path.indexOf("/aulas-experimentais") === 0;
+
+    return !isPublicMarketing && !isPublicAccessFlow;
+  }
+
+  function isRestrictedCurrentPage() {
+    return isRestrictedPath(window.location.pathname);
+  }
+
+  function isRestrictedDestination(action) {
+    if (!action || action.tagName !== "A") return true;
+    if (!isRestrictedCurrentPage()) return true;
+
+    var href = action.getAttribute("href");
+    if (!href) return false;
+
+    try {
+      var url = new URL(href, window.location.href);
+      if (url.origin !== window.location.origin) return false;
+      return isRestrictedPath(url.pathname);
+    } catch (error) {
+      return false;
+    }
+  }
+
   function visibleActions(source) {
     return directActions(source).filter(function (action) {
       if (action.hasAttribute("hidden") || action.getAttribute("aria-hidden") === "true") return false;
-      return window.getComputedStyle(action).display !== "none";
+      if (window.getComputedStyle(action).display === "none") return false;
+      return isRestrictedDestination(action);
     });
+  }
+
+  function fallbackLinksForCurrentPage() {
+    return isRestrictedCurrentPage() ? RESTRICTED_FALLBACK_LINKS : PUBLIC_FALLBACK_LINKS;
   }
 
   function isDangerAction(action) {
@@ -171,7 +248,7 @@
     source.setAttribute("aria-label", "Navegação principal");
 
     var currentPath = normalizePathname(window.location.pathname);
-    FALLBACK_LINKS.forEach(function (item) {
+    fallbackLinksForCurrentPage().forEach(function (item) {
       if (normalizePathname(item.href) === currentPath) return;
       var link = document.createElement("a");
       link.className = "top-link";

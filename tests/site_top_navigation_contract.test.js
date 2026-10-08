@@ -31,7 +31,7 @@ test("uses the profile-students menu pattern as the global navigation model", fu
 
 
 test("renders the profile-students standardized menu without flashing legacy links", function () {
-  const version = "/mobile_top_navigation.js?v=20260924-single-menu-1";
+  const version = "/mobile_top_navigation.js?v=20261008-private-menu-1";
   assert.match(profileStudents, /<html lang="pt-BR" class="tf-nav-pending">/);
   assert.match(profileStudents, /\.tf-nav-pending \.top-links \{ visibility: hidden; \}/);
   assert.equal(profileStudents.includes(version), true);
@@ -40,7 +40,7 @@ test("renders the profile-students standardized menu without flashing legacy lin
 
 
 test("uses the compact menu from first paint on every class detail page", function () {
-  const version = "/mobile_top_navigation.js?v=20260924-single-menu-1";
+  const version = "/mobile_top_navigation.js?v=20261008-private-menu-1";
   assert.match(classDetail, /<html lang="pt-BR" class="tf-nav-pending">/);
   assert.match(classDetail, /\.tf-nav-pending \.top-links \{ visibility: hidden; \}/);
   assert.equal(classDetail.includes(version), true);
@@ -65,7 +65,7 @@ test("uses SVG controls rather than character icons", function () {
 });
 
 test("keeps the home without the standardized top menu and preserves it on portal pages", function () {
-  const version = "/mobile_top_navigation.js?v=20260924-home-login-exclusion-1";
+  const version = "/mobile_top_navigation.js?v=20261008-private-menu-1";
   assert.equal(runtimeConfig.includes(version), true);
   assert.equal(home.includes(version), false);
   assert.equal(studentArea.includes("/mobile_top_navigation.js"), true);
