@@ -9,7 +9,7 @@ const source = fs.readFileSync(
     "..",
     "supabase",
     "migrations",
-    "20261009165200_reconcile_unapproved_outdated_payment_attempts.sql"
+    "20261009164438_reconcile_unapproved_outdated_payment_attempts.sql"
   ),
   "utf8"
 );
