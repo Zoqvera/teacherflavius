@@ -26,6 +26,7 @@ function getClassDisplayName(classItem) {
 function getClassTypeMeta(value) {
   if (value === "quintet") return { label:"QUINTETO", css:"quintet" };
   if (value === "individual") return { label:"INDIVIDUAL", css:"individual" };
+  if (value === "experimental") return { label:"EXPERIMENTAL", css:"experimental" };
   return { label:"TIPO NÃO DEFINIDO", css:"unset" };
 }
 
@@ -51,7 +52,7 @@ async function loadClasses() {
   const client = Auth.getClient();
   const results = await Promise.all([
     client.rpc("get_teacher_classes_with_type"),
-    client.from("teacher_classes").select("class_number,class_weekday,class_start_time").eq("is_active", true)
+    client.from("teacher_classes").select("class_number,class_weekday,class_start_time,capacity_override").eq("is_active", true)
   ]);
   results.forEach(function (result) { if (result.error) throw result.error; });
   const scheduleMap = new Map((results[1].data || []).map(function (row) { return [Number(row.class_number), row]; }));
@@ -76,7 +77,7 @@ function renderClassCard(classItem) {
   const timeValue = classItem.class_start_time ? String(classItem.class_start_time).slice(0,5) : "";
   const scheduleText = classItem.class_weekday && classItem.class_start_time ? weekdayLabel(classItem.class_weekday) + ", " + timeLabel(classItem.class_start_time) : "Horário semanal não definido";
 
-  return '<div class="class-card" data-class-number="' + escapeHtml(classNumber) + '">' +
+  return '<div class="class-card" data-class-number="' + escapeHtml(classNumber) + '" data-capacity="' + escapeHtml(classItem.capacity_override || 8) + '">' +
     '<div class="class-card-title"><span><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-6h6v6"/></svg></span>' + escapeHtml(className) + '</span><span class="class-type-badge ' + typeMeta.css + '">' + typeMeta.label + '</span></div>' +
     '<p class="class-meta">Alunos inscritos: ' + studentCount + ' · ' + escapeHtml(scheduleText) + '</p>' +
     '<div class="config-editor">' +
@@ -85,13 +86,13 @@ function renderClassCard(classItem) {
         '<button class="class-name-save-button" type="button" data-save-class-name="' + escapeHtml(classNumber) + '">SALVAR NOME</button>' +
         '<div class="class-name-status" data-class-name-status="' + escapeHtml(classNumber) + '" role="status" aria-live="polite"></div>' +
       '</div>' +
-      '<label>Etiqueta da turma<select class="class-config-select" data-class-type-select="' + escapeHtml(classNumber) + '"><option value=""' + (!classItem.class_type ? ' selected' : '') + '>Selecione</option><option value="quintet"' + (classItem.class_type === 'quintet' ? ' selected' : '') + '>QUINTETO</option><option value="individual"' + (classItem.class_type === 'individual' ? ' selected' : '') + '>INDIVIDUAL</option></select></label>' +
+      '<label>Etiqueta da turma<select class="class-config-select" data-class-type-select="' + escapeHtml(classNumber) + '"><option value=""' + (!classItem.class_type ? ' selected' : '') + '>Selecione</option><option value="quintet"' + (classItem.class_type === 'quintet' ? ' selected' : '') + '>QUINTETO</option><option value="individual"' + (classItem.class_type === 'individual' ? ' selected' : '') + '>INDIVIDUAL</option><option value="experimental"' + (classItem.class_type === 'experimental' ? ' selected' : '') + '>EXPERIMENTAL</option></select></label>' +
       '<label>Dia semanal<select class="class-config-select" data-class-weekday-select="' + escapeHtml(classNumber) + '">' + weekdayOptions(classItem.class_weekday) + '</select></label>' +
       '<label>Horário<input class="class-config-time" data-class-time-input="' + escapeHtml(classNumber) + '" type="time" value="' + escapeHtml(timeValue) + '"></label>' +
       '<div class="schedule-help">O nome pode ser salvo separadamente. Tipo, dia e horário são salvos pelo botão de configuração. O horário é usado em MINHA SEMANA para mostrar a próxima aula.</div>' +
       '<button class="config-save-button full" type="button" data-save-class-config="' + escapeHtml(classNumber) + '">SALVAR CONFIGURAÇÃO</button>' +
     '</div>' +
-    '<div class="class-actions"><a class="open-class-button" href="turma.html?id=' + encodeURIComponent(classNumber) + '">ABRIR TURMA</a><button class="remove-class-button" type="button" data-class-number="' + escapeHtml(classNumber) + '" data-class-name="' + escapeHtml(className) + '">EXCLUIR TURMA</button></div>' +
+    '<div class="class-actions"><a class="open-class-button" href="' + (classItem.class_type === "experimental" ? "/aulas-experimentais/" : "turma.html?id=" + encodeURIComponent(classNumber)) + '">ABRIR TURMA</a><button class="remove-class-button" type="button" data-class-number="' + escapeHtml(classNumber) + '" data-class-name="' + escapeHtml(className) + '">EXCLUIR TURMA</button></div>' +
   '</div>';
 }
 
@@ -132,7 +133,7 @@ async function createClass(event) {
 
   if (!classType) {
     message.className = "error";
-    message.textContent = "Selecione se a turma é INDIVIDUAL ou QUINTETO.";
+    message.textContent = "Selecione INDIVIDUAL, QUINTETO ou EXPERIMENTAL.";
     return;
   }
   if ((weekday && !startTime) || (!weekday && startTime)) {
@@ -218,7 +219,7 @@ async function saveClassConfig(classNumber, button) {
   const weekday = weekdaySelect && weekdaySelect.value ? Number(weekdaySelect.value) : null;
   const startTime = timeInput && timeInput.value ? timeInput.value : null;
 
-  if (!classType) { alert("Selecione INDIVIDUAL ou QUINTETO antes de salvar."); return; }
+  if (!classType) { alert("Selecione INDIVIDUAL, QUINTETO ou EXPERIMENTAL antes de salvar."); return; }
   if ((weekday && !startTime) || (!weekday && startTime)) { alert("Informe o dia e o horário juntos, ou deixe ambos vazios."); return; }
 
   button.disabled = true;

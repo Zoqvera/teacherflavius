@@ -41,6 +41,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .class-title { display: block; font-size: 14px; font-weight: bold; }
     .class-type-badge { display:inline-flex; align-items:center; border-radius:999px; padding:4px 7px; font-size:9px; font-weight:bold; letter-spacing:.4px; white-space:nowrap; }
     .class-type-badge.quintet { color:#dbeafe; background:rgba(37,99,235,.16); border:1px solid rgba(96,165,250,.42); }
+    .class-type-badge.experimental { color:#a7f3d0; background:rgba(16,185,129,.14); border:1px solid rgba(52,211,153,.35); }
     .class-type-badge.individual { color:#d8b4fe; background:rgba(168,85,247,.14); border:1px solid rgba(192,132,252,.35); }
     .class-type-badge.unset { color:#fde68a; background:rgba(245,158,11,.12); border:1px solid rgba(251,191,36,.3); }
     .class-number { display: block; color: #94a3b8; font-size: 11px; margin-bottom: 6px; }
@@ -119,6 +120,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function getClassTypeMeta(value) {
       if (value === "quintet") return { label: "QUINTETO", css: "quintet" };
       if (value === "individual") return { label: "INDIVIDUAL", css: "individual" };
+      if (value === "experimental") return { label: "EXPERIMENTAL", css: "experimental" };
       return { label: "TIPO NÃO DEFINIDO", css: "unset" };
     }
 
@@ -211,10 +213,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return '<div class="extra-section"><h2>Turmas cadastradas</h2><div class="extra-grid">' + sortedClasses.map(function (item) {
         const classNumber = Number(item.class_number);
         const typeMeta = getClassTypeMeta(item.class_type);
-        return '<a class="extra-card class-item" href="turma.html?id=' + encodeURIComponent(classNumber) + '">' +
+        return '<a class="extra-card class-item" href="' + (item.class_type === "experimental" ? "/aulas-experimentais/" : "turma.html?id=" + encodeURIComponent(classNumber)) + '">' +
           '<span class="class-header"><span class="class-title">' + escapeHtml(item.class_name || ("Turma " + classNumber)) + '</span><span class="class-type-badge ' + typeMeta.css + '">' + escapeHtml(typeMeta.label) + '</span></span>' +
           '<span class="class-number">Nº ' + escapeHtml(classNumber) + '</span>' +
-          renderStudentNames(studentsByClass[String(classNumber)] || []) +
+          (item.class_type === "experimental" ? '<span class="student-list">' + Number(item.student_count || 0) + ' agendado(s) na próxima sessão</span>' : renderStudentNames(studentsByClass[String(classNumber)] || [])) +
         '</a>';
       }).join("") + '</div></div>';
     }
