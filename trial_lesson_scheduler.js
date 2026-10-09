@@ -158,7 +158,9 @@
   }
 
   function isEnrolledAfterTrial(appointment) {
-    return Boolean(appointment && appointment.enrolled_after_trial === true && appointment.status !== "cancelled" && new Date(appointment.starts_at).getTime() < Date.now());
+    if (!appointment || appointment.enrolled_after_trial !== true || appointment.status === "cancelled") return false;
+    const scheduledTime = new Date(appointment.starts_at).getTime();
+    return Number.isNaN(scheduledTime) ? appointment.status === "completed" : scheduledTime < Date.now();
   }
 
   function normalizeError(error) {
