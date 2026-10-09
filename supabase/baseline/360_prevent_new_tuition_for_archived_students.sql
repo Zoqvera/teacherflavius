@@ -1,38 +1,37 @@
--- Stop new charges from being generated for archived students.
--- Existing historical tuition remains available for reconciliation.
-
-create or replace function private.reject_new_tuition_for_archived_student()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
+-- Prevent the creation of new tuition charges for archived students.
+-- Existing tuition records and payment reconciliation remain untouched.
+CREATE OR REPLACE FUNCTION private.reject_new_tuition_for_archived_student()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
   archived_student boolean;
-begin
-  select coalesce(profile.archived, false)
-    into archived_student
-  from public.profiles as profile
-  where profile.id = new.student_id
-  for share;
+BEGIN
+  SELECT COALESCE(profile.archived, false)
+    INTO archived_student
+  FROM public.profiles AS profile
+  WHERE profile.id = NEW.student_id
+  FOR SHARE;
 
-  if coalesce(archived_student, false) then
-    raise exception
+  IF COALESCE(archived_student, false) THEN
+    RAISE EXCEPTION
       'Não é permitido gerar novas mensalidades para um aluno arquivado.'
-      using errcode = '23514';
-  end if;
+      USING ERRCODE = '23514';
+  END IF;
 
-  return new;
-end;
+  RETURN NEW;
+END;
 $function$;
 
-revoke all on function private.reject_new_tuition_for_archived_student()
-  from public, anon, authenticated;
+REVOKE ALL ON FUNCTION private.reject_new_tuition_for_archived_student()
+FROM PUBLIC, anon, authenticated;
 
-drop trigger if exists monthly_tuition_prevent_archived_new_charge
-  on public.monthly_tuition;
+DROP TRIGGER IF EXISTS monthly_tuition_prevent_archived_new_charge
+ON public.monthly_tuition;
 
-create trigger monthly_tuition_prevent_archived_new_charge
-before insert or update of student_id on public.monthly_tuition
-for each row
-execute function private.reject_new_tuition_for_archived_student();
+CREATE TRIGGER monthly_tuition_prevent_archived_new_charge
+BEFORE INSERT OR UPDATE OF student_id ON public.monthly_tuition
+FOR EACH ROW
+EXECUTE FUNCTION private.reject_new_tuition_for_archived_student();
