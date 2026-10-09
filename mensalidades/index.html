@@ -413,6 +413,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       .modal-actions { flex-direction: column-reverse; }
       .modal-actions .finance-button { width: 100%; }
     }
+    .pending-pix-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+    .pending-pix-card { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 18px; background: rgba(10, 24, 55, .7); border: 1px solid rgba(129,140,248,.3); border-radius: 16px; }
+    .pending-pix-name { color: #f8fafc; font-size: 17px; }
+    .pending-pix-amount { color: #e2e8f0; font-size: 15px; font-weight: 600; }
+    .pending-pix-detail { color: #bac8df; font-size: 13px; overflow-wrap: anywhere; }
+    .pending-pix-paid { color: #93c5fd; font-size: 13px; }
+    .pending-pix-empty, .pending-pix-message { color: #bac8df; font-size: 14px; line-height: 1.5; }
+    .pending-pix-message.error { color: #fca5a5; }
+    .pending-pix-message.success { color: #86efac; }
+    .pending-pix-cancel { margin-top: auto; border: 1px solid rgba(248,113,113,.5); }
+    .pending-pix-cancel:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+    @media(max-width:620px) { .pending-pix-cancel { width: 100%; } }
   </style>
   <link rel="stylesheet" href="/mensalidades/mensalidades_visual.css?v=20260901-1">
 </head>
@@ -513,6 +525,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p id="tuitionEmptyState" class="empty-state" hidden></p>
       </section>
 
+      <section class="finance-panel" id="pendingPixSection" aria-labelledby="pendingPixHeading">
+        <div class="panel-header">
+          <div>
+            <h2 id="pendingPixHeading">Cobranças Pix pendentes</h2>
+            <p>Consulte as tentativas de Pix ainda não pagas no mês selecionado e cancele uma cobrança diretamente pelo Mercado Pago.</p>
+          </div>
+          <button id="refreshPendingPixButton" class="finance-button" type="button">ATUALIZAR COBRANÇAS</button>
+        </div>
+        <p id="pendingPixMessage" class="pending-pix-message" role="status" aria-live="polite" hidden></p>
+        <div id="pendingPixList" class="pending-pix-grid" aria-live="polite"></div>
+        <p class="pending-pix-detail">O cancelamento exige confirmação, verifica a situação atual no Mercado Pago e não altera mensalidades já quitadas.</p>
+      </section>
+
     </main>
   </div>
 
@@ -591,6 +616,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 
   <script src="mensalidades.js?v=20260909-1"></script>
+  <script src="/payment_pending_cancellations.js?v=20261009-1"></script>
   <script src="animated_cards.js?v=20260715-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
