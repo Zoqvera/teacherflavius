@@ -158,7 +158,9 @@
   }
 
   function isEnrolledAfterTrial(appointment) {
-    return canUpdateEnrollment(appointment) && appointment.enrolled_after_trial === true;
+    if (!appointment || appointment.enrolled_after_trial !== true || appointment.status === "cancelled") return false;
+    const scheduledTime = new Date(appointment.starts_at).getTime();
+    return Number.isNaN(scheduledTime) ? appointment.status === "completed" : scheduledTime < Date.now();
   }
 
   function normalizeError(error) {
@@ -186,7 +188,7 @@
       );
     }
 
-    if (completed) {
+    if (completed || enrolledAfterTrial) {
       actions.push(
         '<button class="trial-action-button enrollment" type="button" data-trial-id="' + escapeHtml(appointment.id) +
         '" data-trial-enrolled="' + (enrolledAfterTrial ? "false" : "true") + '">' +
@@ -204,7 +206,7 @@
       '<div class="trial-card-meta">' +
         '<span class="trial-pill">Nível ' + escapeHtml(appointment.english_level) + '</span>' +
         '<span class="trial-pill">' + escapeHtml(modeLabel(appointment)) + '</span>' +
-        (enrolledAfterTrial ? '<span class="trial-pill enrolled">MATRICULOU</span>' : '') +
+        (enrolledAfterTrial ? '<span class="trial-pill enrolled">MATRICULOU' + (appointment.conversion_source === "automatic" ? ' · AUTOMÁTICO' : ' · MANUAL') + '</span>' : '') +
       '</div>' +
       '<p class="trial-card-contact"><strong>WhatsApp:</strong> ' + escapeHtml(appointment.whatsapp) + '</p>' +
       '<div class="trial-card-actions">' + actions.join("") + '</div>' +
@@ -420,14 +422,22 @@
   }
 
   async function loadData(runtime) {
+    // Refresh computed enrollments after elapsed trial dates, without modifying manual overrides.
+    const reconciliation = await runtime.client.rpc("reconcile_teacher_trial_enrollments");
+    if (reconciliation.error) throw reconciliation.error;
     const results = await Promise.all([
       runtime.client.rpc("get_teacher_trial_lesson_classes"),
-      runtime.client.rpc("get_teacher_trial_lessons")
+      runtime.client.rpc("get_teacher_trial_lessons"),
+      runtime.client.rpc("get_teacher_trial_conversion_sources")
     ]);
-    if (results[0].error) throw results[0].error;
-    if (results[1].error) throw results[1].error;
+    results.forEach(function (result) { if (result.error) throw result.error; });
+    const sources = new Map((results[2].data || []).map(function (entry) {
+      return [entry.appointment_id, entry.conversion_source];
+    }));
     runtime.state.classes = Array.isArray(results[0].data) ? results[0].data : [];
-    runtime.state.appointments = Array.isArray(results[1].data) ? results[1].data : [];
+    runtime.state.appointments = (Array.isArray(results[1].data) ? results[1].data : []).map(function (appointment) {
+      return Object.assign({}, appointment, { conversion_source: sources.get(appointment.id) || null });
+    });
     renderClassOptions(runtime.documentRef, runtime.state.classes);
     if (runtime.state.editingAppointmentId) {
       const editingAppointment = findAppointment(runtime.state, runtime.state.editingAppointmentId);
@@ -494,7 +504,7 @@
   async function updateEnrollment(runtime, appointmentId, enrolled) {
     const confirmation = enrolled
       ? "Registrar que esta pessoa se matriculou após a aula experimental?"
-      : 'Remover a informação "MATRICULOU" desta aula experimental?';
+      : 'Remover a informação "MATRICULOU" desta aula experimental? O registro será marcado como revisado e não será reativado automaticamente.';
     if (runtime.windowRef.confirm && !runtime.windowRef.confirm(confirmation)) return;
 
     const response = await runtime.client.rpc("set_teacher_trial_lesson_enrollment", {

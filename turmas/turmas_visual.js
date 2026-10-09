@@ -8,13 +8,14 @@
     if (!badge) return null;
     if (badge.classList.contains("individual")) return 1;
     if (badge.classList.contains("quintet")) return 8;
+    if (badge.classList.contains("experimental")) return Number(card.dataset.capacity) || 8;
     return null;
   }
 
   function getStudentCount(card) {
     const meta = card.querySelector(".class-meta");
     if (!meta) return 0;
-    const match = String(meta.textContent || "").match(/Alunos inscritos:\s*(\d+)/i);
+    const match = String(meta.textContent || "").match(/(?:Alunos inscritos|Agendados na próxima sessão):\s*(\d+)/i);
     return match ? Number(match[1]) : 0;
   }
 

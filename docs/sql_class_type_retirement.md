@@ -1,8 +1,9 @@
 # Classificações de turma nos scripts SQL
 
-Os tipos persistidos permitidos são **INDIVIDUAL** e **QUINTETO** em profiles.class_type,
-com os valores internos **individual** e **quintet** em teacher_classes.class_type.
-A capacidade operacional atual é de 1 aluno para individual e 8 alunos para quinteto.
+Os tipos de plano do aluno continuam **INDIVIDUAL** e **QUINTETO** em profiles.class_type.
+Os tipos de turma teacher_classes.class_type agora são **individual**, **quintet** e **experimental**.
+As pessoas agendadas em turmas EXPERIMENTAL continuam registradas exclusivamente em private.trial_lesson_appointments e não recebem matrícula regular.
+A capacidade operacional é de 1 aluno para individual e 8 para quinteto. Em EXPERIMENTAL, é configurável: padrão 8, com AE5 configurada em 10 para preservar reservas existentes.
 
 ## Scripts manuais desativados
 
