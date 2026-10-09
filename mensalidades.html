@@ -510,6 +510,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p id="tuitionEmptyState" class="empty-state" hidden></p>
       </section>
 
+      <section class="finance-panel" aria-labelledby="detachedHistoryTitle">
+        <div class="panel-header">
+          <div>
+            <h2 id="detachedHistoryTitle">Histórico financeiro de perfis removidos</h2>
+            <p>Mensalidades preservadas após a exclusão de perfis, identificadas por referência pseudônima. Não fazem parte das cobranças ativas, da inadimplência ou da previsão de receita.</p>
+          </div>
+        </div>
+        <div class="finance-controls">
+          <button id="refreshDetachedHistoryButton" class="finance-button" type="button">ATUALIZAR HISTÓRICO</button>
+          <button id="exportDetachedHistoryButton" class="finance-button" type="button" disabled>BAIXAR HISTÓRICO</button>
+        </div>
+        <p id="detachedHistorySummary" class="empty-state" role="status" aria-live="polite">Carregando histórico...</p>
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Identidade histórica</th>
+                <th>Competência</th>
+                <th>Vencimento original</th>
+                <th>Valor da parcela</th>
+                <th>Pagamento</th>
+                <th>Situação histórica</th>
+              </tr>
+            </thead>
+            <tbody id="detachedHistoryTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -587,7 +616,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
-  <script src="mensalidades.js?v=20260909-1"></script>
+  <script src="mensalidades.js?v=20261009-1"></script>
   <script src="animated_cards.js?v=20260715-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>

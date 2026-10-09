@@ -169,6 +169,97 @@ async function loadSelectedMonth(options) {
   }
 }
 
+let detachedTuitionHistory = [];
+
+function getDetachedPaymentStatus(item) {
+  if (item.financial_status === "exempt") return "Isenta";
+  if (item.financial_status === "paid") return "Paga";
+  return "Sem pagamento registrado";
+}
+
+function renderDetachedTuitionHistory() {
+  const body = document.getElementById("detachedHistoryTableBody");
+  const summary = document.getElementById("detachedHistorySummary");
+  const unpaid = detachedTuitionHistory.filter(function (item) {
+    return item.financial_status === "no_payment";
+  });
+  const exempt = detachedTuitionHistory.filter(function (item) {
+    return item.financial_status === "exempt";
+  });
+  const unpaidAmount = unpaid.reduce(function (total, item) {
+    return total + Number(item.amount_due || 0);
+  }, 0);
+
+  document.getElementById("exportDetachedHistoryButton").disabled = detachedTuitionHistory.length === 0;
+  summary.textContent = detachedTuitionHistory.length === 0
+    ? "Nenhuma mensalidade de perfil removido encontrada."
+    : detachedTuitionHistory.length + " registro(s) preservado(s) · " +
+      exempt.length + " isento(s) · " + unpaid.length +
+      " sem pagamento registrado (" + formatCurrency(unpaidAmount) +
+      "). Valores históricos sem comprovação de exigibilidade.";
+
+  body.innerHTML = detachedTuitionHistory.map(function (item) {
+    const historicalId = String(item.subject_ref || "").slice(0, 8);
+    const payment = item.payment_date
+      ? formatDate(item.payment_date) + " · " + formatCurrency(item.amount_paid)
+      : "—";
+    return '<tr>' +
+      '<td><strong>Perfil removido</strong><small>Ref. ' + escapeHtml(historicalId) + '</small></td>' +
+      '<td>' + escapeHtml(formatReferenceMonth(item.reference_month)) + '</td>' +
+      '<td>' + escapeHtml(formatDate(item.due_date)) + '</td>' +
+      '<td>' + escapeHtml(formatCurrency(item.amount_due)) + '</td>' +
+      '<td>' + escapeHtml(payment) + '</td>' +
+      '<td>' + escapeHtml(getDetachedPaymentStatus(item)) + '</td>' +
+      '</tr>';
+  }).join("");
+}
+
+async function loadDetachedTuitionHistory() {
+  const button = document.getElementById("refreshDetachedHistoryButton");
+  setButtonBusy(button, true, "CONSULTANDO...");
+  document.getElementById("detachedHistorySummary").textContent = "Carregando histórico...";
+  try {
+    const response = await Auth.getClient().rpc("get_teacher_detached_tuition_history");
+    if (response.error) throw response.error;
+    detachedTuitionHistory = response.data || [];
+    renderDetachedTuitionHistory();
+  } catch (error) {
+    detachedTuitionHistory = [];
+    document.getElementById("detachedHistoryTableBody").innerHTML = "";
+    document.getElementById("exportDetachedHistoryButton").disabled = true;
+    document.getElementById("detachedHistorySummary").textContent =
+      "Não foi possível consultar o histórico financeiro: " + (error.message || "erro desconhecido");
+  } finally {
+    setButtonBusy(button, false);
+  }
+}
+
+function exportDetachedTuitionHistory() {
+  if (!detachedTuitionHistory.length) return;
+  if (!window.XLSX) {
+    document.getElementById("detachedHistorySummary").textContent =
+      "Não foi possível carregar o gerador de Excel.";
+    return;
+  }
+  const rows = detachedTuitionHistory.map(function (item) {
+    return {
+      "Referência histórica": item.subject_ref,
+      "Identificador da mensalidade": item.tuition_id,
+      "Competência": formatReferenceMonth(item.reference_month),
+      "Vencimento original": formatDate(item.due_date),
+      "Valor da parcela": Number(item.amount_due || 0),
+      "Data do pagamento": item.payment_date ? formatDate(item.payment_date) : "",
+      "Valor pago": item.amount_paid == null ? "" : Number(item.amount_paid),
+      "Situação histórica": getDetachedPaymentStatus(item)
+    };
+  });
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  worksheet["!autofilter"] = { ref: worksheet["!ref"] };
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Historico financeiro");
+  XLSX.writeFile(workbook, "mensalidades_perfis_removidos.xlsx", { compression: true });
+}
+
 function updateSummaryCards() {
   const received = monthlyTuition
     .filter(function (item) { return item.payment_status === "paid"; })
@@ -492,6 +583,8 @@ function attachEvents() {
     })();
   });
   document.getElementById("exportButton").addEventListener("click", exportCurrentView);
+  document.getElementById("refreshDetachedHistoryButton").addEventListener("click", loadDetachedTuitionHistory);
+  document.getElementById("exportDetachedHistoryButton").addEventListener("click", exportDetachedTuitionHistory);
   document.getElementById("tuitionTableBody").addEventListener("click", handleTuitionTableClick);
   document.getElementById("paymentForm").addEventListener("submit", registerPayment);
 
@@ -549,6 +642,7 @@ async function initializePage() {
       console.warn("Não foi possível reconciliar pagamentos do Mercado Pago:", error);
     }
     await loadSelectedMonth({ generate: true });
+    await loadDetachedTuitionHistory();
     if (Number(reconciliation.approved || 0) > 0) {
       setPageMessage(
         Number(reconciliation.approved) + " pagamento(s) confirmado(s) pelo Mercado Pago.",
