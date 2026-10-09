@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const read = (file) => fs.readFileSync(path.join(__dirname, "..", file), "utf8");
 const fn = read("supabase/functions/cancel-pending-mercado-pago-payment/index.ts");
-const audit = read("supabase/migrations/20261009190500_audit_pending_pix_cancellations.sql");
+const audit = read("supabase/migrations/20261009190621_audit_pending_pix_cancellations.sql");
 const html = read("mensalidades/index.html");
 const frontend = read("payment_pending_cancellations.js");
 const operations = require("../payment_pending_cancellations.js");
