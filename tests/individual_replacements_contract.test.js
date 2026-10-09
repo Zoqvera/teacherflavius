@@ -62,7 +62,7 @@ test("one-to-one lessons can accept an empty or canceled seat while group rules 
 });
 
 test("creditless legacy booking endpoints remain inaccessible to students", () => {
-  assert.match(policy, /revoke execute on function public\.book_makeup_class\(uuid\) from public,anon,authenticated/i);
-  assert.match(policy, /revoke execute on function public\.get_available_makeup_slots\(\) from public,anon,authenticated/i);
+  assert.match(policy, /revoke execute on function public\.book_makeup_class\(uuid\) from public,\s*anon,\s*authenticated/i);
+  assert.match(policy, /revoke execute on function public\.get_available_makeup_slots\(\) from public,\s*anon,\s*authenticated/i);
   assert.match(policy, /revoke all on function private\.student_replacement_target_type\(uuid\)/i);
 });
