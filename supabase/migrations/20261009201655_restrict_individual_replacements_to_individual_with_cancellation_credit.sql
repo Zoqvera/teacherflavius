@@ -1,16 +1,16 @@
--- Student replacement eligibility by enrolled modality.
--- INDIVIDUAL: only cancellation-generated contract credit to INDIVIDUAL classes.
--- QUINTETO: preserve existing credit eligibility and QUINTETO targets.
--- Historic reservations and credit records remain unchanged.
-set lock_timeout='5s';
-set statement_timeout='90s';
+-- Replacements are restricted to the student's regular-class modality.
+-- No change to historical bookings, paid tuition or existing lesson-credit states.
+set lock_timeout = '5s';
+set statement_timeout = '90s';
 
-CREATE OR REPLACE FUNCTION private.student_replacement_target_type(target_student_id uuid)
- RETURNS text
- LANGUAGE sql
- STABLE SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+-- Resolve target modality from the active student plan and a matching active regular-class link.
+-- Do not infer a student's modality from the destination chosen by the client.
+create or replace function private.student_replacement_target_type(target_student_id uuid)
+returns text
+language sql
+stable security definer
+set search_path = ''
+as $function$
   select case upper(btrim(coalesce(profile.class_type, '')))
     when 'INDIVIDUAL' then 'individual'
     when 'QUINTETO' then 'quintet'
@@ -37,12 +37,19 @@ AS $function$
   limit 1;
 $function$;
 
-CREATE OR REPLACE FUNCTION private.is_student_replacement_credit_eligible(target_student_id uuid, credit_origin text, cancelled_at timestamp with time zone, regular_starts_at timestamp with time zone)
- RETURNS boolean
- LANGUAGE sql
- STABLE SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+-- GROUP students retain their previous eligibility (including manual teacher grants).
+-- INDIVIDUAL students can only spend a contract credit released by cancelling a regular lesson.
+create or replace function private.is_student_replacement_credit_eligible(
+  target_student_id uuid,
+  credit_origin text,
+  cancelled_at timestamptz,
+  regular_starts_at timestamptz
+)
+returns boolean
+language sql
+stable security definer
+set search_path = ''
+as $function$
   select coalesce(
     private.student_replacement_target_type(target_student_id) is not null
     and private.is_replacement_credit_eligible(credit_origin, cancelled_at, regular_starts_at)
@@ -53,6 +60,11 @@ AS $function$
     false
   );
 $function$;
+
+revoke all on function private.student_replacement_target_type(uuid)
+  from public, anon, authenticated;
+revoke all on function private.is_student_replacement_credit_eligible(uuid,text,timestamptz,timestamptz)
+  from public, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.get_my_replacement_options()
  RETURNS TABLE(class_number integer, class_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, available_spots integer)
@@ -634,8 +646,18 @@ begin
   );
 end;
 $function$;
+-- The creditless legacy booking path remains unavailable to students.
+revoke execute on function public.book_makeup_class(uuid) from public, anon, authenticated;
+revoke execute on function public.get_available_makeup_slots() from public, anon, authenticated;
 
-revoke all on function private.student_replacement_target_type(uuid) from public,anon,authenticated;
-revoke all on function private.is_student_replacement_credit_eligible(uuid,text,timestamptz,timestamptz) from public,anon,authenticated;
-revoke execute on function public.book_makeup_class(uuid) from public,anon,authenticated;
-revoke execute on function public.get_available_makeup_slots() from public,anon,authenticated;
+-- Verify the definitions installed by this migration still enforce both class modes.
+do $verify$
+begin
+  if position(
+    'class.class_type = private.student_replacement_target_type(caller_id)'
+    in pg_get_functiondef('public.book_my_lesson_replacement(uuid,integer,timestamptz)'::regprocedure)
+  ) = 0 then
+    raise exception 'Replacement booking target-mode guard missing.';
+  end if;
+end;
+$verify$;
