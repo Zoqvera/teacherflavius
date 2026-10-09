@@ -166,7 +166,8 @@ jobs:
             supabase/baseline/340_enforce_unique_tuition_due_dates_per_student.sql \
             supabase/baseline/345_aggregate_csp_health_by_logical_group.sql \
             supabase/baseline/350_student_reviews_and_public_testimonials.sql \
-            supabase/baseline/355_student_paid_tuition_history.sql
+            supabase/baseline/355_student_paid_tuition_history.sql \
+            supabase/baseline/360_prevent_new_tuition_for_archived_students.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
