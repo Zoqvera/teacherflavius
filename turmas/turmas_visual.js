@@ -8,6 +8,7 @@
     if (!badge) return null;
     if (badge.classList.contains("individual")) return 1;
     if (badge.classList.contains("quintet")) return 8;
+    if (badge.classList.contains("experimental")) return Number(card.dataset.capacity) || 8;
     return null;
   }
 
