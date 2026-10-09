@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
-const migrationPath = "supabase/migrations/20261009182000_prevent_new_tuition_for_archived_students.sql";
+const migrationPath = "supabase/migrations/20261009181637_prevent_new_tuition_for_archived_students.sql";
 const baselinePath = "supabase/baseline/360_prevent_new_tuition_for_archived_students.sql";
 
 function readRepositoryFile(relativePath) {
