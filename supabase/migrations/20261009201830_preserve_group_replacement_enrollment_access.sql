@@ -1,10 +1,11 @@
--- Preserve existing QUINTETO replacement access; INDIVIDUAL requires a regular individual class.
-CREATE OR REPLACE FUNCTION private.student_replacement_target_type(target_student_id uuid)
- RETURNS text
- LANGUAGE sql
- STABLE SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+-- Preserve the former QUINTETO eligibility for already enrolled students.
+-- Require a matching active regular-class membership for INDIVIDUAL students.
+create or replace function private.student_replacement_target_type(target_student_id uuid)
+returns text
+language sql
+stable security definer
+set search_path = ''
+as $function$
   select case upper(btrim(coalesce(profile.class_type, '')))
     when 'INDIVIDUAL' then 'individual'
     when 'QUINTETO' then 'quintet'
@@ -29,4 +30,5 @@ AS $function$
     )
   limit 1;
 $function$;
-revoke all on function private.student_replacement_target_type(uuid) from public,anon,authenticated;
+revoke all on function private.student_replacement_target_type(uuid)
+  from public, anon, authenticated;
