@@ -155,6 +155,7 @@
         const result = await invoke(windowRef, {
           action: "cancel", attempt_id: candidate.attempt_id, confirmation: CONFIRMATION
         });
+        await refresh();
         if (result.pending_sync) {
           setMessage(documentRef, "Mercado Pago confirmou o cancelamento; aguarde a conciliação.", "info");
         } else if (result.ok && result.provider_status === "cancelled") {
@@ -162,7 +163,6 @@
         } else {
           setMessage(documentRef, "Cancelamento não confirmado. Consulte o Mercado Pago.", "error");
         }
-        await refresh();
       } catch (error) {
         setMessage(documentRef, "Cancelamento não confirmado: "
           + (error.message || "falha desconhecida")
