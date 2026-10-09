@@ -77,7 +77,7 @@ function renderClassCard(classItem) {
   const timeValue = classItem.class_start_time ? String(classItem.class_start_time).slice(0,5) : "";
   const scheduleText = classItem.class_weekday && classItem.class_start_time ? weekdayLabel(classItem.class_weekday) + ", " + timeLabel(classItem.class_start_time) : "Horário semanal não definido";
 
-  return '<div class="class-card" data-class-number="' + escapeHtml(classNumber) + '" data-capacity="' + escapeHtml(classItem.capacity_override || 8) + '">' +
+  return '<div class="class-card" data-class-number="' + escapeHtml(classNumber) + '" data-capacity="' + escapeHtml(classItem.capacity_override || (classItem.class_type === "experimental" ? 30 : 8)) + '">' +
     '<div class="class-card-title"><span><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-6h6v6"/></svg></span>' + escapeHtml(className) + '</span><span class="class-type-badge ' + typeMeta.css + '">' + typeMeta.label + '</span></div>' +
     '<p class="class-meta">Alunos inscritos: ' + studentCount + ' · ' + escapeHtml(scheduleText) + '</p>' +
     '<div class="config-editor">' +
