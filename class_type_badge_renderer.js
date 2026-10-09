@@ -20,6 +20,10 @@
       };
     }
 
+    if (value === "experimental") {
+      return { label: "EXPERIMENTAL", color: "#a7f3d0", background: "rgba(16,185,129,.14)", border: "rgba(52,211,153,.35)" };
+    }
+
     if (value === "individual") {
       return {
         label: "INDIVIDUAL",
