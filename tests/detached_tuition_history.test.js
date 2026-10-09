@@ -15,28 +15,28 @@ function createHistoryScreen(records) {
     exportDetachedHistoryButton: { disabled: true }
   };
   const exportedFiles = [];
+  const xlsx = {
+    utils: {
+      json_to_sheet(rows) {
+        exportedFiles.push({ rows });
+        return { "!ref": "A1:H4" };
+      },
+      book_new() { return {}; },
+      book_append_sheet() {}
+    },
+    writeFile(book, filename) {
+      exportedFiles[exportedFiles.length - 1].filename = filename;
+    }
+  };
   const context = vm.createContext({
+    XLSX: xlsx,
     document: {
       getElementById(id) {
         if (!elements[id]) throw new Error("Missing element: " + id);
         return elements[id];
       }
     },
-    window: {
-      XLSX: {
-        utils: {
-          json_to_sheet(rows) {
-            exportedFiles.push({ rows });
-            return { "!ref": "A1:H4" };
-          },
-          book_new() { return {}; },
-          book_append_sheet() {}
-        },
-        writeFile(book, filename) {
-          exportedFiles[exportedFiles.length - 1].filename = filename;
-        }
-      }
-    }
+    window: { XLSX: xlsx }
   });
 
   assert.notEqual(withoutBootstrap, source, "Page bootstrap must be excluded from the VM");
