@@ -5,8 +5,8 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const read = (filename) => fs.readFileSync(path.join(root, filename), "utf8");
-const migration = read("supabase/migrations/20261009193000_experimental_classes_auto_conversion.sql");
-const guards = read("supabase/migrations/20261009195000_experimental_class_transition_guards.sql");
+const migration = read("supabase/migrations/20261009192910_experimental_classes_auto_conversion.sql");
+const guards = read("supabase/migrations/20261009193314_experimental_class_transition_guards.sql");
 const teacherClasses = read("turmas.js");
 const teacherClassesPage = read("turmas.html");
 const bookingUi = read("trial_lesson_scheduler.js");
