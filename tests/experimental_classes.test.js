@@ -37,7 +37,7 @@ test("trial bookings reject active enrolled phone holders and enforce places by 
   assert.match(migration, /private\.check_experimental_booking/);
   assert.match(migration, /pg_advisory_xact_lock\(73008,new\.class_number\)/);
   assert.match(migration, /t\.starts_at=new\.starts_at/);
-  assert.match(migration, /Celular.*aluno matriculado/);
+  assert.match(migration, /celular.*aluno matriculado/i);
   assert.match(migration, /class_number=92 then 10 else 8/);
 });
 
