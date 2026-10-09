@@ -56,13 +56,17 @@ function setClassTitle(className) {
 
 async function loadCurrentClassInfo() {
   const client = Auth.getClient();
-  const response = await client.rpc("get_teacher_classes");
+  const response = await client.rpc("get_teacher_classes_with_type");
   if (response.error) throw response.error;
   const classes = response.data || [];
   const match = classes.find(function (item) {
     return Number(item.class_number) === Number(currentClassNumber);
   });
   if (!match) throw new Error("Turma não encontrada ou excluída.");
+  if (match.class_type === "experimental") {
+    window.location.replace("/aulas-experimentais/");
+    throw new Error("Turmas EXPERIMENTAL são administradas no agendador de aulas experimentais.");
+  }
   return match;
 }
 
