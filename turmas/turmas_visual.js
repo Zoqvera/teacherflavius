@@ -15,7 +15,7 @@
   function getStudentCount(card) {
     const meta = card.querySelector(".class-meta");
     if (!meta) return 0;
-    const match = String(meta.textContent || "").match(/Alunos inscritos:\s*(\d+)/i);
+    const match = String(meta.textContent || "").match(/(?:Alunos inscritos|Agendados na próxima sessão):\s*(\d+)/i);
     return match ? Number(match[1]) : 0;
   }
 
