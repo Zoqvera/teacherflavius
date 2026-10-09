@@ -13,8 +13,8 @@ test("clean /turmas route is static and does not rewrite the document", function
   assert.doesNotMatch(page, /document\.write\(/);
   assert.doesNotMatch(page, /fetch\(['"]\/turmas\.html/);
   assert.match(page, /id="classesGrid"/);
-  assert.match(page, /src="\/turmas\.js\?v=20261002-static-route-1"/);
-  assert.match(page, /src="\/turmas\/turmas_visual\.js\?v=20261002-static-route-1"/);
+  assert.match(page, /src="\/turmas\.js\?v=20261009-experimental-1"/);
+  assert.match(page, /src="\/turmas\/turmas_visual\.js\?v=20261009-experimental-1"/);
   assert.match(page, /href="\/turmas\/turmas_visual\.css\?v=20260929-save-buttons-1"/);
 });
 
