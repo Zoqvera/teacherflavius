@@ -77,6 +77,8 @@ test("interface is an unindexed teacher-only page with a navigation entry", () =
   assert.match(page, /id="reservationForm"/);
   assert.match(page, /id="reservationsMatching"/);
   assert.match(read("professor_home.js"), /href: "\/reservas-de-vagas\/"/);
+  assert.match(read("trial_lesson_scheduler.js"), /CRIAR RESERVA PROMOCIONAL/);
+  assert.match(script, /fillFromTrialLesson/);
   assert.match(read("professor\/professor_icons.js"), /'reservas-de-vagas': '<svg/);
   assert.doesNotMatch(page, /\bonline\b/i);
   assert.doesNotMatch(script, /\bonline\b/i);
