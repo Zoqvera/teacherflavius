@@ -197,6 +197,13 @@
       );
     }
 
+    if (!enrolledAfterTrial && appointment.status !== "cancelled") {
+      actions.push(
+        '<a class="trial-action-button enrollment" href="/reservas-de-vagas/?trial=' +
+        encodeURIComponent(appointment.id) + '">CRIAR RESERVA PROMOCIONAL</a>'
+      );
+    }
+
     return '<article class="trial-card">' +
       '<div class="trial-card-header">' +
         '<div><h3>' + escapeHtml(appointment.visitor_name) + '</h3>' +
