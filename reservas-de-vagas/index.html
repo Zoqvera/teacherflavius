@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Reservas de vagas | Área do Professor</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260715-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/professor.css?v=20260820-1">
+  <link rel="stylesheet" href="/reservas-de-vagas/reservations.css?v=20261010-1">
+</head>
+<body class="auth-checking">
+  <main class="reservation-shell">
+    <nav class="reservation-navigation" data-mobile-menu-source="true" aria-label="Navegação principal">
+      <a href="/">HOME</a><a href="/professor/">ÁREA DO PROFESSOR</a>
+      <a href="/aulas-experimentais/">AULAS EXPERIMENTAIS</a>
+    </nav>
+    <header class="reservation-header">
+      <div><span class="reservation-eyebrow">TEACHER FLÁVIO · COMERCIAL</span>
+        <h1>Reservas de vagas</h1>
+        <p>A reserva garante a condição promocional informada ao interessado. Não bloqueia vaga nem horário em turmas.</p>
+      </div>
+      <button type="button" id="refreshReservations" class="reservation-secondary">ATUALIZAR</button>
+    </header>
+    <p id="reservationMessage" class="reservation-message" role="status" hidden></p>
+    <section class="reservation-summary" id="reservationSummary" aria-label="Indicadores de reservas"></section>
+    <section class="reservation-panel" aria-labelledby="reservationFormTitle">
+      <div class="reservation-section-header">
+        <div><span class="reservation-eyebrow">CADASTRO</span><h2 id="reservationFormTitle">Nova reserva promocional</h2></div>
+      </div>
+      <form id="reservationForm" class="reservation-form">
+        <label><span>Nome *</span><input id="reserveName" type="text" maxlength="120" required autocomplete="off"></label>
+        <label><span>WhatsApp com DDD *</span><input id="reservePhone" type="tel" maxlength="32" inputmode="tel" autocomplete="off" required placeholder="Ex.: (16) 99999-9999"></label>
+        <label><span>Nível de inglês</span><select id="reserveLevel">
+          <option value="Não definido">Não avaliado</option><option value="A1">A1</option><option value="A2">A2</option>
+          <option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option>
+        </select></label>
+        <label><span>Data da reserva *</span><input id="reserveDate" type="date" required></label>
+        <fieldset class="reservation-wide availability-fieldset">
+          <legend>Disponibilidade para aulas</legend>
+          <p>Selecione todos os dias e horários possíveis. Nenhuma vaga será ocupada automaticamente.</p>
+          <div id="reserveAvailability" class="reservation-availability"></div>
+        </fieldset>
+        <label class="reservation-wide"><span>Observações sobre disponibilidade</span>
+          <input id="reserveAvailabilityNotes" type="text" maxlength="500" placeholder="Ex.: prefere aulas à noite"></label>
+        <label><span>Mensalidade promocional (R$) *</span><input id="reservePromotionalPrice" type="number" min="0.01" max="99999999" step="0.01" required></label>
+        <label><span>Validade da condição (opcional)</span><input id="reserveExpiry" type="date"></label>
+        <label class="reservation-wide"><span>Condições da promoção *</span><textarea id="reserveTerms" rows="2" maxlength="2000" required placeholder="Ex.: R$ 50/mês para 4 aulas, por tempo indeterminado"></textarea></label>
+        <label><span>Valor pago pela reserva (R$) *</span><input id="reservePaid" type="number" min="0" max="99999999" step="0.01" value="0" required></label>
+        <label><span>Data do pagamento</span><input id="reservePaymentDate" type="date"></label>
+        <label><span>Forma de pagamento</span><select id="reserveMethod">
+          <option value="">Selecione</option><option value="pix">Pix</option><option value="cash">Dinheiro</option>
+          <option value="card">Cartão</option><option value="bank_transfer">Transferência</option><option value="other">Outra</option>
+        </select></label>
+        <label><span>Instituição / plataforma</span><input id="reserveProvider" type="text" maxlength="120" placeholder="Ex.: PicPay"></label>
+        <label class="reservation-wide"><span>Pagamento (observações livres)</span>
+          <textarea id="reservePaymentNotes" rows="2" maxlength="2000" placeholder="Ex.: Aluna pagou no Pix PicPay."></textarea></label>
+        <label class="reservation-wide"><span>Destino do valor pago</span><select id="reserveDisposition">
+          <option value="undecided">Decidir na matrícula</option>
+          <option value="first_tuition">Crédito para a primeira mensalidade</option>
+          <option value="independent">Taxa independente da mensalidade</option>
+        </select><small>O valor da reserva não é lançado automaticamente como mensalidade.</small></label>
+        <label class="reservation-wide"><span>Outras observações</span>
+          <textarea id="reserveNotes" rows="2" maxlength="2000"></textarea></label>
+        <div class="reservation-actions reservation-wide">
+          <button id="reserveSave" type="submit" class="reservation-primary">SALVAR RESERVA</button>
+          <button id="reserveCancelEdit" type="button" class="reservation-secondary" hidden>CANCELAR EDIÇÃO</button>
+        </div>
+      </form>
+    </section>
+    <section class="reservation-panel" aria-labelledby="reservationsTitle">
+      <div class="reservation-section-header"><div><span class="reservation-eyebrow">ACOMPANHAMENTO</span>
+        <h2 id="reservationsTitle">Reservas registradas</h2></div></div>
+      <div class="reservation-filters">
+        <label><span>Pesquisar</span><input id="reservationSearch" type="search" placeholder="Nome ou WhatsApp"></label>
+        <label><span>Situação</span><select id="reservationStatusFilter">
+          <option value="">Todas</option><option value="reserved">Reservado</option><option value="awaiting_payment">Aguardando pagamento</option>
+          <option value="enrolled">Matriculado</option><option value="expired">Expirado</option><option value="cancelled">Cancelado</option>
+        </select></label>
+        <label><span>Nível</span><select id="reservationLevelFilter"><option value="">Todos</option>
+          <option value="Não definido">Não avaliado</option><option value="A1">A1</option><option value="A2">A2</option>
+          <option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option>
+        </select></label>
+      </div>
+      <div id="reservationsList" class="reservation-list" aria-live="polite"><p>Carregando...</p></div>
+    </section>
+    <section class="reservation-panel" aria-labelledby="matchingTitle">
+      <span class="reservation-eyebrow">PLANEJAMENTO</span><h2 id="matchingTitle">Horários mais procurados</h2>
+      <p class="reservation-muted">Agrupamento de interessados com promoção confirmada; não implica ocupação de vagas.</p>
+      <div id="reservationsMatching"></div>
+    </section>
+  </main>
+  <script src="/reservas-de-vagas/reservations.js?v=20261010-1"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260814-1"></script>
+</body>
+</html>
