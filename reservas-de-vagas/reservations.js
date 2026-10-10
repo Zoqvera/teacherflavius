@@ -347,7 +347,8 @@
       (!statusFilter || item.status === statusFilter) &&
       (!levelFilter || item.english_level === levelFilter) &&
       (!nameSearch || item.full_name.toLocaleLowerCase("pt-BR").includes(nameSearch) ||
-        String(item.whatsapp).replace(/\D/g, "").includes(nameSearch.replace(/\D/g, "")))
+        (nameSearch.replace(/\D/g, "").length >= 4 &&
+          String(item.whatsapp).replace(/\D/g, "").includes(nameSearch.replace(/\D/g, ""))))
     );
     const list = byId("reservationsList");
     list.replaceChildren();
