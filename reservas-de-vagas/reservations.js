@@ -320,6 +320,36 @@
     if (reservation.status !== "enrolled") {
       actions.appendChild(makeButton("MARCAR MATRICULADO", () => setReservationStatus(reservation, "enrolled")));
     }
+    if (reservation.status === "enrolled" && !reservation.matched_student_id) {
+      const availableStudents = (state.students || [])
+        .filter(student => student.enrolled === true && (student.user_id || student.id))
+        .sort((first, second) => String(first.name || "").localeCompare(String(second.name || ""), "pt-BR"));
+      if (availableStudents.length) {
+        const selector = document.createElement("select");
+        selector.setAttribute("aria-label", "Selecionar perfil matriculado para vincular");
+        selector.appendChild(new Option("Selecione o perfil matriculado", ""));
+        availableStudents.forEach(student => {
+          selector.appendChild(new Option(
+            (student.name || student.email || "Aluno") + " · " + (student.whatsapp || "sem WhatsApp"),
+            student.user_id || student.id
+          ));
+        });
+        actions.appendChild(selector);
+        actions.appendChild(makeButton("VINCULAR AO PERFIL", async () => {
+          if (!selector.value) throw new Error("Selecione um aluno matriculado.");
+          const selected = availableStudents.find(student =>
+            String(student.user_id || student.id) === selector.value);
+          if (!selected || !window.confirm("Vincular a reserva de " + reservation.full_name +
+            " ao perfil de " + (selected.name || selected.email) + "?")) return null;
+          await callRpc(RPC.status, {
+            target_id: reservation.id,
+            target_status: "enrolled",
+            target_student_id: selector.value
+          });
+          return "Reserva vinculada manualmente ao perfil matriculado.";
+        }));
+      }
+    }
     if (reservation.status === "enrolled" && !reservation.credit_applied_tuition_id) {
       actions.appendChild(makeButton("DESFAZER MARCAÇÃO", () => setReservationStatus(reservation,
         Number(reservation.amount_paid) > 0 ? "reserved" : "awaiting_payment")));
