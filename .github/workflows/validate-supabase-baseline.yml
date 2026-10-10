@@ -30,6 +30,7 @@ jobs:
         run: |
           node --test tests/student_two_class_links_contract.test.js
           node --test tests/tuition_due_day_required_contract.test.js
+          node --test tests/first_tuition_data_integrity_contract.test.js
           node --test tests/payment_subscription_foundation.test.js
           node --test tests/payment_subscription_reconciliation.test.js
           node --test tests/payment_subscription_sandbox_contract.test.js
@@ -167,7 +168,8 @@ jobs:
             supabase/baseline/345_aggregate_csp_health_by_logical_group.sql \
             supabase/baseline/350_student_reviews_and_public_testimonials.sql \
             supabase/baseline/355_student_paid_tuition_history.sql \
-            supabase/baseline/360_prevent_new_tuition_for_archived_students.sql
+            supabase/baseline/360_prevent_new_tuition_for_archived_students.sql \
+            supabase/baseline/365_guard_first_tuition_due_date.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
