@@ -1,3 +1,4 @@
+
 -- Promotional price holds are not class seat reservations.
 create table private.promotion_reservations (
  id uuid primary key default gen_random_uuid(),
