@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
-const migration = read("supabase/migrations/20261010021000_backfill_and_guard_first_tuition_due_date.sql");
+const migration = read("supabase/migrations/20261010020556_backfill_and_guard_first_tuition_due_date.sql");
 const baseline = read("supabase/baseline/365_guard_first_tuition_due_date.sql");
 
 test("legacy billing metadata is reconstructed without editing settled tuition", () => {
