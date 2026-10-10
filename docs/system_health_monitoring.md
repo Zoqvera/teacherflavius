@@ -175,3 +175,9 @@ Quando o estado global ficar `degraded` ou `critical`, use esta ordem:
 Para um finding de qualidade de dados, confirme primeiro qual registro/regra está inconsistente e corrija a causa por um fluxo administrativo existente. Não faça autocorreção em massa com base apenas no contador do health check.
 
 Um alerta isolado não deve ser apagado para “limpar o painel”. Preserve o histórico e corrija a causa ou o threshold quando necessário.
+
+## Primeira mensalidade e cobrança ativa
+
+A partir de outubro de 2026, uma matrícula ativa com cobrança habilitada exige `profiles.tuition_first_due_date`. Dois constraint triggers adiados até o commit verificam a integridade tanto na alteração do perfil quanto na alteração da configuração de cobrança; transações de cadastro podem salvar os dois registros em qualquer ordem, desde que o resultado final seja consistente.
+
+O monitor de qualidade passa a publicar a métrica `active_billing_missing_first_due` e o finding `data_quality_active_billing_missing_first_due` (warning) se houver alguma regressão. Os dados de alunos legados são recuperados da primeira competência financeira histórica disponível, sem recriar mensalidades nem alterar pagamentos. Vencimentos iniciais excepcionais já quitados não devem ser recalculados a partir do dia recorrente.
