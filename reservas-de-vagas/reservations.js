@@ -206,13 +206,14 @@
     const items = state.reservations;
     const active = items.filter(item => item.status === "reserved").length;
     const enrolled = items.filter(item => item.status === "enrolled").length;
-    const receipts = items.reduce((sum, item) => sum + Number(item.amount_paid || 0), 0);
+    const receipts = items.filter(item => !item.credit_applied_tuition_id)
+      .reduce((sum, item) => sum + Number(item.amount_paid || 0), 0);
     const denominator = enrolled + active + items.filter(item => item.status === "expired" || item.status === "cancelled").length;
     const data = [
       ["Reservas registradas", String(items.length)],
       ["Reservas confirmadas", String(active)],
       ["Convertidas em matrícula", String(enrolled)],
-      ["Pagamentos registrados", formatCurrency(receipts)],
+      ["Recebimentos não transferidos", formatCurrency(receipts)],
       ["Aguardando pagamento", String(items.filter(item => item.status === "awaiting_payment").length)],
       ["Conversão de reservas", denominator ? Math.round(enrolled * 100 / denominator) + "%" : "—"]
     ];
@@ -450,10 +451,12 @@
     }
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initialize, { once: true });
-  } else {
-    initialize();
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initialize, { once: true });
+    } else {
+      initialize();
+    }
   }
 
   if (typeof module !== "undefined" && module.exports) {
