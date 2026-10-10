@@ -440,6 +440,29 @@
     renderMatching();
   }
 
+  async function fillFromTrialLesson() {
+    const trialId = new URLSearchParams(window.location.search).get("trial");
+    if (!trialId || !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(trialId)) return false;
+    const appointments = await callRpc("get_teacher_trial_lessons");
+    const appointment = (appointments || []).find(item => item.id === trialId);
+    if (!appointment) {
+      showMessage("Aula experimental não encontrada; preencha os dados manualmente.", "error");
+      return true;
+    }
+    const phone = normalizePhone(appointment.whatsapp);
+    if (state.reservations.some(item => (item.status === "reserved" || item.status === "awaiting_payment") &&
+      normalizePhone(item.whatsapp) === phone)) {
+      showMessage("Já existe uma reserva ativa para este WhatsApp. Localize-a na listagem antes de cadastrar outra.", "error");
+      return true;
+    }
+    byId("reserveName").value = appointment.visitor_name || "";
+    byId("reservePhone").value = appointment.whatsapp || "";
+    byId("reserveLevel").value = appointment.english_level || "Não definido";
+    showMessage("Dados da aula experimental preenchidos. Complete as condições e o pagamento da promoção.", "success");
+    byId("reservationForm").scrollIntoView({ behavior: "smooth", block: "start" });
+    return true;
+  }
+
   async function waitForAuth() {
     for (let attempt = 0; attempt < 40; attempt++) {
       if (window.Auth && window.Auth.isConfigured && window.Auth.isConfigured()) return true;
@@ -473,7 +496,7 @@
       await loadAuxiliaryData();
       renderMatching();
       document.body.classList.remove("auth-checking");
-      showMessage("");
+      if (!await fillFromTrialLesson()) showMessage("");
     } catch (error) {
       document.body.classList.remove("auth-checking");
       byId("reservationForm").hidden = true;
