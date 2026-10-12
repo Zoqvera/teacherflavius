@@ -196,9 +196,25 @@ function getDetachedPaymentStatus(item) {
   return "Sem pagamento registrado";
 }
 
+function getDetachedHistoryElements() {
+  return {
+    body: document.getElementById("detachedHistoryTableBody"),
+    summary: document.getElementById("detachedHistorySummary"),
+    exportButton: document.getElementById("exportDetachedHistoryButton")
+  };
+}
+
+function hasDetachedHistorySection() {
+  const elements = getDetachedHistoryElements();
+  return !!(elements.body && elements.summary && elements.exportButton);
+}
+
 function renderDetachedTuitionHistory() {
-  const body = document.getElementById("detachedHistoryTableBody");
-  const summary = document.getElementById("detachedHistorySummary");
+  const elements = getDetachedHistoryElements();
+  if (!elements.body || !elements.summary || !elements.exportButton) return;
+
+  const body = elements.body;
+  const summary = elements.summary;
   const unpaid = detachedTuitionHistory.filter(function (item) {
     return item.financial_status === "no_payment";
   });
@@ -209,7 +225,7 @@ function renderDetachedTuitionHistory() {
     return total + Number(item.amount_due || 0);
   }, 0);
 
-  document.getElementById("exportDetachedHistoryButton").disabled = detachedTuitionHistory.length === 0;
+  elements.exportButton.disabled = detachedTuitionHistory.length === 0;
   summary.textContent = detachedTuitionHistory.length === 0
     ? "Nenhuma mensalidade de perfil removido encontrada."
     : detachedTuitionHistory.length + " registro(s) preservado(s) · " +
@@ -234,9 +250,12 @@ function renderDetachedTuitionHistory() {
 }
 
 async function loadDetachedTuitionHistory() {
-  const button = document.getElementById("refreshDetachedHistoryButton");
-  setButtonBusy(button, true, "CONSULTANDO...");
-  document.getElementById("detachedHistorySummary").textContent = "Carregando histórico...";
+  const elements = getDetachedHistoryElements();
+  if (!elements.body || !elements.summary || !elements.exportButton) return;
+
+  const refreshButton = document.getElementById("refreshDetachedHistoryButton");
+  setButtonBusy(refreshButton, true, "CONSULTANDO...");
+  elements.summary.textContent = "Carregando histórico...";
   try {
     const response = await Auth.getClient().rpc("get_teacher_detached_tuition_history");
     if (response.error) throw response.error;
@@ -244,20 +263,20 @@ async function loadDetachedTuitionHistory() {
     renderDetachedTuitionHistory();
   } catch (error) {
     detachedTuitionHistory = [];
-    document.getElementById("detachedHistoryTableBody").innerHTML = "";
-    document.getElementById("exportDetachedHistoryButton").disabled = true;
-    document.getElementById("detachedHistorySummary").textContent =
+    elements.body.innerHTML = "";
+    elements.exportButton.disabled = true;
+    elements.summary.textContent =
       "Não foi possível consultar o histórico financeiro: " + (error.message || "erro desconhecido");
   } finally {
-    setButtonBusy(button, false);
+    setButtonBusy(refreshButton, false);
   }
 }
 
 function exportDetachedTuitionHistory() {
-  if (!detachedTuitionHistory.length) return;
+  const elements = getDetachedHistoryElements();
+  if (!elements.summary || !detachedTuitionHistory.length) return;
   if (!window.XLSX) {
-    document.getElementById("detachedHistorySummary").textContent =
-      "Não foi possível carregar o gerador de Excel.";
+    elements.summary.textContent = "Não foi possível carregar o gerador de Excel.";
     return;
   }
   const rows = detachedTuitionHistory.map(function (item) {
@@ -577,6 +596,13 @@ function handleTuitionTableClick(event) {
 }
 
 
+function bindOptionalEvent(elementId, eventName, handler) {
+  const element = document.getElementById(elementId);
+  if (!element) return false;
+  element.addEventListener(eventName, handler);
+  return true;
+}
+
 function attachEvents() {
   document.getElementById("referenceMonth").addEventListener("change", function () {
     loadSelectedMonth({ generate: true });
@@ -602,8 +628,8 @@ function attachEvents() {
     })();
   });
   document.getElementById("exportButton").addEventListener("click", exportCurrentView);
-  document.getElementById("refreshDetachedHistoryButton").addEventListener("click", loadDetachedTuitionHistory);
-  document.getElementById("exportDetachedHistoryButton").addEventListener("click", exportDetachedTuitionHistory);
+  bindOptionalEvent("refreshDetachedHistoryButton", "click", loadDetachedTuitionHistory);
+  bindOptionalEvent("exportDetachedHistoryButton", "click", exportDetachedTuitionHistory);
   document.getElementById("tuitionTableBody").addEventListener("click", handleTuitionTableClick);
   document.getElementById("paymentForm").addEventListener("submit", registerPayment);
 
@@ -661,7 +687,9 @@ async function initializePage() {
       console.warn("Não foi possível reconciliar pagamentos do Mercado Pago:", error);
     }
     await loadSelectedMonth({ generate: true });
-    await loadDetachedTuitionHistory();
+    if (hasDetachedHistorySection()) {
+      await loadDetachedTuitionHistory();
+    }
     if (Number(reconciliation.approved || 0) > 0) {
       setPageMessage(
         Number(reconciliation.approved) + " pagamento(s) confirmado(s) pelo Mercado Pago.",
