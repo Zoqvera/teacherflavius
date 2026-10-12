@@ -115,6 +115,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p class="muted">O funil usa como coorte os cliques de WhatsApp ocorridos dentro do período selecionado. Matrículas e receita ficam atribuídas à origem desse clique.</p>
       </section>
 
+      <section class="panel" aria-labelledby="declared-sources-title">
+        <h2 id="declared-sources-title">Como os alunos conheceram as aulas</h2>
+        <p class="muted">Origem informada na matrícula ou pelo professor, separada da origem técnica dos acessos. O período considera a data de matrícula; a receita é o total de mensalidades pagas pelos alunos dessa coorte.</p>
+        <div class="summary-grid">
+          <div class="summary-card"><span>Matrículas no período</span><strong id="declaredEnrollmentCount">0</strong></div>
+          <div class="summary-card"><span>Sem origem informada</span><strong id="declaredMissingCount">0</strong></div>
+          <div class="summary-card"><span>Reservas / aulas experimentais cadastradas</span><strong id="declaredLeadsCount">0</strong></div>
+        </div>
+        <div id="declaredSourcesEmpty" class="empty">Não há matrículas no período.</div>
+        <div id="declaredSourcesWrap" class="table-wrap" hidden>
+          <table aria-label="Matrículas por origem declarada">
+            <thead><tr><th>Origem declarada</th><th>Matrículas</th><th>Participação</th><th>Mensalidades recebidas</th></tr></thead>
+            <tbody id="declaredSourcesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="summary-grid" aria-label="Resumo de conversão">
         <div class="summary-card"><span>Visitantes únicos</span><strong id="metricVisitors">0</strong><small>No período selecionado</small></div>
         <div class="summary-card"><span>Cliques no WhatsApp</span><strong id="metricLeads">0</strong><small>Intenção de contato</small></div>
@@ -199,7 +216,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </main>
   </div>
 
-  <script src="/marketing_acquisition.js?v=20260922-individual-cta-1"></script>
+  <script src="/marketing_acquisition.js?v=20261012-origin-1"></script>
   <script src="/marketing_tracking_control.js?v=20260904-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
