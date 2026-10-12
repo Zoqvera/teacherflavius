@@ -92,3 +92,31 @@ test("historical export preserves exact subjects without changing active tuition
   assert.equal(screen.exportedFiles[0].rows[0]["Situação histórica"], "Sem pagamento registrado");
   assert.equal(screen.exportedFiles[0].filename, "mensalidades_perfis_removidos.xlsx");
 });
+
+test("canonical tuition page can omit detached-history controls without breaking bootstrap bindings", () => {
+  const elements = {
+    referenceMonth: { addEventListener() {} },
+    studentSearch: { addEventListener() {} },
+    statusFilter: { addEventListener() {} },
+    refreshMonthButton: { addEventListener() {} },
+    exportButton: { addEventListener() {} },
+    tuitionTableBody: { addEventListener() {} },
+    paymentForm: { addEventListener() {} }
+  };
+  const context = vm.createContext({
+    document: {
+      getElementById(id) {
+        return elements[id] || null;
+      },
+      querySelectorAll() {
+        return [];
+      },
+      addEventListener() {}
+    },
+    window: {}
+  });
+
+  vm.runInContext(withoutBootstrap, context, { filename: scriptPath });
+  assert.doesNotThrow(() => vm.runInContext("attachEvents()", context));
+  assert.equal(vm.runInContext("hasDetachedHistorySection()", context), false);
+});
