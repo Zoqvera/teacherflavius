@@ -36,7 +36,7 @@ function authResourcesAreReady() {
 
   try {
     return window.Auth.isConfigured() === true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
