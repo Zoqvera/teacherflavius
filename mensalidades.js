@@ -596,7 +596,7 @@ function handleTuitionTableClick(event) {
 }
 
 
-function bindEventIfPresent(elementId, eventName, handler) {
+function bindOptionalEvent(elementId, eventName, handler) {
   const element = document.getElementById(elementId);
   if (!element) return false;
   element.addEventListener(eventName, handler);
@@ -604,12 +604,12 @@ function bindEventIfPresent(elementId, eventName, handler) {
 }
 
 function attachEvents() {
-  bindEventIfPresent("referenceMonth", "change", function () {
+  document.getElementById("referenceMonth").addEventListener("change", function () {
     loadSelectedMonth({ generate: true });
   });
-  bindEventIfPresent("studentSearch", "input", renderDashboard);
-  bindEventIfPresent("statusFilter", "change", renderDashboard);
-  bindEventIfPresent("refreshMonthButton", "click", function () {
+  document.getElementById("studentSearch").addEventListener("input", renderDashboard);
+  document.getElementById("statusFilter").addEventListener("change", renderDashboard);
+  document.getElementById("refreshMonthButton").addEventListener("click", function () {
     (async function () {
       try {
         setPageMessage("Verificando confirmações do Mercado Pago...", "info");
@@ -627,11 +627,11 @@ function attachEvents() {
       }
     })();
   });
-  bindEventIfPresent("exportButton", "click", exportCurrentView);
-  bindEventIfPresent("refreshDetachedHistoryButton", "click", loadDetachedTuitionHistory);
-  bindEventIfPresent("exportDetachedHistoryButton", "click", exportDetachedTuitionHistory);
-  bindEventIfPresent("tuitionTableBody", "click", handleTuitionTableClick);
-  bindEventIfPresent("paymentForm", "submit", registerPayment);
+  document.getElementById("exportButton").addEventListener("click", exportCurrentView);
+  bindOptionalEvent("refreshDetachedHistoryButton", "click", loadDetachedTuitionHistory);
+  bindOptionalEvent("exportDetachedHistoryButton", "click", exportDetachedTuitionHistory);
+  document.getElementById("tuitionTableBody").addEventListener("click", handleTuitionTableClick);
+  document.getElementById("paymentForm").addEventListener("submit", registerPayment);
 
   document.querySelectorAll("[data-close-modal]").forEach(function (button) {
     button.addEventListener("click", function () { closeModal(button.dataset.closeModal); });
