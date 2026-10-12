@@ -6,7 +6,7 @@ const vm = require("node:vm");
 
 const scriptPath = path.join(__dirname, "..", "mensalidades.js");
 const source = fs.readFileSync(scriptPath, "utf8");
-const withoutBootstrap = source.replace(/\binitializePage\(\);\s*$/, "");
+const withoutBootstrap = source.replace(/\binitializePage\(\)(?:\.catch\(handlePageInitializationError\))?;\s*$/, "");
 
 function createHistoryScreen(records) {
   const elements = {
