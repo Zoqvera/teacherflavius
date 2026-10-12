@@ -46,7 +46,9 @@ function loadAcquisitionService() {
   const window = {
     location: { search: "?utm_source=instagram&utm_campaign=october" }
   };
-  vm.runInNewContext(read("student_acquisition.js"), { window, document, Option: FakeOption });
+  vm.runInNewContext(read("student_acquisition.js"), {
+    window, document, Option: FakeOption, URL, URLSearchParams
+  });
   return { api: window.StudentAcquisition, select, detail, detailContainer };
 }
 
