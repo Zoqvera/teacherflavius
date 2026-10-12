@@ -172,6 +172,11 @@ begin
   select pg_get_functiondef('private.run_operational_data_quality_check(boolean)'::regprocedure)
     into definition;
 
+  -- Safe to replay if deployment automation already applied this migration.
+  if position('lesson_credit_audit := private.lesson_credit_audit_snapshot();' in definition) > 0 then
+    return;
+  end if;
+
   if position(previous_declaration in definition) = 0
      or position(previous_issues in definition) = 0
      or position(previous_metrics in definition) = 0 then
