@@ -30,6 +30,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260716-1"></script>
   <link rel="stylesheet" href="reposicoes.css?v=20260716-2">
+  <link rel="stylesheet" href="/lesson_credit_admin.css?v=20261012-1">
 </head>
 <body class="auth-checking">
 <!-- Google Tag Manager (noscript) -->
@@ -104,9 +105,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p class="empty">Carregando horários...</p>
       </div>
     </section>
+    <section class="panel" id="lessonCreditAudit" aria-labelledby="lessonCreditAuditTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">INTEGRIDADE DOS DADOS</span>
+          <h2 id="lessonCreditAuditTitle">Auditoria dos créditos de aulas</h2>
+        </div>
+        <button id="refreshCreditAuditButton" class="secondary-button" type="button">ATUALIZAR CRÉDITOS</button>
+      </div>
+      <div id="lessonCreditAuditContent" role="status" aria-live="polite"></div>
+    </section>
   </main>
 
   <script src="reposicoes_admin.js?v=20260716-3"></script>
+  <script src="/lesson_credit_admin.js?v=20261012-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
 
