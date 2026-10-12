@@ -29,11 +29,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="supabase_config.js?v=20260429-1"></script>
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260429-1"></script>
+  <script src="/student_acquisition.js?v=20261012-1"></script>
   <link rel="stylesheet" href="professor.css?v=20260429-1">
   <style>
     .form-panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 20px; backdrop-filter: blur(12px); }
     .form-panel label { display:block; color:#cbd5e1; font-size:13px; margin:12px 0 6px; }
-    .form-panel input { width:100%; background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 13px; color:#f1f5f9; font-size:14px; font-family:Georgia, serif; }
+    .form-panel input, .form-panel select { width:100%; background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 13px; color:#f1f5f9; font-size:14px; font-family:Georgia, serif; }
+    .form-panel select option { color:#0f172a; background:#ffffff; }
     .form-panel input:focus { outline:none; border-color:#818cf8; }
     .availability-block { margin:18px 0; }
     .availability-help { color:#94a3b8; font-size:13px; line-height:1.5; margin-bottom:14px; }
@@ -90,6 +92,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <label for="studentEnrollmentCode">Número de matrícula</label>
         <input id="studentEnrollmentCode" type="text" />
 
+        <label for="studentAcquisitionSource">Como o aluno conheceu as aulas?</label>
+        <select id="studentAcquisitionSource"><option value="">Não informado</option></select>
+        <div data-acquisition-detail hidden>
+          <label for="studentAcquisitionDetail">Qual outra origem?</label>
+          <input id="studentAcquisitionDetail" maxlength="120" type="text" placeholder="Informe onde conheceu as aulas" />
+        </div>
+        <p id="studentAcquisitionProvenance" class="availability-help"></p>
+
         <div class="availability-block">
           <h2>Disponibilidade para aulas</h2>
           <p class="availability-help">Marque os dias e horários disponíveis do aluno.</p>
@@ -104,7 +114,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </form>
     </div>
   </div>
-  <script src="editar_aluno.js?v=20260429-1"></script>
+  <script src="editar_aluno.js?v=20261012-origin-1"></script>
   <script src="animated_cards.js?v=20260429-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
