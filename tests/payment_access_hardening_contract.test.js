@@ -2,8 +2,10 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 
 const root = path.join(__dirname, "..");
+const mensalidades = fs.readFileSync(path.join(root, "mensalidades.js"), "utf8");
 const migration = fs.readFileSync(
   path.join(root, "supabase/migrations/20260910015722_harden_payment_data_api_surface.sql"),
   "utf8"
@@ -109,4 +111,37 @@ test("manual reconciliation requires teacher admin authorization for broad acces
   assert.match(source, /rpc\("is_teacher_admin"\)/);
   assert.doesNotMatch(source, /rpc\("is_teacher_admin_mfa"\)/);
   assert.match(source, /\.eq\("student_id", user\.id\)/);
+});
+
+test("tuition admin bootstrap retries while auth modules are still initializing", async () => {
+  const withoutBootstrap = mensalidades.replace(
+    /\binitializePage\(\)\.catch\(handlePageInitializationError\);\s*$/,
+    ""
+  );
+  let configurationChecks = 0;
+  const context = vm.createContext({
+    window: {
+      SUPABASE_CONFIG: { url: "https://example.test" },
+      Auth: {
+        isConfigured() {
+          configurationChecks += 1;
+          if (configurationChecks < 3) {
+            throw new Error("Supabase client service is still initializing");
+          }
+          return true;
+        }
+      }
+    },
+    setTimeout(callback) {
+      callback();
+    }
+  });
+
+  assert.notEqual(withoutBootstrap, mensalidades, "Page bootstrap must be excluded from the VM");
+  vm.runInContext(withoutBootstrap, context, { filename: "mensalidades.js" });
+
+  const ready = await vm.runInContext("waitForAuthResources()", context);
+  assert.equal(ready, true);
+  assert.equal(configurationChecks, 3);
+  assert.match(mensalidades, /initializePage\(\)\.catch\(handlePageInitializationError\)/);
 });
