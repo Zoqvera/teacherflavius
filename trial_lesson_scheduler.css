@@ -1,3 +1,5 @@
+[data-acquisition-detail][hidden] { display: none !important; }
+
 :root {
   --trial-panel: rgba(15, 23, 42, 0.72);
   --trial-border: rgba(148, 163, 184, 0.18);
