@@ -32,7 +32,7 @@
       detail.required = isOther && select.required;
       if (!isOther) detail.value = "";
     }
-    select.addEventListener("change", sync);
+    select.onchange = sync;
     sync();
   }
 
