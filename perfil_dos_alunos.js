@@ -9,6 +9,9 @@ let currentStudentFilter = "all";
 let studentBillingMap = new Map();
 let selectedStudentForBilling = null;
 let studentBillingLoaded = false;
+let studentCourseStateMap = new Map();
+let studentCourseStateLoaded = false;
+let selectedStudentForCourseState = null;
 
 function redirectToLogin() {
   window.location.href = "login.html?next=" + encodeURIComponent("perfil_dos_alunos.html");
@@ -122,11 +125,44 @@ function getStudentBilling(student) {
 }
 
 function hasBillingConfigured(student) {
+  const courseState = getStudentCourseState(student);
   const billing = getStudentBilling(student);
   return !!(billing && billing.monthly_fee != null);
 }
 
+function getStudentCourseState(student) {
+  const studentId = student && (student.user_id || student.id);
+  return studentId ? studentCourseStateMap.get(String(studentId)) || null : null;
+}
+
+function getCourseStateLabel(state) {
+  if (!state) return "Não identificado";
+  const labels = {
+    active: "Ativo com turma",
+    awaiting_class: "Aguardando turma",
+    paused: "Matrícula pausada"
+  };
+  return labels[state.course_status] || "Não identificado";
+}
+
+function getStudentBillingStatusLabel(state) {
+  if (!state) return "Não identificado";
+  if (state.billing_exemption === "permanent") return "Isenção permanente";
+  if (state.course_status === "paused") return "Suspensa durante a pausa";
+  return state.billing_active ? "Ativa" : "Desativada — verificar";
+}
+
 function filterStudents(students) {
+  if (["awaiting_class", "paused", "exempt"].includes(currentStudentFilter)) {
+    return students.filter(function (student) {
+      const state = getStudentCourseState(student);
+      if (!state) return false;
+      return currentStudentFilter === "exempt"
+        ? state.billing_exemption === "permanent"
+        : state.course_status === currentStudentFilter;
+    });
+  }
+
   if (currentStudentFilter === "without_class") {
     return students.filter(function (student) { return !hasAssignedClass(student); });
   }
@@ -176,6 +212,18 @@ function getFilterMetadata() {
       empty: studentBillingLoaded
         ? "Todos os alunos matriculados já possuem um valor de mensalidade."
         : "Os valores de mensalidade não puderam ser carregados."
+    },
+    awaiting_class: {
+      title: "Aguardando turma", heading: "Matriculados aguardando turma",
+      empty: "Nenhum aluno aguardando uma turma."
+    },
+    paused: {
+      title: "Matrículas pausadas", heading: "Alunos com matrícula pausada",
+      empty: "Nenhuma matrícula pausada."
+    },
+    exempt: {
+      title: "Isentos permanentemente", heading: "Isenções permanentes",
+      empty: "Nenhum aluno com isenção permanente."
     },
     availability: {
       title: "Disponibilidade dos alunos",
@@ -379,6 +427,30 @@ async function loadStudents() {
   return response.data || [];
 }
 
+async function loadStudentCourseStates() {
+  const response = await Auth.getClient().rpc("get_teacher_student_course_states");
+  if (response.error) throw response.error;
+  const map = new Map();
+  (response.data || []).forEach(function (state) {
+    map.set(String(state.student_id), state);
+  });
+  studentCourseStateMap = map;
+  studentCourseStateLoaded = true;
+  return map;
+}
+
+async function refreshStudentCourseStates() {
+  try {
+    await loadStudentCourseStates();
+    return true;
+  } catch (error) {
+    studentCourseStateLoaded = false;
+    setBillingStatusMessage("Não foi possível consultar a situação dos alunos: " +
+      (error.message || "erro desconhecido"), "error");
+    return false;
+  }
+}
+
 async function loadStudentBillingMap() {
   const client = Auth.getClient();
   const responses = await Promise.all([
@@ -501,6 +573,7 @@ async function deleteStudent(userId, studentName, button) {
     const response = await client.rpc("delete_teacher_student", { target_user_id: userId });
     if (response.error) throw response.error;
     await loadStudentClassMap();
+    await Promise.all([refreshStudentCourseStates(), refreshStudentBillingMap()]);
     await renderStudentProfiles();
   } catch (error) {
     alert("Não foi possível excluir o aluno: " + (error.message || "erro desconhecido") + ". Reexecute o arquivo supabase_professor_admin.sql no Supabase.");
@@ -620,6 +693,67 @@ async function saveClassAssignment() {
   }
 }
 
+function openStudentCourseStateModal(studentId, studentName) {
+  const state = studentCourseStateMap.get(String(studentId));
+  if (!state) return;
+  selectedStudentForCourseState = { studentId, studentName, state };
+  const modal = document.getElementById("studentCourseStateModal");
+  document.getElementById("studentCourseStateStudentName").textContent = "Aluno: " + studentName;
+  document.getElementById("studentCourseStatus").value = state.course_status;
+  document.getElementById("studentCourseReason").value = state.status_reason || "";
+  document.getElementById("studentCourseExemption").checked = state.billing_exemption === "permanent";
+  document.getElementById("studentCourseSince").value = state.status_since || "";
+  document.getElementById("studentCourseStateMessage").textContent = "";
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeStudentCourseStateModal() {
+  const modal = document.getElementById("studentCourseStateModal");
+  selectedStudentForCourseState = null;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+async function saveStudentCourseState(event) {
+  event.preventDefault();
+  if (!selectedStudentForCourseState) return;
+  const selection = selectedStudentForCourseState;
+  const status = document.getElementById("studentCourseStatus").value;
+  const reason = document.getElementById("studentCourseReason").value.trim();
+  const exemption = document.getElementById("studentCourseExemption").checked ? "permanent" : "none";
+  const since = document.getElementById("studentCourseSince").value || null;
+  const message = document.getElementById("studentCourseStateMessage");
+  const button = document.getElementById("saveStudentCourseStateButton");
+  if ((status === "paused" || exemption === "permanent") && !reason) {
+    message.textContent = "O motivo é obrigatório para pausas e isenções.";
+    return;
+  }
+  if (status === "paused" && !window.confirm(
+    "Suspender novas cobranças enquanto durar a pausa? Os pagamentos históricos serão preservados."
+  )) return;
+  button.disabled = true;
+  message.textContent = "Atualizando situação...";
+  try {
+    const response = await Auth.getClient().rpc("set_teacher_student_course_state", {
+      target_student_id: selection.studentId,
+      target_course_status: status,
+      target_reason: reason,
+      target_billing_exemption: exemption,
+      target_effective_date: since
+    });
+    if (response.error) throw response.error;
+    await Promise.all([refreshStudentCourseStates(), refreshStudentBillingMap()]);
+    renderFilteredStudents();
+    closeStudentCourseStateModal();
+    setBillingStatusMessage("Situação administrativa atualizada. Histórico financeiro preservado.", "success");
+  } catch (error) {
+    message.textContent = "Não foi possível atualizar: " + (error.message || "erro desconhecido");
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function setStudentBillingMessage(message, type) {
   const element = document.getElementById("studentBillingMessage");
   if (!element) return;
@@ -710,9 +844,9 @@ async function saveStudentBilling(event) {
       ? billingStartMonth
       : currentBillingMonth;
 
-    const generation = await client.rpc("generate_monthly_tuition", {
-      target_reference_month: generationMonth
-    });
+    const generation = active
+      ? await client.rpc("generate_monthly_tuition", { target_reference_month: generationMonth })
+      : { error: null };
 
     const refreshed = await refreshStudentBillingMap({ showSuccess: !generation.error });
     renderFilteredStudents();
@@ -733,6 +867,11 @@ async function saveStudentBilling(event) {
 }
 
 function attachActionButtons() {
+  document.querySelectorAll(".course-status-button").forEach(function (button) {
+    button.addEventListener("click", function () {
+      openStudentCourseStateModal(button.dataset.studentId, button.dataset.studentName || "Aluno");
+    });
+  });
   document.querySelectorAll(".delete-student-button").forEach(function (button) {
     button.addEventListener("click", function () {
       deleteStudent(button.dataset.userId, button.dataset.studentName || "este aluno", button);
@@ -776,6 +915,12 @@ function renderProfileCard(student) {
     ? '<button class="delete-button delete-student-button" type="button" data-user-id="' + escapeHtml(userId) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(248,113,113,0.55); background:rgba(248,113,113,0.10); color:#fca5a5;">EXCLUIR ALUNO</button>'
     : '';
 
+  const courseStateButton = userId && !preEnrolled && studentCourseStateLoaded
+    ? '<button class="delete-button course-status-button" type="button" data-student-id="' +
+      escapeHtml(userId) + '" data-student-name="' + escapeHtml(studentName) +
+      '">ALTERAR SITUAÇÃO</button>'
+    : '';
+
   const billingButton = userId && !preEnrolled && studentBillingLoaded
     ? '<button class="delete-button billing-settings-button" type="button" data-student-id="' + escapeHtml(userId) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(52,211,153,0.48); background:rgba(16,185,129,0.11); color:#a7f3d0;">' + (billingConfigured ? 'EDITAR MENSALIDADE' : 'DEFINIR MENSALIDADE') + '</button>'
     : '';
@@ -785,6 +930,14 @@ function renderProfileCard(student) {
       '<span class="pill ' + (preEnrolled ? 'pending' : '') + '">' + pillLabel + '</span>' +
     '</strong>' +
     '<p><b>Turma:</b> ' + escapeHtml(assignedClasses) + '</p>' +
+    (!preEnrolled ? '<div class="student-course-summary"><p><b>Situação no curso:</b> ' +
+       escapeHtml(getCourseStateLabel(courseState)) + '</p>' +
+       '<p><b>Cobrança:</b> ' + escapeHtml(getStudentBillingStatusLabel(courseState)) + '</p>' +
+       (courseState && courseState.status_since ?
+         '<p><b>Registrada em:</b> ' + escapeHtml(formatCreatedAt(courseState.status_since)) + '</p>' : '') +
+       (courseState && courseState.status_reason ?
+         '<p><b>Observação:</b> ' + escapeHtml(courseState.status_reason) + '</p>' : '') +
+       '</div>' : '') +
     '<p><b>Código de convite / matrícula:</b> ' + escapeHtml(student.enrollment_code || "Não informado") + '</p>' +
     '<p><b>Nome completo:</b> ' + escapeHtml(student.name || "Não informado") + '</p>' +
     '<p><b>E-mail:</b> ' + escapeHtml(student.email || "Não informado") + '</p>' +
@@ -802,6 +955,7 @@ function renderProfileCard(student) {
     '<div class="student-actions">' +
       '<button class="delete-button assign-class-button" type="button" data-ref-id="' + escapeHtml(refId) + '" data-ref-type="' + escapeHtml(refType) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">ADICIONAR TURMA</button>' +
       billingButton +
+      courseStateButton +
       editButton +
       deleteButton +
     '</div>' +
@@ -879,6 +1033,10 @@ function setupModalEvents() {
   const billingCancelButton = document.getElementById("cancelStudentBillingButton");
   const billingForm = document.getElementById("studentBillingForm");
   const billingModal = document.getElementById("studentBillingModal");
+  const courseModal = document.getElementById("studentCourseStateModal");
+  const closeCourseButton = document.getElementById("closeStudentCourseStateModalButton");
+  const cancelCourseButton = document.getElementById("cancelStudentCourseStateButton");
+  const courseForm = document.getElementById("studentCourseStateForm");
 
   if (closeButton) closeButton.addEventListener("click", closeClassAssignmentModal);
   if (cancelButton) cancelButton.addEventListener("click", closeClassAssignmentModal);
@@ -888,6 +1046,13 @@ function setupModalEvents() {
       if (event.target === modal) closeClassAssignmentModal();
     });
   }
+
+  if (closeCourseButton) closeCourseButton.addEventListener("click", closeStudentCourseStateModal);
+  if (cancelCourseButton) cancelCourseButton.addEventListener("click", closeStudentCourseStateModal);
+  if (courseForm) courseForm.addEventListener("submit", saveStudentCourseState);
+  if (courseModal) courseModal.addEventListener("click", function (event) {
+    if (event.target === courseModal) closeStudentCourseStateModal();
+  });
 
   if (billingCloseButton) billingCloseButton.addEventListener("click", closeStudentBillingModal);
   if (billingCancelButton) billingCancelButton.addEventListener("click", closeStudentBillingModal);
@@ -917,7 +1082,7 @@ async function guardPage() {
   setupModalEvents();
   setupFilterEvents();
   await loadTeacherClasses();
-  await Promise.all([loadStudentClassMap(), refreshStudentBillingMap()]);
+  await Promise.all([loadStudentClassMap(), refreshStudentBillingMap(), refreshStudentCourseStates()]);
   await renderStudentProfiles();
 }
 
