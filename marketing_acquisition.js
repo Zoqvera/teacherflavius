@@ -69,6 +69,10 @@
       bing: "Bing",
       instagram: "Instagram",
       facebook: "Facebook",
+      referral: "Indicação de amigo ou familiar",
+      other: "Outro",
+      unknown: "Não me lembro",
+      not_informed: "Não informado",
       direct: "Acesso direto"
     };
     var key = String(value || "direct").toLowerCase();
@@ -322,6 +326,25 @@
     return response.data;
   }
 
+  function renderDeclaredSources(data) {
+    const channels = Array.isArray(data.channels) ? data.channels : [];
+    setText("declaredEnrollmentCount", number(data.total_enrollments));
+    setText("declaredMissingCount", number(data.missing_origin));
+    setText("declaredLeadsCount", number(data.reservations) + number(data.trials));
+    const table = document.getElementById("declaredSourcesWrap");
+    const empty = document.getElementById("declaredSourcesEmpty");
+    const body = document.getElementById("declaredSourcesBody");
+    if (table) table.hidden = channels.length === 0;
+    if (empty) empty.hidden = channels.length > 0;
+    if (body) {
+      body.innerHTML = channels.map(function (entry) {
+        return "<tr><td>" + escapeHtml(sourceLabel(entry.source)) + "</td><td>" +
+          number(entry.enrollments) + "</td><td>" + percent(entry.percentage) +
+          "</td><td>" + escapeHtml(currency(entry.revenue)) + "</td></tr>";
+      }).join("");
+    }
+  }
+
   async function loadReport() {
     var button = document.getElementById("refreshAcquisition");
     var status = document.getElementById("acquisitionStatus");
@@ -336,7 +359,8 @@
         client.rpc("get_teacher_acquisition_summary", { period_days: period }),
         client.rpc("get_teacher_recent_marketing_leads", { period_days: period }),
         client.rpc("get_teacher_attribution_students"),
-        client.rpc("get_teacher_individual_cta_summary", { period_days: period })
+        client.rpc("get_teacher_individual_cta_summary", { period_days: period }),
+        client.rpc("get_teacher_declared_acquisition_report", { period_days: period })
       ]);
       responses.forEach(function (response) { if (response.error) throw response.error; });
 
@@ -344,6 +368,7 @@
       renderSummary(responses[0].data || {});
       renderRecentLeads(responses[1].data || []);
       renderIndividualCtas(responses[3].data || {});
+      renderDeclaredSources(responses[4].data || {});
       if (status) status.textContent = "Funil de conversão dos últimos " + period + " dias.";
     } catch (error) {
       console.error("Falha ao carregar conversão:", error);
