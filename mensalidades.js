@@ -18,16 +18,35 @@ const statusMetadata = {
   open: { label: "Em aberto", className: "status-open" }
 };
 
+const AUTH_RESOURCE_MAX_ATTEMPTS = 30;
+const AUTH_RESOURCE_RETRY_DELAY_MS = 150;
+
 function sleep(ms) {
   return new Promise(function (resolve) { setTimeout(resolve, ms); });
 }
 
-async function waitForAuthResources() {
-  for (let attempt = 0; attempt < 12; attempt++) {
-    if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured()) return true;
-    await sleep(150);
+function authResourcesAreReady() {
+  if (
+    !window.Auth ||
+    !window.SUPABASE_CONFIG ||
+    typeof window.Auth.isConfigured !== "function"
+  ) {
+    return false;
   }
-  return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
+
+  try {
+    return window.Auth.isConfigured() === true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function waitForAuthResources() {
+  for (let attempt = 0; attempt < AUTH_RESOURCE_MAX_ATTEMPTS; attempt += 1) {
+    if (authResourcesAreReady()) return true;
+    await sleep(AUTH_RESOURCE_RETRY_DELAY_MS);
+  }
+  return authResourcesAreReady();
 }
 
 function redirectToLogin() {
@@ -659,4 +678,17 @@ async function initializePage() {
   }
 }
 
-initializePage();
+function handlePageInitializationError(error) {
+  const status = document.getElementById("adminStatus");
+  if (status) {
+    status.textContent = "Não foi possível abrir o controle financeiro.";
+  }
+  document.body.classList.remove("auth-checking");
+  setPageMessage(
+    "Não foi possível inicializar a página: " + (error && error.message ? error.message : "erro desconhecido") + ".",
+    "error"
+  );
+  console.error("Falha ao inicializar o controle de mensalidades:", error);
+}
+
+initializePage().catch(handlePageInitializationError);
