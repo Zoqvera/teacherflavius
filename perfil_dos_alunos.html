@@ -353,6 +353,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         width: 100%;
       }
     }
+    .student-course-summary { border: 1px solid rgba(129,140,248,0.22); background: rgba(129,140,248,0.08); border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
+    .student-course-summary p { margin: 5px 0; }
   </style>
 </head>
 <body class="auth-checking">
@@ -392,6 +394,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <select id="studentStatusFilter" class="student-filter-select" onchange="if (window.applyStudentFilter) window.applyStudentFilter(this.value);">
           <option value="all">Todos os alunos</option>
           <option value="without_class">Alunos sem turma</option>
+          <option value="awaiting_class">Aguardando turma</option>
+          <option value="paused">Matrículas pausadas</option>
+          <option value="exempt">Isenção permanente</option>
           <option value="enrolled">Alunos matriculados</option>
           <option value="without_billing">Mensalidade não configurada</option>
           <option value="availability">Disponibilidade dos alunos</option>
@@ -471,7 +476,42 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
-  <script src="perfil_dos_alunos.js?v=20261004-lesson-credits-1"></script>
+  <div id="studentCourseStateModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="studentCourseStateTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="studentCourseStateTitle">Situação do aluno no curso</h2>
+          <p id="studentCourseStateStudentName" class="modal-help"></p>
+        </div>
+        <button id="closeStudentCourseStateModalButton" class="modal-close" type="button" aria-label="Fechar janela">×</button>
+      </div>
+      <form id="studentCourseStateForm">
+        <label for="studentCourseStatus" class="modal-help">Situação administrativa</label>
+        <select id="studentCourseStatus" class="class-select" required>
+          <option value="active">Ativo com turma</option>
+          <option value="awaiting_class">Aguardando turma (manter cobrança)</option>
+          <option value="paused">Matrícula pausada (suspender cobrança)</option>
+        </select>
+        <label for="studentCourseExemption" class="modal-help">
+          <input id="studentCourseExemption" type="checkbox">
+          Isenção permanente de mensalidades
+        </label>
+        <p class="modal-help">A isenção é independente da turma. O sistema bloqueia novas cobranças enquanto houver pausa ou isenção.</p>
+        <label for="studentCourseSince" class="modal-help">Data de início da situação (se conhecida)</label>
+        <input id="studentCourseSince" class="class-select" type="date">
+        <label for="studentCourseReason" class="modal-help">Motivo / observação</label>
+        <textarea id="studentCourseReason" class="class-select" rows="3" maxlength="800" placeholder="Ex.: viagem, matrícula aguardando horário, isenção autorizada"></textarea>
+        <p class="modal-help">Para pausar, desvincule o aluno das turmas. Ao vincular um aluno pausado a uma turma regular, as novas cobranças são reativadas a partir do próximo vencimento, salvo isenção permanente. Pagamentos anteriores não são alterados.</p>
+        <div id="studentCourseStateMessage" class="empty" role="status" aria-live="polite"></div>
+        <div class="modal-actions">
+          <button id="saveStudentCourseStateButton" class="modal-save-button" type="submit">SALVAR SITUAÇÃO</button>
+          <button id="cancelStudentCourseStateButton" class="modal-cancel-button" type="button">CANCELAR</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="perfil_dos_alunos.js?v=20261012-course-states-1"></script>
   <script src="/perfil_dos_alunos_vencimento.js?v=20261006-unified-first-due-1"></script>
   <script src="perfil_dos_alunos_archive.js?v=20260807-archive-1"></script>
   <script src="perfil_dos_alunos_licoes.js?v=20260807-lessons-1"></script>
