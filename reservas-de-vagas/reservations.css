@@ -8,6 +8,7 @@ body{min-height:100vh}.reservation-shell{width:min(1120px,calc(100% - 28px));mar
 .reservation-section-header h2,.reservation-panel h2{font-size:21px;margin:6px 0 16px}.reservation-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .reservation-stat{border:1px solid var(--reserve-border);background:var(--reserve-surface);border-radius:16px;padding:17px}
 .reservation-stat span{color:var(--reserve-muted);display:block;font-size:11px;font-weight:800;text-transform:uppercase}.reservation-stat strong{font-size:26px;display:block;margin-top:8px}
+[data-acquisition-detail][hidden] { display:none !important; }
 .reservation-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.reservation-form label,.reservation-filters label{display:flex;flex-direction:column;gap:7px;min-width:0}
 .reservation-form label>span,.reservation-filters label>span{font-size:13px;font-weight:700;color:#dbeafe}
 .reservation-form input,.reservation-form select,.reservation-form textarea,.reservation-filters input,.reservation-filters select{width:100%;padding:11px;border:1px solid rgba(148,163,184,.3);border-radius:11px;background:rgba(15,23,42,.86);color:white;font:inherit;min-height:44px}
