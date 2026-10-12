@@ -10,6 +10,7 @@
   <script src="/supabase_config.js?v=20260715-1"></script>
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260730-1"></script>
+  <script src="/student_acquisition.js?v=20261012-1"></script>
   <link rel="stylesheet" href="/professor.css?v=20260820-1">
   <link rel="stylesheet" href="/trial_lesson_scheduler.css?v=20260922-2">
 </head>
@@ -63,6 +64,15 @@
         <label class="trial-field">
           <span>WhatsApp</span>
           <input id="trialWhatsapp" type="tel" maxlength="32" inputmode="tel" autocomplete="off" placeholder="Ex.: 16 99999-9999" required>
+        </label>
+
+        <label class="trial-field">
+          <span>Como conheceu as aulas?</span>
+          <select id="trialAcquisitionSource"><option value="">Não informado</option></select>
+        </label>
+        <label class="trial-field" data-acquisition-detail hidden>
+          <span>Qual outra origem?</span>
+          <input id="trialAcquisitionDetail" type="text" maxlength="120">
         </label>
 
         <label class="trial-field trial-field-wide">
@@ -120,7 +130,7 @@
     </section>
   </main>
 
-  <script src="/trial_lesson_scheduler.js?v=20261009-experimental-1"></script>
+  <script src="/trial_lesson_scheduler.js?v=20261012-origin-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
   <script src="/site_runtime_config.js?v=20260903-1"></script>

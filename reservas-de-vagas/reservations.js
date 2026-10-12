@@ -20,7 +20,7 @@
   };
   const RPC = Object.freeze({
     list: "get_teacher_promotion_reservations",
-    save: "save_teacher_promotion_reservation",
+    save: "save_teacher_promotion_reservation_with_origin",
     status: "set_teacher_promotion_reservation_status",
     credit: "apply_teacher_promotion_credit"
   });
@@ -112,6 +112,7 @@
   function resetForm() {
     state.editingId = null;
     byId("reservationForm").reset();
+    window.StudentAcquisition.setup("reserveSource", "reserveSourceDetail");
     byId("reserveDate").value = localToday();
     byId("reservePaid").value = "0";
     byId("reservePaymentDate").value = "";
@@ -145,8 +146,10 @@
     if (paid > 0 && (!value("reserveMethod") || !value("reservePaymentDate"))) {
       throw new Error("Informe a forma e a data do pagamento.");
     }
+    const acquisition = window.StudentAcquisition.read("reserveSource", "reserveSourceDetail", false);
     return {
       full_name: value("reserveName"), whatsapp: value("reservePhone"),
+      declared_source: acquisition.source, source_detail: acquisition.detail,
       english_level: value("reserveLevel"), availability: selectedAvailability(),
       availability_notes: value("reserveAvailabilityNotes"),
       reserved_on: value("reserveDate"), promotional_tuition: price,
@@ -172,6 +175,7 @@
     };
     for (const [id, fieldValue] of Object.entries(fields)) byId(id).value = fieldValue == null ? "" : fieldValue;
     setAvailability(reservation.availability);
+    window.StudentAcquisition.setup("reserveSource", "reserveSourceDetail", reservation.declared_source, reservation.source_detail);
     syncPaymentFields();
     byId("reservationFormTitle").textContent = "Editar reserva de " + reservation.full_name;
     byId("reserveSave").textContent = "SALVAR ALTERAÇÕES";
@@ -309,6 +313,7 @@
     if (reservation.linked_trial_id) appendDetail(card, "Aula experimental", "Registro associado");
     if (reservation.matched_student_id) appendDetail(card, "Matrícula", "Perfil vinculado");
     if (reservation.credit_applied_tuition_id) appendDetail(card, "Crédito", "Aplicado à mensalidade " + reservation.credit_applied_tuition_id.slice(0, 8));
+    appendDetail(card, "Como conheceu", window.StudentAcquisition.label(reservation.declared_source,reservation.source_detail));
     if (reservation.notes) appendDetail(card, "Observações", reservation.notes);
 
     const actions = createElement("div", "reservation-item-actions");

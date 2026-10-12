@@ -216,6 +216,7 @@
         (enrolledAfterTrial ? '<span class="trial-pill enrolled">MATRICULOU' + (appointment.conversion_source === "automatic" ? ' · AUTOMÁTICO' : ' · MANUAL') + '</span>' : '') +
       '</div>' +
       '<p class="trial-card-contact"><strong>WhatsApp:</strong> ' + escapeHtml(appointment.whatsapp) + '</p>' +
+      '<p class="trial-card-contact"><strong>Como conheceu:</strong> ' + escapeHtml(appointment.acquisition_label || "Não informado") + '</p>' +
       '<div class="trial-card-actions">' + actions.join("") + '</div>' +
     '</article>';
   }
@@ -360,6 +361,7 @@
     documentRef.getElementById("trialClassNumber").value = "";
     documentRef.getElementById("trialDate").value = saoPauloNowParts(new Date()).isoDate;
     documentRef.getElementById("trialTime").value = "";
+    runtime.windowRef.StudentAcquisition.setup("trialAcquisitionSource", "trialAcquisitionDetail");
     applyMode(runtime.state, documentRef);
   }
 
@@ -380,6 +382,7 @@
     documentRef.getElementById("trialClassNumber").value = appointment.class_number == null ? "" : String(appointment.class_number);
     documentRef.getElementById("trialDate").value = schedule.date;
     documentRef.getElementById("trialTime").value = schedule.time;
+    runtime.windowRef.StudentAcquisition.setup("trialAcquisitionSource", "trialAcquisitionDetail", appointment.declared_source, appointment.source_detail);
     applyMode(runtime.state, documentRef, { preserveDate: true });
     setMessage(documentRef, "Editando a aula experimental de " + appointment.visitor_name + ".", "success");
 
@@ -435,15 +438,25 @@
     const results = await Promise.all([
       runtime.client.rpc("get_teacher_trial_lesson_classes"),
       runtime.client.rpc("get_teacher_trial_lessons"),
-      runtime.client.rpc("get_teacher_trial_conversion_sources")
+      runtime.client.rpc("get_teacher_trial_conversion_sources"),
+      runtime.client.rpc("get_teacher_lead_acquisitions")
     ]);
     results.forEach(function (result) { if (result.error) throw result.error; });
     const sources = new Map((results[2].data || []).map(function (entry) {
       return [entry.appointment_id, entry.conversion_source];
     }));
+    const originMap = new Map(((results[3].data || {}).trials || []).map(function (item) {
+      return [String(item.id), item];
+    }));
     runtime.state.classes = Array.isArray(results[0].data) ? results[0].data : [];
     runtime.state.appointments = (Array.isArray(results[1].data) ? results[1].data : []).map(function (appointment) {
-      return Object.assign({}, appointment, { conversion_source: sources.get(appointment.id) || null });
+      const origin = originMap.get(String(appointment.id)) || {};
+      return Object.assign({}, appointment, {
+        conversion_source: sources.get(appointment.id) || null,
+        declared_source: origin.source || null,
+        source_detail: origin.detail || null,
+        acquisition_label: runtime.windowRef.StudentAcquisition.label(origin.source, origin.detail)
+      });
     });
     renderClassOptions(runtime.documentRef, runtime.state.classes);
     if (runtime.state.editingAppointmentId) {
@@ -489,7 +502,10 @@
 
     try {
       const payload = createPayload(runtime.state, documentRef);
-      const rpcName = editing ? "update_teacher_trial_lesson" : "create_teacher_trial_lesson";
+      const acquisition = runtime.windowRef.StudentAcquisition.read("trialAcquisitionSource", "trialAcquisitionDetail", false);
+      payload.target_source = acquisition.source;
+      payload.target_detail = acquisition.detail;
+      const rpcName = editing ? "update_teacher_trial_lesson_with_origin" : "create_teacher_trial_lesson_with_origin";
       if (editing) payload.target_appointment_id = appointmentId;
       const response = await runtime.client.rpc(rpcName, payload);
       if (response.error) throw response.error;
@@ -643,6 +659,7 @@
     const today = saoPauloNowParts(new Date()).isoDate;
     documentRef.getElementById("trialDate").min = today;
     documentRef.getElementById("trialDate").value = today;
+    windowRef.StudentAcquisition.setup("trialAcquisitionSource", "trialAcquisitionDetail");
     bindEvents(runtime);
     documentRef.body.classList.remove("auth-checking");
     await refresh(runtime);
