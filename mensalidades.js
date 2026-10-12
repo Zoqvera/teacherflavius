@@ -200,8 +200,7 @@ function getDetachedHistoryElements() {
   return {
     body: document.getElementById("detachedHistoryTableBody"),
     summary: document.getElementById("detachedHistorySummary"),
-    exportButton: document.getElementById("exportDetachedHistoryButton"),
-    refreshButton: document.getElementById("refreshDetachedHistoryButton")
+    exportButton: document.getElementById("exportDetachedHistoryButton")
   };
 }
 
@@ -254,7 +253,8 @@ async function loadDetachedTuitionHistory() {
   const elements = getDetachedHistoryElements();
   if (!elements.body || !elements.summary || !elements.exportButton) return;
 
-  setButtonBusy(elements.refreshButton, true, "CONSULTANDO...");
+  const refreshButton = document.getElementById("refreshDetachedHistoryButton");
+  setButtonBusy(refreshButton, true, "CONSULTANDO...");
   elements.summary.textContent = "Carregando histórico...";
   try {
     const response = await Auth.getClient().rpc("get_teacher_detached_tuition_history");
@@ -268,7 +268,7 @@ async function loadDetachedTuitionHistory() {
     elements.summary.textContent =
       "Não foi possível consultar o histórico financeiro: " + (error.message || "erro desconhecido");
   } finally {
-    setButtonBusy(elements.refreshButton, false);
+    setButtonBusy(refreshButton, false);
   }
 }
 
