@@ -106,6 +106,11 @@ function fillForm(student) {
   document.getElementById("studentPixKey").value = student.pix_key || "";
   document.getElementById("studentEnrollmentCode").value = student.enrollment_code || "";
   setAvailability(student.availability || {});
+  const origin = student.acquisition || {};
+  window.StudentAcquisition.setup("studentAcquisitionSource", "studentAcquisitionDetail", origin.source, origin.detail);
+  document.getElementById("studentAcquisitionProvenance").textContent = origin.recorded_via
+    ? "Origem registrada por: " + ({ teacher: "professor", student: "aluno", reservation: "reserva", trial: "aula experimental" }[origin.recorded_via] || origin.recorded_via)
+    : "Origem ainda não informada.";
 }
 
 async function saveStudent(event) {
@@ -120,6 +125,7 @@ async function saveStudent(event) {
     if (cleanCpf.length !== 11) throw new Error("CPF inválido. Informe 11 dígitos.");
     if (cleanWhatsapp.length < 10) throw new Error("WhatsApp inválido.");
 
+    const acquisition = window.StudentAcquisition.read("studentAcquisitionSource", "studentAcquisitionDetail", false);
     const client = Auth.getClient();
     const response = await client.rpc("update_teacher_student_profile", {
       target_user_id: currentStudentId,
@@ -133,6 +139,12 @@ async function saveStudent(event) {
     });
 
     if (response.error) throw response.error;
+    const sourceResponse = await client.rpc("set_teacher_student_acquisition", {
+      target_student_id: currentStudentId,
+      target_source: acquisition.source,
+      target_detail: acquisition.detail
+    });
+    if (sourceResponse.error) throw new Error("Os dados cadastrais foram salvos, mas a origem não: " + sourceResponse.error.message);
     message.className = "empty";
     message.textContent = "Dados do aluno atualizados.";
   } catch (error) {
@@ -166,11 +178,17 @@ async function guardPage() {
   }
 
   try {
-    const students = await loadStudents();
+    const [students, originsResponse] = await Promise.all([
+      loadStudents(),
+      Auth.getClient().rpc("get_teacher_student_acquisitions")
+    ]);
+    if (originsResponse.error) throw originsResponse.error;
+    const origins = new Map((originsResponse.data || []).map(item => [String(item.student_id), item]));
     currentStudent = students.find(function (student) {
       return String(student.user_id || student.id) === String(currentStudentId);
     });
     if (!currentStudent) throw new Error("Aluno não encontrado.");
+    currentStudent.acquisition = origins.get(String(currentStudentId)) || null;
     fillForm(currentStudent);
     status.textContent = "Professor autenticado: " + currentProfessorSession.user.email + ". Editando: " + (currentStudent.name || currentStudent.email || "aluno") + ".";
     document.body.classList.remove("auth-checking");
