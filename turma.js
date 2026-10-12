@@ -293,21 +293,70 @@ async function addSelectedStudentsToClass() {
 }
 
 async function removeStudentFromClass(refId, refType, button) {
-  const confirmed = window.confirm("Remover este aluno de " + (currentClassName || "Turma " + currentClassNumber) + "?");
-  if (!confirmed) return;
+  const client = Auth.getClient();
+  let disposition = "1";
+  if (refType === "user") {
+    // The final class removal must require an explicit administrative decision.
+    try {
+      const currentStates = await client.rpc("get_teacher_student_course_states");
+      if (currentStates.error) throw currentStates.error;
+      const state = (currentStates.data || []).find(function (row) {
+        return String(row.student_id) === String(refId);
+      });
+      if (state && Number(state.active_class_count) === 1) {
+        disposition = window.prompt(
+          "Esta é a última turma regular do aluno. Escolha como ficará a matrícula:\\n" +
+          "1 - Aguardando outra turma (manter cobrança)\\n" +
+          "2 - Matrícula pausada (suspender novas cobranças)\\n" +
+          "3 - Arquivar matrícula (preservar histórico e encerrar cobranças)\\n\\n" +
+          "Digite 1, 2 ou 3:", "1");
+        if (disposition === null) return;
+        disposition = disposition.trim();
+        if (!["1", "2", "3"].includes(disposition)) {
+          window.alert("Opção inválida. A turma não foi alterada.");
+          return;
+        }
+      }
+    } catch (error) {
+      window.alert("Não foi possível verificar a situação do aluno. Nenhuma alteração foi feita: " +
+        (error.message || "erro desconhecido"));
+      return;
+    }
+  }
+
+  if (!window.confirm("Remover este aluno de " +
+    (currentClassName || "Turma " + currentClassNumber) + "?")) return;
+
   button.disabled = true;
   button.textContent = "REMOVENDO...";
   try {
-    const client = Auth.getClient();
     const response = await client.rpc("remove_teacher_class_student_by_ref", {
       target_class_number: currentClassNumber,
       target_student_ref_id: refId,
       target_student_ref_type: refType
     });
     if (response.error) throw response.error;
+
+    if (disposition === "2") {
+      const paused = await client.rpc("set_teacher_student_course_state", {
+        target_student_id: refId,
+        target_course_status: "paused",
+        target_reason: "Pausa autorizada na desvinculação da última turma",
+        target_billing_exemption: null,
+        target_effective_date: null
+      });
+      if (paused.error) throw paused.error;
+    } else if (disposition === "3") {
+      const archived = await client.rpc("archive_teacher_student", { target_user_id: refId });
+      if (archived.error) throw archived.error;
+    }
+
     await refreshLists();
   } catch (error) {
-    alert("Não foi possível remover o aluno: " + (error.message || "erro desconhecido") + ". Execute supabase_pre_matriculas_turmas.sql no Supabase.");
+    window.alert("A operação não foi concluída integralmente. Confira o estado do aluno em Perfil dos Alunos: " +
+      (error.message || "erro desconhecido"));
+    await refreshLists();
+  } finally {
     button.disabled = false;
     button.textContent = "REMOVER DA TURMA";
   }
