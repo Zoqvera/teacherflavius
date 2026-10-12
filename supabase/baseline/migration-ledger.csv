@@ -254,3 +254,4 @@ version,name
 20261008043050,normalize_student_names_title_case
 20261008043429,secure_student_name_normalization_triggers
 20261008052515,student_paid_tuition_history
+20261012201436,avoid_tuition_due_date_generation_conflicts
