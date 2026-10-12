@@ -134,6 +134,12 @@ function getStudentCourseState(student) {
   return studentId ? studentCourseStateMap.get(String(studentId)) || null : null;
 }
 
+function formatCourseStatusDate(value) {
+  if (!value) return "Data não registrada";
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value).slice(0, 10));
+  return match ? match[3] + "/" + match[2] + "/" + match[1] : "Data não registrada";
+}
+
 function getCourseStateLabel(state) {
   if (!state) return "Não identificado";
   const labels = {
@@ -934,7 +940,7 @@ function renderProfileCard(student) {
        escapeHtml(getCourseStateLabel(courseState)) + '</p>' +
        '<p><b>Cobrança:</b> ' + escapeHtml(getStudentBillingStatusLabel(courseState)) + '</p>' +
        (courseState && courseState.status_since ?
-         '<p><b>Registrada em:</b> ' + escapeHtml(formatCreatedAt(courseState.status_since)) + '</p>' : '') +
+         '<p><b>Registrada em:</b> ' + escapeHtml(formatCourseStatusDate(courseState.status_since)) + '</p>' : '') +
        (courseState && courseState.status_reason ?
          '<p><b>Observação:</b> ' + escapeHtml(courseState.status_reason) + '</p>' : '') +
        '</div>' : '') +

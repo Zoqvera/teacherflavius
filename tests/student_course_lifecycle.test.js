@@ -29,6 +29,11 @@ test("course labels and financial exceptions are independent", () => {
   assert.equal(vm.runInContext("getStudentBillingStatusLabel({course_status:'active',billing_active:false,billing_exemption:'permanent'})", ctx), "Isenção permanente");
 });
 
+test("administrative dates are timezone-independent", () => {
+  const ctx = createUiContext();
+  assert.equal(vm.runInContext("formatCourseStatusDate(\'2026-10-12\')", ctx), "12/10/2026");
+});
+
 test("course filters use persisted status, not merely no-class membership", () => {
   const ctx = createUiContext();
   assert.equal(vm.runInContext(`
