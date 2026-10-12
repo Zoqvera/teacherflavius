@@ -11,6 +11,7 @@ let selectedStudentForBilling = null;
 let studentBillingLoaded = false;
 let studentCourseStateMap = new Map();
 let studentCourseStateLoaded = false;
+let studentAcquisitionMap = new Map();
 let selectedStudentForCourseState = null;
 
 function redirectToLogin() {
@@ -183,6 +184,10 @@ function filterStudents(students) {
     });
   }
 
+  if (currentStudentFilter === "without_origin") {
+    return students.filter(student => isEnrolledStudent(student) && !studentAcquisitionMap.get(String(student.user_id || student.id))?.source);
+  }
+
   if (currentStudentFilter === "availability") {
     return students.filter(hasAvailability);
   }
@@ -229,6 +234,11 @@ function getFilterMetadata() {
     exempt: {
       title: "Isentos permanentemente", heading: "Isenções permanentes",
       empty: "Nenhum aluno com isenção permanente."
+    },
+    without_origin: {
+      title: "Origem não informada",
+      heading: "Alunos sem origem declarada",
+      empty: "Todos os alunos selecionados têm origem registrada."
     },
     availability: {
       title: "Disponibilidade dos alunos",
@@ -349,7 +359,8 @@ function downloadEnrolledStudentsExcel() {
     "Mensalidade (R$)",
     "Turma",
     "Data da matrícula",
-    "Disponibilidade"
+    "Disponibilidade",
+    "Como conheceu as aulas"
   ];
 
   const rows = students
@@ -369,12 +380,14 @@ function downloadEnrolledStudentsExcel() {
         hasBillingConfigured(student) ? Number(getStudentBilling(student).monthly_fee) : "",
         getStudentClassNames(student),
         enrollmentDate instanceof Date && !Number.isNaN(enrollmentDate.getTime()) ? enrollmentDate : "",
-        formatAvailabilityForSpreadsheet(student)
+        formatAvailabilityForSpreadsheet(student),
+        window.StudentAcquisition.label((studentAcquisitionMap.get(String(student.user_id || student.id)) || {}).source,
+          (studentAcquisitionMap.get(String(student.user_id || student.id)) || {}).detail)
       ];
     });
 
   const worksheet = XLSX.utils.aoa_to_sheet([headers].concat(rows), { cellDates: true });
-  worksheet["!autofilter"] = { ref: "A1:J" + (rows.length + 1) };
+  worksheet["!autofilter"] = { ref: "A1:K" + (rows.length + 1) };
   worksheet["!cols"] = [
     { wch: 30 },
     { wch: 32 },
@@ -385,7 +398,8 @@ function downloadEnrolledStudentsExcel() {
     { wch: 18 },
     { wch: 24 },
     { wch: 20 },
-    { wch: 52 }
+    { wch: 52 },
+    { wch: 34 }
   ];
 
   for (let rowIndex = 2; rowIndex <= rows.length + 1; rowIndex++) {
@@ -905,6 +919,7 @@ function renderProfileCard(student) {
   const assignedClasses = getStudentClassNames(student);
   const pillLabel = preEnrolled ? "Pré-matriculado" : "Matriculado";
   const sourceLabel = preEnrolled ? "Pré-matrícula por convite" : (student.source || "Não informado");
+  const acquisition = studentAcquisitionMap.get(String(userId)) || {};
   const courseState = getStudentCourseState(student);
   const billing = getStudentBilling(student);
   const billingConfigured = !!(billing && billing.monthly_fee != null);
@@ -952,6 +967,7 @@ function renderProfileCard(student) {
     '<p><b>Chave PIX:</b> ' + escapeHtml(student.pix_key || "Não informado") + '</p>' +
     '<p><b>Referência:</b> ' + escapeHtml(refType + ':' + refId) + '</p>' +
     '<p><b>Origem do registro:</b> ' + escapeHtml(sourceLabel) + '</p>' +
+    '<p><b>Como conheceu as aulas:</b> ' + escapeHtml(window.StudentAcquisition.label(acquisition.source, acquisition.detail)) + '</p>' +
     '<p><b>Status da pré-matrícula:</b> ' + escapeHtml(student.pre_enrollment_status || (preEnrolled ? "pending" : "completed")) + '</p>' +
     '<p><b>Criado em:</b> ' + escapeHtml(formatCreatedAt(student.created_at)) + '</p>' +
     '<div class="student-billing-row"><b>Mensalidade</b><span class="billing-category ' + billingClass + '">' + escapeHtml(billingLabel) + '</span></div>' +
@@ -1088,6 +1104,9 @@ async function guardPage() {
   setupModalEvents();
   setupFilterEvents();
   await loadTeacherClasses();
+  const originResult = await Auth.getClient().rpc("get_teacher_student_acquisitions");
+  if (originResult.error) throw originResult.error;
+  studentAcquisitionMap = new Map((originResult.data || []).map(entry => [String(entry.student_id), entry]));
   await Promise.all([loadStudentClassMap(), refreshStudentBillingMap(), refreshStudentCourseStates()]);
   await renderStudentProfiles();
 }
