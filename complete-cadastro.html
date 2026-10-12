@@ -31,6 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260818-google-auth-1"></script>
   <script src="/enrollment_onboarding_state.js?v=20261006-1"></script>
+  <script src="/student_acquisition.js?v=20261012-1"></script>
   <script src="/student_profile_optional.js?v=20260902-1"></script>
   <script src="/student_tuition_due_day.js?v=20261005-next-day-1"></script>
   <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20261004-fee-plan-1" />
@@ -123,6 +124,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <option value="individual">Aulas individuais</option>
               </select>
               <div class="field-note">Ao escolher aulas em grupo, seu cadastro será classificado automaticamente como QUINTETO.</div>
+            </div>
+            <div class="field full">
+              <label class="field-label" for="acquisitionSource">Como você conheceu as aulas de inglês do Teacher Flávio?</label>
+              <select id="acquisitionSource" required><option value="">Selecione uma opção</option></select>
+              <div data-acquisition-detail hidden>
+                <label class="field-label" for="acquisitionDetail">Onde conheceu?</label>
+                <input id="acquisitionDetail" type="text" maxlength="120" placeholder="Informe a origem" />
+              </div>
+              <div class="field-note">Sua resposta nos ajuda a entender como novos alunos encontram as aulas.</div>
             </div>
           </div>
         </section>
@@ -225,6 +235,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       profileForm.hidden = !state.formUnlocked;
       classModeField.hidden = !state.requiresClassMode;
       classMode.required = state.requiresClassMode;
+      document.getElementById("acquisitionSource").required = !existingProfile;
 
       codeStep.classList.toggle("is-current", state.requiresAccessCode && !state.formUnlocked);
       codeStep.classList.toggle("is-done", state.requiresAccessCode && state.formUnlocked);
@@ -269,6 +280,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             ? "individual"
             : "";
 
+      const acquisition = await Auth.getClient().rpc("get_my_student_acquisition");
+      if (acquisition.error) throw acquisition.error;
+      const recorded = acquisition.data || {};
+      window.StudentAcquisition.setup("acquisitionSource", "acquisitionDetail", recorded.source, recorded.detail);
       configureFormForState(state);
     }
 
@@ -377,6 +392,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (state.requiresCommercialSetup) {
           const billingTermsResponse = await Auth.getClient().rpc("set_my_enrollment_billing_terms");
           if (billingTermsResponse.error) throw billingTermsResponse.error;
+        }
+
+        const sourceAnswer = window.StudentAcquisition.read(
+          "acquisitionSource", "acquisitionDetail", state.mode === NEW_ENROLLMENT_MODE
+        );
+        if (sourceAnswer.source) {
+          const savedSource = await Auth.getClient().rpc("set_my_student_acquisition", {
+            target_source: sourceAnswer.source,
+            target_detail: sourceAnswer.detail,
+            target_technical: window.StudentAcquisition.technicalAttribution()
+          });
+          if (savedSource.error) throw savedSource.error;
         }
 
         await Auth.completeProfile({
