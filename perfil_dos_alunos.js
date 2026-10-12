@@ -125,7 +125,6 @@ function getStudentBilling(student) {
 }
 
 function hasBillingConfigured(student) {
-  const courseState = getStudentCourseState(student);
   const billing = getStudentBilling(student);
   return !!(billing && billing.monthly_fee != null);
 }
@@ -900,6 +899,7 @@ function renderProfileCard(student) {
   const assignedClasses = getStudentClassNames(student);
   const pillLabel = preEnrolled ? "Pré-matriculado" : "Matriculado";
   const sourceLabel = preEnrolled ? "Pré-matrícula por convite" : (student.source || "Não informado");
+  const courseState = getStudentCourseState(student);
   const billing = getStudentBilling(student);
   const billingConfigured = !!(billing && billing.monthly_fee != null);
   const billingLabel = !studentBillingLoaded
