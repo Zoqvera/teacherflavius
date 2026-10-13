@@ -51,7 +51,7 @@ test("student and administrator flows share the same two-date first-tuition rule
 test("administrator reads authoritative first-tuition options from the database", function () {
   assert.match(dueDayScript, /get_teacher_student_tuition_due_date_options/);
   assert.match(dueDayScript, /dueDayOptionsByStudentId/);
-  assert.match(dueDayScript, /dia da matrícula ou no dia seguinte/);
+  assert.match(dueDayScript, /vencimento inicial é fixado automaticamente no dia da matrícula/);
   assert.doesNotMatch(dueDayScript, /addCalendarDays\(anchorDate, 5\)/);
   assert.doesNotMatch(dueDayScript, /addCalendarDays\(anchorDate, 8\)/);
 });
