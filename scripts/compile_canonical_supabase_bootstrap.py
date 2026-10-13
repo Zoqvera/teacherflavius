@@ -16,7 +16,7 @@ from pathlib import Path
 WORKFLOW = ".github/workflows/validate-supabase-baseline.yml"
 BASELINE_PREFIX = "supabase/baseline/"
 EXPECTED_FIRST = "supabase/baseline/10_public_schema.sql"
-EXPECTED_LAST = "supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql"
+EXPECTED_LAST = "supabase/baseline/380_same_day_first_tuition_payment.sql"
 
 
 def parse_baseline_order(workflow: str) -> tuple[str, ...]:
