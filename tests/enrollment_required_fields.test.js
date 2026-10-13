@@ -8,7 +8,6 @@ function read(relativePath) {
 }
 
 const page = read("complete-cadastro.html");
-const dueDay = read("student_tuition_due_day.js");
 const migration = read(
   "supabase/migrations/20261001163500_require_all_enrollment_fields.sql"
 );
@@ -22,8 +21,8 @@ test("every personal enrollment identity field is required", function () {
   assert.match(page, /id="birthDate"[^>]*required/);
   assert.match(page, /id="cpf"[^>]*required/);
   assert.match(page, /id="whatsapp"[^>]*required/);
-  assert.match(dueDay, /select\.required = state\.selectedDueDate == null/);
-  assert.match(dueDay, /Escolha a data de vencimento da primeira mensalidade/);
+  assert.doesNotMatch(page, /student_tuition_due_day\.js|tuitionDueDate/);
+  assert.match(page, /O vencimento da primeira mensalidade será definido automaticamente/);
 });
 
 test("database activation rejects missing personal enrollment fields", function () {

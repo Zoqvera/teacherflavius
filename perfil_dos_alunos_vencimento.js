@@ -77,7 +77,7 @@
 
     const note = form.querySelector(".billing-modal-note");
     if (note) {
-      note.textContent = "Para novos cadastros, o primeiro vencimento deve ser no dia da matrícula ou no dia seguinte. Alunos já configurados mantêm o vencimento atual enquanto ele não for alterado.";
+      note.textContent = "Para novas matrículas, o vencimento inicial é fixado automaticamente no dia da matrícula. As condições históricas dos alunos já matriculados permanecem preservadas.";
     }
 
     const saveButton = document.getElementById("saveStudentBillingButton");

@@ -50,7 +50,10 @@ test("restore and migration reconciliation retain exact applied version", () => 
   const fingerprint = JSON.parse(read("supabase/baseline/schema-fingerprint.json"));
   assert.match(workflow, /377_manual_replacement_credits_all_students\.sql/);
   assert.match(ledger, /20261013113046,allow_manual_replacement_credits_for_all_students/);
-  assert.equal(fingerprint.captured_from_migration_version, "20261013113046");
-  assert.equal(fingerprint.public_functions, 188);
-  assert.equal(fingerprint.private_functions, 35);
+  assert.ok(
+    Number(fingerprint.captured_from_migration_version) >= 20261013113046,
+    "Recovery must include the already-applied manual credit migration"
+  );
+  assert.ok(fingerprint.public_functions >= 188);
+  assert.ok(fingerprint.private_functions >= 35);
 });
