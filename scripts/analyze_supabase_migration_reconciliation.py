@@ -46,6 +46,11 @@ class Reconciliation:
     remote_only_examples: tuple[str, ...]
     git_only_examples: tuple[str, ...]
     changed_sql_examples: tuple[str, ...]
+    same_version_changed_sql_versions: tuple[str, ...]
+    timestamp_aliases_identical_sql: tuple[tuple[str, str], ...]
+    timestamp_aliases_changed_sql: tuple[tuple[str, str], ...]
+    remaining_remote_versions: tuple[str, ...]
+    remaining_git_versions: tuple[str, ...]
     status: str
 
 
@@ -155,6 +160,25 @@ def reconcile(production: list[Migration], repository: list[Migration]) -> Recon
             sorted(item.version for item in git_only if item.version not in matched_git_versions)[:8]
         ),
         changed_sql_examples=tuple(changed_versions[:8]),
+        same_version_changed_sql_versions=tuple(changed_versions),
+        timestamp_aliases_identical_sql=tuple(
+            sorted((git.version, remote.version)
+                   for git, remote in timestamp_candidates
+                   if git.checksum == remote.checksum)
+        ),
+        timestamp_aliases_changed_sql=tuple(
+            sorted((git.version, remote.version)
+                   for git, remote in timestamp_candidates
+                   if git.checksum != remote.checksum)
+        ),
+        remaining_remote_versions=tuple(
+            sorted(item.version for item in remote_only
+                   if item.version not in matched_remote_versions)
+        ),
+        remaining_git_versions=tuple(
+            sorted(item.version for item in git_only
+                   if item.version not in matched_git_versions)
+        ),
         status="METADATA_AND_SQL_ALIGNED" if aligned else "RECONCILIATION_REQUIRED",
     )
 

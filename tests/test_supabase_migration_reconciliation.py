@@ -31,6 +31,10 @@ class ReconciliationTests(unittest.TestCase):
         r = reconcile([remote], [local])
         self.assertEqual(r.timestamp_shift_candidates, 1)
         self.assertEqual(r.timestamp_shift_same_sql, 1)
+        self.assertEqual(
+            r.timestamp_aliases_identical_sql,
+            (("20261013000002", "20261013000001"),),
+        )
         self.assertEqual(r.remaining_remote_only, 0)
         self.assertEqual(r.remaining_git_only, 0)
         self.assertEqual(r.status, "RECONCILIATION_REQUIRED")
@@ -42,12 +46,17 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(r.timestamp_shift_candidates, 1)
         self.assertEqual(r.timestamp_shift_same_sql, 0)
         self.assertEqual(r.timestamp_shift_different_sql, 1)
+        self.assertEqual(
+            r.timestamp_aliases_changed_sql,
+            (("20261013000002", "20261013000001"),),
+        )
 
     def test_same_version_with_different_sql_does_not_pass(self) -> None:
         a = item("20261013000001", "credit_sync", "select 1;")
         b = item("20261013000001", "credit_sync", "select 2;")
         r = reconcile([a], [b])
         self.assertEqual(r.same_version_different_sql, 1)
+        self.assertEqual(r.same_version_changed_sql_versions, ("20261013000001",))
         self.assertEqual(r.status, "RECONCILIATION_REQUIRED")
 
     def test_unique_entries_are_preserved_in_report(self) -> None:
@@ -57,6 +66,8 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(r.timestamp_shift_candidates, 0)
         self.assertEqual(r.remote_only_examples, ("20261013000001",))
         self.assertEqual(r.git_only_examples, ("20261013000002",))
+        self.assertEqual(r.remaining_remote_versions, ("20261013000001",))
+        self.assertEqual(r.remaining_git_versions, ("20261013000002",))
 
     def test_rejects_sql_in_metadata_input(self) -> None:
         digest = "a" * 64
