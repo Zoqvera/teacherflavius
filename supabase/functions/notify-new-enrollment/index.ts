@@ -16,6 +16,9 @@ type DatabaseWebhookPayload = {
 };
 
 const encoder = new TextEncoder();
+const ENROLLMENT_FROM_EMAIL = "Matrículas <matriculas@teacherflavius.com>";
+const STUDENT_AREA_URL = "https://teacherflavius.com/area-do-estudante/";
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function getDefaultKey(envName: string, legacyName: string): string {
   const raw = Deno.env.get(envName);
@@ -99,10 +102,9 @@ Deno.serve(async (request: Request) => {
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   const notificationEmail = Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL") ?? "";
-  const fromEmail = Deno.env.get("ENROLLMENT_FROM_EMAIL") ?? "";
   const expectedWebhookSecret = Deno.env.get("ENROLLMENT_WEBHOOK_SECRET") ?? "";
 
-  if (!supabaseUrl || !secretKey || !resendApiKey || !notificationEmail || !fromEmail || !expectedWebhookSecret) {
+  if (!supabaseUrl || !secretKey || !resendApiKey || !notificationEmail || !expectedWebhookSecret) {
     console.error("Missing required environment variables for enrollment notification");
     return jsonResponse({ error: "Server configuration is incomplete" }, 500);
   }
@@ -160,7 +162,7 @@ Deno.serve(async (request: Request) => {
 
   const { data: student, error: studentError } = await supabase
     .from("profiles")
-    .select("id, name, whatsapp, enrolled")
+    .select("id, name, email, whatsapp, enrolled")
     .eq("id", notification.student_id)
     .single();
 
@@ -196,8 +198,21 @@ Deno.serve(async (request: Request) => {
   }
 
   const enrolledAt = formatEnrollmentDate(notification.created_at);
-  const studentName = displayValue(student.name, "Não informado");
+  const studentName = displayValue(student.name, "Aluno");
+  const studentEmail = displayValue(student.email, "").toLowerCase();
   const studentWhatsapp = displayValue(student.whatsapp, "Não informado");
+
+  if (!emailPattern.test(studentEmail)) {
+    await supabase
+      .from("enrollment_email_notifications")
+      .update({
+        status: "failed",
+        last_error: "Student email is missing or invalid",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", notification.id);
+    return jsonResponse({ error: "Student email is missing or invalid" }, 422);
+  }
   const classesPerMonth = Number(billing.classes_per_month);
   const monthlyFee = formatCurrencyBRL(billing.monthly_fee);
   const studentNameHtml = escapeHtml(studentName);
@@ -230,15 +245,43 @@ Deno.serve(async (request: Request) => {
     </div>
   `;
 
-  const resendResponse = await fetch("https://api.resend.com/emails", {
+  const studentTextBody = [
+    `Olá, ${studentName}!`,
+    "",
+    "Sua matrícula foi concluída com sucesso.",
+    "",
+    `Quantidade de aulas por mês: ${classesPerMonth}`,
+    `Valor mensal: ${monthlyFee}`,
+    `Data da matrícula: ${enrolledAt}`,
+    "",
+    `Acesse sua Área do Estudante: ${STUDENT_AREA_URL}`,
+  ].join("\n");
+
+  const studentHtmlBody = `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033;max-width:620px;margin:0 auto">
+      <h1 style="font-size:22px;margin-bottom:18px">Matrícula confirmada</h1>
+      <p>Olá, <strong>${studentNameHtml}</strong>!</p>
+      <p>Sua matrícula foi concluída com sucesso.</p>
+      <table style="border-collapse:collapse;width:100%;margin:18px 0">
+        <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Aulas por mês</td><td>${classesPerMonthHtml}</td></tr>
+        <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Valor mensal</td><td>${monthlyFeeHtml}</td></tr>
+        <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Data da matrícula</td><td>${escapeHtml(enrolledAt)}</td></tr>
+      </table>
+      <p style="margin:24px 0">
+        <a href="${STUDENT_AREA_URL}" style="display:inline-block;background:#6366f1;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold">Acessar Área do Estudante</a>
+      </p>
+    </div>
+  `;
+
+  const adminResponse = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${resendApiKey}`,
       "Content-Type": "application/json",
-      "Idempotency-Key": `enrollment-${notification.id}`,
+      "Idempotency-Key": `enrollment-admin-${notification.id}`,
     },
     body: JSON.stringify({
-      from: fromEmail,
+      from: ENROLLMENT_FROM_EMAIL,
       to: [notificationEmail],
       subject: "Nova matrícula concluída",
       text: textBody,
@@ -246,13 +289,46 @@ Deno.serve(async (request: Request) => {
     }),
   });
 
-  if (!resendResponse.ok) {
+  if (!adminResponse.ok) {
     await supabase
       .from("enrollment_email_notifications")
-      .update({ status: "failed", last_error: `provider_http_${resendResponse.status}`, updated_at: new Date().toISOString() })
+      .update({
+        status: "failed",
+        last_error: `admin_provider_http_${adminResponse.status}`,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", notification.id);
-    console.error("Resend rejected enrollment notification", notification.id, resendResponse.status);
-    return jsonResponse({ error: "Email provider rejected the message" }, 502);
+    console.error("Resend rejected enrollment admin notification", notification.id, adminResponse.status);
+    return jsonResponse({ error: "Email provider rejected the admin message" }, 502);
+  }
+
+  const studentResponse = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": `enrollment-student-${notification.id}`,
+    },
+    body: JSON.stringify({
+      from: ENROLLMENT_FROM_EMAIL,
+      to: [studentEmail],
+      subject: "Matrícula confirmada — Teacher Flávio",
+      text: studentTextBody,
+      html: studentHtmlBody,
+    }),
+  });
+
+  if (!studentResponse.ok) {
+    await supabase
+      .from("enrollment_email_notifications")
+      .update({
+        status: "failed",
+        last_error: `student_provider_http_${studentResponse.status}`,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", notification.id);
+    console.error("Resend rejected enrollment student confirmation", notification.id, studentResponse.status);
+    return jsonResponse({ error: "Email provider rejected the student message" }, 502);
   }
 
   const sentAt = new Date().toISOString();
