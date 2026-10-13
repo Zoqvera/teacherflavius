@@ -80,6 +80,17 @@ create_dump_set() {
     --schema supabase_migrations
 }
 
+capture_application_triggers() {
+  # CLI schema dumps omit customizations of Supabase-managed Auth.
+  # Only application-owned definitions are extracted; this file is encrypted
+  # with the rest of the production backup before leaving the runner.
+  psql "$SUPABASE_DB_URL" \
+    -qAt \
+    --variable ON_ERROR_STOP=1 \
+    --file supabase/recovery/export_application_triggers.sql \
+    > "$BACKUP_DIR/application_triggers.sql"
+}
+
 capture_recovery_manifest() {
   psql "$SUPABASE_DB_URL" \
     -At \
@@ -88,7 +99,7 @@ capture_recovery_manifest() {
     > "$BACKUP_DIR/recovery_manifest.json"
 
   jq -e '
-    .format_version == 2
+    .format_version == 3
     and (.critical_row_counts | type == "object")
     and (.catalog_fingerprint | type == "object")
     and (.storage | type == "object")
@@ -98,7 +109,7 @@ capture_recovery_manifest() {
 
 validate_dump_set() {
   local file
-  for file in roles.sql schema.sql data.sql history_schema.sql history_data.sql recovery_manifest.json; do
+  for file in roles.sql schema.sql data.sql history_schema.sql history_data.sql application_triggers.sql recovery_manifest.json; do
     if [ ! -s "$BACKUP_DIR/$file" ]; then
       echo "::error::Backup file is missing or empty: $file"
       exit 1
@@ -113,6 +124,7 @@ validate_dump_set() {
       data.sql \
       history_schema.sql \
       history_data.sql \
+      application_triggers.sql \
       recovery_manifest.json \
       > manifest.sha256
   )
@@ -120,6 +132,7 @@ validate_dump_set() {
   cat > "$BACKUP_DIR/README.txt" <<'EOF'
 Teacherflavius encrypted Supabase logical backup.
 This archive contains production database data and must remain confidential.
+application_triggers.sql contains application-owned Auth and event triggers not covered by the CLI schema dump.
 recovery_manifest.json contains only technical counts/configuration used by the automated restore verifier.
 Restore instructions are versioned in BACKUP_RECOVERY.md in the repository.
 EOF
@@ -171,6 +184,7 @@ main() {
   prepare_paths
   trap cleanup_plaintext EXIT
   create_dump_set
+  capture_application_triggers
   capture_recovery_manifest
   validate_dump_set
   encrypt_backup
