@@ -39,4 +39,5 @@ test("enrollment email escapes contact values before HTML interpolation", functi
 test("privacy inventory reflects the enrollment email data flow", function () {
   assert.match(privacyMap, /notificação administrativa de nova matrícula inclui nome, WhatsApp, quantidade de aulas, valor combinado e data da matrícula/);
   assert.match(privacyMap, /CPF, e-mail, código de matrícula e chave PIX continuam fora da mensagem/);
+  assert.match(privacyMap, /confirmação de matrícula e confirmação de reposição/);
 });
