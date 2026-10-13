@@ -26,6 +26,7 @@ const SUBJECTS: Record<string, string> = {
   system_health_stalled: "Alerta crítico: health check global parou",
   data_quality_check_stalled: "Alerta: health check de qualidade de dados parou",
   data_quality_orphan_class_assignments: "Alerta crítico: vínculo de turma órfão",
+  data_quality_class_membership_without_profile: "Alerta: vínculo de turma sem perfil de aluno",
   data_quality_invalid_class_student_refs: "Alerta crítico: referência inválida em turma",
   data_quality_class_capacity_exceeded: "Alerta crítico: turma acima da capacidade",
   data_quality_student_class_type_mismatch: "Alerta: tipo de aluno incompatível com a turma",
