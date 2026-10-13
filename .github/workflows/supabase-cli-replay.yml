@@ -41,7 +41,7 @@ jobs:
           PREVIEW_DIR="${RUNNER_TEMP}/teacherflavius-cli-replay"
           mkdir -p "${PREVIEW_DIR}"
           (cd "${PREVIEW_DIR}" && supabase init --force)
-          python3 scripts/prepare_supabase_cli_replay.py \
+          python3 -m scripts.prepare_supabase_cli_replay \
             --repo-root "${GITHUB_WORKSPACE}" \
             --staging-root "${PREVIEW_DIR}"
 
