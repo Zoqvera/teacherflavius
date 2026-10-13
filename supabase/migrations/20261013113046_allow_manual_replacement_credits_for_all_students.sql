@@ -1,3 +1,4 @@
+
 create or replace function private.is_student_replacement_credit_eligible(
   target_student_id uuid,
   credit_origin text,
@@ -382,12 +383,7 @@ begin
   end if;
 
   select
-    coalesce(
-      nullif(trim(profile.name), ''),
-      nullif(trim(user_account.raw_user_meta_data ->> 'name'), ''),
-      user_account.email,
-      'Aluno'
-    ),
+    coalesce(nullif(trim(profile.name), ''), nullif(trim(user_account.raw_user_meta_data ->> 'name'), ''), user_account.email, 'Aluno'),
     coalesce(nullif(trim(profile.email), ''), user_account.email, '')
   into student_name, student_email
   from auth.users user_account
@@ -425,14 +421,8 @@ begin
     used_at = now()
   where credit.id = credit_row.id;
 
-  insert into public.makeup_class_email_notifications (
-    booking_id,
-    notification_type
-  )
-  values (
-    target_booking_id,
-    'booking_confirmation'
-  )
+  insert into public.makeup_class_email_notifications (booking_id, notification_type)
+  values (target_booking_id, 'booking_confirmation')
   on conflict (booking_id, notification_type) do nothing;
 
   return jsonb_build_object(
