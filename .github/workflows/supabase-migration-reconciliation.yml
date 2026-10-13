@@ -1,0 +1,111 @@
+name: Supabase migration reconciliation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/analyze_supabase_migration_reconciliation.py
+      - tests/test_supabase_migration_reconciliation.py
+      - .github/workflows/supabase-migration-reconciliation.yml
+  push:
+    branches:
+      - main
+    paths:
+      - scripts/analyze_supabase_migration_reconciliation.py
+      - tests/test_supabase_migration_reconciliation.py
+      - .github/workflows/supabase-migration-reconciliation.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconciliation-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Verify reconciliation contracts
+        run: python3 -m unittest discover -s tests -p test_supabase_migration_reconciliation.py
+
+  analyze-production-ledger:
+    # Only trusted main code can access production metadata. Never give a PR
+    # workflow a production database URL, even for SELECT statements.
+    if: github.event_name != 'pull_request'
+    needs: reconciliation-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Check out protected main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Check metadata-only database connection
+        shell: bash
+        run: |
+          if [[ -z "${SUPABASE_DB_URL}" ]]; then
+            echo "::error::SUPABASE_DB_URL is not configured."
+            exit 1
+          fi
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Read migration checksums without fetching stored SQL
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # PostgreSQL computes the SHA256 server side. Only version, name,
+          # and digest reach CI; historical statements can contain personal
+          # information and must never be printed or uploaded.
+          psql "${SUPABASE_DB_URL}" -X -qAt -F $'\t' -v ON_ERROR_STOP=1 \
+            -c "select
+                   version,
+                   coalesce(name, ''),
+                   encode(
+                     extensions.digest(
+                       convert_to(
+                         regexp_replace(
+                           regexp_replace(
+                             coalesce(array_to_string(statements, chr(10)), ''),
+                             '^[[:space:]]+', ''
+                           ),
+                           '[[:space:]]+$', ''
+                         ),
+                         'UTF8'
+                       ),
+                       'sha256'
+                     ),
+                     'hex'
+                   )
+                 from supabase_migrations.schema_migrations
+                 order by version;" > "${RUNNER_TEMP}/migration-digests.tsv"
+
+          test -s "${RUNNER_TEMP}/migration-digests.tsv"
+          # The Python parser rejects unexpected metadata before emitting a report.
+
+      - name: Compare full version, name and SQL checksum identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/analyze_supabase_migration_reconciliation.py \
+            --remote-metadata-file "${RUNNER_TEMP}/migration-digests.tsv" \
+            --report-json "${RUNNER_TEMP}/migration-reconciliation.json"
+
+      - name: Save report without migration statements
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: supabase-migration-reconciliation
+          path: ${{ runner.temp }}/migration-reconciliation.json
+          retention-days: 14
+          if-no-files-found: ignore
