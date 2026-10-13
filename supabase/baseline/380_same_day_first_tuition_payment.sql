@@ -13,8 +13,7 @@ AS $function$
   select array[
     target_enrollment_date
   ]::date[];
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION public.set_my_tuition_due_date(target_due_date date)
  RETURNS jsonb
@@ -111,8 +110,7 @@ begin
     'first_tuition_id', first_tuition_id
   );
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION public.get_my_enrollment_onboarding_state()
  RETURNS jsonb
@@ -179,8 +177,7 @@ begin
       or (flow_mode = 'new_enrollment' and access_authorized)
   );
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION public.activate_completed_google_student_profile()
  RETURNS trigger
@@ -318,8 +315,7 @@ begin
 
   return new;
 end;
-$function$
-
+$function$;
 
 -- Prevent a student from disabling the cohort marker through a direct profile PATCH.
 create or replace function private.protect_first_payment_policy()
