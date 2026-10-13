@@ -5,7 +5,7 @@ const test = require("node:test");
 
 const root = path.resolve(__dirname, "..");
 const overlayPath = "supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql";
-const migrationPath = "supabase/migrations/20261013012100_preserve_historical_credits_and_profile_integrity.sql";
+const migrationPath = "supabase/migrations/20261013012324_preserve_historical_credits_and_profile_integrity.sql";
 const overlay = fs.readFileSync(path.join(root, overlayPath), "utf8");
 const migration = fs.readFileSync(path.join(root, migrationPath), "utf8");
 const auditPanel = fs.readFileSync(path.join(root, "lesson_credit_admin.js"), "utf8");
