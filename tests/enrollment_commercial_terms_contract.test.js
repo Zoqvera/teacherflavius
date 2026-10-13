@@ -38,18 +38,13 @@ test("new enrollment form does not let the student choose commercial terms", fun
   );
 });
 
-test("enrollment saves due-day choice before server-authoritative commercial terms and profile activation", function () {
-  const dueDayIndex = page.indexOf("StudentTuitionDueDay.saveSelection");
+test("enrollment saves authorized billing terms without a due-day choice", function () {
   const billingIndex = page.indexOf("set_my_enrollment_billing_terms");
   const profileIndex = page.indexOf("Auth.completeProfile");
-
-  assert.ok(dueDayIndex >= 0);
-  assert.ok(billingIndex > dueDayIndex);
+  assert.ok(billingIndex > 0);
   assert.ok(profileIndex > billingIndex);
-  assert.match(
-    page,
-    /rpc\("set_my_enrollment_billing_terms"\)/
-  );
+  assert.doesNotMatch(page, /StudentTuitionDueDay|tuitionDueDate/);
+  assert.match(page, /rpc\("set_my_enrollment_billing_terms"\)/);
 });
 
 test("access-code authorization stores the server-authoritative monthly fee and lesson quantity", function () {
