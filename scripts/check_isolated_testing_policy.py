@@ -19,9 +19,14 @@ CRITICAL_PREFIXES = (
     "supabase/baseline/",
     "supabase/functions/",
     "supabase/recovery/",
+    "supabase/schemas/",
 )
 CRITICAL_EXACT_FILES = {
+    "supabase/config.toml",
+    "supabase/seed.sql",
     "supabase_config.js",
+    "site_runtime_config.js",
+    "student_data_utils.js",
     "supabase_client_service.js",
     "auth.js",
     "auth_session_service.js",
@@ -36,11 +41,13 @@ CRITICAL_CODE_PREFIXES = (
     "auth_", "payment_", "tuition_", "monthly_tuition_", "mercado_pago_",
     "student_billing_", "student_enrollment_", "lesson_credit_",
     "reposicoes_", "matricula_", "mensalidades", "class_students_",
-    "makeup_", "student_course_", "login_",
+    "makeup_", "student_course_", "teacher_classes_", "class_students_",
+    "student_access_", "login_",
 )
 CRITICAL_SITE_ROUTES = (
     "login/", "recuperar-senha/", "mensalidades/", "matricula/",
     "reposicoes-admin/", "acesso-aluno/", "area-do-estudante/",
+    "perfil/", "cadastro/",
 )
 SUPPORTED_CODE_SUFFIXES = {".js", ".ts", ".tsx", ".jsx", ".sql", ".html"}
 
@@ -55,6 +62,8 @@ def requires_remote_preview(file_path: str) -> bool:
     if normalized.startswith(CRITICAL_PREFIXES):
         return True
     if normalized in CRITICAL_EXACT_FILES:
+        return True
+    if normalized.startswith("supabase_") and normalized.endswith(".sql"):
         return True
     if normalized.startswith(CRITICAL_SITE_ROUTES):
         return Path(normalized).suffix in SUPPORTED_CODE_SUFFIXES
