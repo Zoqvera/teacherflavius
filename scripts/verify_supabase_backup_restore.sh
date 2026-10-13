@@ -105,11 +105,16 @@ verify_and_decrypt_artifact() {
   )
 
   jq -e '
-    .format_version == 2
+    .format_version == 3
     and (.critical_row_counts | type == "object")
     and (.catalog_fingerprint | type == "object")
     and (.cron_jobs | length == 10)
   ' "$RECOVERY_DIR/recovery_manifest.json" >/dev/null
+
+  if [ ! -s "$RECOVERY_DIR/application_triggers.sql" ]; then
+    echo '::error::Application trigger definitions are absent from the backup archive.'
+    exit 1
+  fi
 
   if ! jq -e '.storage.buckets == 0 and .storage.objects == 0' "$RECOVERY_DIR/recovery_manifest.json" >/dev/null; then
     echo '::error::Supabase Storage contains buckets or objects. Database-only disaster recovery is no longer complete.'
@@ -167,6 +172,17 @@ restore_logical_backup() {
     --dbname "$LOCAL_DB_URL"
 }
 
+restore_application_triggers() {
+  # The local supabase_admin role is required for CREATE EVENT TRIGGER.
+  # Restore these only after all data has been imported, so Auth triggers
+  # cannot accidentally mutate student profiles during the import.
+  {
+    echo 'begin;'
+    cat "$RECOVERY_DIR/application_triggers.sql"
+    echo 'commit;'
+  } | run_recovery_admin_sql
+}
+
 run_recovery_admin_sql() {
   docker exec -i "$LOCAL_DB_CONTAINER" \
     psql \
@@ -214,7 +230,7 @@ write_report() {
     --arg backup_captured_at "$captured_at" \
     --argjson rto_exercise_seconds "$duration" \
     --argjson rpo_design_hours 24 \
-    --argjson manifest_format_version 2 \
+    --argjson manifest_format_version 3 \
     '{
       status: $status,
       verified_at: $verified_at,
@@ -241,6 +257,7 @@ write_report() {
       echo "- Disposable restore + verification: ${duration}s"
       echo '- Backup cadence / design RPO: 24h'
       echo '- Storage coverage guard: passed (0 buckets, 0 objects)'
+      echo '- Application Auth/event triggers: restored and compared against production'
       echo
       echo 'The measured duration is a laboratory restore exercise, not a guarantee of full production cutover time.'
     } >> "$GITHUB_STEP_SUMMARY"
@@ -254,6 +271,7 @@ main() {
   verify_and_decrypt_artifact
   start_disposable_stack
   restore_logical_backup
+  restore_application_triggers
   capture_restored_manifest_and_disable_crons
   compare_recovery_state
   write_report
