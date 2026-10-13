@@ -82,7 +82,7 @@ function renderInstallPage(options) {
     status: status,
     instructions: instructions,
     instructionsText: instructionsText,
-    click: function () { listeners.get("click")(); }
+    click: function () { return listeners.get("click")(); }
   };
 }
 
@@ -129,18 +129,14 @@ test("browser install prompt remains available when supported", async function (
   assert.equal(result.button.disabled, false);
   assert.equal(result.label.textContent, "INSTALAR APP");
   assert.equal(result.instructions.hidden, true);
-  result.click();
-  await Promise.resolve();
-  await Promise.resolve();
+  await result.click();
   assert.equal(requests, 1);
   assert.match(result.status.textContent, /Instalação iniciada/);
 });
 
 test("failed browser installation returns to actionable instructions", async function () {
   const result = renderInstallPage({ available: true, outcome: "error" });
-  result.click();
-  await Promise.resolve();
-  await Promise.resolve();
+  await result.click();
 
   assert.equal(result.button.disabled, false);
   assert.equal(result.instructions.hidden, false);
