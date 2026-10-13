@@ -15,7 +15,11 @@ const boardView = read("quadro-de-turmas/quadro_visual.js");
 const boardPage = read("quadro-de-turmas.html");
 
 test("two named classes receive nine spots without changing other quintet classes", () => {
-  assert.equal(migration, recoveryOverlay);
+  // The historical migration requires both live classes; a clean restore has no rows.
+  assert.match(migration, /Expected both selected classes to be active/);
+  assert.match(recoveryOverlay, /A clean restore has no class data/);
+  assert.match(recoveryOverlay, /if exists \(/);
+  assert.match(recoveryOverlay, /Existing selected classes must be active/);
   assert.match(migration, /class_number in \(47, 52\)/);
   assert.match(migration, /set capacity_override = 9/);
   assert.match(migration, /when tc\.class_type = 'quintet' and tc\.class_number in \(47, 52\) then 9/);
