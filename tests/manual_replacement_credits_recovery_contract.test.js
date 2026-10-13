@@ -52,5 +52,5 @@ test("restore and migration reconciliation retain exact applied version", () => 
   assert.match(ledger, /20261013113046,allow_manual_replacement_credits_for_all_students/);
   assert.equal(fingerprint.captured_from_migration_version, "20261013113046");
   assert.equal(fingerprint.public_functions, 188);
-  assert.equal(fingerprint.private_functions, 34);
+  assert.equal(fingerprint.private_functions, 35);
 });
