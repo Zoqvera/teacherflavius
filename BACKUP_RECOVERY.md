@@ -75,7 +75,7 @@ Manifest format version 3 contains technical counts/configuration only and no ro
 - makeup-class slots;
 - public/private catalog counts, constraints, indexes, RLS policies and application triggers;
 - Supabase Storage bucket/object counts;
-- definitions and active state of the ten recovery-baseline Cron jobs.
+- definitions and active state of the eleven application-owned Cron jobs.
 
 This makes Auth preservation an explicit recovery assertion rather than an assumption about CLI behavior. The Supabase CLI excludes changes to its managed Auth schema; the additional SQL file captures the two custom Auth triggers and application-owned event triggers without modifying production. Verification is performed only in the disposable stack.
 
@@ -109,7 +109,7 @@ The verifier:
 6. starts a clean disposable Supabase stack with no application migration history pre-applied;
 7. restores `roles.sql`, `schema.sql` and `data.sql` in one transaction with `session_replication_role = replica`;
 8. restores the backed-up `supabase_migrations` history separately;
-9. restores the application-owned Auth and event triggers under local `supabase_admin` after loading data, then recreates the ten recovery-baseline Cron definitions from `supabase/baseline/30_platform_config.sql`;
+9. restores the application-owned Auth and event triggers under local `supabase_admin` after loading data, then recreates the eleven application-owned Cron definitions from `supabase/baseline/30_platform_config.sql`;
 10. captures a new manifest from the restored database using the same SQL as production;
 11. disables the disposable Cron jobs before committing the platform-configuration transaction so the test environment cannot execute scheduled external work;
 12. removes the volatile `captured_at` field and requires the remaining restored fingerprint to match the backup fingerprint exactly;
@@ -163,7 +163,7 @@ Verify at minimum:
 - flashcards, exercises and practice history;
 - teacher/admin access;
 - RLS policies and critical triggers;
-- all ten recovery-baseline Cron definitions;
+- all eleven application-owned Cron definitions;
 - Edge Function deployment and secrets;
 - Mercado Pago and notification integrations;
 - OAuth and SMTP configuration.
