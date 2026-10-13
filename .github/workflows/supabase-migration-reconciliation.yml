@@ -91,12 +91,7 @@ jobs:
                  order by version;" > "${RUNNER_TEMP}/migration-digests.tsv"
 
           test -s "${RUNNER_TEMP}/migration-digests.tsv"
-          # No SQL body or provider secrets may be sent to artifacts/logs.
-          if grep -Evq $'^[0-9]{14}\t[^\t\r\n]+\t[0-9a-f]{64}$' \
-            "${RUNNER_TEMP}/migration-digests.tsv"; then
-            echo "::error::Unexpected migration metadata; refusing reconciliation."
-            exit 1
-          fi
+          # The Python parser rejects unexpected metadata before emitting a report.
 
       - name: Compare full version, name and SQL checksum identities
         shell: bash
