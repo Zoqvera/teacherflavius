@@ -56,6 +56,38 @@ confidencialidade; o próprio relatório resume apenas contagens e exemplos
 de versões. Nunca exportar instruções SQL da tabela de migrações para um
 repositório público: algumas migrações históricas contêm dados pessoais.
 
+## Análise de identidade de migração (além dos timestamps)
+
+O relatório inicial identifica 106 versões de produção sem arquivo Git e
+57 versões Git sem registro em produção. Existem 45 nomes coincidentes
+com timestamps diferentes e 12 arquivos com nomes sem equivalente remoto.
+
+Para não confundir **mesmo nome** com **mesma instrução SQL**, acrescentamos
+uma segunda auditoria: **GitHub Actions > Supabase migration reconciliation**.
+Ela compara, sem extrair as instruções históricas do Supabase:
+
+- version (timestamp numérico);
+- name (identificador da migração);
+- SHA256 da concatenação normalizada dos comandos, computado **dentro**
+  do PostgreSQL e nunca publicado como texto SQL.
+
+O workflow de PR só executa os testes de classificação. O workflow de
+`main` executa a leitura com as credenciais já protegidas do GitHub.
+O relatório classifica correspondências por versão, diferenças de corpo SQL,
+versões distintas com o mesmo nome e cópias efetivamente idênticas por SHA256.
+Um mesmo nome com SHA256 diferente **não** autoriza um `migration repair`.
+
+O arquivo JSON publicado como artifact contém exclusivamente contagens e
+amostras de **timestamps numéricos**, sem migração SQL, e-mails, dados de
+alunos ou chaves. O job de classificação ter sucesso significa apenas que
+a comparação foi executada corretamente. O estado
+`RECONCILIATION_REQUIRED` é **bloqueante para habilitar Branching**.
+
+Mesmo quando SQL e nomes coincidirem, não se deve renomear nem reexecutar
+arquivos históricos: o checker de drift preserva sua imutabilidade no Git,
+e o Supabase usa o número de versão como identidade. A mudança efetiva
+exigirá escolher e validar uma estratégia de bootstrap em banco novo.
+
 ## Plano de reconciliação
 
 ### Etapa A — diagnóstico e cópia de segurança (sem alterações em produção)
