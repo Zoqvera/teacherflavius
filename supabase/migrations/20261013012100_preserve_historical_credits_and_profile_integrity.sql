@@ -56,7 +56,7 @@ AS $function$
         when credit.credit_origin = 'contract'
          and billing.classes_per_month is not null
          and credit.credit_number > billing.classes_per_month
-         and exception.credit_id is not null
+         and approved.credit_id is not null
           then 'approved_historical_exception'
         when credit.credit_origin = 'contract'
          and billing.classes_per_month is not null
