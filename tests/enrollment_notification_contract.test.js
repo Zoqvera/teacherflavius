@@ -12,6 +12,13 @@ const privacyMap = fs.readFileSync(path.join(root, "LGPD_DATA_MAP.md"), "utf8");
 
 test("new enrollment email includes student identity and agreed commercial terms", function () {
   assert.match(notifier, /select\("id, name, whatsapp, enrolled"\)/);
+  assert.match(notifier, /auth\.admin\.getUserById\(notification\.student_id\)/);
+  assert.match(notifier, /Matrículas <matriculas@teacherflavius\.com>/);
+  assert.match(notifier, /Matrícula confirmada — Teacher Flávio/);
+  assert.match(notifier, /to: studentEmail/);
+  assert.match(notifier, /enrollment-student-\$\{notification\.id\}/);
+  assert.match(notifier, /to: notificationEmail/);
+  assert.match(notifier, /enrollment-\$\{notification\.id\}/);
   assert.match(notifier, /select\("monthly_fee, classes_per_month"\)/);
   assert.match(notifier, /`Nome: \$\{studentName\}`/);
   assert.match(notifier, /`WhatsApp: \$\{studentWhatsapp\}`/);
