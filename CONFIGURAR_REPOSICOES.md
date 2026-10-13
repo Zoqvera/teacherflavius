@@ -41,10 +41,9 @@ Se a turma não tiver um link `http://` ou `https://` válido, o botão de publi
 
 ## E-mails de agendamento e cancelamento
 
-A Edge Function `notify-makeup-booking` reutiliza os Secrets de envio já configurados:
+A Edge Function `notify-makeup-booking` envia as mensagens com o remetente `Teacher Flávio <contato@teacherflavius.com>` e reutiliza os Secrets:
 
 - `RESEND_API_KEY`;
-- `ENROLLMENT_FROM_EMAIL`;
 - `ENROLLMENT_WEBHOOK_SECRET`.
 
 O Database Webhook deve observar inserções em `public.makeup_class_email_notifications` e chamar:

@@ -16,6 +16,8 @@ type DatabaseWebhookPayload = {
 };
 
 const encoder = new TextEncoder();
+const ENROLLMENT_FROM_EMAIL = "Matrículas <matriculas@teacherflavius.com>";
+const RESEND_EMAIL_ENDPOINT = "https://api.resend.com/emails";
 
 function getDefaultKey(envName: string, legacyName: string): string {
   const raw = Deno.env.get(envName);
@@ -92,6 +94,32 @@ function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => replacements[character]);
 }
 
+type ResendMessage = {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  idempotencyKey: string;
+};
+
+async function sendResendEmail(apiKey: string, message: ResendMessage): Promise<Response> {
+  return fetch(RESEND_EMAIL_ENDPOINT, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": message.idempotencyKey,
+    },
+    body: JSON.stringify({
+      from: ENROLLMENT_FROM_EMAIL,
+      to: [message.to],
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+    }),
+  });
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
@@ -99,10 +127,9 @@ Deno.serve(async (request: Request) => {
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   const notificationEmail = Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL") ?? "";
-  const fromEmail = Deno.env.get("ENROLLMENT_FROM_EMAIL") ?? "";
   const expectedWebhookSecret = Deno.env.get("ENROLLMENT_WEBHOOK_SECRET") ?? "";
 
-  if (!supabaseUrl || !secretKey || !resendApiKey || !notificationEmail || !fromEmail || !expectedWebhookSecret) {
+  if (!supabaseUrl || !secretKey || !resendApiKey || !notificationEmail || !expectedWebhookSecret) {
     console.error("Missing required environment variables for enrollment notification");
     return jsonResponse({ error: "Server configuration is incomplete" }, 500);
   }
@@ -195,6 +222,19 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Unable to load enrollment billing terms" }, 500);
   }
 
+  const { data: authUserData, error: authUserError } = await supabase.auth.admin.getUserById(notification.student_id);
+  const studentEmail = displayValue(authUserData?.user?.email, "");
+
+  if (authUserError || !studentEmail) {
+    const errorMessage = authUserError?.message ?? "Student authentication email not found";
+    await supabase
+      .from("enrollment_email_notifications")
+      .update({ status: "failed", last_error: errorMessage.slice(0, 1000), updated_at: new Date().toISOString() })
+      .eq("id", notification.id);
+    console.error("Unable to load student authentication email", notification.id, errorMessage);
+    return jsonResponse({ error: "Unable to load student email" }, 500);
+  }
+
   const enrolledAt = formatEnrollmentDate(notification.created_at);
   const studentName = displayValue(student.name, "Não informado");
   const studentWhatsapp = displayValue(student.whatsapp, "Não informado");
@@ -230,28 +270,60 @@ Deno.serve(async (request: Request) => {
     </div>
   `;
 
-  const resendResponse = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": `enrollment-${notification.id}`,
-    },
-    body: JSON.stringify({
-      from: fromEmail,
-      to: [notificationEmail],
+  const studentTextBody = [
+    `Olá, ${studentName}!`,
+    "",
+    "Sua matrícula foi concluída com sucesso.",
+    "",
+    `Quantidade de aulas por mês: ${classesPerMonth}`,
+    `Mensalidade: ${monthlyFee}`,
+    `Data da matrícula: ${enrolledAt}`,
+    "",
+    "Você já pode acessar sua Área do Estudante no site Teacher Flávio.",
+  ].join("\n");
+
+  const studentHtmlBody = `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033;max-width:620px;margin:0 auto">
+      <h1 style="font-size:22px;margin-bottom:18px">Matrícula confirmada</h1>
+      <p>Olá, <strong>${studentNameHtml}</strong>!</p>
+      <p>Sua matrícula foi concluída com sucesso.</p>
+      <table style="border-collapse:collapse;width:100%;margin:18px 0">
+        <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Aulas por mês</td><td>${classesPerMonthHtml}</td></tr>
+        <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Mensalidade</td><td>${monthlyFeeHtml}</td></tr>
+        <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Data da matrícula</td><td>${escapeHtml(enrolledAt)}</td></tr>
+      </table>
+      <p>Você já pode acessar sua Área do Estudante no site Teacher Flávio.</p>
+    </div>
+  `;
+
+  const [studentEmailResponse, adminEmailResponse] = await Promise.all([
+    sendResendEmail(resendApiKey, {
+      to: studentEmail,
+      subject: "Matrícula confirmada — Teacher Flávio",
+      text: studentTextBody,
+      html: studentHtmlBody,
+      idempotencyKey: `enrollment-student-${notification.id}`,
+    }),
+    sendResendEmail(resendApiKey, {
+      to: notificationEmail,
       subject: "Nova matrícula concluída",
       text: textBody,
       html: htmlBody,
+      idempotencyKey: `enrollment-${notification.id}`,
     }),
-  });
+  ]);
 
-  if (!resendResponse.ok) {
+  if (!studentEmailResponse.ok || !adminEmailResponse.ok) {
+    const failures = [
+      !studentEmailResponse.ok ? `student_provider_http_${studentEmailResponse.status}` : "",
+      !adminEmailResponse.ok ? `admin_provider_http_${adminEmailResponse.status}` : "",
+    ].filter(Boolean).join(";");
+
     await supabase
       .from("enrollment_email_notifications")
-      .update({ status: "failed", last_error: `provider_http_${resendResponse.status}`, updated_at: new Date().toISOString() })
+      .update({ status: "failed", last_error: failures.slice(0, 1000), updated_at: new Date().toISOString() })
       .eq("id", notification.id);
-    console.error("Resend rejected enrollment notification", notification.id, resendResponse.status);
+    console.error("Resend rejected enrollment notification", notification.id, failures);
     return jsonResponse({ error: "Email provider rejected the message" }, 502);
   }
 

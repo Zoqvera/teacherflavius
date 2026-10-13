@@ -28,3 +28,9 @@ jobs:
 
       - name: Check JavaScript syntax and lint
         run: npm run quality
+
+      - name: Run transactional email contracts
+        run: |
+          node --test tests/enrollment_notification_contract.test.js
+          node --test tests/enrollment_commercial_terms_contract.test.js
+          node --test tests/transactional_email_sender_contract.test.js
