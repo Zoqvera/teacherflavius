@@ -1,0 +1,82 @@
+name: Supabase branching readiness
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/check_supabase_branching_readiness.py"
+      - "tests/test_supabase_branching_readiness.py"
+      - ".github/workflows/supabase-branching-readiness.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  detector-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Test safe read-only migration metadata validator
+        run: python3 -m unittest discover -s tests -p test_supabase_branching_readiness.py
+
+  assess-production-history:
+    # Manual and read-only. No production credentials are provided to PR code.
+    if: github.event_name == 'workflow_dispatch'
+    needs: detector-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Check out protected main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Validate availability of database connection
+        run: |
+          if [[ -z "${SUPABASE_DB_URL}" ]]; then
+            echo "::error::SUPABASE_DB_URL secret is not configured."
+            exit 1
+          fi
+
+      - name: Install PostgreSQL read-only client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Collect migration version identifiers only
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql "${SUPABASE_DB_URL}" -X -qAt -v ON_ERROR_STOP=1 \
+            -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;" \
+            > "${RUNNER_TEMP}/production-versions.txt"
+
+          # A 14-digit timestamp contains no SQL body, secrets, or student data.
+          if grep -Evq '^[0-9]{14}$' "${RUNNER_TEMP}/production-versions.txt"; then
+            echo "::error::Migration metadata query returned unexpected content."
+            exit 1
+          fi
+          test -s "${RUNNER_TEMP}/production-versions.txt"
+
+      - name: Assess preview readiness without changing production
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/check_supabase_branching_readiness.py \
+            --production-versions-file "${RUNNER_TEMP}/production-versions.txt" \
+            --report-json "${RUNNER_TEMP}/branching-readiness.json"
+
+      - name: Save non-sensitive readiness report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: supabase-branching-readiness-report
+          path: ${{ runner.temp }}/branching-readiness.json
+          if-no-files-found: ignore
+          retention-days: 14
