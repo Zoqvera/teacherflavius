@@ -23,9 +23,13 @@ ASSERTION_FILENAME = f"{ASSERTION_VERSION}_verify_disposable_schema.sql"
 # Secrets are never copied from production into these ephemeral fixtures.
 STOP_CRON = """
 -- Preview-only safety: do not schedule provider calls or recurring jobs.
-update cron.job set active = false where active;
 do $preview_cron_guard$
+declare
+  owned_job record;
 begin
+  for owned_job in select jobid from cron.job where active loop
+    perform cron.alter_job(owned_job.jobid, active := false);
+  end loop;
   if exists (select 1 from cron.job where active) then
     raise exception 'A scheduled job remained active in disposable fixture';
   end if;
