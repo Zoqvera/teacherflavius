@@ -341,6 +341,19 @@ python3 -m http.server 4173 --directory _site
 
 `_site/` é um artefato gerado para publicação/validação. O pipeline rejeita vazamento de arquivos operacionais que não pertencem ao site público.
 
+## Testes isolados e branches Supabase
+
+Mudanças de autenticação, banco, mensalidades, créditos, reposições e Edge
+Functions críticas precisam de ensaios numa branch temporária do Supabase
+com dados sintéticos e integrações externas simuladas, além do CI habitual.
+A verificação `Isolated testing policy` exige o registro dos testes na PR.
+Para mudanças comuns, permanecem suficientes os testes automatizados já
+existentes. Branches remotas são criadas sob demanda e excluídas após o
+teste, para reduzir o custo adicional de computação.
+
+Consulte [Estratégia de testes isolados](docs/estrategia-testes-isolados.md)
+antes de alterar rotinas críticas.
+
 ## CI/CD e deploy
 
 GitHub Actions valida PRs e mudanças em `main` com gates de Clean Code, autenticação, segurança, acessibilidade, responsividade, URLs, SEO, performance, build estático, produção, pagamentos, system health e backup/recovery.
