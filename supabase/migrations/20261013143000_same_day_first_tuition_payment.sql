@@ -410,4 +410,16 @@ revoke all on function public.get_my_first_payment_window()
 grant execute on function public.get_my_first_payment_window()
   to authenticated, service_role;
 
+-- PostgREST exposes public RPCs, not the private schema. This service-only
+-- bridge keeps the deadline decision in PostgreSQL for the payment gateway.
+create or replace function public.is_first_tuition_payment_closed(target_tuition_id uuid)
+returns boolean language sql stable security definer set search_path = ''
+as $function$
+  select private.is_first_tuition_payment_closed(target_tuition_id);
+$function$;
+revoke all on function public.is_first_tuition_payment_closed(uuid)
+  from public, anon, authenticated;
+grant execute on function public.is_first_tuition_payment_closed(uuid)
+  to service_role;
+
 notify pgrst, 'reload schema';
