@@ -15,7 +15,7 @@ Essas contagens são um diagnóstico do histórico, **não** uma indicação de 
 faltam 106 tabelas, nem uma autorização para reproduzir migrações antigas.
 A base foi parcialmente construída antes do histórico versionado no Git;
 arquivos históricos posteriores também possuem versões diferentes das
-registradas no banco. A reconstrução que passou no GitHub utiliza o
+registradas no banco. Entre os 57 arquivos sem correspondência de versão,\n**45 compartilham o nome** de uma migração remota, mas possuem timestamps\ndistintos; os outros 12 exigem investigação específica. Igualdade de nome\n**não comprova igualdade das instruções SQL**. A reconstrução que passou no GitHub utiliza o
 `supabase/baseline/`, não a execução cronológica dos 237 arquivos SQL.
 
 **Conclusão:** não habilitar `Automatic branching` até ser comprovada a
