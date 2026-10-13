@@ -178,6 +178,11 @@ restore_application_triggers() {
   # cannot accidentally mutate student profiles during the import.
   {
     echo 'begin;'
+    # Local Supabase restores public.rls_auto_enable() with a non-superuser
+    # owner. PostgreSQL requires a superuser-owned callback when a superuser
+    # recreates an event trigger. Reassign ownership ONLY in this disposable
+    # database; the encrypted backup and production remain unchanged.
+    echo 'alter function public.rls_auto_enable() owner to supabase_admin;'
     cat "$RECOVERY_DIR/application_triggers.sql"
     echo 'commit;'
   } | run_recovery_admin_sql
