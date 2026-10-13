@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       backup_run_id:
-        description: GitHub Actions run ID of a completed encrypted backup using manifest format v2
+        description: GitHub Actions run ID of a completed encrypted backup using manifest format v3
         required: true
         type: string
 
