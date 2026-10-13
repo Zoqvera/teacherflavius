@@ -1,6 +1,15 @@
 name: Encrypted Supabase logical backup
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/create_encrypted_supabase_backup.sh'
+      - 'scripts/verify_supabase_backup_restore.sh'
+      - 'supabase/recovery/**'
+      - '.github/workflows/supabase-encrypted-backup.yml'
+      - '.github/workflows/supabase-backup-recovery-test.yml'
   schedule:
     # 03:17 UTC = 00:17 in America/Sao_Paulo.
     - cron: '17 3 * * *'

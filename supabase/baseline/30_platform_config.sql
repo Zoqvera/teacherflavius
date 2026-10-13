@@ -23,7 +23,8 @@ begin
         ('payment-financial-health-check', '3,8,13,18,23,28,33,38,43,48,53,58 * * * *', 'select private.run_payment_financial_health_check(true);'),
         ('sync-auto-makeup-slots-30-days', '15 6 * * *', 'select public.sync_auto_makeup_slots_30_days();'),
         ('system-health-watchdog', '4,14,24,34,44,54 * * * *', 'select private.system_health_watchdog();'),
-        ('system-synthetic-probe', '1-59/5 * * * *', 'select private.dispatch_system_synthetic_probe();')
+        ('system-synthetic-probe', '1-59/5 * * * *', 'select private.dispatch_system_synthetic_probe();'),
+        ('web-push-notifications', '* * * * *', 'select private.dispatch_web_push_notifications();')
     ) as configured(jobname, schedule, command)
   loop
     if not exists (
@@ -44,6 +45,6 @@ $$;
 --   teacherflavius_notification_webhook_secret
 
 -- Current production inventory at recovery-baseline time:
--- Application-owned Cron jobs: 10.
+-- Application-owned Cron jobs: 11.
 -- Storage buckets: none.
 -- Custom storage RLS policies: none.
