@@ -87,7 +87,7 @@ Por decisão operacional do controlador, a notificação administrativa de nova 
 
 O remetente genérico `resend-email` não registra mais o corpo de erro devolvido pelo provedor; apenas o código HTTP é registrado. O frontend recebe somente `ok` e, quando disponível, o identificador técnico do envio.
 
-E-mails destinados ao próprio aluno, como confirmação de reposição, continuam necessariamente usando seu endereço e podem conter o mínimo de dados necessários à mensagem transacional.
+E-mails destinados ao próprio aluno, como confirmação de matrícula e confirmação de reposição, continuam necessariamente usando seu endereço e podem conter o mínimo de dados necessários à mensagem transacional.
 
 ### Mercado Pago → Resend
 
