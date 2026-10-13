@@ -106,7 +106,8 @@ select jsonb_pretty(jsonb_build_object(
       'payment-financial-health-check',
       'sync-auto-makeup-slots-30-days',
       'system-health-watchdog',
-      'system-synthetic-probe'
+      'system-synthetic-probe',
+      'web-push-notifications'
     )
   ), '[]'::jsonb)
 ));
