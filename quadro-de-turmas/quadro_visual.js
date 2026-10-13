@@ -5,7 +5,7 @@
     var badge = card.querySelector('.class-type-badge');
     if (!badge) return null;
     if (badge.classList.contains('individual')) return 1;
-    if (badge.classList.contains('quintet')) return 8;
+    if (badge.classList.contains('quintet')) return Number(card.dataset.capacity) || 8;
     if (badge.classList.contains('experimental')) return 30;
     return null;
   }

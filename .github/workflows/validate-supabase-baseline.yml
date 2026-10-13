@@ -42,6 +42,7 @@ jobs:
           node --test tests/enrollment_onboarding_state_contract.test.js
           node --test tests/tuition_due_day_enrollment_fallback.test.js
           node --test tests/quintet_capacity_eight_contract.test.js
+          node --test tests/quintet_capacity_nine_exceptions_contract.test.js
           node --test tests/course_vacancy_visibility_contract.test.js
           node --test tests/tuition_after_enrollment_contract.test.js
           node --test tests/lesson_credits_contract.test.js
@@ -175,7 +176,8 @@ jobs:
             supabase/baseline/370_avoid_tuition_due_date_generation_conflicts.sql \
             supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql \
             supabase/baseline/377_manual_replacement_credits_all_students.sql \
-            supabase/baseline/380_same_day_first_tuition_payment.sql
+            supabase/baseline/380_same_day_first_tuition_payment.sql \
+            supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
