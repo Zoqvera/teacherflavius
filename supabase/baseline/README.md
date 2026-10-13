@@ -90,13 +90,14 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 72. Apply `360_prevent_new_tuition_for_archived_students.sql`.
 73. Apply `365_guard_first_tuition_due_date.sql`.
 74. Apply `370_avoid_tuition_due_date_generation_conflicts.sql`.
-75. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
-76. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
-77. Restore the existing Web Push VAPID key pair out-of-band when subscriptions must survive a disaster recovery. If no pair is restored, the Push sender can generate a new pair and students must re-enable notifications.
-78. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
-79. Restore application data separately, if a data restore is required.
-80. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
-81. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
+75. Apply `375_preserve_historical_credits_and_profile_integrity.sql`.
+76. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
+77. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
+78. Restore the existing Web Push VAPID key pair out-of-band when subscriptions must survive a disaster recovery. If no pair is restored, the Push sender can generate a new pair and students must re-enable notifications.
+79. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
+80. Restore application data separately, if a data restore is required.
+81. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
+82. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
 
 ## Important boundaries
 
@@ -114,3 +115,5 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 ## Disposable restore validation
 
 Before merging baseline changes, `.github/workflows/validate-supabase-baseline.yml` starts a clean local Supabase stack in GitHub Actions, applies the committed SQL baseline in documented order without replaying the incomplete historical migrations, provisions only a dummy Vault secret, verifies the Gmail dot-equivalence access boundary, and compares the restored catalog against `schema-fingerprint.json`. Production credentials and application data are never used by this test.
+
+Overlay `375_preserve_historical_credits_and_profile_integrity.sql` versions a private, RLS-protected ledger of expressly approved paid historical credits, protects those credits during subsequent paid-tuition synchronization, and detects class membership records without a public profile. No identifiable student data is committed to the baseline.
