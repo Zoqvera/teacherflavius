@@ -126,7 +126,7 @@
     if (!refs.button) return;
 
     refs.button.addEventListener("click", function () {
-      requestInstall(windowRef, documentRef);
+      return requestInstall(windowRef, documentRef);
     });
 
     if (api && api.installAvailabilityEvent) {
