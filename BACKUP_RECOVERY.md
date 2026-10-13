@@ -109,7 +109,7 @@ The verifier:
 6. starts a clean disposable Supabase stack with no application migration history pre-applied;
 7. restores `roles.sql`, `schema.sql` and `data.sql` in one transaction with `session_replication_role = replica`;
 8. restores the backed-up `supabase_migrations` history separately;
-9. restores the application-owned Auth and event triggers under local `supabase_admin` after loading data, then recreates the eleven application-owned Cron definitions from `supabase/baseline/30_platform_config.sql`;
+9. temporarily reassigns the `public.rls_auto_enable()` callback to the local superuser in the **disposable database only** (required by PostgreSQL for event-trigger recreation), restores application-owned Auth and event triggers after data import, and recreates the eleven application-owned Cron definitions from `supabase/baseline/30_platform_config.sql`;
 10. captures a new manifest from the restored database using the same SQL as production;
 11. disables the disposable Cron jobs before committing the platform-configuration transaction so the test environment cannot execute scheduled external work;
 12. removes the volatile `captured_at` field and requires the remaining restored fingerprint to match the backup fingerprint exactly;

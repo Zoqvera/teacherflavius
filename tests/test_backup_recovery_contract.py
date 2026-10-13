@@ -67,6 +67,14 @@ class BackupRecoveryContractTests(unittest.TestCase):
             main.index("capture_restored_manifest_and_disable_crons"),
         )
         self.assertIn('cat "$RECOVERY_DIR/application_triggers.sql"', script)
+        self.assertIn(
+            "alter function public.rls_auto_enable() owner to supabase_admin;",
+            script,
+        )
+        self.assertLess(
+            script.index("alter function public.rls_auto_enable() owner to supabase_admin;"),
+            script.index('cat "$RECOVERY_DIR/application_triggers.sql"'),
+        )
         self.assertIn("| run_recovery_admin_sql", script)
 
     def test_backup_runs_after_recovery_code_merges(self) -> None:
