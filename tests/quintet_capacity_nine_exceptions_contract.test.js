@@ -7,7 +7,7 @@ function read(filePath) {
   return fs.readFileSync(path.join(__dirname, "..", filePath), "utf8");
 }
 
-const migration = read("supabase/migrations/20261013224900_expand_quintet_classes_8_and_17_to_nine.sql");
+const migration = read("supabase/migrations/20261013225440_expand_quintet_classes_8_and_17_to_nine.sql");
 const recoveryOverlay = read("supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql");
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 const classesView = read("turmas/turmas_visual.js");
