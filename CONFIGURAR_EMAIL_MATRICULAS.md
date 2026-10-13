@@ -6,14 +6,14 @@ O código desta funcionalidade possui três partes:
 2. `supabase/functions/notify-new-enrollment/index.ts` envia o e-mail pelo Resend.
 3. Um Database Webhook do Supabase chama a função quando uma notificação entra na fila.
 
-O e-mail inclui nome, WhatsApp e data da matrícula. CPF, e-mail, código de matrícula e chave Pix não são enviados.
+O fluxo envia dois e-mails: o aviso administrativo existente e uma confirmação ao próprio aluno. O aviso administrativo inclui nome, WhatsApp, quantidade de aulas, valor combinado e data da matrícula. A confirmação do aluno inclui nome, quantidade de aulas, valor mensal, data da matrícula e acesso à Área do Estudante.
 
 ## 1. Preparar o Resend
 
 1. Crie uma conta em <https://resend.com>.
 2. Em **Domains**, adicione e verifique o domínio usado pelo site.
 3. Crie uma API Key.
-4. Escolha o remetente. Exemplo: `Matrículas <matriculas@teacherflavius.com>`.
+4. O remetente transacional de matrícula é fixado no código como `Matrículas <matriculas@teacherflavius.com>`.
 
 Não coloque a API Key no `auth.js`, no `supabase_config.js` nem em outro arquivo público do site.
 
@@ -39,7 +39,6 @@ npx supabase login
 npx supabase link --project-ref SEU_PROJECT_REF
 npx supabase secrets set RESEND_API_KEY=re_sua_chave
 npx supabase secrets set ENROLLMENT_NOTIFICATION_EMAIL=seu-email@exemplo.com
-npx supabase secrets set 'ENROLLMENT_FROM_EMAIL=Matrículas <matriculas@teacherflavius.com>'
 npx supabase secrets set ENROLLMENT_WEBHOOK_SECRET=UM_SEGREDO_LONGO_E_ALEATORIO
 ```
 
@@ -70,7 +69,7 @@ No painel do Supabase:
 ## 6. Testar
 
 1. Faça uma nova matrícula de teste no site.
-2. Confira a caixa de entrada do e-mail configurado em `ENROLLMENT_NOTIFICATION_EMAIL`.
+2. Confira o aviso no endereço configurado em `ENROLLMENT_NOTIFICATION_EMAIL` e a confirmação no e-mail do aluno.
 3. Em **Edge Functions > notify-new-enrollment > Logs**, confirme que a chamada terminou com sucesso.
 4. No **Table Editor**, consulte `enrollment_email_notifications`; o registro deve aparecer com `status = sent`.
 
