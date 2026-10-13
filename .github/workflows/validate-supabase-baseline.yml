@@ -174,6 +174,7 @@ jobs:
             supabase/baseline/365_guard_first_tuition_due_date.sql \
             supabase/baseline/370_avoid_tuition_due_date_generation_conflicts.sql \
             supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql \
+            supabase/baseline/377_manual_replacement_credits_all_students.sql \
             supabase/baseline/380_same_day_first_tuition_payment.sql
           do
             echo "Applying $file"

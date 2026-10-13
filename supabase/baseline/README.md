@@ -91,14 +91,15 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 73. Apply `365_guard_first_tuition_due_date.sql`.
 74. Apply `370_avoid_tuition_due_date_generation_conflicts.sql`.
 75. Apply `375_preserve_historical_credits_and_profile_integrity.sql`.
-76. Apply `380_same_day_first_tuition_payment.sql`.
-77. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
-78. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
-79. Restore the existing Web Push VAPID key pair out-of-band when subscriptions must survive a disaster recovery. If no pair is restored, the Push sender can generate a new pair and students must re-enable notifications.
-80. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
-81. Restore application data separately, if a data restore is required.
-82. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
-83. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
+76. Apply `377_manual_replacement_credits_all_students.sql` (restores the previously omitted 20261009201830 modality helper before reproducing migration 20261013113046).
+77. Apply `380_same_day_first_tuition_payment.sql`.
+78. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
+79. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
+80. Restore the existing Web Push VAPID key pair out-of-band when subscriptions must survive a disaster recovery. If no pair is restored, the Push sender can generate a new pair and students must re-enable notifications.
+81. Deploy the Edge Functions and their environment secrets from the normal application deployment path.
+82. Restore application data separately, if a data restore is required.
+83. Compare the restored catalog against `schema-fingerprint.json` before directing traffic to it.
+84. Only after the restored schema has been verified, reconcile migration-history status using the current Supabase CLI `migration repair` workflow and `migration-ledger.csv`. Do not replay the historical migrations on top of this baseline.
 
 ## Important boundaries
 
@@ -118,5 +119,7 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 Before merging baseline changes, `.github/workflows/validate-supabase-baseline.yml` starts a clean local Supabase stack in GitHub Actions, applies the committed SQL baseline in documented order without replaying the incomplete historical migrations, provisions only a dummy Vault secret, verifies the Gmail dot-equivalence access boundary, and compares the restored catalog against `schema-fingerprint.json`. Production credentials and application data are never used by this test.
 
 Overlay `375_preserve_historical_credits_and_profile_integrity.sql` versions a private, RLS-protected ledger of expressly approved paid historical credits, protects those credits during subsequent paid-tuition synchronization, and detects class membership records without a public profile. No identifiable student data is committed to the baseline.
+
+Overlay `377_manual_replacement_credits_all_students.sql` restores the existing private student-modality helper before the already-applied teacher manual-credit RPC and replacement booking policy. It changes no historical credit rows or tuition records and keeps cancellation eligibility checks in force.
 
 Overlay `380_same_day_first_tuition_payment.sql` applies the automatic São Paulo enrollment-date first due rule only to newly completed Google enrollments. It records a protected policy marker and provides a service-only deadline check, while retaining previously initiated payments and historical billing conditions. The payment gateway must use the service-only RPC before opening a new attempt.
