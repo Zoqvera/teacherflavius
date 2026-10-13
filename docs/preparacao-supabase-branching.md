@@ -88,6 +88,41 @@ arquivos históricos: o checker de drift preserva sua imutabilidade no Git,
 e o Supabase usa o número de versão como identidade. A mudança efetiva
 exigirá escolher e validar uma estratégia de bootstrap em banco novo.
 
+## Diagnóstico SHA256 confirmado — 13/10/2026
+
+O primeiro exame real de todos os corpos SQL históricos, por hash calculado
+dentro do Supabase, está registrado em
+[GitHub Actions — Supabase migration reconciliation, run 38346530061](https://github.com/Zoqvera/teacherflavius/actions/runs/38346530061).
+O job foi concluído com sucesso, mas seu resultado foi
+`RECONCILIATION_REQUIRED`.
+
+| Comparação | Ocorrências |
+| --- | ---: |
+| Mesma versão, mesmo nome e corpo SQL idêntico | 149 |
+| Mesma versão e nome, corpo SQL diferente | 31 |
+| Versão diferente, mesmo nome e corpo SQL idêntico | 33 |
+| Versão diferente, mesmo nome, corpo SQL diferente | 12 |
+| Migrações remotas sem equivalente pelo nome no Git | 61 |
+| Migrações do Git sem equivalente pelo nome no remoto | 12 |
+
+A auditoria produz **um manifesto numérico de versões**, incluído no
+artifact JSON da execução, que relaciona os 33 pares com SQL idêntico,
+os 12 pares com SQL diferente, as 31 versões com divergência de corpo
+SQL e as 73 versões sem par identificado. Não publica os comandos SQL
+antigos, hashes de senhas, nem registros de alunos.
+
+**Critério de segurança:** correspondência por SHA256 atesta bytes
+normalizados iguais; SHA256 diferente pode representar semântica diferente
+ou meras diferenças de formatação e **não** autoriza ajuste automático
+de histórico. Mesmo os 33 pares idênticos não devem ser corrigidos
+renomeando arquivos Git, pois o repositório impõe imutabilidade histórica.
+
+A próxima intervenção efetiva requer avaliar um bootstrap canônico
+reconstrutível, preservando o ledger atual da produção até que a
+simulação em banco vazio seja aprovada e exista um plano de rollback.
+Não trocar o conteúdo/ordem das migrations remotamente por tentativa
+e erro. A integração nativa de Branching permanece desativada.
+
 ## Plano de reconciliação
 
 ### Etapa A — diagnóstico e cópia de segurança (sem alterações em produção)
