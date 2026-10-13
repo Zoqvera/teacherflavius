@@ -522,6 +522,26 @@ Deno.serve(async (request: Request) => {
     }
   }
 
+  // Reuse and reconcile provider payments created before the cutoff above.
+  // Only a *new* Mercado Pago attempt is denied after São Paulo midnight.
+  const { data: windowClosed, error: windowError } = await supabaseAdmin.rpc(
+    "is_first_tuition_payment_closed",
+    { target_tuition_id: tuitionId },
+  );
+  if (windowError || typeof windowClosed !== "boolean") {
+    console.error("First-tuition payment window check failed", windowError?.message);
+    return jsonResponse(request, {
+      error: "Não foi possível confirmar o prazo para pagamento. Tente novamente mais tarde.",
+      code: "payment_window_unavailable",
+    }, 503);
+  }
+  if (windowClosed) {
+    return jsonResponse(request, {
+      error: "O prazo para iniciar o primeiro pagamento terminou às 23h59 (horário de Brasília) do dia da matrícula. Entre em contato com o professor para regularizar sua matrícula. Pagamentos iniciados dentro do prazo continuam em verificação.",
+      code: "first_payment_deadline_expired",
+    }, 409);
+  }
+
   let attempt = sameAttempt;
   if (!attempt) {
     const { data: insertedAttempt, error: insertError } = await supabaseAdmin
