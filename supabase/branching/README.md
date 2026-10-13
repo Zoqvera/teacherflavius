@@ -51,6 +51,37 @@ nem garante que Cron não tente rodar dentro de uma branch remota. Portanto,
 qualquer piloto remoto requer uma configuração segura de Cron, Vault e funções,
 além de autorização prévia do custo.
 
+## Ensaio de migrações nativas pela CLI (sem custo de branch remota)
+
+O workflow `.github/workflows/supabase-cli-replay.yml` executa o próprio
+mecanismo `supabase start` e `supabase db reset --local`, usando um projeto
+descartável situado fora do checkout. Não utiliza a sequência antiga de 237
+migrações do repositório nem altera `supabase/migrations/`.
+
+O script `scripts/prepare_supabase_cli_replay.py` produz exclusivamente
+dentro desse projeto efêmero:
+
+- Uma migração inicial única com o bootstrap compilado dos 75 overlays.
+- Uma segunda migração que comprova a ordem e verifica a existência das
+  tabelas críticas.
+- Um `seed.sql` sintético de duas turmas, sem contas, CPF, pagamentos ou
+  números de contato reais.
+- Uma guarda executada na mesma migração inicial que coloca **todos os Cron
+  jobs como inativos**, impedindo despachos por agendamento no teste.
+
+O CI confere o ledger aplicado pela CLI, a presença de apenas duas turmas
+fictícias, a ausência de perfis/mensalidades, a desativação dos jobs e o
+fingerprint de catálogo. Por fim executa `supabase db reset --local` para
+comprovar que a migração e o seed funcionam novamente em uma instância limpa.
+O ambiente é destruído ao término, mesmo se houver falhas.
+
+**Limitação:** esse ensaio demonstra compatibilidade com o ciclo local de
+migrações da CLI; não é prova de que as branches do Supabase hospedado
+aceitarão o ledger de produção atual. Os identificadores temporários das
+duas migrations NÃO são publicados em `supabase/migrations/` e nunca devem
+ser cadastrados em produção. O ambiente remoto só será ensaiado depois de
+concluir o plano de migrações/ledger e autorizar seu custo.
+
 ## Próximo passo: compatibilidade com Supabase Branching
 
 Para que a integração GitHub consiga usar o bootstrap, ainda será necessário:
