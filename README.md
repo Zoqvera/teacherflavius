@@ -354,6 +354,17 @@ teste, para reduzir o custo adicional de computação.
 Consulte [Estratégia de testes isolados](docs/estrategia-testes-isolados.md)
 antes de alterar rotinas críticas.
 
+### Preparação do Supabase Branching
+
+O CI já valida o baseline reconstrutivo, mas a criação automática de
+branches remotas permanece desativada enquanto as versões em
+`supabase/migrations/` e o ledger remoto não forem reconciliados.
+Existe uma auditoria manual, de leitura e sem dados de alunos, em
+**GitHub Actions > Supabase branching readiness**.
+
+Consulte [Preparação do Supabase Branching](docs/preparacao-supabase-branching.md)
+para os bloqueios conhecidos, testes prévios e critérios de ativação.
+
 ## CI/CD e deploy
 
 GitHub Actions valida PRs e mudanças em `main` com gates de Clean Code, autenticação, segurança, acessibilidade, responsividade, URLs, SEO, performance, build estático, produção, pagamentos, system health e backup/recovery.
