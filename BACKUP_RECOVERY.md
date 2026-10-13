@@ -35,7 +35,7 @@ Never place either secret in source files, issues, pull-request comments, Action
 
 ## Schedule, retention and recovery objectives
 
-The backup workflow runs every day at `03:17 UTC`, currently `00:17` in `America/Sao_Paulo`.
+The backup workflow also runs after changes to backup/recovery scripts or workflows reach `main`, enabling immediate verification of a newly deployed recovery fix. It otherwise runs every day at `03:17 UTC`, currently `00:17` in `America/Sao_Paulo`.
 
 - normal daily backup: retained for 30 days;
 - backup created on the first day of each month: retained for 90 days;
@@ -53,6 +53,7 @@ Each successful encrypted archive contains:
 - `data.sql`
 - `history_schema.sql`
 - `history_data.sql`
+- `application_triggers.sql` (application-owned Auth and event triggers; must be applied after importing data)
 - `recovery_manifest.json`
 - `manifest.sha256`
 - `README.txt`
@@ -65,7 +66,7 @@ The external `.sha256` file is generated with a portable basename so it can be v
 
 `supabase/recovery/recovery_manifest.sql` is the single source of truth used to fingerprint both production at backup time and the disposable restored database.
 
-Manifest format version 2 contains technical counts/configuration only and no row contents or secret values. It covers:
+Manifest format version 3 contains technical counts/configuration only and no row contents or secret values. It covers:
 
 - profiles;
 - Auth users, identities and MFA factors;
@@ -74,9 +75,9 @@ Manifest format version 2 contains technical counts/configuration only and no ro
 - makeup-class slots;
 - public/private catalog counts, constraints, indexes, RLS policies and application triggers;
 - Supabase Storage bucket/object counts;
-- definitions and active state of the eight application-owned Cron jobs.
+- definitions and active state of the ten recovery-baseline Cron jobs.
 
-This makes Auth preservation an explicit recovery assertion rather than an assumption about CLI behavior.
+This makes Auth preservation an explicit recovery assertion rather than an assumption about CLI behavior. The Supabase CLI excludes changes to its managed Auth schema; the additional SQL file captures the two custom Auth triggers and application-owned event triggers without modifying production. Verification is performed only in the disposable stack.
 
 ## Backup self-check
 
@@ -84,7 +85,7 @@ Before an artifact is uploaded, `scripts/create_encrypted_supabase_backup.sh`:
 
 1. validates required secrets;
 2. creates the logical dump set;
-3. captures `recovery_manifest.json`;
+3. exports application-owned triggers on `auth` tables and event triggers into `application_triggers.sql`, then captures `recovery_manifest.json`;
 4. hashes every plaintext backup component into `manifest.sha256`;
 5. archives and encrypts the set with AES-256;
 6. creates a portable SHA-256 for the encrypted payload;
@@ -108,7 +109,7 @@ The verifier:
 6. starts a clean disposable Supabase stack with no application migration history pre-applied;
 7. restores `roles.sql`, `schema.sql` and `data.sql` in one transaction with `session_replication_role = replica`;
 8. restores the backed-up `supabase_migrations` history separately;
-9. recreates the eight application-owned Cron definitions from `supabase/baseline/30_platform_config.sql`;
+9. restores the application-owned Auth and event triggers under local `supabase_admin` after loading data, then recreates the ten recovery-baseline Cron definitions from `supabase/baseline/30_platform_config.sql`;
 10. captures a new manifest from the restored database using the same SQL as production;
 11. disables the disposable Cron jobs before committing the platform-configuration transaction so the test environment cannot execute scheduled external work;
 12. removes the volatile `captured_at` field and requires the remaining restored fingerprint to match the backup fingerprint exactly;
@@ -142,11 +143,12 @@ For an actual disaster recovery into a replacement Supabase project:
 2. decrypt the selected recovery-verified artifact and verify both SHA-256 layers;
 3. restore `roles.sql`, `schema.sql` and `data.sql` using a single transaction and `SET session_replication_role = replica` for the data import;
 4. restore `history_schema.sql` and `history_data.sql` separately;
-5. apply `supabase/baseline/30_platform_config.sql` to recreate application-owned Cron jobs;
-6. provision Vault values, Edge Function secrets, OAuth providers, SMTP settings, API keys and other environment-specific configuration out-of-band;
-7. deploy Edge Functions from the repository;
-8. validate `recovery_manifest.json` against the replacement database;
-9. run critical application smoke tests before routing production traffic.
+5. restore `application_triggers.sql` using a PostgreSQL superuser after data import; on a new Supabase-managed project, application-owned event triggers may require Supabase support because the customer `postgres` role is not a superuser;
+6. apply `supabase/baseline/30_platform_config.sql` to recreate application-owned Cron jobs;
+7. provision Vault values, Edge Function secrets, OAuth providers, SMTP settings, API keys and other environment-specific configuration out-of-band;
+8. deploy Edge Functions from the repository;
+9. validate `recovery_manifest.json` against the replacement database;
+10. run critical application smoke tests before routing production traffic.
 
 Do not blindly replay the repository's incomplete historical migration chain on top of the validated recovery path.
 
@@ -161,7 +163,7 @@ Verify at minimum:
 - flashcards, exercises and practice history;
 - teacher/admin access;
 - RLS policies and critical triggers;
-- all eight Cron definitions;
+- all ten recovery-baseline Cron definitions;
 - Edge Function deployment and secrets;
 - Mercado Pago and notification integrations;
 - OAuth and SMTP configuration.
