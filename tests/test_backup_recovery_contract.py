@@ -15,6 +15,7 @@ APPLICATION_CRONS = (
     "sync-auto-makeup-slots-30-days",
     "system-health-watchdog",
     "system-synthetic-probe",
+    "web-push-notifications",
 )
 
 
@@ -30,10 +31,49 @@ class BackupRecoveryContractTests(unittest.TestCase):
         self.assertIn("actions/upload-artifact@v7", workflow)
         self.assertIn("supabase db dump", script)
         self.assertIn("recovery_manifest.sql", script)
+        self.assertIn("capture_application_triggers", script)
+        self.assertIn("export_application_triggers.sql", script)
+        self.assertIn("application_triggers.sql", script)
+        self.assertIn(".format_version == 3", script)
         self.assertIn("--cipher-algo AES256", script)
         self.assertIn("sha256sum --check manifest.sha256", script)
         self.assertIn('cd "$(dirname "$ENCRYPTED")"', script)
         self.assertIn('sha256sum "$(basename "$ENCRYPTED")"', script)
+
+    def test_application_trigger_export_covers_managed_auth_and_event_triggers(self) -> None:
+        exporter = self.read("supabase/recovery/export_application_triggers.sql")
+
+        for marker in (
+            "set search_path = pg_catalog;",
+            "pg_get_triggerdef",
+            "pg_event_trigger",
+            "pn.nspname in ('public', 'private')",
+            "CREATE EVENT TRIGGER",
+            "quote_literal(tag)",
+            "order by position, object_name",
+        ):
+            self.assertIn(marker, exporter)
+
+    def test_application_triggers_are_restored_after_data_import(self) -> None:
+        script = self.read("scripts/verify_supabase_backup_restore.sh")
+        main = script.split("main() {", maxsplit=1)[1]
+
+        self.assertLess(
+            main.index("restore_logical_backup"),
+            main.index("restore_application_triggers"),
+        )
+        self.assertLess(
+            main.index("restore_application_triggers"),
+            main.index("capture_restored_manifest_and_disable_crons"),
+        )
+        self.assertIn('cat "$RECOVERY_DIR/application_triggers.sql"', script)
+        self.assertIn("| run_recovery_admin_sql", script)
+
+    def test_backup_runs_after_recovery_code_merges(self) -> None:
+        workflow = self.read(".github/workflows/supabase-encrypted-backup.yml")
+        self.assertIn("push:", workflow)
+        self.assertIn("- main", workflow)
+        self.assertIn("'supabase/recovery/**'", workflow)
 
     def test_recovery_workflow_is_chained_to_successful_backup(self) -> None:
         workflow = self.read(".github/workflows/supabase-backup-recovery-test.yml")
@@ -97,7 +137,10 @@ class BackupRecoveryContractTests(unittest.TestCase):
             self.assertIn(marker, script)
 
         self.assertIn(".storage.buckets == 0 and .storage.objects == 0", script)
-        self.assertIn(".cron_jobs | length == 10", script)
+        self.assertIn(".cron_jobs | length == 11", script)
+        self.assertIn(".format_version == 3", script)
+        self.assertIn("restore_application_triggers", script)
+        self.assertIn("application_triggers.sql", script)
 
     def test_restore_script_uses_local_admin_for_cron_recovery(self) -> None:
         script = self.read("scripts/verify_supabase_backup_restore.sh")
