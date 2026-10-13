@@ -64,11 +64,11 @@ test("active client code cannot render or select legacy class types", function (
   }
 });
 
-test("canonical visual capacity remains one for individual and eight for quintet", function () {
+test("canonical visuals honor per-class quintet capacity while preserving the individual limit", function () {
   assert.match(classVisual, /classList\.contains\("individual"\)\) return 1/);
-  assert.match(classVisual, /classList\.contains\("quintet"\)\) return 8/);
+  assert.match(classVisual, /classList\.contains\("quintet"\)\) return Number\(card\.dataset\.capacity\) \|\| 8/);
   assert.match(boardVisual, /classList\.contains\('individual'\)\) return 1/);
-  assert.match(boardVisual, /classList\.contains\('quintet'\)\) return 8/);
+  assert.match(boardVisual, /classList\.contains\('quintet'\)\) return Number\(card\.dataset\.capacity\) \|\| 8/);
   assert.match(badgeRenderer, /value === "quintet"/);
   assert.match(badgeRenderer, /label: "QUINTETO"/);
 });
