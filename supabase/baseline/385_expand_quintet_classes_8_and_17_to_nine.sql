@@ -6,14 +6,14 @@ set statement_timeout = '60s';
 
 do $guard$
 begin
-  if (
-    select count(*)
-    from public.teacher_classes
+  -- A clean restore has no class data. Validate any restored records,
+  -- but do not require production-specific class numbers to be present.
+  if exists (
+    select 1 from public.teacher_classes
     where class_number in (47, 52)
-      and class_type = 'quintet'
-      and is_active = true
-  ) <> 2 then
-    raise exception 'Expected both selected classes to be active QUINTETO classes.';
+      and (class_type is distinct from 'quintet' or is_active is distinct from true)
+  ) then
+    raise exception 'Existing selected classes must be active QUINTETO classes.';
   end if;
 end;
 $guard$;
