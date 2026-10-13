@@ -1,0 +1,148 @@
+# Preparação para criação automática de branches no Supabase
+
+## Estado verificado em 13/10/2026
+
+A produção é o projeto Supabase `wnigzpvgsbpjdxvjzugt`, no plano Pro.
+A branch de produção chama-se `main`. A criação automática ainda **não está
+ativada** e não existe nenhuma preview remota ativa.
+
+O catálogo de versões das migrações de produção contém 286 registros. O
+repositório contém 237 arquivos SQL em `supabase/migrations/`. A comparação
+por versão (não por conteúdo SQL) encontrou **180 correspondências, 106
+versões sem arquivo Git e 57 arquivos sem versão correspondente na produção**.
+
+Essas contagens são um diagnóstico do histórico, **não** uma indicação de que
+faltam 106 tabelas, nem uma autorização para reproduzir migrações antigas.
+A base foi parcialmente construída antes do histórico versionado no Git;
+arquivos históricos posteriores também possuem versões diferentes das
+registradas no banco. A reconstrução que passou no GitHub utiliza o
+`supabase/baseline/`, não a execução cronológica dos 237 arquivos SQL.
+
+**Conclusão:** não habilitar `Automatic branching` até ser comprovada a
+reconstrução de uma branch vazia. O caminho `supabase/migrations/` atual não
+deve ser aplicado indiscriminadamente a um banco novo.
+
+## Auditoria reproduzível, sem dados de alunos
+
+A Action [Supabase branching readiness](../.github/workflows/supabase-branching-readiness.yml)
+pode ser executada manualmente em GitHub Actions. A execução:
+
+1. Busca **somente os identificadores de versão** na tabela
+   `supabase_migrations.schema_migrations` da produção por uma consulta de leitura.
+2. Compara essas versões aos nomes dos arquivos SQL do checkout protegido de
+   `main`. Não lê nem publica instruções SQL de migrações antigas.
+3. Verifica se existem `supabase/config.toml` e `supabase/seed.sql`.
+4. Produz um relatório JSON sem dados pessoais. Retorna **BLOCKED** até que as
+   divergências sejam resolvidas; `METADATA_ALIGNED` significa apenas que
+   as versões coincidem, não que a branch é funcional.
+
+A Action utiliza a credencial já configurada para a auditoria de drift
+(`SUPABASE_DB_URL`), **somente no acionamento manual**. PRs executam apenas
+os testes locais do detector, sem receber qualquer credencial de produção.
+
+Também é possível executá-la localmente com um arquivo contendo exclusivamente
+uma versão numérica de 14 dígitos por linha:
+
+```bash
+python3 scripts/check_supabase_branching_readiness.py \
+  --production-versions-file ./versoes-do-supabase.txt \
+  --report-json ./branching-readiness.json
+
+python3 -m unittest discover -s tests -p test_supabase_branching_readiness.py
+```
+
+Não enviar as versões de produção como anexos públicos se o contexto exigir
+confidencialidade; o próprio relatório resume apenas contagens e exemplos
+de versões. Nunca exportar instruções SQL da tabela de migrações para um
+repositório público: algumas migrações históricas contêm dados pessoais.
+
+## Plano de reconciliação
+
+### Etapa A — diagnóstico e cópia de segurança (sem alterações em produção)
+
+- Verificar nova execução de backup criptografado e restauração independente.
+- Preservar um manifesto do esquema e do histórico remoto para uso privado.
+- Agrupar as 106 versões ausentes por período e dependências; classificar
+  separadamente as 57 versões locais que não estão na produção.
+- Descobrir **quais objetos foram criados fora das migrations**, sem copiar
+  dados privados e sem inferir que os nomes de arquivos são intercambiáveis.
+
+### Etapa B — migrar para uma reconstrução canônica
+
+- Elaborar uma estratégia de **bootstrap/squash consistente com a produção**.
+  Reconciliar a cadeia histórica sem alterar arquivos já aprovados nem
+  aplicar novamente migrations históricas sobre o banco de produção.
+- Testar a estratégia num PostgreSQL/Supabase descartável com Auth, RLS,
+  grants, extensões, RPCs, triggers, Cron e tabelas privadas.
+- Comparar estrutura restaurada com fingerprint de produção. Verificar
+  criação de contas sintéticas, fluxo de cobrança fictícia e ausência de
+  permissões ampliadas; não usar dados reais.
+- Somente se comprovado seguro, planejar o ajuste do ledger de migrações
+  remoto com plano de rollback e autorização específica do professor. Reparar
+  o ledger sem validar a reconstrução **não** resolve a causa-raiz.
+- Confirmar no teste que a migration bootstrap **não será executada na
+  produção**, que já contém esses objetos.
+
+### Etapa C — preparar a preview remota e as integrações
+
+- Criar `supabase/config.toml` pelo CLI, mantendo segredos apenas em
+  variáveis `env()`, e `supabase/seed.sql` com **dados fictícios**.
+- Rever cada job `cron.job`, Edge Function e segredo na branch antes de
+  qualquer ensaio. Remover acesso a credenciais de produção; usar mocks,
+  e-mails de teste e pagamentos sandbox. Cron/Web Push externos devem
+  ficar inertes na preview, inclusive durante a criação do banco.
+- Testar uma única branch efêmera com nome `pr-<numero>-teste`, após
+  conferência do custo e confirmação do professor.
+- Verificar a saúde do projeto, migrações aplicadas, permissões, RLS e
+  isolamento efetivo. Não usar `project_ref` de produção nos testes.
+- Excluir a branch após teste e confirmar sua remoção.
+
+### Etapa D — integração GitHub (somente após Etapas A–C)
+
+Em **Supabase Dashboard > Project Settings > Integrations > GitHub Integration**:
+
+- **Repository:** `Zoqvera/teacherflavius`
+- **Working directory:** `.`
+- **Production branch:** `main`
+- **Automatic branching:** ativar quando a reconstrução estiver validada
+- **Supabase changes only:** ativar inicialmente para limitar branches
+  automáticas aos PRs com alteração em `supabase/`
+- **Deploy to production:** manter desativado inicialmente
+
+A opção **Supabase changes only** não cria automaticamente uma branch para
+uma PR que modifique só `auth.js`, `mensalidades.js` ou outra lógica fora
+de `supabase/`. O check `isolated-preview-gate` atual continua exigindo
+teste isolado nesses casos; criar uma preview **sob demanda** é a solução
+até que haja automação segura desses cenários.
+
+Após habilitar a integração, verificar que o Supabase publica o check
+`Supabase Preview`. Torná-lo obrigatório somente quando o evento gerar
+esse check em todas as PRs cobertas pela regra, para não bloquear PRs
+puramente documentais. Não substituir o `isolated-preview-gate`.
+
+**Não executar** `supabase branches merge` separadamente se o fluxo
+selecionado já aplicar automaticamente as migrations ao fazer merge do
+GitHub. Isso pode duplicar mudanças.
+
+## Segurança e custos
+
+Branches não copiam dados da produção por padrão. São instâncias próprias,
+com custo de computação a partir de US$ 0,01344 por hora para Micro, além
+de possível uso de disco, rede e recursos externos. Branching Compute não
+é coberto pelo Spend Cap nem abatido pelos créditos de computação Pro.
+Antes do teste remunerado, apresentar o custo e pedir autorização.
+
+As regras da `main` já exigem `isolated-preview-gate`. Não contornar a
+proteção com links falsos ou valores `PASS` fictícios. Migrações corretivas
+futuras devem passar por preview verdadeira e verificação do resultado.
+
+Esta preparação não muda o conteúdo público do site nem suas configurações
+de SEO.
+
+## Referências oficiais
+
+- [Supabase GitHub Integration](https://supabase.com/docs/guides/deployment/branching/github-integration)
+- [Supabase Branching](https://supabase.com/docs/guides/deployment/branching)
+- [Por que branches ficam vazias](https://supabase.com/docs/guides/troubleshooting/new-branch-doesnt-copy-database)
+- [Recuperação de falhas de migrations em branches](https://supabase.com/docs/guides/troubleshooting/branch-in-migrations-failed-status)
+- [Preços e uso de Branching](https://supabase.com/docs/guides/platform/manage-your-usage/branching)
