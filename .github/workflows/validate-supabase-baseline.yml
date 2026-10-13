@@ -57,6 +57,7 @@ jobs:
           node --test tests/tuition_release_eligibility_contract.test.js
           node --test tests/student_policy_notice_contract.test.js
           node --test tests/data_quality_lesson_history_contract.test.js
+          node --test tests/historical_credit_integrity_contract.test.js
 
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v3
@@ -171,7 +172,8 @@ jobs:
             supabase/baseline/355_student_paid_tuition_history.sql \
             supabase/baseline/360_prevent_new_tuition_for_archived_students.sql \
             supabase/baseline/365_guard_first_tuition_due_date.sql \
-            supabase/baseline/370_avoid_tuition_due_date_generation_conflicts.sql
+            supabase/baseline/370_avoid_tuition_due_date_generation_conflicts.sql \
+            supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \

@@ -37,6 +37,7 @@
     data_quality_check_stalled: "Health check de qualidade de dados atrasado",
     auth_health_check_stalled: "Health check de autenticação atrasado",
     data_quality_orphan_class_assignments: "Vínculos de turma órfãos",
+    data_quality_class_membership_without_profile: "Vínculo de turma sem perfil cadastrado",
     data_quality_invalid_class_student_refs: "Vínculos de turma com referência inválida",
     data_quality_class_capacity_exceeded: "Turma acima da capacidade",
     data_quality_student_class_type_mismatch: "Tipo do aluno incompatível com a turma",
