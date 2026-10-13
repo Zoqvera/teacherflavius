@@ -72,7 +72,7 @@ class PreviewReplayFixtureTests(unittest.TestCase):
         sql = (self.staging / "supabase/migrations" / BOOTSTRAP_FILENAME).read_text()
         self.assertIn("create table public.profiles", sql)
         self.assertIn("private.lesson_credit_plan_exceptions", sql)
-        self.assertIn("update cron.job set active = false", sql)
+        self.assertIn("perform cron.alter_job(owned_job.jobid, active := false)", sql)
         report = json.loads((self.staging / "artifacts/cli-replay.json").read_text())
         self.assertEqual(report["mode"], "isolated-cli-replay-only")
         self.assertFalse(report["production_ledger_mutated"])
