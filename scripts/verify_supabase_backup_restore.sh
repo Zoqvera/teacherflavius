@@ -108,7 +108,7 @@ verify_and_decrypt_artifact() {
     .format_version == 3
     and (.critical_row_counts | type == "object")
     and (.catalog_fingerprint | type == "object")
-    and (.cron_jobs | length == 10)
+    and (.cron_jobs | length == 11)
   ' "$RECOVERY_DIR/recovery_manifest.json" >/dev/null
 
   if [ ! -s "$RECOVERY_DIR/application_triggers.sql" ]; then
