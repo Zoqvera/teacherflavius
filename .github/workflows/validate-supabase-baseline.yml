@@ -45,6 +45,7 @@ jobs:
           node --test tests/course_vacancy_visibility_contract.test.js
           node --test tests/tuition_after_enrollment_contract.test.js
           node --test tests/lesson_credits_contract.test.js
+          node --test tests/teacher_makeup_notification_contract.test.js
           node --test tests/manual_lesson_credit_grants_contract.test.js
           node --test tests/retire_legacy_makeup_flow_contract.test.js
           node --test tests/enrollment_commercial_terms_contract.test.js
