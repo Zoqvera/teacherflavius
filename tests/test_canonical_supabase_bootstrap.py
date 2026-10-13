@@ -34,15 +34,15 @@ class CanonicalBootstrapTests(unittest.TestCase):
         self.assertGreaterEqual(len(paths), 60)
         self.assertEqual(paths[0], "supabase/baseline/10_public_schema.sql")
         self.assertEqual(
-            paths[-1], "supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql"
+            paths[-1], "supabase/baseline/377_manual_replacement_credits_all_students.sql"
         )
         self.assertEqual(len(paths), len(set(paths)))
 
     def test_bootstrap_contains_exactly_the_existing_reviewed_overlays(self) -> None:
         root = Path(__file__).resolve().parents[1]
         compiled, manifest = compile_bootstrap(root)
-        self.assertEqual(compiled.count("-- BEGIN REVIEWED OVERLAY: "), 75)
-        self.assertEqual(manifest["overlay_count"], 75)
+        self.assertEqual(compiled.count("-- BEGIN REVIEWED OVERLAY: "), 76)
+        self.assertEqual(manifest["overlay_count"], 76)
         self.assertEqual(manifest["mode"], "disposable-only")
         self.assertEqual(
             manifest["bootstrap_sha256"],
@@ -73,7 +73,7 @@ class CanonicalBootstrapTests(unittest.TestCase):
             fingerprint = temporary / "fingerprint.sql"
             write_outputs(root, sql, manifest, fingerprint)
             report = json.loads(manifest.read_text())
-            self.assertEqual(report["overlay_count"], 75)
+            self.assertEqual(report["overlay_count"], 76)
             self.assertIn("public_functions", fingerprint.read_text())
             self.assertIn("select json_build_object(", fingerprint.read_text())
             self.assertIn("create table public.profiles", sql.read_text())
