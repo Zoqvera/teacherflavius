@@ -26,7 +26,15 @@ health check operacional. A auditoria separa:
 | `revoked_review` | Revogação sem causa identificada na situação atual | Revisão (warning) |
 | `revoked_confirmed_booking` | Revogado, mas com reserva confirmada | Crítico |
 | `active_unpaid` | Contratual não revogado, porém mensalidade não quitada | Crítico |
-| `active_excess` | Contratual ativo acima do plano atual | Revisão (warning) |
+| `active_excess` | Contratual ativo acima do plano atual e sem justificativa documentada | Revisão (warning) |
+| `approved_historical_exception` | Crédito contratual pago de competência anterior, preservado por decisão expressa do professor | Histórico justificado (informativo) |
+
+As exceções aprovadas ficam em `private.lesson_credit_plan_exceptions`, com
+referência ao crédito, justificativa administrativa e data de aprovação. A
+sincronização de mensalidades quitadas deve respeitar essas exceções sem
+reescrever `credit_origin = 'contract'` e sem revogar direitos preservados.
+Se uma mensalidade for estornada, a proteção de créditos não pagos mantém
+precedência e a exceção não impede o bloqueio financeiro.
 
 **Limitação temporal:** `student_billing_settings.classes_per_month` descreve
 o plano atual, e não necessariamente a quantidade contratada na competência
