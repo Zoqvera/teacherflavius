@@ -1,7 +1,7 @@
 -- Technical recovery fingerprint used by both production backup capture and disposable restore verification.
 -- Contains counts/configuration only; it intentionally excludes row contents and secret values.
 select jsonb_pretty(jsonb_build_object(
-  'format_version', 2,
+  'format_version', 3,
   'captured_at', now(),
   'critical_row_counts', jsonb_build_object(
     'profiles', (select count(*) from public.profiles),
