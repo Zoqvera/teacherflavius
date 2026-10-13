@@ -1,0 +1,46 @@
+name: Isolated testing policy
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  isolated-preview-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out PR code
+        uses: actions/checkout@v7
+
+      - name: Verify risk policy contracts
+        run: python3 -m unittest discover -s tests -p test_isolated_testing_policy.py
+
+      - name: Read PR changed paths and test evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" \
+            --jq '.[].filename' > "${RUNNER_TEMP}/changed-files.txt"
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+            --jq '.body // ""' > "${RUNNER_TEMP}/pr-body.md"
+
+      - name: Enforce isolated branch evidence for sensitive changes
+        shell: bash
+        run: |
+          python3 scripts/check_isolated_testing_policy.py \
+            --changed-files "${RUNNER_TEMP}/changed-files.txt" \
+            --pr-body "${RUNNER_TEMP}/pr-body.md"
