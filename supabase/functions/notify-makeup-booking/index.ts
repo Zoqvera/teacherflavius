@@ -14,6 +14,8 @@ type DatabaseWebhookPayload = {
 
 const encoder = new TextEncoder();
 const MAKEUP_FROM_EMAIL = "Teacher Flávio <contato@teacherflavius.com>";
+const TEACHER_BOOKING_TYPE = "teacher_booking";
+const MAKEUP_TIME_ZONE = "America/Sao_Paulo";
 
 function getDefaultKey(envName: string, legacyName: string): string {
   const raw = Deno.env.get(envName);
@@ -81,7 +83,7 @@ function formatDate(value: string): string {
     day: "2-digit",
     month: "long",
     year: "numeric",
-    timeZone: "America/Sao_Paulo",
+    timeZone: MAKEUP_TIME_ZONE,
   }).format(new Date(value));
 }
 
@@ -90,8 +92,39 @@ function formatTime(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "America/Sao_Paulo",
+    timeZone: MAKEUP_TIME_ZONE,
   }).format(new Date(value));
+}
+
+function formatCalendarInstant(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error("Invalid lesson timestamp");
+  }
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+function makeGoogleCalendarUrl(
+  studentName: string,
+  className: string,
+  startsAt: string,
+  endsAt: string,
+  meetingUrl: string | null,
+): string {
+  const url = new URL("https://calendar.google.com/calendar/r/eventedit");
+  url.searchParams.set("action", "TEMPLATE");
+  url.searchParams.set("dates", `${formatCalendarInstant(startsAt)}/${formatCalendarInstant(endsAt)}`);
+  url.searchParams.set("stz", MAKEUP_TIME_ZONE);
+  url.searchParams.set("etz", MAKEUP_TIME_ZONE);
+  url.searchParams.set("text", `Reposição de aula — ${studentName} (${className})`);
+  url.searchParams.set("details", [
+    `Aluno: ${studentName}`,
+    `Turma: ${className}`,
+    "Agendamento de reposição pelo TeacherFlavius.",
+    ...(meetingUrl ? [`Link da aula: ${meetingUrl}`] : []),
+  ].join("\n"));
+  if (meetingUrl) url.searchParams.set("location", meetingUrl);
+  return url.toString();
 }
 
 Deno.serve(async (request: Request) => {
@@ -179,8 +212,9 @@ Deno.serve(async (request: Request) => {
 
   const notificationType = String(notification.notification_type ?? "");
   const isCancellation = notificationType === "cancellation";
+  const isTeacherBooking = notificationType === TEACHER_BOOKING_TYPE;
 
-  if (notificationType !== "booking_confirmation" && !isCancellation) {
+  if (notificationType !== "booking_confirmation" && !isCancellation && !isTeacherBooking) {
     await failNotification("Unsupported notification type");
     return jsonResponse({ error: "Unsupported notification type" }, 422);
   }
@@ -207,13 +241,18 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Schedule slot not found" }, 404);
   }
 
-  const recipientEmail = safeHeader(booking.student_email, "");
+  const teacherEmail = Deno.env.get("MAKEUP_TEACHER_NOTIFICATION_EMAIL")
+    || Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL");
+  const recipientEmail = safeHeader(
+    isTeacherBooking ? teacherEmail : booking.student_email,
+    "",
+  );
   const studentName = safeHeader(booking.student_name, "Aluno");
   const className = safeHeader(booking.class_name, "Turma");
   const meetingUrl = safeHttpUrl(booking.meeting_url);
 
   if (!recipientEmail || (!isCancellation && !meetingUrl)) {
-    await failNotification(!recipientEmail ? "Student email is missing" : "Meeting URL is invalid");
+    await failNotification(!recipientEmail ? "Notification recipient email is missing" : "Meeting URL is invalid");
     return jsonResponse({ error: "Booking contact data is incomplete" }, 422);
   }
 
@@ -226,7 +265,47 @@ Deno.serve(async (request: Request) => {
   let textBody: string;
   let htmlBody: string;
 
-  if (isCancellation) {
+  if (isTeacherBooking) {
+    const calendarUrl = makeGoogleCalendarUrl(
+      studentName,
+      className,
+      slot.starts_at,
+      slot.ends_at,
+      meetingUrl,
+    );
+    subject = `Nova reposição: ${studentName} — ${classDate}, ${startTime}`;
+    textBody = [
+      "Um aluno agendou uma reposição.",
+      "",
+      `Aluno: ${studentName}`,
+      `Turma: ${className}`,
+      `Data: ${classDate}`,
+      `Horário: ${schedule}`,
+      `Link da aula: ${meetingUrl}`,
+      "",
+      `Adicionar ao Google Agenda: ${calendarUrl}`,
+      "",
+      "O evento só será criado na sua agenda após você confirmar o salvamento no Google Agenda.",
+    ].join("\n");
+
+    htmlBody = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033;max-width:620px;margin:0 auto">
+        <h1 style="font-size:22px;margin-bottom:18px">Nova reposição agendada</h1>
+        <p>Um aluno confirmou uma reposição de aula.</p>
+        <table style="border-collapse:collapse;width:100%;margin:18px 0">
+          <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Aluno</td><td>${escapeHtml(studentName)}</td></tr>
+          <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Turma</td><td>${escapeHtml(className)}</td></tr>
+          <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Data</td><td>${escapeHtml(classDate)}</td></tr>
+          <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Horário</td><td>${escapeHtml(schedule)}</td></tr>
+        </table>
+        <p style="margin:24px 0">
+          <a href="${escapeHtml(calendarUrl)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold">Adicionar ao Google Agenda</a>
+        </p>
+        <p style="font-size:14px"><a href="${escapeHtml(meetingUrl)}">Abrir link da aula</a></p>
+        <p style="color:#667085;font-size:13px">Revise e salve o evento no Google Agenda. O evento não é atualizado automaticamente se a reposição for cancelada.</p>
+      </div>
+    `;
+  } else if (isCancellation) {
     subject = `Reposição cancelada — ${classDate}, ${startTime}`;
     textBody = [
       `Olá, ${studentName}!`,
