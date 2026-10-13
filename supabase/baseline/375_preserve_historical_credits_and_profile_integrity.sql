@@ -35,7 +35,7 @@ AS $function$
            when credit.status = 'used' then 'Utilizado'
            else 'Perdido' end as effective_status,
       credit.revoked_at,
-      exception.approval_reason,
+      approved.approval_reason,
       billing.classes_per_month as current_plan_classes,
       (tuition.payment_date is not null or coalesce(tuition.is_exempt, false)) as tuition_settled,
       case
@@ -69,7 +69,7 @@ AS $function$
     left join public.student_billing_settings billing on billing.student_id = credit.student_id
     left join public.profiles profile on profile.id = credit.student_id
     left join public.makeup_class_bookings booking on booking.id = credit.makeup_booking_id
-    left join private.lesson_credit_plan_exceptions exception on exception.credit_id = credit.id
+    left join private.lesson_credit_plan_exceptions approved on approved.credit_id = credit.id
   ),
   totals as (
     select
