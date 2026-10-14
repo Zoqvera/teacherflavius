@@ -52,10 +52,9 @@ class PreviewReplayFixtureTests(unittest.TestCase):
         self.assertIn("if exists (select 1 from public.profiles)", synthetic_seed)
         self.assertIn("if exists (select 1 from cron.job where active)", synthetic_seed)
         self.assertIn("raise exception", synthetic_seed)
+        stage_replay(self.repository, self.staging)
         self.assertEqual(
-            (self.staging / "supabase/seed.sql").read_text(encoding="utf-8")
-            if (self.staging / "supabase/seed.sql").is_file()
-            else synthetic_seed,
+            (self.staging / "supabase/seed.sql").read_text(encoding="utf-8"),
             synthetic_seed,
         )
 
