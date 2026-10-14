@@ -1,7 +1,11 @@
 """Regression checks for the branch-gated sensitive-change policy."""
 from __future__ import annotations
 
+import subprocess
+import sys
+import tempfile
 import unittest
+from pathlib import Path
 
 from scripts.check_isolated_testing_policy import (
     PRODUCTION_PROJECT_REF,
@@ -92,6 +96,38 @@ class EvidenceTests(unittest.TestCase):
 
     def test_duplicate_fields_are_rejected(self) -> None:
         self.assertTrue(validate_evidence(EVIDENCE + f"Preview project ref: {PREVIEW_REF}\n"))
+
+
+class AdvisoryModeTests(unittest.TestCase):
+    def run_policy(self, advisory: bool) -> subprocess.CompletedProcess[str]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths_file = root / "changed-files.txt"
+            body_file = root / "body.md"
+            paths_file.write_text("supabase/migrations/20261014162600_review.sql\\n", encoding="utf-8")
+            body_file.write_text("Preview result: PENDING\\n", encoding="utf-8")
+            command = [
+                sys.executable,
+                str(Path(__file__).resolve().parents[1] /
+                    "scripts/check_isolated_testing_policy.py"),
+                "--changed-files", str(paths_file),
+                "--pr-body", str(body_file),
+            ]
+            if advisory:
+                command.append("--advisory")
+            return subprocess.run(command, capture_output=True, text=True, check=False)
+
+    def test_advisory_mode_reports_missing_preview_without_blocking(self) -> None:
+        result = self.run_policy(advisory=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("::warning::", result.stdout)
+        self.assertIn("remote safety has NOT been verified", result.stdout)
+        self.assertNotIn("::error::", result.stdout)
+
+    def test_strict_mode_still_reports_missing_preview_as_failure(self) -> None:
+        result = self.run_policy(advisory=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("::error::", result.stdout)
 
 
 if __name__ == "__main__":
