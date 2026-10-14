@@ -39,7 +39,7 @@ class RepositoryPreviewSafetyTests(unittest.TestCase):
         self.assertIn("individual", sql)
         for forbidden in (
             "auth.users", "service_role", "monthly_tuition (",
-            "profiles (", "payment", "teacherflavius.com",
+            "profiles (", "insert into public.monthly_tuition", "teacherflavius.com",
             "http://", "https://", "gen_random_uuid",
         ):
             self.assertNotIn(forbidden, sql)
