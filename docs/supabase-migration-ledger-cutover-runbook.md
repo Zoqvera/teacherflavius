@@ -196,7 +196,9 @@ restauração.
 - restauração real testada em destino independente;
 - branch remota recriada com sucesso e sem dados reais;
 - operações documentadas, janela aprovada e rollback conferido;
-- `isolated-preview-gate` efetivamente atestando testes remotos;
+- testes remotos efetivos com dados sintéticos e evidência verificável
+  antes de qualquer alteração do ledger de produção (sem depender do gate
+  `isolated-preview-gate`, descontinuado por decisão do proprietário);
 - autorização explícita para qualquer operação de escrita em produção.
 
 Até esse ponto, **Automatic Branching permanece desativado**.
