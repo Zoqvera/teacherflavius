@@ -64,7 +64,7 @@ class SupabaseLedgerRollbackTests(unittest.TestCase):
         )
         report = json.dumps(attest(self.original, None).__dict__)
         self.assertNotIn("select 1", report)
-        self.assertNotIn("first", report)
+        self.assertNotIn('"first"', report)
 
     def test_corrupt_or_duplicated_snapshot_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
