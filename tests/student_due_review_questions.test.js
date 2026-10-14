@@ -11,7 +11,7 @@ const page = fs.readFileSync(path.join(ROOT, "o-que-fazer/index.html"), "utf8");
 const studentApp = fs.readFileSync(path.join(ROOT, "o-que-fazer/app.js"), "utf8");
 const workflowService = fs.readFileSync(path.join(ROOT, "academic_workflow_service.js"), "utf8");
 const migration = fs.readFileSync(
-  path.join(ROOT, "supabase/migrations/20261014162600_add_student_due_review_questions.sql"), "utf8"
+  path.join(ROOT, "supabase/migrations/20261014194243_add_student_due_review_questions.sql"), "utf8"
 );
 const baseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/310_add_student_due_review_questions.sql"), "utf8"
