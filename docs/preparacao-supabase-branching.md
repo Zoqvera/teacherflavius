@@ -246,11 +246,11 @@ Em **Supabase Dashboard > Project Settings > Integrations > GitHub Integration**
 
 A opção **Supabase changes only** não cria automaticamente uma branch para
 uma PR que modifique só `auth.js`, `mensalidades.js` ou outra lógica fora
-de `supabase/`. O check de compatibilidade `isolated-preview-gate` foi alterado para
-modo **consultivo** em 14/10/2026. Testes remotos permanecem recomendados
+de `supabase/`. O contexto `isolated-preview-gate` foi descontinuado
+por solicitação do proprietário. Testes remotos permanecem recomendados
 para alterações sensíveis, mas a ausência deles não impede automaticamente
-o merge. O nome do contexto só será retirado após sua exclusão da regra
-de proteção GitHub nº `24970258`.
+o merge. Para retirar a exigência cadastrada no GitHub, remova esse contexto
+da regra nº `24970258` em **Settings > Rules > Rulesets**.
 
 Após habilitar a integração, verificar que o Supabase publica o check
 `Supabase Preview`. Torná-lo obrigatório somente quando o evento gerar
