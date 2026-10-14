@@ -5,12 +5,15 @@ on:
     branches:
       - main
     paths:
+      - "supabase/config.toml"
+      - "supabase/seed.sql"
       - "scripts/compile_canonical_supabase_bootstrap.py"
       - "scripts/prepare_supabase_cli_replay.py"
       - "scripts/audit_supabase_isolated_chain.py"
       - "tests/test_supabase_isolated_chain_audit.py"
       - "tests/test_canonical_supabase_bootstrap.py"
       - "tests/test_supabase_cli_replay.py"
+      - "tests/test_supabase_preview_repository_safety.py"
       - ".github/workflows/validate-supabase-baseline.yml"
       - ".github/workflows/supabase-cli-replay.yml"
 
@@ -30,6 +33,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_canonical_supabase_bootstrap.py
           python3 -m unittest discover -s tests -p test_supabase_cli_replay.py
+          python3 -m unittest discover -s tests -p test_supabase_preview_repository_safety.py
           python3 -m unittest discover -s tests -p test_supabase_isolated_chain_audit.py
 
       - name: Install Supabase CLI
@@ -128,6 +132,14 @@ jobs:
           jq -S . "${RUNNER_TEMP}/preview-fingerprint.json" \
             > "${RUNNER_TEMP}/actual-fingerprint.json"
           diff -u "${RUNNER_TEMP}/expected-fingerprint.json" "${RUNNER_TEMP}/actual-fingerprint.json"
+
+          # Reusing synthetic fixtures on a populated database must fail closed.
+          if docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            < "${RUNNER_TEMP}/teacherflavius-cli-replay/supabase/seed.sql"; then
+            echo "::error::Synthetic seed accepted a nonempty application database."
+            exit 1
+          fi
 
       - name: Prove canonical bootstrap refuses an existing application database
         shell: bash

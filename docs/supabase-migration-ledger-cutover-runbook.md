@@ -19,8 +19,10 @@ comprova, sozinho, que o Supabase Branching remoto funciona.
 `restore_project` ou `Automatic Branching` contra o banco produtivo
 durante a etapa de diagnóstico.
 
-A PR #651, que adiciona `supabase/config.toml` e `supabase/seed.sql`,
-ainda exige validação remota antes da incorporação à `main`.
+A PR #651 introduz `supabase/config.toml` e `supabase/seed.sql`
+somente para ensaios locais descartáveis. A integração desse preparo
+não equivale a uma preview remota aprovada e não libera Automatic
+Branching, a transição do ledger ou escrita no banco de produção.
 
 ## Auditoria de catálogo real em 14/10/2026
 

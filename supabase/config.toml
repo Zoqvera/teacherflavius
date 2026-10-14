@@ -1,0 +1,13 @@
+# Local Supabase project identifier (not the production project ref).
+# Automatic Branching must remain disabled until the historical migration
+# ledger and the clean-database bootstrap strategy are reconciled.
+# Do not run supabase start or supabase db reset from the repository root:
+# the historical files in supabase/migrations are not a replayable bootstrap.
+# Use the disposable CI fixture described in supabase/branching/README.md.
+project_id = "teacherflavius-local-fixture"
+
+# Only enable the synthetic seed in a disposable, correctly bootstrapped
+# environment after all Cron jobs and external providers have been disabled.
+[db.seed]
+enabled = false
+sql_paths = ["./seed.sql"]

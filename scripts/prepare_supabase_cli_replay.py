@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import tomllib
 from pathlib import Path
 
 from scripts.compile_canonical_supabase_bootstrap import write_outputs
@@ -54,17 +55,8 @@ end;
 $preview_schema_assert$;
 """
 
-SYNTHETIC_SEED = """
--- Disposable test fixtures only; never copy a production profile or payment.
--- No Auth users or payments are created. The two test class numbers are reserved
--- for this disposable CLI fixture and must never reach production.
-insert into public.teacher_classes
-  (class_number, class_name, class_type, class_weekday, class_start_time,
-   is_active, makeup_slots_enabled)
-values
-  (970001, 'Synthetic preview quintet', 'quintet', 5, '18:00', true, false),
-  (970002, 'Synthetic preview individual', 'individual', 3, '10:00', true, false);
-"""
+SEED_RELATIVE_PATH = Path("supabase/seed.sql")
+CONFIG_RELATIVE_PATH = Path("supabase/config.toml")
 
 
 def assert_safe_paths(repository_root: Path, staging_root: Path) -> None:
@@ -87,6 +79,24 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
     sql_dir = staging_root / "supabase"
     if not (sql_dir / "config.toml").is_file():
         raise ValueError("Initialize an isolated Supabase CLI project first.")
+    # The committed config is always seed-disabled. Only disposable CLI
+    # staging may enable it; never alter the actual checkout.
+    repository_config = (repository_root / CONFIG_RELATIVE_PATH).read_text(
+        encoding="utf-8"
+    )
+    parsed_config = tomllib.loads(repository_config)
+    seed_config = parsed_config.get("db", {}).get("seed", {})
+    if seed_config.get("enabled") is not False:
+        raise ValueError("Repository synthetic seeding must default to disabled.")
+    if seed_config.get("sql_paths") != ["./seed.sql"]:
+        raise ValueError("Unexpected repository seed path.")
+    disabled_setting = "enabled = false"
+    if repository_config.count(disabled_setting) != 1:
+        raise ValueError("Expected one disabled seed configuration.")
+    (sql_dir / "config.toml").write_text(
+        repository_config.replace(disabled_setting, "enabled = true", 1),
+        encoding="utf-8",
+    )
     migrations_dir = sql_dir / "migrations"
     migrations_dir.mkdir(parents=True, exist_ok=True)
     if any(migrations_dir.iterdir()) or (sql_dir / "seed.sql").exists():
@@ -102,7 +112,13 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
     migration = migrations_dir / BOOTSTRAP_FILENAME
     migration.write_text(compiled_sql.read_text(encoding="utf-8") + STOP_CRON, encoding="utf-8")
     (migrations_dir / ASSERTION_FILENAME).write_text(VERIFY_SCHEMA, encoding="utf-8")
-    (sql_dir / "seed.sql").write_text(SYNTHETIC_SEED, encoding="utf-8")
+    seed_source = repository_root / SEED_RELATIVE_PATH
+    if not seed_source.is_file():
+        raise ValueError("Synthetic seed file is missing from the repository.")
+    (sql_dir / "seed.sql").write_text(
+        seed_source.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     report = {
         "mode": "isolated-cli-replay-only",
