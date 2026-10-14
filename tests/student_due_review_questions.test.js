@@ -35,12 +35,15 @@ function createElement(tagName) {
     appendChild(child) {
       this.children.push(child);
     },
+    handlers: {},
     setAttribute() {},
-    addEventListener() {}
+    addEventListener(event, callback) {
+      this.handlers[event] = callback;
+    }
   };
 }
 
-async function loadStudentPage(reviews, reviewError = null, planError = null) {
+async function loadStudentPage(reviews, reviewError = null, planError = null, actionPlan = null) {
   const elements = new Map();
   const getElementById = (id) => {
     if (!elements.has(id)) elements.set(id, createElement("div"));
@@ -49,7 +52,12 @@ async function loadStudentPage(reviews, reviewError = null, planError = null) {
   const client = {
     async getMyActionPlan() {
       if (planError) throw planError;
-      return { lesson: null, questions: [] };
+      return actionPlan || { lesson: null, questions: [] };
+    },
+    async markQuestionStudied(questionId) {
+      const question = actionPlan?.questions?.find((item) => item.id === questionId);
+      if (question) question.marked_studied = true;
+      return { ok: true };
     },
     async getMyReviewQuestions() {
       if (reviewError) throw reviewError;
@@ -175,4 +183,69 @@ test("review priorities remain available when the general action plan cannot loa
   } finally {
     console.error = savedError;
   }
+});
+
+test("study catalog contains only questions without the explicit study-button marker", async () => {
+  const actionPlan = {
+    lesson: null,
+    questions: [
+      { id: "new-1", text: "What do you do?", marked_studied: false, studied: false, worked: false },
+      { id: "clicked-1", text: "Where are you from?", marked_studied: true, studied: true, worked: false },
+      { id: "clicked-worked", text: "Are you married?", marked_studied: true, studied: false, worked: true },
+      { id: "worked-unclicked", text: "Do you cook?", marked_studied: false, studied: false, worked: true }
+    ]
+  };
+  const state = await loadStudentPage([], null, null, actionPlan);
+  const items = state.getElementById("actionQuestionList").children;
+
+  assert.deepEqual(items.map((item) => item.children[0].question.id), [
+    "new-1", "worked-unclicked"
+  ]);
+  assert.deepEqual(items.map((item) => item.children[0].number), [1, 2]);
+  assert.equal(items[0].children[1].children[0].disabled, false);
+  assert.equal(items[1].children[1].children[0].disabled, true);
+});
+
+test("clicked question disappears immediately after successful study registration", async () => {
+  const actionPlan = {
+    lesson: null,
+    questions: [
+      { id: "a", text: "Do you study?", marked_studied: false, studied: false, worked: false },
+      { id: "b", text: "Do you work?", marked_studied: false, studied: false, worked: false }
+    ]
+  };
+  const state = await loadStudentPage([], null, null, actionPlan);
+  const initial = state.getElementById("actionQuestionList").children;
+
+  initial[0].children[1].children[0].handlers.click();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  const remaining = state.getElementById("actionQuestionList").children;
+  assert.equal(remaining.length, 1);
+  assert.equal(remaining[0].children[0].question.id, "b");
+  assert.equal(state.getElementById("reviewQuestionList").children.length, 1);
+});
+
+test("no marked questions remain visible and the empty state is explicit", async () => {
+  const state = await loadStudentPage([], null, null, {
+    lesson: null,
+    questions: [
+      { id: "already-clicked", marked_studied: true, studied: false, worked: true }
+    ]
+  });
+  const visible = state.getElementById("actionQuestionList").children;
+  assert.equal(visible.length, 1);
+  assert.match(visible[0].textContent, /já marcou todas as perguntas como estudadas/);
+});
+
+test("missing explicit marker never exposes a question as pending", async () => {
+  const state = await loadStudentPage([], null, null, {
+    lesson: null,
+    questions: [{ id: "legacy", studied: false, worked: false }]
+  });
+  assert.equal(state.getElementById("actionQuestionList").children.length, 0);
+  assert.match(
+    state.getElementById("questionsStatus").textContent,
+    /Não foi possível verificar quais perguntas ainda faltam estudar/
+  );
 });
