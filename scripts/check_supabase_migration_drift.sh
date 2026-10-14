@@ -7,6 +7,7 @@ readonly MIGRATION_GIT_ROOT="${MIGRATION_GIT_ROOT:-${ROOT_DIR}}"
 readonly MIGRATION_DRIFT_CUTOFF="${MIGRATION_DRIFT_CUTOFF:-20261006000000}"
 readonly MIGRATION_CHECKSUM_CUTOFF="${MIGRATION_CHECKSUM_CUTOFF:-20261007051850}"
 readonly MIGRATION_BASE_REF="${MIGRATION_BASE_REF:-}"
+readonly MIGRATION_PR_ALLOW_NEW="${MIGRATION_PR_ALLOW_NEW:-false}"
 
 TEMP_DIR=""
 
@@ -24,6 +25,11 @@ require_configuration() {
 
   if [[ ! "${MIGRATION_DRIFT_CUTOFF}" =~ ^[0-9]{14}$ ]]; then
     echo "::error::MIGRATION_DRIFT_CUTOFF must contain exactly 14 digits."
+    exit 1
+  fi
+
+  if [[ "${MIGRATION_PR_ALLOW_NEW}" != "true" && "${MIGRATION_PR_ALLOW_NEW}" != "false" ]]; then
+    echo "::error::MIGRATION_PR_ALLOW_NEW must be true or false."
     exit 1
   fi
 
@@ -307,9 +313,28 @@ compare_production_identity() {
   fi
 
   if [[ -s "${local_only_file}" ]]; then
-    echo "::error::supabase/migrations contains versions that are missing from production migration history:"
-    sed 's/^/  - /' "${local_only_file}"
-    drift_found=true
+    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
+      # PRs may propose append-only migrations; they must not already be in
+      # production. Published versions remain strictly protected above.
+      local production_tip
+      production_tip="$(tail -n 1 "${remote_versions_file}")"
+      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+        echo "::error::Production migration history is empty or malformed."
+        drift_found=true
+      fi
+      while IFS= read -r new_version; do
+        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ || ! "${new_version}" > "${production_tip}" ]]; then
+          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}."
+          drift_found=true
+        else
+          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
+        fi
+      done < "${local_only_file}"
+    else
+      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+      sed 's/^/  - /' "${local_only_file}"
+      drift_found=true
+    fi
   fi
 
   if [[ -s "${mismatch_file}" ]]; then
@@ -352,7 +377,7 @@ main() {
 
   compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
 
-  echo "Supabase migration IDs are globally unique and committed history is immutable. Production version/name matches Git from ${MIGRATION_DRIFT_CUTOFF}; checksum identity matches from ${MIGRATION_CHECKSUM_CUTOFF}."
+  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
 }
 
 main "$@"
