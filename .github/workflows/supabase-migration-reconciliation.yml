@@ -15,6 +15,8 @@ on:
       - main
     paths:
       - scripts/analyze_supabase_migration_reconciliation.py
+      - scripts/plan_supabase_branching_cutover.py
+      - tests/test_supabase_branching_cutover_plan.py
       - tests/test_supabase_migration_reconciliation.py
       - .github/workflows/supabase-migration-reconciliation.yml
   workflow_dispatch:
