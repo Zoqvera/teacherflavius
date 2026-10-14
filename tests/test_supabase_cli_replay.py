@@ -57,7 +57,7 @@ class PreviewReplayFixtureTests(unittest.TestCase):
         self.assertNotIn("auth.users", synthetic_seed)
         self.assertNotIn("insert into public.monthly_tuition", synthetic_seed)
         self.assertNotIn("teacherflavius.com", synthetic_seed)
-        self.assertIn("if exists (select 1 from public.profiles)", synthetic_seed)
+        self.assertIn("or exists (select 1 from public.profiles)", synthetic_seed)
         self.assertIn("if exists (select 1 from cron.job where active)", synthetic_seed)
         self.assertIn("raise exception", synthetic_seed)
         stage_replay(self.repository, self.staging)
