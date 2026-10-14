@@ -33,6 +33,14 @@ class PreviewReplayFixtureTests(unittest.TestCase):
         self.assertEqual([path.name for path in paths], [BOOTSTRAP_FILENAME, ASSERTION_FILENAME])
         self.assertEqual(report["migration_versions"], ["20261013000000", "20261013000001"])
         self.assertTrue(report["cron_disabled_in_migration"])
+        self.assertIn(
+            "enabled = true",
+            (self.staging / "supabase/config.toml").read_text(encoding="utf-8"),
+        )
+        self.assertFalse(
+            "enabled = true" in
+            (self.repository / "supabase/config.toml").read_text(encoding="utf-8")
+        )
         self.assertTrue(
             paths[0].read_text().rstrip().endswith(STOP_CRON.strip())
         )
