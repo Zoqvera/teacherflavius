@@ -5,10 +5,13 @@ on:
     branches:
       - main
     paths:
+      - "supabase/config.toml"
+      - "supabase/seed.sql"
       - "scripts/compile_canonical_supabase_bootstrap.py"
       - "scripts/prepare_supabase_cli_replay.py"
       - "tests/test_canonical_supabase_bootstrap.py"
       - "tests/test_supabase_cli_replay.py"
+      - "tests/test_supabase_preview_repository_safety.py"
       - ".github/workflows/validate-supabase-baseline.yml"
       - ".github/workflows/supabase-cli-replay.yml"
 
@@ -28,6 +31,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_canonical_supabase_bootstrap.py
           python3 -m unittest discover -s tests -p test_supabase_cli_replay.py
+          python3 -m unittest discover -s tests -p test_supabase_preview_repository_safety.py
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v3
