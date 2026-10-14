@@ -18,7 +18,7 @@
     <header class="academic-header">
       <p class="academic-kicker">PREPARAÇÃO DA PRÓXIMA AULA</p>
       <h1>O QUE FAZER</h1>
-      <p class="academic-description">Aqui estão a sua próxima lição e todas as Conversation Questions disponíveis para estudo.</p>
+      <p class="academic-description">Aqui estão a sua próxima lição, as revisões programadas e todas as Conversation Questions disponíveis para estudo.</p>
       <p id="actionPlanStatus" class="academic-status" role="status">Carregando seu plano...</p>
     </header>
 
@@ -28,6 +28,14 @@
         <h2 id="nextLessonTitle">Lição prevista</h2>
         <div id="nextLessonContainer"></div>
         <a class="academic-study-roadmap-link" href="/roteiro-de-estudos/">Ver todas as lições</a>
+      </section>
+
+      <section class="academic-panel" aria-labelledby="reviewQuestionsTitle">
+        <p class="academic-kicker">PRIORIDADE DE ESTUDO</p>
+        <h2 id="reviewQuestionsTitle">Perguntas para revisar</h2>
+        <p id="reviewQuestionsHelp" class="academic-muted">Essas são perguntas que você já estudou, mas precisa melhorar suas respostas. Estude mais uma vez e participe da aula para responder de novo.</p>
+        <div id="reviewQuestionList" class="academic-question-card-list"></div>
+        <p id="reviewQuestionsStatus" class="academic-status" role="status">Carregando revisões...</p>
       </section>
 
       <section class="academic-panel" aria-labelledby="questionsTitle">
@@ -42,8 +50,8 @@
 
   <script src="/resource_waiter.js?v=20260902-2"></script>
   <script src="/conversation_question_card_renderer.js?v=20261004-1"></script>
-  <script src="/academic_workflow_service.js?v=20261004-question-study-1"></script>
-  <script src="/o-que-fazer/app.js?v=20261006-all-questions-1"></script>
+  <script src="/academic_workflow_service.js?v=20261014-student-reviews-1"></script>
+  <script src="/o-que-fazer/app.js?v=20261014-student-reviews-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
   <script src="/site_runtime_config.js?v=20260903-1"></script>
