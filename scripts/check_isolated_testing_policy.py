@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Require documented isolated previews for changes that can affect student data.
+"""Classify sensitive changes and report isolated-preview evidence.
 
-The gate checks PR evidence format; the reviewer must still verify the live
-Supabase preview branch and its results before merging.
+The GitHub workflow uses advisory mode to avoid blocking pull requests.
+Strict mode remains available for manual verification. Neither mode proves
+that a remote Supabase branch passed; live results must be checked separately.
 """
 from __future__ import annotations
 
