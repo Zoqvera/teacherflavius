@@ -1,5 +1,21 @@
 # Preparação para criação automática de branches no Supabase
 
+## Verificação da cadeia canônica descartável — 14/10/2026
+
+A cadeia de reconstrução usada pelo CLI ganhou um bloqueio SQL executável
+contra aplicação em bancos com tabelas existentes da plataforma de aulas.
+O CI também confere os hashes do bundle das duas migrações isoladas,
+compara o esquema reconstruído com o fingerprint revisado, verifica
+jobs Cron desativados e exige falha controlada ao tentar executar o
+bootstrap uma segunda vez em banco já preenchido com dados sintéticos.
+
+Essa proteção é **somente uma verificação local**: não resolve a
+divergência das versões registradas em `supabase_migrations` e não
+autoriza substituir o diretório atual de migrações ou ativar
+`Automatic Branching`. A próxima transição deve utilizar o relatório
+`branching-cutover-plan.json` e exigir uma reconstrução remota completa,
+após aprovação específica de custo e estratégia de rollback.
+
 ## Preparação do cutover canônico — 14/10/2026
 
 A leitura mais recente do banco de produção encontrou **289 versões de
