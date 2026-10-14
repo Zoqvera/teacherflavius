@@ -82,7 +82,7 @@ test("student sees the complete Conversation Questions catalog and studies each 
     assert.doesNotMatch(sql, /limit 10/i);
   }
 
-  assert.match(studentPage, /todas as Conversation Questions disponíveis para estudo/i);
+  assert.match(studentPage, /Conversation Questions que você ainda não marcou como estudadas/i);
   assert.match(studentApp, /markQuestionStudied\(question\.id\)/);
   assert.match(studentApp, /question\.worked/);
   assert.match(studentApp, /ESTUDEI A PERGUNTA/);
