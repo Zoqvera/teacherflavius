@@ -10,7 +10,7 @@ from scripts.prepare_supabase_cli_replay import (
     ASSERTION_FILENAME,
     BOOTSTRAP_FILENAME,
     STOP_CRON,
-    SYNTHETIC_SEED,
+    SEED_RELATIVE_PATH,
     assert_safe_paths,
     stage_replay,
 )
@@ -41,13 +41,23 @@ class PreviewReplayFixtureTests(unittest.TestCase):
         self.assertNotIn("service_role", (self.staging / "supabase/seed.sql").read_text())
 
     def test_seed_only_contains_two_test_classes_and_no_real_accounts(self) -> None:
-        self.assertIn("970001", SYNTHETIC_SEED)
-        self.assertIn("970002", SYNTHETIC_SEED)
-        self.assertIn("quintet", SYNTHETIC_SEED)
-        self.assertIn("individual", SYNTHETIC_SEED)
-        self.assertNotIn("auth.users", SYNTHETIC_SEED)
-        self.assertNotIn("monthly_tuition", SYNTHETIC_SEED)
-        self.assertNotIn("teacherflavius.com", SYNTHETIC_SEED)
+        synthetic_seed = (self.repository / SEED_RELATIVE_PATH).read_text(encoding="utf-8")
+        self.assertIn("970001", synthetic_seed)
+        self.assertIn("970002", synthetic_seed)
+        self.assertIn("quintet", synthetic_seed)
+        self.assertIn("individual", synthetic_seed)
+        self.assertNotIn("auth.users", synthetic_seed)
+        self.assertNotIn("monthly_tuition", synthetic_seed)
+        self.assertNotIn("teacherflavius.com", synthetic_seed)
+        self.assertIn("if exists (select 1 from public.profiles)", synthetic_seed)
+        self.assertIn("if exists (select 1 from cron.job where active)", synthetic_seed)
+        self.assertIn("raise exception", synthetic_seed)
+        self.assertEqual(
+            (self.staging / "supabase/seed.sql").read_text(encoding="utf-8")
+            if (self.staging / "supabase/seed.sql").is_file()
+            else synthetic_seed,
+            synthetic_seed,
+        )
 
     def test_protects_git_checkout_and_parent_directories(self) -> None:
         with self.assertRaises(ValueError):
