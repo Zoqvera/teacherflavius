@@ -7,6 +7,8 @@ on:
     paths:
       - "scripts/compile_canonical_supabase_bootstrap.py"
       - "scripts/prepare_supabase_cli_replay.py"
+      - "scripts/audit_supabase_isolated_chain.py"
+      - "tests/test_supabase_isolated_chain_audit.py"
       - "tests/test_canonical_supabase_bootstrap.py"
       - "tests/test_supabase_cli_replay.py"
       - ".github/workflows/validate-supabase-baseline.yml"
@@ -28,6 +30,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_canonical_supabase_bootstrap.py
           python3 -m unittest discover -s tests -p test_supabase_cli_replay.py
+          python3 -m unittest discover -s tests -p test_supabase_isolated_chain_audit.py
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v3
@@ -48,6 +51,17 @@ jobs:
           test -f "${PREVIEW_DIR}/supabase/migrations/20261013000000_canonical_disposable_schema.sql"
           test -f "${PREVIEW_DIR}/supabase/migrations/20261013000001_verify_disposable_schema.sql"
           test -f "${PREVIEW_DIR}/supabase/seed.sql"
+
+          python3 -m scripts.audit_supabase_isolated_chain \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --staging-root "${PREVIEW_DIR}" \
+            --report-json "${PREVIEW_DIR}/artifacts/chain-audit.json"
+          jq -e '.status == "LOCAL_CHAIN_VALIDATED" and
+            .reviewed_overlays == 78 and
+            .historical_migrations_replayed == false and
+            .production_ledger_modified == false and
+            .automatic_branching_safe == false' \
+            "${PREVIEW_DIR}/artifacts/chain-audit.json"
 
       - name: Run canonical migration, incremental migration and synthetic seed via CLI
         shell: bash
@@ -114,6 +128,43 @@ jobs:
           jq -S . "${RUNNER_TEMP}/preview-fingerprint.json" \
             > "${RUNNER_TEMP}/actual-fingerprint.json"
           diff -u "${RUNNER_TEMP}/expected-fingerprint.json" "${RUNNER_TEMP}/actual-fingerprint.json"
+
+      - name: Prove canonical bootstrap refuses an existing application database
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+          BOOTSTRAP="${RUNNER_TEMP}/teacherflavius-cli-replay/artifacts/compiled.sql"
+
+          # A second attempt must stop at the guard, before any CREATE/ALTER.
+          if docker exec -i "${DB_CONTAINER}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < "${BOOTSTRAP}" > "${RUNNER_TEMP}/guard-replay.log" 2>&1; then
+            echo "::error::Canonical bootstrap unexpectedly accepted an installed database."
+            exit 1
+          fi
+          if ! grep -Fq 'Refusing canonical bootstrap: application schema already exists' \
+            "${RUNNER_TEMP}/guard-replay.log"; then
+            echo "::error::Replay failed for a reason other than the intentional guard."
+            exit 1
+          fi
+
+          docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 <<'SQL'
+          do $post_guard$
+          begin
+            if (select count(*) from public.teacher_classes
+                where class_number in (970001, 970002)) <> 2 then
+              raise exception 'Installed test classes changed after a rejected replay';
+            end if;
+            if (select count(*) from supabase_migrations.schema_migrations
+                where version in ('20261013000000','20261013000001')) <> 2 then
+              raise exception 'Migration ledger changed after a rejected replay';
+            end if;
+          end;
+          $post_guard$;
+          SQL
 
       - name: Confirm repeatability by recreating the disposable DB
         shell: bash
