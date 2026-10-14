@@ -1,5 +1,5 @@
 -- Synthetic PostgreSQL rehearsal. NEVER connect this file to production.
--- No access to supabase_migrations.schema_migrations or application tables.
+-- No access to any application or production migration tables.
 \set ON_ERROR_STOP on
 
 create temporary table rehearsal_ledger (
