@@ -18,3 +18,12 @@ android/build/
 
 # Generated Capacitor Android project.
 android/
+
+# Local Supabase CLI state and credentials must remain outside source control.
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/.env.*
+supabase/.branches/
+supabase/.temp/
