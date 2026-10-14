@@ -1,9 +1,38 @@
 # Bootstrap canônico do Supabase — protótipo descartável
 
 A reconstrução canônica agora pode ser compilada em **um único arquivo SQL**,
-a partir dos 75 overlays já revisados e executados pelo workflow
+a partir dos 78 overlays já revisados e executados pelo workflow
 `.github/workflows/validate-supabase-baseline.yml`. A ordem é extraída da
 fonte de verdade existente, sem copiar ou substituir as migrations históricas.
+
+## Cadeia canônica isolada e verificável
+
+O gerador já produz, **somente em um projeto CLI descartável fora do Git**,
+duas migrações: (1) a reconstrução canônica dos 78 overlays revisados com
+bloqueio de jobs Cron; (2) uma migração incremental de verificação de
+dependências. Nenhuma das duas é promovida para o diretório histórico
+`supabase/migrations/`.
+
+A reconstrução contém agora uma **guarda SQL executável como primeira
+instrução**: se encontrar `public.profiles`, `public.teacher_classes`,
+`public.monthly_tuition`, `public.class_students` ou a tabela
+`private.lesson_credits`, interrompe antes de qualquer `CREATE` ou
+`ALTER`. É uma barreira adicional contra a execução indevida do bootstrap
+em um banco de aplicação já existente; **não substitui a revisão nem
+autoriza aplicá-lo à produção**.
+
+A ferramenta `scripts/audit_supabase_isolated_chain.py` valida a
+lista exata de duas migrações, os digests SHA256 do bundle, a guarda de
+esquema, o seed sintético e a ausência de SQL histórico inesperado.
+Produz o arquivo temporário `chain-audit.json` contendo **apenas
+metadados**, sem o corpo dos SQLs. Seu resultado
+`LOCAL_CHAIN_VALIDATED` **nunca** equivale a uma preview remota
+aprovada ou a autorização para `migration repair`.
+
+O CI também tenta reaplicar o bootstrap ao banco descartável já criado.
+A operação precisa **falhar pela guarda SQL**, mantendo turmas e
+ledger sintéticos inalterados; depois recria o banco do zero e repete
+a cadeia para assegurar reprodutibilidade.
 
 ## Limite de segurança
 
@@ -35,7 +64,7 @@ apenas lê o repositório e grava arquivos temporários; não conecta ao Supabas
 A Action **Canonical Supabase bootstrap replay**:
 
 1. Executa testes unitários de ordem, integridade e restrição ao diretório.
-2. Compila um único arquivo SQL a partir dos 75 overlays.
+2. Compila um único arquivo SQL a partir dos 78 overlays.
 3. Inicializa um Supabase local descartável, **sem executar os 237 arquivos
    históricos** e sem importar `auth.users`, `profiles` ou dados financeiros.
 4. Executa o bundle por uma única sessão de `psql`.
@@ -61,7 +90,7 @@ migrações do repositório nem altera `supabase/migrations/`.
 O script `scripts/prepare_supabase_cli_replay.py` produz exclusivamente
 dentro desse projeto efêmero:
 
-- Uma migração inicial única com o bootstrap compilado dos 75 overlays.
+- Uma migração inicial única com o bootstrap compilado dos 78 overlays.
 - Uma segunda migração que comprova a ordem e verifica a existência das
   tabelas críticas.
 - Um `seed.sql` sintético de duas turmas, sem contas, CPF, pagamentos ou
