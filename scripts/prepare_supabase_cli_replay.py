@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import tomllib
 from pathlib import Path
 
 from scripts.compile_canonical_supabase_bootstrap import write_outputs
@@ -55,6 +56,7 @@ $preview_schema_assert$;
 """
 
 SEED_RELATIVE_PATH = Path("supabase/seed.sql")
+CONFIG_RELATIVE_PATH = Path("supabase/config.toml")
 
 
 def assert_safe_paths(repository_root: Path, staging_root: Path) -> None:
@@ -77,6 +79,25 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
     sql_dir = staging_root / "supabase"
     if not (sql_dir / "config.toml").is_file():
         raise ValueError("Initialize an isolated Supabase CLI project first.")
+    # Use the committed configuration, but allow seeds ONLY in this
+    # disposable copy. The repository config always keeps them disabled.
+    repository_config = (repository_root / CONFIG_RELATIVE_PATH).read_text(
+        encoding="utf-8"
+    )
+    parsed_config = tomllib.loads(repository_config)
+    seed_config = parsed_config.get("db", {}).get("seed", {})
+    if seed_config.get("enabled") is not False:
+        raise ValueError("Repository synthetic seeding must default to disabled.")
+    if seed_config.get("sql_paths") != ["./seed.sql"]:
+        raise ValueError("Unexpected repository seed path.")
+    disabled_setting = "enabled = false"
+    if repository_config.count(disabled_setting) != 1:
+        raise ValueError("Expected one disabled seed configuration.")
+    (sql_dir / "config.toml").write_text(
+        repository_config.replace(disabled_setting, "enabled = true", 1),
+        encoding="utf-8",
+    )
+
     migrations_dir = sql_dir / "migrations"
     migrations_dir.mkdir(parents=True, exist_ok=True)
     if any(migrations_dir.iterdir()) or (sql_dir / "seed.sql").exists():
