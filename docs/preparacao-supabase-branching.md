@@ -1,5 +1,52 @@
 # Preparação para criação automática de branches no Supabase
 
+## Preparação do cutover canônico — 14/10/2026
+
+A leitura mais recente do banco de produção encontrou **289 versões de
+migrações**, da versão `20260804190024` à `20261013225440`.
+Essas contagens são mais recentes do que o diagnóstico histórico abaixo.
+
+A verificação completa do projeto por meio do GitHub Actions já comprovou
+que o baseline canônico pode recriar o catálogo PostgreSQL em uma instância
+descartável. **Isso não significa que o histórico nativo de migrações do
+Supabase Branching esteja reconciliado.** A branch remota da PR #650
+falhou durante a reconstrução automática; a PR #651 permanece pendente
+de validação remota.
+
+A Action `Supabase migration reconciliation` foi ampliada para produzir
+dois artefatos de diagnóstico no `main`, usando a conexão protegida
+`SUPABASE_DB_URL` e **somente leitura**:
+
+- `migration-reconciliation.json`: comparação de timestamps, nomes e
+  SHA256 calculados dentro do PostgreSQL, sem exportar os SQLs históricos.
+- `branching-cutover-plan.json`: identificação da versão mais recente,
+  contagem de divergências, digest do bootstrap canônico, pré-requisitos
+  pendentes e sequência de validações. O plano nunca autoriza automaticamente
+  reparos no ledger nem ativa `Automatic Branching`.
+
+### Condições obrigatórias para qualquer transição de histórico
+
+1. Preservar um backup recuperável e um registro imutável dos timestamps
+   existentes, assim como a identidade dos arquivos atualmente publicados.
+2. Não alterar, excluir ou renumerar migrações históricas no `main`.
+   Não copiar instruções SQL antigas do banco para artefatos públicos:
+   parte do histórico contém dados pessoais.
+3. Construir uma cadeia de migrações **alternativa e isolada**, iniciada
+   pelo bootstrap canônico consolidado, sem colocá-la no diretório produtivo.
+   Comparar o fingerprint integral, RLS, Auth, triggers e Cron.
+4. Definir um plano explícito para preservar o ledger de produção na
+   transição. Não inserir entradas fictícias em
+   `supabase_migrations.schema_migrations` apenas para passar nas comparações.
+5. Validar a cadeia no Supabase CLI descartável e depois em uma branch
+   hospedada, com integrações externas mockadas e custo aprovado.
+6. Somente após uma branch remota íntegra, aprovar o procedimento de
+   mudança do histórico de produção, incluindo reversão e auditoria.
+7. Ativar `Automatic Branching` exclusivamente após uma nova prova
+   de provisionamento e execução de testes de integração.
+
+**O relatório de cutover é um diagnóstico, não um script de migração**.
+Nenhum passo acima deve ser executado automaticamente sobre a produção.
+
 ## Estado verificado em 13/10/2026
 
 A produção é o projeto Supabase `wnigzpvgsbpjdxvjzugt`, no plano Pro.
