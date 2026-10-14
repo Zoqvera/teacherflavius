@@ -121,7 +121,7 @@ A próxima intervenção efetiva requer avaliar um bootstrap canônico
 reconstrutível, preservando o ledger atual da produção até que a
 simulação em banco vazio seja aprovada e exista um plano de rollback.
 Não trocar o conteúdo/ordem das migrations remotamente por tentativa
-e erro. A integração nativa de Branching permanece desativada.
+e erro. A integração nativa de Branching permanece desativada. O preparo inicial de configuração e seed não altera esse bloqueio.
 
 ## Plano de reconciliação
 
@@ -152,8 +152,11 @@ e erro. A integração nativa de Branching permanece desativada.
 
 ### Etapa C — preparar a preview remota e as integrações
 
-- Criar `supabase/config.toml` pelo CLI, mantendo segredos apenas em
-  variáveis `env()`, e `supabase/seed.sql` com **dados fictícios**.
+- [Preparado em 14/10/2026] Versionar `supabase/config.toml` sem segredos
+  e `supabase/seed.sql` apenas com duas turmas fictícias. O seed fica
+  **desativado por padrão** e é ativado exclusivamente na cópia descartável
+  criada pelo ensaio CLI do GitHub. Ainda não permite criar branches remotas
+  automaticamente nem corrige o histórico de migrações.
 - Rever cada job `cron.job`, Edge Function e segredo na branch antes de
   qualquer ensaio. Remover acesso a credenciais de produção; usar mocks,
   e-mails de teste e pagamentos sandbox. Cron/Web Push externos devem
