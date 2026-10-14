@@ -37,15 +37,15 @@ class PreviewReplayFixtureTests(unittest.TestCase):
             "enabled = true",
             (self.staging / "supabase/config.toml").read_text(encoding="utf-8"),
         )
-        self.assertFalse(
-            "enabled = true" in
-            (self.repository / "supabase/config.toml").read_text(encoding="utf-8")
+        self.assertNotIn(
+            "enabled = true",
+            (self.repository / "supabase/config.toml").read_text(encoding="utf-8"),
         )
         self.assertTrue(
             paths[0].read_text().rstrip().endswith(STOP_CRON.strip())
         )
         self.assertIn("if to_regclass('public.profiles') is null", paths[1].read_text())
-        self.assertEqual(report["reviewed_overlays"], 78)
+        self.assertEqual(report["reviewed_overlays"], 79)
         self.assertNotIn("service_role", (self.staging / "supabase/seed.sql").read_text())
 
     def test_seed_only_contains_two_test_classes_and_no_real_accounts(self) -> None:

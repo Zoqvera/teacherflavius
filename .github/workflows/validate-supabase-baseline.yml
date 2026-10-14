@@ -177,7 +177,8 @@ jobs:
             supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql \
             supabase/baseline/377_manual_replacement_credits_all_students.sql \
             supabase/baseline/380_same_day_first_tuition_payment.sql \
-            supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql
+            supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql \
+            supabase/baseline/390_expose_study_button_marker.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -526,6 +527,57 @@ jobs:
           diff -u \
             /tmp/expected-fingerprint.json \
             /tmp/actual-fingerprint-normalized.json
+
+      - name: Verify student due-review migration against complete restored schema
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < supabase/migrations/20261014194243_add_student_due_review_questions.sql
+
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $student_review_assert$
+          begin
+            if not pg_get_functiondef('public.get_my_action_plan()'::regprocedure)
+              like '%''marked_studied'', question.marked_studied%' then
+              raise exception 'Student study-button marker is missing from the action-plan RPC';
+            end if;
+            if to_regprocedure('public.get_my_review_questions()') is null then
+              raise exception 'Student due-review RPC was not installed';
+            end if;
+            if has_function_privilege('anon', 'public.get_my_review_questions()', 'EXECUTE') then
+              raise exception 'Anonymous users can access student reviews';
+            end if;
+            if not has_function_privilege(
+              'authenticated', 'public.get_my_review_questions()', 'EXECUTE'
+            ) then
+              raise exception 'Student due-review RPC is unavailable to students';
+            end if;
+            if not exists (
+              select 1
+              from pg_proc procedure_row
+              join pg_namespace schema_row on schema_row.oid = procedure_row.pronamespace
+              where schema_row.nspname = 'public'
+                and procedure_row.proname = 'get_my_review_questions'
+                and procedure_row.prosecdef = true
+                and procedure_row.proconfig @> array['search_path=""']
+            ) then
+              raise exception 'Student due-review RPC lacks its restricted search path';
+            end if;
+            begin
+              perform public.get_my_review_questions();
+              raise exception 'Anonymous request unexpectedly received student data';
+            exception when sqlstate '42501' then null;
+            end;
+          end;
+          $student_review_assert$;
+          SQL
 
       - name: Stop disposable Supabase stack
         if: always()

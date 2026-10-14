@@ -26,6 +26,7 @@ function runDriftScript({
   cutoff = "20261006000000",
   gitRoot = ROOT,
   baseRef = "",
+  allowPrNew = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-drift-"),
@@ -61,6 +62,7 @@ REMOTE_ROWS
       MIGRATION_DRIFT_CUTOFF: cutoff,
       MIGRATION_CHECKSUM_CUTOFF: "20261007051850",
       MIGRATION_BASE_REF: baseRef,
+      MIGRATION_PR_ALLOW_NEW: allowPrNew ? "true" : "false",
       PATH: `${binDir}:${process.env.PATH}`,
     },
   });
@@ -74,6 +76,7 @@ function runDriftCheck({
   migrations,
   remoteRows = [],
   cutoff = "20261006000000",
+  allowPrNew = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-files-"),
@@ -88,6 +91,7 @@ function runDriftCheck({
       migrationsDir: tempRoot,
       remoteRows,
       cutoff,
+      allowPrNew,
     });
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -358,4 +362,80 @@ test("baseline reconstructs tuition exemption fields required by later overlays"
     tuitionBaseline,
     /add column if not exists exemption_notes text/i,
   );
+});
+
+test("PR can propose only new migration versions above the production tip", () => {
+  const committed = "select 1;\n";
+  const proposal = "select 2;\n";
+  const result = runDriftCheck({
+    migrations: {
+      "20261007060003_existing.sql": committed,
+      "20261014162600_proposed.sql": proposal,
+    },
+    remoteRows: [{
+      version: "20261007060003",
+      name: "existing",
+      checksum: canonicalChecksum(committed),
+    }],
+    allowPrNew: true,
+  });
+
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.match(result.stdout, /Proposed, unapplied PR migration 20261014162600/);
+});
+
+test("the same unapplied migration is rejected outside PR mode", () => {
+  const sql = "select 1;\n";
+  const result = runDriftCheck({
+    migrations: { "20261014162600_proposed.sql": sql },
+    remoteRows: [{
+      version: "20261007060003",
+      name: "existing",
+      checksum: canonicalChecksum(sql),
+    }],
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /missing from production migration history/);
+});
+
+test("PR mode rejects a new migration placed before a deployed version", () => {
+  const sql = "select 1;\n";
+  const result = runDriftCheck({
+    migrations: {
+      "20261007060003_existing.sql": sql,
+      "20261007060001_backdated.sql": "select 2;\n",
+    },
+    remoteRows: [{
+      version: "20261007060003",
+      name: "existing",
+      checksum: canonicalChecksum(sql),
+    }],
+    allowPrNew: true,
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /must be newer than the current production tip/);
+});
+
+test("PR mode still rejects modification of deployed migration SQL", () => {
+  const sql = "select 1;\n";
+  const result = runDriftCheck({
+    migrations: { "20261007060003_existing.sql": "select 2;\n" },
+    remoteRows: [{
+      version: "20261007060003",
+      name: "existing",
+      checksum: canonicalChecksum(sql),
+    }],
+    allowPrNew: true,
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /Migration identity differs between production and Git/);
+});
+
+test("CI enables append-only proposal mode exclusively for pull requests", () => {
+  assert.match(driftWorkflow, /MIGRATION_PR_ALLOW_NEW:.*github.event_name == 'pull_request'/);
+  assert.match(driftScript, /new_version.*production_tip/);
+  assert.match(driftScript, /MIGRATION_PR_ALLOW_NEW/);
 });

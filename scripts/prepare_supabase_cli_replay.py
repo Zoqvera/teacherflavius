@@ -79,8 +79,8 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
     sql_dir = staging_root / "supabase"
     if not (sql_dir / "config.toml").is_file():
         raise ValueError("Initialize an isolated Supabase CLI project first.")
-    # Use the committed configuration, but allow seeds ONLY in this
-    # disposable copy. The repository config always keeps them disabled.
+    # The committed config is always seed-disabled. Only disposable CLI
+    # staging may enable it; never alter the actual checkout.
     repository_config = (repository_root / CONFIG_RELATIVE_PATH).read_text(
         encoding="utf-8"
     )
@@ -97,7 +97,6 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
         repository_config.replace(disabled_setting, "enabled = true", 1),
         encoding="utf-8",
     )
-
     migrations_dir = sql_dir / "migrations"
     migrations_dir.mkdir(parents=True, exist_ok=True)
     if any(migrations_dir.iterdir()) or (sql_dir / "seed.sql").exists():
@@ -113,13 +112,12 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
     migration = migrations_dir / BOOTSTRAP_FILENAME
     migration.write_text(compiled_sql.read_text(encoding="utf-8") + STOP_CRON, encoding="utf-8")
     (migrations_dir / ASSERTION_FILENAME).write_text(VERIFY_SCHEMA, encoding="utf-8")
-    # Consume the version-controlled, synthetic-only seed instead of
-    # maintaining an independent fixture with different safety checks.
-    source_seed = repository_root / SEED_RELATIVE_PATH
-    if not source_seed.is_file():
+    seed_source = repository_root / SEED_RELATIVE_PATH
+    if not seed_source.is_file():
         raise ValueError("Synthetic seed file is missing from the repository.")
     (sql_dir / "seed.sql").write_text(
-        source_seed.read_text(encoding="utf-8"), encoding="utf-8"
+        seed_source.read_text(encoding="utf-8"),
+        encoding="utf-8",
     )
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     report = {

@@ -6,6 +6,15 @@ on:
       - main
     paths:
       - scripts/analyze_supabase_migration_reconciliation.py
+      - scripts/plan_supabase_branching_cutover.py
+      - scripts/attest_supabase_migration_ledger.py
+      - scripts/compare_supabase_schema_fingerprint.py
+      - scripts/sql/supabase_catalog_fingerprint_readonly.sql
+      - tests/test_supabase_schema_fingerprint_comparison.py
+      - tests/test_supabase_ledger_rollback_rehearsal.py
+      - tests/fixtures/supabase_synthetic_ledger_rollback.sql
+      - docs/supabase-migration-ledger-cutover-runbook.md
+      - tests/test_supabase_branching_cutover_plan.py
       - tests/test_supabase_migration_reconciliation.py
       - .github/workflows/supabase-migration-reconciliation.yml
   push:
@@ -13,6 +22,15 @@ on:
       - main
     paths:
       - scripts/analyze_supabase_migration_reconciliation.py
+      - scripts/plan_supabase_branching_cutover.py
+      - scripts/attest_supabase_migration_ledger.py
+      - scripts/compare_supabase_schema_fingerprint.py
+      - scripts/sql/supabase_catalog_fingerprint_readonly.sql
+      - tests/test_supabase_schema_fingerprint_comparison.py
+      - tests/test_supabase_ledger_rollback_rehearsal.py
+      - tests/fixtures/supabase_synthetic_ledger_rollback.sql
+      - docs/supabase-migration-ledger-cutover-runbook.md
+      - tests/test_supabase_branching_cutover_plan.py
       - tests/test_supabase_migration_reconciliation.py
       - .github/workflows/supabase-migration-reconciliation.yml
   workflow_dispatch:
@@ -29,7 +47,53 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Verify reconciliation contracts
-        run: python3 -m unittest discover -s tests -p test_supabase_migration_reconciliation.py
+        run: |
+          python3 -m unittest discover -s tests -p test_supabase_migration_reconciliation.py
+          python3 -m unittest discover -s tests -p test_supabase_branching_cutover_plan.py
+          python3 -m unittest discover -s tests -p test_supabase_ledger_rollback_rehearsal.py
+          python3 -m unittest discover -s tests -p test_supabase_schema_fingerprint_comparison.py
+
+  synthetic-ledger-rollback:
+    # Completely independent of secrets and the production Supabase project.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ledger_rehearsal
+          POSTGRES_USER: rehearsal
+          POSTGRES_PASSWORD: synthetic-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rehearsal -d ledger_rehearsal"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout synthetic SQL fixture only
+        uses: actions/checkout@v7
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Rehearse and verify full six-column transactional rollback
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGDATABASE: ledger_rehearsal
+          PGUSER: rehearsal
+          PGPASSWORD: synthetic-only
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 \
+            -f tests/fixtures/supabase_synthetic_ledger_rollback.sql \
+            > "${RUNNER_TEMP}/synthetic-ledger-rehearsal.log"
+          grep -Fq "SYNTHETIC_LEDGER_ROLLBACK_PASSED" \
+            "${RUNNER_TEMP}/synthetic-ledger-rehearsal.log"
 
   analyze-production-ledger:
     # Only trusted main code can access production metadata. Never give a PR
@@ -93,6 +157,18 @@ jobs:
           test -s "${RUNNER_TEMP}/migration-digests.tsv"
           # The Python parser rejects unexpected metadata before emitting a report.
 
+      - name: Save read-only production ledger fingerprint
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m scripts.attest_supabase_migration_ledger \
+            --baseline-metadata-file "${RUNNER_TEMP}/migration-digests.tsv" \
+            --report-json "${RUNNER_TEMP}/migration-ledger-attestation.json"
+          jq -e '.status == "UNVERIFIED_REFERENCE" and
+            .production_write_authorized == false and
+            .restores_full_migration_sql == false' \
+            "${RUNNER_TEMP}/migration-ledger-attestation.json"
+
       - name: Compare full version, name and SQL checksum identities
         shell: bash
         run: |
@@ -101,11 +177,46 @@ jobs:
             --remote-metadata-file "${RUNNER_TEMP}/migration-digests.tsv" \
             --report-json "${RUNNER_TEMP}/migration-reconciliation.json"
 
+      - name: Assess canonical bootstrap cutover prerequisites without DB writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m scripts.plan_supabase_branching_cutover \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --remote-metadata-file "${RUNNER_TEMP}/migration-digests.tsv" \
+            --report-json "${RUNNER_TEMP}/branching-cutover-plan.json"
+
+      - name: Compare production catalog counts to the reviewed reconstruction
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Runs only on protected main. No application rows, backup content,
+          # role secrets or stored migration SQL are queried or exported.
+          psql "${SUPABASE_DB_URL}" -X -qAt -v ON_ERROR_STOP=1 \
+            -f scripts/sql/supabase_catalog_fingerprint_readonly.sql \
+            > "${RUNNER_TEMP}/production-schema-fingerprint.json"
+
+          python3 -m scripts.compare_supabase_schema_fingerprint \
+            --baseline-json supabase/baseline/schema-fingerprint.json \
+            --production-json "${RUNNER_TEMP}/production-schema-fingerprint.json" \
+            --report-json "${RUNNER_TEMP}/schema-fingerprint-comparison.json"
+
+          jq -e '.metadata_only == true and
+            .production_write_authorized == false and
+            .verifies_full_schema_equivalence == false and
+            .verifies_backup_recoverability == false' \
+            "${RUNNER_TEMP}/schema-fingerprint-comparison.json"
+
       - name: Save report without migration statements
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: supabase-migration-reconciliation
-          path: ${{ runner.temp }}/migration-reconciliation.json
+          path: |
+            ${{ runner.temp }}/migration-reconciliation.json
+            ${{ runner.temp }}/branching-cutover-plan.json
+            ${{ runner.temp }}/migration-ledger-attestation.json
+            ${{ runner.temp }}/schema-fingerprint-comparison.json
           retention-days: 14
           if-no-files-found: ignore

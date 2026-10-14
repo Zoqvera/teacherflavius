@@ -1,5 +1,73 @@
 # Preparação para criação automática de branches no Supabase
 
+O protocolo detalhado para backup, reversão e critérios de cutover está em
+[supabase-migration-ledger-cutover-runbook.md](supabase-migration-ledger-cutover-runbook.md).
+A transição continua bloqueada enquanto a restauração real e o teste de branch
+remota não forem aprovados.
+
+## Verificação da cadeia canônica descartável — 14/10/2026
+
+A cadeia de reconstrução usada pelo CLI ganhou um bloqueio SQL executável
+contra aplicação em bancos com tabelas existentes da plataforma de aulas.
+O CI também confere os hashes do bundle das duas migrações isoladas,
+compara o esquema reconstruído com o fingerprint revisado, verifica
+jobs Cron desativados e exige falha controlada ao tentar executar o
+bootstrap uma segunda vez em banco já preenchido com dados sintéticos.
+
+Essa proteção é **somente uma verificação local**: não resolve a
+divergência das versões registradas em `supabase_migrations` e não
+autoriza substituir o diretório atual de migrações ou ativar
+`Automatic Branching`. A próxima transição deve utilizar o relatório
+`branching-cutover-plan.json` e exigir uma reconstrução remota completa,
+após aprovação específica de custo e estratégia de rollback.
+
+## Preparação do cutover canônico — 14/10/2026
+
+A leitura mais recente do banco de produção encontrou **289 versões de
+migrações**, da versão `20260804190024` à `20261013225440`.
+Essas contagens são mais recentes do que o diagnóstico histórico abaixo.
+
+A verificação completa do projeto por meio do GitHub Actions já comprovou
+que o baseline canônico pode recriar o catálogo PostgreSQL em uma instância
+descartável. **Isso não significa que o histórico nativo de migrações do
+Supabase Branching esteja reconciliado.** A branch remota da PR #650
+falhou durante a reconstrução automática; a PR #651 permanece pendente
+de validação remota.
+
+A Action `Supabase migration reconciliation` foi ampliada para produzir
+dois artefatos de diagnóstico no `main`, usando a conexão protegida
+`SUPABASE_DB_URL` e **somente leitura**:
+
+- `migration-reconciliation.json`: comparação de timestamps, nomes e
+  SHA256 calculados dentro do PostgreSQL, sem exportar os SQLs históricos.
+- `branching-cutover-plan.json`: identificação da versão mais recente,
+  contagem de divergências, digest do bootstrap canônico, pré-requisitos
+  pendentes e sequência de validações. O plano nunca autoriza automaticamente
+  reparos no ledger nem ativa `Automatic Branching`.
+
+### Condições obrigatórias para qualquer transição de histórico
+
+1. Preservar um backup recuperável e um registro imutável dos timestamps
+   existentes, assim como a identidade dos arquivos atualmente publicados.
+2. Não alterar, excluir ou renumerar migrações históricas no `main`.
+   Não copiar instruções SQL antigas do banco para artefatos públicos:
+   parte do histórico contém dados pessoais.
+3. Construir uma cadeia de migrações **alternativa e isolada**, iniciada
+   pelo bootstrap canônico consolidado, sem colocá-la no diretório produtivo.
+   Comparar o fingerprint integral, RLS, Auth, triggers e Cron.
+4. Definir um plano explícito para preservar o ledger de produção na
+   transição. Não inserir entradas fictícias em
+   `supabase_migrations.schema_migrations` apenas para passar nas comparações.
+5. Validar a cadeia no Supabase CLI descartável e depois em uma branch
+   hospedada, com integrações externas mockadas e custo aprovado.
+6. Somente após uma branch remota íntegra, aprovar o procedimento de
+   mudança do histórico de produção, incluindo reversão e auditoria.
+7. Ativar `Automatic Branching` exclusivamente após uma nova prova
+   de provisionamento e execução de testes de integração.
+
+**O relatório de cutover é um diagnóstico, não um script de migração**.
+Nenhum passo acima deve ser executado automaticamente sobre a produção.
+
 ## Estado verificado em 13/10/2026
 
 A produção é o projeto Supabase `wnigzpvgsbpjdxvjzugt`, no plano Pro.
@@ -121,7 +189,7 @@ A próxima intervenção efetiva requer avaliar um bootstrap canônico
 reconstrutível, preservando o ledger atual da produção até que a
 simulação em banco vazio seja aprovada e exista um plano de rollback.
 Não trocar o conteúdo/ordem das migrations remotamente por tentativa
-e erro. A integração nativa de Branching permanece desativada. O preparo inicial de configuração e seed não altera esse bloqueio.
+e erro. A integração nativa de Branching permanece desativada. A configuração local e o seed sintético adicionados pela PR #651 são apenas infraestrutura para testes descartáveis e não eliminam o bloqueio do histórico de migrações.
 
 ## Plano de reconciliação
 
@@ -181,14 +249,17 @@ Em **Supabase Dashboard > Project Settings > Integrations > GitHub Integration**
 
 A opção **Supabase changes only** não cria automaticamente uma branch para
 uma PR que modifique só `auth.js`, `mensalidades.js` ou outra lógica fora
-de `supabase/`. O check `isolated-preview-gate` atual continua exigindo
-teste isolado nesses casos; criar uma preview **sob demanda** é a solução
-até que haja automação segura desses cenários.
+de `supabase/`. O contexto `isolated-preview-gate` foi descontinuado
+por solicitação do proprietário. Testes remotos permanecem recomendados
+para alterações sensíveis, mas a ausência deles não impede automaticamente
+o merge. Para retirar a exigência cadastrada no GitHub, remova esse contexto
+da regra nº `24970258` em **Settings > Rules > Rulesets**.
 
 Após habilitar a integração, verificar que o Supabase publica o check
 `Supabase Preview`. Torná-lo obrigatório somente quando o evento gerar
 esse check em todas as PRs cobertas pela regra, para não bloquear PRs
-puramente documentais. Não substituir o `isolated-preview-gate`.
+puramente documentais. Não voltar a exigir um check de preview sem a decisão explícita
+do proprietário e sem uma estratégia de provisionamento viável.
 
 **Não executar** `supabase branches merge` separadamente se o fluxo
 selecionado já aplicar automaticamente as migrations ao fazer merge do
@@ -202,9 +273,12 @@ de possível uso de disco, rede e recursos externos. Branching Compute não
 é coberto pelo Spend Cap nem abatido pelos créditos de computação Pro.
 Antes do teste remunerado, apresentar o custo e pedir autorização.
 
-As regras da `main` já exigem `isolated-preview-gate`. Não contornar a
-proteção com links falsos ou valores `PASS` fictícios. Migrações corretivas
-futuras devem passar por preview verdadeira e verificação do resultado.
+A regra GitHub nº `24970258` ainda precisa ser editada em
+`Settings > Rules > Rulesets` para remover o contexto
+`isolated-preview-gate`; o workflow foi descontinuado.
+**Não** registrar links falsos ou valores `PASS` fictícios.
+Migrações corretivas continuam sujeitas aos contratos, controles
+de drift e verificações de segurança independentes da preview remota.
 
 Esta preparação não muda o conteúdo público do site nem suas configurações
 de SEO.

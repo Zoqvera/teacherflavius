@@ -1,35 +1,57 @@
 # Bootstrap canônico do Supabase — protótipo descartável
 
 A reconstrução canônica agora pode ser compilada em **um único arquivo SQL**,
-a partir dos 78 overlays já revisados e executados pelo workflow
+a partir dos 79 overlays já revisados e executados pelo workflow
 `.github/workflows/validate-supabase-baseline.yml`. A ordem é extraída da
 fonte de verdade existente, sem copiar ou substituir as migrations históricas.
 
-## Configuração versionada preparada
+## Configuração versionada e dados fictícios
 
-A raiz do repositório agora contém `supabase/config.toml` e
-`supabase/seed.sql`. O `project_id` no TOML é um nome **local**, não a
-referência do Supabase produtivo. O `[db.seed].enabled` permanece `false`
-por padrão.
+A raiz do repositório contém `supabase/config.toml` sem segredos e
+`supabase/seed.sql` com duas turmas sintéticas (`970001` e `970002`).
+O `project_id` identifica somente o projeto local, não a referência de
+produção. O seed fica **desativado por padrão** no arquivo versionado.
 
-O seed versionado contém apenas duas turmas fictícias (`970001` e
-`970002`) e recusa a execução se detectar dados de turmas, alunos,
-mensalidades ou jobs Cron ativos. Não cria contas de autenticação,
-pagamentos, e-mails nem contatos de alunos.
+A Action `Supabase CLI-native branching rehearsal` cria uma cópia
+descartável fora do checkout, liga o seed **apenas nessa cópia** e garante
+que todos os jobs Cron estejam inativos. O SQL recusa bancos com turmas,
+perfis, mensalidades ou agendamentos Cron ativos. Não contém usuários Auth,
+pagamentos nem contatos reais.
 
-A Action `Supabase CLI-native branching rehearsal` utiliza **cópias
-descartáveis** do `config.toml` e do `seed.sql`: habilita o seed
-**somente nessa cópia**, após preparar o bootstrap consolidado e
-desativar Cron. O repositório nunca ativa o seed para produção ou uma
-preview remota por padrão.
+Não executar `supabase start`, `supabase db reset` ou `supabase db push`
+na raiz do repositório: a cadeia histórica de migrations ainda não é
+reconstrutível num banco vazio. O ensaio CLI usa migrações canônicas
+geradas apenas na pasta temporária. O merge desta PR não autoriza
+Automatic Branching, reparação do ledger nem qualquer escrita na produção.
 
-**Não execute** `supabase start`, `supabase db reset` ou `supabase db push`
-diretamente no diretório original do repositório. O diretório legado
-`supabase/migrations/` ainda não representa uma cadeia segura de
-reconstrução. Use os fluxos descartáveis do GitHub, que constroem os
-artefatos em `$RUNNER_TEMP`. Uma branch remota só deve ser criada
-após a reconciliação do histórico, com consentimento sobre o custo e
-as integrações externas isoladas.
+## Cadeia canônica isolada e verificável
+
+O gerador já produz, **somente em um projeto CLI descartável fora do Git**,
+duas migrações: (1) a reconstrução canônica dos 79 overlays revisados com
+bloqueio de jobs Cron; (2) uma migração incremental de verificação de
+dependências. Nenhuma das duas é promovida para o diretório histórico
+`supabase/migrations/`.
+
+A reconstrução contém agora uma **guarda SQL executável como primeira
+instrução**: se encontrar `public.profiles`, `public.teacher_classes`,
+`public.monthly_tuition`, `public.class_students` ou a tabela
+`private.lesson_credits`, interrompe antes de qualquer `CREATE` ou
+`ALTER`. É uma barreira adicional contra a execução indevida do bootstrap
+em um banco de aplicação já existente; **não substitui a revisão nem
+autoriza aplicá-lo à produção**.
+
+A ferramenta `scripts/audit_supabase_isolated_chain.py` valida a
+lista exata de duas migrações, os digests SHA256 do bundle, a guarda de
+esquema, o seed sintético e a ausência de SQL histórico inesperado.
+Produz o arquivo temporário `chain-audit.json` contendo **apenas
+metadados**, sem o corpo dos SQLs. Seu resultado
+`LOCAL_CHAIN_VALIDATED` **nunca** equivale a uma preview remota
+aprovada ou a autorização para `migration repair`.
+
+O CI também tenta reaplicar o bootstrap ao banco descartável já criado.
+A operação precisa **falhar pela guarda SQL**, mantendo turmas e
+ledger sintéticos inalterados; depois recria o banco do zero e repete
+a cadeia para assegurar reprodutibilidade.
 
 ## Limite de segurança
 
@@ -61,7 +83,7 @@ apenas lê o repositório e grava arquivos temporários; não conecta ao Supabas
 A Action **Canonical Supabase bootstrap replay**:
 
 1. Executa testes unitários de ordem, integridade e restrição ao diretório.
-2. Compila um único arquivo SQL a partir dos 78 overlays.
+2. Compila um único arquivo SQL a partir dos 79 overlays.
 3. Inicializa um Supabase local descartável, **sem executar os arquivos
    históricos** e sem importar `auth.users`, `profiles` ou dados financeiros.
 4. Executa o bundle por uma única sessão de `psql`.
@@ -81,13 +103,13 @@ além de autorização prévia do custo.
 
 O workflow `.github/workflows/supabase-cli-replay.yml` executa o próprio
 mecanismo `supabase start` e `supabase db reset --local`, usando um projeto
-descartável situado fora do checkout. Não utiliza a sequência antiga das
+descartável situado fora do checkout. Não utiliza a sequência histórica de
 migrações do repositório nem altera `supabase/migrations/`.
 
 O script `scripts/prepare_supabase_cli_replay.py` produz exclusivamente
 dentro desse projeto efêmero:
 
-- Uma migração inicial única com o bootstrap compilado dos 78 overlays.
+- Uma migração inicial única com o bootstrap compilado dos 79 overlays.
 - Uma segunda migração que comprova a ordem e verifica a existência das
   tabelas críticas.
 - Um `seed.sql` sintético de duas turmas, sem contas, CPF, pagamentos ou
