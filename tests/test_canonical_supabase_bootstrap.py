@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from scripts.compile_canonical_supabase_bootstrap import (
+    FRESH_DATABASE_GUARD,
     compile_bootstrap,
     extract_fingerprint_query,
     parse_baseline_order,
@@ -51,6 +52,15 @@ class CanonicalBootstrapTests(unittest.TestCase):
         self.assertTrue(compiled.startswith("-- DISPOSABLE DATABASE ONLY."))
         self.assertIn("create table public.profiles", compiled)
         self.assertIn("private.lesson_credit_plan_exceptions", compiled)
+        self.assertEqual(compiled.count(FRESH_DATABASE_GUARD.strip()), 1)
+        self.assertLess(
+            compiled.index(FRESH_DATABASE_GUARD.strip()),
+            compiled.index("create table public.profiles"),
+        )
+        self.assertLess(
+            compiled.index(FRESH_DATABASE_GUARD.strip()),
+            compiled.index("set check_function_bodies"),
+        )
 
     def test_never_write_to_live_migrations_folder(self) -> None:
         root = Path(__file__).resolve().parents[1]
