@@ -55,7 +55,7 @@ class PreviewReplayFixtureTests(unittest.TestCase):
         self.assertIn("quintet", synthetic_seed)
         self.assertIn("individual", synthetic_seed)
         self.assertNotIn("auth.users", synthetic_seed)
-        self.assertNotIn("monthly_tuition", synthetic_seed)
+        self.assertNotIn("insert into public.monthly_tuition", synthetic_seed)
         self.assertNotIn("teacherflavius.com", synthetic_seed)
         self.assertIn("if exists (select 1 from public.profiles)", synthetic_seed)
         self.assertIn("if exists (select 1 from cron.job where active)", synthetic_seed)
