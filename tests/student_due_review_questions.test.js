@@ -17,7 +17,7 @@ const baseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/310_add_student_due_review_questions.sql"), "utf8"
 );
 const actionPlanMigration = fs.readFileSync(
-  path.join(ROOT, "supabase/migrations/20261014200500_expose_study_button_marker.sql"), "utf8"
+  path.join(ROOT, "supabase/migrations/20261014201405_expose_study_button_marker.sql"), "utf8"
 );
 const actionPlanBaseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/390_expose_study_button_marker.sql"), "utf8"
