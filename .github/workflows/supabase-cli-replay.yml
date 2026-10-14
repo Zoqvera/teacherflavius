@@ -119,6 +119,14 @@ jobs:
             > "${RUNNER_TEMP}/actual-fingerprint.json"
           diff -u "${RUNNER_TEMP}/expected-fingerprint.json" "${RUNNER_TEMP}/actual-fingerprint.json"
 
+          # The same seed must refuse a second execution on populated data.
+          if docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            < "${RUNNER_TEMP}/teacherflavius-cli-replay/supabase/seed.sql"; then
+            echo "::error::Synthetic seed accepted a nonempty application database."
+            exit 1
+          fi
+
       - name: Confirm repeatability by recreating the disposable DB
         shell: bash
         run: |
