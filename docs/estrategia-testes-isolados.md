@@ -17,37 +17,27 @@ demanda** e apagadas após validação e merge ou cancelamento da PR.
 
 ## Política para cada pull request
 
-A Action `Isolated testing policy` examina os caminhos alterados e
-**emite avisos consultivos**, sem bloquear a PR por falta de evidência de
-uma branch remota. Esta exigência foi revertida em 14/10/2026 por solicitação
-do proprietário. A ausência de uma preview NÃO equivale à aprovação dos
-testes remotos.
+O check obrigatório `isolated-preview-gate` foi descontinuado a pedido
+do proprietário em 14/10/2026. O workflow que o produzia, seu script e
+seus testes de classificação não fazem mais parte do fluxo ativo. As
+alterações sensíveis **não precisam** incluir evidência de preview remota
+para que o GitHub permita a integração.
 
-**Transição de proteção da main:** o contexto `isolated-preview-gate`
-permanece temporariamente com o mesmo nome para atender à configuração
-legada enquanto o proprietário o remove da regra GitHub nº `24970258`:
-`Settings > Rules > Rulesets > Proteção da main — testes obrigatórios >
-Require status checks to pass`. Remova **somente**
-`isolated-preview-gate`; preserve todos os demais checks.
-Depois, retire o workflow e os contratos correspondentes em uma PR
-independente. Somente a edição do workflow não retira uma verificação
-da lista de checks obrigatórios do GitHub.
+**Para concluir a remoção:** na regra de proteção nº `24970258`,
+acesse `Settings > Rules > Rulesets > Proteção da main — testes obrigatórios`
+e remova `isolated-preview-gate` da lista de required status checks.
+A remoção do workflow, isoladamente, não elimina uma exigência cadastrada
+na ruleset. Mantenha os demais checks obrigatórios e o workflow de drift.
 
-- **Preview recomendada (não exigida pelo CI):** migrações e baseline SQL; Auth/RLS; Edge Functions;
-  rotas de login e recuperação; código de matrículas, mensalidades, pagamentos,
-  créditos, reposições e vínculos de turma.
-- **CI normal:** conteúdo institucional, CSS, documentação, testes sem mudança
-  de regra de negócio e mudanças visuais sem dependências críticas.
-- **Impacto SEO:** alterações em sitemap, robots, canonical, metadata,
+- **Preview recomendada, não obrigatória:** mudanças no Supabase, Auth,
+  pagamentos, matrícula, reposições e demais operações sensíveis.
+- **CI obrigatório:** contratos locais, segurança, histórico de migrações e
+  demais verificações definidas pelas rulesets ativas.
+- **Impacto SEO:** alterações em sitemap, robots, canonical, metadados,
   schema.org e HTML indexável exigem análise e decisão expressa do professor.
-  A classificação de branch **não substitui** a revisão de SEO.
 
-O script `scripts/check_isolated_testing_policy.py` mantém o validador
-estrito disponível para auditorias manuais, mas o workflow utiliza
-`--advisory`: a ausência de evidência produz `::warning::`, não falha.
-Um aviso aprovado pelo GitHub não comprova que a preview existe ou funciona.
-O responsável pelo merge deve avaliar o risco e consultar Supabase e logs
-sempre que houver validação remota.
+Ausência de preview não equivale a testes remotos aprovados. Nenhum registro
+pode declarar `Preview result: PASS` sem resultados efetivamente verificados.
 
 ## Fluxo para alterações relevantes
 
@@ -160,7 +150,7 @@ não declarar `Preview result: PASS`.
 ## Responsabilidades
 
 - **GitHub Actions**: testes unitários, reconstrução descartável do banco,
-  avisos de evidência e regressões; checks obrigatórios continuam exigidos antes do merge.
+  contratos SQL e regressões; os checks obrigatórios continuam exigidos antes do merge.
 - **Supabase Preview**: ensaios funcionais com dados sintéticos e configuração
   de terceiros simulada, somente para alterações relevantes.
 - **Executor do merge**: verificar a branch, os logs e os resultados reais
