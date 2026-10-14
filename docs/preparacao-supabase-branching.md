@@ -270,14 +270,12 @@ de possível uso de disco, rede e recursos externos. Branching Compute não
 é coberto pelo Spend Cap nem abatido pelos créditos de computação Pro.
 Antes do teste remunerado, apresentar o custo e pedir autorização.
 
-A regra GitHub nº `24970258` foi configurada anteriormente para exigir
-`isolated-preview-gate`. Ela precisa ser editada em
-`Settings > Rules > Rulesets` para remover esse contexto. Durante a
-transição, o workflow publica apenas avisos sobre a preview, mantendo o
-contexto exigido até a atualização manual da ruleset. **Não** registrar
-links falsos ou valores `PASS` fictícios. Migrações corretivas continuam
-sujeitas aos contratos, controles de drift e verificações de segurança
-independentes da preview remota.
+A regra GitHub nº `24970258` ainda precisa ser editada em
+`Settings > Rules > Rulesets` para remover o contexto
+`isolated-preview-gate`; o workflow foi descontinuado.
+**Não** registrar links falsos ou valores `PASS` fictícios.
+Migrações corretivas continuam sujeitas aos contratos, controles
+de drift e verificações de segurança independentes da preview remota.
 
 Esta preparação não muda o conteúdo público do site nem suas configurações
 de SEO.
