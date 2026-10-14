@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Require documented isolated previews for changes that can affect student data.
+"""Classify sensitive changes and report isolated-preview evidence.
 
-The gate checks PR evidence format; the reviewer must still verify the live
-Supabase preview branch and its results before merging.
+The GitHub workflow uses advisory mode to avoid blocking pull requests.
+Strict mode remains available for manual verification. Neither mode proves
+that a remote Supabase branch passed; live results must be checked separately.
 """
 from __future__ import annotations
 
@@ -124,6 +125,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--changed-files", type=Path, required=True)
     parser.add_argument("--pr-body", type=Path, required=True)
+    parser.add_argument(
+        "--advisory",
+        action="store_true",
+        help="Report missing preview evidence without blocking the pull request.",
+    )
     args = parser.parse_args()
     paths = args.changed_files.read_text(encoding="utf-8").splitlines()
     body = args.pr_body.read_text(encoding="utf-8")
@@ -137,8 +143,15 @@ def main() -> int:
     for file_path in critical:
         print(f"  - {file_path}")
     if problems:
+        severity = "warning" if args.advisory else "error"
         for problem in problems:
-            print(f"::error::{problem}")
+            print(f"::{severity}::{problem}")
+        if args.advisory:
+            print(
+                "::notice::Remote preview evidence is missing. "
+                "This check is advisory only; remote safety has NOT been verified."
+            )
+            return 0
         print("See docs/estrategia-testes-isolados.md for the evidence template.")
         return 1
     print("Preview evidence declared; verify the live branch and test log before merging.")

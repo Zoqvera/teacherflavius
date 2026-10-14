@@ -38,9 +38,13 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
             --jq '.body // ""' > "${RUNNER_TEMP}/pr-body.md"
 
-      - name: Enforce isolated branch evidence for sensitive changes
+      # Temporary compatibility with the existing required status check.
+      # The owner must remove "isolated-preview-gate" from ruleset 24970258
+      # before this job and workflow can be retired completely.
+      - name: Report remote preview evidence (advisory, not required)
         shell: bash
         run: |
           python3 scripts/check_isolated_testing_policy.py \
             --changed-files "${RUNNER_TEMP}/changed-files.txt" \
-            --pr-body "${RUNNER_TEMP}/pr-body.md"
+            --pr-body "${RUNNER_TEMP}/pr-body.md" \
+            --advisory

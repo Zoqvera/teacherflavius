@@ -246,14 +246,17 @@ Em **Supabase Dashboard > Project Settings > Integrations > GitHub Integration**
 
 A opção **Supabase changes only** não cria automaticamente uma branch para
 uma PR que modifique só `auth.js`, `mensalidades.js` ou outra lógica fora
-de `supabase/`. O check `isolated-preview-gate` atual continua exigindo
-teste isolado nesses casos; criar uma preview **sob demanda** é a solução
-até que haja automação segura desses cenários.
+de `supabase/`. O check de compatibilidade `isolated-preview-gate` foi alterado para
+modo **consultivo** em 14/10/2026. Testes remotos permanecem recomendados
+para alterações sensíveis, mas a ausência deles não impede automaticamente
+o merge. O nome do contexto só será retirado após sua exclusão da regra
+de proteção GitHub nº `24970258`.
 
 Após habilitar a integração, verificar que o Supabase publica o check
 `Supabase Preview`. Torná-lo obrigatório somente quando o evento gerar
 esse check em todas as PRs cobertas pela regra, para não bloquear PRs
-puramente documentais. Não substituir o `isolated-preview-gate`.
+puramente documentais. Não voltar a exigir um check de preview sem a decisão explícita
+do proprietário e sem uma estratégia de provisionamento viável.
 
 **Não executar** `supabase branches merge` separadamente se o fluxo
 selecionado já aplicar automaticamente as migrations ao fazer merge do
@@ -267,9 +270,14 @@ de possível uso de disco, rede e recursos externos. Branching Compute não
 é coberto pelo Spend Cap nem abatido pelos créditos de computação Pro.
 Antes do teste remunerado, apresentar o custo e pedir autorização.
 
-As regras da `main` já exigem `isolated-preview-gate`. Não contornar a
-proteção com links falsos ou valores `PASS` fictícios. Migrações corretivas
-futuras devem passar por preview verdadeira e verificação do resultado.
+A regra GitHub nº `24970258` foi configurada anteriormente para exigir
+`isolated-preview-gate`. Ela precisa ser editada em
+`Settings > Rules > Rulesets` para remover esse contexto. Durante a
+transição, o workflow publica apenas avisos sobre a preview, mantendo o
+contexto exigido até a atualização manual da ruleset. **Não** registrar
+links falsos ou valores `PASS` fictícios. Migrações corretivas continuam
+sujeitas aos contratos, controles de drift e verificações de segurança
+independentes da preview remota.
 
 Esta preparação não muda o conteúdo público do site nem suas configurações
 de SEO.
