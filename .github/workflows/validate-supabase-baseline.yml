@@ -537,7 +537,7 @@ jobs:
 
           docker exec -i "$DB_CONTAINER" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            < supabase/migrations/20261014162600_add_student_due_review_questions.sql
+            < supabase/migrations/20261014194243_add_student_due_review_questions.sql
 
           docker exec -i "$DB_CONTAINER" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
