@@ -8,6 +8,9 @@ on:
       - scripts/analyze_supabase_migration_reconciliation.py
       - scripts/plan_supabase_branching_cutover.py
       - scripts/attest_supabase_migration_ledger.py
+      - scripts/compare_supabase_schema_fingerprint.py
+      - scripts/sql/supabase_catalog_fingerprint_readonly.sql
+      - tests/test_supabase_schema_fingerprint_comparison.py
       - tests/test_supabase_ledger_rollback_rehearsal.py
       - tests/fixtures/supabase_synthetic_ledger_rollback.sql
       - docs/supabase-migration-ledger-cutover-runbook.md
@@ -21,6 +24,9 @@ on:
       - scripts/analyze_supabase_migration_reconciliation.py
       - scripts/plan_supabase_branching_cutover.py
       - scripts/attest_supabase_migration_ledger.py
+      - scripts/compare_supabase_schema_fingerprint.py
+      - scripts/sql/supabase_catalog_fingerprint_readonly.sql
+      - tests/test_supabase_schema_fingerprint_comparison.py
       - tests/test_supabase_ledger_rollback_rehearsal.py
       - tests/fixtures/supabase_synthetic_ledger_rollback.sql
       - docs/supabase-migration-ledger-cutover-runbook.md
@@ -45,6 +51,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_supabase_migration_reconciliation.py
           python3 -m unittest discover -s tests -p test_supabase_branching_cutover_plan.py
           python3 -m unittest discover -s tests -p test_supabase_ledger_rollback_rehearsal.py
+          python3 -m unittest discover -s tests -p test_supabase_schema_fingerprint_comparison.py
 
   synthetic-ledger-rollback:
     # Completely independent of secrets and the production Supabase project.
@@ -179,6 +186,28 @@ jobs:
             --remote-metadata-file "${RUNNER_TEMP}/migration-digests.tsv" \
             --report-json "${RUNNER_TEMP}/branching-cutover-plan.json"
 
+      - name: Compare production catalog counts to the reviewed reconstruction
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Runs only on protected main. No application rows, backup content,
+          # role secrets or stored migration SQL are queried or exported.
+          psql "${SUPABASE_DB_URL}" -X -qAt -v ON_ERROR_STOP=1 \
+            -f scripts/sql/supabase_catalog_fingerprint_readonly.sql \
+            > "${RUNNER_TEMP}/production-schema-fingerprint.json"
+
+          python3 -m scripts.compare_supabase_schema_fingerprint \
+            --baseline-json supabase/baseline/schema-fingerprint.json \
+            --production-json "${RUNNER_TEMP}/production-schema-fingerprint.json" \
+            --report-json "${RUNNER_TEMP}/schema-fingerprint-comparison.json"
+
+          jq -e '.metadata_only == true and
+            .production_write_authorized == false and
+            .verifies_full_schema_equivalence == false and
+            .verifies_backup_recoverability == false' \
+            "${RUNNER_TEMP}/schema-fingerprint-comparison.json"
+
       - name: Save report without migration statements
         uses: actions/upload-artifact@v4
         if: always()
@@ -188,5 +217,6 @@ jobs:
             ${{ runner.temp }}/migration-reconciliation.json
             ${{ runner.temp }}/branching-cutover-plan.json
             ${{ runner.temp }}/migration-ledger-attestation.json
+            ${{ runner.temp }}/schema-fingerprint-comparison.json
           retention-days: 14
           if-no-files-found: ignore

@@ -17,23 +17,27 @@ demanda** e apagadas após validação e merge ou cancelamento da PR.
 
 ## Política para cada pull request
 
-A Action `Isolated testing policy` examina os caminhos alterados. Ela
-**bloqueia o check da PR** quando arquivos sensíveis não incluem a evidência
-padronizada de teste numa branch temporária.
+O check obrigatório `isolated-preview-gate` foi descontinuado a pedido
+do proprietário em 14/10/2026. O workflow que o produzia, seu script e
+seus testes de classificação não fazem mais parte do fluxo ativo. As
+alterações sensíveis **não precisam** incluir evidência de preview remota
+para que o GitHub permita a integração.
 
-- **Preview obrigatória:** migrações e baseline SQL; Auth/RLS; Edge Functions;
-  rotas de login e recuperação; código de matrículas, mensalidades, pagamentos,
-  créditos, reposições e vínculos de turma.
-- **CI normal:** conteúdo institucional, CSS, documentação, testes sem mudança
-  de regra de negócio e mudanças visuais sem dependências críticas.
-- **Impacto SEO:** alterações em sitemap, robots, canonical, metadata,
+**Para concluir a remoção:** na regra de proteção nº `24970258`,
+acesse `Settings > Rules > Rulesets > Proteção da main — testes obrigatórios`
+e remova `isolated-preview-gate` da lista de required status checks.
+A remoção do workflow, isoladamente, não elimina uma exigência cadastrada
+na ruleset. Mantenha os demais checks obrigatórios e o workflow de drift.
+
+- **Preview recomendada, não obrigatória:** mudanças no Supabase, Auth,
+  pagamentos, matrícula, reposições e demais operações sensíveis.
+- **CI obrigatório:** contratos locais, segurança, histórico de migrações e
+  demais verificações definidas pelas rulesets ativas.
+- **Impacto SEO:** alterações em sitemap, robots, canonical, metadados,
   schema.org e HTML indexável exigem análise e decisão expressa do professor.
-  A classificação de branch **não substitui** a revisão de SEO.
 
-O script `scripts/check_isolated_testing_policy.py` implementa a classificação.
-O gate confere **o formato da evidência**, não o estado real do servidor; quem
-faz o merge deve consultar o Supabase e os registros de execução para confirmar
-que o teste realmente passou. Um campo preenchido na PR não prova segurança.
+Ausência de preview não equivale a testes remotos aprovados. Nenhum registro
+pode declarar `Preview result: PASS` sem resultados efetivamente verificados.
 
 ## Fluxo para alterações relevantes
 
@@ -67,8 +71,9 @@ que o teste realmente passou. Um campo preenchido na PR não prova segurança.
    Confirmar que o `project_ref` de todos os testes é da preview, nunca de
    produção. Registrar o link do GitHub Actions e o endereço do dashboard
    dessa preview na descrição da PR.
-9. Fazer merge **do código pelo fluxo habitual de GitHub** após os checks e a
-   verificação efetiva da preview. Não executar também um merge separado de
+9. Fazer merge **do código pelo fluxo habitual de GitHub** após os checks
+   obrigatórios. A preview deixa de ser exigida pelo gate, mas deve ser
+   avaliada para mudanças sensíveis. Não executar também um merge separado de
    Supabase se isso duplicar a aplicação das migrações.
 10. Excluir a branch Supabase ao concluir ou cancelar a PR, confirmar sua
     ausência na lista de branches e revisar o consumo na organização.
@@ -124,7 +129,8 @@ na produção.
 Até essa validação, o CI de reconstrução local é obrigatório para cada mudança
 relevante, mas **não substitui** os testes de Auth, APIs e integrações reais
 numa preview funcional. Se a preview não conseguir ser criada corretamente,
-a PR fica pendente — não tratá-la como aprovada.
+registrar explicitamente a validação remota como pendente ou reprovada;
+não declarar `Preview result: PASS`.
 
 ## Limites operacionais e gastos
 
@@ -144,12 +150,12 @@ a PR fica pendente — não tratá-la como aprovada.
 ## Responsabilidades
 
 - **GitHub Actions**: testes unitários, reconstrução descartável do banco,
-  política de evidência e regressões; todos executados antes do merge.
+  contratos SQL e regressões; os checks obrigatórios continuam exigidos antes do merge.
 - **Supabase Preview**: ensaios funcionais com dados sintéticos e configuração
   de terceiros simulada, somente para alterações relevantes.
 - **Executor do merge**: verificar a branch, os logs e os resultados reais
-  (o gate de texto é insuficiente isoladamente), fazer merge do GitHub apenas
-  com resultado aprovado e confirmar a limpeza da preview.
+  (o aviso de texto não comprova resultado remoto), respeitar as demais
+  regras do GitHub e confirmar a limpeza de qualquer preview criada.
 - **Professor**: decide alterações de SEO, políticas comerciais e qualquer
   custo adicional que ultrapasse o plano atualmente contratado.
 

@@ -22,6 +22,63 @@ durante a etapa de diagnóstico.
 A PR #651, que adiciona `supabase/config.toml` e `supabase/seed.sql`,
 ainda exige validação remota antes da incorporação à `main`.
 
+## Auditoria de catálogo real em 14/10/2026
+
+Uma consulta PostgreSQL **somente leitura**, no projeto de produção, identificou
+divergência expressiva entre o esquema existente e a captura histórica
+`supabase/baseline/schema-fingerprint.json`. Os números se referem ao
+catálogo de objetos, não a registros de alunos.
+
+| Métrica | Captura do baseline | Produção | Diferença |
+| --- | ---: | ---: | ---: |
+| Tabelas públicas | 52 | 81 | +29 |
+| Constraints públicas | 266 | 438 | +172 |
+| Índices públicos sem constraint | 116 | 172 | +56 |
+| Funções públicas | 190 | 344 | +154 |
+| Funções privadas | 37 | 82 | +45 |
+| Políticas RLS públicas | 95 | 107 | +12 |
+| Triggers públicos | 47 | 79 | +32 |
+| Triggers de Auth da aplicação | 1 | 2 | +1 |
+| Event triggers da aplicação | 1 | 1 | 0 |
+| Jobs Cron identificados | 2 | 2 | 0 |
+| Buckets Storage | 0 | 0 | 0 |
+| Nomes de segredos Vault esperados | 3 | 3 | 0 |
+
+A captura de baseline foi marcada como versão `20261013143000`; o
+ledger real de produção está atualmente na versão `20261013225440`.
+A diferença **não comprova, por si só**, que os 29 objetos extras sejam
+alterações ocorridas após essa versão: o baseline pode estar incompleto
+desde a extração anterior. É necessário comparar as identidades e definições
+de objetos antes de selecionar um plano de reconstrução.
+
+Foi comprovado, por busca de arquivos no Git, que algumas tabelas produtivas,
+como `payment_chargebacks`, `payment_analytics_outbox` e
+`marketing_acquisition_events`, são criadas em migrações históricas,
+mas não aparecem entre os overlays de reconstrução consultados.
+A migração desses objetos precisa contemplar também dependências,
+triggers, políticas e permissões, e não apenas `CREATE TABLE`.
+
+O workflow protegido `Supabase migration reconciliation` agora inclui a
+consulta `scripts/sql/supabase_catalog_fingerprint_readonly.sql` e o
+comparador `scripts/compare_supabase_schema_fingerprint.py`.
+A execução em `main` salva apenas as **contagens divergentes** no artefato
+`schema-fingerprint-comparison.json`; não exporta linhas do banco,
+segredos ou SQL histórico. `SCHEMA_COUNTS_ALIGNED` não significa equivalência
+integral, backup recuperável ou autorização para alterar produção.
+`SCHEMA_DRIFT_DETECTED` é um **impedimento operacional** para confiar no
+baseline como imagem completa de produção. A auditoria não reconfigura as
+proteções existentes nem mascara resultados de CI.
+
+A interface conectada do Supabase utilizada na verificação não expõe a
+listagem de backups agendados nem a restauração independente. Portanto,
+**não há evidência de backup/restauração aprovada**. Verificar em
+`Database > Backups` do Dashboard e manter evidências privadas.
+O Supabase documenta backups diários do plano Pro, com retenção de
+até sete dias; isso não atesta que uma cópia específica foi concluída.
+A restauração da produção diretamente nela geraria indisponibilidade e
+não é um teste seguro. Nunca usar a função de restauração no projeto ativo
+para atender a este protocolo.
+
 ## Ponto de restauração: pré-requisitos
 
 Antes de qualquer transição efetiva, o operador responsável precisa confirmar
@@ -139,7 +196,9 @@ restauração.
 - restauração real testada em destino independente;
 - branch remota recriada com sucesso e sem dados reais;
 - operações documentadas, janela aprovada e rollback conferido;
-- `isolated-preview-gate` efetivamente atestando testes remotos;
+- testes remotos efetivos com dados sintéticos e evidência verificável
+  antes de qualquer alteração do ledger de produção (sem depender do gate
+  `isolated-preview-gate`, descontinuado por decisão do proprietário);
 - autorização explícita para qualquer operação de escrita em produção.
 
 Até esse ponto, **Automatic Branching permanece desativado**.
