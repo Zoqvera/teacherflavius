@@ -561,7 +561,7 @@ jobs:
               where schema_row.nspname = 'public'
                 and procedure_row.proname = 'get_my_review_questions'
                 and procedure_row.prosecdef = true
-                and procedure_row.proconfig @> array['search_path=']
+                and procedure_row.proconfig @> array['search_path=""']
             ) then
               raise exception 'Student due-review RPC lacks its restricted search path';
             end if;
