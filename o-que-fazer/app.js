@@ -121,6 +121,28 @@
     return item;
   }
 
+  function renderReviewQuestions(questions) {
+    const list = document.getElementById("reviewQuestionList");
+    const reviews = Array.isArray(questions) ? questions : [];
+    list.innerHTML = "";
+
+    if (!reviews.length) {
+      const empty = document.createElement("p");
+      empty.className = "academic-empty";
+      empty.textContent = "Você não tem perguntas programadas para revisão no momento.";
+      list.appendChild(empty);
+    } else {
+      reviews.forEach(function (question, index) {
+        list.appendChild(window.ConversationQuestionCardRenderer.create(question, {
+          number: index + 1,
+          className: "academic-conversation-card"
+        }));
+      });
+    }
+
+    setStatus("reviewQuestionsStatus", "", "");
+  }
+
   function renderQuestions(plan) {
     const list = document.getElementById("actionQuestionList");
     const questions = Array.isArray(plan.questions) ? plan.questions : [];
@@ -167,6 +189,18 @@
     } catch (error) {
       console.error("Falha ao carregar O QUE FAZER:", error);
       setStatus("actionPlanStatus", "Não foi possível carregar seu plano de preparação.", "error");
+    }
+
+    try {
+      const reviews = await service.getMyReviewQuestions();
+      renderReviewQuestions(reviews);
+    } catch (error) {
+      console.error("Falha ao carregar revisões do aluno:", error);
+      setStatus(
+        "reviewQuestionsStatus",
+        "Não foi possível carregar as revisões programadas.",
+        "error"
+      );
     }
   }
 
