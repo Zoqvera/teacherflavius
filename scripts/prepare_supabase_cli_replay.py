@@ -54,17 +54,7 @@ end;
 $preview_schema_assert$;
 """
 
-SYNTHETIC_SEED = """
--- Disposable test fixtures only; never copy a production profile or payment.
--- No Auth users or payments are created. The two test class numbers are reserved
--- for this disposable CLI fixture and must never reach production.
-insert into public.teacher_classes
-  (class_number, class_name, class_type, class_weekday, class_start_time,
-   is_active, makeup_slots_enabled)
-values
-  (970001, 'Synthetic preview quintet', 'quintet', 5, '18:00', true, false),
-  (970002, 'Synthetic preview individual', 'individual', 3, '10:00', true, false);
-"""
+SEED_RELATIVE_PATH = Path("supabase/seed.sql")
 
 
 def assert_safe_paths(repository_root: Path, staging_root: Path) -> None:
@@ -102,7 +92,14 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
     migration = migrations_dir / BOOTSTRAP_FILENAME
     migration.write_text(compiled_sql.read_text(encoding="utf-8") + STOP_CRON, encoding="utf-8")
     (migrations_dir / ASSERTION_FILENAME).write_text(VERIFY_SCHEMA, encoding="utf-8")
-    (sql_dir / "seed.sql").write_text(SYNTHETIC_SEED, encoding="utf-8")
+    # Consume the version-controlled, synthetic-only seed instead of
+    # maintaining an independent fixture with different safety checks.
+    source_seed = repository_root / SEED_RELATIVE_PATH
+    if not source_seed.is_file():
+        raise ValueError("Synthetic seed file is missing from the repository.")
+    (sql_dir / "seed.sql").write_text(
+        source_seed.read_text(encoding="utf-8"), encoding="utf-8"
+    )
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     report = {
         "mode": "isolated-cli-replay-only",
