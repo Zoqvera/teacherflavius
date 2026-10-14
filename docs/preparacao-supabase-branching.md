@@ -1,5 +1,10 @@
 # Preparação para criação automática de branches no Supabase
 
+O protocolo detalhado para backup, reversão e critérios de cutover está em
+[supabase-migration-ledger-cutover-runbook.md](supabase-migration-ledger-cutover-runbook.md).
+A transição continua bloqueada enquanto a restauração real e o teste de branch
+remota não forem aprovados.
+
 ## Verificação da cadeia canônica descartável — 14/10/2026
 
 A cadeia de reconstrução usada pelo CLI ganhou um bloqueio SQL executável
