@@ -40,7 +40,7 @@ function createElement(tagName) {
   };
 }
 
-async function loadStudentPage(reviews, reviewError = null) {
+async function loadStudentPage(reviews, reviewError = null, planError = null) {
   const elements = new Map();
   const getElementById = (id) => {
     if (!elements.has(id)) elements.set(id, createElement("div"));
@@ -48,6 +48,7 @@ async function loadStudentPage(reviews, reviewError = null) {
   };
   const client = {
     async getMyActionPlan() {
+      if (planError) throw planError;
       return { lesson: null, questions: [] };
     },
     async getMyReviewQuestions() {
@@ -154,5 +155,24 @@ test("empty review state is explicit, and review failure does not hide the quest
     assert.equal(failedState.getElementById("actionQuestionList").children.length, 1);
   } finally {
     console.error = previousError;
+  }
+});
+
+test("review priorities remain available when the general action plan cannot load", async () => {
+  const savedError = console.error;
+  console.error = () => {};
+  try {
+    const state = await loadStudentPage(
+      [{ id: "due-1", text: "What time do you wake up?" }],
+      null,
+      new Error("Synthetic action-plan failure")
+    );
+    assert.equal(state.getElementById("reviewQuestionList").children.length, 1);
+    assert.match(
+      state.getElementById("actionPlanStatus").textContent,
+      /Não foi possível carregar seu plano de preparação/
+    );
+  } finally {
+    console.error = savedError;
   }
 });
