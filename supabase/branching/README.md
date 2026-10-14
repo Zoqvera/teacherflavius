@@ -1,9 +1,35 @@
 # Bootstrap canônico do Supabase — protótipo descartável
 
 A reconstrução canônica agora pode ser compilada em **um único arquivo SQL**,
-a partir dos 75 overlays já revisados e executados pelo workflow
+a partir dos 78 overlays já revisados e executados pelo workflow
 `.github/workflows/validate-supabase-baseline.yml`. A ordem é extraída da
 fonte de verdade existente, sem copiar ou substituir as migrations históricas.
+
+## Configuração versionada preparada
+
+A raiz do repositório agora contém `supabase/config.toml` e
+`supabase/seed.sql`. O `project_id` no TOML é um nome **local**, não a
+referência do Supabase produtivo. O `[db.seed].enabled` permanece `false`
+por padrão.
+
+O seed versionado contém apenas duas turmas fictícias (`970001` e
+`970002`) e recusa a execução se detectar dados de turmas, alunos,
+mensalidades ou jobs Cron ativos. Não cria contas de autenticação,
+pagamentos, e-mails nem contatos de alunos.
+
+A Action `Supabase CLI-native branching rehearsal` utiliza **cópias
+descartáveis** do `config.toml` e do `seed.sql`: habilita o seed
+**somente nessa cópia**, após preparar o bootstrap consolidado e
+desativar Cron. O repositório nunca ativa o seed para produção ou uma
+preview remota por padrão.
+
+**Não execute** `supabase start`, `supabase db reset` ou `supabase db push`
+diretamente no diretório original do repositório. O diretório legado
+`supabase/migrations/` ainda não representa uma cadeia segura de
+reconstrução. Use os fluxos descartáveis do GitHub, que constroem os
+artefatos em `$RUNNER_TEMP`. Uma branch remota só deve ser criada
+após a reconciliação do histórico, com consentimento sobre o custo e
+as integrações externas isoladas.
 
 ## Limite de segurança
 
@@ -35,8 +61,8 @@ apenas lê o repositório e grava arquivos temporários; não conecta ao Supabas
 A Action **Canonical Supabase bootstrap replay**:
 
 1. Executa testes unitários de ordem, integridade e restrição ao diretório.
-2. Compila um único arquivo SQL a partir dos 75 overlays.
-3. Inicializa um Supabase local descartável, **sem executar os 237 arquivos
+2. Compila um único arquivo SQL a partir dos 78 overlays.
+3. Inicializa um Supabase local descartável, **sem executar os arquivos
    históricos** e sem importar `auth.users`, `profiles` ou dados financeiros.
 4. Executa o bundle por uma única sessão de `psql`.
 5. Cria apenas valores Vault fictícios, sem chaves reais.
@@ -55,13 +81,13 @@ além de autorização prévia do custo.
 
 O workflow `.github/workflows/supabase-cli-replay.yml` executa o próprio
 mecanismo `supabase start` e `supabase db reset --local`, usando um projeto
-descartável situado fora do checkout. Não utiliza a sequência antiga de 237
+descartável situado fora do checkout. Não utiliza a sequência antiga das
 migrações do repositório nem altera `supabase/migrations/`.
 
 O script `scripts/prepare_supabase_cli_replay.py` produz exclusivamente
 dentro desse projeto efêmero:
 
-- Uma migração inicial única com o bootstrap compilado dos 75 overlays.
+- Uma migração inicial única com o bootstrap compilado dos 78 overlays.
 - Uma segunda migração que comprova a ordem e verifica a existência das
   tabelas críticas.
 - Um `seed.sql` sintético de duas turmas, sem contas, CPF, pagamentos ou
