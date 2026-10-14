@@ -16,6 +16,12 @@ const migration = fs.readFileSync(
 const baseline = fs.readFileSync(
   path.join(ROOT, "supabase/baseline/310_add_student_due_review_questions.sql"), "utf8"
 );
+const actionPlanMigration = fs.readFileSync(
+  path.join(ROOT, "supabase/migrations/20261014200500_expose_study_button_marker.sql"), "utf8"
+);
+const actionPlanBaseline = fs.readFileSync(
+  path.join(ROOT, "supabase/baseline/390_expose_study_button_marker.sql"), "utf8"
+);
 
 function createElement(tagName) {
   return {
@@ -248,4 +254,20 @@ test("missing explicit marker never exposes a question as pending", async () => 
     state.getElementById("questionsStatus").textContent,
     /Não foi possível verificar quais perguntas ainda faltam estudar/
   );
+});
+
+test("action plan adds a separate permanent click marker without changing worked semantics", () => {
+  assert.equal(actionPlanMigration, actionPlanBaseline);
+  assert.match(actionPlanMigration, /public\.get_my_action_plan\(\)/);
+  assert.match(actionPlanMigration, /auth\.uid\(\)/);
+  assert.match(actionPlanMigration, /from private\.student_question_studies study/);
+  assert.match(actionPlanMigration, /study\.student_id = caller_id/);
+  assert.match(actionPlanMigration, /'marked_studied', question\.marked_studied/);
+  assert.match(actionPlanMigration, /'studied', question\.studied/);
+  assert.match(actionPlanMigration, /'worked', question\.worked/);
+  assert.match(actionPlanMigration, /set search_path = ''/);
+  assert.match(actionPlanMigration, /revoke execute on function public\.get_my_action_plan\(\) from public, anon/);
+  assert.match(actionPlanMigration, /grant execute on function public\.get_my_action_plan\(\) to authenticated, service_role/);
+  assert.doesNotMatch(actionPlanMigration, /mark_my_questions_studied\(/);
+  assert.doesNotMatch(actionPlanMigration, /(?:insert into|update public\.|delete from|drop table)/i);
 });
