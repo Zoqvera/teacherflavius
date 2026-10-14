@@ -177,7 +177,8 @@ jobs:
             supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql \
             supabase/baseline/377_manual_replacement_credits_all_students.sql \
             supabase/baseline/380_same_day_first_tuition_payment.sql \
-            supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql
+            supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql \
+            supabase/baseline/390_expose_study_button_marker.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -543,6 +544,10 @@ jobs:
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
           do $student_review_assert$
           begin
+            if not pg_get_functiondef('public.get_my_action_plan()'::regprocedure)
+              like '%''marked_studied'', question.marked_studied%' then
+              raise exception 'Student study-button marker is missing from the action-plan RPC';
+            end if;
             if to_regprocedure('public.get_my_review_questions()') is null then
               raise exception 'Student due-review RPC was not installed';
             end if;

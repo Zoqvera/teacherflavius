@@ -145,14 +145,27 @@
 
   function renderQuestions(plan) {
     const list = document.getElementById("actionQuestionList");
-    const questions = Array.isArray(plan.questions) ? plan.questions : [];
+    const allQuestions = Array.isArray(plan.questions) ? plan.questions : [];
     list.innerHTML = "";
+
+    // The permanent button-click marker is independent from "worked":
+    // a teacher may have completed a question without this student clicking.
+    if (allQuestions.some(function (question) {
+      return typeof question.marked_studied !== "boolean";
+    })) {
+      setStatus("questionsStatus", "Não foi possível verificar quais perguntas ainda faltam estudar.", "error");
+      return;
+    }
+
+    const questions = allQuestions.filter(function (question) {
+      return !question.marked_studied;
+    });
 
     if (!questions.length) {
       const item = document.createElement("p");
       item.className = "academic-empty";
-      item.textContent = plan.questions_complete
-        ? "Todas as perguntas disponíveis já foram trabalhadas."
+      item.textContent = allQuestions.length
+        ? "Você já marcou todas as perguntas como estudadas."
         : "Nenhuma pergunta disponível no momento.";
       list.appendChild(item);
       setStatus("questionsStatus", "", "");
@@ -163,17 +176,7 @@
       list.appendChild(createQuestionStudyItem(question, index));
     });
 
-    const studiedCount = questions.filter(function (question) {
-      return !!question.studied;
-    }).length;
-
-    setStatus(
-      "questionsStatus",
-      studiedCount
-        ? studiedCount + " de " + questions.length + " pergunta(s) marcada(s) como estudada(s)."
-        : "",
-      studiedCount ? "success" : ""
-    );
+    setStatus("questionsStatus", "", "");
   }
 
   function render(plan) {
