@@ -34,6 +34,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script src="auth.js?v=20260430-3"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260430-3">
   <link rel="stylesheet" href="area_do_estudante.css?v=20261008-install-card-help-1">
+  <link rel="stylesheet" href="/student_review_invitation.css?v=20261015-1">
 </head>
 <body class="auth-checking student-dashboard">
 <!-- Google Tag Manager (noscript) -->
@@ -161,6 +162,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
+  <dialog id="studentReviewInvitation" class="student-review-invitation"
+    aria-labelledby="studentReviewInvitationTitle" aria-describedby="studentReviewInvitationDescription" aria-modal="true">
+    <span class="student-review-invitation__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9Z"/></svg>
+    </span>
+    <h2 id="studentReviewInvitationTitle">Como está sendo sua experiência?</h2>
+    <p id="studentReviewInvitationDescription">
+      Você já completou dois meses de matrícula. Que tal contar como estão sendo suas aulas de inglês?
+      Sua avaliação é voluntária e nos ajuda a melhorar cada vez mais.
+    </p>
+    <div class="student-review-invitation__actions">
+      <a class="student-review-invitation__primary" data-review-invitation-link href="/avaliar-aulas/">AVALIAR AGORA</a>
+      <button class="student-review-invitation__secondary" data-review-invitation-close type="button">AGORA NÃO</button>
+    </div>
+  </dialog>
+
+  <script src="/student_review_invitation.js?v=20261015-1"></script>
   <script src="/resource_waiter.js?v=20260902-1"></script>
   <script src="/pwa_install_prompt.js?v=20261006-1"></script>
   <script src="/web_push_notifications.js?v=20261005-1"></script>

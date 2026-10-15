@@ -136,13 +136,24 @@
     installPrompt.initialize(window, document);
   }
 
+  async function initializeReviewInvitation() {
+    const invitation = window.StudentReviewInvitation;
+    if (!invitation || typeof invitation.initialize !== "function") return;
+
+    await invitation.initialize({
+      client: Auth.getClient(),
+      studentId: state.session.user.id,
+      isProfessor: isProfessorSession()
+    });
+  }
+
   async function updateStatus() {
     const isAllowed = await guardStudentArea();
     if (!isAllowed) return;
 
     clearLoginStatus();
     initializePwaInstallExperience();
-
+    await initializeReviewInvitation();
   }
 
   ensureStudentResourcesCard();
