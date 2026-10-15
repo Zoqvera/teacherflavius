@@ -238,7 +238,20 @@
   }
 
   function render(plan) {
-    if (!isSecondPartPage()) renderLesson(plan);
+    if (isSecondPartPage()) {
+      const backLink = document.getElementById("returnToLessonLink");
+      const lesson = plan && plan.lesson;
+      const lessonUrl = lesson && lesson.has_material
+        ? window.AcademicWorkflowService.lessonUrl(lesson.number)
+        : "";
+
+      if (backLink) {
+        backLink.href = lessonUrl || "/o-que-fazer/";
+        backLink.textContent = lessonUrl ? "VOLTAR À LIÇÃO" : "VOLTAR AO INÍCIO";
+      }
+    } else {
+      renderLesson(plan);
+    }
     renderQuestions(plan);
     setStatus("actionPlanStatus", "Plano atualizado.", "success");
   }
