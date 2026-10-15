@@ -2,6 +2,7 @@
 -- Nunca executar em produção. Todas as alterações ficam em uma transação revertida.
 \set ON_ERROR_STOP on
 BEGIN;
+SET LOCAL app.homework_budget_notify = 'false';
 
 DO $preflight$
 begin
