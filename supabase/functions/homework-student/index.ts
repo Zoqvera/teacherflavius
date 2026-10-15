@@ -135,6 +135,30 @@ async function listAssignments(admin: ReturnType<typeof createClient>, userId: s
   return rows;
 }
 
+
+function studentContent(activity: string, raw: unknown) {
+  const content = raw && typeof raw === "object" && !Array.isArray(raw)
+    ? raw as Record<string, unknown> : {};
+  const text = (key: string) => typeof content[key] === "string"
+    ? (content[key] as string).slice(0, 12000) : "";
+  const strings = (key: string) => Array.isArray(content[key])
+    ? (content[key] as unknown[]).filter((value): value is string =>
+      typeof value === "string").slice(0, 30).map(value => value.slice(0, 2000)) : [];
+  // Whitelist estrita: campos editoriais nao podem transportar gabaritos ocultos.
+  switch (activity) {
+    case "reading":
+      return { passage: text("passage"), instructions: strings("instructions") };
+    case "writing":
+      return { prompt: text("prompt"), guidelines: strings("guidelines"),
+        model: text("model") };
+    case "grammar":
+      return { explanation: text("explanation"), instructions: strings("instructions"),
+        examples: strings("examples") };
+    default:
+      throw new ClientError("Tipo de atividade desconhecido.", 422);
+  }
+}
+
 async function detail(admin: ReturnType<typeof createClient>, userId: string, id: string) {
   const { assignment, exercise } = await requireAssignment(admin, userId, id);
   const version = unwrap(await admin.from("exercise_versions")
@@ -149,7 +173,7 @@ async function detail(admin: ReturnType<typeof createClient>, userId: string, id
   return {
     assignment_id: assignment.id, due_at: assignment.due_at,
     exercise_number: exercise.exercise_number, title: exercise.title,
-    activity_type: exercise.activity_type, content: version.content,
+    activity_type: exercise.activity_type, content: studentContent(exercise.activity_type, version.content),
     version_number: version.version_number, questions,
   };
 }
