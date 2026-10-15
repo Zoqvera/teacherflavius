@@ -47,7 +47,7 @@ test("student area fetches a versioned, uncached HTML document", function () {
   const shell = read("area-do-estudante/index.html");
   const html = read("area_do_estudante.html");
 
-  assert.match(shell, /area_do_estudante\\.html\\?v=20261015-suspend-exercises-2/);
+  assert.match(shell, /sourcePage \+ "\\?v=20261015-suspend-exercises-2"/);
   assert.match(shell, /cache: 'no-store'/);
   assert.match(html, /area_do_estudante\\.js\\?v=20261015-suspend-exercises-2/);
 });
@@ -57,8 +57,8 @@ test("stale student-area cards for the suspended portal are removed", async func
   const removed = [];
   const candidates = [
     "/exercicios-diarios/",
-    "/exercicios.diarios.html",
-    "https://teacherflavius.com/exercicios_diarios.html",
+    "/exercicios-diarios",
+    "https://teacherflavius.com/exercicios-diarios/?from=pwa",
     "/flashcards/",
     "https://example.com/exercicios-diarios/"
   ];

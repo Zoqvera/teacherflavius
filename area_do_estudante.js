@@ -8,9 +8,7 @@
   const STUDENT_RESOURCES_PATH = "/area-do-estudante/recursos/";
   const LOGIN_PATH = "/login/";
   const SUSPENDED_PORTAL_PATHS = new Set([
-    "/exercicios-diarios",
-    "/exercicios.diarios.html",
-    "/exercicios_diarios.html"
+    "/exercicios-diarios"
   ]);
 
   const state = {
