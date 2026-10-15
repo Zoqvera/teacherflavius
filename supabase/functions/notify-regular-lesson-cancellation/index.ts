@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
+import { recordResendAcceptance } from "../_shared/resend_delivery_core.mjs";
 
 type WebhookPayload = {
   type?: string;
@@ -242,6 +243,17 @@ Deno.serve(async (request: Request) => {
   if (!providerResponse.ok) {
     await fail(`Resend HTTP ${providerResponse.status}`);
     return jsonResponse({ error: "Email provider rejected the message" }, 502);
+  }
+
+  if (Deno.env.get("RESEND_DELIVERY_TRACKING_ENABLED") === "true") {
+    const tracked = await recordResendAcceptance(supabase, providerResponse, {
+      queueName: "regular_cancellation", notificationId: notice.id,
+      recipientRole: notice.recipient_type,
+    });
+    if (!tracked) {
+      await fail("resend_tracking_unavailable");
+      return jsonResponse({ error: "Unable to record provider acceptance" }, 503);
+    }
   }
 
   const sentAt = new Date().toISOString();
