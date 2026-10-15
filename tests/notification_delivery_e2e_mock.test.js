@@ -315,3 +315,67 @@ test("uncertain retries beyond eighteen hours require manual reconciliation", as
   assert.equal(fixture.sent.length, 0);
   assert.equal(fixture.notification.attempts, 1);
 });
+
+
+test("individual Google Agenda link is a manual, timezone-safe event template", async () => {
+  const fixture = createNotificationFixture({ classType: "INDIVIDUAL" });
+  assert.equal((await fixture.request()).status, 200);
+  assert.equal(fixture.sent.length, 1);
+
+  const { message } = fixture.sent[0];
+  const match = message.text.match(
+    /Adicionar ao Google Agenda: (https:\/\/calendar\.google\.com\/calendar\/r\/eventedit\S+)/,
+  );
+  assert.ok(match, "Teacher must receive the event creation URL in the plain-text notice");
+
+  const url = new URL(match[1]);
+  assert.equal(url.origin, "https://calendar.google.com");
+  assert.equal(url.pathname, "/calendar/r/eventedit");
+  assert.equal(url.searchParams.get("action"), "TEMPLATE");
+  assert.equal(url.searchParams.get("stz"), "America/Sao_Paulo");
+  assert.equal(url.searchParams.get("etz"), "America/Sao_Paulo");
+
+  const formatInstant = (value) => new Date(value).toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}Z$/, "Z");
+  assert.equal(
+    url.searchParams.get("dates"),
+    [formatInstant(fixture.slot.starts_at), formatInstant(fixture.slot.ends_at)].join("/"),
+  );
+  assert.match(url.searchParams.get("text"), /Aluno de Teste/);
+  assert.match(url.searchParams.get("details"), /Turma: Turma de teste/);
+  assert.equal(url.searchParams.get("location"), fixture.booking.meeting_url);
+
+  // No invitation is sent and the link contains no mutation credentials.
+  assert.equal(url.searchParams.has("add"), false);
+  assert.equal(url.searchParams.has("guest"), false);
+  assert.equal(url.searchParams.has("token"), false);
+  assert.equal(message.attachments, undefined);
+  assert.match(message.text, /após você confirmar o salvamento/);
+});
+
+test("quinteto professor receives no calendar URL or invitation fields", async () => {
+  const fixture = createNotificationFixture({ classType: "QUINTETO" });
+  assert.equal((await fixture.request()).status, 200);
+  const { message } = fixture.sent[0];
+  assert.doesNotMatch(message.html + message.text, /calendar\.google\.com|BEGIN:VCALENDAR|action=TEMPLATE/);
+  assert.equal(message.attachments, undefined);
+});
+
+test("student calendar template does not include the student's name in event title", async () => {
+  const fixture = createNotificationFixture({
+    classType: "INDIVIDUAL",
+    notificationType: "booking_confirmation",
+  });
+  assert.equal((await fixture.request()).status, 200);
+  const { message } = fixture.sent[0];
+  const match = message.text.match(
+    /Adicionar ao Google Agenda: (https:\/\/calendar\.google\.com\/calendar\/r\/eventedit\S+)/,
+  );
+  assert.ok(match);
+  const url = new URL(match[1]);
+  assert.equal(url.searchParams.get("action"), "TEMPLATE");
+  assert.doesNotMatch(url.searchParams.get("text"), /Aluno de Teste/);
+  assert.equal(url.searchParams.get("stz"), "America/Sao_Paulo");
+  assert.equal(message.attachments.length, 1, "The student's own ICS remains available");
+});
