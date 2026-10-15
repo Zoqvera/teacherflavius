@@ -11,6 +11,7 @@ function read(file) {
 
 function createHarness(profile, review) {
   let reviewCalls = 0;
+  const trackedEvents = [];
   let modalOpens = 0;
   const handlers = {};
   const storageValues = new Map();
@@ -57,7 +58,11 @@ function createHarness(profile, review) {
         }
       };
     },
-    async rpc(name) {
+    async rpc(name, params) {
+      if (name === "record_my_student_review_invitation") {
+        trackedEvents.push(params.target_action);
+        return { data: true, error: null };
+      }
       assert.equal(name, "get_my_student_review");
       reviewCalls += 1;
       return { data: review, error: null };
@@ -68,6 +73,7 @@ function createHarness(profile, review) {
     dialog,
     storage,
     handlers,
+    trackedEvents,
     get modalOpens() { return modalOpens; },
     get reviewCalls() { return reviewCalls; }
   };
@@ -118,8 +124,10 @@ test("active students can see the invitation after two months when they never re
   assert.equal(await invitation.initialize(options(harness)), true);
   assert.equal(harness.modalOpens, 1);
   assert.equal(harness.reviewCalls, 1);
+  assert.deepEqual(harness.trackedEvents, ["shown"]);
 
   harness.handlers.dismiss();
+  assert.deepEqual(harness.trackedEvents, ["shown", "dismissed"]);
   assert.equal(harness.dialog.open, false);
   assert.equal(await invitation.initialize(options(harness, { now: new Date() })), false);
   assert.equal(harness.modalOpens, 1, "dismissal should suppress reopening for seven days");

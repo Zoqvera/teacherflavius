@@ -124,3 +124,9 @@ Overlay `375_preserve_historical_credits_and_profile_integrity.sql` versions a p
 Overlay `377_manual_replacement_credits_all_students.sql` restores the existing private student-modality helper before the already-applied teacher manual-credit RPC and replacement booking policy. It changes no historical credit rows or tuition records and keeps cancellation eligibility checks in force.
 
 Overlay `380_same_day_first_tuition_payment.sql` applies the automatic São Paulo enrollment-date first due rule only to newly completed Google enrollments. It records a protected policy marker and provides a service-only deadline check, while retaining previously initiated payments and historical billing conditions. The payment gateway must use the service-only RPC before opening a new attempt.
+
+## Student review invitation metrics restoration
+
+Production migration `20261015161503_track_student_review_invitation_funnel` adds a private one-row-per-student tracking table and two protected RPCs. Its replayable SQL is stored in `395_student_review_invitation_funnel.sql`. This overlay must be applied **after `390_expose_study_button_marker.sql`** when rebuilding production, as it is not yet part of the fixed overlay list in `.github/workflows/validate-supabase-baseline.yml`. The existing schema fingerprint therefore describes the currently validated baseline through overlay 390, not the subsequent invitation metrics schema.
+
+The overlay contains no production student records. Both event collection and reporting are restricted by the database. Do not backfill synthetic views or clicks.
