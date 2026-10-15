@@ -103,6 +103,34 @@ confirmação de reserva; uma restrição única impede duplicação por
 `(booking_id, notification_type)`. Não envia avisos retroativos sobre
 reservas anteriores à implementação.
 
+## Google Agenda e arquivos de calendário
+
+Em **Minhas Aulas**, as reposições futuras confirmadas (`status = used`)
+passam a oferecer dois comandos: **Adicionar ao Google Agenda** e
+**Baixar arquivo .ics**. O arquivo pode ser importado em Outlook, Apple
+Calendar e outros clientes compatíveis com iCalendar. O botão não aparece
+para aulas regulares, cancelamentos, créditos livres ou dados de horário
+inválidos. A página já dispõe dos horários pelo RPC
+`get_my_lesson_credits` e não exige nova migração.
+
+Os e-mails de confirmação de reposição, tanto ao aluno quanto ao
+professor, incluem um arquivo `reposicao-aula.ics` com codificação
+UTF-8, horários UTC, evento confirmado, link da videoaula e UID estável.
+O UID deriva do identificador do aluno, número da turma e horário de
+início, sendo consistente com o download na Área do Estudante.
+
+A inclusão no Google Agenda continua exigindo que o usuário salve o
+compromisso. O download de um arquivo `.ics` também não equivale a
+sincronização automática. Se uma reposição for cancelada, o aluno e
+o professor são orientados a excluir manualmente o evento salvo.
+Não anexar eventos de cancelamento do tipo `METHOD:CANCEL` sem uma
+integração de calendário que identifique com segurança cada compromisso,
+pois uma mensagem pode cancelar eventos compartilhados de uma turma.
+
+Os testes de contrato verificam o conteúdo do `.ics`, escape dos
+campos, limite de 75 bytes por linha e a consistência do identificador,
+sem realizar envios reais.
+
 ## Teste do fluxo atual
 
 1. Na área do professor, abra **AGENDA DE REPOSIÇÕES** e publique um horário futuro válido.

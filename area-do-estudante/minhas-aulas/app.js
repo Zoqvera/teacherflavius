@@ -8,6 +8,7 @@
   let lessonCredits = [];
   let replacementOptions = [];
   let pendingLateCancellationButton = null;
+  let authenticatedStudentId = null;
 
   function sleep(milliseconds) {
     return new Promise(function (resolve) {
@@ -200,6 +201,17 @@
         actions.push('<a class="link-button" href="' + escapeHtml(credit.meeting_url) + '" target="_blank" rel="noopener noreferrer">ACESSAR AULA</a>');
       }
 
+      if (credit.status === "used" && window.TeacherFlaviusLessonCalendar && authenticatedStudentId) {
+        try {
+          const event = getReplacementCalendarEvent(credit);
+          const calendarUrl = window.TeacherFlaviusLessonCalendar.googleCalendarUrl(event);
+          actions.push('<a class="link-button" href="' + escapeHtml(calendarUrl) + '" target="_blank" rel="noopener noreferrer">ADICIONAR AO GOOGLE AGENDA</a>');
+          actions.push('<button class="link-button calendar-download-button" type="button" data-credit-id="' + escapeHtml(credit.credit_id) + '">BAIXAR ARQUIVO .ICS</button>');
+        } catch {
+          // Incomplete lesson data must not result in a broken calendar action.
+        }
+      }
+
       return '<article class="lesson-card">' +
         '<div class="lesson-topline">' +
           '<h3>' + escapeHtml(className) + '</h3>' +
@@ -210,6 +222,43 @@
         (actions.length ? '<div class="action-row">' + actions.join("") + '</div>' : '') +
       '</article>';
     }).join("") + '</div>';
+  }
+
+  function getReplacementCalendarEvent(credit) {
+    return {
+      studentId: authenticatedStudentId,
+      classNumber: credit.class_number,
+      className: credit.class_name || credit.original_class_name || ("Turma " + credit.class_number),
+      startsAt: credit.starts_at,
+      endsAt: credit.ends_at,
+      meetingUrl: credit.meeting_url
+    };
+  }
+
+  function downloadCalendarFile(button) {
+    const credit = lessonCredits.find(function (item) {
+      return item.status === "used" && String(item.credit_id) === button.dataset.creditId;
+    });
+    if (!credit || !window.TeacherFlaviusLessonCalendar) {
+      setPageMessage("Não foi possível recuperar os dados da reposição.", "error");
+      return;
+    }
+    try {
+      const content = window.TeacherFlaviusLessonCalendar.icsContent(
+        getReplacementCalendarEvent(credit)
+      );
+      const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "reposicao-" + credit.credit_id + ".ics";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    } catch (error) {
+      setPageMessage(error.message || "Não foi possível gerar o arquivo de calendário.", "error");
+    }
   }
 
   function getReplacementCreditIds() {
@@ -510,6 +559,9 @@
     document.querySelectorAll(".replacement-book-button").forEach(function (button) {
       button.addEventListener("click", function () { bookReplacement(button); });
     });
+    document.querySelectorAll(".calendar-download-button").forEach(function (button) {
+      button.addEventListener("click", function () { downloadCalendarFile(button); });
+    });
     document.querySelectorAll(".enrollment-cancel-button").forEach(function (button) {
       button.addEventListener("click", function () { cancelUnpaidEnrollment(button); });
     });
@@ -531,6 +583,7 @@
       return;
     }
 
+    authenticatedStudentId = session.user.id;
     if (loginStatus) loginStatus.textContent = "Aluno autenticado: " + (session.user.email || "acesso confirmado") + ".";
     document.body.classList.remove("auth-checking");
 
