@@ -1,5 +1,60 @@
 # Homologação de notificações e reposições — 15/10/2026
 
+
+## Atualização após a homologação externa de 15/10/2026
+
+Esta seção atualiza o quadro de pendências registrado na análise inicial,
+sem modificar nem reescrever suas evidências históricas.
+
+- Foi criada a branch isolada `homologacao-notificacoes-20261015`, sem
+  cópia dos dados dos alunos. O esquema foi reconstituído, as notificações
+  foram restringidas aos endereços previamente autorizados, e a branch foi
+  **excluída**, com exclusão confirmada no Supabase.
+- O usuário confirmou a **revogação** da chave Resend temporária, sem
+  comprovação independente da API Resend.
+- Os testes com Resend real comprovaram a recepção de **9 mensagens** nas
+  caixas autorizadas: 8 originadas da fila da aplicação e 1 teste adicional
+  de transporte. Incluíram confirmações e cancelamentos das modalidades
+  INDIVIDUAL e QUINTETO; os avisos do professor não continham .ics.
+- Na modalidade INDIVIDUAL, o professor recebeu apenas o link de
+  **criação manual** do Google Agenda. Na modalidade QUINTETO, não recebeu
+  link de calendário. O cancelamento individual instrui a remoção manual
+  do evento, caso tenha sido salvo.
+- A PR [#689](https://github.com/Zoqvera/teacherflavius/pull/689)
+  adicionou testes de integração SQL em PostgreSQL descartável e testes
+  simulados da função de cancelamento regular, com **19/19 verificações
+  aprovadas** antes do merge. As RPCs reais retornaram crédito
+  `available` com antecedência suficiente e `forfeited` em cancelamento
+  tardio; também foi validada a geração de duas notificações por
+  cancelamento elegível.
+- A recuperação simulada de falha HTTP 502 usa a mesma chave de
+  idempotência e não duplica envios. Isso **não comprova** a recuperação
+  durante uma indisponibilidade real do serviço Resend.
+- Consulta read-only à conta Google Agenda conectada
+  `handinhandengl@gmail.com`, restrita a 22 e 23/10/2026, não
+  encontrou eventos com os identificadores dos testes. Essa conta não
+  é a agenda do professor, portanto a verificação não é evidência
+  conclusiva do comportamento visual da conta dele.
+- Os testes automatizados adicionais conferem o link
+  `calendar.google.com/calendar/r/eventedit?action=TEMPLATE`,
+  os instantes UTC, o fuso `America/Sao_Paulo`, o destino e a ausência
+  de convite do professor. O fluxo não faz requisições de escrita ao
+  Google Calendar.
+
+**Pendências de validação externa:** observar na conta Google do
+professor a prévia do evento sem salvá-lo; e reproduzir uma falha real
+do provedor seguida do reenvio por cron em ambiente isolado
+estritamente controlado. Não introduzir falhas ou mensagens fictícias
+no ambiente de produção apenas para satisfazer esses cenários.
+
+A [issue #680](https://github.com/Zoqvera/teacherflavius/issues/680)
+permanece como trilha de auditoria atualizada.
+
+**SEO:** a homologação e estes testes não alteram páginas públicas,
+metadados, indexação, sitemap nem `robots.txt`.
+
+
+
 ## Escopo, isolamento e método
 
 - Auditoria SQL **somente leitura** em produção, com resultados agregados.
