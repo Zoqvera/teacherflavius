@@ -105,6 +105,15 @@ function buildHarness(overrides = {}) {
         status: 'submitted', score: null, reused: false }, error: null };
     }
     if (name === 'consume_api_rate_limit') return { data: config.rateLimit !== false, error: null };
+    if (name === 'homework_ai_budget_reserve') return {
+      data: { allowed: config.monthBudget !== false,
+        reserved_micro_usd: 4700 }, error: null,
+    };
+    if (name === 'homework_ai_budget_settle') return {
+      data: { settled: true, charged_micro_usd:
+        Math.ceil(args.p_input_tokens / 10 + args.p_output_tokens / 2) },
+      error: null,
+    };
     if (name === 'homework_claim_writing') return {
       data: { status: config.claimStatus || 'claimed', token: TOKEN,
         prompt: 'Write about your day', text: 'I go to school and I study English.' },
@@ -211,6 +220,17 @@ test('Writing is persisted, assessed by mocked AI and visible through progress',
   assert.equal(result.body.score, 8);
   assert.equal(h.calls.rpc.filter(entry => entry.name === 'homework_submit').length, 1);
   assert.equal(h.calls.ai.length, 1);
+  assert.equal(h.calls.rpc.filter(entry =>
+    entry.name === 'homework_ai_budget_reserve').length, 1);
+  assert.equal(h.calls.rpc.filter(entry =>
+    entry.name === 'homework_ai_budget_settle').length, 1);
+  const reservedAt = h.calls.rpc.findIndex(entry =>
+    entry.name === 'homework_ai_budget_reserve');
+  const settledAt = h.calls.rpc.findIndex(entry =>
+    entry.name === 'homework_ai_budget_settle');
+  assert.ok(reservedAt < settledAt, 'must reserve before settling a request');
+  assert.equal(h.calls.rpc[settledAt].args.p_input_tokens, 40000);
+  assert.equal(h.calls.rpc[settledAt].args.p_output_tokens, 1400);
   const providerBody = JSON.parse(h.calls.ai[0].options.body);
   assert.equal(providerBody.store, false);
   assert.equal(providerBody.model, 'gpt-6-luna');
@@ -432,4 +452,42 @@ test('Edge logs never expose raw backend error messages or submitted writing', a
     submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
   assert.ok(failing.calls.logs.some(value => value.includes('provider_or_storage')));
   assert.doesNotMatch(failing.calls.logs.join(' '), /I go to school and I study English/);
+});
+
+test('monthly US$5 cap denies only the AI call, without discarding the submitted text', async () => {
+  const h = buildHarness({ released: true, monthBudget: false });
+  const result = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.status, 'submitted');
+  assert.equal(result.body.correction, 'monthly_budget');
+  assert.match(result.body.message, /orçamento mensal/);
+  assert.equal(result.body.score, null);
+  assert.equal(h.record.attempt.status, 'submitted');
+  assert.equal(h.calls.ai.length, 0);
+  assert.equal(h.calls.rpc.filter(x => x.name === 'homework_ai_budget_reserve').length, 1);
+  assert.equal(h.calls.rpc.filter(x => x.name === 'homework_ai_budget_settle').length, 0);
+  assert.equal(h.calls.rpc.filter(x => x.name === 'homework_release_writing_lease').length, 1);
+});
+
+test('monthly budget is never reserved on concurrent or already evaluated Writing', async () => {
+  for (const claimStatus of ['processing', 'evaluated']) {
+    const h = buildHarness({ released: true, claimStatus });
+    const result = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+      submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+    assert.equal(result.status, 200);
+    assert.equal(h.calls.ai.length, 0);
+    assert.equal(h.calls.rpc.filter(x => x.name === 'homework_ai_budget_reserve').length, 0);
+  }
+});
+
+test('failed Writing assessment cannot invent token usage or release money prematurely', async () => {
+  const h = buildHarness({ released: true, aiStatus: 503 });
+  const response = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(response.body.status, 'submitted');
+  assert.equal(response.body.correction, 'retry');
+  assert.equal(h.calls.rpc.filter(x => x.name === 'homework_ai_budget_reserve').length, 1);
+  assert.equal(h.calls.rpc.filter(x => x.name === 'homework_ai_budget_settle').length, 0);
+  assert.equal(h.record.attempt.score, null);
 });
