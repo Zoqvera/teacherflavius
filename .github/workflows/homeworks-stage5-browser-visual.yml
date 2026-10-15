@@ -39,7 +39,7 @@ jobs:
           from static_site_files import is_public
 
           for target in (
-              Path("tests/fixtures/homeworks-stage5-visual.html"),
+              Path("tests/fixtures/homeworks-stage5-visual/index.html"),
               Path("tests/fixtures/homeworks-stage5-visual.js"),
               Path("scripts/homeworks_stage5_browser_visual_check.py"),
           ):
