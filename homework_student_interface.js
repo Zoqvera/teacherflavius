@@ -103,7 +103,7 @@
       } else if (resultStatus === "submitted") {
         appendText(panel, "p", type === "writing"
           ? "Seu texto está salvo. A correção está pendente; consulte o progresso mais tarde."
-          : "Suas respostas foram salvas. As respostas abertas podem exigir revisão do professor.");
+          : "Suas respostas foram salvas. A nota automática está sendo confirmada.");
       } else if (resultStatus === "evaluated") {
         appendText(panel, "h3", "Atividade corrigida");
         if (score !== null) appendText(panel, "p", "Nota: " + score + "/10");
@@ -111,6 +111,13 @@
         return panel;
       }
 
+      if (type === "writing" && resultStatus === "submitted") {
+        panel.appendChild(button("Tentar corrigir novamente", async function () {
+          status("Retomando a correção do texto já enviado...");
+          const resumed = await service.retryCorrection(auth, activeAssignment);
+          showProgress(resumed);
+        }));
+      }
       const feedback = Array.isArray(progress.feedback) ? progress.feedback : [];
       const aiFeedback = feedback.find(item => item && item.source === "ai");
       if (type === "writing" && aiFeedback) {
@@ -247,8 +254,19 @@
           status("Enviando atividade e consultando a correção...");
           try {
             const response = await service.submit(auth, currentSubmission);
-            const progress = await service.progress(auth, activeAssignment);
-            showProgress(progress?.status === "not_started" ? response : progress);
+            let confirmed = response;
+            try {
+              const progress = await service.progress(auth, activeAssignment);
+              // Caso o progresso esteja momentaneamente desatualizado,
+              // priorize o resultado final devolvido pelo próprio envio.
+              if (progress?.status === "evaluated" || response?.status !== "evaluated") {
+                confirmed = progress?.status === "not_started" ? response : progress || response;
+              }
+            } catch {
+              // Se a submissão foi confirmada, uma falha na consulta de progresso
+              // não deve ocultar a nota ou induzir um segundo envio.
+            }
+            showProgress(confirmed);
           } catch (error) {
             // Conserva a mesma chave e as mesmas respostas após falhas de rede.
             // Uma nova chave poderia duplicar ou invalidar a entrega já persistida.
@@ -300,7 +318,7 @@
         appendText(item, "span", row.title);
         const score = safeNumber(row.score);
         appendText(item, "span", score === null ? (row.status === "not_started"
-          ? "Não realizada" : "Em processamento ou revisão") : "Nota: " + score + "/10");
+          ? "Não realizada" : "Correção em processamento") : "Nota: " + score + "/10");
         item.appendChild(button("Abrir atividade", () => openActivity(row.assignment_id)));
         list.appendChild(item);
       }
