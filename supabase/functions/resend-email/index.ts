@@ -97,7 +97,7 @@ Deno.serve(async (req: Request) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${resendApiKey}`,
     },
-    body: JSON.stringify({ from: fromEmail, to, subject, html }),
+    body: JSON.stringify({ from: fromEmail, reply_to: "contato@teacherflavius.com", to, subject, html }),
   });
 
   const responseText = await res.text();
