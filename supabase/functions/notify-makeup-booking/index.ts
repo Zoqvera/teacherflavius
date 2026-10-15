@@ -15,6 +15,7 @@ type DatabaseWebhookPayload = {
 const encoder = new TextEncoder();
 const MAKEUP_FROM_EMAIL = "Teacher Flávio <contato@teacherflavius.com>";
 const TEACHER_BOOKING_TYPE = "teacher_booking";
+const TEACHER_CANCELLATION_TYPE = "teacher_cancellation";
 const MAKEUP_TIME_ZONE = "America/Sao_Paulo";
 
 function getDefaultKey(envName: string, legacyName: string): string {
@@ -214,8 +215,10 @@ Deno.serve(async (request: Request) => {
   }
 
   const notificationType = String(notification.notification_type ?? "");
-  const isCancellation = notificationType === "cancellation";
+  const isTeacherCancellation = notificationType === TEACHER_CANCELLATION_TYPE;
+  const isCancellation = notificationType === "cancellation" || isTeacherCancellation;
   const isTeacherBooking = notificationType === TEACHER_BOOKING_TYPE;
+  const isTeacherNotice = isTeacherBooking || isTeacherCancellation;
 
   if (notificationType !== "booking_confirmation" && !isCancellation && !isTeacherBooking) {
     await failNotification("Unsupported notification type");
@@ -247,7 +250,7 @@ Deno.serve(async (request: Request) => {
   // Administrative notifications always go to the approved professor mailbox.
   const teacherEmail = "flaviofreitas@ufu.br";
   const recipientEmail = safeHeader(
-    isTeacherBooking ? teacherEmail : booking.student_email,
+    isTeacherNotice ? teacherEmail : booking.student_email,
     "",
   );
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
@@ -272,7 +275,35 @@ Deno.serve(async (request: Request) => {
   let textBody: string;
   let htmlBody: string;
 
-  if (isTeacherBooking) {
+  if (isTeacherCancellation) {
+    subject = `Reposição cancelada: ${studentName} — ${classDate}, ${startTime}`;
+    textBody = [
+      `O aluno ${studentName} cancelou uma reposição.`,
+      "",
+      `Aluno: ${studentName}`,
+      `Turma: ${className}`,
+      `Data: ${classDate}`,
+      `Horário: ${schedule}`,
+      "",
+      "A vaga da reposição foi liberada.",
+      "Se você salvou o compromisso no Google Agenda, remova-o manualmente.",
+    ].join("\n");
+
+    htmlBody = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033;max-width:620px;margin:0 auto">
+        <h1 style="font-size:22px;margin-bottom:18px">Reposição cancelada pelo aluno</h1>
+        <p>O aluno <strong>${escapeHtml(studentName)}</strong> cancelou uma reposição.</p>
+        <table style="border-collapse:collapse;width:100%;margin:18px 0">
+          <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Aluno</td><td>${escapeHtml(studentName)}</td></tr>
+          <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Turma</td><td>${escapeHtml(className)}</td></tr>
+          <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Data</td><td>${escapeHtml(classDate)}</td></tr>
+          <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Horário</td><td>${escapeHtml(schedule)}</td></tr>
+        </table>
+        <p>A vaga da reposição foi liberada.</p>
+        <p style="color:#667085;font-size:13px">Se o evento foi salvo na sua agenda, remova-o manualmente.</p>
+      </div>
+    `;
+  } else if (isTeacherBooking) {
     const calendarUrl = makeGoogleCalendarUrl(
       studentName,
       className,
