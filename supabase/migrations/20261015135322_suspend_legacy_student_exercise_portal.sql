@@ -1,7 +1,5 @@
--- Suspensão temporária do Portal de Exercícios antigo (Google Forms).
--- Mantém exercícios, links, atribuições e histórico de conclusões intactos.
--- Não altera as TAREFAS PARA CASA (/area-do-estudante/homeworks/).
-
+-- Suspensao temporaria do Portal de Exercicios antigo.
+-- Preserva catalogo, links e historico de conclusoes; o professor mantem acesso administrativo.
 drop policy if exists "Alunos e professores podem visualizar exercícios" on public.teacher_exercises;
 drop policy if exists "Alunos autenticados podem visualizar exercícios ativos" on public.teacher_exercises;
 drop policy if exists "Apenas professores podem visualizar exercícios durante suspensão" on public.teacher_exercises;
