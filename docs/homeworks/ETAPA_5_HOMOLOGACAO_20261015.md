@@ -37,3 +37,7 @@ A suíte executa a Edge Function real em VM isolada, substituindo Supabase, aute
 Não alterar enabled=false, não promover atribuições held para assigned, não inserir menu ou rotas abertas a estudantes durante esta PR. Um lançamento futuro exige nova avaliação da configuração efetivamente implantada, controles administrativos auditáveis e autorização separada.
 
 Esta PR não muda SEO: preview mantém noindex, nofollow, noarchive; nenhuma mudança de sitemap, robots.txt, canonical ou páginas comerciais. A indexação de quaisquer rotas futuras será submetida previamente ao proprietário.
+
+## Atualização — 15/10/2026: migração da correção de Writing
+
+O professor autorizou a substituição de `gpt-4.1-mini` por `gpt-6-luna`. O avaliador usa a Responses API com JSON Schema estrito e `reasoning.effort=none` para reduzir latência. A lógica de avaliação de A1/A2, o intervalo 0–10, os pesos pedagógicos 40/30/30, `store:false`, chave exclusivamente no servidor, limite de solicitações, idempotência e comportamento fail-safe são preservados. A configuração funcional deve ser verificada com resposta real usando textos fictícios e comparação pedagógica antes do aceite. Nenhum dado de aluno é enviado durante a homologação simulada. A mudança não publica rotas estudantis, não modifica `homework_release_control.enabled=false` nem altera SEO. A ativação permanece sujeita a autorização explícita.
