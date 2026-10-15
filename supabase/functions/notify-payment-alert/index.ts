@@ -276,7 +276,7 @@ Deno.serve(async (request: Request) => {
         "Content-Type": "application/json",
         "Idempotency-Key": `payment-alert-${paymentAlert.id}`,
       },
-      body: JSON.stringify({ from: fromEmail, to: [notificationEmail], subject, text: textBody, html: htmlBody }),
+      body: JSON.stringify({ from: fromEmail, reply_to: "contato@teacherflavius.com", to: [notificationEmail], subject, text: textBody, html: htmlBody }),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
