@@ -112,6 +112,7 @@ async function sendResendEmail(apiKey: string, message: ResendMessage): Promise<
     },
     body: JSON.stringify({
       from: ENROLLMENT_FROM_EMAIL,
+      reply_to: "contato@teacherflavius.com",
       to: [message.to],
       subject: message.subject,
       text: message.text,
