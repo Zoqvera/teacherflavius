@@ -261,3 +261,80 @@
     display: grid;
   }
 }
+
+
+.review-funnel {
+  margin: 0 0 24px;
+}
+
+.review-funnel h2 {
+  margin: 0 0 8px;
+  color: var(--tf-slate-50);
+  font-family: var(--tf-font-display);
+  font-size: 20px;
+}
+
+.review-funnel-intro,
+.review-funnel-footnote {
+  margin: 0 0 14px;
+  color: var(--tf-slate-400);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.review-funnel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.review-funnel-card {
+  display: grid;
+  align-content: start;
+  min-height: 124px;
+  padding: 16px;
+  border: 1px solid rgba(78, 154, 236, .25);
+  border-radius: var(--tf-radius-md);
+  background: rgba(3, 26, 63, .72);
+}
+
+.review-funnel-card span,
+.review-funnel-card small {
+  color: var(--tf-slate-300);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.review-funnel-card strong {
+  margin: 9px 0 6px;
+  color: var(--tf-slate-50);
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+}
+
+.review-funnel-status {
+  margin: 12px 0;
+  color: var(--tf-slate-300);
+  font-size: 12px;
+}
+
+.review-funnel-status[data-tone="error"] {
+  color: #fecaca;
+}
+
+.review-funnel-footnote {
+  margin-bottom: 0;
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .review-funnel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .review-funnel-grid {
+    grid-template-columns: 1fr;
+  }
+}

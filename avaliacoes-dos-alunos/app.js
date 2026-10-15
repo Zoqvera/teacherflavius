@@ -11,6 +11,16 @@
     ui.refresh = document.getElementById("reviewRefreshButton");
     ui.status = document.getElementById("reviewAdminStatus");
     ui.list = document.getElementById("reviewAdminList");
+    ui.funnelStatus = document.getElementById("reviewFunnelStatus");
+    ui.funnelNumbers = {
+      eligible_active: document.getElementById("reviewFunnelEligible"),
+      already_reviewed: document.getElementById("reviewFunnelReviewed"),
+      shown: document.getElementById("reviewFunnelShown"),
+      clicked: document.getElementById("reviewFunnelClicked"),
+      dismissed: document.getElementById("reviewFunnelDismissed"),
+      reviewed_after_invitation: document.getElementById("reviewFunnelConverted")
+    };
+    ui.conversionRate = document.getElementById("reviewFunnelConversionRate");
   }
 
   function setStatus(message, tone) {
@@ -202,6 +212,46 @@
     }
   }
 
+  function renderInvitationMetrics(payload) {
+    for (const [name, element] of Object.entries(ui.funnelNumbers)) {
+      const value = Number(payload[name]);
+      element.textContent = Number.isFinite(value)
+        ? value.toLocaleString("pt-BR")
+        : "—";
+    }
+
+    const shown = Number(payload.shown) || 0;
+    const converted = Number(payload.reviewed_after_invitation) || 0;
+    ui.conversionRate.textContent = shown > 0
+      ? "Conversão por convite exibido: " +
+        (100 * converted / shown).toLocaleString("pt-BR", {
+          maximumFractionDigits: 1
+        }) + "%"
+      : "Conversão por convite exibido: ainda sem registros";
+  }
+
+  async function loadInvitationMetrics() {
+    ui.funnelStatus.textContent = "Atualizando indicadores...";
+    ui.funnelStatus.dataset.tone = "neutral";
+
+    try {
+      const response = await window.Auth.getClient().rpc(
+        "get_teacher_student_review_invitation_metrics"
+      );
+      if (response.error) throw response.error;
+      renderInvitationMetrics(response.data || {});
+      ui.funnelStatus.textContent = "Indicadores atualizados.";
+    } catch (_error) {
+      ui.funnelStatus.dataset.tone = "error";
+      ui.funnelStatus.textContent =
+        "Não foi possível atualizar os indicadores. As avaliações continuam disponíveis.";
+    }
+  }
+
+  async function refreshDashboard() {
+    await Promise.all([loadReviews(), loadInvitationMetrics()]);
+  }
+
   async function moderateReview(reviewId, status, note, button) {
     const actionLabel = status === "approved" ? "aprovar" : "rejeitar";
     const confirmed = window.confirm("Deseja " + actionLabel + " esta avaliação?");
@@ -217,7 +267,7 @@
         target_moderation_note: String(note || "").trim() || null
       });
       if (response.error) throw response.error;
-      await loadReviews();
+      await refreshDashboard();
     } catch (error) {
       setStatus(error && error.message ? error.message : "Não foi possível salvar a moderação.", "error");
     } finally {
@@ -228,7 +278,7 @@
   async function initialize() {
     cacheUi();
     ui.filter.addEventListener("change", loadReviews);
-    ui.refresh.addEventListener("click", loadReviews);
+    ui.refresh.addEventListener("click", refreshDashboard);
 
     try {
       const ready = await waitForAuth();
@@ -247,7 +297,7 @@
       }
 
       document.body.classList.remove("auth-checking");
-      await loadReviews();
+      await refreshDashboard();
     } catch (error) {
       document.body.classList.remove("auth-checking");
       setStatus(error && error.message ? error.message : "Não foi possível carregar a página.", "error");
