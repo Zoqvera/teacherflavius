@@ -665,20 +665,32 @@ jobs:
 
       - name: Exercise Homeworks through actual local Supabase Auth and Edge HTTP
         shell: bash
+        env:
+          HOMEWORKS_LIVE_WRITING: ${{ github.event_name == 'workflow_dispatch' && inputs.live_writing && 'true' || 'false' }}
+          LOCAL_OPENAI_SECRET: ${{ github.event_name == 'workflow_dispatch' && inputs.live_writing && secrets.OPENAI_API_KEY || '' }}
         run: |
           set -euo pipefail
 
-          # Live provider keys and production users never enter the CI runtime.
-          # JWT verification is skipped ONLY at the local gateway; the Edge
-          # handler still validates the submitted JWT via Auth.getUser.
-          export OPENAI_API_KEY=""
+          # A billable OpenAI call is possible only with a manual opt-in.
+          # On PRs, the same JWT/SQL/HTTP suite runs without a live provider.
+          if [ "$HOMEWORKS_LIVE_WRITING" = "true" ] && [ -z "$LOCAL_OPENAI_SECRET" ]; then
+            echo "::error::Add the GitHub Actions secret OPENAI_API_KEY."
+            exit 1
+          fi
+
+          # Functions receive their secret from a temporary restricted env file.
+          # All URLs and JWT keys resolve to the disposable local Supabase stack.
+          umask 077
+          SECRET_FILE="$(mktemp /tmp/homeworks-stage5-local.XXXXXXXX.env)"
+          printf 'OPENAI_API_KEY=%s\n' "$LOCAL_OPENAI_SECRET" > "$SECRET_FILE"
           supabase functions serve homework-student --no-verify-jwt \
+            --env-file "$SECRET_FILE" \
             > /tmp/homeworks-stage5-edge-local.log 2>&1 &
           EDGE_PID=$!
-          trap 'kill "$EDGE_PID" 2>/dev/null || true' EXIT
+          trap 'kill "$EDGE_PID" 2>/dev/null || true; rm -f "$SECRET_FILE"' EXIT
 
           if ! node tests/homeworks_stage5_http_integration.cjs; then
-            # Output only a short, redacted local runtime diagnostics tail.
+            # Scrub keys from local Edge diagnostics (no response bodies).
             sed -E 's/(Bearer |sk-[A-Za-z0-9_-]+)[A-Za-z0-9_.-]+/REDACTED/g' \
               /tmp/homeworks-stage5-edge-local.log | tail -n 55
             exit 1
