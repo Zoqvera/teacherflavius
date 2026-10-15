@@ -222,3 +222,21 @@ Após a execução, uma consulta somente leitura confirmou `homework_release_con
 - **Configuração de produção:** confirmar a presença/validade do segredo `OPENAI_API_KEY` na Edge Function de produção por meio de procedimento que não abra o recurso nem envie dados reais; o E2E local usa o segredo GitHub Actions e não verifica o do Supabase.
 
 A liberação dos alunos, a substituição do portal antigo e a transição à **ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica** continuam condicionadas à autorização expressa do professor. Não houve mudança de SEO.
+
+## ETAPA 5 — Paridade pedagógica e transparência antes da submissão
+
+A revisão encontrou uma divergência de resultados entre a simulação do professor e o sistema oficial de correção de Reading/Grammar:
+
+- O simulador anterior removia acentos e pontuação, aceitando respostas que o PostgreSQL considerava diferentes.
+- A nota simulada tratava todas as perguntas com o mesmo peso, mas a RPC `public.homework_submit` calcula nota ponderada por `exercise_questions.points`.
+- Respostas incompletas ou questões com gabarito/pontuação inválidos podiam gerar uma nota simulada mesmo quando o backend recusaria a submissão.
+
+A prévia foi alinhada à regra oficial: normalização de caixa e espaços repetidos; pontuação e acentuação preservadas. Respostas alternativas continuam permitidas **somente** quando constam explicitamente do gabarito `accepted`. A pontuação é ponderada pelos pesos aprovados e arredondada a duas casas. Se faltar resposta, alternativa válida, gabarito ou peso, a prévia não inventa nota; a inspeção editorial sinaliza pesos inválidos.
+
+Esta mudança **não** altera as regras oficiais da correção em PostgreSQL, o gabarito publicado, a ausência de revisão manual nem as pontuações dos alunos. Ajusta apenas a simulação pedagógica para refletir o resultado que o aluno receberá.
+
+Também foi incluída no formulário de Writing uma informação clara, antes do botão de envio: o texto será enviado à OpenAI para correção automática, com orientação para não informar nomes completos, telefones, endereços ou outros dados pessoais. Trata-se de informação de transparência, **não** de uma declaração de consentimento ou aprovação da política de privacidade. As decisões sobre fundamento legal, prazos de retenção, comunicação e custo devem ser tomadas pelo responsável antes da liberação pública.
+
+Os testes abrangem pesos desiguais, caracteres acentuados, pontuação, campos vazios, opções não cadastradas, gabaritos e pesos inválidos e presença do aviso apenas no Writing. Acesso dos alunos permanece bloqueado. Nenhuma alteração em `robots`, `sitemap`, `canonical` ou indexação; a prévia do professor continua protegida por `noindex, nofollow, noarchive`.
+
+**Estado:** ETAPA 5 em curso; critérios de aceite pedagógico, dispositivos e privacidade ainda pendentes. **Próxima:** ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica, somente após autorização expressa.
