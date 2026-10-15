@@ -1,0 +1,60 @@
+name: Student preparation Stage 8 isolated RLS acceptance
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261015213000_student_preparation_pilot_eligibility.sql"
+      - "tests/sql/student_preparation_pilot_rls.sql"
+      - ".github/workflows/student-preparation-isolated-rls.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-rls:
+    name: Student preparation — synthetic PostgreSQL RLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local-synthetic-fixture-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGDATABASE: postgres
+      PGPASSWORD: local-synthetic-fixture-only
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Assert isolated synthetic setup
+        run: |
+          set -euo pipefail
+          test "$PGHOST" = "127.0.0.1"
+          test "$PGDATABASE" = "postgres"
+          test "$PGUSER" = "postgres"
+          test -f supabase/migrations/20261015213000_student_preparation_pilot_eligibility.sql
+          test -f tests/sql/student_preparation_pilot_rls.sql
+
+      - name: Install PostgreSQL client when needed
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+
+      - name: Verify actual migration and identity RLS
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/sql/student_preparation_pilot_rls.sql
