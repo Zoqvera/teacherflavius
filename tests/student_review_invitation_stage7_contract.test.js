@@ -19,7 +19,7 @@ const baselineReadme = read("supabase/baseline/README.md");
 test("PWA entry fetches the current dashboard and uncached invitation JavaScript", () => {
   assert.match(entry, /sourcePage \+ "\?v=20261015-stage7-invitation-1"/);
   assert.match(entry, /cache: 'no-store'/);
-  assert.match(dashboard, /\/student_review_invitation\.js\?v=20261015-funnel-2/);
+  assert.match(dashboard, /\/student_review_invitation\.js\?v=20261015-invitation-retry-1/);
   assert.match(dashboard, /studentReviewInvitation/);
   assert.match(invitation, /record_my_student_review_invitation/);
   assert.doesNotMatch(dashboard, /\/student_review_invitation\.js\?v=20261015-1"/);
