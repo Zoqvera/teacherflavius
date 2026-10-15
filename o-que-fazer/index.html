@@ -12,17 +12,32 @@
   <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
   <link rel="stylesheet" href="/academic_workflow.css?v=20261014-all-questions-link-1">
   <link rel="stylesheet" href="/conversation_question_cards.css?v=20261004-1">
+  <link rel="stylesheet" href="/student_preparation_flow.css?v=20261015-1">
 </head>
 <body class="auth-checking">
   <main class="academic-shell">
     <header class="academic-header">
       <p class="academic-kicker">PREPARAÇÃO DA PRÓXIMA AULA</p>
       <h1>O QUE FAZER</h1>
-      <p class="academic-description">Aqui estão a sua próxima lição, as revisões programadas e as Conversation Questions que você ainda não marcou como estudadas.</p>
+      <p id="legacyActionPlanDescription" class="academic-description">Aqui estão a sua próxima lição, as revisões programadas e as Conversation Questions que você ainda não marcou como estudadas.</p>
       <p id="actionPlanStatus" class="academic-status" role="status">Carregando seu plano...</p>
     </header>
 
-    <div class="academic-grid">
+    <section id="studentPreparationWelcome" class="academic-panel student-preparation-welcome" aria-labelledby="welcomeTitle" hidden>
+      <p class="student-preparation-progress">ETAPA 1 DE 2 — APRESENTAÇÃO</p>
+      <h2 id="welcomeTitle">Prepare-se para a próxima aula</h2>
+      <p class="student-preparation-intro">Sua aula é composta de duas partes:</p>
+      <ol class="student-preparation-steps">
+        <li>Apresentação</li>
+        <li>Conversation</li>
+      </ol>
+      <p class="student-preparation-intro">Agora é hora de se preparar para a próxima aula.</p>
+      <button id="startPreparationButton" class="academic-button primary" type="button" disabled>COMEÇAR</button>
+      <a id="startConversationFallback" class="academic-button primary student-preparation-fallback" href="/o-que-fazer/segunda-parte/" hidden>IR PARA CONVERSATION</a>
+      <p id="welcomePreparationStatus" class="academic-status" role="status">Buscando a próxima lição...</p>
+    </section>
+
+    <div id="legacyActionPlan" class="academic-grid">
       <section class="academic-panel" aria-labelledby="nextLessonTitle">
         <p class="academic-kicker">PRÓXIMA LIÇÃO</p>
         <h2 id="nextLessonTitle">Lição prevista</h2>
@@ -54,7 +69,8 @@
   <script src="/resource_waiter.js?v=20260902-2"></script>
   <script src="/conversation_question_card_renderer.js?v=20261004-1"></script>
   <script src="/academic_workflow_service.js?v=20261014-student-reviews-1"></script>
-  <script src="/o-que-fazer/app.js?v=20261014-hide-marked-questions-1"></script>
+  <script src="/student_preparation_flow.js?v=20261015-1"></script>
+  <script src="/o-que-fazer/app.js?v=20261014-hide-marked-questions-1&flow=20261015"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
   <script src="/site_runtime_config.js?v=20260903-1"></script>
