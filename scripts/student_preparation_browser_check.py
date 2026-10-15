@@ -27,6 +27,7 @@ SCENARIOS = (
     ("unpublished", 390, 844),
     ("second", 320, 740),
     ("second", 390, 844),
+    ("second-dialog", 390, 844),
     ("second", 1280, 900),
     ("lesson", 320, 740),
     ("lesson", 390, 844),
@@ -137,7 +138,7 @@ VERIFIER = r"""
       ok = ok && visible("studentPreparationWelcome") &&
         document.getElementById("startPreparationButton").disabled &&
         visible("startConversationFallback");
-    } else if (scenario === "second") {
+    } else if (scenario === "second" || scenario === "second-dialog") {
       const studiedButton = document.querySelector(
         "#actionQuestionList .academic-question-study-actions button:not(:disabled)"
       );
@@ -150,6 +151,17 @@ VERIFIER = r"""
       ok = ok && calls.studied.length === 1 &&
         document.getElementById("questionsCount").textContent === "0" &&
         document.querySelectorAll("#reviewQuestionList .conversation-card").length === 2;
+      const dialog = document.getElementById("questionStudiedDialog");
+      ok = ok && !!dialog && dialog.open &&
+        document.getElementById("questionStudiedDialogTitle").textContent === "Great job!" &&
+        document.getElementById("studyAnotherQuestionButton").textContent.trim() ===
+          "ESTUDAR MAIS UMA PERGUNTA" &&
+        document.getElementById("finishQuestionStudyLink").getAttribute("href") ===
+          "/area-do-estudante/";
+      if (scenario === "second") {
+        document.getElementById("studyAnotherQuestionButton").click();
+        ok = ok && !dialog.open;
+      }
     } else if (scenario === "lesson") {
       ok = ok && visible("lessonFlowProgress") &&
         visible("lessonNextPartLink") &&
@@ -218,6 +230,7 @@ def copy_fixture_files(root: Path) -> None:
         if match is None:
             raise RuntimeError(f"Could not locate the production main element: {page_name}")
         main_markup = match.group(0)
+        dialog_markup = "".join(re.findall(r'<dialog\b[^>]*>[\s\S]*?</dialog>', html))
         is_lesson = page_name.startswith("licao/")
         if is_lesson:
             main_markup = (
@@ -245,7 +258,8 @@ def copy_fixture_files(root: Path) -> None:
         page = (
             '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-            css_links + '</head><body class="auth-checking">' + main_markup + scripts +
+            css_links + '</head><body class="auth-checking">' +
+            main_markup + dialog_markup + scripts +
             '</body></html>'
         )
         target = root / page_name
@@ -255,7 +269,7 @@ def copy_fixture_files(root: Path) -> None:
 
 def run_case(browser: str, port: int, scenario: str, width: int, height: int) -> None:
     route = "/licao/" if scenario.startswith(("lesson", "roadmap")) else (
-        "/o-que-fazer/segunda-parte/" if scenario == "second" else "/o-que-fazer/"
+        "/o-que-fazer/segunda-parte/" if scenario.startswith("second") else "/o-que-fazer/"
     )
     query = {"scenario": scenario, "lesson": "7"}
     if scenario.startswith("roadmap"):

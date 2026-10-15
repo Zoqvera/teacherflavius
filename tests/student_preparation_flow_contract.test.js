@@ -65,3 +65,23 @@ test("second part is private, reuses the same student question handlers, and kee
   assert.match(landingApp, /updateQuestionCount\("reviewQuestionsCount", reviews\.length\)/);
   assert.match(landingApp, /updateQuestionCount\("questionsCount", questions\.length\)/);
 });
+
+test("study confirmation has the exact requested choices and a verified destination", () => {
+  const dialog = read("o-que-fazer/segunda-parte/index.html");
+  assert.match(dialog, /<dialog id="questionStudiedDialog"/);
+  assert.match(dialog, /<h2 id="questionStudiedDialogTitle">Great job!<\/h2>/);
+  assert.match(dialog, /ESTUDAR MAIS UMA PERGUNTA/);
+  assert.match(dialog, /TERMINAR MEUS ESTUDOS/);
+  assert.match(dialog, /id="finishQuestionStudyLink"[^>]*href="\/area-do-estudante\/"/);
+  assert.match(landingApp, /await service\.markQuestionStudied\(question\.id\)/);
+  assert.match(landingApp, /showQuestionStudiedDialog\(\)/);
+});
+
+test("the teacher lesson plan reflects registered preparation and refreshes while visible", () => {
+  const teacher = read("roteiro-da-aula/app.js");
+  assert.match(lessonApp, /await academicService\.markLessonPrepared\(lessonNumber\)/);
+  assert.match(lessonApp, /window\.location\.href = window\.StudentPreparationFlow\.secondPartUrl/);
+  assert.match(teacher, /item\.lesson_status === "prepared"/);
+  assert.match(teacher, /PLAN_REFRESH_INTERVAL_MS = 30000/);
+  assert.match(teacher, /document\.visibilityState === "visible"/);
+});

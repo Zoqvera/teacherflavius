@@ -2,6 +2,7 @@
   "use strict";
 
   const WAIT_OPTIONS = Object.freeze({ maxAttempts: 30, delayMs: 120 });
+  const PLAN_REFRESH_INTERVAL_MS = 30000;
   const RATING_LABELS = Object.freeze({
     good: "BOM",
     medium: "MÉDIO",
@@ -410,6 +411,13 @@
     dateInput.addEventListener("change", function () { loadPlan(true); });
     document.getElementById("reloadTeacherPlan")
       .addEventListener("click", function () { loadPlan(true); });
+
+    // Update preparation labels while the teacher keeps the roster open.
+    if (typeof window.setInterval === "function") {
+      window.setInterval(function () {
+        if (document.visibilityState === "visible") loadPlan(false);
+      }, PLAN_REFRESH_INTERVAL_MS);
+    }
 
     document.body.classList.remove("auth-checking");
     await loadPlan(true);

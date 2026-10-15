@@ -136,6 +136,30 @@
     container.appendChild(link);
   }
 
+  function showQuestionStudiedDialog() {
+    if (!isNewFlowEnabled() || !isSecondPartPage()) return;
+
+    const dialog = document.getElementById("questionStudiedDialog");
+    if (dialog && !dialog.open) dialog.showModal();
+  }
+
+  function initializeQuestionStudiedDialog() {
+    if (!isNewFlowEnabled() || !isSecondPartPage()) return;
+
+    const dialog = document.getElementById("questionStudiedDialog");
+    const continueButton = document.getElementById("studyAnotherQuestionButton");
+    if (!dialog || !continueButton) return;
+
+    continueButton.addEventListener("click", function () {
+      dialog.close();
+      const nextQuestion = document.querySelector(
+        "#actionQuestionList .academic-question-study-actions button:not(:disabled)"
+      );
+      const focusTarget = nextQuestion || document.getElementById("questionsTitle");
+      if (focusTarget) focusTarget.focus();
+    });
+  }
+
   async function handleQuestionStudied(question, button) {
     if (!question || !question.id || question.studied || question.worked || button.disabled) return;
 
@@ -145,6 +169,7 @@
     try {
       await service.markQuestionStudied(question.id);
       await loadPlan();
+      showQuestionStudiedDialog();
     } catch (error) {
       console.error("Falha ao registrar pergunta estudada:", error);
       setStatus(
@@ -322,7 +347,10 @@
       return;
     }
 
-    if (isSecondPartPage()) trackPreparation("preparation_conversation_view");
+    if (isSecondPartPage()) {
+      initializeQuestionStudiedDialog();
+      trackPreparation("preparation_conversation_view");
+    }
     await loadPlan();
   }
 

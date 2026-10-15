@@ -154,6 +154,36 @@
     button.textContent = label;
   }
 
+  function bindNextPartRegistration(link, lessonNumber) {
+    let registering = false;
+
+    link.addEventListener("click", async function (event) {
+      event.preventDefault();
+      if (registering) return;
+
+      registering = true;
+      const previousLabel = link.textContent;
+      link.setAttribute("aria-disabled", "true");
+      link.textContent = "REGISTRANDO...";
+      setStatus("Registrando sua preparação...");
+
+      try {
+        await academicService.markLessonPrepared(lessonNumber);
+        trackPreparation("preparation_next_part");
+        window.location.href = window.StudentPreparationFlow.secondPartUrl;
+      } catch (error) {
+        console.error("Falha ao registrar preparação:", error);
+        setStatus(
+          error && error.message ? error.message : "Não foi possível registrar sua preparação. Tente novamente.",
+          true
+        );
+        link.textContent = previousLabel;
+        link.removeAttribute("aria-disabled");
+        registering = false;
+      }
+    });
+  }
+
   async function setupPreparation(lessonNumber) {
     const section = document.getElementById("lessonPreparationSection");
     const nextPartLink = document.getElementById("lessonNextPartLink");
@@ -184,9 +214,7 @@
         if (progress) progress.hidden = false;
         if (nextPartLink) {
           nextPartLink.hidden = false;
-          nextPartLink.addEventListener("click", function () {
-            trackPreparation("preparation_next_part");
-          });
+          bindNextPartRegistration(nextPartLink, lessonNumber);
         }
         trackPreparation("preparation_lesson_view");
         return;
