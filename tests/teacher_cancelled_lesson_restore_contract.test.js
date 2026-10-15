@@ -8,6 +8,10 @@ const migration = fs.readFileSync(
   path.join(root, "supabase/migrations/20261015192553_restore_cancelled_teacher_lessons.sql"),
   "utf8"
 );
+const revokedGuard = fs.readFileSync(
+  path.join(root, "supabase/migrations/20261015192938_guard_revoked_lesson_credits.sql"),
+  "utf8"
+);
 const teacherApp = fs.readFileSync(path.join(root, "roteiro-da-aula/app.js"), "utf8");
 const workflow = fs.readFileSync(path.join(root, "academic_workflow_service.js"), "utf8");
 const page = fs.readFileSync(path.join(root, "roteiro-da-aula/index.html"), "utf8");
@@ -32,6 +36,8 @@ test("undo of cancellation is scoped to teacher and protects the replacement cre
   assert.match(migration, /matching_credit\.makeup_booking_id is not null/i);
   assert.match(migration, /matching_credit\.status = 'used'/i);
   assert.match(migration, /matching_credits > 1/i);
+  assert.match(revokedGuard, /credit\.revoked_at is not null/i);
+  assert.match(revokedGuard, /O crédito contratual foi revogado/i);
   assert.match(migration, /set status = 'scheduled', cancelled_at = null/i);
   assert.match(migration, /delete from private\.student_regular_lesson_cancellations/i);
   assert.match(migration, /private\.student_regular_lesson_restorations/i);
