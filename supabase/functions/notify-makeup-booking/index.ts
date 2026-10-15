@@ -131,6 +131,80 @@ function makeGoogleCalendarUrl(
   return url.toString();
 }
 
+function escapeIcsText(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n")
+    .replace(/;/g, "\\;").replace(/,/g, "\\,");
+}
+
+function foldIcsLines(lines: string[]): string {
+  const folded: string[] = [];
+  for (const line of lines) {
+    let part = "";
+    let length = 0;
+    for (const character of line) {
+      const bytes = encoder.encode(character).length;
+      if (length + bytes > 75) {
+        folded.push(part);
+        part = " " + character;
+        length = bytes + 1;
+      } else {
+        part += character;
+        length += bytes;
+      }
+    }
+    folded.push(part);
+  }
+  return folded.join("\r\n") + "\r\n";
+}
+
+function makeIcsAttachment(
+  studentId: string,
+  classNumber: number,
+  studentName: string,
+  className: string,
+  startsAt: string,
+  endsAt: string,
+  meetingUrl: string,
+  audience: "teacher" | "student",
+): { filename: string; content: string; content_type: string } {
+  const uid = `reposicao-${studentId}-${classNumber}-${formatCalendarInstant(startsAt)}@teacherflavius.com`;
+  const title = audience === "teacher"
+    ? `Reposição de aula — ${studentName} (${className})`
+    : `Reposição de inglês — ${className}`;
+  const description = [
+    ...(audience === "teacher" ? [`Aluno: ${studentName}`] : []),
+    `Turma: ${className}`,
+    "Reposição agendada pelo TeacherFlavius.",
+    `Link da aula: ${meetingUrl}`,
+  ].join("\n");
+  const content = foldIcsLines([
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//TeacherFlavius//Reposicoes//PT-BR",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${formatCalendarInstant(new Date().toISOString())}`,
+    `DTSTART:${formatCalendarInstant(startsAt)}`,
+    `DTEND:${formatCalendarInstant(endsAt)}`,
+    `SUMMARY:${escapeIcsText(title)}`,
+    `DESCRIPTION:${escapeIcsText(description)}`,
+    `LOCATION:${escapeIcsText(meetingUrl)}`,
+    "STATUS:CONFIRMED",
+    "SEQUENCE:0",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ]);
+  const bytes = encoder.encode(content);
+  const base64 = btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
+  return {
+    filename: "reposicao-aula.ics",
+    content: base64,
+    content_type: "text/calendar; charset=utf-8",
+  };
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
@@ -197,7 +271,7 @@ Deno.serve(async (request: Request) => {
 
   const { data: booking, error: bookingError } = await supabase
     .from("makeup_class_bookings")
-    .select("id, slot_id, student_name, student_email, class_name, meeting_url, status")
+    .select("id, slot_id, student_id, class_number, student_name, student_email, class_name, meeting_url, status")
     .eq("id", notification.booking_id)
     .single();
 
@@ -430,6 +504,18 @@ Deno.serve(async (request: Request) => {
       subject,
       text: textBody,
       html: htmlBody,
+      ...(!isCancellation ? {
+        attachments: [makeIcsAttachment(
+          booking.student_id,
+          booking.class_number,
+          studentName,
+          className,
+          slot.starts_at,
+          slot.ends_at,
+          meetingUrl!,
+          isTeacherNotice ? "teacher" : "student",
+        )],
+      } : {}),
     }),
   });
 
