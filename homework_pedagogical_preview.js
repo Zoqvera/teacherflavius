@@ -80,6 +80,11 @@
     appendText(container, mainText, "homework-pedagogical-body");
     const guidance = activityType === "writing" ? content.guidelines : content.instructions;
     appendList(container, guidance, "homework-pedagogical-instructions");
+    if (activityType === "writing" && typeof content.model === "string" &&
+        content.model.trim()) {
+      container.appendChild(element("h3", "", "Modelo de referência"));
+      appendText(container, content.model, "homework-pedagogical-body");
+    }
     if (activityType === "grammar") {
       if (Array.isArray(content.examples) && content.examples.length) {
         container.appendChild(element("h3", "", "Exemplos"));
