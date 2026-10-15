@@ -297,13 +297,13 @@
           ? "Correspondência com o gabarito."
           : questions[index].question_type === "multiple_choice"
             ? "Alternativa diferente do gabarito."
-            : "Resposta diferente do gabarito: necessária revisão do professor.";
+            : "Resposta diferente do gabarito: na correção automática, vale zero.";
       });
       summary.textContent = results.total
         ? "Simulação local: " + results.correct + " de " + results.total +
           " respostas coincidiram com o gabarito. Correspondência aproximada: " +
           (results.score * 10).toLocaleString("pt-BR") +
-          "%. Não é nota oficial; respostas abertas exigem avaliação humana."
+          "%. Esta é apenas uma simulação; na entrega oficial, as respostas divergentes recebem zero automaticamente."
         : "Não há gabaritos suficientes para simular uma nota.";
     });
     container.appendChild(form);
