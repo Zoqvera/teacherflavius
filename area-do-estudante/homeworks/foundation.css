@@ -317,3 +317,93 @@ h2 {
     width: 100%;
   }
 }
+
+.homework-version-history {
+  margin-top: 1.6rem;
+  border-top: 1px solid #dce2ec;
+  padding-top: 1rem;
+}
+
+.homework-version-history[hidden] {
+  display: none;
+}
+
+.homework-version-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.homework-version-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  background: #f4f6fa;
+  border: 1px solid #dce2ec;
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.homework-version-list button,
+.homework-pedagogical-reset {
+  border: 1px solid #123a7a;
+  color: #123a7a;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.homework-pedagogical-answer-key {
+  border-top: 1px solid #dce2ec;
+  margin-top: 0.85rem;
+  padding-top: 0.8rem;
+}
+
+.homework-pedagogical-answer-key summary {
+  color: #123a7a;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.homework-pedagogical-answer-key p {
+  overflow-wrap: anywhere;
+}
+
+.homework-pedagogical-input-label {
+  display: block;
+  margin-top: 0.7rem;
+  font-weight: 600;
+}
+
+.homework-pedagogical-progress,
+.homework-pedagogical-counter {
+  font-variant-numeric: tabular-nums;
+  color: #445775;
+  font-weight: 600;
+}
+
+.homework-pedagogical-changed {
+  background: #fff0b8;
+  padding: 0 0.08em;
+  border-radius: 2px;
+  color: #162440;
+}
+
+.homework-pedagogical-reset:focus-visible,
+.homework-version-list button:focus-visible {
+  outline: 3px solid #123a7a;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .homework-version-list button,
+  .homework-pedagogical-reset {
+    width: 100%;
+  }
+}
