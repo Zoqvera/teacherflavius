@@ -122,6 +122,7 @@ test("student UI is inert until explicitly mounted and loaded", async () => {
 test("Writing submit displays official feedback immediately, without another-study prompts", async () => {
   const h = harness();
   await h.controller.open("00000000-0000-4000-8000-000000000001");
+  assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
   const textarea = descendants(h.mount, "textarea")[0];
   assert.ok(textarea);
   textarea.value = "I study English every morning and I like it.";
@@ -141,6 +142,7 @@ test("Writing submit displays official feedback immediately, without another-stu
 test("network retry reuses the same immutable submission key and answers", async () => {
   const h = harness();
   await h.controller.open("00000000-0000-4000-8000-000000000001");
+  assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
   const text = descendants(h.mount, "textarea")[0];
   text.value = "I study English every morning and I like it.";
   h.setSubmitError();
@@ -161,6 +163,7 @@ test("Reading and Grammar inputs validate and submit server-side IDs without ans
   for (const type of ["reading", "grammar"]) {
     const h = harness(type);
     await h.controller.open("00000000-0000-4000-8000-000000000001");
+  assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
     const select = descendants(h.mount, "select")[0];
     const input = descendants(h.mount, "input")[0];
     assert.ok(select && input);
@@ -181,6 +184,7 @@ test("pending Writing progress never manufactures a final grade or submits twice
   const h = harness();
   h.setProgress({ status: "submitted", score: null, feedback: [] });
   await h.controller.open("00000000-0000-4000-8000-000000000001");
+  assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
   assert.match(displayText(h.mount), /correção está pendente/);
   assert.doesNotMatch(displayText(h.mount), /Nota:/);
   assert.equal(descendants(h.mount, "form").length, 0);
