@@ -413,9 +413,11 @@
       .addEventListener("click", function () { loadPlan(true); });
 
     // Update preparation labels while the teacher keeps the roster open.
-    window.setInterval(function () {
-      if (document.visibilityState === "visible") loadPlan(false);
-    }, PLAN_REFRESH_INTERVAL_MS);
+    if (typeof window.setInterval === "function") {
+      window.setInterval(function () {
+        if (document.visibilityState === "visible") loadPlan(false);
+      }, PLAN_REFRESH_INTERVAL_MS);
+    }
 
     document.body.classList.remove("auth-checking");
     await loadPlan(true);
