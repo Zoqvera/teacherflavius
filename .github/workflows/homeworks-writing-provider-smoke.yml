@@ -1,0 +1,59 @@
+name: Homeworks Writing provider smoke
+
+on:
+  pull_request:
+    paths:
+      - "scripts/homework_stage5_provider_smoke.mjs"
+      - "tests/homework_stage5_provider_smoke.test.mjs"
+      - "supabase/functions/homework-student/index.ts"
+      - ".github/workflows/homeworks-writing-provider-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-provider-contract:
+    name: Writing smoke contract without billable requests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Test synthetic payload and provider failure isolation
+        run: node --test tests/homework_stage5_provider_smoke.test.mjs
+
+  openai-live-smoke:
+    name: One synthetic OpenAI request (manual only)
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: validate-provider-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Verify repository credential is available
+        env:
+          HAS_OPENAI_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
+        run: |
+          if [ "$HAS_OPENAI_KEY" != "true" ]; then
+            echo "::error::Configure repository Actions secret OPENAI_API_KEY before dispatching this smoke test."
+            exit 1
+          fi
+
+      - name: Check the real GPT-6 Luna Responses API (one request only)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/homework_stage5_provider_smoke.mjs
