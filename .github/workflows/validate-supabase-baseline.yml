@@ -628,7 +628,7 @@ jobs:
             supabase/migrations/20261015065000_homeworks_stage5_teacher_review.sql \
             supabase/migrations/20261015071000_homeworks_auto_grade_reading_grammar.sql \
             supabase/migrations/20261015180000_homeworks_ai_monthly_budget.sql \
-            supabase/migrations/20261015192900_homeworks_privacy_export.sql
+            supabase/migrations/20261015220000_homeworks_privacy_export.sql
           do
             docker exec -i "$DB_CONTAINER" \
               psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
