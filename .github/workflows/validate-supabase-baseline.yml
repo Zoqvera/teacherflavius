@@ -635,6 +635,34 @@ jobs:
           $clean$;
           SQL
 
+      - name: Exercise Homeworks through actual local Supabase Auth and Edge HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Live provider keys and production users never enter the CI runtime.
+          # JWT verification is skipped ONLY at the local gateway; the Edge
+          # handler still validates the submitted JWT via Auth.getUser.
+          export OPENAI_API_KEY=""
+          supabase functions serve homework-student --no-verify-jwt \
+            > /tmp/homeworks-stage5-edge-local.log 2>&1 &
+          EDGE_PID=$!
+          trap 'kill "$EDGE_PID" 2>/dev/null || true' EXIT
+
+          if ! node tests/homeworks_stage5_http_integration.cjs; then
+            # Output only a short, redacted local runtime diagnostics tail.
+            sed -E 's/(Bearer |sk-[A-Za-z0-9_-]+)[A-Za-z0-9_.-]+/REDACTED/g' \
+              /tmp/homeworks-stage5-edge-local.log | tail -n 55
+            exit 1
+          fi
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -At -v ON_ERROR_STOP=1 \
+              -c 'select not enabled from public.homework_release_control where id=1;' \
+            | grep -Fx t
+
       - name: Exercise real retry RPC with mocked pg_net, no outbound HTTP
         shell: bash
         run: |
