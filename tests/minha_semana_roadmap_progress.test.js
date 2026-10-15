@@ -100,7 +100,9 @@ async function renderWeeklyRoadmap(actionPlan, actionPlanError = null) {
     loadingMessage: getElementById("loadingPanel").textContent,
     dashboardVisible: getElementById("dashboard").hidden === false,
     queriedTables,
-    calledRpcs
+    calledRpcs,
+    taskListHtml: getElementById("taskList").innerHTML,
+    progressCount: getElementById("progressCount").textContent
   };
 }
 
@@ -148,5 +150,15 @@ test("Minha Semana never confuses an action plan failure with course completion"
 
 test("Minha Semana refreshes its dashboard script without altering the canonical URL", function () {
   assert.match(weeklyPage, /<link rel="canonical" href="\/minha-semana\/">/);
-  assert.match(weeklyPage, /\/minha_semana_dashboard\.js\?v=20261008-1/);
+  assert.match(weeklyPage, /\/minha_semana_dashboard\.js\?v=20261015-suspend-exercises-1/);
+});
+
+
+test("Minha Semana excludes the suspended exercise portal from queries, weekly tasks and progress", async function () {
+  const state = await renderWeeklyRoadmap({ lesson: { number: 25 } });
+  assert.equal(state.dashboardVisible, true);
+  assert.equal(state.calledRpcs.includes("get_public_teacher_exercises"), false);
+  assert.equal(state.queriedTables.includes("daily_exercise_completion"), false);
+  assert.doesNotMatch(state.taskListHtml, /ATIVIDADE\s+\d+|FAZER ATIVIDADE|exercicios-diarios/i);
+  assert.match(state.progressCount, /^\d+ de \d+ tarefas concluídas$/);
 });
