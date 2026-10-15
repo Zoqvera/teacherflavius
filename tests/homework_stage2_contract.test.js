@@ -6,7 +6,7 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 const read = relativePath => fs.readFileSync(path.join(root, relativePath), "utf8");
-const sql = read("supabase/migrations/20261015044000_homeworks_stage2_schema.sql");
+const sql = read("supabase/migrations/20261015043416_homeworks_stage2_schema.sql");
 
 function loadAdminService() {
   const context = { window: {} };
