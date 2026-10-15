@@ -18,6 +18,7 @@ function element(tagName = "div") {
     className: "",
     hidden: false,
     disabled: false,
+    open: false,
     textContent: "",
     dataset: {},
     style: {},
@@ -30,7 +31,11 @@ function element(tagName = "div") {
     get innerHTML() { return this.html || ""; },
     appendChild(child) { this.children.push(child); },
     setAttribute(name, value) { this.attributes[name] = String(value); },
-    addEventListener(event, callback) { this.handlers[event] = callback; }
+    removeAttribute(name) { delete this.attributes[name]; },
+    addEventListener(event, callback) { this.handlers[event] = callback; },
+    showModal() { this.open = true; },
+    close() { this.open = false; },
+    focus() { this.focused = true; }
   };
 }
 
@@ -49,6 +54,18 @@ function makeDocument(initiallyHidden = []) {
     },
     createElement: element,
     querySelectorAll: () => [],
+    querySelector(selector) {
+      if (selector !== "#actionQuestionList .academic-question-study-actions button:not(:disabled)") {
+        return null;
+      }
+      const questions = this.getElementById("actionQuestionList").children;
+      for (const item of questions) {
+        const actions = item.children && item.children[1];
+        const button = actions && actions.children && actions.children[0];
+        if (button && !button.disabled) return button;
+      }
+      return null;
+    },
     get title() { return this.pageTitle || ""; },
     set title(value) { this.pageTitle = value; }
   };
@@ -66,7 +83,8 @@ async function runStudentScenario({
   reviews = [],
   session = true,
   planError = null,
-  reviewError = null
+  reviewError = null,
+  markError = null
 } = {}) {
   const document = makeDocument([
     "studentPreparationWelcome",
@@ -85,6 +103,7 @@ async function runStudentScenario({
       return reviews;
     },
     async markQuestionStudied(id) {
+      if (markError) throw markError;
       calls.studied.push(id);
       const found = plan.questions.find((item) => item.id === id);
       if (found) found.marked_studied = true;
@@ -202,6 +221,54 @@ test("second part reuses review cards, filters studied questions and updates cou
   assert.equal(state.node("reviewQuestionsCount").textContent, "2");
 });
 
+
+test("success dialog appears only after persisting a question in the second part", async () => {
+  const state = await runStudentScenario({
+    pathname: "/o-que-fazer/segunda-parte/",
+    enabled: true,
+    plan: { lesson: { number: 8, has_material: true }, questions: [question("q1"), question("q2")] }
+  });
+  const dialog = state.node("questionStudiedDialog");
+  assert.equal(dialog.open, false);
+
+  await state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  assert.deepEqual(state.calls.studied, ["q1"]);
+  assert.equal(dialog.open, true);
+  assert.equal(state.node("questionsCount").textContent, "1");
+
+  state.node("studyAnotherQuestionButton").handlers.click();
+  assert.equal(dialog.open, false);
+  assert.equal(state.node("actionQuestionList").children[0].children[1].children[0].focused, true);
+
+  await state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  assert.deepEqual(state.calls.studied, ["q1", "q2"]);
+  assert.equal(dialog.open, true);
+  assert.equal(state.node("questionsCount").textContent, "0");
+  assert.equal(state.node("finishQuestionStudyLink").href, undefined);
+});
+
+test("studied-question failure never shows the success dialog", async () => {
+  const state = await runStudentScenario({
+    pathname: "/o-que-fazer/segunda-parte/",
+    enabled: true,
+    markError: new Error("Synthetic write failure"),
+    plan: { lesson: null, questions: [question("q1")] }
+  });
+  await state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  assert.equal(state.node("questionStudiedDialog").open, false);
+  assert.equal(state.node("actionQuestionList").children[0].children[1].children[0].disabled, false);
+  assert.match(state.node("questionsStatus").textContent, /Synthetic write failure/);
+});
+
+test("the original study screen never opens a success dialog", async () => {
+  const state = await runStudentScenario({
+    enabled: false,
+    plan: { lesson: null, questions: [question("q1")] }
+  });
+  await state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  assert.equal(state.node("questionStudiedDialog").open, false);
+});
+
 test("second part falls back to the introduction when no next lesson exists", async () => {
   const state = await runStudentScenario({
     pathname: "/o-que-fazer/segunda-parte/",
@@ -247,7 +314,8 @@ async function runLessonScenario({
   roadmapSource = false,
   requestedById = false,
   nextPublished = true,
-  legacyNext = false
+  legacyNext = false,
+  preparationError = null
 } = {}) {
   const document = makeDocument([
     "lessonPageContent",
@@ -278,7 +346,7 @@ async function runLessonScenario({
         (roadmapSource ? "&source=roteiro-de-estudos" : ""),
       href: ""
     },
-    StudentPreparationFlow: { enabled },
+    StudentPreparationFlow: { enabled, secondPartUrl: "/o-que-fazer/segunda-parte/" },
     SUPABASE_CONFIG: {},
     Auth: {
       isConfigured: () => true,
@@ -307,7 +375,10 @@ async function runLessonScenario({
           calls.plans += 1;
           return { lesson: { number: currentLesson, prepared: alreadyPrepared } };
         },
-        markLessonPrepared: async (number) => { calls.prepared.push(number); }
+        markLessonPrepared: async (number) => {
+          calls.prepared.push(number);
+          if (preparationError) throw preparationError;
+        }
       })
     },
     print() {}
@@ -333,7 +404,7 @@ test("legacy lesson preparation stays intact when rollout is disabled", async ()
   assert.equal(state.node("lessonPreparedButton").disabled, true);
 });
 
-test("enabled lesson shows PRÓXIMA PARTE but does not implicitly mark preparation", async () => {
+test("enabled lesson records preparation only after PRÓXIMA PARTE is clicked", async () => {
   const state = await runLessonScenario({ enabled: true });
   assert.equal(state.node("lessonNextPartLink").hidden, false);
   assert.equal(state.node("lessonNextPartLink").href, undefined);
@@ -341,6 +412,25 @@ test("enabled lesson shows PRÓXIMA PARTE but does not implicitly mark preparati
   assert.equal(state.node("lessonLegacyPreparationContent").hidden, true);
   assert.equal(state.node("lessonRoadmapNavigation").hidden, true);
   assert.deepEqual(state.calls.prepared, []);
+  let prevented = false;
+  await state.node("lessonNextPartLink").handlers.click({
+    preventDefault() { prevented = true; }
+  });
+  assert.equal(prevented, true);
+  assert.deepEqual(state.calls.prepared, [7]);
+  assert.equal(state.window.location.href, "/o-que-fazer/segunda-parte/");
+});
+
+test("failed preparation blocks navigation and restores the next-part link", async () => {
+  const state = await runLessonScenario({
+    enabled: true,
+    preparationError: new Error("Synthetic RPC failure")
+  });
+  await state.node("lessonNextPartLink").handlers.click({ preventDefault() {} });
+  assert.equal(state.window.location.href, "");
+  assert.equal(state.node("lessonNextPartLink").textContent, "PRÓXIMA PARTE");
+  assert.equal(state.node("lessonNextPartLink").attributes["aria-disabled"], undefined);
+  assert.match(state.node("lessonPageStatus").textContent, /Synthetic RPC failure/);
 });
 
 test("already prepared lessons continue without exposing the legacy preparation button", async () => {
