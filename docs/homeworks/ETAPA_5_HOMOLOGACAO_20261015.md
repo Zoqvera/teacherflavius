@@ -240,3 +240,15 @@ Também foi incluída no formulário de Writing uma informação clara, antes do
 Os testes abrangem pesos desiguais, caracteres acentuados, pontuação, campos vazios, opções não cadastradas, gabaritos e pesos inválidos e presença do aviso apenas no Writing. Acesso dos alunos permanece bloqueado. Nenhuma alteração em `robots`, `sitemap`, `canonical` ou indexação; a prévia do professor continua protegida por `noindex, nofollow, noarchive`.
 
 **Estado:** ETAPA 5 em curso; critérios de aceite pedagógico, dispositivos e privacidade ainda pendentes. **Próxima:** ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica, somente após autorização expressa.
+
+## ETAPA 5 — Ensaios visuais de navegador (sem alunos e sem produção)
+
+Uma bancada visual isolada foi adicionada **somente** em `tests/fixtures/` com a mesma interface JavaScript de estudante, o mesmo renderizador de feedback de Writing e os CSS oficiais. Os cenários usam exclusivamente dados fictícios e serviços simulados: Reading, Grammar e Writing (formulário inicial, correção pendente e texto avaliado com nota 7,7/10).
+
+A verificação é executada em navegador Chrome/Chromium realmente renderizando DOM e CSS, sem acesso ao Supabase/OpenAI e sem criação de usuários. O workflow `Homeworks Stage 5 browser visual acceptance` testa larguras de 320 px, 390 px e 1280 px, com seis estados por viewport (18 cenários), incluindo: ausência de rolagem horizontal, rótulos dos botões, nota quando avaliada, aviso de envio à OpenAI no Writing e conclusão da renderização assíncrona. Gera capturas de tela temporárias como artefatos privados do GitHub Actions (retenção de 7 dias) para inspeção pelo professor.
+
+O workflow verifica que os arquivos da bancada pertencem a `tests/`/`scripts/`, que são excluídos explicitamente da publicação pelo `scripts/static_site_files.py`; portanto, **nenhuma rota de aluno ou página de simulação é publicada**.
+
+Limitação explícita: execução em navegador headless com viewports móveis **não corresponde a teste físico em Android/iOS** nem comprova compatibilidade com leitores de tela, uso por teclado em um dispositivo real ou desempenho de rede. Esses itens ainda demandam aceite humano depois de existir um caminho privado para homologação sem permitir acesso dos alunos.
+
+Sem alteração de SQL, Edge Function, gabaritos, modelo, custos de API ou estado de `homework_release_control`. SEO permanece inalterado.
