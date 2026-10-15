@@ -80,10 +80,11 @@
   ]);
 
   function track(eventName) {
+    const privacy = window.TeacherFlaviusPrivacy;
     if (!enabled || !TRACKED_EVENTS.includes(eventName) ||
-        typeof window.gtag !== "function") return;
+        !privacy || typeof privacy.hasAnalyticsConsent !== "function" ||
+        !privacy.hasAnalyticsConsent() || typeof window.gtag !== "function") return;
 
-    // The existing consent configuration governs whether analytics are collected.
     window.gtag("event", eventName, { event_category: "student_preparation" });
   }
 
