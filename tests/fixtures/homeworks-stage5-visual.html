@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Homeworks — bancada visual isolada (não publicar)</title>
+  <link rel="stylesheet" href="../../homework_student_interface.css">
+  <link rel="stylesheet" href="../../area-do-estudante/homeworks/foundation.css">
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f4f6fa; color: #162440; }
+    main { width: min(calc(100% - 24px), 820px); margin: 24px auto; min-width: 0; }
+    .homework-stage5-screen { background: #fff; padding: 16px; border: 1px solid #dce2ec; border-radius: 12px; min-width: 0; }
+    #visualNotice { margin: 0 0 12px; padding: 12px; border-radius: 8px; background: #edf4ff; }
+  </style>
+</head>
+<body>
+  <main>
+    <p id="visualNotice" role="status" aria-live="polite">Iniciando cenário local...</p>
+    <section class="homework-stage5-screen" aria-label="Atividade fictícia">
+      <div id="visualMount"></div>
+    </section>
+  </main>
+  <script src="../../homework_pedagogical_preview.js"></script>
+  <script src="../../homework_student_interface.js"></script>
+  <script src="./homeworks-stage5-visual.js"></script>
+</body>
+</html>
