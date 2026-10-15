@@ -1,5 +1,10 @@
 (function () {
   const FLASHCARD_WEEKLY_GOAL = 3;
+  const TASK_ICONS = Object.freeze({
+    class: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 2v6M16 2v6M3 10h18"/></svg>',
+    flashcards: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="15" height="16" rx="2"/><path d="M3 7v12a2 2 0 0 0 2 2h12M10 8h7M10 12h5"/></svg>',
+    grammar: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6a8 8 0 0 0-9-2v15a8 8 0 0 1 9 2 8 8 0 0 1 9-2V4a8 8 0 0 0-9 2ZM12 6v15"/></svg>'
+  });
   let currentUser = null;
 
   function sleep(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
@@ -145,7 +150,7 @@
     const tasks = [];
     if (classTrackable) {
       tasks.push({
-        key:"class", icon:classDone ? "✅" : "📅", tone:classDone ? "done" : "pending",
+        key:"class", icon:"class", tone:classDone ? "done" : "pending",
         title:classDone ? "Aula da semana realizada" : "Aula da semana — pendente",
         detail:data.classInfo && data.classInfo.class_weekday ? weekdayLabel(data.classInfo.class_weekday) + ", " + timeLabel(data.classInfo.class_start_time) : "Frequência ainda não registrada nesta semana",
         done:classDone, href:"/minha-turma/", button:"VER MINHA TURMA"
@@ -153,7 +158,7 @@
     }
 
     tasks.push({
-      key:"flashcards", icon:"🧠", tone:flashDone ? "done" : "pending",
+      key:"flashcards", icon:"flashcards", tone:flashDone ? "done" : "pending",
       title:"Flashcards — " + Math.min(data.practiceDates.length, FLASHCARD_WEEKLY_GOAL) + "/3 dias praticados",
       detail:flashDone ? "Meta semanal atingida." : "Pratique em " + (FLASHCARD_WEEKLY_GOAL - data.practiceDates.length) + " dia(s) diferente(s) para completar a meta.",
       done:flashDone, href:"/flashcards/", button:"PRATICAR FLASHCARDS"
@@ -161,7 +166,7 @@
 
     if (grammarTrackable) {
       tasks.push({
-        key:"grammar", icon:grammarDoneThisWeek ? "✅" : "📚", tone:grammarDoneThisWeek ? "done" : "pending",
+        key:"grammar", icon:"grammar", tone:grammarDoneThisWeek ? "done" : "pending",
         title:grammarDoneThisWeek ? "Aula de gramática — realizada nesta semana" : "Aula de gramática — pendente",
         detail:grammarDoneThisWeek ? "Você já concluiu uma aula de gramática nesta semana." : (nextGrammar ? "Próxima: " + nextGrammar.title : "Abra as aulas de gramática."),
         done:grammarDoneThisWeek, href:"/aulas-de-gramatica.html", button:"VER AULA DE GRAMÁTICA"
@@ -180,7 +185,7 @@
 
   function renderTask(task) {
     return '<article class="week-task ' + esc(task.tone) + '">' +
-      '<div class="task-icon">' + esc(task.icon) + '</div>' +
+      '<div class="task-icon">' + (TASK_ICONS[task.icon] || "") + '</div>' +
       '<div class="task-body"><div class="task-title">' + esc(task.title) + '</div><div class="task-detail">' + esc(task.detail) + '</div></div>' +
       '<a class="task-button" href="' + esc(task.href) + '">' + esc(task.button) + '</a>' +
     '</article>';
