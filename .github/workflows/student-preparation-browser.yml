@@ -1,0 +1,53 @@
+name: Student preparation Stage 5 browser acceptance
+
+on:
+  pull_request:
+    paths:
+      - "o-que-fazer/index.html"
+      - "o-que-fazer/segunda-parte/index.html"
+      - "o-que-fazer/app.js"
+      - "licao/index.html"
+      - "licao.js"
+      - "student_preparation_flow.js"
+      - "student_preparation_flow.css"
+      - "scripts/student_preparation_browser_check.py"
+      - ".github/workflows/student-preparation-browser.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-student-browser:
+    name: Student preparation — Chromium desktop/mobile
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Require browser and synthetic-fixture isolation
+        run: |
+          set -euo pipefail
+          command -v google-chrome-stable || command -v google-chrome || command -v chromium
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "scripts")
+          from static_site_files import is_public
+          assert not is_public(Path("scripts/student_preparation_browser_check.py"))
+          assert not is_public(Path("tests/student_preparation_flow_functional.test.js"))
+          print("PASS: synthetic browser QA resources are not publicly deployed.")
+          PY
+
+      - name: Run real Chromium acceptance
+        run: python3 scripts/student_preparation_browser_check.py
+
+      - name: Upload synthetic browser snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-preparation-stage5-screenshots
+          path: _student_preparation_visual_artifacts/*.png
+          if-no-files-found: ignore
+          retention-days: 7
