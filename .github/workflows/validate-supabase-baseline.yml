@@ -199,25 +199,6 @@ jobs:
           );
           SQL
 
-      - name: Exercise regular lesson cancellation and notification outbox
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
-          test -n "$DB_CONTAINER"
-
-          # Disposable CI instance: application emails must never leave this test.
-          docker exec -i "$DB_CONTAINER" \
-            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            < supabase/migrations/20261015030100_add_regular_and_teacher_cancellation_email_notifications.sql
-
-          # Test runs inside BEGIN/ROLLBACK and disables the actual email dispatch
-          # trigger within that transaction; it tests the genuine cancellation RPC.
-          docker exec -i "$DB_CONTAINER" \
-            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            < tests/sql/regular_cancellation_homologation.sql
-
       - name: Verify least-privilege browser ACLs
         shell: bash
         run: |
@@ -594,6 +575,25 @@ jobs:
           end;
           $student_review_assert$;
           SQL
+
+      - name: Exercise regular lesson cancellation and notification outbox
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # Disposable CI instance: application emails must never leave this test.
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < supabase/migrations/20261015030100_add_regular_and_teacher_cancellation_email_notifications.sql
+
+          # Test runs inside BEGIN/ROLLBACK and disables the actual email dispatch
+          # trigger within that transaction; it tests the genuine cancellation RPC.
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < tests/sql/regular_cancellation_homologation.sql
 
       - name: Stop disposable Supabase stack
         if: always()
