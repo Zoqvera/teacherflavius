@@ -2,24 +2,8 @@ name: Android Capacitor build
 
 on:
   pull_request:
-    paths:
-      - "capacitor.config.json"
-      - "package.json"
-      - "pwa_registration.js"
-      - "pwa_install_prompt.js"
-      - "native_auth_bridge.js"
-      - "login.html"
-      - "supabase_client_service.js"
-      - "auth_infrastructure.js"
-      - "site.webmanifest"
-      - "assets/favicon.svg"
-      - "mobile/android_release.json"
-      - "scripts/configure_android_signing.py"
-      - "tests/test_configure_android_signing.py"
-      - "scripts/**"
-      - "tests/test_capacitor_android_contract.py"
-      - "tests/test_prepare_android_web.py"
-      - ".github/workflows/android-capacitor-build.yml"
+    branches:
+      - main
   push:
     branches:
       - main
