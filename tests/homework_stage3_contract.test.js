@@ -77,6 +77,19 @@ test("simulation rejects mismatched responses rather than inventing a score", ()
   assert.equal(response.total, 0);
 });
 
+test("teacher approval refuses a question with invalid grading weight", () => {
+  const preview = loadPreview();
+  const exercise = { activity_type: "grammar", exercise_number: 3 };
+  const version = { content: { explanation: "Present tense." } };
+  const invalid = [{
+    prompt: "Complete the sentence", question_type: "short_answer",
+    answer_key: { correct: "is" }, points: -2
+  }];
+  const report = preview.inspectForApproval(exercise, version, invalid);
+  assert.equal(report.ready, false);
+  assert.ok(report.issues.some(issue => issue.includes("peso de pontuação inválido")));
+});
+
 test("pedagogical renderer has no network, backend writes or embedded answer fixtures", () => {
   const source = read("homework_pedagogical_preview.js");
   assert.doesNotMatch(source, /fetch\(|\.rpc\(|\.insert\(|\.upsert\(/);
