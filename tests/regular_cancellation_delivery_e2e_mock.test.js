@@ -119,7 +119,7 @@ function makeFixture(options = {}) {
   );
   assert.notEqual(source, typescript, "Expected pinned Supabase SDK import");
   const withoutDeliveryImport = source.replace(
-    /^import \\{ recordResendAcceptance \\} from "[^"]+";\\r?\\n/,
+    /^import \{ recordResendAcceptance \} from "[^"]+";\r?\n/,
     "",
   );
   vm.runInNewContext(stripTypeScriptTypes(withoutDeliveryImport), {
