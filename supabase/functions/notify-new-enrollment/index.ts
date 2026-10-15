@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
+import { recordResendAcceptance } from "../_shared/resend_delivery_core.mjs";
 
 type NotificationRecord = {
   id: string;
@@ -325,6 +326,30 @@ Deno.serve(async (request: Request) => {
       idempotencyKey: `enrollment-${notification.id}`,
     }),
   ]);
+
+  // Persist each provider message independently, including partial success.
+  // Feature OFF by default: old delivery behavior remains unchanged.
+  if (Deno.env.get("RESEND_DELIVERY_TRACKING_ENABLED") === "true") {
+    const tracked = await Promise.all([
+      studentEmailResponse.ok
+        ? recordResendAcceptance(supabase, studentEmailResponse, {
+          queueName: "enrollment", notificationId: notification.id, recipientRole: "student",
+        })
+        : Promise.resolve(true),
+      adminEmailResponse.ok
+        ? recordResendAcceptance(supabase, adminEmailResponse, {
+          queueName: "enrollment", notificationId: notification.id, recipientRole: "teacher",
+        })
+        : Promise.resolve(true),
+    ]);
+    if (tracked.some((result) => !result)) {
+      await supabase.from("enrollment_email_notifications")
+        .update({ status: "failed", last_error: "resend_tracking_unavailable",
+          updated_at: new Date().toISOString() })
+        .eq("id", notification.id);
+      return jsonResponse({ error: "Unable to record provider acceptance" }, 503);
+    }
+  }
 
   if (!studentEmailResponse.ok || !adminEmailResponse.ok) {
     const failures = [
