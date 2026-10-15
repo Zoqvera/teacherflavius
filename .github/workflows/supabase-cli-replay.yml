@@ -1,0 +1,214 @@
+name: Supabase CLI-native branching rehearsal
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/config.toml"
+      - "supabase/seed.sql"
+      - "scripts/compile_canonical_supabase_bootstrap.py"
+      - "scripts/prepare_supabase_cli_replay.py"
+      - "scripts/audit_supabase_isolated_chain.py"
+      - "tests/test_supabase_isolated_chain_audit.py"
+      - "tests/test_canonical_supabase_bootstrap.py"
+      - "tests/test_supabase_cli_replay.py"
+      - "tests/test_supabase_preview_repository_safety.py"
+      - ".github/workflows/validate-supabase-baseline.yml"
+      - ".github/workflows/supabase-cli-replay.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  preview-migration-rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Verify fixture generation and production isolation
+        run: |
+          python3 -m unittest discover -s tests -p test_canonical_supabase_bootstrap.py
+          python3 -m unittest discover -s tests -p test_supabase_cli_replay.py
+          python3 -m unittest discover -s tests -p test_supabase_preview_repository_safety.py
+          python3 -m unittest discover -s tests -p test_supabase_isolated_chain_audit.py
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Build an isolated Supabase CLI project outside the repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          PREVIEW_DIR="${RUNNER_TEMP}/teacherflavius-cli-replay"
+          mkdir -p "${PREVIEW_DIR}"
+          (cd "${PREVIEW_DIR}" && supabase init --force)
+          python3 -m scripts.prepare_supabase_cli_replay \
+            --repo-root "${GITHUB_WORKSPACE}" \
+            --staging-root "${PREVIEW_DIR}"
+
+          test -f "${PREVIEW_DIR}/supabase/migrations/20261013000000_canonical_disposable_schema.sql"
+          test -f "${PREVIEW_DIR}/supabase/migrations/20261013000001_verify_disposable_schema.sql"
+          test -f "${PREVIEW_DIR}/supabase/seed.sql"
+
+          python3 -m scripts.audit_supabase_isolated_chain \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --staging-root "${PREVIEW_DIR}" \
+            --report-json "${PREVIEW_DIR}/artifacts/chain-audit.json"
+          jq -e '.status == "LOCAL_CHAIN_VALIDATED" and
+            .reviewed_overlays == 79 and
+            .historical_migrations_replayed == false and
+            .production_ledger_modified == false and
+            .automatic_branching_safe == false' \
+            "${PREVIEW_DIR}/artifacts/chain-audit.json"
+
+      - name: Run canonical migration, incremental migration and synthetic seed via CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${RUNNER_TEMP}/teacherflavius-cli-replay"
+          supabase start
+
+      - name: Provision placeholder Vault entries for comparable fingerprint
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+          docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          select vault.create_secret(
+            'cli-preview-only-not-a-real-token',
+            'teacherflavius_notification_webhook_secret',
+            'Disposable fingerprint placeholder'
+          );
+          select vault.create_secret(
+            'cli-preview-only-not-a-real-key',
+            'teacherflavius_web_push_vapid_private_key',
+            'Disposable fingerprint placeholder'
+          );
+          SQL
+
+      - name: Verify CLI migration ledger, synthetic rows, disabled Cron and catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+
+          docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $verify$
+          begin
+            if (select count(*) from supabase_migrations.schema_migrations
+                where version in ('20261013000000', '20261013000001')) <> 2 then
+              raise exception 'Canonical + incremental migrations not tracked by CLI';
+            end if;
+            if (select count(*) from public.teacher_classes
+                where class_number in (970001, 970002)) <> 2 then
+              raise exception 'Synthetic seed was not applied by Supabase CLI';
+            end if;
+            if exists (select 1 from cron.job where active) then
+              raise exception 'Cron would be active in the isolated preview';
+            end if;
+            if exists (select 1 from public.profiles)
+               or exists (select 1 from public.monthly_tuition) then
+              raise exception 'Preview unexpectedly contains personal or financial data';
+            end if;
+          end;
+          $verify$;
+          SQL
+
+          docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres \
+            -At -v ON_ERROR_STOP=1 \
+            < "${RUNNER_TEMP}/teacherflavius-cli-replay/artifacts/fingerprint.sql" \
+            > "${RUNNER_TEMP}/preview-fingerprint.json"
+          jq -S 'del(.captured_from_migration_version)' \
+            supabase/baseline/schema-fingerprint.json \
+            > "${RUNNER_TEMP}/expected-fingerprint.json"
+          jq -S . "${RUNNER_TEMP}/preview-fingerprint.json" \
+            > "${RUNNER_TEMP}/actual-fingerprint.json"
+          diff -u "${RUNNER_TEMP}/expected-fingerprint.json" "${RUNNER_TEMP}/actual-fingerprint.json"
+
+          # Reusing synthetic fixtures on a populated database must fail closed.
+          if docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            < "${RUNNER_TEMP}/teacherflavius-cli-replay/supabase/seed.sql"; then
+            echo "::error::Synthetic seed accepted a nonempty application database."
+            exit 1
+          fi
+
+      - name: Prove canonical bootstrap refuses an existing application database
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+          BOOTSTRAP="${RUNNER_TEMP}/teacherflavius-cli-replay/artifacts/compiled.sql"
+
+          # A second attempt must stop at the guard, before any CREATE/ALTER.
+          if docker exec -i "${DB_CONTAINER}" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < "${BOOTSTRAP}" > "${RUNNER_TEMP}/guard-replay.log" 2>&1; then
+            echo "::error::Canonical bootstrap unexpectedly accepted an installed database."
+            exit 1
+          fi
+          if ! grep -Fq 'Refusing canonical bootstrap: application schema already exists' \
+            "${RUNNER_TEMP}/guard-replay.log"; then
+            echo "::error::Replay failed for a reason other than the intentional guard."
+            exit 1
+          fi
+
+          docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 <<'SQL'
+          do $post_guard$
+          begin
+            if (select count(*) from public.teacher_classes
+                where class_number in (970001, 970002)) <> 2 then
+              raise exception 'Installed test classes changed after a rejected replay';
+            end if;
+            if (select count(*) from supabase_migrations.schema_migrations
+                where version in ('20261013000000','20261013000001')) <> 2 then
+              raise exception 'Migration ledger changed after a rejected replay';
+            end if;
+          end;
+          $post_guard$;
+          SQL
+
+      - name: Confirm repeatability by recreating the disposable DB
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd "${RUNNER_TEMP}/teacherflavius-cli-replay" && supabase db reset --local)
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+          docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $repeat$
+          begin
+            if (select count(*) from supabase_migrations.schema_migrations
+                where version in ('20261013000000', '20261013000001')) <> 2 then
+              raise exception 'CLI replay lost migration ledger after reset';
+            end if;
+            if (select count(*) from public.teacher_classes
+                where class_number in (970001, 970002)) <> 2 then
+              raise exception 'CLI replay lost synthetic seed after reset';
+            end if;
+            if exists(select 1 from cron.job where active) then
+              raise exception 'CLI replay reactivated Cron after reset';
+            end if;
+          end;
+          $repeat$;
+          SQL
+
+      - name: Stop and remove disposable Supabase project
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "${RUNNER_TEMP}/teacherflavius-cli-replay/supabase/config.toml" ]]; then
+            cd "${RUNNER_TEMP}/teacherflavius-cli-replay"
+            supabase stop --no-backup
+          fi

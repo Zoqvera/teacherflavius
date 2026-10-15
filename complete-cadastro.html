@@ -33,7 +33,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="/enrollment_onboarding_state.js?v=20261006-1"></script>
   <script src="/student_acquisition.js?v=20261012-1"></script>
   <script src="/student_profile_optional.js?v=20260902-1"></script>
-  <script src="/student_tuition_due_day.js?v=20261005-next-day-1"></script>
+  
   <link rel="stylesheet" href="/complete-cadastro/complete_cadastro_visual.css?v=20261004-fee-plan-1" />
 </head>
 <body class="enrollment-onboarding">
@@ -59,7 +59,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="account-note">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
-        <span id="onboardingAccountNote">Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. A primeira mensalidade deve vencer no dia da matrícula ou no dia seguinte. Essas são as duas únicas opções de vencimento disponíveis durante a matrícula.</span>
+        <span id="onboardingAccountNote">Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. O vencimento da primeira mensalidade será definido automaticamente para o dia em que você concluir a matrícula. Você será encaminhado ao pagamento, que deve ser iniciado até 23h59 desse dia (horário de Brasília).</span>
       </div>
 
       <form id="enrollmentAccessForm">
@@ -249,7 +249,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         personalDataDescription.textContent = "Preencha os dados pessoais que ainda faltam para concluir seu cadastro.";
       } else {
         intro.textContent = "Preencha seus dados para concluir a matrícula. Ao finalizar, sua primeira mensalidade ficará disponível e você será encaminhado diretamente para o pagamento.";
-        accountNote.textContent = "Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. A primeira mensalidade deve vencer no dia da matrícula ou no dia seguinte. Essas são as duas únicas opções de vencimento disponíveis durante a matrícula.";
+        accountNote.textContent = "Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. O vencimento da primeira mensalidade será definido automaticamente para o dia em que você concluir a matrícula. Você será encaminhado ao pagamento, que deve ser iniciado até 23h59 desse dia (horário de Brasília).";
         personalDataDescription.textContent = "Todos os campos abaixo são obrigatórios para concluir a matrícula.";
       }
 
@@ -379,14 +379,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           if (savedClassType !== classType) {
             throw new Error("Não foi possível registrar o tipo de aula escolhido.");
           }
-        }
-
-        if (
-          state.requiresTuitionDueDate &&
-          window.StudentTuitionDueDay &&
-          typeof window.StudentTuitionDueDay.saveSelection === "function"
-        ) {
-          await window.StudentTuitionDueDay.saveSelection();
         }
 
         if (state.requiresCommercialSetup) {

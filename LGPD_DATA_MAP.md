@@ -83,11 +83,11 @@ Esse status é um controle operacional; não equivale a uma certificação jurí
 
 ### Resend
 
-Por decisão operacional do controlador, a notificação administrativa de nova matrícula inclui nome, WhatsApp, quantidade de aulas, valor combinado e data da matrícula. CPF, e-mail, código de matrícula e chave PIX continuam fora da mensagem administrativa. O aviso é destinado ao endereço configurado em `ENROLLMENT_NOTIFICATION_EMAIL`. O próprio aluno recebe separadamente uma confirmação no e-mail cadastrado, com nome, quantidade de aulas, valor mensal, data da matrícula e acesso à Área do Estudante.
+Por decisão operacional do controlador, a notificação administrativa de nova matrícula inclui nome, WhatsApp, quantidade de aulas, valor combinado e data da matrícula. CPF, e-mail, código de matrícula e chave PIX continuam fora da mensagem. O envio é destinado somente ao endereço administrativo configurado em `ENROLLMENT_NOTIFICATION_EMAIL`.
 
 O remetente genérico `resend-email` não registra mais o corpo de erro devolvido pelo provedor; apenas o código HTTP é registrado. O frontend recebe somente `ok` e, quando disponível, o identificador técnico do envio.
 
-E-mails destinados ao próprio aluno, como confirmação de matrícula e de reposição, usam seu endereço cadastrado e contêm somente os dados necessários à mensagem transacional. Matrículas saem de `matriculas@teacherflavius.com`; reposições saem de `contato@teacherflavius.com`.
+E-mails destinados ao próprio aluno, como confirmação de matrícula e confirmação de reposição, usam o endereço da conta ou da reserva e contêm somente o mínimo necessário à mensagem transacional. As matrículas são enviadas por `Matrículas <matriculas@teacherflavius.com>` e as reposições por `Teacher Flávio <contato@teacherflavius.com>`. O endereço de destino do aluno não é incluído no corpo do aviso administrativo. O e-mail de matrícula é recuperado de Supabase Auth, não de metadados editáveis no perfil.
 
 ### Mercado Pago → Resend
 

@@ -6,18 +6,22 @@ O código desta funcionalidade possui três partes:
 2. `supabase/functions/notify-new-enrollment/index.ts` envia o e-mail pelo Resend.
 3. Um Database Webhook do Supabase chama a função quando uma notificação entra na fila.
 
-O fluxo envia dois e-mails: o aviso administrativo existente e uma confirmação ao próprio aluno. O aviso administrativo inclui nome, WhatsApp, quantidade de aulas, valor combinado e data da matrícula. A confirmação do aluno inclui nome, quantidade de aulas, valor mensal, data da matrícula e acesso à Área do Estudante.
+O aviso administrativo inclui nome, WhatsApp, quantidade de aulas, valor mensal e data da matrícula. O aluno recebe separadamente uma confirmação no endereço verificado por Supabase Auth, com quantidade de aulas, mensalidade e data da matrícula. CPF, código de matrícula e chave Pix não são enviados nesses e-mails.
 
 ## 1. Preparar o Resend
 
 1. Crie uma conta em <https://resend.com>.
 2. Em **Domains**, adicione e verifique o domínio usado pelo site.
 3. Crie uma API Key.
-4. O remetente transacional de matrícula é fixado no código como `Matrículas <matriculas@teacherflavius.com>`.
+4. O remetente de matrícula é `Matrículas <matriculas@teacherflavius.com>` e fica definido na Edge Function.
 
 Não coloque a API Key no `auth.js`, no `supabase_config.js` nem em outro arquivo público do site.
 
-## 2. Executar o SQL
+## 2. Estado de instalação
+
+O fluxo de notificações e os Database Webhooks já estão instalados no projeto de produção. **Não execute novamente o instalador SQL apenas para concluir a PR #642.** Os passos seguintes são referência para recuperação controlada ou instalação em outro projeto, não uma instrução de reaplicação em produção.
+
+## 3. Executar o SQL (somente em instalação nova ou recuperação aprovada)
 
 Depois que esta alteração estiver na branch principal:
 
@@ -69,8 +73,8 @@ No painel do Supabase:
 ## 6. Testar
 
 1. Faça uma nova matrícula de teste no site.
-2. Confira o aviso no endereço configurado em `ENROLLMENT_NOTIFICATION_EMAIL` e a confirmação no e-mail do aluno.
+2. Confira a caixa de entrada do aluno e também o e-mail administrativo configurado em `ENROLLMENT_NOTIFICATION_EMAIL`.
 3. Em **Edge Functions > notify-new-enrollment > Logs**, confirme que a chamada terminou com sucesso.
 4. No **Table Editor**, consulte `enrollment_email_notifications`; o registro deve aparecer com `status = sent`.
 
-Se o provedor rejeitar o envio, o status será `failed` e `last_error` mostrará a causa. O envio usa uma chave de idempotência para reduzir o risco de e-mails duplicados.
+Se o provedor rejeitar algum envio, o status será `failed` e `last_error` registrará um código técnico. Cada destinatário usa chave de idempotência própria: o e-mail administrativo preserva a chave histórica `enrollment-{id}` e a confirmação ao aluno utiliza `enrollment-student-{id}`. A fila é marcada como `sent` somente quando os dois envios são aceitos pelo provedor. Essa confirmação não garante entrega na caixa de entrada.

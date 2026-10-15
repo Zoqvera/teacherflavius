@@ -17,7 +17,13 @@
 
   function isIos(windowRef) {
     const navigatorRef = windowRef.navigator || {};
-    return /iphone|ipad|ipod/i.test(navigatorRef.userAgent || "");
+    return /iphone|ipad|ipod/i.test(navigatorRef.userAgent || "") ||
+      (navigatorRef.platform === "MacIntel" && navigatorRef.maxTouchPoints > 1);
+  }
+
+  function isEmbeddedBrowser(windowRef) {
+    const userAgent = String((windowRef.navigator || {}).userAgent || "");
+    return /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|; wv[); ]/i.test(userAgent);
   }
 
   function isStandalone(windowRef) {
@@ -39,9 +45,16 @@
 
   function showManualInstructions(windowRef, refs) {
     refs.instructions.hidden = false;
+    if (isEmbeddedBrowser(windowRef)) {
+      refs.instructionsText.textContent = isIos(windowRef)
+        ? "Abra esta página no Safari pelo menu do aplicativo. Toque em Compartilhar e depois em Adicionar à Tela de Início."
+        : "Abra esta página no Google Chrome pelo menu do aplicativo. Depois escolha Instalar aplicativo ou Adicionar à tela inicial.";
+      return;
+    }
+
     refs.instructionsText.textContent = isIos(windowRef)
-      ? "No Safari, toque em Compartilhar e depois em Adicionar à Tela de Início."
-      : "Abra o menu do navegador e escolha Instalar aplicativo ou Adicionar à tela inicial.";
+      ? "No iPhone ou iPad, abra esta página no Safari, toque em Compartilhar e depois em Adicionar à Tela de Início."
+      : "Abra o menu do navegador e escolha Instalar aplicativo ou Adicionar à tela inicial. Se a opção não aparecer, abra esta página no Google Chrome.";
   }
 
   function renderState(windowRef, documentRef) {
@@ -67,9 +80,9 @@
       return;
     }
 
-    refs.button.disabled = true;
-    refs.button.querySelector("span").textContent = "INSTALAR APP";
-    refs.status.textContent = "Use as opções do navegador para instalar.";
+    refs.button.disabled = false;
+    refs.button.querySelector("span").textContent = "VER COMO INSTALAR";
+    refs.status.textContent = "A instalação automática não está disponível neste navegador.";
     showManualInstructions(windowRef, refs);
   }
 
@@ -78,7 +91,9 @@
     const refs = elements(documentRef);
 
     if (!api || typeof api.requestInstall !== "function" || !installAvailable(windowRef)) {
+      refs.status.textContent = "Siga as instruções abaixo para instalar o aplicativo.";
       showManualInstructions(windowRef, refs);
+      if (typeof refs.instructions.focus === "function") refs.instructions.focus();
       return;
     }
 
@@ -99,7 +114,8 @@
       return;
     }
 
-    refs.status.textContent = "Não foi possível abrir a instalação automaticamente.";
+    renderState(windowRef, documentRef);
+    refs.status.textContent = "Não foi possível abrir a instalação automaticamente. Use as instruções abaixo.";
     showManualInstructions(windowRef, refs);
   }
 
@@ -110,7 +126,7 @@
     if (!refs.button) return;
 
     refs.button.addEventListener("click", function () {
-      requestInstall(windowRef, documentRef);
+      return requestInstall(windowRef, documentRef);
     });
 
     if (api && api.installAvailabilityEvent) {
