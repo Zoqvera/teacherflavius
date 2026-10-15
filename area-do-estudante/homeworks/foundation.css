@@ -90,3 +90,76 @@ h2 {
   outline: 3px solid #123a7a;
   outline-offset: 4px;
 }
+
+.homework-form,
+.homework-question-group {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.homework-form label {
+  font-weight: 700;
+  margin-top: 0.55rem;
+}
+
+.homework-form input,
+.homework-form textarea {
+  width: 100%;
+  border: 1px solid #a4b0c2;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.homework-form input:focus-visible,
+.homework-form textarea:focus-visible,
+.homework-controls button:focus-visible,
+#homeworkCreateDraft:focus-visible {
+  outline: 3px solid #123a7a;
+  outline-offset: 2px;
+}
+
+.homework-controls {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.homework-controls button,
+#homeworkCreateDraft {
+  border: 1px solid #123a7a;
+  background: #123a7a;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.homework-controls button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.homework-question-group p {
+  margin: 0;
+  color: #52627a;
+  font-size: 0.9rem;
+}
+
+.homework-question-group[hidden] {
+  display: none;
+}
+
+.homework-activity > div:first-child {
+  display: grid;
+  gap: 0.25rem;
+}
+
+@media (max-width: 600px) {
+  .homework-shell { width: min(100% - 1rem, 860px); margin: 1rem auto; }
+  .homework-controls { width: 100%; }
+  .homework-controls button { flex: 1 1 auto; }
+}
