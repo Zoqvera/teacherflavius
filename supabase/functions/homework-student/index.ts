@@ -5,7 +5,7 @@ const ORIGIN = "https://teacherflavius.com";
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const MODEL = "gpt-6-luna";
 
-type StudentAction = "list" | "detail" | "progress" | "submit";
+type StudentAction = "list" | "detail" | "progress" | "submit" | "retry_correction";
 type Payload = {
   action?: StudentAction;
   assignment_id?: string;
@@ -272,6 +272,13 @@ async function submit(
       ? await getFeedback(admin, submitted.attempt_id) : [] };
   }
 
+  return assessSubmittedWriting(admin, userId, submitted);
+}
+
+async function assessSubmittedWriting(
+  admin: ReturnType<typeof createClient>, userId: string,
+  submitted: { attempt_id: string; status: string; activity_type: string; score: number | null },
+) {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) return { ...submitted, status: "submitted", correction: "unconfigured" };
   // Limites por aluno antes do gasto financeiro; falhas deixam resposta persistida.
@@ -304,6 +311,33 @@ async function submit(
     return { ...submitted, status: "submitted", correction: "retry",
       message: "Texto salvo. A correção está temporariamente indisponível; reenvie com a mesma chave." };
   }
+}
+
+async function retryCorrection(
+  admin: ReturnType<typeof createClient>, userId: string, assignmentId: string,
+) {
+  const { exercise } = await requireAssignment(admin, userId, requireUuid(assignmentId));
+  if (exercise.activity_type !== "writing") {
+    throw new ClientError("Somente atividades Writing admitem nova correção.", 422);
+  }
+  const attempt = unwrap(await admin.from("exercise_attempts")
+    .select("id,status,score")
+    .eq("assignment_id", assignmentId).eq("student_id", userId)
+    .order("started_at", { ascending: false }).limit(1).maybeSingle(), "retry-attempt");
+  if (!attempt || !["submitted", "evaluating", "evaluated"].includes(attempt.status)) {
+    throw new ClientError("Texto ainda não enviado ou tentativa indisponível.", 404);
+  }
+  const submitted = {
+    attempt_id: attempt.id, status: attempt.status, score: attempt.score,
+    activity_type: "writing", reused: true,
+  };
+  if (attempt.status === "evaluated") {
+    return { ...submitted, feedback: await getFeedback(admin, attempt.id) };
+  }
+  // A resposta original nunca é recebida novamente do navegador.
+  // O texto já salvo é obtido pelo RPC protegido homework_claim_writing.
+  return assessSubmittedWriting(admin, userId, submitted);
+
 }
 
 Deno.serve(async (request: Request) => {
@@ -354,6 +388,8 @@ Deno.serve(async (request: Request) => {
       case "progress": return json(await progress(admin, userId,
         requireUuid(payload.assignment_id)), 200, origin);
       case "submit": return json(await submit(admin, userId, payload), 200, origin);
+      case "retry_correction": return json(await retryCorrection(admin, userId,
+        requireUuid(payload.assignment_id)), 200, origin);
       default: throw new ClientError("Ação não reconhecida.", 400);
     }
   } catch (error) {
