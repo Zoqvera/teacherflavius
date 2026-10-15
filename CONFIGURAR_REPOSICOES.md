@@ -56,6 +56,23 @@ Os tipos de notificação são:
 
 - `booking_confirmation`: confirmação do agendamento;
 - `cancellation`: confirmação do cancelamento.
+- `teacher_booking`: aviso independente ao professor quando o aluno confirma uma reposição, com link **Adicionar ao Google Agenda**.
+
+O aviso ao professor sai de `Teacher Flávio <contato@teacherflavius.com>`.
+O destinatário pode ser definido no Secret `MAKEUP_TEACHER_NOTIFICATION_EMAIL`;
+quando ausente, é utilizado `ENROLLMENT_NOTIFICATION_EMAIL` e, como última
+alternativa, `contato@teacherflavius.com`. O texto informa o aluno, a turma,
+a data, o horário de início e término e o link da aula.
+
+O link do Google Agenda prepara um evento com fuso `America/Sao_Paulo`.
+O professor precisa revisar e salvar o compromisso. Não há integração
+OAuth com o Google Agenda e alterações/cancelamentos posteriores de
+reposições **não atualizam automaticamente** o evento salvo.
+
+O banco enfileira a notificação ao professor apenas ao inserir uma
+confirmação de reserva; uma restrição única impede duplicação por
+`(booking_id, notification_type)`. Não envia avisos retroativos sobre
+reservas anteriores à implementação.
 
 ## Teste do fluxo atual
 
@@ -65,7 +82,8 @@ Os tipos de notificação são:
 4. Cancele uma reposição com pelo menos 12 horas de antecedência e confirme a devolução do crédito.
 5. Teste uma reposição dentro da janela de 12 horas e confirme que o cancelamento continua disponível, mas sem devolução de crédito.
 6. Confirme que a vaga é liberada e que o e-mail de cancelamento é enfileirado.
-7. Confirme que `/reposicoes/` redireciona para `/area-do-estudante/minhas-aulas/`.
+7. Confirme que o aviso ao professor contém o nome do aluno, data e horário, e que o link do Google Agenda prepara o evento sem salvá-lo automaticamente.
+8. Confirme que `/reposicoes/` redireciona para `/area-do-estudante/minhas-aulas/`.
 
 Para diagnosticar o envio:
 
