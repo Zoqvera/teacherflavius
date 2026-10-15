@@ -1,0 +1,106 @@
+.student-review-invitation {
+  box-sizing: border-box;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  overflow-y: auto;
+  border: 1px solid rgba(113, 183, 248, .36);
+  border-radius: 22px;
+  color: #eff6ff;
+  background: linear-gradient(155deg, #082957 0%, #03152d 100%);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .48);
+  text-align: center;
+}
+
+.student-review-invitation::backdrop {
+  background: rgba(0, 8, 26, .78);
+  backdrop-filter: blur(4px);
+}
+
+.student-review-invitation__icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  background: rgba(70, 154, 240, .18);
+  color: #9ed0ff;
+}
+
+.student-review-invitation__icon svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.student-review-invitation h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.3rem, 5vw, 1.6rem);
+  line-height: 1.25;
+  color: #fff;
+}
+
+.student-review-invitation p {
+  margin: 0 0 24px;
+  color: #c7d9ef;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.student-review-invitation__actions {
+  display: grid;
+  gap: 12px;
+}
+
+.student-review-invitation__primary,
+.student-review-invitation__secondary {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-height: 48px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.student-review-invitation__primary {
+  border: 1px solid #4f9ee8;
+  color: #fff;
+  background: #1266bc;
+}
+
+.student-review-invitation__primary:hover {
+  background: #1a7bd9;
+}
+
+.student-review-invitation__secondary {
+  border: 1px solid rgba(199, 217, 239, .24);
+  color: #d8e7fa;
+  background: transparent;
+}
+
+.student-review-invitation__secondary:hover {
+  background: rgba(255, 255, 255, .07);
+}
+
+.student-review-invitation__primary:focus-visible,
+.student-review-invitation__secondary:focus-visible {
+  outline: 3px solid #b7e2ff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .student-review-invitation {
+    padding: 24px 20px;
+  }
+}

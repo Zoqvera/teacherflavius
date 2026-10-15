@@ -8,6 +8,7 @@ module.exports = [
       "area-do-estudante/homeworks/foundation.js",
       "accessibility.js",
       "area_do_estudante.js",
+      "student_review_invitation.js",
       "academic_workflow_service.js",
       "o-que-fazer/app.js",
       "roteiro-da-aula/app.js",
