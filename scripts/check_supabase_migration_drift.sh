@@ -301,7 +301,7 @@ compare_production_identity() {
   local alias_git_version="20261015030100"
   local alias_remote_version="20261015030846"
   local alias_name="add_regular_and_teacher_cancellation_email_notifications"
-  local alias_sha="5dc7e85b53bc3ebad9b96a759e78f9ce681939f8bd0edb8e8baaa34a6978839e"
+  local alias_sha="794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7"
   local local_identity
   local remote_identity
   local expected_git
