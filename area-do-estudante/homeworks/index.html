@@ -11,14 +11,14 @@
   <script src="/supabase_config.js?v=20260430-3"></script>
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260430-3"></script>
-  <link rel="stylesheet" href="/area-do-estudante/homeworks/foundation.css?v=20261015-4">
+  <link rel="stylesheet" href="/area-do-estudante/homeworks/foundation.css?v=20261015-5">
 </head>
 <body>
   <main class="homework-shell">
     <header class="homework-header">
       <p class="homework-kicker">TEACHER FLÁVIO</p>
       <h1>TAREFAS PARA CASA</h1>
-      <p>Ambiente de desenvolvimento — Etapa 3: Interfaces pedagógicas</p>
+      <p>Ambiente administrativo em homologação — ETAPA 5</p>
       <p id="homeworkStatus" class="homework-status" role="status" aria-live="polite">
         Verificando acesso do professor...
       </p>
@@ -69,6 +69,14 @@
       <button id="homeworkClosePedagogicalPreview" type="button">Fechar pré-visualização</button>
     </section>
 
+    <section id="homeworkReview" class="homework-preview"
+      aria-labelledby="homeworkReviewTitle" hidden>
+      <h2 id="homeworkReviewTitle">Revisão pedagógica de respostas abertas</h2>
+      <p>Somente professor autenticado com MFA. Respostas divergentes de Reading e Grammar
+        devem receber nota e justificativa antes do resultado final.</p>
+      <div id="homeworkReviewList"></div>
+    </section>
+
     <nav class="homework-navigation" aria-label="Navegação">
       <a href="/professor/">Voltar à Área do Professor</a>
     </nav>
@@ -79,6 +87,8 @@
   <script src="/homework_access_service.js?v=20261015-1"></script>
   <script src="/homework_admin_service.js?v=20261015-2"></script>
   <script src="/homework_pedagogical_preview.js?v=20261015-2"></script>
-  <script src="/area-do-estudante/homeworks/foundation.js?v=20261015-4"></script>
+  <script src="/homework_teacher_review_service.js?v=20261015-1"></script>
+  <script src="/homework_teacher_review_renderer.js?v=20261015-1"></script>
+  <script src="/area-do-estudante/homeworks/foundation.js?v=20261015-5"></script>
 </body>
 </html>
