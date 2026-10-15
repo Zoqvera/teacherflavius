@@ -12,6 +12,7 @@
   const isPreview = hostname === PREVIEW_HOSTNAME;
   let enabled = isPreview;
   let resolution = null;
+  let resolvedUserId = null;
   const secondPartUrl = "/o-que-fazer/segunda-parte/";
 
   if (isPreview && window.document && window.document.head) {
@@ -51,17 +52,25 @@
 
   async function resolveEligibility(client, userId) {
     if (isPreview) return true;
-    if (!PRODUCTION_PILOT_ARMED || !PRODUCTION_HOSTNAMES.includes(hostname)) {
+    if (!PRODUCTION_PILOT_ARMED || !PRODUCTION_HOSTNAMES.includes(hostname) ||
+        !client || !userId) {
+      enabled = false;
+      resolvedUserId = null;
+      resolution = null;
       return false;
     }
 
-    if (!resolution) {
+    if (resolvedUserId !== userId) {
+      enabled = false;
+      resolvedUserId = userId;
       resolution = readPilotEligibility(client, userId)
         .catch(function (error) {
           console.error("Falha ao verificar elegibilidade da preparação:", error);
           return false;
         })
         .then(function (allowed) {
+          // A previous account's asynchronous response must not unlock a new session.
+          if (resolvedUserId !== userId) return false;
           enabled = allowed === true;
           return enabled;
         });
