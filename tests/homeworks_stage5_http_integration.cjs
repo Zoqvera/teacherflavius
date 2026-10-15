@@ -1,6 +1,7 @@
 /**
  * TAREFAS PARA CASA — HTTP end-to-end, local Supabase disposable instance only.
- * No production network URLs, provider keys, real students, email or permanent data.
+ * Manual live mode makes one GPT-6 Luna request, using only synthetic data.
+ * All database connections stay local. Never run this against production.
  */
 const assert = require('node:assert/strict');
 const { execFileSync } = require('node:child_process');
@@ -113,6 +114,10 @@ async function waitForEdge(config) {
 }
 
 async function run() {
+  const liveWriting = process.env.HOMEWORKS_LIVE_WRITING === 'true';
+  if (liveWriting && process.env.GITHUB_EVENT_NAME !== 'workflow_dispatch') {
+    throw new Error('Live Writing test requires explicit manual workflow_dispatch.');
+  }
   const config = localConfig();
   await waitForEdge(config);
   const studentA = await createSyntheticUser(config, 'a');
@@ -193,20 +198,84 @@ async function run() {
     answers: { text: 'Yesterday I go to school and I studied English.' },
   });
   assert.equal(writing.status, 200, JSON.stringify(writing.body));
-  assert.equal(writing.body.status, 'submitted');
-  assert.equal(writing.body.score, null);
-  assert.equal(writing.body.correction, 'unconfigured');
-  const retry = await edge(config, studentA.jwt, 'retry_correction', {
-    assignment_id: WRITING,
-  });
-  assert.equal(retry.status, 200);
-  assert.equal(retry.body.status, 'submitted');
-  assert.equal(retry.body.correction, 'unconfigured');
+  if (liveWriting) {
+    assert.equal(writing.body.status, 'evaluated',
+      'A provider failure must not be mistaken for completed Writing.');
+    assert.equal(writing.body.correction, undefined);
+    assert.ok(Number.isFinite(writing.body.score) &&
+      writing.body.score >= 0 && writing.body.score <= 10);
+    assert.equal(writing.body.feedback.length, 1);
+
+    const feedback = writing.body.feedback[0];
+    assert.equal(feedback.source, 'ai');
+    assert.equal(feedback.score, writing.body.score);
+    assert.equal(feedback.original_text,
+      'Yesterday I go to school and I studied English.');
+    assert.ok(typeof feedback.corrected_text === 'string' &&
+      feedback.corrected_text.trim().length > 0);
+    assert.ok(typeof feedback.general_comment === 'string' &&
+      feedback.general_comment.length >= 10);
+    assert.ok(feedback.explanations.length >= 3 &&
+      feedback.explanations.length <= 12);
+
+    const gradeFor = (index, weight) => {
+      const text = feedback.explanations[index];
+      const match = text.match(new RegExp(
+        ':\\s*(\\d+(?:\\.\\d+)?)\\/10 \\(peso ' + weight + '%\\)'));
+      assert.ok(match, 'Each rubric component must be visible in the feedback.');
+      return Number(match[1]);
+    };
+    const completion = gradeFor(0, 40);
+    const accuracy = gradeFor(1, 30);
+    const vocabulary = gradeFor(2, 30);
+    const expectedScore = Number((
+      completion * 0.4 + accuracy * 0.3 + vocabulary * 0.3
+    ).toFixed(2));
+    assert.equal(writing.body.score, expectedScore,
+      'The stored grade must use the canonical 40/30/30 weighting.');
+
+    // An evaluated attempt is read from storage, never sent to the provider again.
+    const retry = await edge(config, studentA.jwt, 'retry_correction', {
+      assignment_id: WRITING,
+    });
+    assert.equal(retry.status, 200);
+    assert.equal(retry.body.status, 'evaluated');
+    assert.equal(retry.body.score, expectedScore);
+    assert.equal(retry.body.feedback.length, 1);
+
+    const consumed = dockerSql(
+      "select count(*) from public.api_rate_limit_buckets " +
+      "where bucket_key like 'homework-writing:%' and request_count=1;"
+    ).trim();
+    assert.equal(consumed, '2',
+      'Exactly one Writing request consumes one hourly and one daily counter.');
+
+    const stored = dockerSql(
+      "select count(*) from public.exercise_feedback " +
+      "where source='ai' and evaluator_model='gpt-6-luna';"
+    ).trim();
+    assert.equal(stored, '1', 'The real assessment must be saved only once.');
+  } else {
+    assert.equal(writing.body.status, 'submitted');
+    assert.equal(writing.body.score, null);
+    assert.equal(writing.body.correction, 'unconfigured');
+    const retry = await edge(config, studentA.jwt, 'retry_correction', {
+      assignment_id: WRITING,
+    });
+    assert.equal(retry.status, 200);
+    assert.equal(retry.body.status, 'submitted');
+    assert.equal(retry.body.correction, 'unconfigured');
+  }
+
   const writingProgress = await edge(config, studentA.jwt, 'progress', {
     assignment_id: WRITING,
   });
   assert.equal(writingProgress.status, 200);
-  assert.equal(writingProgress.body.status, 'submitted');
+  assert.equal(writingProgress.body.status, liveWriting ? 'evaluated' : 'submitted');
+  if (liveWriting) {
+    assert.equal(writingProgress.body.score, writing.body.score);
+    assert.equal(writingProgress.body.feedback[0].source, 'ai');
+  }
 
   const grammarDetail = await edge(config, studentB.jwt, 'detail', {
     assignment_id: GRAMMAR,
@@ -236,7 +305,9 @@ async function run() {
 
   process.stdout.write(
     'PASS: true JWT, gate, per-user access, hidden answer keys, Reading/Grammar grades, ' +
-    'Writing saved retry without provider, idempotency and block restoration.\n',
+    (liveWriting ? 'Live Writing stored/recovered with canonical 40/30/30 score; ' :
+      'Writing saved retry without provider; ') +
+    'idempotency and block restoration.\\n',
   );
 }
 
