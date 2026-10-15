@@ -162,7 +162,7 @@ begin
   activity := target.activity_type;
   if activity = 'writing' then
     if jsonb_typeof(p_payload) <> 'object' or
-      jsonb_object_length(p_payload) <> 1 or
+      (select count(*) from jsonb_object_keys(p_payload)) <> 1 or
       jsonb_typeof(p_payload->'text') <> 'string' or
       char_length(trim(p_payload->>'text')) not between 20 and 3000 then
       raise exception 'Writing requer texto de 20 a 3000 caracteres.';
