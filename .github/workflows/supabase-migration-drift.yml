@@ -4,10 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - "supabase/migrations/**"
-      - "scripts/check_supabase_migration_drift.sh"
-      - ".github/workflows/supabase-migration-drift.yml"
   push:
     branches:
       - main
