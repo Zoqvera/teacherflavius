@@ -141,8 +141,21 @@ test("private Reading preview shows progress, simulates exact matches and can re
     /Questões respondidas: 1 de 2/);
   form.dispatch("submit");
   assert.match(descendants(form, "p").map(item => item.textContent).join(" "),
-    /Não é nota oficial/);
+    /Não é possível calcular nota/);
   assert.equal(descendants(form, "details").length, 2);
+
+  // Um envio incompleto não pode exibir uma nota que o PostgreSQL recusaria.
+  const options = descendants(form, "select");
+  if (options.length) {
+    options[0].value = "yes";
+  } else {
+    const radios = descendants(form, "input").filter(item => item.type === "radio");
+    assert.ok(radios.length);
+    radios[0].checked = true;
+  }
+  form.dispatch("submit");
+  assert.match(descendants(form, "p").map(item => item.textContent).join(" "),
+    /Não é nota oficial/);
   form.dispatch("reset");
   assert.match(descendants(form, "p").map(item => item.textContent).join(" "),
     /Questões respondidas: 0 de 2/);

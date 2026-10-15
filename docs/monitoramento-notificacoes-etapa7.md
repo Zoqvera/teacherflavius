@@ -172,3 +172,29 @@ responsável. A Etapa 7 permanece aberta para acompanhamento.
 
 **SEO:** nenhuma alteração em páginas indexáveis, rotas, metadados,
 sitemap ou robots.txt.
+
+
+## Integração nativa à saúde do sistema — Etapa 7.2
+
+A migração versionada
+`supabase/migrations/20261015134000_integrate_email_notifications_with_system_health.sql`
+insere a análise agregada no monitor existente de 5 minutos. Não depende de
+vaga para tarefas do ChatGPT, não adiciona cron e não faz envios de testes.
+
+O resultado, após a migração ser publicada no banco, integra o bloco
+`metrics.email_notifications`, os `issues` da última execução e os
+alertas administrativos deduplicados. Os códigos de alerta estão documentados
+em `docs/system_health_monitoring.md`.
+
+O serviço de monitoramento depende da saúde do próprio monitor global e da
+fila de alertas existente. Um alerta que falha no Resend não equivale a uma
+notificação recebida pelo professor. O passo seguinte é verificar a aplicação
+efetiva da migração, confirmar uma execução real do health check e observar
+os resultados antes de declarar a Etapa 7.2 concluída.
+
+**Plano de reversão:** em caso de regressão, desabilitar os dois triggers
+`attach_email_health_to_system_run` e
+`enqueue_email_health_alerts_from_system_run`, restaurar a antiga RPC
+`public.run_system_health_check_internal(boolean)` preservada no histórico
+versionado e verificar a saúde do monitor; executar a reversão apenas por
+migração de correção testada e revisada. Não alterar filas ou cron de envio.
