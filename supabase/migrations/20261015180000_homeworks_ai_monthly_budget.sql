@@ -92,7 +92,8 @@ begin
     if not month_row.alert_cap_sent then
       update public.homework_ai_budget_months set alert_cap_sent=true,
         updated_at=now() where month_start=period;
-      if to_regprocedure('private.enqueue_system_health_alert(text,text,text,jsonb)') is not null then
+      if coalesce(current_setting('app.homework_budget_notify',true),'true') <> 'false'
+        and to_regprocedure('private.enqueue_system_health_alert(text,text,text,jsonb)') is not null then
         perform private.enqueue_system_health_alert(
           'homework_ai_budget_limit','critical',
           'homework_ai_budget_limit:'||to_char(period,'YYYYMM'),
