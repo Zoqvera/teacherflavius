@@ -18,7 +18,7 @@ language plpgsql security definer set search_path = ''
 as $review$
 begin
   if auth.uid() is null or
-     not (select public.is_teacher_admin()) or
+     coalesce((select public.is_teacher_admin()),false) is not true or
      coalesce((select auth.jwt()->>'aal'),'') <> 'aal2' then
     raise exception 'Acesso exclusivo ao professor com MFA.' using errcode='42501';
   end if;
@@ -64,7 +64,7 @@ declare
   grade numeric(4,2);
 begin
   if auth.uid() is null or
-     not (select public.is_teacher_admin()) or
+     coalesce((select public.is_teacher_admin()),false) is not true or
      coalesce((select auth.jwt()->>'aal'),'') <> 'aal2' then
     raise exception 'Acesso exclusivo ao professor com MFA.' using errcode='42501';
   end if;
