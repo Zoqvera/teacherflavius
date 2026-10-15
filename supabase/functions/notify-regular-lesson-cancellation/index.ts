@@ -18,6 +18,7 @@ type CancellationNotification = {
   recipient_type: "student" | "teacher";
   status: string;
   attempts: number;
+  created_at: string;
 };
 
 const FROM_EMAIL = "Teacher Flávio <contato@teacherflavius.com>";
@@ -168,7 +169,7 @@ Deno.serve(async (request: Request) => {
   });
   const { data, error } = await supabase
     .from("regular_lesson_cancellation_email_notifications")
-    .select("id, student_id, student_name, class_name, starts_at, ends_at, credit_granted, recipient_type, status, attempts")
+    .select("id, student_id, student_name, class_name, starts_at, ends_at, credit_granted, recipient_type, status, attempts, created_at")
     .eq("id", payload.record.id)
     .single();
 
@@ -200,14 +201,26 @@ Deno.serve(async (request: Request) => {
   }
 
   const attemptedAt = new Date().toISOString();
-  await supabase.from("regular_lesson_cancellation_email_notifications")
+  // Resend only retains idempotency keys for 24 hours: block uncertain late replays.
+  if (notice.attempts > 0 && Date.now() - new Date(notice.created_at).getTime() > 18 * 60 * 60 * 1000) {
+    return jsonResponse({ error: "Manual reconciliation required after idempotency window" }, 409);
+  }
+
+  const { data: claimed, error: claimError } = await supabase
+    .from("regular_lesson_cancellation_email_notifications")
     .update({
       attempts: Number(notice.attempts ?? 0) + 1,
       last_attempt_at: attemptedAt,
       updated_at: attemptedAt,
       last_error: null,
     })
-    .eq("id", notice.id);
+    .eq("id", notice.id)
+    .eq("status", notice.status)
+    .eq("attempts", notice.attempts)
+    .select("id")
+    .maybeSingle();
+  if (claimError) return jsonResponse({ error: "Unable to claim notification" }, 500);
+  if (!claimed) return jsonResponse({ ok: true, skipped: "already_claimed" });
 
   const message = cancellationMessage(notice);
   const providerResponse = await fetch("https://api.resend.com/emails", {
