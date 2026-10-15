@@ -1,0 +1,119 @@
+.homework-student-list {
+  display: grid;
+  gap: 1rem;
+  padding-left: 1.25rem;
+}
+
+.homework-student-item {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #fff;
+  color: #172743;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+}
+
+.homework-student-heading {
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  line-height: 1.2;
+}
+
+.homework-student-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.homework-student-form label {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.homework-student-question {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 1rem;
+  min-width: 0;
+}
+
+.homework-student-question legend {
+  padding: 0 0.5rem;
+  font-weight: 650;
+}
+
+.homework-student-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #64748b;
+  font: inherit;
+  background: #fff;
+  color: #172743;
+  line-height: 1.5;
+}
+
+textarea.homework-student-input {
+  min-height: 170px;
+  resize: vertical;
+}
+
+.homework-student-button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.7rem 1rem;
+  border: 1px solid #123a7a;
+  background: #123a7a;
+  color: #fff;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.homework-student-button:focus-visible,
+.homework-student-input:focus-visible {
+  outline: 3px solid #0759bd;
+  outline-offset: 3px;
+}
+
+.homework-student-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.homework-student-passage {
+  white-space: pre-wrap;
+  line-height: 1.8;
+}
+
+.homework-student-guidance {
+  padding-left: 1.5rem;
+  line-height: 1.65;
+}
+
+.homework-student-result {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  background: #f4f6fa;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+}
+
+@media (max-width: 600px) {
+  .homework-student-item,
+  .homework-student-question,
+  .homework-student-result {
+    padding: 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homework-student-button,
+  .homework-student-input {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}
