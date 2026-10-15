@@ -138,3 +138,42 @@ Como alternativa, `.github/workflows/homeworks-writing-provider-smoke.yml` execu
 O script `scripts/homework_stage5_provider_smoke.mjs` usa duas frases sintéticas (enunciado e exemplo com erros simples), `model=gpt-6-luna`, `reasoning.effort=none`, `store=false`, saída JSON Schema estrita de três subnotas, `max_output_tokens=1400`, timeout de 45 s e calcula a nota oficial com pesos 40/30/30. O teste rejeita grades ou feedback fora de faixa; os logs não contêm textos, respostas brutas ou chaves, apenas sucesso/falha, critérios numéricos, nota e latência. A execução só acontece quando o professor adiciona manualmente o segredo `OPENAI_API_KEY` em **GitHub → Settings → Secrets and variables → Actions** e dispara o workflow. A chave já configurada na produção Supabase não é copiada, lida ou compartilhada.
 
 **Limites:** teste real de provedor ainda pendente até configuração do segredo no GitHub e disparo manual. A credencial de produção Supabase não pode ser inspecionada por essas ferramentas, e este teste não homologa o armazenamento transacional nem a chamada real via Edge na produção. A ETAPA 5 só encerra após validação pedagógica, privacidade e dispositivos. Nenhum acesso estudantil foi habilitado. Nenhuma alteração de SEO.
+
+## Evidência de execução real da OpenAI — 15/10/2026
+
+**Critério de conectividade e contrato com provedor: APROVADO.**
+
+O workflow manual **Homeworks Writing provider smoke**, execução [#38739059955](https://github.com/Zoqvera/teacherflavius/actions/runs/38739059955), foi disparado em 15/10/2026 às 13:00 UTC, no commit `36fd1aad0ade405806853f38bddbe59115b911d4` (`main`). Ambos os jobs concluíram com sucesso, incluindo **One synthetic OpenAI request (manual only)**. A verificação `OPENAI_API_KEY` confirmou a presença do segredo no GitHub Actions; seu valor não foi exposto.
+
+O resultado observado no log da chamada **real** à API Responses foi:
+
+```json
+{
+  "result": "PASS",
+  "model": "gpt-6-luna",
+  "score": 7.7,
+  "criteria": {
+    "task_completion": 8,
+    "linguistic_accuracy": 6,
+    "clarity_vocabulary": 9
+  },
+  "duration_ms": 4439,
+  "response_storage_opt_out": true,
+  "synthetic_only": true
+}
+```
+
+A nota foi calculada pelo código de teste, independentemente do modelo: `8 × 0.4 + 6 × 0.3 + 9 × 0.3 = 7.70`. O retorno estruturado passou pela validação dos três critérios, comentário, texto corrigido e explicações. `response_storage_opt_out` registra `store:false` na solicitação, **não** garantia de retenção zero. Nenhum texto real de aluno foi enviado.
+
+A confirmação de conectividade com o provedor **não equivale à homologação do fluxo de Writing completo na Edge Function de produção**, pois o smoke não criou tentativas no Supabase. A implantação `homework-student` segue na versão 5, `verify_jwt=true`. Verificação de produção após o teste: `homework_release_control.enabled=false`, zero exercícios, atribuições, tentativas e feedbacks. O módulo permanece fechado, com o portal antigo preservado.
+
+### Critérios restantes para encerrar a ETAPA 5
+
+- **Integração produtiva segura**: confirmar que a função Edge consegue usar o segredo próprio do Supabase e salvar uma avaliação real, sem habilitar acesso dos estudantes; obter ambiente isolado com bootstrap íntegro ou outro ensaio de integração igualmente isolado e seguro.
+- **Aceite pedagógico**: professor avaliar clareza do feedback, fidelidade das correções, adequação A1/A2 e justificativa das notas com exemplos de respostas fictícias; não permitir publicação antes desse aceite.
+- **Experiência em dispositivos**: homologar manualmente a interface de Reading, Writing e Grammar em telefone Android e desktop, inclusive envio, retomada, estado de progresso e acessibilidade.
+- **Privacidade e operação**: confirmar a política de dados e limites de uso/custo antes da ativação.
+
+**Status global: ETAPA 5 EM ANDAMENTO.** Não abrir a liberação aos alunos até aprovação expressa. Nenhuma mudança nesta atualização afeta SEO, esquema SQL, conteúdo pedagógico publicado, credenciais ou fluxo de produção.
+
+**Próxima etapa planejada, ainda não iniciada: ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica.**
