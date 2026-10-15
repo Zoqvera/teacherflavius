@@ -595,6 +595,46 @@ jobs:
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
             < tests/sql/regular_cancellation_homologation.sql
 
+      - name: Homologate Homeworks in isolated PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # Explicit allowlist: migration history is not replayed wholesale.
+          # This stack contains only synthetic users; no emails or AI calls are sent.
+          for migration in \
+            supabase/migrations/20261015043416_homeworks_stage2_schema.sql \
+            supabase/migrations/20261015060000_homeworks_stage4_submission.sql \
+            supabase/migrations/20261015065000_homeworks_stage5_teacher_review.sql \
+            supabase/migrations/20261015071000_homeworks_auto_grade_reading_grammar.sql
+          do
+            docker exec -i "$DB_CONTAINER" \
+              psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+              < "$migration"
+          done
+
+          # A transação do teste usa ROLLBACK. A liberação é temporária só no CI.
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < tests/sql/homeworks_stage5_postgres_e2e.sql
+
+          # A fixture não pode deixar liberação nem registros.
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $clean$
+          begin
+            if (select enabled from public.homework_release_control where id=1) or
+               exists(select 1 from public.exercise_attempts) or
+               exists(select 1 from public.exercises) then
+              raise exception 'Testes de Homeworks deixaram estado no banco isolado.';
+            end if;
+          end;
+          $clean$;
+          SQL
+
       - name: Stop disposable Supabase stack
         if: always()
         run: supabase stop --no-backup
