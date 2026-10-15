@@ -32,13 +32,18 @@ SCENARIOS = (
     ("lesson", 390, 844),
     ("lesson", 1280, 900),
     ("lesson-disabled", 390, 844),
+    ("roadmap", 320, 740),
+    ("roadmap", 390, 844),
+    ("roadmap", 1280, 900),
+    ("roadmap-last", 390, 844),
+    ("roadmap-disabled", 390, 844),
 )
 
 BOOTSTRAP = r"""
 (function () {
   "use strict";
   const scenario = new URLSearchParams(location.search).get("scenario") || "legacy";
-  const enabled = !["legacy", "lesson-disabled"].includes(scenario);
+  const enabled = !["legacy", "lesson-disabled", "roadmap-disabled"].includes(scenario);
   window.StudentPreparationFlow = { enabled };
   window.SUPABASE_CONFIG = {};
   window.ResourceWaiter = { waitUntil: async () => true };
@@ -84,8 +89,11 @@ BOOTSTRAP = r"""
     legacyLessonPreviewUrl: () => ""
   };
   window.StudyLessonService = {
+    lessonPageUrl: id => "/licao/?id=" + id,
     create: () => ({
-      getLinkedPageByLessonNumber: async () => ({
+      getLinkedPageByLessonNumber: async number => number === 8
+        ? (scenario === "roadmap-last" ? null : { id: "22222222-2222-4222-8222-222222222222" })
+        : ({
         lesson_number_label: "LIÇÃO 7",
         title: "Presentation practice",
         objective: "Introduce yourself clearly",
@@ -104,7 +112,8 @@ VERIFIER = r"""
   "use strict";
   function visible(id) {
     const node = document.getElementById(id);
-    return !!node && !node.hidden && getComputedStyle(node).display !== "none";
+    return !!node && !node.hidden && getComputedStyle(node).display !== "none" &&
+      node.getClientRects().length > 0;
   }
   function result(ok, details) {
     document.body.dataset.qaResult = ok ? "PASS" : "FAIL";
@@ -145,13 +154,27 @@ VERIFIER = r"""
       ok = ok && visible("lessonFlowProgress") &&
         visible("lessonNextPartLink") &&
         visible("lessonPreparationSection") &&
+        !visible("lessonPreparedButton") && !visible("lessonNextLessonLink") &&
         document.getElementById("lessonNextPartLink").getAttribute("href") ===
         "/o-que-fazer/segunda-parte/" &&
         calls.prepared.length === 0;
     } else if (scenario === "lesson-disabled") {
       ok = ok && !visible("lessonFlowProgress") &&
         !visible("lessonNextPartLink") &&
-        visible("lessonPreparationSection");
+        visible("lessonPreparationSection") && visible("lessonPreparedButton");
+    } else if (scenario === "roadmap") {
+      ok = ok && !visible("lessonFlowProgress") &&
+        !visible("lessonPreparedButton") && !visible("lessonNextPartLink") &&
+        visible("lessonNextLessonLink") &&
+        document.getElementById("lessonNextLessonLink").getAttribute("href") ===
+          "/licao/?id=22222222-2222-4222-8222-222222222222&source=roteiro-de-estudos";
+    } else if (scenario === "roadmap-last") {
+      ok = ok && !visible("lessonPreparedButton") && !visible("lessonNextPartLink") &&
+        !visible("lessonNextLessonLink") && visible("lessonRoadmapNavigation") &&
+        /Não há uma próxima lição/.test(document.getElementById("lessonRoadmapStatus").textContent);
+    } else if (scenario === "roadmap-disabled") {
+      ok = ok && visible("lessonPreparedButton") && !visible("lessonNextPartLink") &&
+        !visible("lessonNextLessonLink");
     }
     result(ok, detail + ", scenario=" + scenario);
   }, 240);
@@ -231,13 +254,13 @@ def copy_fixture_files(root: Path) -> None:
 
 
 def run_case(browser: str, port: int, scenario: str, width: int, height: int) -> None:
-    route = "/licao/" if scenario.startswith("lesson") else (
+    route = "/licao/" if scenario.startswith(("lesson", "roadmap")) else (
         "/o-que-fazer/segunda-parte/" if scenario == "second" else "/o-que-fazer/"
     )
-    url = f"http://127.0.0.1:{port}{route}?" + urlencode({
-        "scenario": scenario,
-        "lesson": "7",
-    })
+    query = {"scenario": scenario, "lesson": "7"}
+    if scenario.startswith("roadmap"):
+        query["source"] = "roteiro-de-estudos"
+    url = f"http://127.0.0.1:{port}{route}?" + urlencode(query)
     ARTIFACTS.mkdir(exist_ok=True)
     image_name = ARTIFACTS / f"{scenario}-{width}.png"
     cmd = [

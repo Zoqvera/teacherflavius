@@ -56,6 +56,53 @@
     });
   }
 
+  function isNewFlowEnabled() {
+    return !!(window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true);
+  }
+
+  function isRoadmapNavigation() {
+    return isNewFlowEnabled() &&
+      new URLSearchParams(window.location.search).get("source") === "roteiro-de-estudos";
+  }
+
+  async function setupRoadmapNavigation(service, lessonNumber) {
+    const section = document.getElementById("lessonRoadmapNavigation");
+    const nextLink = document.getElementById("lessonNextLessonLink");
+    const status = document.getElementById("lessonRoadmapStatus");
+    if (!section || !nextLink || !status || !isRoadmapNavigation()) return;
+
+    section.hidden = false;
+    nextLink.hidden = true;
+    status.textContent = "";
+
+    if (!Number.isInteger(lessonNumber) || lessonNumber < 1) {
+      status.textContent = "Esta lição não tem sequência definida no roteiro de estudos.";
+      return;
+    }
+
+    const nextNumber = lessonNumber + 1;
+    const legacyUrl = window.AcademicWorkflowService.legacyLessonPreviewUrl(nextNumber);
+
+    try {
+      const nextPage = await service.getLinkedPageByLessonNumber(nextNumber);
+      if (nextPage) {
+        nextLink.href = window.StudyLessonService.lessonPageUrl(nextPage.id) +
+          "&source=roteiro-de-estudos";
+      } else if (legacyUrl) {
+        nextLink.href = "/licao/?lesson=" + encodeURIComponent(nextNumber) +
+          "&source=roteiro-de-estudos";
+      } else {
+        status.textContent = "Não há uma próxima lição publicada no momento.";
+        return;
+      }
+
+      nextLink.hidden = false;
+    } catch (error) {
+      console.error("Falha ao localizar a próxima lição:", error);
+      status.textContent = "Não foi possível consultar a próxima lição. Tente novamente.";
+    }
+  }
+
   function showDynamicSections(visible) {
     document.querySelectorAll(".dynamic-lesson-section").forEach(function (section) {
       section.hidden = !visible;
@@ -105,6 +152,10 @@
     const progress = document.getElementById("lessonFlowProgress");
     if (nextPartLink) nextPartLink.hidden = true;
     if (progress) progress.hidden = true;
+    if (isRoadmapNavigation()) {
+      section.hidden = true;
+      return;
+    }
     if (!lessonNumber) {
       section.hidden = true;
       return;
@@ -119,9 +170,12 @@
       }
 
       section.hidden = false;
-      if (window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true) {
+      const legacyContent = document.getElementById("lessonLegacyPreparationContent");
+      if (legacyContent) legacyContent.hidden = isNewFlowEnabled();
+      if (isNewFlowEnabled()) {
         if (progress) progress.hidden = false;
         if (nextPartLink) nextPartLink.hidden = false;
+        return;
       }
       if (plan.lesson.prepared) {
         disablePreparedButton("PREPARAÇÃO REGISTRADA");
@@ -165,11 +219,13 @@
     if (linkedPage) {
       renderDynamicPage(linkedPage);
       await setupPreparation(lessonNumber);
+      await setupRoadmapNavigation(service, lessonNumber);
       return true;
     }
 
     if (renderLegacyLesson(lessonNumber)) {
       await setupPreparation(lessonNumber);
+      await setupRoadmapNavigation(service, lessonNumber);
       return true;
     }
 
@@ -186,6 +242,7 @@
       page.roadmap_lesson_number
     );
     await setupPreparation(lessonNumber);
+    await setupRoadmapNavigation(service, Number(page.roadmap_lesson_number));
     return true;
   }
 

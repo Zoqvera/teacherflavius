@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
   <link rel="stylesheet" href="/study_lesson_page.css?v=20261007-print-2">
   <link rel="stylesheet" href="/academic_workflow.css?v=20261004-1">
-  <link rel="stylesheet" href="/student_preparation_flow.css?v=20261015-1">
+  <link rel="stylesheet" href="/student_preparation_flow.css?v=20261015-2">
 </head>
 <body class="auth-checking">
   <!-- Google Tag Manager (noscript) -->
@@ -122,13 +122,19 @@
       </section>
 
       <section id="lessonPreparationSection" class="lesson-content-card academic-preparation-card" hidden>
-        <p class="lesson-section-kicker">PREPARAÇÃO</p>
-        <h2>Terminou de preparar esta lição?</h2>
-        <p class="lesson-rich-text">Registre sua preparação. A lição só será considerada concluída quando o professor marcar que ela foi apresentada.</p>
-        <button id="lessonPreparedButton" class="academic-button primary" type="button">ESTOU PREPARADO</button>
-        <p id="lessonPreparationStatus" class="academic-status" role="status"></p>
+        <div id="lessonLegacyPreparationContent">
+          <p class="lesson-section-kicker">PREPARAÇÃO</p>
+          <h2>Terminou de preparar esta lição?</h2>
+          <p class="lesson-rich-text">Registre sua preparação. A lição só será considerada concluída quando o professor marcar que ela foi apresentada.</p>
+          <button id="lessonPreparedButton" class="academic-button primary" type="button">ESTOU PREPARADO</button>
+          <p id="lessonPreparationStatus" class="academic-status" role="status"></p>
+        </div>
         <a id="lessonNextPartLink" class="academic-button primary student-preparation-next-link" href="/o-que-fazer/segunda-parte/" hidden>PRÓXIMA PARTE</a>
       </section>
+      <nav id="lessonRoadmapNavigation" class="lesson-content-card student-preparation-roadmap-nav" aria-label="Navegação do roteiro de estudos" hidden>
+        <a id="lessonNextLessonLink" class="academic-button primary student-preparation-next-link" hidden>PRÓXIMA LIÇÃO</a>
+        <p id="lessonRoadmapStatus" class="academic-status" role="status"></p>
+      </nav>
     </main>
   </div>
 
@@ -136,7 +142,7 @@
   <script src="/study_lesson_service.js?v=20261004-full-content-1"></script>
   <script src="/academic_workflow_service.js?v=20261004-1"></script>
   <script src="/student_preparation_flow.js?v=20261015-1"></script>
-  <script src="/licao.js?v=20261007-print-1&flow=20261015"></script>
+  <script src="/licao.js?v=20261015-roadmap-1"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>

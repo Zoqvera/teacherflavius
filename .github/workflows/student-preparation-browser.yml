@@ -8,6 +8,8 @@ on:
       - "o-que-fazer/app.js"
       - "licao/index.html"
       - "licao.js"
+      - "roteiro_de_estudos.html"
+      - "tests/student_preparation_flow_functional.test.js"
       - "student_preparation_flow.js"
       - "student_preparation_flow.css"
       - "scripts/student_preparation_browser_check.py"
@@ -39,6 +41,9 @@ jobs:
           assert not is_public(Path("tests/student_preparation_flow_functional.test.js"))
           print("PASS: synthetic browser QA resources are not publicly deployed.")
           PY
+
+      - name: Run controller scenario tests
+        run: node --test tests/student_preparation_flow_functional.test.js
 
       - name: Run real Chromium acceptance
         run: python3 scripts/student_preparation_browser_check.py

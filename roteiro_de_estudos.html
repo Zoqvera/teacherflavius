@@ -30,6 +30,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260428-2"></script>
   <script src="/study_lesson_service.js?v=20260918-2"></script>
+  <script src="/student_preparation_flow.js?v=20261015-1"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260428-2">
   <style>
     .page-description {
@@ -207,13 +208,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function renderLessonTitle(lessonId, title) {
       const lessonNumber = Number(lessonId.replace("lesson-", ""));
       const linkedPage = linkedLessonPages.get(lessonNumber);
-      const lessonUrl = linkedPage
+      const newFlowEnabled = !!(window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true);
+      const originalUrl = linkedPage
         ? window.StudyLessonService.lessonPageUrl(linkedPage.id)
         : lessonLinks[lessonId];
+      const lessonUrl = !newFlowEnabled ? originalUrl
+        : linkedPage
+          ? originalUrl + "&source=roteiro-de-estudos"
+          : originalUrl
+            ? "/licao/?lesson=" + encodeURIComponent(lessonNumber) + "&source=roteiro-de-estudos"
+            : "";
       const inner = '<span><span class="icon">📖</span>' + escapeHtml(title) + '</span><span class="arrow">›</span>';
 
       if (!lessonUrl) return '<div class="lesson-title">' + inner + '</div>';
-      if (linkedPage) return '<a class="lesson-title" href="' + lessonUrl + '">' + inner + '</a>';
+      if (linkedPage || newFlowEnabled) return '<a class="lesson-title" href="' + lessonUrl + '">' + inner + '</a>';
       return '<a class="lesson-title" href="' + lessonUrl + '" target="_blank" rel="noopener noreferrer">' + inner + '</a>';
     }
 
