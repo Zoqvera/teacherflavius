@@ -96,3 +96,17 @@ Critérios automatizados: liberação inicialmente `false`; bloqueio com atribui
 O check de restauração histórica existente permanece intacto: essa homologação adicional acontece **depois** da comparação do fingerprint de recuperação e antes da destruição da pilha temporária, sem modificar o banco produtivo.
 
 Conclusão: testes SQL reais são evidência necessária, mas não substituem testes E2E completos com Edge autenticada e sessões reais isoladas, correção Writing com provedor OpenAI real, validação manual de dispositivos e aceite editorial do professor. A ETAPA 5 não deve ser encerrada somente com esses checks.
+
+## Complemento: protocolo transacional de Writing no PostgreSQL isolado
+
+A homologação SQL da Etapa 5 passa a incluir a atividade **2 — Writing** (entre Reading e Grammar). O próprio PostgreSQL recebe o texto fictício e verifica todas as RPCs reais sem chamada a provedores externos:
+
+- `homework_submit` persiste texto original, deixa a tentativa `submitted` sem inventar nota e rejeita submissão oficial duplicada;
+- `homework_claim_writing` valida atribuição, versão, tipo, propriedade, bloqueio global e devolve um token de avaliação; segunda reivindicação dentro da janela de lease recebe `processing`;
+- `homework_complete_writing` rejeita token forjado, grava o retorno fictício da IA uma única vez com nota 8/10 e preserva o texto original e o corrigido;
+- `homework_release_writing_lease` volta a `submitted` diante de falha, e a reivindicação seguinte emite um token diferente;
+- tentativa de completar novamente com token consumido falha; reenvio com a mesma chave recupera a nota oficial, e outro identificador não duplica a tentativa;
+- as duas tentativas do aluno fictício A (Reading e Writing) são visíveis apenas para A; o aluno B vê exclusivamente Grammar, com políticas RLS reais;
+- todos os registros, usuários, atribuições e alterações temporárias do controle de lançamento são descartados por `ROLLBACK` no banco do CI.
+
+Esse incremento testa o armazenamento, o controle transacional e a passagem de feedback de Writing, **não** a qualidade de respostas reais do GPT-6 Luna. As chamadas à API da OpenAI, a avaliação de latência e custos, o fluxo completo via Edge autenticada e os testes práticos de dispositivos permanecem critérios pendentes. A ETAPA 5 continua aberta e a liberação de alunos continua expressamente proibida.
