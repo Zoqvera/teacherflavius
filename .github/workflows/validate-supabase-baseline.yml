@@ -595,6 +595,28 @@ jobs:
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
             < tests/sql/regular_cancellation_homologation.sql
 
+      - name: Exercise real retry RPC with mocked pg_net, no outbound HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # Only install the SQL function in the disposable CI database.
+          # The production pg_cron schedule is verified by static tests:
+          # DO NOT register a job pointing to production from CI.
+          sed '/^-- Existing pg_cron extension is installed/,$d' \
+            supabase/migrations/20261015041000_retry_transactional_emails_safely.sql \
+            | docker exec -i "$DB_CONTAINER" \
+                psql -U postgres -d postgres -v ON_ERROR_STOP=1
+
+          # All callbacks are intercepted by a net.http_post transaction stub.
+          # The function is restored and all data discarded by ROLLBACK.
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < tests/sql/transactional_email_retry_homologation.sql
+
       - name: Stop disposable Supabase stack
         if: always()
         run: supabase stop --no-backup
