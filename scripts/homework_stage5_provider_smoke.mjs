@@ -147,7 +147,7 @@ export async function runSmoke({ apiKey, fetchImpl = fetch } = {}) {
     score,
     criteria,
     duration_ms: Date.now() - startedAt,
-    retained_by_provider: false,
+    response_storage_opt_out: true,
     synthetic_only: true,
   };
 }
