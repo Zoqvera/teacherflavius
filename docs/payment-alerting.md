@@ -14,7 +14,7 @@ O fluxo de pagamentos do Teacherflavius.com usa uma fila interna de alertas em `
 
 ## Entrega e deduplicação
 
-Os alertas são enviados por e-mail pela Edge Function `notify-payment-alert`, usando o canal Resend já configurado no projeto. Cada alerta possui uma chave de deduplicação. Falhas de gateway são agrupadas por janela de 15 minutos e rajadas de webhooks inválidos geram no máximo um alerta por janela de 15 minutos.
+Os alertas são enviados por e-mail pela Edge Function `notify-payment-alert`, usando o canal Resend já configurado no projeto. O remetente é `Financeiro Teacher Flávio <financeiro@teacherflavius.com>` e o `Reply-To` é `contato@teacherflavius.com`, caixa postal recebida no Google Workspace. A mesma identidade financeira é usada pelo alerta administrativo de indisponibilidade do Mercado Pago gerado por `create-mercado-pago-payment`. Nenhum desses dois fluxos cria aviso financeiro ao aluno. Cada alerta possui uma chave de deduplicação. Falhas de gateway são agrupadas por janela de 15 minutos e rajadas de webhooks inválidos geram no máximo um alerta por janela de 15 minutos.
 
 Alertas com falha de entrega são reencaminhados automaticamente pelo health scan, até cinco tentativas, com intervalo mínimo de 10 minutos.
 

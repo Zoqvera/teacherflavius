@@ -11,6 +11,8 @@ function read(relativePath) {
 
 const enrollment = read("supabase/functions/notify-new-enrollment/index.ts");
 const makeup = read("supabase/functions/notify-makeup-booking/index.ts");
+const paymentAlerts = read("supabase/functions/notify-payment-alert/index.ts");
+const paymentCreation = read("supabase/functions/create-mercado-pago-payment/index.ts");
 
 test("enrollment and replacement use dedicated sender addresses", function () {
   assert.match(enrollment, /Matrículas <matriculas@teacherflavius\.com>/);
@@ -19,6 +21,16 @@ test("enrollment and replacement use dedicated sender addresses", function () {
   assert.match(makeup, /Teacher Flávio <contato@teacherflavius\.com>/);
   assert.doesNotMatch(makeup, /Deno\.env\.get\("ENROLLMENT_FROM_EMAIL"\)/);
   assert.match(makeup, /from: MAKEUP_FROM_EMAIL/);
+});
+
+test("financial operational emails use dedicated sender and Workspace reply-to", function () {
+  for (const source of [paymentAlerts, paymentCreation]) {
+    assert.match(source, /const FINANCIAL_FROM_EMAIL = "Financeiro Teacher Flávio <financeiro@teacherflavius\.com>"/);
+    assert.match(source, /from: FINANCIAL_FROM_EMAIL/);
+    assert.match(source, /reply_to: "contato@teacherflavius\.com"/);
+    assert.doesNotMatch(source, /Deno\.env\.get\("ENROLLMENT_FROM_EMAIL"\)/);
+    assert.match(source, /Deno\.env\.get\("ENROLLMENT_NOTIFICATION_EMAIL"\)/);
+  }
 });
 
 test("enrollment sends both student confirmation and existing administrative notice", function () {

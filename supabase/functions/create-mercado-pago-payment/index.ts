@@ -23,6 +23,8 @@ type MercadoPagoPayment = {
   date_approved?: string;
 };
 
+const FINANCIAL_FROM_EMAIL = "Financeiro Teacher Flávio <financeiro@teacherflavius.com>";
+
 const ACTIVE_ATTEMPT_STATUSES = [
   "created",
   "pending",
@@ -175,9 +177,8 @@ async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
 }): Promise<boolean> {
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   const notificationEmail = Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL") ?? "";
-  const fromEmail = Deno.env.get("ENROLLMENT_FROM_EMAIL") ?? "";
 
-  if (!resendApiKey || !notificationEmail || !fromEmail) {
+  if (!resendApiKey || !notificationEmail) {
     console.warn("Mercado Pago policy alert email is not configured");
     return false;
   }
@@ -192,7 +193,7 @@ async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
         "Idempotency-Key": `mercado-pago-policy-${input.paymentMethod}-${input.providerErrorCode}-${dayKey}`,
       },
       body: JSON.stringify({
-        from: fromEmail,
+        from: FINANCIAL_FROM_EMAIL,
         reply_to: "contato@teacherflavius.com",
         to: [notificationEmail],
         subject: "Alerta: pagamento via Mercado Pago indisponível",
