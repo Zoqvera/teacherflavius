@@ -23,10 +23,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - "**/*.html"
-      - "scripts/**"
-      - ".github/workflows/materialize-gtm-github-pages.yml"
   workflow_dispatch:
 
 permissions:
