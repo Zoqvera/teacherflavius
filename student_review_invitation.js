@@ -4,6 +4,9 @@
   const INVITATION_ID = "studentReviewInvitation";
   const SNOOZE_KEY_PREFIX = "teacherflavius:student-review-invitation:";
   const SNOOZE_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+  const PENDING_EVENT_PREFIX = "teacherflavius:student-review-invitation-pending:";
+  const PENDING_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+  const EVENT_TYPES = Object.freeze(["shown", "clicked", "dismissed"]);
   const SCHOOL_TIME_ZONE = "America/Sao_Paulo";
 
   function calendarDateParts(value) {
@@ -78,18 +81,73 @@
     }
   }
 
-  function recordInvitationEvent(client, action) {
+  function pendingEventKey(studentId, action) {
+    return PENDING_EVENT_PREFIX + studentId + ":" + action;
+  }
+
+  function queuePendingEvent(storage, studentId, action) {
+    if (!storage) return;
+    try {
+      const key = pendingEventKey(studentId, action);
+      if (!storage.getItem(key)) storage.setItem(key, String(Date.now()));
+    } catch (_error) {
+      // Browsers with restricted storage can still submit events directly.
+    }
+  }
+
+  function removePendingEvent(storage, studentId, action) {
+    if (!storage) return;
+    try {
+      storage.removeItem(pendingEventKey(studentId, action));
+    } catch (_error) {
+      // Storage access is optional.
+    }
+  }
+
+  function pendingEvents(storage, studentId, now) {
+    if (!storage) return [];
+    return EVENT_TYPES.filter(function (action) {
+      try {
+        const pendingAt = Number(storage.getItem(pendingEventKey(studentId, action)));
+        if (!Number.isFinite(pendingAt) || pendingAt <= 0) return false;
+        if (pendingAt > now || now - pendingAt > PENDING_MAX_AGE_MS) {
+          removePendingEvent(storage, studentId, action);
+          return false;
+        }
+        return true;
+      } catch (_error) {
+        return false;
+      }
+    });
+  }
+
+  function clearPendingEvents(storage, studentId) {
+    EVENT_TYPES.forEach(function (action) {
+      removePendingEvent(storage, studentId, action);
+    });
+  }
+
+  function recordInvitationEvent(client, action, studentId, storage, isRetry) {
+    if (!isRetry) queuePendingEvent(storage, studentId, action);
     try {
       return Promise.resolve(client.rpc("record_my_student_review_invitation", {
         target_action: action
       })).then(function (result) {
-        return Boolean(result && !result.error && result.data === true);
+        const saved = Boolean(result && !result.error && result.data === true);
+        if (saved) removePendingEvent(storage, studentId, action);
+        return saved;
       }).catch(function () {
         return false;
       });
     } catch (_error) {
-      // Analytics must not interfere with the optional review invitation.
+      // Failure cannot interrupt the invitation or its navigation.
       return Promise.resolve(false);
+    }
+  }
+
+  async function retryPendingEvents(client, studentId, storage, now) {
+    for (const action of pendingEvents(storage, studentId, now)) {
+      await recordInvitationEvent(client, action, studentId, storage, true);
     }
   }
 
@@ -110,7 +168,7 @@
         // Modified clicks may open a second tab and must not be intercepted.
         if (event.defaultPrevented || event.button !== 0 ||
             event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-          void recordInvitationEvent(client, "clicked");
+          void recordInvitationEvent(client, "clicked", studentId, storage);
           return;
         }
 
@@ -126,7 +184,7 @@
 
     dialog.addEventListener("close", function () {
       recordDismissal(storage, studentId);
-      void recordInvitationEvent(client, "dismissed");
+      void recordInvitationEvent(client, "dismissed", studentId, storage);
     }, { once: true });
   }
 
@@ -173,17 +231,22 @@
       // A private authenticated RPC is the source of truth: pending,
       // approved and rejected reviews all count as already submitted.
       const reviewResponse = await client.rpc("get_my_student_review");
-      if (reviewResponse.error || !reviewResponse.data ||
-          reviewResponse.data.review) {
+      if (reviewResponse.error || !reviewResponse.data) return false;
+      if (reviewResponse.data.review) {
+        clearPendingEvents(storage, studentId);
         return false;
       }
+
+      // Retry transient failures even while the invitation is snoozed.
+      // Never block the dashboard or show the dialog solely for analytics.
+      void retryPendingEvents(client, studentId, storage, now.getTime());
 
       if (isSnoozed(storage, studentId, now.getTime())) return false;
 
       attachInvitationHandlers(dialog, studentId, storage, client);
       if (!dialog.open) {
         dialog.showModal();
-        void recordInvitationEvent(client, "shown");
+        void recordInvitationEvent(client, "shown", studentId, storage);
       }
       return true;
     } catch (_error) {
