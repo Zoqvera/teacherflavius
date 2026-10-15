@@ -55,7 +55,9 @@ test("second part is private, reuses the same student question handlers, and kee
   assert.match(secondPage, /PERGUNTAS AINDA NÃO ESTUDADAS/);
   assert.match(secondPage, /id="actionQuestionList"/);
   assert.match(secondPage, /id="reviewQuestionList"/);
-  assert.match(secondPage, /href="\/o-que-fazer\/app\.js\?v=/);
+  assert.match(secondPage, /id="returnToLessonLink"/);
+  assert.match(landingApp, /backLink\.href = lessonUrl \|\| "\/o-que-fazer\/"/);
+  assert.match(secondPage, /src="\/o-que-fazer\/app\.js\?v=/);
   assert.match(landingApp, /service\.markQuestionStudied\(question\.id\)/);
   assert.match(landingApp, /!question\.marked_studied/);
   assert.match(landingApp, /updateQuestionCount\("reviewQuestionsCount", reviews\.length\)/);
