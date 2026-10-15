@@ -42,3 +42,67 @@ test("database restricts the legacy catalog to teachers without deleting records
   assert.match(sql, /where public\.is_teacher_admin\(\)/);
   assert.doesNotMatch(sql, /delete\s+from\s+public\.teacher_exercises|truncate\s+table/i);
 });
+
+test("student area fetches a versioned, uncached HTML document", function () {
+  const shell = read("area-do-estudante/index.html");
+  const html = read("area_do_estudante.html");
+
+  assert.match(shell, /area_do_estudante\\.html\\?v=20261015-suspend-exercises-2/);
+  assert.match(shell, /cache: 'no-store'/);
+  assert.match(html, /area_do_estudante\\.js\\?v=20261015-suspend-exercises-2/);
+});
+
+test("stale student-area cards for the suspended portal are removed", async function () {
+  const vm = require("node:vm");
+  const removed = [];
+  const candidates = [
+    "/exercicios-diarios/",
+    "/exercicios.diarios.html",
+    "https://teacherflavius.com/exercicios_diarios.html",
+    "/flashcards/",
+    "https://example.com/exercicios-diarios/"
+  ];
+  const links = candidates.map(function (href) {
+    return {
+      getAttribute: function (name) {
+        return name === "href" ? href : null;
+      },
+      remove: function () {
+        removed.push(href);
+      }
+    };
+  });
+
+  const documentMock = {
+    querySelectorAll: function () {
+      return links;
+    },
+    querySelector: function () {
+      return null;
+    },
+    getElementById: function () {
+      return null;
+    },
+    body: { classList: { remove: function () {} } }
+  };
+  const windowMock = {
+    location: {
+      href: "https://teacherflavius.com/area-do-estudante/",
+      origin: "https://teacherflavius.com"
+    },
+    ResourceWaiter: {
+      waitUntil: function () {
+        return Promise.resolve(false);
+      }
+    }
+  };
+
+  vm.runInNewContext(read("area_do_estudante.js"), {
+    document: documentMock,
+    window: windowMock,
+    URL,
+    console
+  });
+  await Promise.resolve();
+  assert.deepEqual(removed, candidates.slice(0, 3));
+});
