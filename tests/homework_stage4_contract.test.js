@@ -42,6 +42,9 @@ test("student RLS is read-only, owner-restricted and does not expose answer keys
   assert.match(sql, /grant select \(id, assignment_id, version_id, student_id, attempt_number/);
   assert.doesNotMatch(sql, /grant (?:insert|update|delete) on public\.exercise_answers to authenticated/);
   assert.match(edge, /select\("id,position,prompt,question_type,options,points"\)/);
+  assert.match(edge, /function studentContent\(/);
+  assert.match(edge, /content: studentContent\(exercise\.activity_type, version\.content\)/);
+  assert.doesNotMatch(edge, /content: version\.content/);
   assert.doesNotMatch(edge, /select\([^\n]*answer_key/);
   assert.match(edge, /eq\("student_id", userId\)/);
 });
