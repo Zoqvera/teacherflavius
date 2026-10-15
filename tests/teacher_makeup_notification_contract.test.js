@@ -25,9 +25,8 @@ test("each booking confirmation queues a distinct and deduplicated teacher email
 test("teacher notice is sent from the usual account to a separate configured recipient", function () {
   assert.match(notifier, /Teacher Flávio <contato@teacherflavius\.com>/);
   assert.match(notifier, /TEACHER_BOOKING_TYPE = "teacher_booking"/);
-  assert.match(notifier, /MAKEUP_TEACHER_NOTIFICATION_EMAIL/);
-  assert.match(notifier, /ENROLLMENT_NOTIFICATION_EMAIL/);
-  assert.match(notifier, /\|\| "contato@teacherflavius\.com"/);
+  assert.match(notifier, /const teacherEmail = "flaviofreitas@ufu\.br"/);
+  assert.doesNotMatch(notifier, /Deno\.env\.get\("MAKEUP_TEACHER_NOTIFICATION_EMAIL"\)/);
   assert.match(notifier, /isTeacherBooking \? teacherEmail : booking\.student_email/);
   assert.match(notifier, /isTeacherBooking\)[\s\S]*Nova reposição:/);
   assert.match(notifier, /Idempotency-Key/);
@@ -52,4 +51,14 @@ test("existing student messages and cancellation branches remain available", fun
   assert.match(notifier, /else if \(isCancellation\)/);
   assert.match(notifier, /Reposição de aula confirmada/);
   assert.match(notifier, /Reposição de aula cancelada/);
+});
+
+test("student gets a dedicated Google Calendar link without student name in event title", function () {
+  assert.match(notifier, /audience: "student" \| "teacher" = "teacher"/);
+  assert.match(notifier, /"student",\s*\);/);
+  assert.match(notifier, /const studentCalendarUrl = makeGoogleCalendarUrl\(/);
+  assert.match(notifier, /"text", audience === "teacher"/);
+  assert.match(notifier, /"Reposição de inglês — \$\{className\}"/);
+  assert.match(notifier, /Adicionar ao Google Agenda: \$\{studentCalendarUrl\}/);
+  assert.match(notifier, /escapeHtml\(studentCalendarUrl\)/);
 });
