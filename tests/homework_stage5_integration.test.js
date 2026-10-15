@@ -49,8 +49,18 @@ function buildHarness(overrides = {}) {
   const record = { attempt: null, feedback: [] };
   let handler;
   const activity = config.writing ? 'writing' : 'reading';
+  const month = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit',
+  }).formatToParts(new Date());
+  const monthKey = month.find(part => part.type === 'year').value + '-' +
+    month.find(part => part.type === 'month').value + '-01';
   const allRows = {
     homework_release_control: [{ id: 1, enabled: config.released }],
+    homework_ai_budget_months: config.remainingBudgetMicros == null ? [] : [{
+      month_start: monthKey, limit_micro_usd: 5000000,
+      spent_micro_usd: 5000000 - config.remainingBudgetMicros,
+      reserved_micro_usd: 0,
+    }],
     profiles: [{ id: STUDENT, enrolled: true, archived: config.archived }],
     exercise_assignments: [{ id: ASSIGNMENT, student_id: config.assignedTo,
       exercise_id: EXERCISE, version_id: VERSION, status: 'assigned' }],
@@ -255,6 +265,36 @@ test('Writing is persisted, assessed by mocked AI and visible through progress',
     /Cumprimento do enunciado: 8\/10 \(peso 40%\)/);
   assert.match(progress.body.feedback[0].explanations[1], /Precisão linguística: 8\/10/);
   assert.match(progress.body.feedback[0].explanations[2], /Clareza e vocabulário: 8\/10/);
+});
+
+test('monthly Writing budget pause survives progress reload without leaking accounting', async () => {
+  const h = buildHarness({ released: true, monthBudget: false, remainingBudgetMicros: 3000 });
+  const sent = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(sent.status, 200);
+  assert.equal(sent.body.correction, 'monthly_budget');
+  assert.equal(h.calls.ai.length, 0);
+
+  const reloaded = await h.request({ action: 'progress', assignment_id: ASSIGNMENT });
+  assert.equal(reloaded.status, 200);
+  assert.equal(reloaded.body.status, 'submitted');
+  assert.equal(reloaded.body.correction, 'monthly_budget');
+  assert.equal(reloaded.body.score, null);
+  assert.equal(JSON.stringify(reloaded.body).includes('micro_usd'), false);
+
+  const budgetQueries = h.calls.tables.filter(row => row.name === 'homework_ai_budget_months');
+  assert.equal(budgetQueries.length, 1);
+  assert.ok(budgetQueries[0].filters.month_start);
+});
+
+test('Writing progress allows correction again when the monthly budget refreshes', async () => {
+  const h = buildHarness({ released: true, aiStatus: 503, remainingBudgetMicros: 4700 });
+  await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  const progress = await h.request({ action: 'progress', assignment_id: ASSIGNMENT });
+  assert.equal(progress.status, 200);
+  assert.equal(progress.body.status, 'submitted');
+  assert.equal(progress.body.correction, undefined);
 });
 
 test('failed AI assessment never fabricates a score and can retry idempotently', async () => {
