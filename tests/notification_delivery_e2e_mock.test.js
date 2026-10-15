@@ -127,7 +127,7 @@ function createNotificationFixture(options = {}) {
   );
   assert.ok(strippedImport.length < typescript.length, "strip only the known external SDK import");
   const withoutDeliveryImport = strippedImport.replace(
-    /^import \\{ recordResendAcceptance \\} from "[^"]+";\\r?\\n/,
+    /^import \{ recordResendAcceptance \} from "[^"]+";\r?\n/,
     "",
   );
   const script = stripTypeScriptTypes(withoutDeliveryImport);
