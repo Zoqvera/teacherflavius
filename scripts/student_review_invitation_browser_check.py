@@ -51,6 +51,7 @@ FIXTURE_SCRIPT = r"""
     ? { status: scenario === "submitted" ? "pending" : scenario }
     : null;
   const reviewCalls = [];
+  const trackedEvents = [];
   const storageEntries = new Map();
   const key = "teacherflavius:student-review-invitation:synthetic-student";
   if (scenario === "snoozed") {
@@ -76,11 +77,15 @@ FIXTURE_SCRIPT = r"""
         }
       };
     },
-    async rpc(name) {
-      reviewCalls.push(name);
+    async rpc(name, params) {
+      if (name === "record_my_student_review_invitation") {
+        trackedEvents.push(params.target_action);
+        return { data: true, error: null };
+      }
       if (name !== "get_my_student_review") {
         throw new Error("Incorrect review RPC");
       }
+      reviewCalls.push(name);
       return { data: { review }, error: null };
     }
   };
@@ -114,6 +119,7 @@ FIXTURE_SCRIPT = r"""
     const initialOk = shown === shouldShow &&
       dialog.open === shouldShow &&
       reviewCalls.length === expectedCalls &&
+      (shouldShow ? trackedEvents.includes("shown") : trackedEvents.length === 0) &&
       !!reviewLink &&
       reviewLink.getAttribute("href") === "/avaliar-aulas/" &&
       fitsViewport;
@@ -127,8 +133,9 @@ FIXTURE_SCRIPT = r"""
       const dismiss = dialog.querySelector("[data-review-invitation-close]");
       dismiss.click();
       await new Promise(resolve => setTimeout(resolve, 50));
-      if (dialog.open || !storageEntries.has(key)) {
-        report(false, "Dismissal did not close and snooze");
+      if (dialog.open || !storageEntries.has(key) ||
+          !trackedEvents.includes("dismissed")) {
+        report(false, "Dismissal did not close, snooze and track");
         return;
       }
     }
