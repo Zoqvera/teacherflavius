@@ -60,7 +60,8 @@ class ClientError extends Error {
 
 function unwrap<T>(result: { data: T; error: { message: string } | null }, action: string): T {
   if (result.error) {
-    console.error("homework backend", action, result.error.message);
+    // SQL/provider error strings may include student text or sensitive identifiers.
+    console.error("homework backend", action, "request_failed");
     throw new Error("Não foi possível processar a operação.");
   }
   return result.data;
@@ -310,8 +311,7 @@ async function assessSubmittedWriting(
 ) {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) return { ...submitted, status: "submitted", correction: "unconfigured" };
-  // Limites por aluno antes do gasto financeiro; falhas deixam resposta persistida.
-  await consumeRateLimit(admin, userId);
+  // Primeiro verifique o lease: consultas concorrentes não devem gastar cota.
   const claimed = unwrap(await admin.rpc("homework_claim_writing", {
     p_student_id: userId, p_attempt_id: submitted.attempt_id,
   }), "claim");
@@ -323,7 +323,12 @@ async function assessSubmittedWriting(
       feedback: await getFeedback(admin, submitted.attempt_id) };
   }
 
+  if (claimed.status !== "claimed" || typeof claimed.token !== "string") {
+    throw new Error("Concessão de avaliação inválida.");
+  }
   try {
+    // Somente a avaliação realmente reivindicada consome os limites horários/diários.
+    await consumeRateLimit(admin, userId);
     const result = await assessWriting(apiKey, claimed.text, claimed.prompt);
     const feedback = unwrap(await admin.rpc("homework_complete_writing", {
       p_student_id: userId, p_attempt_id: submitted.attempt_id, p_token: claimed.token,
@@ -333,10 +338,13 @@ async function assessSubmittedWriting(
     }), "complete");
     return { ...submitted, status: "evaluated", score: feedback.score, feedback: [feedback] };
   } catch (error) {
-    console.error("homework correction failed", error instanceof Error ? error.message : "unknown");
     await admin.rpc("homework_release_writing_lease", {
       p_student_id: userId, p_attempt_id: submitted.attempt_id, p_token: claimed.token,
     });
+    // Quota exhaustion is an expected 429, not an OpenAI failure.
+    if (error instanceof ClientError) throw error;
+    // Do not print provider/SQL exception text: it can contain student input.
+    console.error("homework correction failed", "provider_or_storage");
     return { ...submitted, status: "submitted", correction: "retry",
       message: "Texto salvo. A correção está temporariamente indisponível; tente corrigir novamente pelo painel da atividade." };
   }
@@ -423,7 +431,7 @@ Deno.serve(async (request: Request) => {
     }
   } catch (error) {
     if (error instanceof ClientError) return json({ error: error.message }, error.status, origin);
-    console.error("homework student edge failure", error instanceof Error ? error.message : "unknown");
+    console.error("homework student edge failure", "unexpected");
     return json({ error: "Não foi possível acessar Tarefas para Casa." }, 500, origin);
   }
 });
