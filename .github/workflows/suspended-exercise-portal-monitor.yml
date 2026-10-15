@@ -1,0 +1,62 @@
+name: Suspended exercise portal monitoring
+
+on:
+  schedule:
+    # Daily at 08:37 in Brasilia (11:37 UTC).
+    - cron: "37 11 * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "area-do-estudante/index.html"
+      - "area_do_estudante.html"
+      - "area_do_estudante.js"
+      - "exercicios-diarios/**"
+      - "exercicios.diarios.html"
+      - "exercicios_diarios.html"
+      - "minha-semana/index.html"
+      - "minha_semana_dashboard.js"
+      - "curso-de-ingles-online/index.html"
+      - "service-worker.js"
+      - "supabase_config.js"
+      - "supabase/migrations/*suspend_legacy_student_exercise_portal.sql"
+      - "scripts/monitor_suspended_portal.py"
+      - "tests/test_monitor_suspended_portal.py"
+      - "tests/legacy_exercise_portal_suspension.test.js"
+      - ".github/workflows/suspended-exercise-portal-monitor.yml"
+  pull_request:
+    paths:
+      - "area-do-estudante/index.html"
+      - "area_do_estudante.html"
+      - "area_do_estudante.js"
+      - "exercicios-diarios/**"
+      - "exercicios.diarios.html"
+      - "exercicios_diarios.html"
+      - "minha-semana/index.html"
+      - "minha_semana_dashboard.js"
+      - "curso-de-ingles-online/index.html"
+      - "service-worker.js"
+      - "supabase_config.js"
+      - "scripts/monitor_suspended_portal.py"
+      - "tests/test_monitor_suspended_portal.py"
+      - ".github/workflows/suspended-exercise-portal-monitor.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  suspended-portal:
+    name: Verify suspended legacy portal
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Verify regression contracts
+        run: node --test tests/legacy_exercise_portal_suspension.test.js
+      - name: Verify monitoring rules
+        run: python3 -m unittest discover -s tests -p test_monitor_suspended_portal.py -v
+      - name: Audit published site and anonymous Supabase access
+        if: github.event_name != 'pull_request'
+        run: python3 scripts/monitor_suspended_portal.py
