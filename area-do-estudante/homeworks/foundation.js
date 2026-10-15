@@ -35,10 +35,14 @@
 
   function toQuestions(text) {
     return lines(text).map(function (line) {
-      const parts = line.split(" | ").map(part => part.trim());
+      const parts = line.split(/\s+\|\s+/).map(part => part.trim());
+      if (!parts[0]) {
+        throw new TypeError("Toda questão deve conter um enunciado.");
+      }
       if (parts.length === 3) {
         const options = parts[1].split(";").map(option => option.trim()).filter(Boolean);
-        if (options.length < 2 || !options.includes(parts[2])) {
+        if (options.length < 2 || new Set(options).size !== options.length ||
+            !options.includes(parts[2])) {
           throw new TypeError("Questão de alternativas inválida: " + parts[0]);
         }
         return {
@@ -122,6 +126,7 @@
     const questions = latest
       ? await window.HomeworkAdminService.listQuestions(window.Auth, latest.id) : [];
     populateEditor(exercise, latest, questions);
+    renderVersionHistory(exercise, versions);
     byId("homeworkTitle").focus();
   }
 
@@ -135,6 +140,27 @@
     });
     byId("homeworkPedagogicalPreview").hidden = false;
     byId("homeworkPedagogicalPreviewTitle").focus();
+  }
+
+  function renderVersionHistory(exercise, versions) {
+    const list = byId("homeworkVersionList");
+    const fragment = document.createDocumentFragment();
+    for (const version of versions) {
+      const item = document.createElement("li");
+      const information = document.createElement("span");
+      information.textContent = "Versão " + version.version_number + " · " +
+        (version.status === "approved" ? "Aprovada" : "Rascunho");
+      const preview = createButton("Pré-visualizar versão " + version.version_number,
+        async function () {
+          await openPedagogicalPreview(exercise, version);
+          showStatus("Pré-visualização da versão " + version.version_number +
+            " aberta somente para o professor.");
+        });
+      item.append(information, preview);
+      fragment.appendChild(item);
+    }
+    list.replaceChildren(fragment);
+    byId("homeworkVersionHistory").hidden = versions.length === 0;
   }
 
   function createButton(label, callback) {
@@ -188,6 +214,13 @@
         }));
         if (latest && latest.status === "draft") {
           controls.appendChild(createButton("Aprovar versão", async function () {
+            const questions = await window.HomeworkAdminService.listQuestions(
+              window.Auth, latest.id);
+            const review = window.HomeworkPedagogicalPreview.inspectForApproval(
+              exercise, latest, questions);
+            if (!review.ready) {
+              throw new Error("Revisão pedagógica: " + review.issues.join(" "));
+            }
             await window.HomeworkAdminService.approveVersion(window.Auth, latest.id);
             await refreshCatalog();
             showStatus("Versão aprovada. A atividade permanece indisponível aos alunos.");
@@ -246,6 +279,7 @@
 
     byId("homeworkCloseEditor").addEventListener("click", function () {
       byId("homeworkEditor").hidden = true;
+      byId("homeworkVersionHistory").hidden = true;
       currentExercise = null;
     });
 
