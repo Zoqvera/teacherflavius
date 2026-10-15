@@ -91,9 +91,9 @@
           j++;
         }
       }
-      after.forEach((word, index) => {
+      for (let index = 0; index < after.length; index++) {
         if (!unchanged.has(index)) marked.add(index);
-      });
+      }
     }
 
     let position = 0;
