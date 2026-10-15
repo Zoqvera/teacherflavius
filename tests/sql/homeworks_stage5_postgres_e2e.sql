@@ -30,13 +30,18 @@ declare
   student_b constant uuid := '09000000-0000-4000-8000-000000000003';
   submission_key constant uuid := '09000000-0000-4000-8000-000000000004';
   second_key constant uuid := '09000000-0000-4000-8000-000000000005';
+  writing_key constant uuid := '09000000-0000-4000-8000-000000000006';
   reading_id uuid;
   writing_id uuid;
   grammar_id uuid;
   reading_version uuid;
+  writing_version uuid;
   grammar_version uuid;
   reading_assignment uuid;
+  writing_assignment uuid;
   grammar_assignment uuid;
+  writing_attempt uuid;
+  writing_token uuid;
   reading_payload jsonb;
   grammar_payload jsonb;
   output jsonb;
@@ -89,6 +94,11 @@ begin
 
   insert into public.exercise_versions
     (exercise_id,version_number,content,status,approved_by,approved_at)
+  values (writing_id,1,'{"prompt":"Write about a recent school day."}'::jsonb,
+    'approved',teacher_id,now()) returning id into writing_version;
+
+  insert into public.exercise_versions
+    (exercise_id,version_number,content,status,approved_by,approved_at)
   values (grammar_id,1,'{"explanation":"Present tense."}'::jsonb,'approved',teacher_id,now())
   returning id into grammar_version;
   insert into public.exercise_questions
@@ -100,6 +110,9 @@ begin
     published_version_id=reading_version,approved_by=teacher_id,published_at=now()
     where id=reading_id;
   update public.exercises set status='published',
+    published_version_id=writing_version,approved_by=teacher_id,published_at=now()
+    where id=writing_id;
+  update public.exercises set status='published',
     published_version_id=grammar_version,approved_by=teacher_id,published_at=now()
     where id=grammar_id;
 
@@ -107,6 +120,8 @@ begin
   values (reading_id,reading_version,student_a) returning id into reading_assignment;
   insert into public.exercise_assignments (exercise_id,version_id,student_id)
   values (grammar_id,grammar_version,student_b) returning id into grammar_assignment;
+  insert into public.exercise_assignments (exercise_id,version_id,student_id)
+  values (writing_id,writing_version,student_a) returning id into writing_assignment;
 
   select jsonb_agg(jsonb_build_object(
       'question_id', q.id,
@@ -135,7 +150,7 @@ begin
   if not failed then raise exception 'Atribuição held aceitou envio.'; end if;
 
   update public.exercise_assignments set status='assigned'
-    where id in (reading_assignment,grammar_assignment);
+    where id in (reading_assignment,writing_assignment,grammar_assignment);
 
   -- Impedir tentativa de ler/responder atividade de outro aluno.
   failed := false;
@@ -194,8 +209,106 @@ begin
   if (select count(*) from public.exercise_attempts where status='submitted') <> 0 then
     raise exception 'Reading/Grammar deixaram tentativas pendentes.';
   end if;
-  if (select count(*) from public.exercise_attempts) <> 2 then
-    raise exception 'Quantidade de tentativas inesperada.';
+  -- A mesma RPC real persiste Writing sem nota; a IA só é acionada pela
+  -- Edge Function, portanto esta prova usa um feedback simulado sem HTTP.
+  output := public.homework_submit(student_a,writing_assignment,writing_key,
+    '{"text":"Yesterday I goes to school with my friends."}'::jsonb);
+  if output->>'activity_type' <> 'writing' or output->>'status' <> 'submitted'
+     or output->>'score' is not null then
+    raise exception 'Writing recebeu nota indevida na submissão: %',output;
+  end if;
+  writing_attempt := (output->>'attempt_id')::uuid;
+  if (select count(*) from public.exercise_answers
+      where attempt_id=writing_attempt and question_id is null) <> 1 then
+    raise exception 'Texto Writing original não foi persistido.';
+  end if;
+
+  -- Apenas uma avaliação por vez pode obter lease e ler o original.
+  output := public.homework_claim_writing(student_a,writing_attempt);
+  if output->>'status' <> 'claimed'
+    or output->>'text' <> 'Yesterday I goes to school with my friends.'
+    or output->>'prompt' <> 'Write about a recent school day.' then
+    raise exception 'Lease Writing não retornou texto/enunciado aprovados: %', output;
+  end if;
+  writing_token := (output->>'token')::uuid;
+  output := public.homework_claim_writing(student_a,writing_attempt);
+  if output->>'status' <> 'processing' then
+    raise exception 'Lease concorrente não foi recusado: %',output;
+  end if;
+
+  -- Token forjado ou de uma concessão antiga não pode fechar a avaliação.
+  failed := false;
+  begin
+    perform public.homework_complete_writing(student_a,writing_attempt,
+      '09000000-0000-4000-8000-000000000099'::uuid,
+      8,'Um texto fictício com conteúdo compreensível.',
+      'Yesterday I went to school with my friends.',
+      '["Use went no passado."]'::jsonb,'test-provider');
+  exception when sqlstate '42501' then failed := true;
+  end;
+  if not failed then raise exception 'Token inválido concluiu a correção.'; end if;
+
+  -- A queda do provedor devolve status submitted, sem perder a resposta.
+  perform public.homework_release_writing_lease(student_a,writing_attempt,writing_token);
+  if (select status from public.exercise_attempts where id=writing_attempt) <> 'submitted' then
+    raise exception 'Falha de Writing não recuperou a tentativa.';
+  end if;
+  output := public.homework_claim_writing(student_a,writing_attempt);
+  if output->>'status' <> 'claimed' or (output->>'token')::uuid = writing_token then
+    raise exception 'Retomada Writing não criou um novo lease: %',output;
+  end if;
+  writing_token := (output->>'token')::uuid;
+
+  output := public.homework_complete_writing(student_a,writing_attempt,writing_token,
+    8,'Um texto fictício com conteúdo compreensível.',
+    'Yesterday I went to school with my friends.',
+    '["Use went no passado."]'::jsonb,'test-provider');
+  if output->>'source' <> 'ai' or (output->>'score')::numeric <> 8
+     or output->>'original_text' <> 'Yesterday I goes to school with my friends.'
+     or (select status from public.exercise_attempts where id=writing_attempt) <> 'evaluated' then
+    raise exception 'Correção Writing não concluiu corretamente: %',output;
+  end if;
+  if (select count(*) from public.exercise_feedback
+      where attempt_id=writing_attempt and source='ai') <> 1 then
+    raise exception 'Feedback IA não foi persistido unicamente.';
+  end if;
+  failed := false;
+  begin
+    perform public.homework_complete_writing(student_a,writing_attempt,writing_token,
+      8,'Correção duplicada não deve acontecer.',
+      'Yesterday I went to school with my friends.',
+      '[]'::jsonb,'test-provider');
+  exception when sqlstate '42501' then failed := true;
+  end;
+  if not failed then raise exception 'Token já consumido gerou avaliação duplicada.'; end if;
+
+  -- Retry idempotente e sem segunda nota. Nova chave permanece recusada.
+  output := public.homework_submit(student_a,writing_assignment,writing_key,
+    '{"text":"Yesterday I goes to school with my friends."}'::jsonb);
+  if output->>'reused' <> 'true' or output->>'status' <> 'evaluated'
+     or (output->>'score')::numeric <> 8 then
+    raise exception 'Reenvio Writing não recuperou a nota armazenada: %',output;
+  end if;
+  failed := false;
+  begin
+    perform public.homework_submit(student_a,writing_assignment,second_key,
+      '{"text":"Yesterday I goes to school with my friends."}'::jsonb);
+  exception when others then failed := true;
+  end;
+  if not failed then raise exception 'Writing criou segunda tentativa oficial.'; end if;
+
+  -- Recurso bloqueado impede reivindicar até tentativas válidas já salvas.
+  update public.homework_release_control set enabled=false where id=1;
+  failed := false;
+  begin
+    perform public.homework_claim_writing(student_a,writing_attempt);
+  exception when sqlstate '42501' then failed := true;
+  end;
+  if not failed then raise exception 'A trava global não bloqueou a correção.'; end if;
+  update public.homework_release_control set enabled=true where id=1;
+
+  if (select count(*) from public.exercise_attempts) <> 3 then
+    raise exception 'Quantidade de tentativas Reading/Writing/Grammar inesperada.';
   end if;
 end;
 $homework_cases$;
@@ -207,10 +320,10 @@ SET LOCAL request.jwt.claims = '{"sub":"09000000-0000-4000-8000-000000000002","r
 
 DO $student_a_rls$
 begin
-  if (select count(*) from public.exercise_attempts) <> 1 then
-    raise exception 'Aluno A deveria enxergar apenas a própria tentativa.';
+  if (select count(*) from public.exercise_attempts) <> 2 then
+    raise exception 'Aluno A deveria enxergar apenas Reading e Writing próprios.';
   end if;
-  if (select count(*) from public.exercise_feedback) <> 1 then
+  if (select count(*) from public.exercise_feedback) <> 2 then
     raise exception 'Aluno A conseguiu ver feedback de terceiros ou perdeu o próprio.';
   end if;
   if exists (select 1 from public.exercise_questions) then
