@@ -59,13 +59,17 @@ Os tipos de notificação são:
 - `teacher_booking`: aviso independente ao professor quando o aluno confirma uma reposição, com link **Adicionar ao Google Agenda**.
 
 O aviso ao professor sai de `Teacher Flávio <contato@teacherflavius.com>`.
-O destinatário pode ser definido no Secret `MAKEUP_TEACHER_NOTIFICATION_EMAIL`;
-quando ausente, é utilizado `ENROLLMENT_NOTIFICATION_EMAIL` e, como última
-alternativa, `contato@teacherflavius.com`. O texto informa o aluno, a turma,
+O destinatário administrativo aprovado é `flaviofreitas@ufu.br`, definido
+explicitamente na Edge Function. O texto informa o aluno, a turma,
 a data, o horário de início e término e o link da aula.
 
 O link do Google Agenda prepara um evento com fuso `America/Sao_Paulo`.
-O professor precisa revisar e salvar o compromisso. Não há integração
+O aluno e o professor recebem botões independentes para adicionar a reposição.
+Ambos precisam revisar e salvar o compromisso. O e-mail do aluno informa
+que cancelamentos podem ocorrer até o início da aula, mas que o crédito
+só é devolvido com antecedência mínima de 12 horas. Ao cancelar uma
+reposição, o aluno é orientado a remover qualquer evento salvo manualmente.
+Não há integração
 OAuth com o Google Agenda e alterações/cancelamentos posteriores de
 reposições **não atualizam automaticamente** o evento salvo.
 
