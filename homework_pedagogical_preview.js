@@ -116,6 +116,51 @@
     container.appendChild(paragraph);
   }
 
+
+  function inspectForApproval(exercise, version, questions) {
+    if (!exercise || !version || !Array.isArray(questions) ||
+        !TYPE_LABELS[exercise.activity_type]) {
+      throw new TypeError("Dados de revisão incompletos.");
+    }
+    const content = version.content || {};
+    const type = exercise.activity_type;
+    const main = type === "reading" ? content.passage :
+      type === "writing" ? content.prompt : content.explanation;
+    const issues = [];
+    if (typeof main !== "string" || !main.trim()) {
+      issues.push("Preencha o conteúdo principal da atividade.");
+    }
+    if (type === "reading" && questions.length !== 10) {
+      issues.push("Reading exige exatamente 10 perguntas.");
+    }
+    if (type === "grammar" && questions.length < 1) {
+      issues.push("Grammar exige ao menos uma questão.");
+    }
+    if (type === "writing" && questions.length !== 0) {
+      issues.push("Writing não deve conter questões objetivas.");
+    }
+    if (type !== "writing") {
+      questions.forEach(function (question, index) {
+        const number = index + 1;
+        if (typeof question.prompt !== "string" || !question.prompt.trim()) {
+          issues.push("A questão " + number + " não contém enunciado.");
+        }
+        const accepted = acceptedAnswers(question);
+        if (!accepted.length) {
+          issues.push("A questão " + number + " não contém gabarito.");
+        }
+        if (question.question_type === "multiple_choice") {
+          const options = Array.isArray(question.options) ? question.options : [];
+          if (options.length < 2 ||
+              accepted.some(answer => !options.includes(answer))) {
+            issues.push("A questão " + number + " possui alternativas inconsistentes.");
+          }
+        }
+      });
+    }
+    return Object.freeze({ ready: issues.length === 0, issues: Object.freeze(issues) });
+  }
+
   function element(tag, className, value) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -348,6 +393,7 @@
     evaluateResponses: evaluateResponses,
     countWords: countWords,
     diffCorrectedText: diffCorrectedText,
+    inspectForApproval: inspectForApproval,
     render: render,
     appendWritingFeedback: appendWritingFeedback
   });
