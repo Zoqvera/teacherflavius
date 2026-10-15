@@ -1,5 +1,5 @@
 -- Replay the actual private retry RPC against a disposable Supabase database.
--- ALL mutation is confined to this transaction; ROLLBACK restores pg_net.
+-- ALL mutation is confined to this transaction; ROLLBACK restores the original retry function.
 -- The pg_net HTTP function is replaced BEFORE any fixture is queued.
 \set ON_ERROR_STOP on
 begin;
@@ -16,7 +16,7 @@ create temporary table retry_http_calls (
   webhook_secret_matches boolean not null
 ) on commit drop;
 
-create or replace function net.http_post(
+create function pg_temp.capture_http_post(
   url text,
   body jsonb default '{}'::jsonb,
   params jsonb default '{}'::jsonb,
@@ -40,6 +40,29 @@ begin
   return request_id;
 end
 $test_http_post$;
+
+-- pg_net is owned by Supabase infrastructure; never change its schema.
+-- Redirect only the outbound CALLS in the real RPC body, in this transaction.
+-- Every filter, database query, and webhook payload remains unchanged.
+do $redirect_http_sink$
+declare
+  original_definition text;
+  replacement_definition text;
+begin
+  original_definition := pg_get_functiondef(
+    'private.retry_transactional_email_notifications()'::regprocedure
+  );
+  if (length(original_definition)
+      - length(replace(original_definition, 'net.http_post(', '')))
+       / length('net.http_post(') <> 3 then
+    raise exception 'Retry function must contain exactly three HTTP sinks';
+  end if;
+  replacement_definition := replace(
+    original_definition, 'net.http_post(', 'pg_temp.capture_http_post('
+  );
+  execute replacement_definition;
+end
+$redirect_http_sink$;
 
 -- The function must fail closed if the webhook secret is absent.
 do $missing_secret$
