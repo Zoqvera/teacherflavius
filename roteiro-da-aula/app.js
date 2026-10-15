@@ -69,7 +69,14 @@
     return "PREVISTA";
   }
 
+  function isCancelled(item) {
+    return item.attendance_status === "cancelled" ||
+      item.attendance_status === "cancelled_finalized";
+  }
+
   function attendanceLabel(status) {
+    if (status === "cancelled_finalized") return "CANCELADA — AULA FINALIZADA";
+    if (status === "cancelled") return "AULA CANCELADA";
     if (status === "present") return "PRESENTE";
     if (status === "absent") return "NÃO COMPARECEU";
     return "AGUARDANDO";
@@ -87,7 +94,8 @@
       if (button.disabled) return;
       button.disabled = true;
       try {
-        await handler();
+        const result = await handler();
+        if (result === false) button.disabled = false;
       } catch (error) {
         console.error("Falha no Roteiro da Aula:", error);
         setStatus(
@@ -176,6 +184,28 @@
     ));
 
     const actions = element("div", "academic-actions");
+    if (isCancelled(item)) {
+      actions.appendChild(actionButton(
+        "DESCANCELAR AULA",
+        "primary",
+        async function () {
+          const confirmed = window.confirm(
+            "Descancelar a aula de " + item.student_name +
+            "? Caso exista um crédito de reposição disponível para esta aula, ele será devolvido à aula regular."
+          );
+          if (!confirmed) return false;
+          await reloadAfter(
+            function () {
+              return service.restoreCancelledRegularLesson(item, classDate);
+            },
+            "Cancelamento revertido. O crédito correspondente foi reconciliado."
+          );
+          return true;
+        },
+        item.attendance_status === "cancelled_finalized"
+      ));
+    }
+
     actions.appendChild(actionButton(
       "PRESENTE",
       "success",
@@ -187,7 +217,7 @@
           "Presença registrada."
         );
       },
-      item.attendance_status === "present"
+      item.attendance_status === "present" || isCancelled(item)
     ));
 
     actions.appendChild(actionButton(
@@ -203,7 +233,8 @@
       },
       !item.lesson_number ||
         item.lesson_status === "presented" ||
-        item.attendance_status === "absent"
+        item.attendance_status === "absent" ||
+        isCancelled(item)
     ));
 
     actions.appendChild(actionButton(
@@ -217,11 +248,17 @@
           "Ausência registrada. A lição e as perguntas permanecem pendentes."
         );
       },
-      item.attendance_status === "absent"
+      item.attendance_status === "absent" || isCancelled(item)
     ));
 
     card.appendChild(header);
     card.appendChild(pills);
+    if (item.attendance_status === "cancelled_finalized") {
+      card.appendChild(element(
+        "p", "academic-muted",
+        "Aula já finalizada. O cancelamento pode ser consultado, mas não revertido aqui."
+      ));
+    }
     card.appendChild(actions);
     card.appendChild(renderQuestionSection(
       "PERGUNTAS ESTUDADAS",
@@ -283,11 +320,24 @@
     }, false);
 
     heading.appendChild(title);
-    heading.appendChild(finalize);
+    if (!items.every(function (item) {
+      return item.attendance_status === "cancelled_finalized";
+    })) {
+      heading.appendChild(finalize);
+    }
     block.appendChild(heading);
-    items.forEach(function (item) {
+
+    const regularItems = items.filter(function (item) { return !isCancelled(item); });
+    const cancelledItems = items.filter(isCancelled);
+    regularItems.forEach(function (item) {
       block.appendChild(renderStudent(item, classDate));
     });
+    if (cancelledItems.length) {
+      block.appendChild(element("h3", "academic-muted", "AULAS CANCELADAS"));
+      cancelledItems.forEach(function (item) {
+        block.appendChild(renderStudent(item, classDate));
+      });
+    }
     return block;
   }
 
@@ -319,7 +369,8 @@
       renderPlan(items, classDate);
       setStatus(
         items.length
-          ? items.length + " aluno(s) no roteiro desta data."
+          ? items.length + " aluno(s) no roteiro desta data, incluindo " +
+            items.filter(isCancelled).length + " cancelamento(s)."
           : "Nenhum aluno previsto para esta data.",
         "success"
       );
