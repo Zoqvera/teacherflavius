@@ -14,6 +14,16 @@ declare
   event_date constant timestamptz := '2026-10-15 19:20:00+00';
   blocked boolean;
 begin
+  if not exists (
+       select 1 from pg_class where oid = 'private.resend_delivery_messages'::regclass
+         and relrowsecurity
+     ) or not exists (
+       select 1 from pg_class where oid = 'private.resend_delivery_events'::regclass
+         and relrowsecurity
+     ) then
+    raise exception 'Resend evidence must have RLS enabled';
+  end if;
+
   if has_function_privilege('anon',
        'public.record_resend_message_acceptance(text,uuid,text,text)', 'EXECUTE')
      or has_function_privilege('authenticated',
