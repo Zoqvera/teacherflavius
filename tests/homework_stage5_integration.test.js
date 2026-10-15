@@ -38,6 +38,7 @@ function fakeData(overrides = {}) {
     aiEnabled: true,
     aiStatus: 200,
     aiScore: 8,
+    aiAssessment: null,
     ...overrides,
   };
 }
@@ -134,9 +135,16 @@ function buildHarness(overrides = {}) {
       calls.ai.push({ url, options });
       return new Response(JSON.stringify({ status: 'completed', output: [{
         content: [{ type: 'output_text', text: JSON.stringify({
-          score: config.aiScore, general_comment: 'Good effort in your writing.',
-          corrected_text: 'I went to school and studied English.',
-          explanations: ['Use past tense to describe yesterday.'],
+          ...(config.aiAssessment || {
+            criteria: {
+              task_completion: config.aiScore,
+              linguistic_accuracy: config.aiScore,
+              clarity_vocabulary: config.aiScore,
+            },
+            general_comment: 'Good effort in your writing.',
+            corrected_text: 'I went to school and studied English.',
+            explanations: ['Use past tense to describe yesterday.'],
+          }),
         }) }],
       }] }), { status: config.aiStatus, headers: { 'Content-Type': 'application/json' } });
     },
@@ -203,11 +211,23 @@ test('Writing is persisted, assessed by mocked AI and visible through progress',
   assert.equal(providerBody.max_output_tokens, 1400);
   assert.equal(providerBody.text.format.type, 'json_schema');
   assert.equal(providerBody.text.format.strict, true);
+  const schema = providerBody.text.format.schema;
+  assert.deepEqual(schema.required,
+    ['criteria', 'general_comment', 'corrected_text', 'explanations']);
+  assert.deepEqual(schema.properties.criteria.required,
+    ['task_completion', 'linguistic_accuracy', 'clarity_vocabulary']);
+  assert.equal(schema.properties.criteria.additionalProperties, false);
+  assert.equal(schema.properties.criteria.properties.task_completion.minimum, 0);
+  assert.equal(schema.properties.criteria.properties.task_completion.maximum, 10);
   assert.equal(h.calls.ai[0].options.headers.Authorization, 'Bearer server-test-only');
   assert.equal(JSON.stringify(providerBody).includes(STUDENT), false);
   const progress = await h.request({ action: 'progress', assignment_id: ASSIGNMENT });
   assert.equal(progress.status, 200);
   assert.equal(progress.body.feedback[0].score, 8);
+  assert.match(progress.body.feedback[0].explanations[0],
+    /Cumprimento do enunciado: 8\/10 \(peso 40%\)/);
+  assert.match(progress.body.feedback[0].explanations[1], /Precisão linguística: 8\/10/);
+  assert.match(progress.body.feedback[0].explanations[2], /Clareza e vocabulário: 8\/10/);
 });
 
 test('failed AI assessment never fabricates a score and can retry idempotently', async () => {
@@ -291,4 +311,66 @@ test('Writing retry respects missing API credentials without inventing a score',
   assert.equal(response.body.correction, 'unconfigured');
   assert.equal(response.body.status, 'submitted');
   assert.equal(h.calls.ai.length, 0);
+});
+
+test('Writing grade is weighted by the backend, not guessed as a total by AI', async () => {
+  const h = buildHarness({ released: true, aiAssessment: {
+    criteria: { task_completion: 8, linguistic_accuracy: 6, clarity_vocabulary: 9 },
+    general_comment: 'The task was completed with some grammar issues.',
+    corrected_text: 'I went to school and studied English.',
+    explanations: ['Keep verb tenses consistent.'],
+    score: 10, // Even a forged unweighted total cannot override the canonical formula.
+  } });
+  const result = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.status, 'evaluated');
+  assert.equal(result.body.score, 7.7); // 8*40% + 6*30% + 9*30%.
+  assert.equal(h.record.feedback.length, 1);
+  assert.equal(h.record.feedback[0].score, 7.7);
+  assert.equal(h.record.feedback[0].explanations.length, 4);
+  assert.match(h.record.feedback[0].explanations[0], /8\/10.*40%/);
+  assert.match(h.record.feedback[0].explanations[1], /6\/10.*30%/);
+  assert.match(h.record.feedback[0].explanations[2], /9\/10.*30%/);
+});
+
+test('Writing assessment outside the rubric cannot create grades and remains recoverable', async () => {
+  const invalidRubrics = [
+    { task_completion: -1, linguistic_accuracy: 8, clarity_vocabulary: 8 },
+    { task_completion: 8, linguistic_accuracy: 11, clarity_vocabulary: 8 },
+    { task_completion: '10', linguistic_accuracy: 8, clarity_vocabulary: 8 },
+    { task_completion: NaN, linguistic_accuracy: 8, clarity_vocabulary: 8 },
+    null,
+  ];
+  for (const criteria of invalidRubrics) {
+    const h = buildHarness({ released: true, aiAssessment: {
+      criteria,
+      general_comment: 'This writing can be evaluated.',
+      corrected_text: 'I went to school and studied English.',
+      explanations: ['Use past tense.'],
+    } });
+    const response = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+      submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+    assert.equal(response.status, 200);
+    assert.equal(response.body.status, 'submitted');
+    assert.equal(response.body.correction, 'retry');
+    assert.equal(h.record.attempt.score, null);
+    assert.equal(h.record.feedback.length, 0);
+    assert.equal(h.calls.rpc.filter(call => call.name === 'homework_complete_writing').length, 0);
+    assert.equal(h.calls.rpc.filter(call => call.name === 'homework_release_writing_lease').length, 1);
+  }
+});
+
+test('Writing never persists more than twelve explanations including three rubric notes', async () => {
+  const h = buildHarness({ released: true, aiAssessment: {
+    criteria: { task_completion: 10, linguistic_accuracy: 10, clarity_vocabulary: 10 },
+    general_comment: 'The writing achieves the expected learning outcomes.',
+    corrected_text: 'I studied English yesterday.',
+    explanations: Array.from({ length: 10 }, () => 'Explain grammar.'),
+  } });
+  const response = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(response.body.status, 'submitted');
+  assert.equal(response.body.score, null);
+  assert.equal(h.record.feedback.length, 0);
 });
