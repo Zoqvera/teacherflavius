@@ -177,3 +177,23 @@ A confirmação de conectividade com o provedor **não equivale à homologação
 **Status global: ETAPA 5 EM ANDAMENTO.** Não abrir a liberação aos alunos até aprovação expressa. Nenhuma mudança nesta atualização afeta SEO, esquema SQL, conteúdo pedagógico publicado, credenciais ou fluxo de produção.
 
 **Próxima etapa planejada, ainda não iniciada: ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica.**
+
+## Preparação da homologação integrada real — HTTP Edge + OpenAI + PostgreSQL isolados
+
+Após o smoke real de provedor, foi preparado um teste end-to-end da correção Writing no próprio workflow `Validate Supabase baseline restore`, reutilizando a pilha Supabase **local descartável** que já tinha sido aprovada com JWTs autênticos e dados exclusivamente sintéticos.
+
+O workflow agora admite acionamento **manual** com o campo `live_writing=true`. A execução normal de PRs e o valor padrão `false` não acionam a OpenAI, nem recebem o segredo. No modo manual, o GitHub Actions fornece `OPENAI_API_KEY` somente ao passo de homologação, grava uma cópia efêmera de permissões restritas para `supabase functions serve --env-file` e apaga o arquivo ao terminar. O Supabase produtivo não recebe operações; nenhuma branch paga será criada. O gateway do Supabase local inicia com `--no-verify-jwt`, mas a própria Edge Function valida o token real do usuário por `auth.getUser`; na produção continua `verify_jwt=true`.
+
+A preparação extrai **somente** o RPC `consume_api_rate_limit` e sua tabela da migração de segurança já aprovada, para garantir que o teste local percorra também o limite de uso implementado. Os alunos, atribuições, gabaritos e textos são fictícios e permanecem apenas no banco do CI.
+
+No modo `live_writing=true`, o ensaio realiza uma única submissão Writing através da Edge Function HTTP, usa a credencial de GitHub Actions com um texto sintético e verifica:
+- resposta `evaluated`, com nota dentro de 0 a 10, feedback `ai`, texto original intacto e texto corrigido não vazio;
+- decomposição dos critérios de 40/30/30 e igualdade entre a nota armazenada e a média ponderada calculada independentemente no teste;
+- um único registro em `exercise_feedback` com `evaluator_model='gpt-6-luna'`;
+- uma única concessão de correção, contabilizada nos buckets de rate limit horário e diário;
+- retorno idempotente em `retry_correction` sem enviar outro texto à OpenAI, com `progress` refletindo a nota persistida;
+- Reading e Grammar continuam corrigidos automaticamente por gabarito, e bloqueios JWT, RLS, origem, atribuição e feature flag continuam intactos.
+
+A execução **não** será automática; requer selecionar `Run workflow` em `Validate Supabase baseline restore`, branch `main`, `live_writing=true`. Isso provoca exatamente uma solicitação faturável à OpenAI em caso de sucesso. A aprovação desses testes ainda precisa ser observada em uma execução manual antes de atestar o E2E real. O sucesso isolado não substitui a revisão pedagógica humana e de privacidade, tampouco a verificação visual Android/desktop.
+
+Nenhuma página, indexação, `robots`, sitemap ou SEO será alterado. O portal atual e o bloqueio global dos estudantes permanecem.
