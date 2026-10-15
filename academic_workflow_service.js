@@ -173,6 +173,16 @@
       return hydrateTeacherLessonPlan(items);
     }
 
+    async function restoreCancelledRegularLesson(item, classDate) {
+      if (!item || item.lesson_kind !== "regular") {
+        throw new Error("Somente cancelamentos de aulas regulares podem ser revertidos.");
+      }
+      return unwrap(await supabase.rpc("restore_teacher_cancelled_regular_lesson", {
+        target_entry_id: item.entry_id,
+        target_date: normalizeDate(classDate)
+      }));
+    }
+
     async function finalizeTeacherLessonSession(classNumber, startsAt, classDate) {
       const normalizedClassNumber = Number(classNumber);
       const normalizedStartsAt = String(startsAt || "").trim();
@@ -231,6 +241,7 @@
       markQuestionStudied,
       markQuestionsStudied,
       rateQuestion,
+      restoreCancelledRegularLesson,
       setAttendance
     });
   }
