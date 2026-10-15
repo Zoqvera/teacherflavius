@@ -1,99 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- Google Consent Mode default -->
-<script>
-window.dataLayer = window.dataLayer || [];
-window.gtag = window.gtag || function(){dataLayer.push(arguments);};
-gtag('consent', 'default', {
-  analytics_storage: 'denied',
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  wait_for_update: 500
-});
-</script>
-<!-- End Google Consent Mode default -->
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
-<!-- End Google Tag Manager -->
-
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exercícios Diários - Teacher Flávio</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 16px 48px;
-      font-family: Georgia, serif;
-    }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .container { width: 100%; max-width: 620px; animation: fadeInUp 0.5s ease; }
-    .top-links { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
-    .top-link { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(129,140,248,0.35); border-radius: 10px; padding: 9px 16px; color: #818cf8; font-size: 13px; font-family: Georgia, serif; text-decoration: none; }
-    .badge { display: inline-block; background: linear-gradient(90deg, #818cf8, #a78bfa); color: #fff; font-size: 11px; font-family: monospace; letter-spacing: 3px; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; }
-    .header { text-align: center; margin-bottom: 38px; }
-    .header h1 { color: #f1f5f9; font-size: 38px; font-weight: bold; letter-spacing: -1px; margin-bottom: 8px; }
-    .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(129,140,248,0.3), transparent); margin-bottom: 32px; }
-    .menu-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-    .menu-button { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; color: #f1f5f9; font-size: 17px; font-weight: bold; letter-spacing: 0.5px; text-decoration: none; transition: transform 0.2s, border-color 0.2s, background 0.2s; backdrop-filter: blur(12px); }
-    .menu-button:hover { transform: translateY(-3px); border-color: rgba(129,140,248,0.5); background: rgba(129,140,248,0.07); }
-    .menu-button span:first-child { display: flex; align-items: center; gap: 12px; }
-    .icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #818cf8, #a78bfa); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-    .arrow { color: #475569; font-size: 22px; transition: color 0.2s, transform 0.2s; }
-    .menu-button:hover .arrow { color: #818cf8; transform: translateX(4px); }
-    @media (min-width: 680px) { .menu-grid { grid-template-columns: 1fr 1fr; } }
+    :root { color-scheme: light; font-family: Georgia, serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f8fafc; color: #0f172a; display: grid; place-items: center; padding: 24px; }
+    main { width: 100%; max-width: 630px; border: 1px solid #dbe3ef; border-radius: 16px; background: #fff; padding: clamp(24px, 6vw, 44px); text-align: center; }
+    svg { width: 42px; height: 42px; stroke: #475569; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    h1 { font-size: clamp(24px, 4vw, 32px); margin: 18px 0 12px; }
+    p { line-height: 1.7; color: #475569; }
+    a { display: inline-block; padding: 12px 22px; margin-top: 12px; border-radius: 10px; background: #1d4ed8; color: white; text-decoration: none; font-weight: bold; }
+    a:focus-visible { outline: 3px solid #0f172a; outline-offset: 3px; }
   </style>
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-  <div class="container">
-    <div class="top-links">
-      <a class="top-link" href="index.html">HOME</a>
-      <a class="top-link" href="area_do_estudante.html">ÁREA DO ESTUDANTE</a>
-    </div>
-
-    <div class="header">
-      <div><span class="badge">TEACHER FLÁVIO</span></div>
-      <h1>Exercícios Diários</h1>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="menu-grid">
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 30.03.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 06.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 10.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 13.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 14.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 15.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 16.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 17.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 20.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 22.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 23.04.26</span><span class="arrow">›</span></a>
-      <a class="menu-button" href="#"><span><span class="icon">📝</span>Exercício 24.04.26</span><span class="arrow">›</span></a>
-    </div>
-  </div>
-    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
-<script src="/site_asset_loader.js?v=20260902-1"></script>
-
-<script src="/site_runtime_config.js?v=20260903-1"></script>
-<script src="/site_page_runtime.js?v=20260903-1"></script>
-<script defer src="/site_footer.js?v=20260814-1"></script>
+  <main>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+    <h1>Portal de Exercícios temporariamente indisponível</h1>
+    <p>O acesso às atividades deste portal está suspenso. Os exercícios anteriores e seus registros estão preservados.</p>
+    <a href="/area-do-estudante/">VOLTAR À ÁREA DO ESTUDANTE</a>
+  </main>
 </body>
 </html>
