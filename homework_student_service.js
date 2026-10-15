@@ -6,7 +6,8 @@
     LIST: "list",
     DETAIL: "detail",
     PROGRESS: "progress",
-    SUBMIT: "submit"
+    SUBMIT: "submit",
+    RETRY_CORRECTION: "retry_correction"
   });
 
   function clientFrom(auth) {
@@ -61,6 +62,8 @@
     list: auth => request(auth, ACTIONS.LIST),
     detail: (auth, assignmentId) => request(auth, ACTIONS.DETAIL, { assignment_id: assignmentId }),
     progress: (auth, assignmentId) => request(auth, ACTIONS.PROGRESS, { assignment_id: assignmentId }),
+    retryCorrection: (auth, assignmentId) => request(auth, ACTIONS.RETRY_CORRECTION,
+      { assignment_id: assignmentId }),
     makeSubmission: makeSubmission,
     submit: submit
   });
