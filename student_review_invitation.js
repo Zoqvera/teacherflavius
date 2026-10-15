@@ -78,7 +78,22 @@
     }
   }
 
-  function attachInvitationHandlers(dialog, studentId, storage) {
+  function recordInvitationEvent(client, action) {
+    try {
+      return Promise.resolve(client.rpc("record_my_student_review_invitation", {
+        target_action: action
+      })).then(function (result) {
+        return Boolean(result && !result.error && result.data === true);
+      }).catch(function () {
+        return false;
+      });
+    } catch (_error) {
+      // Analytics must not interfere with the optional review invitation.
+      return Promise.resolve(false);
+    }
+  }
+
+  function attachInvitationHandlers(dialog, studentId, storage, client) {
     const dismissButton = dialog.querySelector("[data-review-invitation-close]");
     const reviewLink = dialog.querySelector("[data-review-invitation-link]");
 
@@ -89,13 +104,29 @@
     }
 
     if (reviewLink) {
-      reviewLink.addEventListener("click", function () {
+      reviewLink.addEventListener("click", async function (event) {
         recordDismissal(storage, studentId);
+
+        // Modified clicks may open a second tab and must not be intercepted.
+        if (event.defaultPrevented || event.button !== 0 ||
+            event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+          void recordInvitationEvent(client, "clicked");
+          return;
+        }
+
+        event.preventDefault();
+        // Give the RPC a short opportunity to finish before navigation.
+        await Promise.race([
+          recordInvitationEvent(client, "clicked"),
+          new Promise(function (resolve) { root.setTimeout(resolve, 650); })
+        ]);
+        root.location.assign(reviewLink.href);
       }, { once: true });
     }
 
     dialog.addEventListener("close", function () {
       recordDismissal(storage, studentId);
+      void recordInvitationEvent(client, "dismissed");
     }, { once: true });
   }
 
@@ -149,8 +180,11 @@
 
       if (isSnoozed(storage, studentId, now.getTime())) return false;
 
-      attachInvitationHandlers(dialog, studentId, storage);
-      if (!dialog.open) dialog.showModal();
+      attachInvitationHandlers(dialog, studentId, storage, client);
+      if (!dialog.open) {
+        dialog.showModal();
+        void recordInvitationEvent(client, "shown");
+      }
       return true;
     } catch (_error) {
       // Never display a potentially incorrect invitation on failed queries.
