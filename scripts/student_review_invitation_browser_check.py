@@ -16,7 +16,7 @@ DASHBOARD = ROOT / "area_do_estudante.html"
 CSS = ROOT / "student_review_invitation.css"
 SCRIPT = ROOT / "student_review_invitation.js"
 MODAL_PATTERN = re.compile(
-    r'<dialog id="studentReviewInvitation"\b[\s\S]*?</dialog>'
+    r'<dialog id="studentReviewInvitation"[\s\S]*?</dialog>'
 )
 
 SCENARIOS = (
