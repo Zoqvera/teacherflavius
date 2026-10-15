@@ -118,7 +118,11 @@ function makeFixture(options = {}) {
     "",
   );
   assert.notEqual(source, typescript, "Expected pinned Supabase SDK import");
-  vm.runInNewContext(stripTypeScriptTypes(source), {
+  const withoutDeliveryImport = source.replace(
+    /^import \\{ recordResendAcceptance \\} from "[^"]+";\\r?\\n/,
+    "",
+  );
+  vm.runInNewContext(stripTypeScriptTypes(withoutDeliveryImport), {
     Deno: {
       env: { get: (key) => environment[key] || null },
       serve: (callback) => { handler = callback; },
