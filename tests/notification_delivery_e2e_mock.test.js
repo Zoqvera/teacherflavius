@@ -170,6 +170,7 @@ test("individual booking: teacher email offers manual Google Agenda action witho
   assert.equal(fixture.sent.length, 1);
   const { message, key } = fixture.sent[0];
   assert.deepEqual(message.to, ["flaviofreitas@ufu.br"]);
+  assert.equal(message.reply_to, "contato@teacherflavius.com");
   assert.match(message.html, /Adicionar ao Google Agenda/);
   assert.match(message.text, /Adicionar ao Google Agenda: https:\/\/calendar\.google\.com/);
   assert.match(message.text, /O evento só será criado na sua agenda após você confirmar/);
