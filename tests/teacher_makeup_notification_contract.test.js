@@ -58,7 +58,7 @@ test("student gets a dedicated Google Calendar link without student name in even
   assert.match(notifier, /"student",\s*\);/);
   assert.match(notifier, /const studentCalendarUrl = makeGoogleCalendarUrl\(/);
   assert.match(notifier, /"text", audience === "teacher"/);
-  assert.match(notifier, /"Reposição de inglês — \$\{className\}"/);
+  assert.match(notifier, /`Reposição de inglês — \$\{className\}`/);
   assert.match(notifier, /Adicionar ao Google Agenda: \$\{studentCalendarUrl\}/);
   assert.match(notifier, /escapeHtml\(studentCalendarUrl\)/);
 });
