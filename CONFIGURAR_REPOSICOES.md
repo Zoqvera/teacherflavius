@@ -56,7 +56,7 @@ Os tipos de notificação são:
 
 - `booking_confirmation`: confirmação do agendamento;
 - `cancellation`: confirmação do cancelamento.
-- `teacher_booking`: aviso independente ao professor quando o aluno confirma uma reposição, com link **Adicionar ao Google Agenda**.
+- `teacher_booking`: aviso independente ao professor quando o aluno confirma uma reposição. Apenas alunos classificados como **INDIVIDUAL** apresentam o link **Adicionar ao Google Agenda**; **QUINTETO** recebe aviso sem ação de calendário.
 
 O aviso ao professor sai de `Teacher Flávio <contato@teacherflavius.com>`.
 O destinatário administrativo aprovado é `flaviofreitas@ufu.br`, definido
@@ -89,8 +89,12 @@ históricos ou faça testes de envio com cadastros reais. O status `sent` repres
 aceite do provedor, não necessariamente entrega ao destinatário.
 
 O link do Google Agenda prepara um evento com fuso `America/Sao_Paulo`.
-O aluno e o professor recebem botões independentes para adicionar a reposição.
-Ambos precisam revisar e salvar o compromisso. O e-mail do aluno informa
+O aluno pode adicionar sua própria reposição ao calendário. O professor recebe
+um botão **Adicionar ao Google Agenda** exclusivamente quando o aluno está
+classificado em `profiles.class_type = 'INDIVIDUAL'` (comparação sem distinção
+de caixa e com remoção de espaços). Avisos de alunos `QUINTETO` não incluem
+o botão nem links de convite; classificações ausentes ou desconhecidas não
+habilitam a ação. A inclusão exige sempre clicar e salvar manualmente no Google Agenda. O e-mail do aluno informa
 que cancelamentos podem ocorrer até o início da aula, mas que o crédito
 só é devolvido com antecedência mínima de 12 horas. Ao cancelar uma
 reposição, o aluno é orientado a remover qualquer evento salvo manualmente.
@@ -113,16 +117,21 @@ para aulas regulares, cancelamentos, créditos livres ou dados de horário
 inválidos. A página já dispõe dos horários pelo RPC
 `get_my_lesson_credits` e não exige nova migração.
 
-Os e-mails de confirmação de reposição, tanto ao aluno quanto ao
-professor, incluem um arquivo `reposicao-aula.ics` com codificação
-UTF-8, horários UTC, evento confirmado, link da videoaula e UID estável.
-O UID deriva do identificador do aluno, número da turma e horário de
-início, sendo consistente com o download na Área do Estudante.
+Apenas o e-mail de confirmação **do aluno** inclui o anexo
+`reposicao-aula.ics` com codificação UTF-8, horários UTC, evento confirmado,
+link da videoaula e UID estável. Os e-mails **do professor não contêm
+anexos `.ics`** para evitar interpretações de convite automático pelo
+calendário, inclusive quando o aluno é individual.
+O UID do anexo estudantil deriva do identificador do aluno, número da
+turma e horário de início, sendo consistente com o download na Área do
+Estudante.
 
 A inclusão no Google Agenda continua exigindo que o usuário salve o
-compromisso. O download de um arquivo `.ics` também não equivale a
-sincronização automática. Se uma reposição for cancelada, o aluno e
-o professor são orientados a excluir manualmente o evento salvo.
+compromisso. Não existe integração que crie, atualize ou exclua eventos
+na agenda do professor. O download de um arquivo `.ics` pelo aluno também
+não equivale a sincronização automática. Se uma reposição individual for
+cancelada, o professor será orientado a excluir manualmente o evento que
+tenha escolhido salvar. O aluno também recebe a orientação de exclusão.
 Não anexar eventos de cancelamento do tipo `METHOD:CANCEL` sem uma
 integração de calendário que identifique com segurança cada compromisso,
 pois uma mensagem pode cancelar eventos compartilhados de uma turma.
@@ -139,7 +148,7 @@ sem realizar envios reais.
 4. Cancele uma reposição com pelo menos 12 horas de antecedência e confirme a devolução do crédito.
 5. Teste uma reposição dentro da janela de 12 horas e confirme que o cancelamento continua disponível, mas sem devolução de crédito.
 6. Confirme que a vaga é liberada e que o e-mail de cancelamento é enfileirado.
-7. Confirme que o aviso ao professor contém o nome do aluno, data e horário, e que o link do Google Agenda prepara o evento sem salvá-lo automaticamente.
+7. Confirme que os avisos ao professor contêm nome do aluno, data e horário. Para `INDIVIDUAL`, verifique a presença do botão **Adicionar ao Google Agenda** e a necessidade de confirmar o salvamento; para `QUINTETO`, verifique que o aviso não tem botão, convite nem anexo `.ics`.
 8. Confirme que `/reposicoes/` redireciona para `/area-do-estudante/minhas-aulas/`.
 
 Para diagnosticar o envio:
