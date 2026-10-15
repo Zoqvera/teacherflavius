@@ -122,12 +122,16 @@ export async function recordResendAcceptance(client, response, details) {
 
   if (!EXTERNAL_ID_PATTERN.test(payload?.id || "")) return false;
 
-  const { data, error } = await client.rpc("record_resend_message_acceptance", {
-    p_queue_name: details.queueName,
-    p_notification_id: details.notificationId,
-    p_recipient_role: details.recipientRole,
-    p_provider_email_id: payload.id,
-  });
-
-  return !error && data === true;
+  try {
+    const { data, error } = await client.rpc("record_resend_message_acceptance", {
+      p_queue_name: details.queueName,
+      p_notification_id: details.notificationId,
+      p_recipient_role: details.recipientRole,
+      p_provider_email_id: payload.id,
+    });
+    return !error && data === true;
+  } catch {
+    // The sender marks this as a retryable tracking failure.
+    return false;
+  }
 }
