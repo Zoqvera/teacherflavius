@@ -176,7 +176,12 @@ Deno.serve(async (request: Request) => {
   if (notification.status === "sent") return jsonResponse({ ok: true, already_sent: true });
 
   const attemptAt = new Date().toISOString();
-  await supabase
+  // Resend retains idempotency keys for 24 hours. Do not auto-replay uncertain older sends.
+  if (Number(notification.attempts ?? 0) > 0
+    && Date.now() - new Date(notification.created_at).getTime() > 18 * 60 * 60 * 1000) {
+    return jsonResponse({ error: "Manual reconciliation required after idempotency window" }, 409);
+  }
+  const { data: claimed, error: claimError } = await supabase
     .from("enrollment_email_notifications")
     .update({
       attempts: Number(notification.attempts ?? 0) + 1,
@@ -184,7 +189,13 @@ Deno.serve(async (request: Request) => {
       updated_at: attemptAt,
       last_error: null,
     })
-    .eq("id", notification.id);
+    .eq("id", notification.id)
+    .eq("status", notification.status)
+    .eq("attempts", notification.attempts)
+    .select("id")
+    .maybeSingle();
+  if (claimError) return jsonResponse({ error: "Unable to claim notification" }, 500);
+  if (!claimed) return jsonResponse({ ok: true, skipped: "already_claimed" });
 
   const { data: student, error: studentError } = await supabase
     .from("profiles")
