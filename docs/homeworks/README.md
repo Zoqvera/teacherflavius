@@ -85,7 +85,7 @@ Implementação administrativa isolada, sem migração de dados do Portal de Exe
 - `exercise_assignments`: atribuições mantidas obrigatoriamente em `held`; nenhuma entrega é liberada.
 - `exercise_attempts`, `exercise_answers` e `exercise_feedback`: preparação do histórico para próximas etapas, sem escrita de alunos nem integração com IA ainda.
 
-A RLS exige a autorização `is_teacher_admin()` para todas as tabelas.
+A RLS exige simultaneamente a autorização `is_teacher_admin()` e sessão MFA AAL2 para todas as tabelas.
 As três tabelas editoriais recebem grants explícitos mínimos ao papel autenticado, filtrado por RLS; respostas e feedback não recebem grants de acesso estudantil nem de escrita pelo navegador. Alunos e usuários não autenticados **não recebem nenhuma política de acesso**. A lista antiga de exercícios e respectivas tabelas permanecem intactas.
 
 **Gerenciamento:** a rota de pré-visualização agora permite ao professor criar o próximo rascunho numerado, editar campos próprios de Reading, Writing e Grammar, salvar nova versão, aprová-la e marcar a publicação apenas internamente. A publicação é proibida sem aprovação de uma versão da mesma atividade. Reading exige dez perguntas com gabarito, Grammar ao menos uma e Writing não armazena perguntas objetivas. Versões aprovadas são imutáveis. Enunciados e gabaritos nunca são embutidos no HTML/JS estático.
