@@ -163,3 +163,157 @@ h2 {
   .homework-controls { width: 100%; }
   .homework-controls button { flex: 1 1 auto; }
 }
+
+
+/* Etapa 3: interfaces pedagógicas somente na pré-visualização administrativa. */
+.homework-pedagogical-heading {
+  border-bottom: 1px solid #dce2ec;
+  padding-bottom: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.homework-pedagogical-kind {
+  color: #123a7a;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.45rem;
+}
+
+.homework-pedagogical-heading h3 {
+  margin: 0;
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+}
+
+.homework-pedagogical-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.85;
+  padding: 1rem;
+  background: #f4f6fa;
+  border-radius: 10px;
+}
+
+.homework-pedagogical-note {
+  background: #edf4ff;
+  border-left: 4px solid #123a7a;
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  color: #263b5e;
+  line-height: 1.5;
+}
+
+.homework-pedagogical-instructions,
+.homework-pedagogical-examples {
+  line-height: 1.75;
+  padding-left: 1.4rem;
+}
+
+.homework-pedagogical-quiz,
+.homework-pedagogical-writing {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.homework-pedagogical-question {
+  border: 1px solid #dce2ec;
+  border-radius: 10px;
+  padding: 1rem;
+  min-width: 0;
+}
+
+.homework-pedagogical-question legend {
+  font-weight: 650;
+  padding: 0 0.3rem;
+  line-height: 1.5;
+}
+
+.homework-pedagogical-input,
+.homework-pedagogical-textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0.8rem;
+  font: inherit;
+  border-radius: 8px;
+  border: 1px solid #889bb8;
+  margin-top: 0.5rem;
+}
+
+.homework-pedagogical-textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.homework-pedagogical-writing label {
+  display: grid;
+  gap: 0.6rem;
+  font-weight: 700;
+}
+
+.homework-pedagogical-options {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.homework-pedagogical-option {
+  display: flex;
+  align-items: start;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #dce2ec;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.homework-pedagogical-option input {
+  margin-top: 0.3rem;
+  accent-color: #123a7a;
+}
+
+.homework-pedagogical-submit,
+#homeworkClosePedagogicalPreview {
+  background: #123a7a;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  border: 1px solid #123a7a;
+  border-radius: 8px;
+  padding: 0.8rem 1.15rem;
+  cursor: pointer;
+  justify-self: start;
+}
+
+#homeworkClosePedagogicalPreview {
+  margin-top: 1rem;
+  background: #fff;
+  color: #123a7a;
+}
+
+.homework-pedagogical-answer-result,
+.homework-pedagogical-summary {
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.homework-pedagogical-feedback {
+  border-top: 1px solid #dce2ec;
+  margin-top: 1.5rem;
+}
+
+.homework-pedagogical-input:focus-visible,
+.homework-pedagogical-textarea:focus-visible,
+.homework-pedagogical-submit:focus-visible,
+#homeworkClosePedagogicalPreview:focus-visible {
+  outline: 3px solid #123a7a;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .homework-pedagogical-submit,
+  #homeworkClosePedagogicalPreview {
+    width: 100%;
+  }
+}

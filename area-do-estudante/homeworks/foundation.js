@@ -25,7 +25,8 @@
 
   function authIsReady() {
     return !!(window.Auth && window.SUPABASE_CONFIG && window.HomeworkAccessService &&
-      window.HomeworkAdminService && window.Auth.isConfigured());
+      window.HomeworkAdminService && window.HomeworkPedagogicalPreview &&
+      window.Auth.isConfigured());
   }
 
   function lines(text) {
@@ -34,14 +35,27 @@
 
   function toQuestions(text) {
     return lines(text).map(function (line) {
-      const divider = line.indexOf(" | ");
-      const prompt = divider < 0 ? line : line.slice(0, divider).trim();
-      const expectedAnswer = divider < 0 ? "" : line.slice(divider + 3).trim();
+      const parts = line.split(" | ").map(part => part.trim());
+      if (parts.length === 3) {
+        const options = parts[1].split(";").map(option => option.trim()).filter(Boolean);
+        if (options.length < 2 || !options.includes(parts[2])) {
+          throw new TypeError("Questão de alternativas inválida: " + parts[0]);
+        }
+        return {
+          type: "multiple_choice",
+          prompt: parts[0],
+          options: options,
+          answer_key: { accepted: [parts[2]] }
+        };
+      }
+      if (parts.length > 3) {
+        throw new TypeError("Separe cada questão usando ' | ' apenas.");
+      }
       return {
         type: "short_answer",
-        prompt: prompt,
+        prompt: parts[0],
         options: [],
-        answer_key: expectedAnswer ? { accepted: [expectedAnswer] } : null
+        answer_key: parts[1] ? { accepted: [parts[1]] } : null
       };
     });
   }
@@ -74,7 +88,10 @@
       ? content.examples.join("\n") : (content.model || "");
     byId("homeworkQuestions").value = questions.map(function (question) {
       const accepted = question.answer_key && question.answer_key.accepted;
-      return question.prompt + (accepted && accepted[0] ? " | " + accepted[0] : "");
+      return question.prompt +
+        (question.question_type === "multiple_choice" && Array.isArray(question.options)
+          ? " | " + question.options.join("; ") : "") +
+        (accepted && accepted[0] ? " | " + accepted[0] : "");
     }).join("\n");
     byId("homeworkMainLabel").textContent = {
       reading: "Texto de leitura em inglês",
@@ -89,8 +106,8 @@
         "Exemplos (um por linha)";
     byId("homeworkQuestionGroup").hidden = exercise.activity_type === "writing";
     byId("homeworkQuestionHelp").textContent = exercise.activity_type === "reading"
-      ? "Exatamente 10 perguntas em português. Uma por linha: Pergunta | resposta esperada"
-      : "Ao menos uma questão. Uma por linha: Pergunta | resposta esperada";
+      ? "Exatamente 10 perguntas em português. Formato: Pergunta | resposta esperada"
+      : "Ao menos uma questão. Use Pergunta | resposta; ou Pergunta | opção A; opção B | resposta correta.";
     byId("homeworkVersionLabel").textContent = version
       ? "Última versão: " + version.version_number + " (" +
         (version.status === "approved" ? "aprovada" : "rascunho") + "). Salvar cria nova versão."
@@ -106,6 +123,18 @@
       ? await window.HomeworkAdminService.listQuestions(window.Auth, latest.id) : [];
     populateEditor(exercise, latest, questions);
     byId("homeworkTitle").focus();
+  }
+
+  async function openPedagogicalPreview(exercise, version) {
+    const questions = await window.HomeworkAdminService.listQuestions(window.Auth, version.id);
+    window.HomeworkPedagogicalPreview.render({
+      mount: byId("homeworkPedagogicalPreviewContent"),
+      exercise: exercise,
+      version: version,
+      questions: questions
+    });
+    byId("homeworkPedagogicalPreview").hidden = false;
+    byId("homeworkPedagogicalPreviewTitle").focus();
   }
 
   function createButton(label, callback) {
@@ -174,6 +203,12 @@
           }));
         }
       }
+      if (latest) {
+        controls.appendChild(createButton("Pré-visualizar", async function () {
+          await openPedagogicalPreview(exercise, latest);
+          showStatus("Pré-visualização pedagógica aberta somente para o professor.");
+        }));
+      }
       item.append(information, controls);
       fragment.appendChild(item);
     }
@@ -212,6 +247,11 @@
     byId("homeworkCloseEditor").addEventListener("click", function () {
       byId("homeworkEditor").hidden = true;
       currentExercise = null;
+    });
+
+    byId("homeworkClosePedagogicalPreview").addEventListener("click", function () {
+      byId("homeworkPedagogicalPreview").hidden = true;
+      byId("homeworkPedagogicalPreviewContent").replaceChildren();
     });
   }
 

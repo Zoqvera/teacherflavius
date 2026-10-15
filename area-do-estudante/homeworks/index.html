@@ -11,14 +11,14 @@
   <script src="/supabase_config.js?v=20260430-3"></script>
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260430-3"></script>
-  <link rel="stylesheet" href="/area-do-estudante/homeworks/foundation.css?v=20261015-2">
+  <link rel="stylesheet" href="/area-do-estudante/homeworks/foundation.css?v=20261015-3">
 </head>
 <body>
   <main class="homework-shell">
     <header class="homework-header">
       <p class="homework-kicker">TEACHER FLÁVIO</p>
       <h1>TAREFAS PARA CASA</h1>
-      <p>Ambiente de desenvolvimento — Etapa 2: Banco de Dados e Gerenciamento</p>
+      <p>Ambiente de desenvolvimento — Etapa 3: Interfaces pedagógicas</p>
       <p id="homeworkStatus" class="homework-status" role="status" aria-live="polite">
         Verificando acesso do professor...
       </p>
@@ -55,6 +55,14 @@
       </form>
     </section>
 
+    <section id="homeworkPedagogicalPreview" class="homework-preview"
+      aria-labelledby="homeworkPedagogicalPreviewTitle" hidden>
+      <h2 id="homeworkPedagogicalPreviewTitle" tabindex="-1">Pré-visualização pedagógica</h2>
+      <p>Ambiente exclusivo do professor. As respostas simuladas não são salvas nem enviadas.</p>
+      <div id="homeworkPedagogicalPreviewContent"></div>
+      <button id="homeworkClosePedagogicalPreview" type="button">Fechar pré-visualização</button>
+    </section>
+
     <nav class="homework-navigation" aria-label="Navegação">
       <a href="/professor/">Voltar à Área do Professor</a>
     </nav>
@@ -64,6 +72,7 @@
   <script src="/homework_activity_model.js?v=20261015-1"></script>
   <script src="/homework_access_service.js?v=20261015-1"></script>
   <script src="/homework_admin_service.js?v=20261015-2"></script>
-  <script src="/area-do-estudante/homeworks/foundation.js?v=20261015-2"></script>
+  <script src="/homework_pedagogical_preview.js?v=20261015-1"></script>
+  <script src="/area-do-estudante/homeworks/foundation.js?v=20261015-3"></script>
 </body>
 </html>

@@ -97,3 +97,40 @@ As três tabelas editoriais recebem grants explícitos mínimos ao papel autenti
 **Próximos incrementos:** editor com formatos adicionais (múltipla escolha e recursos multimídia), design completo de atividades, atribuição/entrega dos alunos após autorização, correção e rubrica de Writing por IA no servidor, observabilidade/custo/privacidade e testes de usabilidade.
 
 **SEO:** rota em desenvolvimento mantém `noindex, nofollow, noarchive`, sem inclusão no sitemap, links públicos ou mudanças em páginas comerciais.
+
+
+## ETAPA 3 — Desenvolvimento das Atividades e Interfaces Pedagógicas (primeiro incremento)
+
+Este incremento introduz componentes responsivos de **pré-visualização exclusiva do professor**.
+O catálogo disponibiliza o botão **Pré-visualizar** apenas para versões já salvas e após
+confirmação de sessão administrativa. O navegador busca os conteúdos e gabaritos pelas
+consultas administrativas existentes, sob a RLS/MFA AAL2 da ETAPA 2. Os arquivos estáticos
+não contêm conteúdos personalizados nem chaves de IA.
+
+- **Reading:** mostra passagem em inglês, instruções e dez questões cadastradas em português.
+  Campos de resposta e simulação local de coincidência com o gabarito servem somente
+  para testar a interface; respostas abertas necessitam de avaliação pedagógica humana.
+- **Grammar:** exibe explicação, exemplos, instruções, respostas curtas e alternativas.
+  No editor, as questões podem ser escritas como `Pergunta | resposta` ou
+  `Pergunta | opção A; opção B | resposta correta`. Alternativas precisam incluir
+  a resposta correta. O modo de correção é apenas demonstrativo.
+- **Writing:** mostra enunciado, orientações e campo de produção escrita com botão **Enviar**.
+  Ao clicar, a interface informa que nenhuma transmissão ou correção ocorreu. A
+  renderização do feedback da futura IA contempla nota, avaliação geral, original,
+  corrigido e explicações, mas não existe ainda execução da IA.
+  Quando fornecido pelo professor, o modelo editorial `content.model` aparece
+  como referência na pré-visualização privada.
+
+**Sem liberação:** nenhuma atividade é entregue a alunos, nenhuma tentativa/resposta/nota
+é gravada e nenhuma rota pública `/atividade_N/` é criada. `exercise_assignments`
+continua exclusivamente em `held`; o Portal de Exercícios e o fluxo de alunos
+permanecem intactos. O simulador não é uma correção oficial nem substitui avaliação.
+
+**Próximos trabalhos ainda dentro desta etapa:** aperfeiçoamento pedagógico dos
+tipos de questão e critérios de avaliação; revisão visual e de acessibilidade;
+testes de ponta a ponta com o professor. Em etapa posterior, implementar persistência
+autorizada de tentativas e serviço seguro de correção de Writing por IA no servidor,
+com autorização explícita antes de qualquer disponibilização estudantil.
+
+**SEO:** manteve-se `noindex, nofollow, noarchive` somente na rota de desenvolvimento.
+Não há mudança de sitemap, robots.txt, URLs comerciais ou menu público.
