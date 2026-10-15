@@ -5,6 +5,8 @@ module.exports = [
       "homework_access_service.js",
       "homework_admin_service.js",
       "homework_student_interface.js",
+      "homework_teacher_review_service.js",
+      "homework_teacher_review_renderer.js",
       "area-do-estudante/homeworks/foundation.js",
       "accessibility.js",
       "area_do_estudante.js",

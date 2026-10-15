@@ -41,3 +41,20 @@ Esta PR não muda SEO: preview mantém noindex, nofollow, noarchive; nenhuma mud
 ## Atualização — 15/10/2026: migração da correção de Writing
 
 O professor autorizou a substituição de `gpt-4.1-mini` por `gpt-6-luna`. O avaliador usa a Responses API com JSON Schema estrito e `reasoning.effort=none` para reduzir latência. A lógica de avaliação de A1/A2, o intervalo 0–10, os pesos pedagógicos 40/30/30, `store:false`, chave exclusivamente no servidor, limite de solicitações, idempotência e comportamento fail-safe são preservados. A configuração funcional deve ser verificada com resposta real usando textos fictícios e comparação pedagógica antes do aceite. Nenhum dado de aluno é enviado durante a homologação simulada. A mudança não publica rotas estudantis, não modifica `homework_release_control.enabled=false` nem altera SEO. A ativação permanece sujeita a autorização explícita.
+
+## Registro da migração de revisão
+A migração foi aplicada ao Supabase principal com registro de versão atribuído pelo servidor `20261015063815`, alias exato do arquivo `20261015065000_homeworks_stage5_teacher_review.sql`. O checksum SHA-256 normalizado está fixado em `scripts/check_supabase_migration_drift.sh` para prevenir divergência futura. As funções novas não concedem EXECUTE a anon; apenas o professor autenticado com MFA AAL2 passa pela checagem interna. Verificação pós-migração confirmou `homework_release_control.enabled=false`, zero atividades, zero atribuições e zero tentativas.
+
+## Incremento: fila de revisão pedagógica de Reading e Grammar
+
+Foi implementado o fluxo de revisão humana em separado da nota automática:
+
+- RPC `homework_review_queue`: lista somente respostas abertas divergentes, pendentes e vinculadas à versão aprovada e publicada da atividade.
+- RPC `homework_review_answer`: exige `is_teacher_admin()`, autenticação e MFA AAL2. Registra nota 0–10 por resposta e justificativa pedagógica; cada avaliação é registrada no histórico `exercise_feedback`.
+- A transação trava a tentativa antes da nota e impede avaliações concorrentes ou duplicadas, pontuação de múltipla escolha e acesso por alunos.
+- A nota final é calculada pela média ponderada pelos pontos das questões, somente quando nenhuma resposta ainda está pendente.
+- Formulário de revisão na rota administrativa existente, condicionado à mesma autorização de professor. O conteúdo dos alunos aparece apenas via RPC protegida, nunca em HTML estático.
+
+**Homologação:** testes de contrato e interface simulada no CI não substituem transações reais em banco isolado. Nenhuma revisão manual real ou resposta de aluno foi criada nesta alteração. A chave global de liberação permanece desligada. Ao revisar o processo, validar matrícula fictícia, transações concorrentes, comportamento com MFA ausente e revisão de 10 questões de Reading.
+
+**SEO:** o ambiente administrativo continua `noindex, nofollow, noarchive`; nenhuma rota de aluno foi aberta, nenhuma página comercial, sitemap, canonical ou robots.txt foi modificada. Esta alteração não afeta SEO externo.

@@ -26,6 +26,7 @@
   function authIsReady() {
     return !!(window.Auth && window.SUPABASE_CONFIG && window.HomeworkAccessService &&
       window.HomeworkAdminService && window.HomeworkPedagogicalPreview &&
+      window.HomeworkTeacherReviewService && window.HomeworkTeacherReviewRenderer &&
       window.Auth.isConfigured());
   }
 
@@ -254,6 +255,28 @@
     list.replaceChildren(fragment);
   }
 
+  async function refreshReviewQueue() {
+    const records = await window.HomeworkTeacherReviewService.queue(window.Auth);
+    window.HomeworkTeacherReviewRenderer.render({
+      mount: byId("homeworkReviewList"),
+      records: records,
+      onReview: async function (answerId, score, comment) {
+        const result = await window.HomeworkTeacherReviewService.review(
+          window.Auth, answerId, score, comment);
+        await refreshReviewQueue();
+        showStatus(result.status === "evaluated"
+          ? "Revisão concluída. Nota final da atividade registrada."
+          : "Resposta revisada. Outras questões ainda precisam de avaliação.");
+        return result;
+      },
+      onError: function (error) {
+        showStatus("Não foi possível revisar a resposta: " +
+          (error?.message || "operação indisponível"));
+      }
+    });
+    byId("homeworkReview").hidden = false;
+  }
+
   function bindControls() {
     byId("homeworkCreateDraft").addEventListener("click", function () {
       runAction(async function () {
@@ -292,6 +315,9 @@
   function showTeacherPreview() {
     byId("homeworkPreview").hidden = false;
     bindControls();
+    refreshReviewQueue().catch(function (error) {
+      showStatus("Revisão pedagógica indisponível: " + error.message);
+    });
     showStatus("Acesso do professor confirmado. Carregando catálogo privado...");
     refreshCatalog().then(function () {
       showStatus("Catálogo privado carregado. O acesso dos alunos permanece desativado.");
