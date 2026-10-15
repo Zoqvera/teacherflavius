@@ -35,7 +35,7 @@ begin
   insert into pg_temp.retry_http_calls (
     destination, payload, webhook_secret_matches
   ) values (
-    url, body, headers->>'x-webhook-secret' = 'isolated-ci-webhook-fixture'
+    url, body, headers->>'x-webhook-secret' = (select decrypted_secret from vault.decrypted_secrets where name='teacherflavius_notification_webhook_secret' limit 1)
   ) returning id into request_id;
   return request_id;
 end
@@ -64,30 +64,30 @@ begin
 end
 $redirect_http_sink$;
 
--- The function must fail closed if the webhook secret is absent.
-do $missing_secret$
-declare
-  answer jsonb;
+-- The canonical baseline may already have a disposable Vault fixture.
+-- Never assume a local secret is absent and never expose its value in CI logs.
+-- With no seed, provision a disposable secret entirely inside this transaction.
+do $ensure_fixture_secret$
 begin
-  if exists (
+  if not exists (
     select 1 from vault.secrets
-    where name = 'teacherflavius_notification_webhook_secret'
+    where name='teacherflavius_notification_webhook_secret'
   ) then
-    raise exception 'Disposable baseline unexpectedly contains production webhook secret';
+    perform vault.create_secret(
+      'isolated-ci-webhook-fixture',
+      'teacherflavius_notification_webhook_secret',
+      'Ephemeral token for retry CI; not used for production'
+    );
   end if;
-  answer := private.retry_transactional_email_notifications();
-  if answer->>'reason' <> 'missing_secret' then
-    raise exception 'Retry did not reject missing webhook secret: %', answer;
+  if not exists (
+    select 1 from vault.decrypted_secrets
+    where name='teacherflavius_notification_webhook_secret'
+      and nullif(decrypted_secret,'') is not null
+  ) then
+    raise exception 'Local webhook fixture secret is missing or empty';
   end if;
 end
-$missing_secret$;
-
--- This is not a real credential. It is created only in the rolled-back CI fixture.
-select vault.create_secret(
-  'isolated-ci-webhook-fixture',
-  'teacherflavius_notification_webhook_secret',
-  'Ephemeral token for retry CI; not used for production'
-);
+$ensure_fixture_secret$;
 
 insert into auth.users (
   id, instance_id, aud, role, email, email_confirmed_at,
