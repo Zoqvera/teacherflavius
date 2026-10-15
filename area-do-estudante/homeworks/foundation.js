@@ -26,7 +26,6 @@
   function authIsReady() {
     return !!(window.Auth && window.SUPABASE_CONFIG && window.HomeworkAccessService &&
       window.HomeworkAdminService && window.HomeworkPedagogicalPreview &&
-      window.HomeworkTeacherReviewService && window.HomeworkTeacherReviewRenderer &&
       window.Auth.isConfigured());
   }
 
@@ -96,7 +95,7 @@
       return question.prompt +
         (question.question_type === "multiple_choice" && Array.isArray(question.options)
           ? " | " + question.options.join("; ") : "") +
-        (accepted && accepted[0] ? " | " + accepted[0] : "");
+        (accepted && accepted.length ? " | " + accepted.join("; ") : "");
     }).join("\n");
     byId("homeworkMainLabel").textContent = {
       reading: "Texto de leitura em inglês",
@@ -111,8 +110,8 @@
         "Exemplos (um por linha)";
     byId("homeworkQuestionGroup").hidden = exercise.activity_type === "writing";
     byId("homeworkQuestionHelp").textContent = exercise.activity_type === "reading"
-      ? "Exatamente 10 perguntas em português. Formato: Pergunta | resposta esperada"
-      : "Ao menos uma questão. Use Pergunta | resposta; ou Pergunta | opção A; opção B | resposta correta.";
+      ? "Exatamente 10 perguntas em português. Formato: Pergunta | resposta válida 1; resposta válida 2"
+      : "Ao menos uma questão. Use Pergunta | resposta válida 1; resposta válida 2 ou Pergunta | opção A; opção B | resposta correta.";
     byId("homeworkVersionLabel").textContent = version
       ? "Última versão: " + version.version_number + " (" +
         (version.status === "approved" ? "aprovada" : "rascunho") + "). Salvar cria nova versão."
@@ -255,28 +254,6 @@
     list.replaceChildren(fragment);
   }
 
-  async function refreshReviewQueue() {
-    const records = await window.HomeworkTeacherReviewService.queue(window.Auth);
-    window.HomeworkTeacherReviewRenderer.render({
-      mount: byId("homeworkReviewList"),
-      records: records,
-      onReview: async function (answerId, score, comment) {
-        const result = await window.HomeworkTeacherReviewService.review(
-          window.Auth, answerId, score, comment);
-        await refreshReviewQueue();
-        showStatus(result.status === "evaluated"
-          ? "Revisão concluída. Nota final da atividade registrada."
-          : "Resposta revisada. Outras questões ainda precisam de avaliação.");
-        return result;
-      },
-      onError: function (error) {
-        showStatus("Não foi possível revisar a resposta: " +
-          (error?.message || "operação indisponível"));
-      }
-    });
-    byId("homeworkReview").hidden = false;
-  }
-
   function bindControls() {
     byId("homeworkCreateDraft").addEventListener("click", function () {
       runAction(async function () {
@@ -315,9 +292,6 @@
   function showTeacherPreview() {
     byId("homeworkPreview").hidden = false;
     bindControls();
-    refreshReviewQueue().catch(function (error) {
-      showStatus("Revisão pedagógica indisponível: " + error.message);
-    });
     showStatus("Acesso do professor confirmado. Carregando catálogo privado...");
     refreshCatalog().then(function () {
       showStatus("Catálogo privado carregado. O acesso dos alunos permanece desativado.");

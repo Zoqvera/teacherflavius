@@ -28,7 +28,7 @@ A suíte executa a Edge Function real em VM isolada, substituindo Supabase, aute
 - [ ] Construir e homologar a experiência estudantil completa, incluindo Enviar, progresso, recuperação e navegação numerada, sem disponibilizar páginas a alunos antes da autorização.
 - [ ] Exercitar aluno A/B fictícios, tentativa e reenvio, atribuição held versus assigned, RLS, concorrência e versões publicadas em banco/Edge isolados, sem cópia de dados de produção.
 - [ ] Corrigir Writing com credencial válida, texto fictício e API de IA REAL, comprovando rubrica 40%/30%/30%, correção imediatamente após Enviar, latência, falhas, limites e custo.
-- [ ] Implementar e homologar revisão pedagógica manual para respostas abertas divergentes em Reading/Grammar, sem atribuir nota final prematura.
+- [ ] Homologar a correção **automática** de Reading e Grammar por comparação normalizada ao gabarito, com alternativas aceitas, notas ponderadas e reenvio idempotente. Não usar revisão manual.
 - [ ] Realizar testes práticos em Android/iOS/desktop, navegação por teclado, leitores de tela, foco, responsividade, contraste e conectividade intermitente.
 - [ ] Aprovar aviso de privacidade/retenção para textos, orçamento/alertas de IA, observabilidade e procedimento de bloqueio emergencial.
 - [ ] Obter aceite editorial do professor e, em momento separado, autorização expressa de lançamento.
@@ -58,3 +58,21 @@ Foi implementado o fluxo de revisão humana em separado da nota automática:
 **Homologação:** testes de contrato e interface simulada no CI não substituem transações reais em banco isolado. Nenhuma revisão manual real ou resposta de aluno foi criada nesta alteração. A chave global de liberação permanece desligada. Ao revisar o processo, validar matrícula fictícia, transações concorrentes, comportamento com MFA ausente e revisão de 10 questões de Reading.
 
 **SEO:** o ambiente administrativo continua `noindex, nofollow, noarchive`; nenhuma rota de aluno foi aberta, nenhuma página comercial, sitemap, canonical ou robots.txt foi modificada. Esta alteração não afeta SEO externo.
+
+## Correção de orientação — 15/10/2026: Reading e Grammar sem revisão manual
+
+O professor rejeitou expressamente a revisão humana de Reading/Grammar. Portanto, a PR #688 e seu registro histórico de migração são documentados apenas como histórico, não como requisito ativo. A migração incremental `20261015071000_homeworks_auto_grade_reading_grammar.sql` substitui a função de submissão e remove as RPCs `homework_review_queue` e `homework_review_answer`. A página administrativa deixa de carregar seus componentes e os respectivos arquivos de interface são retirados do código ativo.
+
+O fluxo definitivo é: cada resposta do aluno é comparada no servidor com o gabarito da versão aprovada; ignoram-se diferenças de letras maiúsculas/minúsculas e de espaços repetidos; aceitam-se variantes explicitamente definidas no gabarito; cada resposta recebe 10 se corresponder e 0 caso contrário; a nota final de 0 a 10 é uma média ponderada pelos pontos de todas as questões e é registrada imediatamente como `evaluated`. Respostas abertas divergentes recebem 0, sem qualquer revisão humana. O professor pode prever grafias alternativas no próprio gabarito, mas o sistema não atribui equivalência semântica livre.
+
+O Writing permanece independente com avaliação GPT-6 Luna no servidor.
+
+**Liberação:** o bloqueio `homework_release_control.enabled=false` não é alterado, a página de alunos não é aberta, o portal de atividades antigo continua intacto e os testes ponta a ponta ainda são exigidos. **SEO:** mudanças apenas na área administrativa privada, mantendo `noindex, nofollow, noarchive`; nenhum sitemap, canonical ou robots.txt alterado.
+
+## Evidência de implantação da correção exclusivamente automática
+
+A migração foi aplicada ao Supabase com a versão registrada pelo servidor `20261015065527` para o arquivo versionado `20261015071000_homeworks_auto_grade_reading_grammar.sql`. O checksum SHA-256 da declaração implantada é `4d47c634ced700ae8d0e53e8c84e0cdeca83bf6bec079819eec2a68c3b9c2cbb`; ambos estão reconciliados em `scripts/check_supabase_migration_drift.sh`, sem editar histórico já aplicado.
+
+Após a implantação, a RPC `homework_submit` contém pontuação 10/0 e não contém pendência de avaliação manual. As funções `homework_review_queue` e `homework_review_answer` não existem mais. `anon` e `authenticated` não possuem EXECUTE na RPC de envio; o servidor continua usando `service_role`. O bloqueio `homework_release_control.enabled=false` foi confirmado com zero atividades e tentativas.
+
+Permanece pendente o teste com contas fictícias e atribuições em ambiente isolado; esta alteração substitui o mecanismo de pontuação, mas **não conclui** a homologação integrada da ETAPA 5 nem libera alunos.
