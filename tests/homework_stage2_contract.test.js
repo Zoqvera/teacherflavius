@@ -47,8 +47,8 @@ test("schema has seven new homework tables and none reuse the legacy teacher_exe
 
 test("schema enforces teacher-only RLS and holds every assignment", () => {
   assert.match(sql, /enable row level security/);
-  assert.match(sql, /auth\\.jwt\\(\\)->>\x27aal\x27/);
-  assert.match(sql, /for all to authenticated using \\(\\(select public\\.is_teacher_admin\\(\\)\\) and/);
+  assert.match(sql, /auth\.jwt\(\)->>'aal'/);
+  assert.match(sql, /for all to authenticated using \(\(select public\.is_teacher_admin\(\)\) and/);
   assert.match(sql, /revoke all on table public\.%I from anon, authenticated/);
   assert.match(sql, /status text not null default 'held' check \(status = 'held'\)/);
   assert.doesNotMatch(sql, /to anon[\s\S]*?grant select/);
