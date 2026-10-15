@@ -94,8 +94,16 @@
       return title;
     }
 
+    function replaceView(fragment, title) {
+      mount.replaceChildren(fragment);
+      // Keep keyboard and assistive-technology focus on the newly opened view.
+      title.focus();
+    }
+
     function renderFeedback(progress, type) {
       const panel = createElement("section", "homework-student-result");
+      panel.setAttribute("role", "status");
+      panel.setAttribute("aria-live", "polite");
       const score = safeNumber(progress.score);
       const resultStatus = progress.status;
       if (resultStatus === "evaluating") {
@@ -116,7 +124,8 @@
         return panel;
       }
 
-      if (type === "writing" && resultStatus === "submitted") {
+      if (type === "writing" && resultStatus === "submitted" &&
+          progress.correction !== "monthly_budget") {
         panel.appendChild(button("Tentar corrigir novamente", async function () {
           status("Retomando a correção do texto já enviado...");
           const resumed = await service.retryCorrection(auth, activeAssignment);
@@ -149,11 +158,12 @@
         return;
       }
       const fragment = document.createDocumentFragment();
-      fragment.appendChild(heading("ATIVIDADE " + currentDetail.exercise_number +
-        " — " + TYPES[currentDetail.activity_type]));
+      const title = heading("ATIVIDADE " + currentDetail.exercise_number +
+        " — " + TYPES[currentDetail.activity_type]);
+      fragment.appendChild(title);
       fragment.appendChild(renderFeedback(progress, currentDetail.activity_type));
       fragment.appendChild(button("Voltar às atividades", load));
-      mount.replaceChildren(fragment);
+      replaceView(fragment, title);
       status("Progresso consultado com segurança.");
     }
 
@@ -217,8 +227,9 @@
 
     function renderActivity(detail) {
       const fragment = document.createDocumentFragment();
-      fragment.appendChild(heading("ATIVIDADE " + detail.exercise_number +
-        " — " + TYPES[detail.activity_type]));
+      const title = heading("ATIVIDADE " + detail.exercise_number +
+        " — " + TYPES[detail.activity_type]);
+      fragment.appendChild(title);
       appendText(fragment, "h3", detail.title);
       appendContent(fragment, detail);
       const form = createElement("form", "homework-student-form");
@@ -288,7 +299,7 @@
       });
       fragment.appendChild(form);
       fragment.appendChild(button("Voltar às atividades", load));
-      mount.replaceChildren(fragment);
+      replaceView(fragment, title);
       status("Atividade carregada. Responda antes de enviar.");
     }
 
@@ -316,7 +327,8 @@
       const result = await service.list(auth);
       const rows = Array.isArray(result?.assignments) ? result.assignments : [];
       const fragment = document.createDocumentFragment();
-      fragment.appendChild(heading("Minhas tarefas para casa"));
+      const title = heading("Minhas tarefas para casa");
+      fragment.appendChild(title);
       if (rows.length === 0) appendText(fragment, "p", "Ainda não há atividades disponíveis.");
       const list = createElement("ol", "homework-student-list");
       for (const row of rows) {
@@ -332,7 +344,7 @@
         list.appendChild(item);
       }
       fragment.appendChild(list);
-      mount.replaceChildren(fragment);
+      replaceView(fragment, title);
       status("Lista de atividades atualizada.");
     }
 
