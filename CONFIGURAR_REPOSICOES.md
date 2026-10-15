@@ -63,6 +63,31 @@ O destinatário administrativo aprovado é `flaviofreitas@ufu.br`, definido
 explicitamente na Edge Function. O texto informa o aluno, a turma,
 a data, o horário de início e término e o link da aula.
 
+## Notificações de cancelamento de aulas regulares e reposições
+
+O cancelamento de **aula regular** cria, após a atualização confirmada do crédito, dois
+registros independentes em `public.regular_lesson_cancellation_email_notifications`,
+um para o aluno e outro para `flaviofreitas@ufu.br`. A Edge Function
+`notify-regular-lesson-cancellation` envia cada e-mail pelo remetente
+`Teacher Flávio <contato@teacherflavius.com>` e utiliza o e-mail verificado
+no Supabase Auth para localizar o aluno. A fila usa RLS, acesso de serviço
+e chave de deduplicação por crédito, momento do cancelamento e destinatário.
+
+O aviso informa turma, data, horário e o resultado do crédito. A política de
+cancelamento (até o início; concessão de crédito apenas com antecedência mínima
+de 12 horas) permanece definida exclusivamente nas funções canônicas do banco.
+
+O **cancelamento de reposição** continua gerando o aviso estudantil `cancellation`.
+Um gatilho adicional insere `teacher_cancellation`, enviado separadamente ao professor
+pela função existente `notify-makeup-booking`. O e-mail orienta a remover manualmente
+o evento do calendário quando tiver sido salvo. Não há exclusão automática de eventos.
+
+As Edge Functions utilizam `RESEND_API_KEY` e `ENROLLMENT_WEBHOOK_SECRET`.
+O dispatcher SQL utiliza o segredo já guardado no Vault sob
+`teacherflavius_notification_webhook_secret`. Não execute novamente instaladores
+históricos ou faça testes de envio com cadastros reais. O status `sent` representa
+aceite do provedor, não necessariamente entrega ao destinatário.
+
 O link do Google Agenda prepara um evento com fuso `America/Sao_Paulo`.
 O aluno e o professor recebem botões independentes para adicionar a reposição.
 Ambos precisam revisar e salvar o compromisso. O e-mail do aluno informa
