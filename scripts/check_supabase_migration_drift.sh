@@ -308,8 +308,8 @@ compare_production_identity() {
   local expected_remote
   local_identity="$(grep -E '^20261015030100[[:space:]]' "$local_records_file" || true)"
   remote_identity="$(grep -E '^20261015030846[[:space:]]' "$remote_records_file" || true)"
-  printf -v expected_git '%s\\t%s\\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
-  printf -v expected_remote '%s\\t%s\\t%s' "$alias_remote_version" "$alias_name" "$alias_sha"
+  printf -v expected_git '%s\t%s\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
+  printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "$alias_name" "$alias_sha"
 
   if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
     grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
