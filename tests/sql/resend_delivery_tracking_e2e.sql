@@ -8,7 +8,7 @@ alter table public.enrollment_email_notifications disable trigger user;
 do $resend_cases$
 declare
   fake_student constant uuid := '89000000-0000-4000-8000-000000000001';
-  fake_notice constant uuid := '89000000-0000-4000-8000-000000000002';
+  fake_notice uuid;
   student_provider constant text := 'resend_fixture_student_01';
   teacher_provider constant text := 'resend_fixture_teacher_01';
   event_date constant timestamptz := '2026-10-15 19:20:00+00';
@@ -58,11 +58,21 @@ begin
   insert into public.profiles (id, name, enrolled, archived)
   values (fake_student, 'Fixture Resend', true, false);
 
-  insert into public.enrollment_email_notifications (
-    id, student_id, status, attempts, created_at, updated_at
-  ) values (
-    fake_notice, fake_student, 'pending', 0, now(), now()
-  );
+  -- The real enrollment trigger may already have queued the notification.
+  -- Reuse that record; never insert two rows for the same fictional student.
+  select id into fake_notice
+  from public.enrollment_email_notifications
+  where student_id = fake_student
+  limit 1;
+
+  if fake_notice is null then
+    fake_notice := '89000000-0000-4000-8000-000000000002';
+    insert into public.enrollment_email_notifications (
+      id, student_id, status, attempts, created_at, updated_at
+    ) values (
+      fake_notice, fake_student, 'pending', 0, now(), now()
+    );
+  end if;
 
   -- Event before acceptance: timeline must reconcile when message is linked.
   if not public.record_resend_delivery_event(
