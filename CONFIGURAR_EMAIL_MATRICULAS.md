@@ -34,7 +34,7 @@ Esse arquivo deve ser executado depois de `supabase_mensalidades.sql`, pois usa 
 
 O script não envia mensagens para alunos antigos. Somente matrículas concluídas depois da instalação geram notificações.
 
-## 3. Configurar os Secrets
+## 4. Configurar os Secrets
 
 No terminal, dentro do repositório, vincule o projeto e salve os segredos:
 
@@ -46,9 +46,9 @@ npx supabase secrets set ENROLLMENT_NOTIFICATION_EMAIL=seu-email@exemplo.com
 npx supabase secrets set ENROLLMENT_WEBHOOK_SECRET=UM_SEGREDO_LONGO_E_ALEATORIO
 ```
 
-Use o mesmo valor de `ENROLLMENT_WEBHOOK_SECRET` no cabeçalho do webhook criado no passo 5.
+Use o mesmo valor de `ENROLLMENT_WEBHOOK_SECRET` no cabeçalho do webhook criado no passo 6.
 
-## 4. Publicar a Edge Function
+## 5. Publicar a Edge Function
 
 ```bash
 npx supabase functions deploy notify-new-enrollment --no-verify-jwt
@@ -56,7 +56,7 @@ npx supabase functions deploy notify-new-enrollment --no-verify-jwt
 
 A função desativa a validação JWT porque é chamada pelo banco, mas exige o cabeçalho privado `x-webhook-secret` e compara esse valor com o Secret salvo no Supabase.
 
-## 5. Criar o Database Webhook
+## 6. Criar o Database Webhook
 
 No painel do Supabase:
 
@@ -70,7 +70,7 @@ No painel do Supabase:
 8. Adicione o cabeçalho `Content-Type` com o valor `application/json`.
 9. Salve o webhook.
 
-## 6. Testar
+## 7. Testar
 
 1. Faça uma nova matrícula de teste no site.
 2. Confira a caixa de entrada do aluno e também o e-mail administrativo configurado em `ENROLLMENT_NOTIFICATION_EMAIL`.
