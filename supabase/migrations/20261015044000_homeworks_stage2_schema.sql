@@ -333,7 +333,7 @@ begin
     execute format('alter table public.%I enable row level security', table_name);
     execute format('revoke all on table public.%I from anon, authenticated', table_name);
     execute format(
-      'create policy homework_teacher_only on public.%I for all to authenticated using ((select public.is_teacher_admin()) and (select auth.jwt()->>'aal') = ''aal2'') with check ((select public.is_teacher_admin()) and (select auth.jwt()->>'aal') = ''aal2'')',
+      'create policy homework_teacher_only on public.%I for all to authenticated using ((select public.is_teacher_admin()) and (select auth.jwt()->>''aal'') = ''aal2'') with check ((select public.is_teacher_admin()) and (select auth.jwt()->>''aal'') = ''aal2'')',
       table_name
     );
   end loop;
