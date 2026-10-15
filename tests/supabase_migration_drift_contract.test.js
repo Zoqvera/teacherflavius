@@ -527,3 +527,32 @@ test("both Supabase-assigned versions match their immutable source SQL", () => {
     assert.match(rejected.stdout, /missing from supabase\/migrations|missing from production migration history/);
   }
 });
+
+
+test("Stage 4 Supabase-assigned migration version is checksum-attested, never renamed", () => {
+  const filename = "20261015060000_homeworks_stage4_submission.sql";
+  const content = read("supabase/migrations/" + filename);
+  const expectedChecksum = "b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84";
+  assert.equal(canonicalChecksum(content), expectedChecksum);
+
+  const accepted = runDriftCheck({
+    migrations: { [filename]: content },
+    remoteRows: [{
+      version: "20261015052321",
+      name: "homeworks_stage4_submission",
+      checksum: expectedChecksum,
+    }],
+  });
+  assert.equal(accepted.status, 0, accepted.stdout + accepted.stderr);
+  assert.match(accepted.stdout, /Exact SHA256 and name attest Supabase-generated migration alias/);
+
+  const tampered = runDriftCheck({
+    migrations: { [filename]: content + "\nselect 999;\n" },
+    remoteRows: [{
+      version: "20261015052321",
+      name: "homeworks_stage4_submission",
+      checksum: expectedChecksum,
+    }],
+  });
+  assert.equal(tampered.status, 1);
+});
