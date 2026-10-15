@@ -85,7 +85,8 @@ test("only student booking confirmations attach ICS; teacher notices have none",
   assert.match(notifier, /attachments: \[makeIcsAttachment\(/);
   assert.match(notifier, /notificationType === "booking_confirmation" \? \{/);
   assert.doesNotMatch(notifier, /isTeacherNotice \? "teacher" : "student"/);
-  assert.doesNotMatch(notifier, /audience === "teacher"[\s\S]*?\? \`Reposição de aula/);
+  const icsFunction = notifier.slice(notifier.indexOf("function makeIcsAttachment("), notifier.indexOf("Deno.serve("));
+  assert.doesNotMatch(icsFunction, /audience|studentName/);
   assert.match(notifier, /DTSTAMP:\$\{formatCalendarInstant\(createdAt\)\}/);
   assert.match(notifier, /notification\.created_at,/);
   assert.match(notifier, /METHOD:PUBLISH/);
