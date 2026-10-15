@@ -312,6 +312,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       currentUser = session.user;
+      const preparationFlow = window.StudentPreparationFlow;
+      if (preparationFlow && typeof preparationFlow.resolveEligibility === "function") {
+        await preparationFlow.resolveEligibility(Auth.getClient(), session.user.id);
+      }
+      if (preparationFlow && preparationFlow.enabled === true &&
+          typeof preparationFlow.track === "function") {
+        preparationFlow.track("preparation_roadmap_view");
+      }
 
       let completionLoaded = true;
       let lessonPagesLoaded = true;
