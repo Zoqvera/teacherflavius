@@ -231,7 +231,8 @@ test("success dialog appears only after persisting a question in the second part
   const dialog = state.node("questionStudiedDialog");
   assert.equal(dialog.open, false);
 
-  await state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  await flush();
   assert.deepEqual(state.calls.studied, ["q1"]);
   assert.equal(dialog.open, true);
   assert.equal(state.node("questionsCount").textContent, "1");
@@ -240,11 +241,12 @@ test("success dialog appears only after persisting a question in the second part
   assert.equal(dialog.open, false);
   assert.equal(state.node("actionQuestionList").children[0].children[1].children[0].focused, true);
 
-  await state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  await flush();
   assert.deepEqual(state.calls.studied, ["q1", "q2"]);
   assert.equal(dialog.open, true);
   assert.equal(state.node("questionsCount").textContent, "0");
-  assert.equal(state.node("finishQuestionStudyLink").href, undefined);
+  assert.match(read("o-que-fazer/segunda-parte/index.html"), /id="finishQuestionStudyLink"[^>]+href="\/area-do-estudante\/"/);
 });
 
 test("studied-question failure never shows the success dialog", async () => {
@@ -254,7 +256,8 @@ test("studied-question failure never shows the success dialog", async () => {
     markError: new Error("Synthetic write failure"),
     plan: { lesson: null, questions: [question("q1")] }
   });
-  await state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  await flush();
   assert.equal(state.node("questionStudiedDialog").open, false);
   assert.equal(state.node("actionQuestionList").children[0].children[1].children[0].disabled, false);
   assert.match(state.node("questionsStatus").textContent, /Synthetic write failure/);
@@ -265,7 +268,8 @@ test("the original study screen never opens a success dialog", async () => {
     enabled: false,
     plan: { lesson: null, questions: [question("q1")] }
   });
-  await state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  state.node("actionQuestionList").children[0].children[1].children[0].handlers.click();
+  await flush();
   assert.equal(state.node("questionStudiedDialog").open, false);
 });
 
@@ -326,6 +330,7 @@ async function runLessonScenario({
     "lessonFlowProgress",
     "legacyLessonMaterial"
   ]);
+  document.getElementById("lessonNextPartLink").textContent = "PRÓXIMA PARTE";
   const calls = { prepared: [], plans: 0 };
   const pageId = "11111111-1111-4111-8111-111111111111";
   const nextPageId = "22222222-2222-4222-8222-222222222222";
