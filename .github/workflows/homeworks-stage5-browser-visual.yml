@@ -6,7 +6,7 @@ on:
       - "homework_student_interface.js"
       - "homework_student_interface.css"
       - "homework_pedagogical_preview.js"
-      - "tests/fixtures/homeworks-stage5-visual.html"
+      - "tests/fixtures/homeworks-stage5-visual/index.html"
       - "tests/fixtures/homeworks-stage5-visual.js"
       - "scripts/homeworks_stage5_browser_visual_check.py"
       - ".github/workflows/homeworks-stage5-browser-visual.yml"
