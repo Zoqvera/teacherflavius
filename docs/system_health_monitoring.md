@@ -56,7 +56,7 @@ A regra vigente é:
 - `individual`: 1 aluno;
 - `quintet`: 8 alunos.
 
-Toda turma `quintet` usa capacidade operacional fixa de 8 alunos, inclusive quando existe um override legado diferente. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas e na troca de turma.
+Toda turma `quintet` usa capacidade operacional fixa de 8 alunos, exceto as turmas internas 47 (Turma 8, segunda-feira 20h) e 52 (Turma 17, terça-feira 20h), cuja capacidade é de 9 alunos cada. Overrides legados não modificam as demais turmas Quinteto. A mesma função central é utilizada no enforcement de `class_students`, nas listagens de vagas e na troca de turma.
 
 A capacidade de reposição é independente da capacidade de matrícula regular. A regra canônica é calculada por ocorrência: uma turma `quintet` pode receber reposição quando tiver pelo menos 4 vagas operacionais disponíveis ou pelo menos uma vaga daquela ocorrência liberada por cancelamento e ainda não consumida por outra reposição. A vaga liberada é vinculada à turma e à data da aula, e cada reserva confirmada a consome. O agendamento recalcula a capacidade sob bloqueio transacional e nunca pode ultrapassar `private.get_class_operational_capacity()`. Cancelamentos feitos antes do início da aula sempre liberam fisicamente a vaga; a antecedência mínima de 12 horas controla apenas a concessão ou devolução do crédito de reposição.
 

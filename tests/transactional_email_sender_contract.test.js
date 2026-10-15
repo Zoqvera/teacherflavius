@@ -33,3 +33,30 @@ test("enrollment sends both student confirmation and existing administrative not
 test("replacement keeps the current cancellation policy text", function () {
   assert.match(makeup, /Você pode cancelar esse agendamento até 12 \(doze\) horas antes do horário da aula/);
 });
+
+test("student notification uses the verified Auth email, not a mutable profile field", function () {
+  assert.match(enrollment, /auth\.admin\.getUserById\(notification\.student_id\)/);
+  assert.match(enrollment, /const studentEmail = displayValue\(authUserData\?\.user\?\.email, ""\)/);
+  assert.doesNotMatch(enrollment, /\.select\("id, name, email, whatsapp, enrolled"\)/);
+});
+
+test("separate email idempotency keys preserve the existing admin key on retries", function () {
+  assert.match(enrollment, /idempotencyKey: `enrollment-student-\$\{notification\.id\}`/);
+  assert.match(enrollment, /idempotencyKey: `enrollment-\$\{notification\.id\}`/);
+  assert.match(enrollment, /"Idempotency-Key": message\.idempotencyKey/);
+  assert.match(enrollment, /const \[studentEmailResponse, adminEmailResponse\] = await Promise\.all\(/);
+});
+
+test("email webhooks require their private shared secret", function () {
+  for (const source of [enrollment, makeup]) {
+    assert.match(source, /request\.headers\.get\("x-webhook-secret"\)/);
+    assert.match(source, /await secretsMatch\(receivedWebhookSecret, expectedWebhookSecret\)/);
+    assert.match(source, /return jsonResponse\(\{ error: "Unauthorized" \}, 401\)/);
+  }
+});
+
+test("both email flows remain transaction-only and avoid public user metadata", function () {
+  assert.doesNotMatch(enrollment, /raw_user_meta_data|user_metadata/);
+  assert.doesNotMatch(makeup, /Deno\.env\.get\("ENROLLMENT_FROM_EMAIL"\)/);
+  assert.match(makeup, /Idempotency-Key": `makeup-\$\{notificationType\}-\$\{notification\.id\}`/);
+});

@@ -148,9 +148,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     async function loadTeacherClasses() {
-      const response = await Auth.getClient().rpc("get_teacher_classes_with_type");
+      const [response, capacityResponse] = await Promise.all([
+        Auth.getClient().rpc("get_teacher_classes_with_type"),
+        Auth.getClient().from("teacher_classes")
+          .select("class_number,capacity_override")
+          .eq("is_active", true)
+      ]);
       if (response.error) throw response.error;
-      return response.data || [];
+      if (capacityResponse.error) throw capacityResponse.error;
+
+      const capacityByClass = new Map(
+        (capacityResponse.data || []).map(function (item) {
+          return [Number(item.class_number), item.capacity_override];
+        })
+      );
+      return (response.data || []).map(function (item) {
+        return Object.assign({}, item, {
+          capacity_override: capacityByClass.get(Number(item.class_number))
+        });
+      });
     }
 
     async function loadClassStudents(classNumber) {
@@ -213,7 +229,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return '<div class="extra-section"><h2>Turmas cadastradas</h2><div class="extra-grid">' + sortedClasses.map(function (item) {
         const classNumber = Number(item.class_number);
         const typeMeta = getClassTypeMeta(item.class_type);
-        return '<a class="extra-card class-item" href="' + (item.class_type === "experimental" ? "/aulas-experimentais/" : "turma.html?id=" + encodeURIComponent(classNumber)) + '">' +
+        return '<a class="extra-card class-item" data-capacity="' + escapeHtml(item.capacity_override || (item.class_type === "experimental" ? 30 : item.class_type === "individual" ? 1 : 8)) + '" href="' + (item.class_type === "experimental" ? "/aulas-experimentais/" : "turma.html?id=" + encodeURIComponent(classNumber)) + '">' +
           '<span class="class-header"><span class="class-title">' + escapeHtml(item.class_name || ("Turma " + classNumber)) + '</span><span class="class-type-badge ' + typeMeta.css + '">' + escapeHtml(typeMeta.label) + '</span></span>' +
           '<span class="class-number">Nº ' + escapeHtml(classNumber) + '</span>' +
           (item.class_type === "experimental" ? '<span class="student-list">' + Number(item.student_count || 0) + ' agendado(s) na próxima sessão</span>' : renderStudentNames(studentsByClass[String(classNumber)] || [])) +
@@ -318,7 +334,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     guardPage();
   </script>
   <script src="animated_cards.js?v=20260922-quintet-1"></script>
-  <script src="/quadro-de-turmas/quadro_visual.js?v=20261009-capacity30-1"></script>
+  <script src="/quadro-de-turmas/quadro_visual.js?v=20261013-capacity9-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
 

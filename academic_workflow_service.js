@@ -104,6 +104,11 @@
       return plan;
     }
 
+    async function getMyReviewQuestions() {
+      const reviews = unwrap(await supabase.rpc("get_my_review_questions"));
+      return hydrateQuestions(Array.isArray(reviews) ? reviews : []);
+    }
+
     async function markLessonPrepared(lessonNumber) {
       const normalized = normalizeLessonNumber(lessonNumber);
       if (!normalized) throw new Error("Lição inválida.");
@@ -219,6 +224,7 @@
     return Object.freeze({
       finalizeTeacherLessonSession,
       getMyActionPlan,
+      getMyReviewQuestions,
       getTeacherLessonPlan,
       markLessonPrepared,
       markLessonPresented,

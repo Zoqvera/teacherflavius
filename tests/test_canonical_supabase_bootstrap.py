@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from scripts.compile_canonical_supabase_bootstrap import (
+    FRESH_DATABASE_GUARD,
     compile_bootstrap,
     extract_fingerprint_query,
     parse_baseline_order,
@@ -34,15 +35,15 @@ class CanonicalBootstrapTests(unittest.TestCase):
         self.assertGreaterEqual(len(paths), 60)
         self.assertEqual(paths[0], "supabase/baseline/10_public_schema.sql")
         self.assertEqual(
-            paths[-1], "supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql"
+            paths[-1], "supabase/baseline/390_expose_study_button_marker.sql"
         )
         self.assertEqual(len(paths), len(set(paths)))
 
     def test_bootstrap_contains_exactly_the_existing_reviewed_overlays(self) -> None:
         root = Path(__file__).resolve().parents[1]
         compiled, manifest = compile_bootstrap(root)
-        self.assertEqual(compiled.count("-- BEGIN REVIEWED OVERLAY: "), 75)
-        self.assertEqual(manifest["overlay_count"], 75)
+        self.assertEqual(compiled.count("-- BEGIN REVIEWED OVERLAY: "), 79)
+        self.assertEqual(manifest["overlay_count"], 79)
         self.assertEqual(manifest["mode"], "disposable-only")
         self.assertEqual(
             manifest["bootstrap_sha256"],
@@ -51,6 +52,15 @@ class CanonicalBootstrapTests(unittest.TestCase):
         self.assertTrue(compiled.startswith("-- DISPOSABLE DATABASE ONLY."))
         self.assertIn("create table public.profiles", compiled)
         self.assertIn("private.lesson_credit_plan_exceptions", compiled)
+        self.assertEqual(compiled.count(FRESH_DATABASE_GUARD.strip()), 1)
+        self.assertLess(
+            compiled.index(FRESH_DATABASE_GUARD.strip()),
+            compiled.index("create table public.profiles"),
+        )
+        self.assertLess(
+            compiled.index(FRESH_DATABASE_GUARD.strip()),
+            compiled.index("set check_function_bodies"),
+        )
 
     def test_never_write_to_live_migrations_folder(self) -> None:
         root = Path(__file__).resolve().parents[1]
@@ -73,7 +83,7 @@ class CanonicalBootstrapTests(unittest.TestCase):
             fingerprint = temporary / "fingerprint.sql"
             write_outputs(root, sql, manifest, fingerprint)
             report = json.loads(manifest.read_text())
-            self.assertEqual(report["overlay_count"], 75)
+            self.assertEqual(report["overlay_count"], 79)
             self.assertIn("public_functions", fingerprint.read_text())
             self.assertIn("select json_build_object(", fingerprint.read_text())
             self.assertIn("create table public.profiles", sql.read_text())

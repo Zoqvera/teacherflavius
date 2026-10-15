@@ -344,12 +344,12 @@ python3 -m http.server 4173 --directory _site
 ## Testes isolados e branches Supabase
 
 Mudanças de autenticação, banco, mensalidades, créditos, reposições e Edge
-Functions críticas precisam de ensaios numa branch temporária do Supabase
+Functions críticas devem, quando possível, ser testadas em ambiente isolado
 com dados sintéticos e integrações externas simuladas, além do CI habitual.
-A verificação `Isolated testing policy` exige o registro dos testes na PR.
-Para mudanças comuns, permanecem suficientes os testes automatizados já
-existentes. Branches remotas são criadas sob demanda e excluídas após o
-teste, para reduzir o custo adicional de computação.
+A exigência obrigatória de preview remota foi retirada por decisão do
+proprietário; a ausência desse ensaio não comprova segurança remota.
+Os testes automatizados e regras de proteção restantes continuam ativos.
+Branches temporárias criadas sob demanda devem ser excluídas após os testes.
 
 Consulte [Estratégia de testes isolados](docs/estrategia-testes-isolados.md)
 antes de alterar rotinas críticas.

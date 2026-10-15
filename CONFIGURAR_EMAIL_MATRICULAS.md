@@ -6,7 +6,7 @@ O código desta funcionalidade possui três partes:
 2. `supabase/functions/notify-new-enrollment/index.ts` envia o e-mail pelo Resend.
 3. Um Database Webhook do Supabase chama a função quando uma notificação entra na fila.
 
-A notificação administrativa inclui nome, WhatsApp e data da matrícula. O aluno também recebe uma confirmação da própria matrícula no endereço da conta. CPF, código de matrícula e chave Pix não são enviados nas mensagens.
+O aviso administrativo inclui nome, WhatsApp, quantidade de aulas, valor mensal e data da matrícula. O aluno recebe separadamente uma confirmação no endereço verificado por Supabase Auth, com quantidade de aulas, mensalidade e data da matrícula. CPF, código de matrícula e chave Pix não são enviados nesses e-mails.
 
 ## 1. Preparar o Resend
 
@@ -17,7 +17,11 @@ A notificação administrativa inclui nome, WhatsApp e data da matrícula. O alu
 
 Não coloque a API Key no `auth.js`, no `supabase_config.js` nem em outro arquivo público do site.
 
-## 2. Executar o SQL
+## 2. Estado de instalação
+
+O fluxo de notificações e os Database Webhooks já estão instalados no projeto de produção. **Não execute novamente o instalador SQL apenas para concluir a PR #642.** Os passos seguintes são referência para recuperação controlada ou instalação em outro projeto, não uma instrução de reaplicação em produção.
+
+## 3. Executar o SQL (somente em instalação nova ou recuperação aprovada)
 
 Depois que esta alteração estiver na branch principal:
 
@@ -30,7 +34,7 @@ Esse arquivo deve ser executado depois de `supabase_mensalidades.sql`, pois usa 
 
 O script não envia mensagens para alunos antigos. Somente matrículas concluídas depois da instalação geram notificações.
 
-## 3. Configurar os Secrets
+## 4. Configurar os Secrets
 
 No terminal, dentro do repositório, vincule o projeto e salve os segredos:
 
@@ -42,9 +46,9 @@ npx supabase secrets set ENROLLMENT_NOTIFICATION_EMAIL=seu-email@exemplo.com
 npx supabase secrets set ENROLLMENT_WEBHOOK_SECRET=UM_SEGREDO_LONGO_E_ALEATORIO
 ```
 
-Use o mesmo valor de `ENROLLMENT_WEBHOOK_SECRET` no cabeçalho do webhook criado no passo 5.
+Use o mesmo valor de `ENROLLMENT_WEBHOOK_SECRET` no cabeçalho do webhook criado no passo 6.
 
-## 4. Publicar a Edge Function
+## 5. Publicar a Edge Function
 
 ```bash
 npx supabase functions deploy notify-new-enrollment --no-verify-jwt
@@ -52,7 +56,7 @@ npx supabase functions deploy notify-new-enrollment --no-verify-jwt
 
 A função desativa a validação JWT porque é chamada pelo banco, mas exige o cabeçalho privado `x-webhook-secret` e compara esse valor com o Secret salvo no Supabase.
 
-## 5. Criar o Database Webhook
+## 6. Criar o Database Webhook
 
 No painel do Supabase:
 
@@ -66,11 +70,11 @@ No painel do Supabase:
 8. Adicione o cabeçalho `Content-Type` com o valor `application/json`.
 9. Salve o webhook.
 
-## 6. Testar
+## 7. Testar
 
 1. Faça uma nova matrícula de teste no site.
 2. Confira a caixa de entrada do aluno e também o e-mail administrativo configurado em `ENROLLMENT_NOTIFICATION_EMAIL`.
 3. Em **Edge Functions > notify-new-enrollment > Logs**, confirme que a chamada terminou com sucesso.
 4. No **Table Editor**, consulte `enrollment_email_notifications`; o registro deve aparecer com `status = sent`.
 
-Se o provedor rejeitar o envio, o status será `failed` e `last_error` mostrará a causa. O envio usa uma chave de idempotência para reduzir o risco de e-mails duplicados.
+Se o provedor rejeitar algum envio, o status será `failed` e `last_error` registrará um código técnico. Cada destinatário usa chave de idempotência própria: o e-mail administrativo preserva a chave histórica `enrollment-{id}` e a confirmação ao aluno utiliza `enrollment-student-{id}`. A fila é marcada como `sent` somente quando os dois envios são aceitos pelo provedor. Essa confirmação não garante entrega na caixa de entrada.

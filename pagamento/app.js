@@ -1,6 +1,7 @@
 let paymentSession = null;
 let pendingTuitions = [];
 let selectedTuition = null;
+let firstPaymentWindow = { tuition_id: null, closed: false };
 let mercadoPago = null;
 let bricksBuilder = null;
 let paymentBrickController = null;
@@ -175,6 +176,32 @@ async function loadPendingTuitions() {
   return pendingTuitions;
 }
 
+async function loadFirstPaymentWindow() {
+  const response = await Auth.getClient().rpc("get_my_first_payment_window");
+  if (response.error) throw response.error;
+  const data = response.data || {};
+  firstPaymentWindow = {
+    tuition_id: data.tuition_id || null,
+    closed: data.closed === true
+  };
+}
+
+function isClosedFirstTuition(tuition) {
+  return firstPaymentWindow.closed &&
+    tuition && String(tuition.tuition_id) === String(firstPaymentWindow.tuition_id);
+}
+
+async function showFirstPaymentClosed() {
+  stopPaymentPolling();
+  await destroyBricks();
+  document.getElementById("checkoutTitle").textContent = "Prazo do pagamento inicial encerrado";
+  document.getElementById("checkoutDescription").textContent =
+    "A primeira mensalidade só pode ser iniciada no dia da matrícula, até 23h59 (horário de Brasília). Entre em contato com o professor para regularizar a matrícula. Se você iniciou o pagamento no prazo, utilize VERIFICAR PAGAMENTO NOVAMENTE para confirmar a situação.";
+  document.getElementById("paymentBrickLoading").hidden = true;
+  document.getElementById("retryPaymentButton").hidden = true;
+  setPageMessage("O prazo para iniciar o pagamento terminou. Você ainda pode verificar um pagamento iniciado anteriormente.", "warning");
+}
+
 async function reconcilePendingPayments(tuitionId) {
   const response = await Auth.getClient().functions.invoke("reconcile-mercado-pago-payments", {
     body: tuitionId ? { tuition_id: tuitionId } : {}
@@ -188,9 +215,12 @@ function renderTuitionList() {
   list.innerHTML = pendingTuitions.map(function (tuition) {
     const selected = selectedTuition && selectedTuition.tuition_id === tuition.tuition_id;
     const overdue = tuition.payment_status === "overdue";
-    const statusLabel = tuition.attempt_status === "pending"
-      ? "Pagamento pendente"
-      : (overdue ? "Vencida" : "Em aberto");
+    const closed = isClosedFirstTuition(tuition);
+    const statusLabel = closed
+      ? "Prazo encerrado"
+      : tuition.attempt_status === "pending"
+        ? "Pagamento pendente"
+        : (overdue ? "Vencida" : "Em aberto");
     return '<button class="tuition-card' + (selected ? ' selected' : '') + '" type="button" data-tuition-id="' + escapeHtml(tuition.tuition_id) + '">' +
       '<span class="tuition-card__top"><strong>' + escapeHtml(formatReferenceMonth(tuition.reference_month)) + '</strong><span class="tuition-card__amount">' + escapeHtml(formatCurrency(tuition.amount_due)) + '</span></span>' +
       '<span class="tuition-card__bottom"><span>Vencimento: ' + escapeHtml(formatDate(tuition.due_date)) + '</span><span class="tuition-card__status' + (overdue ? ' overdue' : '') + '">' + statusLabel + '</span></span>' +
@@ -322,7 +352,8 @@ async function selectTuition(tuitionId) {
   selectedTuition = tuition;
   renderTuitionList();
   updateCheckoutHeading();
-  await renderPaymentBrick();
+  if (isClosedFirstTuition(selectedTuition)) await showFirstPaymentClosed();
+  else await renderPaymentBrick();
 }
 
 function showAllPaid(message) {
@@ -341,6 +372,7 @@ async function refreshAfterPayment(paidTuitionId) {
   const previousCount = pendingTuitions.length;
   await reconcilePendingPayments(paidTuitionId);
   await loadPendingTuitions();
+  await loadFirstPaymentWindow();
   const stillPending = pendingTuitions.some(function (tuition) {
     return String(tuition.tuition_id) === String(paidTuitionId);
   });
@@ -358,7 +390,8 @@ async function refreshAfterPayment(paidTuitionId) {
     renderTuitionList();
     updateCheckoutHeading();
     setPageMessage("Pagamento confirmado. Você ainda possui " + pendingTuitions.length + " mensalidade(s) em aberto.", "success");
-    await renderPaymentBrick();
+    if (isClosedFirstTuition(selectedTuition)) await showFirstPaymentClosed();
+    else await renderPaymentBrick();
     return true;
   }
 
@@ -409,6 +442,7 @@ async function initializePage() {
 
   try {
     await loadPendingTuitions();
+    await loadFirstPaymentWindow();
     if (pendingTuitions.some(function (tuition) { return !!tuition.provider_payment_id; })) {
       try {
         await reconcilePendingPayments();
@@ -453,7 +487,8 @@ async function initializePage() {
     renderTuitionList();
     updateCheckoutHeading();
     setPageMessage("Escolha Pix ou cartão de débito para pagar a mensalidade selecionada.", "");
-    await renderPaymentBrick();
+    if (isClosedFirstTuition(selectedTuition)) await showFirstPaymentClosed();
+    else await renderPaymentBrick();
   } catch (error) {
     setPageMessage(await getFunctionError(error), "error");
   }

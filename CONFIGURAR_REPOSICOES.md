@@ -56,19 +56,23 @@ Os tipos de notificação são:
 
 - `booking_confirmation`: confirmação do agendamento;
 - `cancellation`: confirmação do cancelamento.
-- `teacher_booking`: notificação independente ao professor sobre uma nova reposição, com botão **Adicionar ao Google Agenda**.
+- `teacher_booking`: aviso independente ao professor quando o aluno confirma uma reposição, com link **Adicionar ao Google Agenda**.
 
-A notificação ao professor usa `Teacher Flávio <contato@teacherflavius.com>` como remetente.
-O destinatário vem do Secret opcional `MAKEUP_TEACHER_NOTIFICATION_EMAIL`; quando não
-configurado, usa `ENROLLMENT_NOTIFICATION_EMAIL` (o mesmo destinatário dos avisos de novas matrículas).
-O botão abre o Google Agenda com nome do aluno, turma, data, hora de início e término,
-fuso `America/Sao_Paulo` e link da aula preenchidos; o professor ainda precisa
-confirmar o salvamento. Eventos criados por esse link não são sincronizados
-automaticamente se o aluno cancelar a reposição.
+O aviso ao professor sai de `Teacher Flávio <contato@teacherflavius.com>`.
+O destinatário pode ser definido no Secret `MAKEUP_TEACHER_NOTIFICATION_EMAIL`;
+quando ausente, é utilizado `ENROLLMENT_NOTIFICATION_EMAIL` e, como última
+alternativa, `contato@teacherflavius.com`. O texto informa o aluno, a turma,
+a data, o horário de início e término e o link da aula.
 
-A fila usa a restrição única `(booking_id, notification_type)` e insere a
-notificação de professor somente quando a confirmação da reserva é criada.
-O webhook já existente despacha as duas mensagens separadamente.
+O link do Google Agenda prepara um evento com fuso `America/Sao_Paulo`.
+O professor precisa revisar e salvar o compromisso. Não há integração
+OAuth com o Google Agenda e alterações/cancelamentos posteriores de
+reposições **não atualizam automaticamente** o evento salvo.
+
+O banco enfileira a notificação ao professor apenas ao inserir uma
+confirmação de reserva; uma restrição única impede duplicação por
+`(booking_id, notification_type)`. Não envia avisos retroativos sobre
+reservas anteriores à implementação.
 
 ## Teste do fluxo atual
 
@@ -78,7 +82,7 @@ O webhook já existente despacha as duas mensagens separadamente.
 4. Cancele uma reposição com pelo menos 12 horas de antecedência e confirme a devolução do crédito.
 5. Teste uma reposição dentro da janela de 12 horas e confirme que o cancelamento continua disponível, mas sem devolução de crédito.
 6. Confirme que a vaga é liberada e que o e-mail de cancelamento é enfileirado.
-7. Confirme que o destinatário de notificações ao professor recebeu o aviso e que o botão do Google Agenda abre os horários corretos, sem salvar um evento real durante testes isolados.
+7. Confirme que o aviso ao professor contém o nome do aluno, data e horário, e que o link do Google Agenda prepara o evento sem salvá-lo automaticamente.
 8. Confirme que `/reposicoes/` redireciona para `/area-do-estudante/minhas-aulas/`.
 
 Para diagnosticar o envio:

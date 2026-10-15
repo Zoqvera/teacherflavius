@@ -16,7 +16,27 @@ from pathlib import Path
 WORKFLOW = ".github/workflows/validate-supabase-baseline.yml"
 BASELINE_PREFIX = "supabase/baseline/"
 EXPECTED_FIRST = "supabase/baseline/10_public_schema.sql"
-EXPECTED_LAST = "supabase/baseline/375_preserve_historical_credits_and_profile_integrity.sql"
+EXPECTED_LAST = "supabase/baseline/390_expose_study_button_marker.sql"
+
+# Active runtime guard. A comment saying "disposable" is not a safe check.
+# Reject an existing application schema *before* executing any of the
+# reviewed CREATE/ALTER statements. Do not rely on an environment variable,
+# which a misconfigured production process could accidentally inherit.
+FRESH_DATABASE_GUARD = """
+-- Fail closed when the application is already installed.
+do $canonical_fresh_database_guard$
+begin
+  if to_regclass('public.profiles') is not null
+     or to_regclass('public.teacher_classes') is not null
+     or to_regclass('public.monthly_tuition') is not null
+     or to_regclass('public.class_students') is not null
+     or to_regclass('private.lesson_credits') is not null then
+    raise exception 'Refusing canonical bootstrap: application schema already exists';
+  end if;
+end;
+$canonical_fresh_database_guard$;
+"""
+
 
 
 def parse_baseline_order(workflow: str) -> tuple[str, ...]:
@@ -82,6 +102,8 @@ def compile_bootstrap(repo_root: Path) -> tuple[str, dict]:
         "-- Generated from the reviewed Supabase reconstruction overlays.\n",
         "-- This is NOT safe for the Supabase GitHub automatic-branch migration folder.\n",
         "-- Preview-only outbound Cron and provider integrations must be isolated.\n\n",
+        FRESH_DATABASE_GUARD,
+        "\n",
     ]
     included = []
     for path in paths:

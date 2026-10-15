@@ -11,7 +11,6 @@ function read(relativePath) {
 
 const page = read("complete-cadastro.html");
 const stateService = read("enrollment_onboarding_state.js");
-const tuitionDueDay = read("student_tuition_due_day.js");
 const migration = read(
   "supabase/migrations/20261006114559_backend_driven_enrollment_onboarding_state.sql"
 );
@@ -43,7 +42,7 @@ test("browser reads enrollment behavior only from the backend state RPC", functi
   assert.match(page, /EnrollmentOnboardingState/);
   assert.match(page, /state\.requiresAccessCode/);
   assert.match(page, /state\.requiresClassMode/);
-  assert.match(page, /state\.requiresTuitionDueDate/);
+  assert.doesNotMatch(page, /state\.requiresTuitionDueDate/);
   assert.match(page, /state\.requiresCommercialSetup/);
   assert.doesNotMatch(page, /hasEnrollmentAccess\(\)/);
 });
@@ -54,10 +53,7 @@ test("existing students bypass commercial enrollment operations", function () {
     page,
     /if \(state\.requiresClassMode\)[\s\S]*set_my_enrollment_class_mode/
   );
-  assert.match(
-    page,
-    /if \([\s\S]*state\.requiresTuitionDueDate[\s\S]*StudentTuitionDueDay\.saveSelection/
-  );
+  assert.doesNotMatch(page, /StudentTuitionDueDay\.saveSelection/);
   assert.match(
     page,
     /if \(state\.requiresCommercialSetup\)[\s\S]*set_my_enrollment_billing_terms/
@@ -68,16 +64,9 @@ test("existing students bypass commercial enrollment operations", function () {
   );
 });
 
-test("tuition module does not mount or save a due date outside new enrollment", function () {
-  assert.match(
-    tuitionDueDay,
-    /state\.enabled = onboardingState\.requiresTuitionDueDate === true/
-  );
-  assert.match(tuitionDueDay, /if \(!state\.enabled\) return null/);
-  assert.match(
-    tuitionDueDay,
-    /if \(!state\.enabled\)[\s\S]*existingSection\.remove\(\)[\s\S]*return false/
-  );
+test("enrollment page never loads the obsolete manual due-date widget", function () {
+  assert.doesNotMatch(page, /student_tuition_due_day\.js/);
+  assert.doesNotMatch(page, /tuitionDueDate/);
 });
 
 test("existing profile completion copy explicitly preserves commercial terms", function () {

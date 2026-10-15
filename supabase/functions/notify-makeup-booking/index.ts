@@ -242,11 +242,16 @@ Deno.serve(async (request: Request) => {
   }
 
   const teacherEmail = Deno.env.get("MAKEUP_TEACHER_NOTIFICATION_EMAIL")
-    || Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL");
+    || Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL")
+    || "contato@teacherflavius.com";
   const recipientEmail = safeHeader(
     isTeacherBooking ? teacherEmail : booking.student_email,
     "",
   );
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+    await failNotification("Notification recipient email is invalid");
+    return jsonResponse({ error: "Notification recipient email is invalid" }, 422);
+  }
   const studentName = safeHeader(booking.student_name, "Aluno");
   const className = safeHeader(booking.class_name, "Turma");
   const meetingUrl = safeHttpUrl(booking.meeting_url);
