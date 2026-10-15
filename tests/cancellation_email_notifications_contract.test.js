@@ -6,7 +6,7 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const read = (name) => fs.readFileSync(path.join(root, name), "utf8");
 
-const migration = read("supabase/migrations/20261015030100_add_regular_and_teacher_cancellation_email_notifications.sql");
+const migration = read("supabase/migrations/20261015030846_add_regular_and_teacher_cancellation_email_notifications.sql");
 const regular = read("supabase/functions/notify-regular-lesson-cancellation/index.ts");
 const makeup = read("supabase/functions/notify-makeup-booking/index.ts");
 
