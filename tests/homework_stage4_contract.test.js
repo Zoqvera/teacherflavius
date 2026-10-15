@@ -6,7 +6,7 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 const read = name => fs.readFileSync(path.join(root, name), "utf8");
-const sql = read("supabase/migrations/20261015060000_homeworks_stage4_submission.sql");
+const sql = read("supabase/migrations/20261015052321_homeworks_stage4_submission.sql");
 const edge = read("supabase/functions/homework-student/index.ts");
 
 function studentService(calls, error) {
