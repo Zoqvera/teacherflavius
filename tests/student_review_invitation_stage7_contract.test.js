@@ -35,10 +35,10 @@ test("reconstruction runs the exact audited production SQL after other overlays"
   assert.match(baselineReadme, /automated reconstruction applies this overlay/i);
 });
 
-test("reconstruction fingerprint reflects one private table, two constraints and two RPCs", () => {
+test("reconstruction fingerprint counts public RPCs while private tables use separate security tests", () => {
   assert.equal(fingerprint.captured_from_migration_version, "20261015161503");
-  assert.equal(fingerprint.tables, 53);
-  assert.equal(fingerprint.constraints, 268);
+  assert.equal(fingerprint.tables, 52);
+  assert.equal(fingerprint.constraints, 266);
   assert.equal(fingerprint.public_functions, 192);
   assert.equal(fingerprint.non_constraint_indexes, 116);
   assert.equal(fingerprint.rls_policies, 95);
