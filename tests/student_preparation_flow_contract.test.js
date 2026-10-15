@@ -37,6 +37,8 @@ test("welcome respects the exact copy and next-lesson resolution", () => {
   assert.match(landingApp, /lesson && lesson\.has_material/);
   assert.match(landingApp, /button\.disabled = !lessonUrl/);
   assert.match(landing, /id="legacyActionPlan"/);
+  assert.match(landing, /id="legacyActionPlanDescription"/);
+  assert.match(landingApp, /description\.hidden = true/);
 });
 
 test("lesson preserves the student's preparation registration and offers a gated continuation", () => {
