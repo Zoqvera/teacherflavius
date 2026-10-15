@@ -25,7 +25,7 @@ values (
 );
 
 insert into public.teacher_classes (class_number, class_name, class_type)
-values (909001, 'HOMOLOGACAO REGULAR - TURMA FICTICIA', 'QUINTETO');
+values (909001, 'HOMOLOGACAO REGULAR - TURMA FICTICIA', 'quintet');
 
 -- Tuition exists only to satisfy the credit's foreign-key relationship.
 -- It is unpaid, unattached to a real student profile, and rolled back.
