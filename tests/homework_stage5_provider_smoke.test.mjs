@@ -96,7 +96,7 @@ test('one-call provider success reveals only numeric rubric diagnostics', async 
   assert.equal(result.result, 'PASS');
   assert.equal(result.score, 7.7);
   assert.equal(result.synthetic_only, true);
-  assert.equal(result.retained_by_provider, false);
+  assert.equal(result.response_storage_opt_out, true);
   assert.equal(JSON.stringify(result).includes('sk-test-fake'), false);
 });
 
