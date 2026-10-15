@@ -77,14 +77,16 @@ test("private student page only presents calendar actions for booked replacement
   assert.doesNotMatch(application, /window\.location\.href\s*=\s*calendarUrl/);
 });
 
-test("email confirmations attach ICS for both recipients but not cancellations", () => {
+test("only student booking confirmations attach ICS; teacher notices have none", () => {
   assert.match(notifier, /\.select\("id, slot_id, student_id, class_number,/);
   assert.match(notifier, /function makeIcsAttachment\(/);
   assert.match(notifier, /content_type: "text\/calendar; charset=utf-8"/);
   assert.match(notifier, /filename: "reposicao-aula\.ics"/);
   assert.match(notifier, /attachments: \[makeIcsAttachment\(/);
-  assert.match(notifier, /\.\.\.\(!isCancellation \? \{/);
-  assert.match(notifier, /isTeacherNotice \? "teacher" : "student"/);
+  assert.match(notifier, /notificationType === "booking_confirmation" \? \{/);
+  assert.doesNotMatch(notifier, /isTeacherNotice \? "teacher" : "student"/);
+  const icsFunction = notifier.slice(notifier.indexOf("function makeIcsAttachment("), notifier.indexOf("Deno.serve("));
+  assert.doesNotMatch(icsFunction, /audience|studentName/);
   assert.match(notifier, /DTSTAMP:\$\{formatCalendarInstant\(createdAt\)\}/);
   assert.match(notifier, /notification\.created_at,/);
   assert.match(notifier, /METHOD:PUBLISH/);
