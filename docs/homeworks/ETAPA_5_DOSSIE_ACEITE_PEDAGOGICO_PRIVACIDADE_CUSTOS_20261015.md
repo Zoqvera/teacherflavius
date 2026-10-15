@@ -39,7 +39,7 @@ Tabela pública de preços consultada em 15/10/2026: `gpt-6-luna`, processamento
 
 **Simulação, não projeção de gasto observado:** uma avaliação com 1.000 tokens de entrada e 500 tokens de saída custa aproximadamente US$ 0,00035. Mil avaliações nesse mesmo perfil custariam aproximadamente **US$ 0,35**. Esse exemplo não inclui impostos, câmbio, variações de tokenização, modos de processamento nem infraestrutura.
 
-O backend limita tentativas de correção de Writing a **5 por hora e 15 por dia por aluno**, mas **ainda não existe teto global de gasto ou de requisições de todos os alunos**. O código exige uma única avaliação formal por atribuição e recupera o feedback já salvo, mas falhas recuperáveis podem ocasionar novas chamadas e consumo adicional.
+O backend limita tentativas de correção de Writing a **5 por hora e 15 por dia por aluno** e possui teto global específico de **US$ 5 por mês**, com reserva conservadora e suspensão de novas correções quando o saldo é insuficiente. Esse controle não abrange outras aplicações da mesma conta OpenAI. O código exige uma única avaliação formal por atribuição e recupera o feedback já salvo, mas falhas recuperáveis podem ocasionar novas chamadas e consumo adicional.
 
 **Decisão registrada em 15/10/2026:** o professor aprovou **US$ 5 por mês** para a correção Writing pelo GPT-6 Luna, alerta aos **US$ 4 (80%)** e suspensão de novas correções antes de ultrapassar o saldo. A implementação do módulo usa uma reserva conservadora e atomicamente serializada no PostgreSQL antes de cada chamada à IA. O limite é específico das correções de Writing feitas por esta Edge Function; **não** limita a cobrança total da conta OpenAI por outras aplicações, chaves, projetos ou serviços. A política de retenção e os demais aceites permanecem pendentes.
 
@@ -82,3 +82,8 @@ Este dossiê não muda as configurações de SEO nem acrescenta páginas públic
 A auditoria identificou que `get_my_data_export()`, criada antes do módulo, não relacionava as produções e os feedbacks de TAREFAS PARA CASA. A migração incremental `20261015192900_homeworks_privacy_export.sql` acrescenta `homework_assignments` com tentativas, respostas originais, notas e feedbacks (inclusive textos corrigidos). Cada consulta filtra por `auth.uid()` através de `requester_id`; não exporta gabaritos, tokens de avaliação nem textos de terceiros. Os demais campos e controles de autenticação da RPC permanecem inalterados.
 
 O CI testa a exportação sob as identidades fictícias A/B em PostgreSQL descartável, verifica a presença de texto original e correção do próprio titular e a ausência de respostas do outro aluno. A exclusão definitiva existente continua apoiada na cascata `auth.users → profiles → exercise_assignments → exercise_attempts → exercise_answers/exercise_feedback`. A política de **prazo de retenção** continua pendente de decisão administrativa e revisão jurídica. Nada nesta mudança autoriza lançamento.
+
+
+### Preparação do aceite de retenção e calibração pedagógica — 15/10/2026
+
+O protocolo complementar `ETAPA_5_PROPOSTA_RETENCAO_ACEITE_20261015.md` documenta opções de conservação de respostas após desligamento, transparência para a correção Writing e critérios de julgamento A1/A2. A proposta **não está aprovada**, não implanta exclusão por prazo e não habilita o recurso. Novos testes de Edge simulada comprovam aplicação independente dos pesos 40/30/30 e isolamento de instruções presentes no texto do aluno, mas não constituem prova de qualidade pedagógica das saídas reais do modelo. A revisão do professor continua necessária.
