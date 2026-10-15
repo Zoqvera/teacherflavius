@@ -181,3 +181,46 @@ Um alerta isolado não deve ser apagado para “limpar o painel”. Preserve o h
 A partir de outubro de 2026, uma matrícula ativa com cobrança habilitada exige `profiles.tuition_first_due_date`. Dois constraint triggers adiados até o commit verificam a integridade tanto na alteração do perfil quanto na alteração da configuração de cobrança; transações de cadastro podem salvar os dois registros em qualquer ordem, desde que o resultado final seja consistente.
 
 O monitor de qualidade passa a publicar a métrica `active_billing_missing_first_due` e o finding `data_quality_active_billing_missing_first_due` (warning) se houver alguma regressão. Os dados de alunos legados são recuperados da primeira competência financeira histórica disponível, sem recriar mensalidades nem alterar pagamentos. Vencimentos iniciais excepcionais já quitados não devem ser recalculados a partir do dia recorrente.
+
+
+## Etapa 7.2 — Observabilidade dos e-mails transacionais
+
+A migração `20261015134000_integrate_email_notifications_with_system_health.sql`
+adiciona à verificação de saúde **já agendada** os agregados das filas de
+matrícula, reposição e cancelamento regular e o estado do cron
+`transactional-email-retry-10m`. Não cria outra tarefa `pg_cron` nem
+altera a rotina de envio ou a fila original.
+
+A inspeção reutiliza a inserção em `private.system_health_runs`:
+um trigger BEFORE INSERT anexa métricas agregadas e findings ao snapshot
+do mesmo monitor. Quando a chamada usa `target_notify=true`, um trigger
+AFTER INSERT coloca somente os incidentes de e-mail na
+`private.system_health_alerts`, com deduplicação por código, fila e hora.
+`target_notify=false` preserva o modo sem notificação da interface RPC,
+e o retorno da RPC reflete o estado persistido no monitor.
+
+Sinais operacionais:
+- `email_queue_delayed`: mensagem `pending` ou `failed` há mais de 20 min;
+  após 18 horas, a ocorrência é crítica e não deve ser reenviada
+  automaticamente fora da janela segura.
+- `email_queue_retry_exhausted`: três tentativas ou mais ainda pendentes.
+- `email_sent_timestamp_missing`: `sent` sem `sent_at`.
+- `email_retry_cron_unhealthy`: job ausente, inativo, expressão diferente
+  de `*/10 * * * *`, ou último sucesso há mais de 20 minutos.
+- `email_retry_cron_execution_failed`: última execução sem sucesso.
+
+Os alertas contêm **somente agregados e códigos técnicos**, sem dados
+pessoais dos alunos. A apresentação administrativa usa a interface existente
+`/saude-do-sistema/`; a página continua privada e não indexável.
+
+**Ativação:** a integração só produz novos indicadores depois da aplicação
+da migração no projeto produtivo. Merge de código ou CI verde, isoladamente,
+não provam que o banco de produção foi atualizado. A homologação de CI
+executa as mudanças transacionalmente e desfaz tudo com `ROLLBACK`,
+sem requisição ao Resend. Para incidentes operacionais, siga
+`docs/monitoramento-notificacoes-etapa7.md`.
+
+**Limite:** o campo `sent` não comprova recebimento. Acompanhamento de
+bounces e entregas pelo Resend permanece tarefa separada da Etapa 7.3.
+
+**SEO:** nenhum conteúdo público, sitemap, robots.txt ou metadado alterado.
