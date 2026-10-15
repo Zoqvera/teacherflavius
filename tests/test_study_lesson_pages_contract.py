@@ -62,7 +62,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("service.getLinkedPageByLessonNumber(lessonNumber)", controller)
         self.assertNotIn("service.listLinkedPages()", controller)
         self.assertIn("study_lesson_service.js?v=20261004-full-content-1", lesson)
-        self.assertRegex(lesson, r'src="/licao\\.js\\?v=[^"]+"')
+        self.assertIn('src="/licao.js?v=', lesson)
 
     def test_lesson_page_contains_required_support_cards(self) -> None:
         lesson = self.read("licao/index.html")
