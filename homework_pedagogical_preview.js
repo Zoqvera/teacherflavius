@@ -46,10 +46,9 @@
       const points = questionPoints(question);
       const answer = normalizeAnswer(responses[index]);
       const graded = accepted.length > 0 && points !== null;
-      const options = question.question_type === "multiple_choice"
-        ? question.options : null;
-      const validOption = !options || Array.isArray(options) &&
-        options.includes(String(responses[index]).trim());
+      const validOption = question.question_type !== "multiple_choice" ||
+        (Array.isArray(question.options) &&
+          question.options.includes(String(responses[index]).trim()));
       const correct = graded && answer.length > 0 && validOption &&
         accepted.some(candidate => normalizeAnswer(candidate) === answer);
 
