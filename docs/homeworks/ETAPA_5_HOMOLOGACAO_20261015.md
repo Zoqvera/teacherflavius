@@ -252,3 +252,13 @@ O workflow verifica que os arquivos da bancada pertencem a `tests/`/`scripts/`, 
 Limitação explícita: execução em navegador headless com viewports móveis **não corresponde a teste físico em Android/iOS** nem comprova compatibilidade com leitores de tela, uso por teclado em um dispositivo real ou desempenho de rede. Esses itens ainda demandam aceite humano depois de existir um caminho privado para homologação sem permitir acesso dos alunos.
 
 Sem alteração de SQL, Edge Function, gabaritos, modelo, custos de API ou estado de `homework_release_control`. SEO permanece inalterado.
+
+## ETAPA 5 — Proteção de cota e logs, preparação do aceite final
+
+Revisão do tratamento de Writing: a Edge Function passa a reivindicar primeiro a concessão exclusiva de avaliação. Se outra avaliação já estiver em processamento ou houver feedback concluído, a requisição devolve esse estado **sem debitar a cota** nem chamar a IA novamente. Somente a correção efetivamente reivindicada consome os limites já existentes (5/h e 15/dia por aluno). Se a cota for excedida, o backend libera a concessão, mantém o texto original salvo e informa HTTP 429. Falhas do provedor continuam recuperáveis com texto persistido e sem criação de nota artificial.
+
+Erros internos deixam de imprimir no console mensagens brutas recebidas de PostgreSQL/provedor que possam conter dados pessoais ou a redação. Os logs recebem nomes estáveis de operação e motivos genéricos, sem segredos ou texto estudantil. Foram adicionados testes de limite concorrente, reenvio, liberação de lease após 429 e minimização dos logs.
+
+O arquivo `docs/homeworks/ETAPA_5_DOSSIE_ACEITE_PEDAGOGICO_PRIVACIDADE_CUSTOS_20261015.md` consolida três exemplos fictícios de Writing para revisão do professor e o quadro de decisão sobre uso de IA, retenção e orçamento. **Não é aceite automático.** Em particular, `store:false` não constitui Zero Data Retention, não existe teto de gastos global no módulo, nem política específica de expiração de textos aprovada.
+
+O trabalho não libera estudantes, não altera notas ou gabaritos existentes, não publica novas rotas e não afeta SEO. A ETAPA 5 continua aberta; a próxima é ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica, apenas após aceite e autorização expressa.
