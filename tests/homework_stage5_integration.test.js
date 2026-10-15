@@ -45,7 +45,7 @@ function fakeData(overrides = {}) {
 
 function buildHarness(overrides = {}) {
   const config = fakeData(overrides);
-  const calls = { tables: [], rpc: [], ai: [] };
+  const calls = { tables: [], rpc: [], ai: [], logs: [] };
   const record = { attempt: null, feedback: [] };
   let handler;
   const activity = config.writing ? 'writing' : 'reading';
@@ -92,6 +92,10 @@ function buildHarness(overrides = {}) {
 
   async function rpc(name, args) {
     calls.rpc.push({ name, args });
+    if (name === config.rpcError) return {
+      data: null,
+      error: { message: 'private-student-mail@example.test student submitted text' },
+    };
     if (name === 'homework_submit') {
       if (record.attempt) return { data: { attempt_id: ATTEMPT, activity_type: activity,
         status: record.attempt.status, score: record.attempt.score, reused: true }, error: null };
@@ -101,8 +105,11 @@ function buildHarness(overrides = {}) {
         status: 'submitted', score: null, reused: false }, error: null };
     }
     if (name === 'consume_api_rate_limit') return { data: config.rateLimit !== false, error: null };
-    if (name === 'homework_claim_writing') return { data: { status: 'claimed', token: TOKEN,
-      prompt: 'Write about your day', text: 'I go to school and I study English.' }, error: null };
+    if (name === 'homework_claim_writing') return {
+      data: { status: config.claimStatus || 'claimed', token: TOKEN,
+        prompt: 'Write about your day', text: 'I go to school and I study English.' },
+      error: null,
+    };
     if (name === 'homework_complete_writing') {
       record.attempt.status = 'evaluated';
       record.attempt.score = args.p_score;
@@ -130,7 +137,7 @@ function buildHarness(overrides = {}) {
     Deno: { env: { get: key => env[key] }, serve: callback => { handler = callback; } },
     createClient: (_url, key) => key === 'public' ? user : admin,
     AbortController, Response, setTimeout, clearTimeout,
-    console: { error() {} },
+    console: { error(...values) { calls.logs.push(values.map(String).join(' ')); } },
     fetch: async (url, options) => {
       calls.ai.push({ url, options });
       return new Response(JSON.stringify({ status: 'completed', output: [{
@@ -373,4 +380,56 @@ test('Writing never persists more than twelve explanations including three rubri
   assert.equal(response.body.status, 'submitted');
   assert.equal(response.body.score, null);
   assert.equal(h.record.feedback.length, 0);
+});
+
+
+test('Writing processing lease does not consume quota or generate duplicate provider calls', async () => {
+  const h = buildHarness({ released: true, claimStatus: 'processing' });
+  const result = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.status, 'evaluating');
+  assert.equal(h.calls.rpc.filter(call => call.name === 'homework_claim_writing').length, 1);
+  assert.equal(h.calls.rpc.filter(call => call.name === 'consume_api_rate_limit').length, 0);
+  assert.equal(h.calls.ai.length, 0);
+
+  const complete = buildHarness({ released: true, claimStatus: 'evaluated' });
+  const response = await complete.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(response.body.status, 'evaluated');
+  assert.equal(complete.calls.rpc.filter(call =>
+    call.name === 'consume_api_rate_limit').length, 0);
+  assert.equal(complete.calls.ai.length, 0);
+});
+
+test('Writing quota exceeded releases lease and preserves the stored submission', async () => {
+  const h = buildHarness({ released: true, rateLimit: false });
+  const result = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(result.status, 429);
+  assert.match(result.body.error, /Limite de correções atingido/);
+  assert.equal(h.record.attempt.status, 'submitted');
+  assert.equal(h.record.attempt.score, null);
+  assert.equal(h.calls.rpc.filter(call => call.name === 'homework_claim_writing').length, 1);
+  assert.equal(h.calls.rpc.filter(call => call.name === 'consume_api_rate_limit').length, 1);
+  assert.equal(h.calls.rpc.filter(call =>
+    call.name === 'homework_release_writing_lease').length, 1);
+  assert.equal(h.calls.ai.length, 0);
+});
+
+test('Edge logs never expose raw backend error messages or submitted writing', async () => {
+  const h = buildHarness({ released: true, rpcError: 'homework_submit' });
+  const response = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.equal(response.status, 500);
+  assert.equal(response.body.error, 'Não foi possível acessar Tarefas para Casa.');
+  assert.ok(h.calls.logs.some(value => value.includes('homework backend submit')));
+  assert.doesNotMatch(h.calls.logs.join(' '), /private-student-mail|student submitted text/i);
+  assert.doesNotMatch(h.calls.logs.join(' '), /I go to school and I study English/);
+
+  const failing = buildHarness({ released: true, aiStatus: 503 });
+  await failing.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  assert.ok(failing.calls.logs.some(value => value.includes('provider_or_storage')));
+  assert.doesNotMatch(failing.calls.logs.join(' '), /I go to school and I study English/);
 });
