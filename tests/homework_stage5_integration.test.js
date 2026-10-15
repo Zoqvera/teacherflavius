@@ -153,7 +153,7 @@ function buildHarness(overrides = {}) {
     });
     return { status: response.status, body: await response.json().catch(() => null) };
   }
-  return { request, calls, record };
+  return { request, calls, record, setAiStatus: status => { config.aiStatus = status; } };
 }
 
 test('student Edge rejects invalid origins, sessions and methods before accessing homework', async () => {
@@ -231,5 +231,64 @@ test('when AI credentials are not configured, Writing stays submitted', async ()
   assert.equal(response.status, 200);
   assert.equal(response.body.correction, 'unconfigured');
   assert.equal(response.body.score, null);
+  assert.equal(h.calls.ai.length, 0);
+});
+
+test('Writing correction resumes after a reload without resending text or submitting again', async () => {
+  const h = buildHarness({ released: true, aiStatus: 503 });
+  const first = await h.request({
+    action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' },
+  });
+  assert.equal(first.body.status, 'submitted');
+  assert.equal(first.body.correction, 'retry');
+  assert.equal(h.record.attempt.score, null);
+
+  h.setAiStatus(200);
+  const resumed = await h.request({ action: 'retry_correction', assignment_id: ASSIGNMENT });
+  assert.equal(resumed.status, 200);
+  assert.equal(resumed.body.status, 'evaluated');
+  assert.equal(resumed.body.score, 8);
+  assert.equal(resumed.body.feedback[0].source, 'ai');
+  assert.equal(h.calls.rpc.filter(x => x.name === 'homework_submit').length, 1);
+  assert.equal(h.calls.rpc.filter(x => x.name === 'homework_claim_writing').length, 2);
+  assert.equal(h.calls.ai.length, 2);
+
+  const repeated = await h.request({ action: 'retry_correction', assignment_id: ASSIGNMENT });
+  assert.equal(repeated.status, 200);
+  assert.equal(repeated.body.status, 'evaluated');
+  assert.equal(h.calls.ai.length, 2, 'a corrected text cannot be charged again');
+});
+
+test('Writing recovery validates access and rejects nonexistent or non-Writing attempts', async () => {
+  const locked = buildHarness();
+  assert.equal((await locked.request({ action: 'retry_correction',
+    assignment_id: ASSIGNMENT })).status, 403);
+  assert.equal(locked.calls.ai.length, 0);
+
+  const unauthorized = buildHarness({ released: true, assignedTo: OTHER_STUDENT });
+  assert.equal((await unauthorized.request({ action: 'retry_correction',
+    assignment_id: ASSIGNMENT })).status, 404);
+
+  const notWriting = buildHarness({ released: true, writing: false });
+  assert.equal((await notWriting.request({ action: 'retry_correction',
+    assignment_id: ASSIGNMENT })).status, 422);
+
+  const empty = buildHarness({ released: true });
+  assert.equal((await empty.request({ action: 'retry_correction',
+    assignment_id: ASSIGNMENT })).status, 404);
+  assert.equal((await empty.request({ action: 'retry_correction',
+    assignment_id: 'invalid-uuid' })).status, 400);
+  assert.equal(empty.calls.ai.length, 0);
+});
+
+test('Writing retry respects missing API credentials without inventing a score', async () => {
+  const h = buildHarness({ released: true, aiEnabled: false });
+  await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'I go to school and I study English.' } });
+  const response = await h.request({ action: 'retry_correction', assignment_id: ASSIGNMENT });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.correction, 'unconfigured');
+  assert.equal(response.body.status, 'submitted');
   assert.equal(h.calls.ai.length, 0);
 });

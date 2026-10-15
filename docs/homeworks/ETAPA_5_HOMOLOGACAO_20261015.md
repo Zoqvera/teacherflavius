@@ -76,3 +76,13 @@ A migração foi aplicada ao Supabase com a versão registrada pelo servidor `20
 Após a implantação, a RPC `homework_submit` contém pontuação 10/0 e não contém pendência de avaliação manual. As funções `homework_review_queue` e `homework_review_answer` não existem mais. `anon` e `authenticated` não possuem EXECUTE na RPC de envio; o servidor continua usando `service_role`. O bloqueio `homework_release_control.enabled=false` foi confirmado com zero atividades e tentativas.
 
 Permanece pendente o teste com contas fictícias e atribuições em ambiente isolado; esta alteração substitui o mecanismo de pontuação, mas **não conclui** a homologação integrada da ETAPA 5 nem libera alunos.
+
+## Incremento de homologação — recuperação de Writing após interrupção
+
+Para cumprir o requisito de correção imediata com tolerância a falhas, a Edge Function passa a admitir `retry_correction`. A operação valida novamente o JWT, perfil matriculado ativo, bloqueio global, propriedade da atribuição e tipo Writing. A consulta de `exercise_attempts` restringe `assignment_id` e `student_id`. Somente tentativas já enviadas podem solicitar nova correção. O texto não é reenviado pelo navegador: o RPC existente `homework_claim_writing` lê a produção original salva no banco e utiliza lease de avaliação para evitar duplicação.
+
+O retorno `evaluated` é idempotente e recupera o feedback armazenado, sem nova chamada à IA. Se o provedor falhar ou a chave estiver ausente, o serviço não inventa pontuação. Testes com API/Supabase simulados exercitam bloqueio global, acesso cruzado entre alunos, atribuição inexistente, Reading impedido de solicitar correção IA, idempotência e falha/recuperação. A interface inclui `Tentar corrigir novamente` apenas para Writing com estado `submitted`, inclusive depois de recarregar a atividade.
+
+As notas já devolvidas pelo backend no momento do envio permanecem visíveis mesmo quando a consulta de progresso falha logo em seguida. Reading e Grammar continuam recebendo somente correção automática por gabarito, sem revisão humana.
+
+**Limitações do aceite:** os testes automatizados não comprovam conectividade real com o provedor OpenAI nem uso de credencial válida. Permanecem pendentes os testes isolados de banco/Edge com alunos fictícios e a validação pedagógica de Writing com chamadas reais. A chave `homework_release_control.enabled=false` segue inalterada. Não foram criadas novas rotas nem alterados sitemap, robots, canonicals ou indexação.

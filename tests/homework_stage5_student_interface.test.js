@@ -50,8 +50,9 @@ function harness(type = "writing") {
   const assignment = "00000000-0000-4000-8000-000000000001";
   const mount = new FakeNode("main");
   const notice = new FakeNode("status");
-  const calls = { submissions: [], made: 0, renderedFeedback: 0, details: 0 };
+  const calls = { submissions: [], made: 0, renderedFeedback: 0, details: 0, retries: 0 };
   let nextSubmitError = false;
+  let nextProgressError = false;
   let progress = { status: "not_started", score: null, feedback: [] };
   const content = type === "writing" ? { prompt: "Describe your day.", guidelines: ["Use English."] }
     : type === "reading" ? { passage: "I read in the morning.", instructions: ["Answer."] }
@@ -72,7 +73,26 @@ function harness(type = "writing") {
       activity_type: type, score: progress.score, status: progress.status,
     }] }),
     detail: async (_auth, id) => { assert.equal(id, assignment); calls.details++; return detail; },
-    progress: async (_auth, id) => { assert.equal(id, assignment); return progress; },
+    progress: async (_auth, id) => {
+      assert.equal(id, assignment);
+      if (nextProgressError) {
+        nextProgressError = false;
+        throw new Error("Progress temporarily unavailable");
+      }
+      return progress;
+    },
+    retryCorrection: async (_auth, id) => {
+      assert.equal(id, assignment);
+      calls.retries++;
+      progress = { status: "evaluated", score: 9, feedback: [{
+        source: "ai", score: 9,
+        original_text: "I study English in the morning.",
+        corrected_text: "I studied English in the morning.",
+        general_comment: "Adequate text and communication.",
+        explanations: ["Use the simple past for yesterday."]
+      }] };
+      return progress;
+    },
     makeSubmission: (id, answers) => {
       assert.equal(id, assignment);
       calls.made++;
@@ -102,6 +122,7 @@ function harness(type = "writing") {
   return {
     mount, notice, controller, calls, get progress() { return progress; },
     setSubmitError: () => { nextSubmitError = true; },
+    setProgressError: () => { nextProgressError = true; },
     setProgress: value => { progress = value; },
     buildAnswers: window.HomeworkStudentInterface.buildAnswers,
   };
@@ -197,4 +218,43 @@ test("submission validation refuses missing answers or too-short Writing", () =>
     /20 e 3.000/);
   assert.throws(() => h.buildAnswers("reading",
     [{ id: "q1", read: () => " " }], null), /todas as perguntas/);
+});
+
+test("Writing saved before page reload can be corrected by the persisted server attempt", async () => {
+  const h = harness();
+  h.setProgress({ status: "submitted", score: null, feedback: [] });
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  assert.match(displayText(h.mount), /Tentar corrigir novamente/);
+  assert.equal(descendants(h.mount, "form").length, 0);
+  const retry = descendants(h.mount, "button")
+    .find(button => button.textContent === "Tentar corrigir novamente");
+  assert.ok(retry);
+  retry.dispatch("click");
+  await flush();
+  assert.equal(h.calls.retries, 1);
+  assert.equal(h.calls.made, 0, "no duplicate student submission is constructed");
+  assert.equal(h.calls.renderedFeedback, 1);
+  assert.match(displayText(h.mount), /Nota: 9\/10/);
+});
+
+test("successful submission shows official feedback even if the next progress fetch fails", async () => {
+  const h = harness();
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  const text = descendants(h.mount, "textarea")[0];
+  text.value = "I study English every morning and I like it.";
+  h.setProgressError();
+  descendants(h.mount, "form")[0].dispatch("submit");
+  await flush();
+  assert.equal(h.calls.submissions.length, 1);
+  assert.equal(h.calls.renderedFeedback, 1);
+  assert.match(displayText(h.mount), /Nota: 8\/10/);
+  assert.doesNotMatch(h.notice.textContent, /Envio não confirmado/);
+});
+
+test("Reading/Grammar pending states never instruct manual teacher review", async () => {
+  const h = harness("reading");
+  h.setProgress({ status: "submitted", score: null, feedback: [] });
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  assert.match(displayText(h.mount), /nota automática está sendo confirmada/);
+  assert.doesNotMatch(displayText(h.mount), /revisão do professor/i);
 });
