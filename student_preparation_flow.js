@@ -5,9 +5,10 @@
     "stage6-student-preparation-preview-teacherflavius.handinhandengl.workers.dev";
   const PRODUCTION_HOSTNAMES = Object.freeze(["teacherflavius.com", "www.teacherflavius.com"]);
 
-  // Stage 7: requires a separate approval to arm the production pilot.
-  // The database master switch and per-student grants must also be enabled.
-  const PRODUCTION_PILOT_ARMED = false;
+  // Stage 9.3: production may query eligibility, but no one is enabled unless
+  // both the database master switch and the student's own grant are enabled.
+  // The database master switch is the immediate operational kill switch.
+  const PRODUCTION_PILOT_ARMED = true;
   const hostname = String(window.location && window.location.hostname || "").toLowerCase();
   const isPreview = hostname === PREVIEW_HOSTNAME;
   let enabled = isPreview;

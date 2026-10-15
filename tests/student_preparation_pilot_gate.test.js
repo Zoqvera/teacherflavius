@@ -16,7 +16,7 @@ const PREVIEW_HOST = "stage6-student-preparation-preview-teacherflavius.handinha
 
 function createScenario({
   hostname = "teacherflavius.com",
-  armed = false,
+  armed = true,
   globalEnabled = false,
   memberEnabled = false,
   memberUserId = "student-1",
@@ -63,15 +63,27 @@ function createScenario({
     gtag(...args) { events.push(args); }
   };
   const source = armed
-    ? script.replace("const PRODUCTION_PILOT_ARMED = false;", "const PRODUCTION_PILOT_ARMED = true;")
-    : script;
+    ? script
+    : script.replace("const PRODUCTION_PILOT_ARMED = true;", "const PRODUCTION_PILOT_ARMED = false;");
   vm.runInNewContext(source, { window, console: { error() {} } });
   return { client, window, reads, events };
 }
 
-test("the committed production kill switch remains disabled", async () => {
-  assert.match(script, /const PRODUCTION_PILOT_ARMED = false;/);
-  const context = createScenario({ globalEnabled: true, memberEnabled: true });
+test("production eligibility lookup requires explicit live master permission", async () => {
+  assert.match(script, /const PRODUCTION_PILOT_ARMED = true;/);
+  const context = createScenario({ memberEnabled: true });
+  assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"), false);
+  assert.equal(context.window.StudentPreparationFlow.enabled, false);
+  assert.equal(context.reads.length, 1);
+  assert.equal(context.reads[0].table, "student_preparation_pilot_settings");
+});
+
+test("source-level emergency rollback bypasses data access", async () => {
+  const context = createScenario({
+    armed: false,
+    globalEnabled: true,
+    memberEnabled: true
+  });
   assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"), false);
   assert.equal(context.window.StudentPreparationFlow.enabled, false);
   assert.equal(context.reads.length, 0);
