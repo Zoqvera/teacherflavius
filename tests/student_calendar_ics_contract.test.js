@@ -85,7 +85,8 @@ test("email confirmations attach ICS for both recipients but not cancellations",
   assert.match(notifier, /attachments: \[makeIcsAttachment\(/);
   assert.match(notifier, /\.\.\.\(!isCancellation \? \{/);
   assert.match(notifier, /isTeacherNotice \? "teacher" : "student"/);
-  assert.match(notifier, /new Date\(\)\.toISOString\(\)/);
+  assert.match(notifier, /DTSTAMP:\$\{formatCalendarInstant\(createdAt\)\}/);
+  assert.match(notifier, /notification\.created_at,/);
   assert.match(notifier, /METHOD:PUBLISH/);
   assert.match(notifier, /UID:\$\{uid\}/);
   assert.match(notifier, /reposicao-\$\{studentId\}-\$\{classNumber\}-\$\{formatCalendarInstant\(startsAt\)\}@teacherflavius\.com/);
