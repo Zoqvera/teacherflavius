@@ -197,3 +197,28 @@ No modo `live_writing=true`, o ensaio realiza uma única submissão Writing atra
 A execução **não** será automática; requer selecionar `Run workflow` em `Validate Supabase baseline restore`, branch `main`, `live_writing=true`. Isso provoca exatamente uma solicitação faturável à OpenAI em caso de sucesso. A aprovação desses testes ainda precisa ser observada em uma execução manual antes de atestar o E2E real. O sucesso isolado não substitui a revisão pedagógica humana e de privacidade, tampouco a verificação visual Android/desktop.
 
 Nenhuma página, indexação, `robots`, sitemap ou SEO será alterado. O portal atual e o bloqueio global dos estudantes permanecem.
+
+## Aceite técnico integrado de Writing — execução real no CI, 15/10/2026
+
+**Resultado: APROVADO, sem liberação de alunos.** O professor acionou manualmente o workflow [Validate Supabase baseline restore — execução #38744294482](https://github.com/Zoqvera/teacherflavius/actions/runs/38744294482) com `live_writing=true`, branch `main`, commit `1ee1778533f5f8e6d4c0a793613c0669bc2c4140`. O job `restore-test` concluiu com sucesso, incluindo `Exercise Homeworks through actual local Supabase Auth and Edge HTTP`. O log confirma explicitamente `HOMEWORKS_LIVE_WRITING: true` e o resultado `Live Writing stored/recovered with canonical 40/30/30 score; idempotency and block restoration`.
+
+A evidência deste teste usa **JWTs reais do Supabase Auth local**, submissão HTTP à função `homework-student` real, a API Responses real do `gpt-6-luna` e armazenamento/consulta das RPCs reais em PostgreSQL descartável. Valida:
+- texto Writing fictício persistido e retorno `evaluated` com `exercise_feedback.source='ai'`;
+- texto original preservado, correção textual não vazia, comentário e explicações presentes, subnotas extraídas das explicações e nota final armazenada igual ao cálculo independente 40/30/30;
+- exatamente um feedback do modelo `gpt-6-luna` persistido, com contador de limite de uma avaliação (buckets horário e diário);
+- `retry_correction` idempotente após avaliação concluída, recuperando o resultado anterior, sem requisitar segunda correção;
+- status de progresso, Reading/Grammar corrigidos por gabarito, JWT, isolamento entre alunos, origem permitida, gabaritos ocultos e desligamento da chave global ao final;
+- encerramento e remoção da pilha Supabase local no workflow.
+
+A aprovação do E2E permite encerrar o **critério técnico de integração de Writing**, mas **não** comprova que a Edge Function produtiva possua um segredo OpenAI utilizável, uma vez que o teste usa o segredo do GitHub Actions e banco local. A produção não foi invocada para gerar correções e não recebeu dados fictícios.
+
+Após a execução, uma consulta somente leitura confirmou `homework_release_control.enabled=false`, zero atividades, atribuições, tentativas e feedbacks, com a Edge Function ativa (versão 5) e `verify_jwt=true`. Não existem branches Supabase pagas abertas.
+
+### Aceites remanescentes da ETAPA 5
+
+- **Pedagógico:** analisar exemplos de feedback e pontuação de Writing para A1/A2, verificando fidelidade sem introdução de conteúdo inventado, clareza, proporcionalidade da nota e coerência dos três critérios. A execução automática não substitui o aceite do professor.
+- **Privacidade e custos:** aprovar as informações sobre envio de textos dos alunos ao provedor, tratamento/retensão de dados, limites de requisições e eventual cobrança por correção; `store=false` não representa garantia de retenção zero.
+- **Interface:** validar em Android e desktop as páginas Reading/Writing/Grammar, os estados antes/depois do envio, a apresentação do feedback, a recuperação após recarregar e os recursos de acessibilidade.
+- **Configuração de produção:** confirmar a presença/validade do segredo `OPENAI_API_KEY` na Edge Function de produção por meio de procedimento que não abra o recurso nem envie dados reais; o E2E local usa o segredo GitHub Actions e não verifica o do Supabase.
+
+A liberação dos alunos, a substituição do portal antigo e a transição à **ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica** continuam condicionadas à autorização expressa do professor. Não houve mudança de SEO.
