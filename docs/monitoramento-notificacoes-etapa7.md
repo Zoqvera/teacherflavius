@@ -198,3 +198,24 @@ os resultados antes de declarar a Etapa 7.2 concluída.
 `public.run_system_health_check_internal(boolean)` preservada no histórico
 versionado e verificar a saúde do monitor; executar a reversão apenas por
 migração de correção testada e revisada. Não alterar filas ou cron de envio.
+
+## Etapa 7.3 — Auditoria de entregabilidade Resend
+
+O relatório de observações e o procedimento de reconciliação estão em
+[notificacoes-etapa7-3-auditoria-entregabilidade-resend.md](notificacoes-etapa7-3-auditoria-entregabilidade-resend.md).
+
+Em nova leitura de produção em 15/10/2026, o total da fila de matrícula era
+**120** (`sent`), reposições **86** (73 confirmações e 13 cancelamentos),
+e cancelamentos regulares **0**. Todos sem `pending`, `failed`,
+reenvios ou ausência de `sent_at`. A antiga medição pontual de 119
+permanece documentada acima e **não permite concluir exclusão**; a
+comparação de snapshots e causas pertence à Etapa 7.4.
+
+A auditoria interna está concluída, mas **o Resend ainda não foi consultado
+com acesso autorizado nesta sessão**. As Edge Functions não persistem os IDs
+de mensagens retornados pelo provedor, impedindo prova de entrega automática
+por registro. Nenhum webhook novo, segredo ou migração foi aplicado nesta
+etapa. A Etapa 7.3 permanecerá aberta até a verificação externa ou até
+uma ressalva formal de cobertura insuficiente.
+
+**SEO:** documentação interna apenas; sem mudança de indexação.
