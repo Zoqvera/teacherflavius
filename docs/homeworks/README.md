@@ -173,3 +173,72 @@ lançamento para alunos deve permanecer desativado até aprovação explícita.
 
 **SEO:** nenhuma alteração em sitemap, robots.txt, canonicals, páginas comerciais
 ou indexação pública. A rota privada continua noindex, nofollow, noarchive.
+
+## ETAPA 4 — Submissão segura, progresso e correção por IA (código não liberado)
+
+**Status de lançamento:** BLOQUEADO. O novo `homework_release_control.enabled` é
+criado explicitamente como `false`; não há rotina exposta para ativá-lo.
+A etapa não adiciona nenhuma rota estudantil, botão no portal, atribuição
+ativa nem funcionalidade no Portal de Exercícios existente.
+O proprietário deve autorizar expressamente uma etapa de ativação posterior.
+
+**Pipeline no servidor:**
+
+1. A Edge Function `homework-student` recebe POST autenticado e chama
+   `auth.getUser(token)` para validar a sessão. O estudante é identificado
+   exclusivamente pelo usuário autenticado, com perfil matriculado e não arquivado.
+2. Antes de qualquer leitura, o backend verifica a trava global. O estudante
+   vê apenas atribuições `assigned` que pertençam a ele; os gabaritos não são
+   incluídos nas consultas de leitura pedagógica.
+3. O RPC `homework_submit` valida atribuição, identidade, versão aprovada,
+   quantidade e autoria de cada resposta, tamanho e chave UUID de idempotência,
+   gravando tentativa e respostas em **uma transação**.
+4. Cada atribuição admite uma entrega oficial; repetição da mesma chave devolve
+   o resultado existente, e uma chave diferente é rejeitada. Isso evita cliques
+   duplicados e envios concorrentes.
+5. Reading e Grammar usam o gabarito **no servidor**. Respostas curtas que
+   divergem da correspondência literal ficam pendentes de revisão: não são
+   automaticamente marcadas como incorretas. Apenas tentativas inteiramente
+   determinísticas recebem nota final automática de 0 a 10.
+6. Writing armazena primeiro o texto original e faz correção na Edge Function
+   autenticada. Usa chave `OPENAI_API_KEY` exclusivamente no servidor, modelo
+   `gpt-4.1-mini`, `store:false`, saída JSON estruturada e rubrica:
+   cumprimento do enunciado (40%), precisão linguística (30%) e
+   clareza/vocabulário (30%). A nota é 0–10; há avaliação geral, original,
+   corrigido e explicações em português.
+7. A avaliação usa *lease* atômica para minimizar correções duplicadas,
+   limite de 5 solicitações/hora e 15/dia por estudante, e devolução da
+   tentativa ao estado `submitted` em caso de falha. O botão Enviar poderá
+   recuperar o resultado por `progress`, inclusive após desconexão.
+8. Apenas o professor com MFA AAL2 consegue criar atribuições com status `held`.
+   Nesta etapa elas nunca são promovidas automaticamente para `assigned`.
+
+**Privacidade:** enviamos ao provedor de IA somente enunciado e texto da
+atividade, sem nome, telefone, e-mail nem identificador do estudante. Textos
+inseridos pelos próprios estudantes podem conter dados pessoais; incluir aviso
+de tratamento e base legal na interface de liberação. `store:false` desativa
+o armazenamento do conteúdo como estado de conversa da API, mas não representa
+promessa de retenção zero em todos os sistemas do provedor.
+
+**Publicação técnica:** a migração SQL precisa ser aplicada pelo fluxo de
+migrações do projeto após CI/merge. Fazer `supabase functions deploy homework-student`
+ou a implantação correspondente com verificação de JWT obrigatória. Configurar
+`OPENAI_API_KEY` apenas no painel seguro de secrets, com orçamento e
+monitoramento definidos; até isso acontecer, Writing fica salvo com correção
+pendente, sem atribuir nota fictícia. O adaptador
+`homework_student_service.js` ainda não é carregado em página pública.
+
+**Teste e ativação:** validar acesso cruzado negado (aluno A/B), ausência de
+gabaritos na API, usuário deslogado, estudante arquivado, versões/atribuições
+`held`, idempotência e simultaneidade, leitura do próprio progresso,
+correção por IA bem-sucedida, falha/timeout, custos, acessibilidade e
+dispositivo móvel. **Não alterar `enabled=false` antes de autorização
+expressa e de uma etapa separada de lançamento.**
+
+**Numeração:** o contador `exercises_exercise_number_seq` havia avançado
+em testes de transação revertida, sem atividades persistidas. A migração
+restaura o início em 1 somente quando o catálogo estiver vazio.
+
+**SEO:** nenhum arquivo público de marketing, sitemap, robots.txt, canonical
+ou caminho do aluno muda. A rota de desenvolvimento continua
+`noindex, nofollow, noarchive`.
