@@ -193,6 +193,7 @@ async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
       },
       body: JSON.stringify({
         from: fromEmail,
+        reply_to: "contato@teacherflavius.com",
         to: [notificationEmail],
         subject: "Alerta: pagamento via Mercado Pago indisponível",
         text: [

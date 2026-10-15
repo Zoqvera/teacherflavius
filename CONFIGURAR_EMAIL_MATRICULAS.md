@@ -14,6 +14,7 @@ O aviso administrativo inclui nome, WhatsApp, quantidade de aulas, valor mensal 
 2. Em **Domains**, adicione e verifique o domínio usado pelo site.
 3. Crie uma API Key.
 4. O remetente de matrícula é `Matrículas <matriculas@teacherflavius.com>` e fica definido na Edge Function.
+5. As respostas são direcionadas por `Reply-To: contato@teacherflavius.com`, caixa postal gerenciada no Google Workspace. O recebimento no Resend permanece desativado.
 
 Não coloque a API Key no `auth.js`, no `supabase_config.js` nem em outro arquivo público do site.
 

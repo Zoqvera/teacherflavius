@@ -184,7 +184,7 @@ Deno.serve(async (request: Request) => {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from: fromEmail, to: [notificationEmail], subject, text: textBody, html: htmlBody }),
+      body: JSON.stringify({ from: fromEmail, reply_to: "contato@teacherflavius.com", to: [notificationEmail], subject, text: textBody, html: htmlBody }),
     });
 
     if (!response.ok) {
