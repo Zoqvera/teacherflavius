@@ -110,17 +110,20 @@ function makeGoogleCalendarUrl(
   startsAt: string,
   endsAt: string,
   meetingUrl: string | null,
+  audience: "student" | "teacher" = "teacher",
 ): string {
   const url = new URL("https://calendar.google.com/calendar/r/eventedit");
   url.searchParams.set("action", "TEMPLATE");
   url.searchParams.set("dates", `${formatCalendarInstant(startsAt)}/${formatCalendarInstant(endsAt)}`);
   url.searchParams.set("stz", MAKEUP_TIME_ZONE);
   url.searchParams.set("etz", MAKEUP_TIME_ZONE);
-  url.searchParams.set("text", `Reposição de aula — ${studentName} (${className})`);
+  url.searchParams.set("text", audience === "teacher"
+    ? `Reposição de aula — ${studentName} (${className})`
+    : `Reposição de inglês — ${className}`);
   url.searchParams.set("details", [
-    `Aluno: ${studentName}`,
+    ...(audience === "teacher" ? [`Aluno: ${studentName}`] : []),
     `Turma: ${className}`,
-    "Agendamento de reposição pelo TeacherFlavius.",
+    "Reposição agendada pelo TeacherFlavius.",
     ...(meetingUrl ? [`Link da aula: ${meetingUrl}`] : []),
   ].join("\n"));
   if (meetingUrl) url.searchParams.set("location", meetingUrl);
@@ -241,9 +244,8 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Schedule slot not found" }, 404);
   }
 
-  const teacherEmail = Deno.env.get("MAKEUP_TEACHER_NOTIFICATION_EMAIL")
-    || Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL")
-    || "contato@teacherflavius.com";
+  // Administrative notifications always go to the approved professor mailbox.
+  const teacherEmail = "flaviofreitas@ufu.br";
   const recipientEmail = safeHeader(
     isTeacherBooking ? teacherEmail : booking.student_email,
     "",
@@ -322,6 +324,7 @@ Deno.serve(async (request: Request) => {
       `Horário: ${schedule}`,
       "",
       "A vaga foi liberada e está novamente disponível.",
+      "Se você salvou a reposição no seu calendário, remova o evento manualmente.",
     ].join("\n");
 
     htmlBody = `
@@ -334,21 +337,31 @@ Deno.serve(async (request: Request) => {
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Data</td><td>${escapeHtml(classDate)}</td></tr>
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Horário</td><td>${escapeHtml(schedule)}</td></tr>
         </table>
-        <p style="color:#667085;font-size:13px">A vaga foi liberada e está novamente disponível.</p>
+        <p style="color:#667085;font-size:13px">A vaga foi liberada e está novamente disponível. Se você salvou esta reposição no seu calendário, remova o evento manualmente.</p>
       </div>
     `;
   } else {
+    const studentCalendarUrl = makeGoogleCalendarUrl(
+      studentName,
+      className,
+      slot.starts_at,
+      slot.ends_at,
+      meetingUrl,
+      "student",
+    );
     subject = `Reposição agendada — ${classDate}, ${startTime}`;
     textBody = [
       `Olá, ${studentName}!`,
       "",
-      "Sua aula de reposição está agendada. Você pode cancelar esse agendamento até 12 (doze) horas antes do horário da aula. Se você não cancelar o agendamento e não comparecer à aula, a aula será considerada como aula dada.",
+      "Sua aula de reposição está agendada. Você pode cancelar esta reposição até o início da aula. Com pelo menos 12 (doze) horas de antecedência, o crédito utilizado será devolvido. Se cancelar depois desse prazo, a vaga será liberada, mas o crédito não será devolvido. Se não cancelar nem comparecer, a aula será considerada realizada.",
       "",
       `Turma: ${className}`,
       `Data: ${classDate}`,
       `Horário: ${schedule}`,
       `Link da aula: ${meetingUrl}`,
+      `Adicionar ao Google Agenda: ${studentCalendarUrl}`,
       "",
+      "O compromisso será incluído na agenda somente após você confirmar o salvamento.",
       "Guarde esta mensagem para acessar a aula no horário marcado.",
     ].join("\n");
 
@@ -356,7 +369,7 @@ Deno.serve(async (request: Request) => {
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033;max-width:620px;margin:0 auto">
         <h1 style="font-size:22px;margin-bottom:18px">Reposição de aula confirmada</h1>
         <p>Olá, <strong>${escapeHtml(studentName)}</strong>!</p>
-        <p>Sua aula de reposição está agendada. Você pode cancelar esse agendamento até 12 (doze) horas antes do horário da aula. Se você não cancelar o agendamento e não comparecer à aula, a aula será considerada como aula dada.</p>
+        <p>Sua aula de reposição está agendada. Você pode cancelar esta reposição até o início da aula. Com pelo menos 12 (doze) horas de antecedência, o crédito utilizado será devolvido. Se cancelar depois desse prazo, a vaga será liberada, mas o crédito não será devolvido. Se não cancelar nem comparecer, a aula será considerada realizada.</p>
         <table style="border-collapse:collapse;width:100%;margin:18px 0">
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Turma</td><td>${escapeHtml(className)}</td></tr>
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Data</td><td>${escapeHtml(classDate)}</td></tr>
@@ -365,7 +378,10 @@ Deno.serve(async (request: Request) => {
         <p style="margin:24px 0">
           <a href="${escapeHtml(meetingUrl)}" style="display:inline-block;background:#6366f1;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold">Entrar na aula</a>
         </p>
-        <p style="color:#667085;font-size:13px">Este é o mesmo link de videoaula cadastrado pelo professor para sua turma.</p>
+        <p style="margin:20px 0">
+          <a href="${escapeHtml(studentCalendarUrl)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold">Adicionar ao Google Agenda</a>
+        </p>
+        <p style="color:#667085;font-size:13px">Revise e salve o compromisso no Google Agenda. O link de videoaula é o mesmo cadastrado pelo professor.</p>
       </div>
     `;
   }
