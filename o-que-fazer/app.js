@@ -23,8 +23,10 @@
   function showWelcome() {
     const welcome = document.getElementById("studentPreparationWelcome");
     const legacy = document.getElementById("legacyActionPlan");
+    const description = document.getElementById("legacyActionPlanDescription");
     if (welcome) welcome.hidden = false;
     if (legacy) legacy.hidden = true;
+    if (description) description.hidden = true;
   }
 
   async function loadWelcome() {
