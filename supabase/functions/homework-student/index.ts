@@ -182,16 +182,46 @@ async function detail(admin: ReturnType<typeof createClient>, userId: string, id
   };
 }
 
+// Mirrors the worst-case single-call reservation in the SQL budget module.
+// This is only a display hint: the atomic reserve RPC remains authoritative.
+const MIN_WRITING_BUDGET_MICRO_USD = 4700;
+
+function brazilianBudgetMonth(now: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit",
+  }).formatToParts(now);
+  const year = parts.find(part => part.type === "year")?.value;
+  const month = parts.find(part => part.type === "month")?.value;
+  if (!year || !month) throw new Error("Não foi possível determinar o mês de orçamento.");
+  return `${year}-${month}-01`;
+}
+
+async function isWritingBudgetPaused(admin: ReturnType<typeof createClient>) {
+  const currentMonth = brazilianBudgetMonth(new Date());
+  const row = unwrap(await admin.from("homework_ai_budget_months")
+    .select("spent_micro_usd,reserved_micro_usd,limit_micro_usd")
+    .eq("month_start", currentMonth).maybeSingle(), "budget-progress");
+  if (!row) return false;
+  const spent = Number(row.spent_micro_usd);
+  const reserved = Number(row.reserved_micro_usd);
+  const limit = Number(row.limit_micro_usd);
+  if (![spent, reserved, limit].every(Number.isFinite)) return false;
+  return limit - spent - reserved < MIN_WRITING_BUDGET_MICRO_USD;
+}
+
 async function progress(admin: ReturnType<typeof createClient>, userId: string, id: string) {
-  await requireAssignment(admin, userId, id);
+  const { exercise } = await requireAssignment(admin, userId, id);
   const attempt = unwrap(await admin.from("exercise_attempts")
     .select("id,status,score,submitted_at,evaluated_at")
     .eq("assignment_id", id).eq("student_id", userId)
     .order("started_at", { ascending: false }).limit(1).maybeSingle(), "progress");
   if (!attempt) return { status: "not_started", score: null, feedback: [] };
   const feedback = await getFeedback(admin, attempt.id);
+  const budgetPaused = exercise.activity_type === "writing" &&
+    attempt.status === "submitted" && await isWritingBudgetPaused(admin);
   return { attempt_id: attempt.id, status: attempt.status, score: attempt.score,
     submitted_at: attempt.submitted_at, evaluated_at: attempt.evaluated_at,
+    ...(budgetPaused ? { correction: "monthly_budget" } : {}),
     feedback };
 }
 
