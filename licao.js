@@ -101,6 +101,10 @@
 
   async function setupPreparation(lessonNumber) {
     const section = document.getElementById("lessonPreparationSection");
+    const nextPartLink = document.getElementById("lessonNextPartLink");
+    const progress = document.getElementById("lessonFlowProgress");
+    if (nextPartLink) nextPartLink.hidden = true;
+    if (progress) progress.hidden = true;
     if (!lessonNumber) {
       section.hidden = true;
       return;
@@ -115,6 +119,10 @@
       }
 
       section.hidden = false;
+      if (window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true) {
+        if (progress) progress.hidden = false;
+        if (nextPartLink) nextPartLink.hidden = false;
+      }
       if (plan.lesson.prepared) {
         disablePreparedButton("PREPARAÇÃO REGISTRADA");
         setPreparationStatus(

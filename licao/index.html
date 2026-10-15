@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
   <link rel="stylesheet" href="/study_lesson_page.css?v=20261007-print-2">
   <link rel="stylesheet" href="/academic_workflow.css?v=20261004-1">
+  <link rel="stylesheet" href="/student_preparation_flow.css?v=20261015-1">
 </head>
 <body class="auth-checking">
   <!-- Google Tag Manager (noscript) -->
@@ -57,6 +58,7 @@
     <div class="divider"></div>
 
     <main id="lessonPageContent" hidden>
+      <p id="lessonFlowProgress" class="student-preparation-progress" hidden>ETAPA 1 DE 2 — APRESENTAÇÃO</p>
       <section class="lesson-page-actions" aria-label="Ações da lição">
         <button id="printLessonButton" class="lesson-print-button" type="button">
           <svg class="lesson-print-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -125,6 +127,7 @@
         <p class="lesson-rich-text">Registre sua preparação. A lição só será considerada concluída quando o professor marcar que ela foi apresentada.</p>
         <button id="lessonPreparedButton" class="academic-button primary" type="button">ESTOU PREPARADO</button>
         <p id="lessonPreparationStatus" class="academic-status" role="status"></p>
+        <a id="lessonNextPartLink" class="academic-button primary student-preparation-next-link" href="/o-que-fazer/segunda-parte/" hidden>PRÓXIMA PARTE</a>
       </section>
     </main>
   </div>
@@ -132,7 +135,8 @@
   <script src="/resource_waiter.js?v=20260902-2"></script>
   <script src="/study_lesson_service.js?v=20261004-full-content-1"></script>
   <script src="/academic_workflow_service.js?v=20261004-1"></script>
-  <script src="/licao.js?v=20261007-print-1"></script>
+  <script src="/student_preparation_flow.js?v=20261015-1"></script>
+  <script src="/licao.js?v=20261007-print-1&flow=20261015"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>

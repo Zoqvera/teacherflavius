@@ -4,6 +4,59 @@
   const WAIT_OPTIONS = Object.freeze({ maxAttempts: 30, delayMs: 120 });
   let service = null;
 
+  function isSecondPartPage() {
+    return String(window.location.pathname || "").replace(/\/+$/, "") ===
+      "/o-que-fazer/segunda-parte";
+  }
+
+  function isNewFlowEnabled() {
+    return !!(window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true);
+  }
+
+  function updateQuestionCount(elementId, count) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.textContent = String(count);
+    element.setAttribute("aria-label", count + " perguntas");
+  }
+
+  function showWelcome() {
+    const welcome = document.getElementById("studentPreparationWelcome");
+    const legacy = document.getElementById("legacyActionPlan");
+    if (welcome) welcome.hidden = false;
+    if (legacy) legacy.hidden = true;
+  }
+
+  async function loadWelcome() {
+    try {
+      const plan = await service.getMyActionPlan();
+      const lesson = plan && plan.lesson;
+      const button = document.getElementById("startPreparationButton");
+      const fallback = document.getElementById("startConversationFallback");
+      const lessonUrl = lesson && lesson.has_material
+        ? window.AcademicWorkflowService.lessonUrl(lesson.number)
+        : "";
+
+      button.disabled = !lessonUrl;
+      if (lessonUrl) {
+        fallback.hidden = true;
+        button.onclick = function () { window.location.href = lessonUrl; };
+        setStatus("welcomePreparationStatus", "Sua próxima lição está disponível.");
+      } else {
+        fallback.hidden = false;
+        const message = lesson
+          ? "O material da próxima lição ainda não foi publicado. Você pode preparar a conversação."
+          : "Não há uma próxima lição disponível. Você pode preparar a conversação.";
+        setStatus("welcomePreparationStatus", message);
+      }
+      setStatus("actionPlanStatus", "", "");
+    } catch (error) {
+      console.error("Falha ao carregar a próxima lição:", error);
+      setStatus("welcomePreparationStatus", "Não foi possível consultar sua próxima lição.", "error");
+      setStatus("actionPlanStatus", "Não foi possível carregar seu plano de preparação.", "error");
+    }
+  }
+
   function resourcesReady() {
     return !!(
       window.Auth &&
@@ -24,7 +77,8 @@
   }
 
   function redirectToLogin() {
-    window.location.href = "/login/?next=" + encodeURIComponent("/o-que-fazer/");
+    const nextPath = isSecondPartPage() ? "/o-que-fazer/segunda-parte/" : "/o-que-fazer/";
+    window.location.href = "/login/?next=" + encodeURIComponent(nextPath);
   }
 
   function lessonStatusLabel(lesson) {
@@ -33,6 +87,7 @@
 
   function renderLesson(plan) {
     const container = document.getElementById("nextLessonContainer");
+    if (!container) return;
     const lesson = plan.lesson;
     container.innerHTML = "";
 
@@ -140,6 +195,7 @@
       });
     }
 
+    updateQuestionCount("reviewQuestionsCount", reviews.length);
     setStatus("reviewQuestionsStatus", "", "");
   }
 
@@ -161,6 +217,8 @@
       return !question.marked_studied;
     });
 
+    updateQuestionCount("questionsCount", questions.length);
+
     if (!questions.length) {
       const item = document.createElement("p");
       item.className = "academic-empty";
@@ -180,7 +238,7 @@
   }
 
   function render(plan) {
-    renderLesson(plan);
+    if (!isSecondPartPage()) renderLesson(plan);
     renderQuestions(plan);
     setStatus("actionPlanStatus", "Plano atualizado.", "success");
   }
@@ -208,6 +266,11 @@
   }
 
   async function initialize() {
+    if (isSecondPartPage() && !isNewFlowEnabled()) {
+      window.location.replace("/o-que-fazer/");
+      return;
+    }
+
     const ready = await window.ResourceWaiter.waitUntil(resourcesReady, WAIT_OPTIONS);
     if (!ready) {
       setStatus("actionPlanStatus", "Não foi possível carregar os recursos da página.", "error");
@@ -224,6 +287,13 @@
     service = window.AcademicWorkflowService.create(window.Auth.getClient());
 
     document.body.classList.remove("auth-checking");
+
+    if (isNewFlowEnabled() && !isSecondPartPage()) {
+      showWelcome();
+      await loadWelcome();
+      return;
+    }
+
     await loadPlan();
   }
 
