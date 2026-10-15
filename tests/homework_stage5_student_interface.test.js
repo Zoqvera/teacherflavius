@@ -23,6 +23,7 @@ class FakeNode {
   replaceChildren(...nodes) { this.children = nodes; }
   addEventListener(type, handler) { this.listeners[type] = handler; }
   setAttribute(name, value) { this.attributes[name] = value; }
+  focus() { this.focused = true; }
   dispatch(type) { return this.listeners[type]?.({ preventDefault() {} }); }
   get childElementCount() { return this.children.length; }
 }
@@ -143,6 +144,7 @@ test("student UI is inert until explicitly mounted and loaded", async () => {
   await h.controller.load();
   assert.match(displayText(h.mount), /Minhas tarefas para casa/);
   assert.match(displayText(h.mount), /Não realizada/);
+  assert.equal(descendants(h.mount, "h2")[0].focused, true);
   assert.equal(h.calls.made, 0);
 });
 
@@ -155,6 +157,7 @@ test("Writing submit displays official feedback immediately, without another-stu
   assert.match(displayText(h.mount), /Não inclua nomes completos/);
   const textarea = descendants(h.mount, "textarea")[0];
   assert.ok(textarea);
+  assert.equal(descendants(h.mount, "h2")[0].focused, true);
   textarea.value = "I study English every morning and I like it.";
   textarea.dispatch("input");
   assert.match(displayText(h.mount), /Caracteres: 44/);
@@ -165,6 +168,9 @@ test("Writing submit displays official feedback immediately, without another-stu
   assert.equal(h.calls.submissions.length, 1);
   assert.equal(h.progress.status, "evaluated");
   assert.equal(h.calls.renderedFeedback, 1);
+  assert.equal(descendants(h.mount, "h2")[0].focused, true);
+  assert.equal(descendants(h.mount, "section")[0].attributes["aria-live"], "polite");
+  assert.equal(descendants(h.mount, "section")[0].attributes.role, "status");
   assert.match(displayText(h.mount), /Nota: 8\/10/);
   assert.doesNotMatch(displayText(h.mount), /estudar agora/i);
 });
@@ -282,5 +288,7 @@ test("Writing monthly budget pause preserves the sent text and shows a clear sta
   assert.equal(h.progress.status, "submitted");
   assert.match(displayText(h.mount), /limite mensal de correções por IA foi atingido/);
   assert.match(displayText(h.mount), /A correção poderá ser retomada no mês seguinte/);
+  assert.doesNotMatch(displayText(h.mount), /Tentar corrigir novamente/);
+  assert.equal(h.calls.retries, 0);
   assert.doesNotMatch(displayText(h.mount), /Nota:/);
 });

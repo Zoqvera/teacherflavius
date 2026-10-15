@@ -262,3 +262,12 @@ Erros internos deixam de imprimir no console mensagens brutas recebidas de Postg
 O arquivo `docs/homeworks/ETAPA_5_DOSSIE_ACEITE_PEDAGOGICO_PRIVACIDADE_CUSTOS_20261015.md` consolida três exemplos fictícios de Writing para revisão do professor e o quadro de decisão sobre uso de IA, retenção e orçamento. **Não é aceite automático.** Em particular, `store:false` não constitui Zero Data Retention, não existe teto de gastos global no módulo, nem política específica de expiração de textos aprovada.
 
 O trabalho não libera estudantes, não altera notas ou gabaritos existentes, não publica novas rotas e não afeta SEO. A ETAPA 5 continua aberta; a próxima é ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica, apenas após aceite e autorização expressa.
+
+
+## Complemento: acessibilidade das transições e pausa orçamentária — 15/10/2026
+
+A interface privada transfere o foco programaticamente para o título da visualização após abrir atividades, receber correções e voltar à lista. O título usa `tabIndex=-1`, sem interferir na sequência normal de tabulação. O painel de resultado usa `role=status` e `aria-live=polite`. Os testes simulados verificam foco e atributos de anúncio.
+
+Quando `correction=monthly_budget` é informado pela Edge, o resultado mostra a suspensão sem inventar nota e **não oferece uma nova tentativa imediata**. O texto enviado permanece salvo. Limitação remanescente: após recarregar a página, a API `progress` não preserva a razão da pausa no seu payload; o orçamento segue bloqueado no servidor, mas essa experiência deve ser aprimorada antes da liberação.
+
+Ainda são necessários testes físicos com Android/iOS e leitores de tela. Nenhuma política de retenção nem aprovação editorial foi presumida. O controle `homework_release_control.enabled=false` deve continuar inalterado. **SEO:** sem alterações em rotas públicas, indexação, metadados, sitemap ou canonical.

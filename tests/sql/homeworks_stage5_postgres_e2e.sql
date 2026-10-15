@@ -371,7 +371,15 @@ SET LOCAL request.jwt.claim.sub = '09000000-0000-4000-8000-000000000002';
 SET LOCAL request.jwt.claims = '{"sub":"09000000-0000-4000-8000-000000000002","role":"authenticated","aal":"aal1"}';
 
 DO $student_a_rls$
+declare exported jsonb;
 begin
+  exported := public.get_my_data_export();
+  if coalesce(jsonb_array_length(exported->'homework_assignments'), -1) <> 2
+    or exported::text not like '%Yesterday I goes to school%'
+    or exported::text not like '%Yesterday I went to school%'
+    or exported::text like '%answer_key%' then
+    raise exception 'Exportação LGPD do aluno A omitiu sua produção ou expôs gabarito.';
+  end if;
   if (select count(*) from public.exercise_attempts) <> 2 then
     raise exception 'Aluno A deveria enxergar apenas Reading e Writing próprios.';
   end if;
@@ -400,7 +408,14 @@ SET LOCAL request.jwt.claim.sub = '09000000-0000-4000-8000-000000000003';
 SET LOCAL request.jwt.claims = '{"sub":"09000000-0000-4000-8000-000000000003","role":"authenticated","aal":"aal1"}';
 
 DO $student_b_rls$
+declare exported jsonb;
 begin
+  exported := public.get_my_data_export();
+  if coalesce(jsonb_array_length(exported->'homework_assignments'), -1) <> 1
+    or exported::text like '%Yesterday I goes to school%'
+    or exported::text like '%answer_key%' then
+    raise exception 'Exportação LGPD do aluno B expôs resposta de outro estudante ou gabarito.';
+  end if;
   if (select count(*) from public.exercise_attempts) <> 1 then
     raise exception 'Aluno B deve ver apenas a própria atividade.';
   end if;

@@ -75,3 +75,10 @@ Este dossiê não muda as configurações de SEO nem acrescenta páginas públic
 - **Limitação financeira:** a reserva cobre somente o custo da operação de geração com o modelo e tarifa Standard verificada em outubro de 2026. Preços futuros, operações externas à Edge, tributos, diferenças de faturamento e despesas de infraestrutura não são controlados por esta funcionalidade. É recomendável definir também um limite e alertas no projeto da OpenAI como camada independente.
 
 **Importante:** a implementação do orçamento não constitui aceite de privacidade, não altera a trava de acesso e não autoriza lançamento.
+
+
+### Homologação da exportação de dados do aluno — 15/10/2026
+
+A auditoria identificou que `get_my_data_export()`, criada antes do módulo, não relacionava as produções e os feedbacks de TAREFAS PARA CASA. A migração incremental `20261015192900_homeworks_privacy_export.sql` acrescenta `homework_assignments` com tentativas, respostas originais, notas e feedbacks (inclusive textos corrigidos). Cada consulta filtra por `auth.uid()` através de `requester_id`; não exporta gabaritos, tokens de avaliação nem textos de terceiros. Os demais campos e controles de autenticação da RPC permanecem inalterados.
+
+O CI testa a exportação sob as identidades fictícias A/B em PostgreSQL descartável, verifica a presença de texto original e correção do próprio titular e a ausência de respostas do outro aluno. A exclusão definitiva existente continua apoiada na cascata `auth.users → profiles → exercise_assignments → exercise_attempts → exercise_answers/exercise_feedback`. A política de **prazo de retenção** continua pendente de decisão administrativa e revisão jurídica. Nada nesta mudança autoriza lançamento.
