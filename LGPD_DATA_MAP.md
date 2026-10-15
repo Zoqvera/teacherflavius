@@ -87,7 +87,7 @@ Por decisão operacional do controlador, a notificação administrativa de nova 
 
 O remetente genérico `resend-email` não registra mais o corpo de erro devolvido pelo provedor; apenas o código HTTP é registrado. O frontend recebe somente `ok` e, quando disponível, o identificador técnico do envio.
 
-E-mails destinados ao próprio aluno, como confirmação de matrícula e confirmação de reposição, continuam necessariamente usando seu endereço e podem conter o mínimo de dados necessários à mensagem transacional.
+E-mails destinados ao próprio aluno, como confirmação de matrícula e confirmação de reposição, usam o endereço da conta ou da reserva e contêm somente o mínimo necessário à mensagem transacional. As matrículas são enviadas por `Matrículas <matriculas@teacherflavius.com>` e as reposições por `Teacher Flávio <contato@teacherflavius.com>`. O endereço de destino do aluno não é incluído no corpo do aviso administrativo. O e-mail de matrícula é recuperado de Supabase Auth, não de metadados editáveis no perfil.
 
 ### Mercado Pago → Resend
 
