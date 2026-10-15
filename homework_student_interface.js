@@ -101,9 +101,14 @@
       if (resultStatus === "evaluating") {
         appendText(panel, "p", "Sua resposta foi salva. A correção está sendo processada.");
       } else if (resultStatus === "submitted") {
-        appendText(panel, "p", type === "writing"
-          ? "Seu texto está salvo. A correção está pendente; consulte o progresso mais tarde."
-          : "Suas respostas foram salvas. A nota automática está sendo confirmada.");
+        const pausedForBudget = type === "writing" &&
+          progress.correction === "monthly_budget";
+        appendText(panel, "p", pausedForBudget
+          ? "Seu texto foi salvo. O limite mensal de correções por IA foi atingido. " +
+            "A correção poderá ser retomada no mês seguinte."
+          : type === "writing"
+            ? "Seu texto está salvo. A correção está pendente; consulte o progresso mais tarde."
+            : "Suas respostas foram salvas. A nota automática está sendo confirmada.");
       } else if (resultStatus === "evaluated") {
         appendText(panel, "h3", "Atividade corrigida");
         if (score !== null) appendText(panel, "p", "Nota: " + score + "/10");
@@ -267,6 +272,9 @@
               // Se a submissão foi confirmada, uma falha na consulta de progresso
               // não deve ocultar a nota ou induzir um segundo envio.
             }
+            // O status de progresso não inclui a razão administrativa da pausa.
+            // Preserve a resposta explícita da Edge quando o orçamento se esgota.
+            if (response?.correction === "monthly_budget") confirmed = response;
             showProgress(confirmed);
           } catch (error) {
             // Conserva a mesma chave e as mesmas respostas após falhas de rede.
