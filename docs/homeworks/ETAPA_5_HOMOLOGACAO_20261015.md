@@ -86,3 +86,13 @@ O retorno `evaluated` é idempotente e recupera o feedback armazenado, sem nova 
 As notas já devolvidas pelo backend no momento do envio permanecem visíveis mesmo quando a consulta de progresso falha logo em seguida. Reading e Grammar continuam recebendo somente correção automática por gabarito, sem revisão humana.
 
 **Limitações do aceite:** os testes automatizados não comprovam conectividade real com o provedor OpenAI nem uso de credencial válida. Permanecem pendentes os testes isolados de banco/Edge com alunos fictícios e a validação pedagógica de Writing com chamadas reais. A chave `homework_release_control.enabled=false` segue inalterada. Não foram criadas novas rotas nem alterados sitemap, robots, canonicals ou indexação.
+
+## Homologação adicional: transações reais em PostgreSQL isolado
+
+A suíte `tests/sql/homeworks_stage5_postgres_e2e.sql` utiliza o banco descartável do GitHub Actions (`validate-supabase-baseline.yml`), aplica explicitamente as migrações existentes de Homeworks e executa a função **real** `public.homework_submit` com dois estudantes fictícios e atividades Reading/Grammar. Não existe uso de dados de produção, chave OpenAI ou envio de mensagens.
+
+Critérios automatizados: liberação inicialmente `false`; bloqueio com atribuição `held`; isolamento entre estudantes; respostas incompletas com rollback; normalização de maiúsculas/minúsculas e espaços; pontuação por questão e ponderação da nota; submissão oficial idempotente; impedimento de reenvio com outra chave; ausência de revisão manual; RLS do papel `authenticated` para tentativas, feedback e gabaritos; ausência de permissão direta de executar a RPC; verificação pós-teste de base vazia e bloqueada. O teste é totalmente revertido via `ROLLBACK` no banco efêmero.
+
+O check de restauração histórica existente permanece intacto: essa homologação adicional acontece **depois** da comparação do fingerprint de recuperação e antes da destruição da pilha temporária, sem modificar o banco produtivo.
+
+Conclusão: testes SQL reais são evidência necessária, mas não substituem testes E2E completos com Edge autenticada e sessões reais isoladas, correção Writing com provedor OpenAI real, validação manual de dispositivos e aceite editorial do professor. A ETAPA 5 não deve ser encerrada somente com esses checks.
