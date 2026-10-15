@@ -121,7 +121,8 @@ declare
 begin
   if old.status = 'published' and (
     new.status <> 'published' or
-    new.published_version_id is distinct from old.published_version_id
+    new.published_version_id is distinct from old.published_version_id or
+    new.title is distinct from old.title
   ) then
     raise exception 'Uma atividade publicada nao pode ser alterada; crie uma nova versao em outra atividade.';
   end if;
@@ -339,7 +340,7 @@ $policies$;
 
 -- Somente professor logado le e edita o catalogo. Resultados e respostas sao server-only.
 grant select, insert, update on public.exercises to authenticated;
-grant select, insert on public.exercise_versions to authenticated;
+grant select, insert, update on public.exercise_versions to authenticated;
 grant select, insert on public.exercise_questions to authenticated;
 grant usage, select on sequence public.exercises_exercise_number_seq to authenticated;
 
