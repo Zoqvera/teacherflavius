@@ -303,7 +303,7 @@
         ? "Simulação local: " + results.correct + " de " + results.total +
           " respostas coincidiram com o gabarito. Correspondência aproximada: " +
           (results.score * 10).toLocaleString("pt-BR") +
-          "%. Esta é apenas uma simulação; na entrega oficial, as respostas divergentes recebem zero automaticamente."
+          "%. Não é nota oficial; na entrega oficial, respostas divergentes recebem zero automaticamente."
         : "Não há gabaritos suficientes para simular uma nota.";
     });
     container.appendChild(form);
