@@ -41,6 +41,7 @@ jobs:
           node --test tests/course_vacancy_visibility_contract.test.js
           node --test tests/tuition_after_enrollment_contract.test.js
           node --test tests/lesson_credits_contract.test.js
+          node --test tests/regular_cancellation_delivery_e2e_mock.test.js
           node --test tests/teacher_makeup_notification_contract.test.js
           node --test tests/manual_lesson_credit_grants_contract.test.js
           node --test tests/retire_legacy_makeup_flow_contract.test.js
@@ -197,6 +198,25 @@ jobs:
             'Temporary VAPID value used only by the baseline restore CI test'
           );
           SQL
+
+      - name: Exercise regular lesson cancellation and notification outbox
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # Disposable CI instance: application emails must never leave this test.
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < supabase/migrations/20261015030100_add_regular_and_teacher_cancellation_email_notifications.sql
+
+          # Test runs inside BEGIN/ROLLBACK and disables the actual email dispatch
+          # trigger within that transaction; it tests the genuine cancellation RPC.
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < tests/sql/regular_cancellation_homologation.sql
 
       - name: Verify least-privilege browser ACLs
         shell: bash
