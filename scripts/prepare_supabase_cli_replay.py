@@ -98,10 +98,10 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
     # entries require source files that are intentionally absent here.
     # Preserve only the minimal known-safe project/seed fixture settings.
     staging_config = (
-        'project_id = "teacherflavius-local-fixture"\\n'
-        '\\n[db.seed]\\n'
-        'enabled = true\\n'
-        'sql_paths = ["./seed.sql"]\\n'
+        'project_id = "teacherflavius-local-fixture"\n'
+        '\n[db.seed]\n'
+        'enabled = true\n'
+        'sql_paths = ["./seed.sql"]\n'
     )
     (sql_dir / "config.toml").write_text(
         staging_config, encoding="utf-8",
