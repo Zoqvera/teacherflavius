@@ -1,6 +1,9 @@
 module.exports = [
   {
     files: [
+      "homework_activity_model.js",
+      "homework_access_service.js",
+      "area-do-estudante/homeworks/foundation.js",
       "accessibility.js",
       "area_do_estudante.js",
       "academic_workflow_service.js",
