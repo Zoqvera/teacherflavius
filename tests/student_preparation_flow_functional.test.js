@@ -243,17 +243,26 @@ async function runLessonScenario({
   currentLesson = 7,
   requestedLesson = 7,
   alreadyPrepared = false,
-  session = true
+  session = true,
+  roadmapSource = false,
+  requestedById = false,
+  nextPublished = true,
+  legacyNext = false
 } = {}) {
   const document = makeDocument([
     "lessonPageContent",
     "lessonPreparationSection",
     "lessonNextPartLink",
+    "lessonNextLessonLink",
+    "lessonRoadmapNavigation",
     "lessonFlowProgress",
     "legacyLessonMaterial"
   ]);
-  const calls = { prepared: [] };
+  const calls = { prepared: [], plans: 0 };
+  const pageId = "11111111-1111-4111-8111-111111111111";
+  const nextPageId = "22222222-2222-4222-8222-222222222222";
   const linkedPage = {
+    roadmap_lesson_number: requestedLesson,
     title: "Testing lesson",
     lesson_number_label: "LESSON 7",
     objective: "Objective",
@@ -263,7 +272,12 @@ async function runLessonScenario({
     useful_vocabulary: "Vocabulary"
   };
   const window = {
-    location: { pathname: "/licao/", search: "?lesson=" + requestedLesson, href: "" },
+    location: {
+      pathname: "/licao/",
+      search: (requestedById ? "?id=" + pageId : "?lesson=" + requestedLesson) +
+        (roadmapSource ? "&source=roteiro-de-estudos" : ""),
+      href: ""
+    },
     StudentPreparationFlow: { enabled },
     SUPABASE_CONFIG: {},
     Auth: {
@@ -273,17 +287,26 @@ async function runLessonScenario({
     },
     ResourceWaiter: { waitUntil: async () => true },
     StudyLessonService: {
+      isValidPageId: (id) => id === pageId,
+      lessonPageUrl: (id) => "/licao/?id=" + id,
       create: () => ({
-        getLinkedPageByLessonNumber: async () => linkedPage
+        getLinkedPageByLessonNumber: async (number) => {
+          if (number === requestedLesson) return linkedPage;
+          if (number === requestedLesson + 1 && nextPublished) return { id: nextPageId };
+          return null;
+        },
+        getPage: async (id) => id === pageId ? linkedPage : null
       })
     },
     AcademicWorkflowService: {
       normalizeLessonNumber: Number,
-      legacyLessonPreviewUrl: () => "",
+      legacyLessonPreviewUrl: (number) => legacyNext && number === requestedLesson + 1
+        ? "https://drive.google.com/file/d/synthetic/preview" : "",
       create: () => ({
-        getMyActionPlan: async () => ({
-          lesson: { number: currentLesson, prepared: alreadyPrepared }
-        }),
+        getMyActionPlan: async () => {
+          calls.plans += 1;
+          return { lesson: { number: currentLesson, prepared: alreadyPrepared } };
+        },
         markLessonPrepared: async (number) => { calls.prepared.push(number); }
       })
     },
@@ -315,18 +338,86 @@ test("enabled lesson shows PRÓXIMA PARTE but does not implicitly mark preparati
   assert.equal(state.node("lessonNextPartLink").hidden, false);
   assert.equal(state.node("lessonNextPartLink").href, undefined);
   assert.equal(state.node("lessonFlowProgress").hidden, false);
+  assert.equal(state.node("lessonLegacyPreparationContent").hidden, true);
+  assert.equal(state.node("lessonRoadmapNavigation").hidden, true);
   assert.deepEqual(state.calls.prepared, []);
 });
 
-test("an already prepared next lesson retains its continuation", async () => {
+test("already prepared lessons continue without exposing the legacy preparation button", async () => {
   const state = await runLessonScenario({ enabled: true, alreadyPrepared: true });
   assert.equal(state.node("lessonNextPartLink").hidden, false);
-  assert.equal(state.node("lessonPreparedButton").disabled, true);
-  assert.equal(state.node("lessonPreparedButton").textContent, "PREPARAÇÃO REGISTRADA");
+  assert.equal(state.node("lessonLegacyPreparationContent").hidden, true);
+  assert.deepEqual(state.calls.prepared, []);
 });
 
 test("older lessons do not expose the new two-part navigation", async () => {
   const state = await runLessonScenario({ enabled: true, currentLesson: 8, requestedLesson: 7 });
   assert.equal(state.node("lessonPreparationSection").hidden, true);
   assert.equal(state.node("lessonNextPartLink").hidden, true);
+});
+
+test("roadmap access to the current lesson shows only PRÓXIMA LIÇÃO", async () => {
+  const state = await runLessonScenario({ enabled: true, roadmapSource: true });
+  assert.equal(state.node("lessonPreparationSection").hidden, true);
+  assert.equal(state.node("lessonFlowProgress").hidden, true);
+  assert.equal(state.node("lessonNextPartLink").hidden, true);
+  assert.equal(state.node("lessonRoadmapNavigation").hidden, false);
+  assert.equal(state.node("lessonNextLessonLink").hidden, false);
+  assert.equal(
+    state.node("lessonNextLessonLink").href,
+    "/licao/?id=22222222-2222-4222-8222-222222222222&source=roteiro-de-estudos"
+  );
+  assert.equal(state.calls.plans, 0);
+  assert.deepEqual(state.calls.prepared, []);
+});
+
+test("roadmap navigation also works for pages opened by ID", async () => {
+  const state = await runLessonScenario({
+    enabled: true,
+    roadmapSource: true,
+    requestedById: true
+  });
+  assert.equal(state.node("lessonNextLessonLink").hidden, false);
+  assert.equal(state.node("lessonPreparationSection").hidden, true);
+});
+
+test("legacy PDF next lesson remains accessible within roadmap viewer", async () => {
+  const state = await runLessonScenario({
+    enabled: true,
+    roadmapSource: true,
+    nextPublished: false,
+    legacyNext: true
+  });
+  assert.equal(state.node("lessonNextLessonLink").hidden, false);
+  assert.equal(
+    state.node("lessonNextLessonLink").href,
+    "/licao/?lesson=8&source=roteiro-de-estudos"
+  );
+});
+
+test("unpublished next lesson does not lead to a broken link", async () => {
+  const state = await runLessonScenario({
+    enabled: true,
+    roadmapSource: true,
+    requestedLesson: 74,
+    currentLesson: 74,
+    nextPublished: false
+  });
+  assert.equal(state.node("lessonRoadmapNavigation").hidden, false);
+  assert.equal(state.node("lessonNextLessonLink").hidden, true);
+  assert.match(state.node("lessonRoadmapStatus").textContent, /não há uma próxima lição/i);
+});
+
+test("roadmap source does not alter the legacy experience with the rollout disabled", async () => {
+  const state = await runLessonScenario({
+    enabled: false,
+    roadmapSource: true
+  });
+  assert.equal(state.node("lessonPreparationSection").hidden, false);
+  assert.equal(state.node("lessonLegacyPreparationContent").hidden, false);
+  assert.equal(state.node("lessonNextPartLink").hidden, true);
+  assert.equal(state.node("lessonRoadmapNavigation").hidden, true);
+  state.node("lessonPreparedButton").onclick();
+  await flush();
+  assert.deepEqual(state.calls.prepared, [7]);
 });
