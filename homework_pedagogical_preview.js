@@ -48,6 +48,74 @@
     };
   }
 
+
+  function countWords(value) {
+    const words = String(value == null ? "" : value).trim().match(/\S+/g);
+    return words ? words.length : 0;
+  }
+
+  // LCS de palavras, com limite para evitar cálculos quadráticos em textos extensos.
+  // Conserva a pontuação e os espaços originais do texto corrigido.
+  function diffCorrectedText(original, corrected) {
+    if (typeof original !== "string" || typeof corrected !== "string") {
+      throw new TypeError("Os dois textos precisam ser strings.");
+    }
+    const before = original.match(/\S+/g) || [];
+    const after = corrected.match(/\S+/g) || [];
+    const marked = new Set();
+    if (before.length > 450 || after.length > 450) {
+      after.forEach((word, index) => {
+        if (word !== before[index]) marked.add(index);
+      });
+    } else {
+      const matrix = Array.from({ length: before.length + 1 },
+        () => new Uint16Array(after.length + 1));
+      for (let i = before.length - 1; i >= 0; i--) {
+        for (let j = after.length - 1; j >= 0; j--) {
+          matrix[i][j] = before[i] === after[j]
+            ? matrix[i + 1][j + 1] + 1
+            : Math.max(matrix[i + 1][j], matrix[i][j + 1]);
+        }
+      }
+      const unchanged = new Set();
+      let i = 0;
+      let j = 0;
+      while (i < before.length && j < after.length) {
+        if (before[i] === after[j]) {
+          unchanged.add(j);
+          i++;
+          j++;
+        } else if (matrix[i + 1][j] >= matrix[i][j + 1]) {
+          i++;
+        } else {
+          j++;
+        }
+      }
+      after.forEach((word, index) => {
+        if (!unchanged.has(index)) marked.add(index);
+      });
+    }
+
+    let position = 0;
+    return (corrected.match(/\s+|\S+/g) || []).map(function (token) {
+      if (/^\s+$/.test(token)) {
+        return { text: token, changed: false };
+      }
+      const changed = marked.has(position);
+      position++;
+      return { text: token, changed: changed };
+    });
+  }
+
+  function appendCorrectedText(container, original, corrected) {
+    const paragraph = element("p", "homework-pedagogical-body");
+    for (const segment of diffCorrectedText(original, corrected)) {
+      paragraph.appendChild(element(segment.changed ? "mark" : "span",
+        segment.changed ? "homework-pedagogical-changed" : "", segment.text));
+    }
+    container.appendChild(paragraph);
+  }
+
   function element(tag, className, value) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -115,8 +183,8 @@
       wrapper.appendChild(options);
       read = () => radios.find(radio => radio.checked)?.value || "";
     } else {
-      const label = element("label", "homework-visually-hidden",
-        "Resposta da questão " + (index + 1));
+      const label = element("label", "homework-pedagogical-input-label",
+        "Sua resposta");
       const input = element("input", "homework-pedagogical-input");
       input.type = "text";
       input.autocomplete = "off";
@@ -129,6 +197,13 @@
     const message = element("p", "homework-pedagogical-answer-result");
     message.setAttribute("aria-live", "polite");
     wrapper.appendChild(message);
+    if (acceptedAnswers(question).length) {
+      const answer = element("details", "homework-pedagogical-answer-key");
+      answer.appendChild(element("summary", "", "Conferir gabarito (professor)"));
+      appendText(answer, "Respostas aceitas: " + acceptedAnswers(question).join("; "));
+      appendText(answer, question.explanation, "homework-pedagogical-explanation");
+      wrapper.appendChild(answer);
+    }
     parent.appendChild(wrapper);
     return { read: read, message: message };
   }
@@ -147,7 +222,24 @@
     const summary = element("p", "homework-pedagogical-summary");
     summary.setAttribute("role", "status");
     summary.setAttribute("aria-live", "polite");
-    form.append(submit, summary);
+    const clear = element("button", "homework-pedagogical-reset", "Limpar respostas");
+    clear.type = "reset";
+    const progress = element("p", "homework-pedagogical-progress");
+    progress.setAttribute("role", "status");
+    progress.setAttribute("aria-live", "polite");
+    const updateProgress = function () {
+      const answered = fields.filter(field => String(field.read()).trim()).length;
+      progress.textContent = "Questões respondidas: " + answered + " de " + questions.length;
+    };
+    form.addEventListener("input", updateProgress);
+    form.addEventListener("change", updateProgress);
+    form.addEventListener("reset", function () {
+      fields.forEach(field => { field.message.textContent = ""; });
+      summary.textContent = "";
+      progress.textContent = "Questões respondidas: 0 de " + questions.length;
+    });
+    form.append(progress, submit, clear, summary);
+    updateProgress();
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       const results = evaluateResponses(questions, fields.map(field => field.read()));
@@ -158,13 +250,15 @@
         }
         field.message.textContent = results.results[index].correct
           ? "Correspondência com o gabarito."
-          : "Não corresponde exatamente ao gabarito.";
+          : questions[index].question_type === "multiple_choice"
+            ? "Alternativa diferente do gabarito."
+            : "Resposta diferente do gabarito: necessária revisão do professor.";
       });
       summary.textContent = results.total
         ? "Simulação local: " + results.correct + " de " + results.total +
-          " respostas correspondentes; nota demonstrativa " +
-          results.score.toLocaleString("pt-BR", { minimumFractionDigits: 1 }) +
-          "/10. Respostas abertas exigem revisão pedagógica."
+          " respostas coincidiram com o gabarito. Correspondência aproximada: " +
+          (results.score * 10).toLocaleString("pt-BR") +
+          "%. Não é nota oficial; respostas abertas exigem avaliação humana."
         : "Não há gabaritos suficientes para simular uma nota.";
     });
     container.appendChild(form);
@@ -181,10 +275,14 @@
     label.appendChild(text);
     const button = element("button", "homework-pedagogical-submit", "Enviar");
     button.type = "submit";
+    const counter = element("p", "homework-pedagogical-counter", "Palavras: 0");
+    text.addEventListener("input", function () {
+      counter.textContent = "Palavras: " + countWords(text.value);
+    });
     const message = element("p", "homework-pedagogical-summary");
     message.setAttribute("role", "status");
     message.setAttribute("aria-live", "polite");
-    form.append(label, button, message);
+    form.append(label, counter, button, message);
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       message.textContent = "Pré-visualização: texto não enviado. A correção por IA " +
@@ -210,7 +308,8 @@
     panel.appendChild(element("h4", "", "Texto original"));
     appendText(panel, feedback.original_text, "homework-pedagogical-body");
     panel.appendChild(element("h4", "", "Versão corrigida"));
-    appendText(panel, feedback.corrected_text, "homework-pedagogical-body");
+    appendText(panel, "Trechos alterados aparecem destacados.");
+    appendCorrectedText(panel, feedback.original_text, feedback.corrected_text);
     if (feedback.explanations.length) {
       panel.appendChild(element("h4", "", "Explicações"));
       appendList(panel, feedback.explanations, "homework-pedagogical-instructions");
@@ -247,6 +346,8 @@
     normalizeAnswer: normalizeAnswer,
     acceptedAnswers: acceptedAnswers,
     evaluateResponses: evaluateResponses,
+    countWords: countWords,
+    diffCorrectedText: diffCorrectedText,
     render: render,
     appendWritingFeedback: appendWritingFeedback
   });
