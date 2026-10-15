@@ -491,3 +491,39 @@ test("the attested alias rejects mismatched names, remote hashes and unrelated r
     assert.match(result.stdout, /Production contains migration versions.*missing|supabase\/migrations contains versions.*missing/is);
   }
 });
+
+
+test("both Supabase-assigned versions match their immutable source SQL", () => {
+  const oldFile = "20261015030100_add_regular_and_teacher_cancellation_email_notifications.sql";
+  const retryFile = "20261015041000_retry_transactional_emails_safely.sql";
+  const original = read("supabase/migrations/" + oldFile);
+  const retry = read("supabase/migrations/" + retryFile);
+  assert.equal(canonicalChecksum(retry), "5550c24828b5de718108b3c0709f50b8079fc1a6f8ea07267a75dc80f8d277da");
+
+  const remotes = [
+    {
+      version: "20261015030846",
+      name: "add_regular_and_teacher_cancellation_email_notifications",
+      checksum: canonicalChecksum(original),
+    },
+    {
+      version: "20261015041123",
+      name: "retry_transactional_emails_safely",
+      checksum: canonicalChecksum(retry),
+    },
+  ];
+  const migrations = { [oldFile]: original, [retryFile]: retry };
+  const accepted = runDriftCheck({ migrations, remoteRows: remotes });
+  assert.equal(accepted.status, 0, accepted.stdout + accepted.stderr);
+  assert.equal((accepted.stdout.match(/Exact SHA256 and name attest/g) || []).length, 2);
+
+  for (const remoteRows of [
+    [remotes[0], { ...remotes[1], checksum: "0".repeat(64) }],
+    [remotes[0], { ...remotes[1], name: "unexpected" }],
+    [remotes[0], { ...remotes[1], version: "20261015041124" }],
+  ]) {
+    const rejected = runDriftCheck({ migrations, remoteRows });
+    assert.equal(rejected.status, 1);
+    assert.match(rejected.stdout, /missing from supabase\/migrations|missing from production migration history/);
+  }
+});
