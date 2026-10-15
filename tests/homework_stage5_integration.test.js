@@ -105,7 +105,7 @@ function buildHarness(overrides = {}) {
     if (name === 'homework_complete_writing') {
       record.attempt.status = 'evaluated';
       record.attempt.score = args.p_score;
-      const feedback = { source: 'ai', score: args.p_score,
+      const feedback = { attempt_id: ATTEMPT, source: 'ai', score: args.p_score,
         general_comment: args.p_comment, original_text: 'I go to school and I study English.',
         corrected_text: args.p_corrected, explanations: args.p_explanations };
       record.feedback.push(feedback);
