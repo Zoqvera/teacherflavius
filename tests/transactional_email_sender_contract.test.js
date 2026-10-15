@@ -30,8 +30,11 @@ test("enrollment sends both student confirmation and existing administrative not
   assert.match(enrollment, /idempotencyKey: `enrollment-\$\{notification\.id\}`/);
 });
 
-test("replacement keeps the current cancellation policy text", function () {
-  assert.match(makeup, /Você pode cancelar esse agendamento até 12 \(doze\) horas antes do horário da aula/);
+test("replacement email matches canonical cancellation rule", function () {
+  assert.match(makeup, /Você pode cancelar esta reposição até o início da aula/);
+  assert.match(makeup, /Com pelo menos 12 \(doze\) horas de antecedência/);
+  assert.match(makeup, /a vaga será liberada, mas o crédito não será devolvido/);
+  assert.doesNotMatch(makeup, /cancelar esse agendamento até 12 \(doze\) horas antes/);
 });
 
 test("student notification uses the verified Auth email, not a mutable profile field", function () {
@@ -59,4 +62,11 @@ test("both email flows remain transaction-only and avoid public user metadata", 
   assert.doesNotMatch(enrollment, /raw_user_meta_data|user_metadata/);
   assert.doesNotMatch(makeup, /Deno\.env\.get\("ENROLLMENT_FROM_EMAIL"\)/);
   assert.match(makeup, /Idempotency-Key": `makeup-\$\{notificationType\}-\$\{notification\.id\}`/);
+});
+
+test("both administrative notification streams target the approved mailbox", function () {
+  assert.match(enrollment, /const notificationEmail = "flaviofreitas@ufu\.br"/);
+  assert.match(makeup, /const teacherEmail = "flaviofreitas@ufu\.br"/);
+  assert.match(enrollment, /WhatsApp: \$\{studentWhatsapp\}/);
+  assert.match(enrollment, /to: studentEmail/);
 });
