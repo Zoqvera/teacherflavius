@@ -168,9 +168,7 @@ returns trigger language plpgsql set search_path = ''
 as $guard$
 begin
   if old.status = 'approved' and (
-    tg_op = 'DELETE' or
-    new.content is distinct from old.content or
-    new.status is distinct from old.status
+    tg_op = 'DELETE' or new is distinct from old
   ) then
     raise exception 'Versao aprovada e imutavel.';
   end if;
@@ -188,7 +186,8 @@ as $function$
 declare
   created public.exercises;
 begin
-  if not (select public.is_teacher_admin()) then
+  if not (select public.is_teacher_admin()) or
+    coalesce((select auth.jwt()->>'aal'), '') <> 'aal2' then
     raise exception 'Acesso exclusivo ao professor.' using errcode = '42501';
   end if;
   insert into public.exercises default values returning * into created;
@@ -214,7 +213,8 @@ declare
   question jsonb;
   question_index integer := 0;
 begin
-  if not (select public.is_teacher_admin()) then
+  if not (select public.is_teacher_admin()) or
+    coalesce((select auth.jwt()->>'aal'), '') <> 'aal2' then
     raise exception 'Acesso exclusivo ao professor.' using errcode = '42501';
   end if;
   select * into target from public.exercises where id = p_exercise_id for update;
@@ -270,7 +270,8 @@ declare
   question_total integer;
   unanswered integer;
 begin
-  if not (select public.is_teacher_admin()) then
+  if not (select public.is_teacher_admin()) or
+    coalesce((select auth.jwt()->>'aal'), '') <> 'aal2' then
     raise exception 'Acesso exclusivo ao professor.' using errcode = '42501';
   end if;
   select * into selected from public.exercise_versions where id = p_version_id for update;
@@ -301,7 +302,8 @@ as $function$
 declare
   selected public.exercise_versions;
 begin
-  if not (select public.is_teacher_admin()) then
+  if not (select public.is_teacher_admin()) or
+    coalesce((select auth.jwt()->>'aal'), '') <> 'aal2' then
     raise exception 'Acesso exclusivo ao professor.' using errcode = '42501';
   end if;
   select * into selected from public.exercise_versions where id = p_version_id for update;
@@ -331,7 +333,7 @@ begin
     execute format('alter table public.%I enable row level security', table_name);
     execute format('revoke all on table public.%I from anon, authenticated', table_name);
     execute format(
-      'create policy homework_teacher_only on public.%I for all to authenticated using ((select public.is_teacher_admin())) with check ((select public.is_teacher_admin()))',
+      'create policy homework_teacher_only on public.%I for all to authenticated using ((select public.is_teacher_admin()) and (select auth.jwt()->>'aal') = ''aal2'') with check ((select public.is_teacher_admin()) and (select auth.jwt()->>'aal') = ''aal2'')',
       table_name
     );
   end loop;
@@ -343,6 +345,10 @@ grant select, insert, update on public.exercises to authenticated;
 grant select, insert, update on public.exercise_versions to authenticated;
 grant select, insert on public.exercise_questions to authenticated;
 grant usage, select on sequence public.exercises_exercise_number_seq to authenticated;
+grant all on public.exercises, public.exercise_versions, public.exercise_questions,
+  public.exercise_assignments, public.exercise_attempts, public.exercise_answers,
+  public.exercise_feedback to service_role;
+grant usage, select on sequence public.exercises_exercise_number_seq to service_role;
 
 revoke all on function public.homework_guard_publication() from public,anon,authenticated;
 revoke all on function public.homework_guard_question_mutation() from public,anon,authenticated;
