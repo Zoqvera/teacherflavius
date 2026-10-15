@@ -54,7 +54,7 @@ test("events remain private; summary is restricted to teacher and returns aggreg
 test("optional invitation logs actions and preserves navigation and dismissal", () => {
   assert.match(invitation, /rpc\("record_my_student_review_invitation"/);
   for (const action of ["shown", "clicked", "dismissed"]) {
-    assert.match(invitation, new RegExp('recordInvitationEvent\\(client, "' + action + '"\\)'));
+    assert.match(invitation, new RegExp('recordInvitationEvent\\(client, "' + action + '", studentId, storage\\)'));
   }
   assert.match(invitation, /Promise\.race/);
   assert.match(invitation, /root\.location\.assign\(reviewLink\.href\)/);
