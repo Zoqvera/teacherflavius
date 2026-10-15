@@ -4,11 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - supabase/baseline/**
-      - supabase/migrations/**
-      - .github/workflows/validate-supabase-baseline.yml
-
 permissions:
   contents: read
 
