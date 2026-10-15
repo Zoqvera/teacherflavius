@@ -21,7 +21,7 @@ def valid_pages() -> dict[str, str]:
     pages = {path: "" for path in PUBLISHED_PATHS}
     for path in LEGACY_PAGES:
         pages[path] = "<main><h1>" + SUSPENSION_MESSAGE + "</h1></main>"
-    pages["/area-do-estudante/"] = "cache: 'no-store' suspend-exercises-2"
+    pages["/area-do-estudante/"] = 'sourcePage + "?v=20261015-invitation-retry-1" { cache: \'no-store\' }'
     pages["/area_do_estudante.html"] = (
         '<a href="/flashcards/">Flashcards</a>'
         '<script src="/area_do_estudante.js?v=20261015-suspend-exercises-2"></script>'
@@ -43,6 +43,28 @@ def valid_pages() -> dict[str, str]:
 class SuspendedPortalMonitoringTests(unittest.TestCase):
     def test_valid_pages_preserve_student_and_marketing_contracts(self) -> None:
         self.assertEqual(validate_published_pages(valid_pages()), [])
+
+    def test_student_cache_wrapper_accepts_new_versions_but_rejects_stale_ones(self) -> None:
+        current = valid_pages()
+        self.assertEqual(validate_published_pages(current), [])
+
+        older = valid_pages()
+        older["/area-do-estudante/"] = (
+            'sourcePage + "?v=20261014-old" { cache: \'no-store\' }'
+        )
+        self.assertTrue(any(
+            "atualização de cache" in issue
+            for issue in validate_published_pages(older)
+        ))
+
+        missing_no_store = valid_pages()
+        missing_no_store["/area-do-estudante/"] = (
+            'sourcePage + "?v=20261015-current"'
+        )
+        self.assertTrue(any(
+            "atualização de cache" in issue
+            for issue in validate_published_pages(missing_no_store)
+        ))
 
     def test_reappearing_legacy_student_card_fails(self) -> None:
         pages = valid_pages()

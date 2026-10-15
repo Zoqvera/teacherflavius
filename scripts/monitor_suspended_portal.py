@@ -67,7 +67,15 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
             problems.append(path + ": catálogo antigo voltou a ser consultado")
 
     student_shell = pages.get("/area-do-estudante/", "")
-    if "cache: 'no-store'" not in student_shell or "suspend-exercises-2" not in student_shell:
+    shell_cache_version = re.search(
+        r'sourcePage\s*\+\s*"\?v=(20\d{6})-[A-Za-z0-9-]+"',
+        student_shell
+    )
+    if (
+        "cache: 'no-store'" not in student_shell
+        or not shell_cache_version
+        or shell_cache_version.group(1) < "20261015"
+    ):
         problems.append("Área do Estudante: atualização de cache não preservada")
 
     student_page = pages.get("/area_do_estudante.html", "")
