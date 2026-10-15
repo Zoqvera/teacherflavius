@@ -127,6 +127,6 @@ Overlay `380_same_day_first_tuition_payment.sql` applies the automatic São Paul
 
 ## Student review invitation metrics restoration
 
-Production migration `20261015161503_track_student_review_invitation_funnel` adds a private one-row-per-student tracking table and two protected RPCs. Its replayable SQL is stored in `395_student_review_invitation_funnel.sql`. This overlay must be applied **after `390_expose_study_button_marker.sql`** when rebuilding production, as it is not yet part of the fixed overlay list in `.github/workflows/validate-supabase-baseline.yml`. The existing schema fingerprint therefore describes the currently validated baseline through overlay 390, not the subsequent invitation metrics schema.
+Production migration `20261015161503_track_student_review_invitation_funnel` adds a private one-row-per-student tracking table and two protected RPCs. Its replayable SQL is stored in `395_student_review_invitation_funnel.sql`. The automated reconstruction applies this overlay **after `390_expose_study_button_marker.sql`**. The schema fingerprint includes its private table, constraints and authenticated RPCs; the disposable database restoration validates their reproducibility.
 
 The overlay contains no production student records. Both event collection and reporting are restricted by the database. Do not backfill synthetic views or clicks.
