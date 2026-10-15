@@ -297,7 +297,7 @@
       }
 
       document.body.classList.remove("auth-checking");
-      await loadReviews();
+      await refreshDashboard();
     } catch (error) {
       document.body.classList.remove("auth-checking");
       setStatus(error && error.message ? error.message : "Não foi possível carregar a página.", "error");
