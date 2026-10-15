@@ -19,6 +19,7 @@ function createScenario({
   armed = false,
   globalEnabled = false,
   memberEnabled = false,
+  memberUserId = "student-1",
   globalError = false,
   memberError = false,
   analyticsConsent = true
@@ -43,7 +44,7 @@ function createScenario({
                   }
                   if (table === "student_preparation_pilot_members") {
                     return {
-                      data: memberEnabled ? { enabled: true } : null,
+                      data: memberEnabled && value === memberUserId ? { enabled: true } : null,
                       error: memberError ? new Error("No access") : null
                     };
                   }
@@ -160,4 +161,63 @@ test("all three student views resolve identity after validating the session", ()
     assert.match(content, /resolveEligibility\(/);
     assert.match(content, /getSession\(\)/);
   }
+});
+
+test("changing authenticated identity clears the previous student's cached eligibility", async () => {
+  const context = createScenario({
+    armed: true,
+    globalEnabled: true,
+    memberEnabled: true,
+    memberUserId: "student-1"
+  });
+  const flow = context.window.StudentPreparationFlow;
+
+  assert.equal(await flow.resolveEligibility(context.client, "student-1"), true);
+  assert.equal(flow.enabled, true);
+  assert.equal(await flow.resolveEligibility(context.client, "student-2"), false);
+  assert.equal(flow.enabled, false);
+  assert.equal(await flow.resolveEligibility(context.client, "student-1"), true);
+  assert.equal(flow.enabled, true);
+
+  assert.equal(await flow.resolveEligibility(null, null), false);
+  assert.equal(flow.enabled, false);
+});
+
+test("a previous session's delayed result cannot unlock the current student", async () => {
+  const context = createScenario({
+    armed: true,
+    globalEnabled: true,
+    memberEnabled: true,
+    memberUserId: "student-1"
+  });
+  const flow = context.window.StudentPreparationFlow;
+  let completeFirstMemberRequest;
+  const firstMemberRequest = new Promise(resolve => { completeFirstMemberRequest = resolve; });
+  const delayedClient = {
+    from(table) {
+      if (table !== "student_preparation_pilot_members") return context.client.from(table);
+      return {
+        select() {
+          return {
+            eq(column, value) {
+              assert.equal(column, "user_id");
+              return {
+                async maybeSingle() {
+                  if (value === "student-1") return firstMemberRequest;
+                  return { data: null, error: null };
+                }
+              };
+            }
+          };
+        }
+      };
+    }
+  };
+
+  const first = flow.resolveEligibility(delayedClient, "student-1");
+  const second = flow.resolveEligibility(delayedClient, "student-2");
+  assert.equal(await second, false);
+  completeFirstMemberRequest({ data: { enabled: true }, error: null });
+  assert.equal(await first, false);
+  assert.equal(flow.enabled, false);
 });
