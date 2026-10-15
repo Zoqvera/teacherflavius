@@ -33,6 +33,10 @@ create table private.resend_delivery_events (
   received_at timestamptz not null default now()
 );
 
+-- Defense in depth even though these tables are in an unexposed schema.
+alter table private.resend_delivery_messages enable row level security;
+alter table private.resend_delivery_events enable row level security;
+
 create index resend_delivery_events_email_timeline_idx
   on private.resend_delivery_events (provider_email_id, occurred_at desc);
 
