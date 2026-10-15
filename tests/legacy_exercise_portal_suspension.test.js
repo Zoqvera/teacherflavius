@@ -47,9 +47,9 @@ test("student area fetches a versioned, uncached HTML document", function () {
   const shell = read("area-do-estudante/index.html");
   const html = read("area_do_estudante.html");
 
-  assert.match(shell, /sourcePage \+ "\\?v=20261015-suspend-exercises-2"/);
+  assert.ok(shell.includes('sourcePage + "?v=20261015-suspend-exercises-2"'));
   assert.match(shell, /cache: 'no-store'/);
-  assert.match(html, /area_do_estudante\\.js\\?v=20261015-suspend-exercises-2/);
+  assert.ok(html.includes("area_do_estudante.js?v=20261015-suspend-exercises-2"));
 });
 
 test("stale student-area cards for the suspended portal are removed", async function () {
