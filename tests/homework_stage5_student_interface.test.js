@@ -71,8 +71,8 @@ function harness(type = "writing") {
       assignment_id: assignment, title: "Homework", exercise_number: 1,
       activity_type: type, score: progress.score, status: progress.status,
     }] }),
-    detail: async id => { assert.equal(id, assignment); calls.details++; return detail; },
-    progress: async id => { assert.equal(id, assignment); return progress; },
+    detail: async (_auth, id) => { assert.equal(id, assignment); calls.details++; return detail; },
+    progress: async (_auth, id) => { assert.equal(id, assignment); return progress; },
     makeSubmission: (id, answers) => {
       assert.equal(id, assignment);
       calls.made++;
