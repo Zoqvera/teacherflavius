@@ -134,3 +134,42 @@ com autorização explícita antes de qualquer disponibilização estudantil.
 
 **SEO:** manteve-se `noindex, nofollow, noarchive` somente na rota de desenvolvimento.
 Não há mudança de sitemap, robots.txt, URLs comerciais ou menu público.
+
+
+## ETAPA 3 — Critérios de conclusão técnica (segundo incremento)
+
+O incremento de finalização da interface agrega:
+
+- Validação de pré-aprovação: Reading exige 10 perguntas com gabarito, Grammar ao menos
+  uma pergunta com gabarito, Writing exige enunciado e não aceita questões objetivas.
+  Múltipla escolha exige no mínimo duas alternativas e que a resposta correta esteja
+  entre elas. A **RPC de aprovação do banco continua sendo a autorização decisiva**.
+- Histórico consultável de versões do professor, cada uma com sua pré-visualização,
+  sem permitir alterar versões aprovadas.
+- Reading e Grammar: acompanhamento de quantidade de respostas preenchidas, correção
+  local somente por coincidência literal normalizada, gabaritos conferíveis pelo professor,
+  botão de limpeza e mensagens que não tratam respostas abertas divergentes como erros
+  inequívocos. A porcentagem é ilustrativa e **não é uma nota de aluno**.
+- Writing: contador de palavras e renderização segura de feedback estruturado, com
+  destaques em palavras novas/alteradas no texto corrigido. A marcação é visual e não
+  altera o texto original. Não há requisição de IA nem transferência de texto.
+- Testes funcionais isolados (DOM simulado), contratos de autorização, ausência de
+  escrita/requisição no componente de pré-visualização e regressões da aplicação.
+
+**Aceite técnico da ETAPA 3:** merge apenas após os checks aplicáveis do CI (testes
+de JavaScript, segurança, acessibilidade, build estático, SEO e compatibilidade) e
+revisão dos resultados. A avaliação visual em dispositivos reais e a revisão final
+de conteúdos de cada atividade pertencem ao aceite editorial do professor; não
+significam autorização para entrega aos alunos.
+
+**ETAPA 4 proposta — Submissão Segura, Progresso e Correção por IA:**
+desenvolver autorização de aluno baseada em matrícula/atribuição, entrega das
+atividades aprovadas, persistência transacional de tentativas e respostas, políticas
+RLS específicas do aluno, nota/resultados de Reading e Grammar com revisão pedagógica
+quando necessário, correção síncrona de Writing por Edge Function autenticada e
+rubrica auditável, limites de uso, privacidade, custo e tratamento de falhas. Projetar
+primeiro os testes de isolamento entre alunos, permissões e idempotência. O
+lançamento para alunos deve permanecer desativado até aprovação explícita.
+
+**SEO:** nenhuma alteração em sitemap, robots.txt, canonicals, páginas comerciais
+ou indexação pública. A rota privada continua noindex, nofollow, noarchive.
