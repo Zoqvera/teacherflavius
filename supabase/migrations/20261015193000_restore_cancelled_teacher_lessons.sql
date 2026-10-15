@@ -181,7 +181,7 @@ begin
   )
   order by enriched.starts_at, enriched.student_name, enriched.lesson_kind;
 end;
-$function$
+$function$;
 
 
 -- Treat cancelled attendees as resolved when finalizing a class.
@@ -268,7 +268,7 @@ begin
     'class_date', target_date
   );
 end;
-$function$
+$function$;
 
 -- Immutable record of administrative reversal.
 create table if not exists private.student_regular_lesson_restorations (
