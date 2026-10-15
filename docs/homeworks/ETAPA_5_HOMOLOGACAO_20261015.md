@@ -110,3 +110,13 @@ A homologação SQL da Etapa 5 passa a incluir a atividade **2 — Writing** (en
 - todos os registros, usuários, atribuições e alterações temporárias do controle de lançamento são descartados por `ROLLBACK` no banco do CI.
 
 Esse incremento testa o armazenamento, o controle transacional e a passagem de feedback de Writing, **não** a qualidade de respostas reais do GPT-6 Luna. As chamadas à API da OpenAI, a avaliação de latência e custos, o fluxo completo via Edge autenticada e os testes práticos de dispositivos permanecem critérios pendentes. A ETAPA 5 continua aberta e a liberação de alunos continua expressamente proibida.
+
+## Complemento: rubrica de Writing verificável pelo servidor
+
+Na integração anterior, a instrução do modelo indicava pesos pedagógicos de 40/30/30, mas a nota total era fornecida diretamente pela IA. Para permitir auditoria matemática, a resposta estruturada passa a exigir **três subnotas independentes** (0–10): cumprimento do enunciado, precisão linguística e clareza/vocabulário. A nota oficial não vem da resposta da IA: é calculada pela Edge Function `0.4 × cumprimento + 0.3 × precisão + 0.3 × clareza`, com arredondamento a duas casas decimais.
+
+A interface já exibe `explanations` da avaliação, então o servidor acrescenta as três subnotas e seus respectivos pesos no próprio feedback; o restante das explicações continua em português. O limite anterior de 12 explicações é preservado: o modelo pode fornecer até nove, além das três entradas de rubrica geradas no servidor.
+
+A saída passa por JSON Schema estrito, incluindo subnotas numéricas limitadas ao intervalo 0–10. Respostas incompletas, fora da faixa ou fora do formato não geram nota: a tentativa Writing continua recuperável para nova correção. O contrato foi conferido na documentação de Structured Outputs da OpenAI; um teste com provedor e credenciais reais ainda é **obrigatório** antes de concluir a etapa.
+
+Os pesos acordados não mudaram. Esta alteração não libera alunos, não modifica o SQL, não atinge dados preexistentes nem altera SEO. A ETAPA 5 continua em homologação.
