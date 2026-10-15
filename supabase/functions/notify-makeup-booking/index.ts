@@ -166,6 +166,7 @@ function makeIcsAttachment(
   endsAt: string,
   meetingUrl: string,
   audience: "teacher" | "student",
+  createdAt: string,
 ): { filename: string; content: string; content_type: string } {
   const uid = `reposicao-${studentId}-${classNumber}-${formatCalendarInstant(startsAt)}@teacherflavius.com`;
   const title = audience === "teacher"
@@ -185,7 +186,7 @@ function makeIcsAttachment(
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${uid}`,
-    `DTSTAMP:${formatCalendarInstant(new Date().toISOString())}`,
+    `DTSTAMP:${formatCalendarInstant(createdAt)}`,
     `DTSTART:${formatCalendarInstant(startsAt)}`,
     `DTEND:${formatCalendarInstant(endsAt)}`,
     `SUMMARY:${escapeIcsText(title)}`,
@@ -259,7 +260,12 @@ Deno.serve(async (request: Request) => {
   if (notification.status === "sent") return jsonResponse({ ok: true, already_sent: true });
 
   const attemptAt = new Date().toISOString();
-  await supabase
+  // Resend retains idempotency keys for 24 hours. Do not auto-replay uncertain older sends.
+  if (Number(notification.attempts ?? 0) > 0
+    && Date.now() - new Date(notification.created_at).getTime() > 18 * 60 * 60 * 1000) {
+    return jsonResponse({ error: "Manual reconciliation required after idempotency window" }, 409);
+  }
+  const { data: claimed, error: claimError } = await supabase
     .from("makeup_class_email_notifications")
     .update({
       attempts: Number(notification.attempts ?? 0) + 1,
@@ -267,7 +273,13 @@ Deno.serve(async (request: Request) => {
       updated_at: attemptAt,
       last_error: null,
     })
-    .eq("id", notification.id);
+    .eq("id", notification.id)
+    .eq("status", notification.status)
+    .eq("attempts", notification.attempts)
+    .select("id")
+    .maybeSingle();
+  if (claimError) return jsonResponse({ error: "Unable to claim notification" }, 500);
+  if (!claimed) return jsonResponse({ ok: true, skipped: "already_claimed" });
 
   const { data: booking, error: bookingError } = await supabase
     .from("makeup_class_bookings")
@@ -514,6 +526,7 @@ Deno.serve(async (request: Request) => {
           slot.ends_at,
           meetingUrl!,
           isTeacherNotice ? "teacher" : "student",
+          notification.created_at,
         )],
       } : {}),
     }),
