@@ -86,8 +86,9 @@ somente depois instalar a migração versionada que agenda o reenvio.
 Execute os testes de CI antes de aplicar a migração. A consulta de
 auditoria é somente leitura.
 
-Este repositório possui uma divergência prévia de versão do histórico
-de migrações, documentada na issue #667. Não renomeie nem edite
+A divergência histórica de versões descrita na issue #667 foi reconciliada
+na PR #670 por identidade exata de nome e SHA256, sem renomear o SQL
+original ou alterar o ledger de produção. Não renomeie nem edite
 migrações antigas, não execute reparos diretos no ledger e não
 desative as proteções do GitHub para contornar a divergência.
 
