@@ -155,6 +155,10 @@ test("Writing submit displays official feedback immediately, without another-stu
   assert.match(displayText(h.mount),
     /seu texto será enviado ao serviço de IA da OpenAI/);
   assert.match(displayText(h.mount), /Não inclua nomes completos/);
+  assert.match(displayText(h.mount), /o texto original, a correção, a nota e as explicações/i);
+  assert.match(displayText(h.mount), /ficarão registrados na sua conta/i);
+  assert.match(displayText(h.mount), /correção é automática e pode conter imprecisões/i);
+  assert.match(displayText(h.mount), /CPF, telefones, endereços, informações de saúde/i);
   const textarea = descendants(h.mount, "textarea")[0];
   assert.ok(textarea);
   assert.equal(descendants(h.mount, "h2")[0].focused, true);
@@ -201,6 +205,7 @@ test("Reading and Grammar inputs validate and submit server-side IDs without ans
     await h.controller.open("00000000-0000-4000-8000-000000000001");
   assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
     assert.doesNotMatch(displayText(h.mount), /enviado ao serviço de IA da OpenAI/);
+    assert.doesNotMatch(displayText(h.mount), /ficarão registrados na sua conta/);
     const select = descendants(h.mount, "select")[0];
     const input = descendants(h.mount, "input")[0];
     assert.ok(select && input);
