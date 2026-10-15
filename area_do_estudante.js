@@ -7,6 +7,9 @@
   const STUDENT_AREA_PATH = "/area-do-estudante/";
   const STUDENT_RESOURCES_PATH = "/area-do-estudante/recursos/";
   const LOGIN_PATH = "/login/";
+  const SUSPENDED_PORTAL_PATHS = new Set([
+    "/exercicios-diarios"
+  ]);
 
   const state = {
     session: null,
@@ -93,6 +96,28 @@
     studyGrid.appendChild(createStudentResourcesCard());
   }
 
+
+  function removeSuspendedPortalCards() {
+    const cards = document.querySelectorAll(".menu-groups a[href]");
+
+    for (const card of cards) {
+      const href = card.getAttribute("href");
+      if (!href) continue;
+
+      let target;
+      try {
+        target = new URL(href, window.location.href);
+      } catch (_error) {
+        continue;
+      }
+
+      const path = target.pathname.replace(/\/+$/, "");
+      if (target.origin === window.location.origin && SUSPENDED_PORTAL_PATHS.has(path)) {
+        card.remove();
+      }
+    }
+  }
+
   function showAuthLoadError(status) {
     document.body.classList.remove("auth-checking");
     if (!status) return;
@@ -156,6 +181,7 @@
     await initializeReviewInvitation();
   }
 
+  removeSuspendedPortalCards();
   ensureStudentResourcesCard();
   updateStatus();
 })();

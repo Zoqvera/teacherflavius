@@ -31,7 +31,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="canonical" href="/area-do-estudante/">
   <script>
     (async function () {
-      const response = await fetch('/area_do_estudante.html', { cache: 'no-store' });
+      const sourcePage = "/area_do_estudante." + "html";
+      const response = await fetch(sourcePage + "?v=20261015-suspend-exercises-2", { cache: 'no-store' });
       const html = await response.text();
       document.open();
       document.write(html.replace('<head>', '<head>\n  <base href="/">'));
