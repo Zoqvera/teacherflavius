@@ -1,5 +1,10 @@
 (function () {
   const FLASHCARD_WEEKLY_GOAL = 3;
+  const TASK_ICONS = Object.freeze({
+    class: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 2v6M16 2v6M3 10h18"/></svg>',
+    flashcards: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="15" height="16" rx="2"/><path d="M3 7v12a2 2 0 0 0 2 2h12M10 8h7M10 12h5"/></svg>',
+    grammar: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6a8 8 0 0 0-9-2v15a8 8 0 0 1 9 2 8 8 0 0 1 9-2V4a8 8 0 0 0-9 2ZM12 6v15"/></svg>'
+  });
   let currentUser = null;
 
   function sleep(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
@@ -21,11 +26,6 @@
   function formatDate(key) {
     const match = String(key || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
     return match ? match[3] + "/" + match[2] : String(key || "");
-  }
-
-  function activityNumber(title) {
-    const match = String(title || "").match(/ATIVIDADE\s+(\d+)/i);
-    return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
   }
 
   function normalize(value) {
@@ -103,8 +103,6 @@
   async function loadData(week) {
     const client = Auth.getClient();
     const results = await Promise.all([
-      client.rpc("get_public_teacher_exercises"),
-      client.from("daily_exercise_completion").select("exercise_id,completed").eq("user_id", currentUser.id),
       client.from("flashcard_practice_days").select("practice_date").eq("user_id", currentUser.id).gte("practice_date", week.week_start).lte("practice_date", week.week_end),
       client.from("grammar_lessons").select("id,title,created_at").order("created_at", { ascending:true }),
       client.from("grammar_lesson_completion").select("lesson_id,completed,completed_at").eq("user_id", currentUser.id),
@@ -113,9 +111,9 @@
       loadClassInfo()
     ]);
 
-    results.slice(0, 7).forEach(function (result) { if (result.error) throw result.error; });
+    results.slice(0, 5).forEach(function (result) { if (result.error) throw result.error; });
 
-    const actionPlan = results[6].data;
+    const actionPlan = results[4].data;
     if (!actionPlan || typeof actionPlan !== "object" || !Object.prototype.hasOwnProperty.call(actionPlan, "lesson")) {
       throw new Error("Não foi possível identificar a próxima lição.");
     }
@@ -126,26 +124,16 @@
     }
 
     return {
-      exercises: (results[0].data || []).map(function (item) {
-        return { id:item.exercise_id, title:item.exercise_title, url:item.exercise_url, number:activityNumber(item.exercise_title) };
-      }).filter(function (item) { return item.id; }).sort(function (a,b) { return a.number-b.number; }),
-      exerciseCompletions: new Map((results[1].data || []).map(function (row) { return [row.exercise_id, row.completed === true]; })),
-      practiceDates: Array.from(new Set((results[2].data || []).map(function (row) { return String(row.practice_date).slice(0,10); }))),
-      grammarLessons: results[3].data || [],
-      grammarCompletions: results[4].data || [],
-      frequency: results[5].data || [],
+      practiceDates: Array.from(new Set((results[0].data || []).map(function (row) { return String(row.practice_date).slice(0,10); }))),
+      grammarLessons: results[1].data || [],
+      grammarCompletions: results[2].data || [],
+      frequency: results[3].data || [],
       nextRoadmap: nextRoadmap,
-      classInfo: results[7]
+      classInfo: results[5]
     };
   }
 
   function buildState(week, data) {
-    const currentExercise = data.exercises.find(function (ex) { return ex.number === Number(week.week_number); }) || null;
-    const overdue = data.exercises.filter(function (ex) {
-      return Number.isFinite(ex.number) && ex.number < Number(week.week_number) && data.exerciseCompletions.get(ex.id) !== true;
-    });
-
-    const currentExerciseDone = !!(currentExercise && data.exerciseCompletions.get(currentExercise.id) === true);
     const flashDone = data.practiceDates.length >= FLASHCARD_WEEKLY_GOAL;
     const classDone = data.frequency.some(function (row) { return isPresent(row.attendance_status); });
     const classTrackable = classDone || !!(data.classInfo && data.classInfo.class_weekday && data.classInfo.class_start_time);
@@ -162,28 +150,15 @@
     const tasks = [];
     if (classTrackable) {
       tasks.push({
-        key:"class", icon:classDone ? "✅" : "📅", tone:classDone ? "done" : "pending",
+        key:"class", icon:"class", tone:classDone ? "done" : "pending",
         title:classDone ? "Aula da semana realizada" : "Aula da semana — pendente",
         detail:data.classInfo && data.classInfo.class_weekday ? weekdayLabel(data.classInfo.class_weekday) + ", " + timeLabel(data.classInfo.class_start_time) : "Frequência ainda não registrada nesta semana",
         done:classDone, href:"/minha-turma/", button:"VER MINHA TURMA"
       });
     }
 
-    overdue.forEach(function (exercise) {
-      tasks.push({ key:"overdue-" + exercise.id, icon:"🔴", tone:"danger", title:exercise.title + " — atrasada", detail:"Atividade de uma semana anterior ainda não concluída.", done:false, href:exercise.url || "/exercicios-diarios/", button:"FAZER ATIVIDADE" });
-    });
-
-    if (currentExercise) {
-      tasks.push({
-        key:"current-exercise", icon:currentExerciseDone ? "✅" : "🟣", tone:currentExerciseDone ? "done" : "current",
-        title:currentExercise.title + (currentExerciseDone ? " — concluída" : " — fazer esta semana"),
-        detail:"Atividade correspondente à Semana " + week.week_number + ".", done:currentExerciseDone,
-        href:currentExercise.url || "/exercicios-diarios/", button:currentExerciseDone ? "ABRIR ATIVIDADE" : "FAZER ATIVIDADE"
-      });
-    }
-
     tasks.push({
-      key:"flashcards", icon:"🧠", tone:flashDone ? "done" : "pending",
+      key:"flashcards", icon:"flashcards", tone:flashDone ? "done" : "pending",
       title:"Flashcards — " + Math.min(data.practiceDates.length, FLASHCARD_WEEKLY_GOAL) + "/3 dias praticados",
       detail:flashDone ? "Meta semanal atingida." : "Pratique em " + (FLASHCARD_WEEKLY_GOAL - data.practiceDates.length) + " dia(s) diferente(s) para completar a meta.",
       done:flashDone, href:"/flashcards/", button:"PRATICAR FLASHCARDS"
@@ -191,7 +166,7 @@
 
     if (grammarTrackable) {
       tasks.push({
-        key:"grammar", icon:grammarDoneThisWeek ? "✅" : "📚", tone:grammarDoneThisWeek ? "done" : "pending",
+        key:"grammar", icon:"grammar", tone:grammarDoneThisWeek ? "done" : "pending",
         title:grammarDoneThisWeek ? "Aula de gramática — realizada nesta semana" : "Aula de gramática — pendente",
         detail:grammarDoneThisWeek ? "Você já concluiu uma aula de gramática nesta semana." : (nextGrammar ? "Próxima: " + nextGrammar.title : "Abra as aulas de gramática."),
         done:grammarDoneThisWeek, href:"/aulas-de-gramatica.html", button:"VER AULA DE GRAMÁTICA"
@@ -202,8 +177,6 @@
       tasks:tasks,
       doneCount:tasks.filter(function (task) { return task.done; }).length,
       totalCount:tasks.length,
-      overdue:overdue,
-      currentExercise:currentExercise,
       classInfo:data.classInfo,
       nextClass:nextClassText(data.classInfo),
       nextRoadmap:data.nextRoadmap
@@ -212,7 +185,7 @@
 
   function renderTask(task) {
     return '<article class="week-task ' + esc(task.tone) + '">' +
-      '<div class="task-icon">' + esc(task.icon) + '</div>' +
+      '<div class="task-icon">' + (TASK_ICONS[task.icon] || "") + '</div>' +
       '<div class="task-body"><div class="task-title">' + esc(task.title) + '</div><div class="task-detail">' + esc(task.detail) + '</div></div>' +
       '<a class="task-button" href="' + esc(task.href) + '">' + esc(task.button) + '</a>' +
     '</article>';
