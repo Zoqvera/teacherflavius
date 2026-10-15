@@ -258,7 +258,26 @@ async function run() {
       undefined, undefined, true
     ).trim();
     assert.equal(stored, '1', 'The real assessment must be saved only once.');
+
+    const budget = dockerSql(
+      "select count(*) from public.homework_ai_budget_months " +
+      "where limit_micro_usd=5000000 and spent_micro_usd between 1 and 4700 " +
+      "and reserved_micro_usd=0;",
+      undefined, undefined, true
+    ).trim();
+    assert.equal(budget, '1', 'Real provider tokens must settle against the monthly budget.');
+    const charges = dockerSql(
+      "select count(*) from public.homework_ai_budget_calls " +
+      "where actual_micro_usd is not null and settled_at is not null;",
+      undefined, undefined, true
+    ).trim();
+    assert.equal(charges, '1', 'Exactly one Writing model call must be accounted.');
   } else {
+    const budget = dockerSql(
+      "select count(*) from public.homework_ai_budget_calls;",
+      undefined, undefined, true
+    ).trim();
+    assert.equal(budget, '0', 'Missing provider credentials must not reserve budget.');
     assert.equal(writing.body.status, 'submitted');
     assert.equal(writing.body.score, null);
     assert.equal(writing.body.correction, 'unconfigured');

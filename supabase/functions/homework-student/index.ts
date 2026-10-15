@@ -4,6 +4,9 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.3";
 const ORIGIN = "https://teacherflavius.com";
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const MODEL = "gpt-6-luna";
+// Conservative budget reservation: longest accepted input and 1,400 output tokens.
+const MAX_BUDGET_INPUT_TOKENS = 40000;
+const MAX_OUTPUT_TOKENS = 1400;
 
 type StudentAction = "list" | "detail" | "progress" | "submit" | "retry_correction";
 type Payload = {
@@ -244,6 +247,7 @@ async function assessWriting(apiKey: string, original: string, prompt: string) {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: MODEL,
+        service_tier: "default", // Contrato de preço Standard, mesmo se o projeto mudar.
         reasoning: { effort: "none" },
         store: false,
         max_output_tokens: 1400,
@@ -281,7 +285,17 @@ async function assessWriting(apiKey: string, original: string, prompt: string) {
       }),
     });
     if (!response.ok) throw new Error(`Provedor de IA indisponível (${response.status}).`);
-    return parseAssessment(await response.json());
+    const body = await response.json();
+    const assessment = parseAssessment(body);
+    const usage = body?.usage;
+    // No trustworthy usage means keeping the complete conservative reserve.
+    const inputTokens = Number.isInteger(usage?.input_tokens) &&
+      usage.input_tokens >= 0 && usage.input_tokens <= MAX_BUDGET_INPUT_TOKENS
+      ? usage.input_tokens : MAX_BUDGET_INPUT_TOKENS;
+    const outputTokens = Number.isInteger(usage?.output_tokens) &&
+      usage.output_tokens >= 0 && usage.output_tokens <= MAX_OUTPUT_TOKENS
+      ? usage.output_tokens : MAX_OUTPUT_TOKENS;
+    return { ...assessment, inputTokens, outputTokens };
   } finally {
     clearTimeout(timeout);
   }
@@ -327,9 +341,25 @@ async function assessSubmittedWriting(
     throw new Error("Concessão de avaliação inválida.");
   }
   try {
-    // Somente a avaliação realmente reivindicada consome os limites horários/diários.
+    // Cotas individuais e orçamento global são aplicados antes da chamada externa.
     await consumeRateLimit(admin, userId);
+    const budget = unwrap(await admin.rpc("homework_ai_budget_reserve", {
+      p_attempt_id: submitted.attempt_id, p_token: claimed.token,
+    }), "budget-reserve");
+    if (budget?.allowed !== true) {
+      await admin.rpc("homework_release_writing_lease", {
+        p_student_id: userId, p_attempt_id: submitted.attempt_id, p_token: claimed.token,
+      });
+      return { ...submitted, status: "submitted", correction: "monthly_budget",
+        message: "Texto salvo. A correção automática atingiu o orçamento mensal e " +
+          "ficará suspensa até o próximo mês." };
+    }
     const result = await assessWriting(apiKey, claimed.text, claimed.prompt);
+    // Liquida a reserva com o uso real; sem tokens válidos, mantém a previsão máxima.
+    unwrap(await admin.rpc("homework_ai_budget_settle", {
+      p_attempt_id: submitted.attempt_id, p_token: claimed.token,
+      p_input_tokens: result.inputTokens, p_output_tokens: result.outputTokens,
+    }), "budget-settle");
     const feedback = unwrap(await admin.rpc("homework_complete_writing", {
       p_student_id: userId, p_attempt_id: submitted.attempt_id, p_token: claimed.token,
       p_score: result.score, p_comment: result.general_comment,

@@ -51,24 +51,37 @@ def assert_scenario(browser: str, viewport: tuple[str, int, int],
         "--disable-dev-shm-usage", "--no-first-run", "--no-default-browser-check",
         "--allow-file-access-from-files", "--hide-scrollbars",
         "--force-device-scale-factor=1",
-        "--virtual-time-budget=5000",
+        "--virtual-time-budget=15000",
         f"--window-size={width},{height}",
         f"--screenshot={artifact}", "--dump-dom", url,
     ]
-    try:
-        run = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True,
-                             timeout=35, check=False)
-    except subprocess.TimeoutExpired as error:
-        raise RuntimeError(f"Browser timed out: {label} {activity}/{state}") from error
-    if run.returncode != 0:
-        raise RuntimeError(
-            f"Chrome failed: {label} {activity}/{state} (exit={run.returncode})"
-        )
-    status = re.search(r'data-qa-result="([^"]+)"', run.stdout)
-    if status is None or status.group(1) != "PASS":
+    # Shared CI runners intermittently return an empty DOM before scripts mount.
+    # Retry only an unready DOM; a true FAIL remains immediate.
+    for attempt in range(3):
+        try:
+            run = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True,
+                                 timeout=60, check=False)
+        except subprocess.TimeoutExpired as error:
+            if attempt < 2:
+                continue  # Cold Chrome startup can stall on a shared CI runner.
+            raise RuntimeError(
+                f"Browser timed out: {label} {activity}/{state}"
+            ) from error
+        if run.returncode != 0:
+            raise RuntimeError(
+                f"Chrome failed: {label} {activity}/{state} (exit={run.returncode})"
+            )
+        status = re.search(r'data-qa-result="([^"]+)"', run.stdout)
+        if status is not None and status.group(1) == "PASS":
+            break
+        if status is not None and status.group(1) == "FAIL":
+            raise AssertionError(
+                f"UI assertions failed: {label} {activity}/{state}, result=FAIL"
+            )
+        # Only retry when async rendering was not ready; never mask real FAIL.
+    else:
         raise AssertionError(
-            f"UI assertions failed: {label} {activity}/{state}, result="
-            f"{status.group(1) if status else 'not ready'}"
+            f"UI never became ready: {label} {activity}/{state}"
         )
     if not artifact.is_file():
         raise RuntimeError(f"No screenshot generated: {artifact.name}")

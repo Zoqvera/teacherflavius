@@ -2,6 +2,7 @@
 -- Nunca executar em produção. Todas as alterações ficam em uma transação revertida.
 \set ON_ERROR_STOP on
 BEGIN;
+SET LOCAL app.homework_budget_notify = 'false';
 
 DO $preflight$
 begin
@@ -231,6 +232,30 @@ begin
     raise exception 'Lease Writing não retornou texto/enunciado aprovados: %', output;
   end if;
   writing_token := (output->>'token')::uuid;
+  -- Somente quem possui o lease real pode reservar orçamento.
+  output := public.homework_ai_budget_reserve(writing_attempt,writing_token);
+  if output->>'allowed' <> 'true' or
+     (output->>'reserved_micro_usd')::bigint <> 4700 then
+    raise exception 'Orçamento Writing não reservou a chamada: %',output;
+  end if;
+  output := public.homework_ai_budget_reserve(writing_attempt,writing_token);
+  if output->>'reused' <> 'true' then
+    raise exception 'Reserva por token repetido criou gasto duplicado: %',output;
+  end if;
+  output := public.homework_ai_budget_settle(writing_attempt,writing_token,1000,200);
+  if output->>'settled' <> 'true' or
+     (output->>'charged_micro_usd')::bigint <> 200 then
+    raise exception 'Uso real de tokens não foi reconciliado: %',output;
+  end if;
+  output := public.homework_ai_budget_settle(writing_attempt,writing_token,1000,200);
+  if output->>'reused' <> 'true' then
+    raise exception 'Liquidação repetida não foi idempotente: %',output;
+  end if;
+  if (select spent_micro_usd from public.homework_ai_budget_months limit 1) <> 200
+    or (select reserved_micro_usd from public.homework_ai_budget_months limit 1) <> 0 then
+    raise exception 'Contabilidade mensal inesperada.';
+  end if;
+
   output := public.homework_claim_writing(student_a,writing_attempt);
   if output->>'status' <> 'processing' then
     raise exception 'Lease concorrente não foi recusado: %',output;
@@ -258,6 +283,33 @@ begin
     raise exception 'Retomada Writing não criou um novo lease: %',output;
   end if;
   writing_token := (output->>'token')::uuid;
+
+  -- Simula avanço do consumo mensal sem realizar nenhuma requisição à IA.
+  update public.homework_ai_budget_months set spent_micro_usd=3996000;
+  output := public.homework_ai_budget_reserve(writing_attempt,writing_token);
+  if output->>'allowed' <> 'true' or
+     not (select alert_80_sent from public.homework_ai_budget_months limit 1) then
+    raise exception 'Aviso de 80%% não foi marcado ao cruzar US$ 4: %',output;
+  end if;
+  perform public.homework_ai_budget_settle(writing_attempt,writing_token,1000,200);
+
+  -- Nova concessão ao atingir o teto: bloqueia antes de gerar despesas.
+  update public.homework_ai_budget_months set spent_micro_usd=4997000;
+  update public.exercise_attempts
+    set evaluation_token='09000000-0000-4000-8000-000000000097'::uuid
+    where id=writing_attempt;
+  output := public.homework_ai_budget_reserve(writing_attempt,
+    '09000000-0000-4000-8000-000000000097'::uuid);
+  if output->>'allowed' <> 'false'
+    or output->>'reason' <> 'monthly_budget_exceeded'
+    or not (select alert_cap_sent from public.homework_ai_budget_months limit 1) then
+    raise exception 'Teto mensal US$ 5 não bloqueou a avaliação: %',output;
+  end if;
+  if (select count(*) from public.homework_ai_budget_calls) <> 2 then
+    raise exception 'Bloqueio criou reserva indevida.';
+  end if;
+  update public.exercise_attempts set evaluation_token=writing_token
+    where id=writing_attempt;
 
   output := public.homework_complete_writing(student_a,writing_attempt,writing_token,
     8,'Um texto fictício com conteúdo compreensível.',
@@ -332,6 +384,14 @@ begin
   if has_function_privilege('authenticated',
     'public.homework_submit(uuid,uuid,uuid,jsonb)', 'EXECUTE') then
     raise exception 'RPC de submissão exposta diretamente ao navegador.';
+  end if;
+  if has_function_privilege('authenticated',
+    'public.homework_ai_budget_reserve(uuid,uuid)', 'EXECUTE')
+    or has_function_privilege('authenticated',
+    'public.homework_ai_budget_settle(uuid,uuid,integer,integer)', 'EXECUTE')
+    or has_table_privilege('authenticated', 'public.homework_ai_budget_months', 'SELECT')
+    or has_table_privilege('anon', 'public.homework_ai_budget_calls', 'SELECT') then
+    raise exception 'Orçamento confidencial acessível ao navegador.';
   end if;
 end;
 $student_a_rls$;

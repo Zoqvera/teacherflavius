@@ -53,6 +53,7 @@ function harness(type = "writing") {
   const calls = { submissions: [], made: 0, renderedFeedback: 0, details: 0, retries: 0 };
   let nextSubmitError = false;
   let nextProgressError = false;
+  let budgetPaused = false;
   let progress = { status: "not_started", score: null, feedback: [] };
   const content = type === "writing" ? { prompt: "Describe your day.", guidelines: ["Use English."] }
     : type === "reading" ? { passage: "I read in the morning.", instructions: ["Answer."] }
@@ -104,6 +105,10 @@ function harness(type = "writing") {
         nextSubmitError = false;
         throw new Error("Network offline");
       }
+      if (budgetPaused) {
+        progress = { status: "submitted", score: null, feedback: [] };
+        return { ...progress, correction: "monthly_budget" };
+      }
       progress = { status: "evaluated", score: 8, feedback: type === "writing" ?
         [{ source: "ai", score: 8, original_text: value.answers.text,
           corrected_text: "I studied English.", general_comment: "Good work.",
@@ -122,6 +127,7 @@ function harness(type = "writing") {
   return {
     mount, notice, controller, calls, get progress() { return progress; },
     setSubmitError: () => { nextSubmitError = true; },
+    setBudgetPaused: () => { budgetPaused = true; },
     setProgressError: () => { nextProgressError = true; },
     setProgress: value => { progress = value; },
     buildAnswers: window.HomeworkStudentInterface.buildAnswers,
@@ -261,4 +267,20 @@ test("Reading/Grammar pending states never instruct manual teacher review", asyn
   await h.controller.open("00000000-0000-4000-8000-000000000001");
   assert.match(displayText(h.mount), /nota automática está sendo confirmada/);
   assert.doesNotMatch(displayText(h.mount), /revisão do professor/i);
+});
+
+test("Writing monthly budget pause preserves the sent text and shows a clear status", async () => {
+  const h = harness();
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  h.setBudgetPaused();
+  const writing = descendants(h.mount, "textarea")[0];
+  writing.value = "Yesterday I went to school and studied English.";
+  descendants(h.mount, "form")[0].dispatch("submit");
+  await flush();
+  assert.equal(h.calls.made, 1);
+  assert.equal(h.calls.submissions.length, 1);
+  assert.equal(h.progress.status, "submitted");
+  assert.match(displayText(h.mount), /limite mensal de correções por IA foi atingido/);
+  assert.match(displayText(h.mount), /A correção poderá ser retomada no mês seguinte/);
+  assert.doesNotMatch(displayText(h.mount), /Nota:/);
 });
