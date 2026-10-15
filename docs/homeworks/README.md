@@ -118,8 +118,8 @@ não contêm conteúdos personalizados nem chaves de IA.
   Ao clicar, a interface informa que nenhuma transmissão ou correção ocorreu. A
   renderização do feedback da futura IA contempla nota, avaliação geral, original,
   corrigido e explicações, mas não existe ainda execução da IA.
-  O modelo editorial `content.model` permanece armazenado, sem apresentar o texto
-  como solução automática ao aluno.
+  Quando fornecido pelo professor, o modelo editorial `content.model` aparece
+  como referência na pré-visualização privada.
 
 **Sem liberação:** nenhuma atividade é entregue a alunos, nenhuma tentativa/resposta/nota
 é gravada e nenhuma rota pública `/atividade_N/` é criada. `exercise_assignments`
