@@ -246,7 +246,12 @@
         form.appendChild(label);
         appendText(form, "p",
           "Para receber a correção automática, seu texto será enviado ao serviço de IA da OpenAI. " +
-          "Não inclua nomes completos, telefones, endereços ou outros dados pessoais.");
+          "O texto original, a correção, a nota e as explicações ficarão registrados na sua conta " +
+          "para acompanhamento pedagógico.");
+        appendText(form, "p",
+          "A correção é automática e pode conter imprecisões. " +
+          "Não inclua nomes completos, CPF, telefones, endereços, informações de saúde " +
+          "ou outros dados pessoais seus ou de terceiros.");
         const counter = createElement("p", "", "Caracteres: 0 / " + MAX_WRITING_LENGTH);
         counter.setAttribute("aria-live", "polite");
         writing.addEventListener("input", function () {
