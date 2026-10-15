@@ -92,7 +92,7 @@ As três tabelas editoriais recebem grants explícitos mínimos ao papel autenti
 
 **Publicação interna não significa liberação:** a autorização RLS continua exclusiva do professor inclusive quando `status='published'`. Atribuições permanecem `held`. Nenhuma rota `/atividade_N/`, botão de aluno, processamento de resposta ou Edge Function de IA está disponível. A liberação será objeto de uma etapa posterior e depende de autorização expressa.
 
-**Operação e validação:** migração `supabase/migrations/20261015044000_homeworks_stage2_schema.sql`. Foi testada em transação de banco com `ROLLBACK`, incluindo criação, salvamento, aprovação, publicação e tentativas de leitura/escrita sem autorização. A migração deverá ser aplicada por fluxo versionado e auditado; **não executar reset no banco do repositório**, cuja baseline histórica não é reproduzível de forma limpa. Controles de revisão, testes automatizados e verificações de drift continuam obrigatórios.
+**Operação e validação:** migração `supabase/migrations/20261015043416_homeworks_stage2_schema.sql`. Foi testada em transação de banco com `ROLLBACK`, incluindo criação, salvamento, aprovação, publicação e tentativas de leitura/escrita sem autorização. A migração deverá ser aplicada por fluxo versionado e auditado; **não executar reset no banco do repositório**, cuja baseline histórica não é reproduzível de forma limpa. Controles de revisão, testes automatizados e verificações de drift continuam obrigatórios.
 
 **Próximos incrementos:** editor com formatos adicionais (múltipla escolha e recursos multimídia), design completo de atividades, atribuição/entrega dos alunos após autorização, correção e rubrica de Writing por IA no servidor, observabilidade/custo/privacidade e testes de usabilidade.
 
