@@ -27,7 +27,7 @@ test("teacher notice is sent from the usual account to a separate configured rec
   assert.match(notifier, /TEACHER_BOOKING_TYPE = "teacher_booking"/);
   assert.match(notifier, /const teacherEmail = "flaviofreitas@ufu\.br"/);
   assert.doesNotMatch(notifier, /Deno\.env\.get\("MAKEUP_TEACHER_NOTIFICATION_EMAIL"\)/);
-  assert.match(notifier, /isTeacherBooking \? teacherEmail : booking\.student_email/);
+  assert.match(notifier, /isTeacherNotice \? teacherEmail : booking\.student_email/);
   assert.match(notifier, /isTeacherBooking\)[\s\S]*Nova reposição:/);
   assert.match(notifier, /Idempotency-Key/);
   assert.match(notifier, /makeup-\$\{notificationType\}-\$\{notification\.id\}/);
