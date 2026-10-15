@@ -120,3 +120,11 @@ A interface já exibe `explanations` da avaliação, então o servidor acrescent
 A saída passa por JSON Schema estrito, incluindo subnotas numéricas limitadas ao intervalo 0–10. Respostas incompletas, fora da faixa ou fora do formato não geram nota: a tentativa Writing continua recuperável para nova correção. O contrato foi conferido na documentação de Structured Outputs da OpenAI; um teste com provedor e credenciais reais ainda é **obrigatório** antes de concluir a etapa.
 
 Os pesos acordados não mudaram. Esta alteração não libera alunos, não modifica o SQL, não atinge dados preexistentes nem altera SEO. A ETAPA 5 continua em homologação.
+
+## Complemento: chamadas HTTP reais à Edge Function no Supabase descartável
+
+A validação SQL isolada é ampliada com `tests/homeworks_stage5_http_integration.cjs` e a fixture `tests/sql/homeworks_stage5_http_fixture.sql`. O GitHub Actions sobe a Edge Function **real** `homework-student` no Supabase local e cria dois usuários sintéticos via Supabase Auth com sessões JWT reais. Não reutiliza o projeto, as chaves ou os alunos de produção.
+
+A suíte valida: bloqueio global antes de qualquer liberação; sessão inválida e origem estrangeira; lista individualizada A/B; atividade Reading sem gabarito nem conteúdo secreto; recusa de acesso cruzado; submissão automática e nota 9/10 em Reading; idempotência e progresso salvo; Grammar com nota imediata 10/10; persistência de Writing sem nota quando não há chave OpenAI local; recuperação de Writing com `retry_correction` sem reenviar texto; desativação da liberação e nova negativa da Edge Function.
+
+A chave da OpenAI local fica explicitamente vazia no CI. O teste não realiza chamada à API nem valida a chave secreta do Supabase de produção. A liberação transitória ocorre somente no banco efêmero do CI, é revertida ao final do teste HTTP e toda a instância é destruída pelo job. A ETAPA 5 continua pendente de avaliação com credencial real, testes pedagógicos, dispositivos e aceite final.
