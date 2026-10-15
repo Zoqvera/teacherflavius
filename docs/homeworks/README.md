@@ -165,8 +165,8 @@ significam autorização para entrega aos alunos.
 **ETAPA 4 proposta — Submissão Segura, Progresso e Correção por IA:**
 desenvolver autorização de aluno baseada em matrícula/atribuição, entrega das
 atividades aprovadas, persistência transacional de tentativas e respostas, políticas
-RLS específicas do aluno, nota/resultados de Reading e Grammar com revisão pedagógica
-quando necessário, correção síncrona de Writing por Edge Function autenticada e
+RLS específicas do aluno, nota/resultados automáticos de Reading e Grammar por
+comparação ao gabarito, correção síncrona de Writing por Edge Function autenticada e
 rubrica auditável, limites de uso, privacidade, custo e tratamento de falhas. Projetar
 primeiro os testes de isolamento entre alunos, permissões e idempotência. O
 lançamento para alunos deve permanecer desativado até aprovação explícita.
@@ -196,10 +196,13 @@ O proprietário deve autorizar expressamente uma etapa de ativação posterior.
 4. Cada atribuição admite uma entrega oficial; repetição da mesma chave devolve
    o resultado existente, e uma chave diferente é rejeitada. Isso evita cliques
    duplicados e envios concorrentes.
-5. Reading e Grammar usam o gabarito **no servidor**. Respostas curtas que
-   divergem da correspondência literal ficam pendentes de revisão: não são
-   automaticamente marcadas como incorretas. Apenas tentativas inteiramente
-   determinísticas recebem nota final automática de 0 a 10.
+5. Reading e Grammar são avaliadas **inteiramente no servidor**, comparando
+   cada resposta ao gabarito da versão aprovada. Ignoram diferenças de caixa
+   e espaços repetidos; podem ter várias respostas aceitas definidas previamente
+   pelo professor (separadas por ponto e vírgula). Correspondência recebe 10
+   na questão e divergência recebe 0. A nota da atividade é calculada
+   imediatamente de 0 a 10, ponderada pelos pontos de cada questão, sem
+   revisão manual nem IA.
 6. Writing armazena primeiro o texto original e faz correção na Edge Function
    autenticada. Usa chave `OPENAI_API_KEY` exclusivamente no servidor, modelo
    `gpt-6-luna`, `store:false`, saída JSON estruturada e rubrica:
@@ -242,3 +245,9 @@ restaura o início em 1 somente quando o catálogo estiver vazio.
 **SEO:** nenhum arquivo público de marketing, sitemap, robots.txt, canonical
 ou caminho do aluno muda. A rota de desenvolvimento continua
 `noindex, nofollow, noarchive`.
+
+## ETAPA 5 — Correção de Reading e Grammar exclusivamente automática (15/10/2026)
+
+Por decisão do professor, foi revogada a revisão humana introduzida na PR #688. A migração incremental `20261015071000_homeworks_auto_grade_reading_grammar.sql` substitui o processamento de `homework_submit` apenas para Reading/Grammar e remove as funções `homework_review_queue` e `homework_review_answer`. O editor admite múltiplas respostas corretas para questões abertas, separadas por ponto e vírgula. Toda questão é pontuada imediatamente; tentativas objetivas são concluídas no envio, e a correção por GPT-6 Luna fica exclusiva do Writing. O arquivo histórico da migração anterior permanece intocado para integridade do ledger. O banco guarda as notas e comentário automático geral sem expor gabaritos na interface dos alunos. Os alunos permanecem bloqueados até autorização expressa.
+
+SEO: nenhuma alteração em sitemap, robots.txt ou URLs públicas. A área administrativa continua `noindex`.
