@@ -19,11 +19,9 @@ begin
 end;
 $preflight$;
 
--- O teste não valida criação de contas, matrículas ou pagamentos.
--- Ignora APENAS triggers de domínio sobre usuários/perfis neste banco efêmero.
--- Chaves estrangeiras, checks, RLS e triggers de Homeworks permanecem ativos.
-ALTER TABLE auth.users DISABLE TRIGGER USER;
-ALTER TABLE public.profiles DISABLE TRIGGER USER;
+-- Contas e perfis fictícios são criados com permissões normais.
+-- O CI não altera triggers de auth.users nem de profiles, e valida
+-- as mesmas chaves estrangeiras, políticas RLS e funções da aplicação.
 
 DO $homework_cases$
 declare
