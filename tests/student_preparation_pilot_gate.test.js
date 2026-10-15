@@ -20,7 +20,8 @@ function createScenario({
   globalEnabled = false,
   memberEnabled = false,
   globalError = false,
-  memberError = false
+  memberError = false,
+  analyticsConsent = true
 } = {}) {
   const reads = [];
   const events = [];
@@ -57,6 +58,7 @@ function createScenario({
   };
   const window = {
     location: { hostname },
+    TeacherFlaviusPrivacy: { hasAnalyticsConsent: () => analyticsConsent },
     gtag(...args) { events.push(args); }
   };
   const source = armed
@@ -144,4 +146,18 @@ test("RLS prevents unauthorized access and students cannot mutate pilot records"
   }
   assert.match(migration, /to authenticated\s+using \(\(select auth\.uid\(\)\) = user_id\)/);
   assert.match(migration, /values \(true, false\)/);
+});
+
+test("analytics consent denial prevents pilot telemetry", () => {
+  const context = createScenario({ hostname: PREVIEW_HOST, analyticsConsent: false });
+  context.window.StudentPreparationFlow.track("preparation_next_part");
+  assert.equal(context.events.length, 0);
+});
+
+test("all three student views resolve identity after validating the session", () => {
+  for (const file of ["o-que-fazer/app.js", "licao.js", "roteiro_de_estudos.html"]) {
+    const content = fs.readFileSync(path.join(root, file), "utf8");
+    assert.match(content, /resolveEligibility\(/);
+    assert.match(content, /getSession\(\)/);
+  }
 });
