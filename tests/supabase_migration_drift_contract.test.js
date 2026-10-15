@@ -556,3 +556,31 @@ test("Stage 4 Supabase-assigned migration version is checksum-attested, never re
   });
   assert.equal(tampered.status, 1);
 });
+
+
+test("student preparation pilot migration requires the exact SHA-attested Supabase version alias", () => {
+  const filename = "20261015213000_student_preparation_pilot_eligibility.sql";
+  const sql = read("supabase/migrations/" + filename);
+  const checksum = canonicalChecksum(sql);
+  const version = "20261015214937";
+  const name = "student_preparation_pilot_eligibility";
+  assert.equal(checksum, "c026abfefca5a071929eebca566461733ce49ccd590b50b9a485275705ffd264");
+  assert.ok(
+    driftScript.includes(
+      "20261015213000|" + version + "|" + name + "|" + checksum
+    )
+  );
+
+  const authorized = runDriftCheck({
+    migrations: { [filename]: sql },
+    remoteRows: [{ version, name, checksum }],
+  });
+  assert.equal(authorized.status, 0, authorized.stdout + "\n" + authorized.stderr);
+  assert.match(authorized.stdout, /verified migration alias|hash.*attest|exact sha256/i);
+
+  const altered = runDriftCheck({
+    migrations: { [filename]: sql },
+    remoteRows: [{ version, name, checksum: "0".repeat(64) }],
+  });
+  assert.equal(altered.status, 1, altered.stdout + "\n" + altered.stderr);
+});
