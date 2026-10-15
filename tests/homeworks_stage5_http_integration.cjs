@@ -69,7 +69,7 @@ async function createSyntheticUser(config, suffix) {
   return { id: result.id, jwt: session.access_token };
 }
 
-function dockerSql(sql, studentA, studentB) {
+function dockerSql(sql, studentA, studentB, tuplesOnly = false) {
   const names = execFileSync('docker', ['ps', '--format', '{{.Names}}'], {
     encoding: 'utf8',
   }).split(/\r?\n/);
@@ -77,6 +77,7 @@ function dockerSql(sql, studentA, studentB) {
   if (!container) throw new Error('Disposable Supabase database container not found.');
   const args = ['exec', '-i', container, 'psql', '-U', 'postgres',
     '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'];
+  if (tuplesOnly) args.push('-At');
   if (studentA && studentB) {
     assert.match(studentA, UUID);
     assert.match(studentB, UUID);
@@ -245,14 +246,16 @@ async function run() {
 
     const consumed = dockerSql(
       "select count(*) from public.api_rate_limit_buckets " +
-      "where bucket_key like 'homework-writing:%' and request_count=1;"
+      "where bucket_key like 'homework-writing:%' and request_count=1;",
+      undefined, undefined, true
     ).trim();
     assert.equal(consumed, '2',
       'Exactly one Writing request consumes one hourly and one daily counter.');
 
     const stored = dockerSql(
       "select count(*) from public.exercise_feedback " +
-      "where source='ai' and evaluator_model='gpt-6-luna';"
+      "where source='ai' and evaluator_model='gpt-6-luna';",
+      undefined, undefined, true
     ).trim();
     assert.equal(stored, '1', 'The real assessment must be saved only once.');
   } else {
