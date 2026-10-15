@@ -1,16 +1,12 @@
 (function () {
   "use strict";
 
-  const EXERCISE_SCHEDULE_CUTOFF = "2026-07-30";
-  const EXERCISE_TIME_ZONE = "America/Sao_Paulo";
   const PROFESSOR_EMAIL = "flaviofreitas@ufu.br";
-  const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const AUTH_RESOURCE_MAX_ATTEMPTS = 10;
   const AUTH_RESOURCE_RETRY_DELAY_MS = 150;
   const STUDENT_AREA_PATH = "/area-do-estudante/";
   const STUDENT_RESOURCES_PATH = "/area-do-estudante/recursos/";
   const LOGIN_PATH = "/login/";
-  const FALLBACK_EXERCISES_PATH = "/exercicios-diarios/";
 
   const state = {
     session: null,
@@ -31,66 +27,6 @@
       maxAttempts: AUTH_RESOURCE_MAX_ATTEMPTS,
       delayMs: AUTH_RESOURCE_RETRY_DELAY_MS
     });
-  }
-
-  function extractActivityNumber(title) {
-    const match = String(title || "").match(/ATIVIDADE\s+(\d+)/i);
-    return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
-  }
-
-  function dateKeyInSaoPaulo(value) {
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: EXERCISE_TIME_ZONE,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    }).formatToParts(date);
-
-    const values = {};
-    parts.forEach(function (part) {
-      if (part.type !== "literal") values[part.type] = part.value;
-    });
-
-    return values.year + "-" + values.month + "-" + values.day;
-  }
-
-  function dateKeyToUtcMs(dateKey) {
-    const match = String(dateKey || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!match) return NaN;
-    return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-  }
-
-  function getExerciseScheduleStartDate(profile) {
-    const storedStartDate = profile && profile.exercise_schedule_start_date
-      ? String(profile.exercise_schedule_start_date).slice(0, 10)
-      : "";
-
-    if (/^\d{4}-\d{2}-\d{2}$/.test(storedStartDate)) return storedStartDate;
-
-    const profileCreatedDate = profile && profile.created_at
-      ? dateKeyInSaoPaulo(profile.created_at)
-      : "";
-
-    if (!profileCreatedDate || profileCreatedDate <= EXERCISE_SCHEDULE_CUTOFF) {
-      return EXERCISE_SCHEDULE_CUTOFF;
-    }
-
-    return profileCreatedDate;
-  }
-
-  function getCurrentExerciseWeek(profile) {
-    const startDateKey = getExerciseScheduleStartDate(profile);
-    const todayKey = dateKeyInSaoPaulo(new Date());
-    const startMs = dateKeyToUtcMs(startDateKey);
-    const todayMs = dateKeyToUtcMs(todayKey);
-
-    if (!Number.isFinite(startMs) || !Number.isFinite(todayMs) || todayMs < startMs) return 0;
-
-    const elapsedDays = Math.floor((todayMs - startMs) / MS_PER_DAY);
-    return Math.floor(elapsedDays / 7) + 1;
   }
 
   function getLoggedEmail() {
@@ -157,28 +93,6 @@
     studyGrid.appendChild(createStudentResourcesCard());
   }
 
-  function closeOverdueModal() {
-    const modal = document.getElementById("overdueModal");
-    if (modal) modal.hidden = true;
-  }
-
-  function bindOverdueModal() {
-    const modal = document.getElementById("overdueModal");
-    const closeButton = document.getElementById("overdueClose");
-
-    if (closeButton) closeButton.addEventListener("click", closeOverdueModal);
-
-    if (modal) {
-      modal.addEventListener("click", function (event) {
-        if (event.target === modal) closeOverdueModal();
-      });
-    }
-
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") closeOverdueModal();
-    });
-  }
-
   function showAuthLoadError(status) {
     document.body.classList.remove("auth-checking");
     if (!status) return;
@@ -205,115 +119,8 @@
     await detectProfessorSession();
     updateProfessorAreaVisibility();
 
-    if (isProfessorSession()) closeOverdueModal();
-
     document.body.classList.remove("auth-checking");
     return true;
-  }
-
-  async function loadPublishedExercises() {
-    const response = await Auth.getClient().rpc("get_public_teacher_exercises");
-    if (response.error) throw response.error;
-
-    return (response.data || []).map(function (item) {
-      return {
-        id: item.exercise_id,
-        title: item.exercise_title,
-        url: item.exercise_url
-      };
-    });
-  }
-
-  async function loadStudentCompletions() {
-    const response = await Auth.getClient()
-      .from("daily_exercise_completion")
-      .select("exercise_id, completed")
-      .eq("user_id", state.session.user.id);
-
-    if (response.error) throw response.error;
-    return response.data || [];
-  }
-
-  function buildCompletionMap(completions) {
-    const completedByExerciseId = new Map();
-    completions.forEach(function (row) {
-      completedByExerciseId.set(row.exercise_id, row.completed === true);
-    });
-    return completedByExerciseId;
-  }
-
-  function isExerciseOverdue(exercise, completedByExerciseId, currentWeek) {
-    if (!exercise.id || completedByExerciseId.get(exercise.id) === true) return false;
-    const activityNumber = extractActivityNumber(exercise.title);
-    return Number.isFinite(activityNumber) && activityNumber < currentWeek;
-  }
-
-  function compareExercisesByActivityNumber(a, b) {
-    const numberDifference = extractActivityNumber(a.title) - extractActivityNumber(b.title);
-    if (numberDifference !== 0) return numberDifference;
-    return String(a.title || "").localeCompare(String(b.title || ""), "pt-BR");
-  }
-
-  function findFirstOverdueExercise(exercises, completions, currentWeek) {
-    const completedByExerciseId = buildCompletionMap(completions);
-    const overdueExercises = exercises
-      .filter(function (exercise) {
-        return isExerciseOverdue(exercise, completedByExerciseId, currentWeek);
-      })
-      .sort(compareExercisesByActivityNumber);
-
-    if (!overdueExercises.length) return null;
-    return overdueExercises.find(function (exercise) { return !!exercise.url; }) || overdueExercises[0];
-  }
-
-  function showOverdueExercise(exercise) {
-    const modal = document.getElementById("overdueModal");
-    const link = document.getElementById("overdueActivityLink");
-    if (!modal || !link || !exercise) return;
-
-    link.textContent = exercise.title || "Abrir atividade atrasada";
-    link.href = exercise.url || FALLBACK_EXERCISES_PATH;
-    modal.hidden = false;
-  }
-
-  async function showOverdueActivityIfNeeded(profile) {
-    const modal = document.getElementById("overdueModal");
-    const link = document.getElementById("overdueActivityLink");
-    if (!modal || !link) return;
-
-    if (isProfessorSession()) {
-      modal.hidden = true;
-      return;
-    }
-
-    try {
-      const currentWeek = getCurrentExerciseWeek(profile);
-      if (currentWeek <= 1) {
-        modal.hidden = true;
-        return;
-      }
-
-      const [exercises, completions] = await Promise.all([
-        loadPublishedExercises(),
-        loadStudentCompletions()
-      ]);
-
-      if (isProfessorSession()) {
-        modal.hidden = true;
-        return;
-      }
-
-      const overdueExercise = findFirstOverdueExercise(exercises, completions, currentWeek);
-      if (!overdueExercise) {
-        modal.hidden = true;
-        return;
-      }
-
-      showOverdueExercise(overdueExercise);
-    } catch (error) {
-      console.error("Não foi possível verificar atividades atrasadas:", error);
-      modal.hidden = true;
-    }
   }
 
   function clearLoginStatus() {
@@ -336,21 +143,8 @@
     clearLoginStatus();
     initializePwaInstallExperience();
 
-    if (isProfessorSession()) {
-      closeOverdueModal();
-      return;
-    }
-
-    try {
-      const profile = await Auth.getProfile();
-      await showOverdueActivityIfNeeded(profile);
-    } catch (error) {
-      console.error("Não foi possível carregar o ciclo semanal do aluno:", error);
-      closeOverdueModal();
-    }
   }
 
   ensureStudentResourcesCard();
-  bindOverdueModal();
   updateStatus();
 })();
