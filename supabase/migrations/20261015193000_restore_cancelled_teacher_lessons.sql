@@ -184,6 +184,92 @@ end;
 $function$
 
 
+-- Treat cancelled attendees as resolved when finalizing a class.
+CREATE OR REPLACE FUNCTION public.finalize_teacher_lesson_session(target_class_number integer, target_starts_at timestamp with time zone, target_date date)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  session_class_name text;
+  session_count integer := 0;
+  unresolved_names text[];
+begin
+  if not coalesce(public.is_teacher_admin(), false) then
+    raise exception 'Acesso administrativo do professor obrigatório.' using errcode = '42501';
+  end if;
+
+  if target_class_number is null or target_starts_at is null or target_date is null then
+    raise exception 'Turma, horário e data da aula são obrigatórios.' using errcode = '22023';
+  end if;
+
+  if (target_starts_at at time zone 'America/Sao_Paulo')::date is distinct from target_date then
+    raise exception 'O horário informado não pertence à data selecionada.' using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1
+    from private.academic_class_session_finalizations finalization
+    where finalization.class_number = target_class_number
+      and finalization.starts_at = target_starts_at
+  ) then
+    return jsonb_build_object(
+      'ok', true,
+      'already_finalized', true,
+      'class_number', target_class_number,
+      'starts_at', target_starts_at
+    );
+  end if;
+
+  select
+    count(*)::integer,
+    min(plan.class_name),
+    coalesce(
+      array_agg(plan.student_name order by plan.student_name)
+        filter (where plan.attendance_status not in ('present', 'absent', 'cancelled', 'cancelled_finalized')),
+      '{}'::text[]
+    )
+  into session_count, session_class_name, unresolved_names
+  from public.get_teacher_lesson_plan(target_date) plan
+  where plan.class_number = target_class_number
+    and plan.starts_at = target_starts_at;
+
+  if session_count = 0 then
+    raise exception 'Aula não encontrada ou já finalizada.' using errcode = 'P0002';
+  end if;
+
+  if cardinality(unresolved_names) > 0 then
+    raise exception 'Falta definir presença ou ausência de: %.', array_to_string(unresolved_names, ', ');
+  end if;
+
+  insert into private.academic_class_session_finalizations (
+    class_number,
+    class_name,
+    starts_at,
+    class_date,
+    finalized_by
+  )
+  values (
+    target_class_number,
+    coalesce(session_class_name, 'Turma ' || target_class_number::text),
+    target_starts_at,
+    target_date,
+    auth.uid()
+  )
+  on conflict (class_number, starts_at) do nothing;
+
+  return jsonb_build_object(
+    'ok', true,
+    'already_finalized', false,
+    'class_number', target_class_number,
+    'class_name', session_class_name,
+    'starts_at', target_starts_at,
+    'class_date', target_date
+  );
+end;
+$function$
+
 -- Immutable record of administrative reversal.
 create table if not exists private.student_regular_lesson_restorations (
   id uuid primary key default gen_random_uuid(),
