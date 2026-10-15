@@ -1,6 +1,6 @@
 # ETAPA 5 — Protocolo de retenção e aceite pedagógico de Writing
 Data: 15/10/2026
-Status: **proposta técnica — pendente de aprovação do controlador e de aceite pedagógico do professor**.
+Status: **prazo de retenção aprovado em 15/10/2026; operacionalização, base legal, transparência, menores e aceite pedagógico ainda pendentes**.
 Escopo: TAREFAS PARA CASA (Reading, Writing, Grammar), não Portal de Exercícios legado.
 
 ## 1. Constatações verificadas
@@ -13,7 +13,7 @@ Escopo: TAREFAS PARA CASA (Reading, Writing, Grammar), não Portal de Exercício
 6. A Edge Function mantém a rubrica oficial **40% cumprimento, 30% precisão, 30% clareza/vocabulário**, nota de 0 a 10 calculada pelo servidor, sem revisão manual de Reading/Grammar.
 7. Produção: `homework_release_control.enabled=false`; sem atribuições submetidas nem feedbacks reais no momento da auditoria.
 
-## 2. Proposta de ciclo de vida (não aprovada e não implementada como expurgo)
+## 2. Política de prazo aprovada; eliminação automática ainda não habilitada
 
 | Situação | Tratamento proposto | Condição |
 | --- | --- | --- |
@@ -24,7 +24,9 @@ Escopo: TAREFAS PARA CASA (Reading, Writing, Grammar), não Portal de Exercício
 | Backups e plataformas externas | Documentar janela de retenção, ciclos de exclusão e eventuais exceções; não prometer apagamento imediato em todos os sistemas | Revisão técnica dos fornecedores e jurídica |
 | Menores | Verificar adequação da base legal, melhor interesse, idade e participação responsável quando exigida | Avaliação específica antes da oferta |
 
-**Decisões pendentes do controlador:** base legal para Writing/uso de IA, retenção após término do vínculo sem exclusão da conta, política sobre menores, transparência sobre transferência internacional e atualização da página pública de privacidade. Não adotar um prazo arbitrário nem fingir que consentimento foi capturado.
+**Prazo aprovado em 15/10/2026:** reter redações, textos corrigidos, notas, respostas e feedbacks durante o vínculo ativo e por **12 meses civis a partir do encerramento formal comprovado do vínculo**, ressalvados pedidos válidos de exclusão e eventual conservação imposta por lei ou necessária ao exercício regular de direitos. Não confundir matrícula arquivada, pausa, troca de turma ou desativação de cobrança com encerramento formal. Não converter 12 meses civis em 365 dias para cronologia ou descarte. Ainda não existe evento inequívoco de encerramento da relação de ensino no cadastro, logo nenhum cron de expurgo pode ser habilitado com segurança.
+
+**Decisões ainda pendentes:** base legal para Writing/uso de IA, processo de registro verificável do encerramento, tratamento de menores, transparência sobre transferência internacional, cópias de segurança e autorização da publicação da política pública de privacidade. Não fingir que consentimento foi capturado.
 
 ## 3. Texto de transparência dentro de Writing (implementação técnica)
 
@@ -54,7 +56,8 @@ O professor deve examinar a saída **real**, não uma correção inventada ou a 
 - [x] Orçamento de Writing de US$ 5/mês com bloqueio preventivo.
 - [x] Aviso técnico mais claro na **interface privada** de Writing.
 - [ ] Homologação pedagógica do professor sobre exemplos A1/A2 em saídas do modelo.
-- [ ] Aprovação da política de retenção e tratamento de menores, com parecer apropriado.
+- [x] Prazo de retenção pedagógica de 12 meses civis após o encerramento formal, aprovado pelo controlador em 15/10/2026.
+- [ ] Operacionalização segura do marco de encerramento e eliminação, revisão do tratamento de menores e fundamentação jurídica apropriada.
 - [ ] Revisão/autorização de publicação da política pública `/privacidade/` contemplando OpenAI, transferência, finalidade e retenção.
 - [ ] Android físico/PWA, desktop com leitor de tela/teclado e conectividade intermitente.
 - [ ] **Autorização de lançamento separada e expressa**.
@@ -82,7 +85,29 @@ Nesta subetapa **não se alteram** páginas públicas, title/description/canonic
 - CI de PR #737 após conciliação de `main`: **18/18 workflows concluídos com sucesso**. O teste de restore foi reexecutado após falha transitória de conflito de porta local Docker `54322`; segunda execução passou. Testes automatizados não substituem uso físico e aceite humano.
 - **Leitura de segurança pós-implantação:** `homework_release_control.enabled=false`; **0** atribuições, **0** tentativas, **0** feedbacks, **0** versões de atividade e **0** chamadas registradas no orçamento do módulo. Nenhuma atividade ou acesso foi habilitado.
 - **Escopo do pós-deploy:** comparação de código, metadados da Edge e SQL de contagem/trava em produção. **Não** foi exercitada uma requisição autenticada de aluno real na produção. Os cenários HTTP E2E de aluno sintético usam ambiente descartável.
-- **Pendências:** definir e aprovar retenção e base legal para redações; revisar a política pública `/privacidade/` para indicar uso da OpenAI e a transferência internacional pertinente; confirmar tratamento de menores; validar amostras pedagógicas e acessibilidade física/assistiva; obter autorização separada de lançamento.
+- **Pendências:** operacionalizar a retenção de 12 meses **já aprovada**, confirmar base legal para redações, revisar a política pública `/privacidade/` para indicar uso da OpenAI e transferência internacional pertinente; confirmar tratamento de menores; validar amostras pedagógicas e acessibilidade física/assistiva; obter autorização separada de lançamento.
 - **SEO:** esta implantação não alterou URLs públicas, metadados, `canonical`, `robots`, sitemap ou texto da política pública indexável. A futura atualização de `/privacidade/` é decisão de conteúdo com impacto potencial sobre indexação e deve ser autorizada antes de publicada.
 
 **Próxima subetapa:** ETAPA 5 — Retenção, Transparência e Aceites Pedagógicos Finais. A ETAPA 6 só começará depois de todos os aceites e da autorização de lançamento.
+
+## 8. Decisão de retenção de 12 meses — 15/10/2026
+
+O controlador **aprovou expressamente** conservar respostas Reading/Grammar, redações Writing, correções por IA, notas e feedbacks **enquanto durar a matrícula ativa e por 12 meses civis após o encerramento formal do vínculo**. O prazo é uma escolha administrativa, não deve ser apresentado como período prescrito pela LGPD.
+
+### Registro operacional não destrutivo
+
+**Registrado e verificado no Supabase de produção em 15/10/2026:** o catálogo `public.data_retention_policies` contém o dataset `homeworks_academic_history`, na categoria `service`, com `enabled=true`, `automatic_purge=false`, `retention_days=null`, `source_table=null` e `timestamp_column=null`. O `rationale` registra os 12 meses civis a partir do encerramento formal comprovado e as exceções legais. A consulta de conferência confirmou todos os campos. O mecanismo genérico de expurgo é baseado na idade da linha e não serve para esse prazo. Isso registra a aprovação **sem fingir que a eliminação foi automatizada**. O registro é configuração administrativa (DML idempotente, sem alteração de esquema nem histórico de migrações).
+
+O banco atualmente fornece `profiles.archived` e `profiles.archived_at`; **esses campos não são datas confiáveis de encerramento do vínculo**, pois o professor também arquiva alunos aguardando turma, e o desarquivamento reativa a conta. Não usar `archived_at` como marco inicial. Falta registrar explicitamente o desligamento definitivo do serviço e eventual reativação. Sem esse evento, não efetuar descarte em massa nem calcular vencimentos a partir de `submitted_at`, `created_at` ou `archived_at`.
+
+A exclusão definitiva solicitada pelo titular permanece apoiada no fluxo separado e já existente, inclusive com a distinção entre registros pedagógicos e financeiros. Antes de habilitar qualquer expurgo: validar retenção em backups e fornecedores, exceções legais, avisos de auditoria, simulação `dry-run`, critérios de reativação e testes isolados de aluno ativo/arquivado/encerrado e duas identidades distintas.
+
+### Minuta de transparência — apenas para revisão, não publicada
+
+> As atividades TAREFAS PARA CASA registram suas respostas, notas e orientações pedagógicas. Nos exercícios de Writing, o texto digitado e o enunciado são enviados à OpenAI para avaliação automatizada e retorno de uma versão corrigida, comentários e explicações. A avaliação automática pode apresentar imprecisões. Não inclua informações pessoais sensíveis ou dados de terceiros em suas redações. O conteúdo do aluno e seu feedback são mantidos durante a prestação das aulas e por 12 meses civis após o encerramento formal do vínculo, ressalvadas hipóteses legais de eliminação antecipada ou conservação justificada. Você pode solicitar acesso, exportação e exclusão por meio dos canais de privacidade. A OpenAI pode tratar os dados em infraestrutura fora do Brasil; as informações sobre fornecedores, transferência internacional, retenção por terceiros e bases legais serão detalhadas na política de privacidade antes do lançamento.
+
+**Não publicar esta minuta ainda:** ainda requer revisão da base legal, tratamento de menores e das garantias de transferência internacional. A interface privada tem aviso informativo, não coleta consentimento. `store:false` reduz armazenamento de respostas na API, mas **não equivale a retenção zero**.
+
+**SEO:** a presente decisão e o registro técnico do prazo não alteram página pública, indexação ou metadados. Atualizar `/privacidade/` é alteração de conteúdo indexável com possível efeito de SEO e está sujeita a autorização separada.
+
+**Próxima subetapa:** ETAPA 5 — Protocolo de Encerramento do Vínculo e Homologação Pedagógica/Privacidade. A ETAPA 6 continua condicionada a todas as aprovações e à autorização de lançamento.
