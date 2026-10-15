@@ -736,6 +736,23 @@ jobs:
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
             < tests/sql/transactional_email_retry_homologation.sql
 
+      - name: Exercise Resend delivery tracking in disposable PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # Schema and synthetic Auth/email records are fully rolled back.
+          # No provider calls, cron jobs, or production writes occur here.
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20261015210000_resend_delivery_tracking_foundation.sql
+            cat tests/sql/resend_delivery_tracking_e2e.sql
+            echo 'ROLLBACK;'
+          } | docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1
+
       - name: Exercise email health integration in disposable PostgreSQL
         shell: bash
         run: |
