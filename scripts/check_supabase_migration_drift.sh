@@ -295,29 +295,34 @@ compare_production_identity() {
   comm -23 "${remote_versions_file}" "${local_versions_file}" > "${remote_only_file}"
   comm -13 "${remote_versions_file}" "${local_versions_file}" > "${local_only_file}"
 
-  # Strict reconciliation of a single Supabase server-versioned migration.
-  # Both the local immutable SQL and the deployed SQL must match the pinned
-  # name and SHA256. Unknown version mismatches still fail the drift gate.
-  local alias_git_version="20261015030100"
-  local alias_remote_version="20261015030846"
-  local alias_name="add_regular_and_teacher_cancellation_email_notifications"
-  local alias_sha="794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7"
+  # Only pinned, hash-verified server-assigned version aliases are recognized.
+  # Unexpected versions and modified SQL still fail the immutable history gate.
+  local alias_git_version
+  local alias_remote_version
+  local alias_name
+  local alias_sha
   local local_identity
   local remote_identity
   local expected_git
   local expected_remote
-  local_identity="$(grep -E '^20261015030100[[:space:]]' "$local_records_file" || true)"
-  remote_identity="$(grep -E '^20261015030846[[:space:]]' "$remote_records_file" || true)"
-  printf -v expected_git '%s\t%s\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
-  printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "$alias_name" "$alias_sha"
+  while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha; do
+    [[ -n "$alias_git_version" ]] || continue
+    local_identity="$(grep -E "^$alias_git_version[[:space:]]" "$local_records_file" || true)"
+    remote_identity="$(grep -E "^$alias_remote_version[[:space:]]" "$remote_records_file" || true)"
+    printf -v expected_git '%s\t%s\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
+    printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "$alias_name" "$alias_sha"
 
-  if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
-    grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
-    grep -vx "$alias_remote_version" "$remote_only_file" > "$TEMP_DIR/alias_remaining_remote" || true
-    mv "$TEMP_DIR/alias_remaining_local" "$local_only_file"
-    mv "$TEMP_DIR/alias_remaining_remote" "$remote_only_file"
-    echo "::notice::Exact SHA256 and name attest Supabase-generated migration alias; committed SQL and production ledger are unchanged."
-  fi
+    if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
+      grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
+      grep -vx "$alias_remote_version" "$remote_only_file" > "$TEMP_DIR/alias_remaining_remote" || true
+      mv "$TEMP_DIR/alias_remaining_local" "$local_only_file"
+      mv "$TEMP_DIR/alias_remaining_remote" "$remote_only_file"
+      echo "::notice::Exact SHA256 and name attest Supabase-generated migration alias; committed SQL and production ledger are unchanged."
+    fi
+  done <<'VERIFIED_MIGRATION_ALIASES'
+20261015030100|20261015030846|add_regular_and_teacher_cancellation_email_notifications|794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7
+20261015041000|20261015041123|retry_transactional_emails_safely|5550c24828b5de718108b3c0709f50b8079fc1a6f8ea07267a75dc80f8d277da
+VERIFIED_MIGRATION_ALIASES
 
   join -t $'\t' \
     -o '1.1,1.2,2.2,1.3,2.3' \
