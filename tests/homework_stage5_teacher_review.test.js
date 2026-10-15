@@ -45,7 +45,7 @@ function load(filename, globalName, document) {
 test("teacher review RPC requires both server-side admin privileges and MFA", () => {
   assert.match(migration, /create function public\.homework_review_queue/);
   assert.match(migration, /create function public\.homework_review_answer/);
-  assert.equal((migration.match(/not \(select public\.is_teacher_admin\(\)\)/g) || []).length, 2);
+  assert.equal((migration.match(/coalesce\(\(select public\.is_teacher_admin\(\)\),false\) is not true/g) || []).length, 2);
   assert.equal((migration.match(/auth\.jwt\(\)->>'aal'/g) || []).length, 2);
   assert.match(migration, /auth\.uid\(\) is null/);
   assert.match(migration, /security definer set search_path = ''/);
