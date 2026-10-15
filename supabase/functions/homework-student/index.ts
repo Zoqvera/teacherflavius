@@ -247,9 +247,10 @@ async function assessWriting(apiKey: string, original: string, prompt: string) {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: MODEL,
+        service_tier: "default", // Contrato de preço Standard, mesmo se o projeto mudar.
         reasoning: { effort: "none" },
         store: false,
-        max_output_tokens: MAX_OUTPUT_TOKENS,
+        max_output_tokens: 1400,
         input: [
           { role: "system", content: [
             "Você é avaliador pedagógico de escrita em inglês para estudantes A1/A2.",
