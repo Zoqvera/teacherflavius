@@ -68,3 +68,11 @@ O fluxo definitivo é: cada resposta do aluno é comparada no servidor com o gab
 O Writing permanece independente com avaliação GPT-6 Luna no servidor.
 
 **Liberação:** o bloqueio `homework_release_control.enabled=false` não é alterado, a página de alunos não é aberta, o portal de atividades antigo continua intacto e os testes ponta a ponta ainda são exigidos. **SEO:** mudanças apenas na área administrativa privada, mantendo `noindex, nofollow, noarchive`; nenhum sitemap, canonical ou robots.txt alterado.
+
+## Evidência de implantação da correção exclusivamente automática
+
+A migração foi aplicada ao Supabase com a versão registrada pelo servidor `20261015065527` para o arquivo versionado `20261015071000_homeworks_auto_grade_reading_grammar.sql`. O checksum SHA-256 da declaração implantada é `4d47c634ced700ae8d0e53e8c84e0cdeca83bf6bec079819eec2a68c3b9c2cbb`; ambos estão reconciliados em `scripts/check_supabase_migration_drift.sh`, sem editar histórico já aplicado.
+
+Após a implantação, a RPC `homework_submit` contém pontuação 10/0 e não contém pendência de avaliação manual. As funções `homework_review_queue` e `homework_review_answer` não existem mais. `anon` e `authenticated` não possuem EXECUTE na RPC de envio; o servidor continua usando `service_role`. O bloqueio `homework_release_control.enabled=false` foi confirmado com zero atividades e tentativas.
+
+Permanece pendente o teste com contas fictícias e atribuições em ambiente isolado; esta alteração substitui o mecanismo de pontuação, mas **não conclui** a homologação integrada da ETAPA 5 nem libera alunos.
