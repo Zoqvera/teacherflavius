@@ -42,9 +42,10 @@ No terminal, dentro do repositório, vincule o projeto e salve os segredos:
 npx supabase login
 npx supabase link --project-ref SEU_PROJECT_REF
 npx supabase secrets set RESEND_API_KEY=re_sua_chave
-npx supabase secrets set ENROLLMENT_NOTIFICATION_EMAIL=seu-email@exemplo.com
 npx supabase secrets set ENROLLMENT_WEBHOOK_SECRET=UM_SEGREDO_LONGO_E_ALEATORIO
 ```
+
+A notificação administrativa de matrícula é encaminhada para `flaviofreitas@ufu.br`, endereço aprovado e definido diretamente na Edge Function. O Secret legado `ENROLLMENT_NOTIFICATION_EMAIL` pode continuar existindo para outras funções, mas não determina mais o destinatário da matrícula.
 
 Use o mesmo valor de `ENROLLMENT_WEBHOOK_SECRET` no cabeçalho do webhook criado no passo 6.
 
@@ -73,7 +74,7 @@ No painel do Supabase:
 ## 7. Testar
 
 1. Faça uma nova matrícula de teste no site.
-2. Confira a caixa de entrada do aluno e também o e-mail administrativo configurado em `ENROLLMENT_NOTIFICATION_EMAIL`.
+2. Confira a caixa de entrada do aluno e também a caixa de entrada administrativa `flaviofreitas@ufu.br`.
 3. Em **Edge Functions > notify-new-enrollment > Logs**, confirme que a chamada terminou com sucesso.
 4. No **Table Editor**, consulte `enrollment_email_notifications`; o registro deve aparecer com `status = sent`.
 
