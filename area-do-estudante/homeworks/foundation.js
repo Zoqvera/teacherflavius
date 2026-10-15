@@ -5,51 +5,225 @@
   const LOGIN_PATH = "/login/";
   const AUTH_MAX_ATTEMPTS = 40;
   const AUTH_RETRY_DELAY_MS = 100;
-  const PREVIEW_ACTIVITY_COUNT = 9;
+  const TYPE_LABELS = Object.freeze({
+    reading: "Reading",
+    writing: "Writing",
+    grammar: "Grammar"
+  });
+
+  let currentExercise = null;
+  let busy = false;
+
+  function byId(id) {
+    return document.getElementById(id);
+  }
 
   function showStatus(message) {
-    const status = document.getElementById("homeworkStatus");
+    const status = byId("homeworkStatus");
     if (status) status.textContent = message;
   }
 
   function authIsReady() {
-    return !!(window.Auth && window.SUPABASE_CONFIG &&
-      window.HomeworkAccessService && window.HomeworkActivityModel &&
-      window.Auth.isConfigured());
+    return !!(window.Auth && window.SUPABASE_CONFIG && window.HomeworkAccessService &&
+      window.HomeworkAdminService && window.Auth.isConfigured());
   }
 
-  function createActivityItem(blueprint) {
-    const item = document.createElement("li");
-    item.className = "homework-activity";
+  function lines(text) {
+    return text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  }
 
-    const title = document.createElement("strong");
-    title.textContent = blueprint.title;
+  function toQuestions(text) {
+    return lines(text).map(function (line) {
+      const divider = line.indexOf(" | ");
+      const prompt = divider < 0 ? line : line.slice(0, divider).trim();
+      const expectedAnswer = divider < 0 ? "" : line.slice(divider + 3).trim();
+      return {
+        type: "short_answer",
+        prompt: prompt,
+        options: [],
+        answer_key: expectedAnswer ? { accepted: [expectedAnswer] } : null
+      };
+    });
+  }
 
-    const details = document.createElement("span");
-    details.textContent = "Rascunho — não publicado";
+  function serializeEditor(exercise) {
+    const main = byId("homeworkMainText").value.trim();
+    const guidance = lines(byId("homeworkGuidance").value);
+    const examples = lines(byId("homeworkExamples").value);
+    const content = exercise.activity_type === "reading"
+      ? { passage: main, instructions: guidance }
+      : exercise.activity_type === "writing"
+        ? { prompt: main, guidelines: guidance, model: examples.join("\n") }
+        : { explanation: main, instructions: guidance, examples: examples };
+    return {
+      exerciseId: exercise.id,
+      title: byId("homeworkTitle").value.trim(),
+      content: content,
+      questions: exercise.activity_type === "writing" ? [] : toQuestions(byId("homeworkQuestions").value)
+    };
+  }
 
-    item.appendChild(title);
-    item.appendChild(details);
-    return item;
+  function populateEditor(exercise, version, questions) {
+    const content = version ? version.content || {} : {};
+    byId("homeworkEditorTitle").textContent = "ATIVIDADE " + exercise.exercise_number +
+      " — " + TYPE_LABELS[exercise.activity_type];
+    byId("homeworkTitle").value = exercise.title;
+    byId("homeworkMainText").value = content.passage || content.prompt || content.explanation || "";
+    byId("homeworkGuidance").value = (content.instructions || content.guidelines || []).join("\n");
+    byId("homeworkExamples").value = Array.isArray(content.examples)
+      ? content.examples.join("\n") : (content.model || "");
+    byId("homeworkQuestions").value = questions.map(function (question) {
+      const accepted = question.answer_key && question.answer_key.accepted;
+      return question.prompt + (accepted && accepted[0] ? " | " + accepted[0] : "");
+    }).join("\n");
+    byId("homeworkMainLabel").textContent = {
+      reading: "Texto de leitura em inglês",
+      writing: "Enunciado de produção escrita",
+      grammar: "Explicação gramatical"
+    }[exercise.activity_type];
+    byId("homeworkGuidanceLabel").textContent =
+      exercise.activity_type === "writing" ? "Orientações (uma por linha)" :
+        "Instruções (uma por linha)";
+    byId("homeworkExamplesLabel").textContent =
+      exercise.activity_type === "writing" ? "Modelo de texto (linhas separadas)" :
+        "Exemplos (um por linha)";
+    byId("homeworkQuestionGroup").hidden = exercise.activity_type === "writing";
+    byId("homeworkQuestionHelp").textContent = exercise.activity_type === "reading"
+      ? "Exatamente 10 perguntas em português. Uma por linha: Pergunta | resposta esperada"
+      : "Ao menos uma questão. Uma por linha: Pergunta | resposta esperada";
+    byId("homeworkVersionLabel").textContent = version
+      ? "Última versão: " + version.version_number + " (" +
+        (version.status === "approved" ? "aprovada" : "rascunho") + "). Salvar cria nova versão."
+      : "Ainda não existem versões. O primeiro salvamento criará a versão 1.";
+    byId("homeworkEditor").hidden = false;
+  }
+
+  async function openEditor(exercise) {
+    currentExercise = exercise;
+    const versions = await window.HomeworkAdminService.listVersions(window.Auth, exercise.id);
+    const latest = versions[0] || null;
+    const questions = latest
+      ? await window.HomeworkAdminService.listQuestions(window.Auth, latest.id) : [];
+    populateEditor(exercise, latest, questions);
+    byId("homeworkTitle").focus();
+  }
+
+  function createButton(label, callback) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.disabled = busy;
+    button.addEventListener("click", function () {
+      runAction(callback);
+    });
+    return button;
+  }
+
+  async function runAction(operation) {
+    if (busy) return;
+    busy = true;
+    try {
+      await operation();
+    } catch (error) {
+      showStatus("Operação não concluída: " + (error && error.message || "erro desconhecido"));
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function refreshCatalog() {
+    const list = byId("homeworkActivityList");
+    const exercises = await window.HomeworkAdminService.listExercises(window.Auth);
+    const fragment = document.createDocumentFragment();
+
+    for (const exercise of exercises) {
+      const versions = await window.HomeworkAdminService.listVersions(window.Auth, exercise.id);
+      const latest = versions[0];
+      const item = document.createElement("li");
+      item.className = "homework-activity";
+      const information = document.createElement("div");
+      const heading = document.createElement("strong");
+      heading.textContent = "ATIVIDADE " + exercise.exercise_number +
+        " — " + TYPE_LABELS[exercise.activity_type];
+      const details = document.createElement("span");
+      details.textContent = exercise.title + " · " +
+        (exercise.status === "published" ? "Publicada internamente (sem acesso de alunos)" :
+          "Rascunho") + (latest ? " · versão " + latest.version_number : " · sem versão");
+      information.append(heading, details);
+      const controls = document.createElement("div");
+      controls.className = "homework-controls";
+      if (exercise.status === "draft") {
+        controls.appendChild(createButton("Editar", async function () {
+          await openEditor(exercise);
+          showStatus("Editor aberto. As alterações ainda não foram salvas.");
+        }));
+        if (latest && latest.status === "draft") {
+          controls.appendChild(createButton("Aprovar versão", async function () {
+            await window.HomeworkAdminService.approveVersion(window.Auth, latest.id);
+            await refreshCatalog();
+            showStatus("Versão aprovada. A atividade permanece indisponível aos alunos.");
+          }));
+        }
+        if (latest && latest.status === "approved") {
+          controls.appendChild(createButton("Publicar internamente", async function () {
+            await window.HomeworkAdminService.publishVersion(window.Auth, latest.id);
+            byId("homeworkEditor").hidden = true;
+            currentExercise = null;
+            await refreshCatalog();
+            showStatus("Atividade publicada apenas para o professor. Alunos continuam bloqueados.");
+          }));
+        }
+      }
+      item.append(information, controls);
+      fragment.appendChild(item);
+    }
+    if (exercises.length === 0) {
+      const item = document.createElement("li");
+      item.className = "homework-activity";
+      item.textContent = "Nenhuma atividade cadastrada. Crie o primeiro rascunho para iniciar a sequência.";
+      fragment.appendChild(item);
+    }
+    list.replaceChildren(fragment);
+  }
+
+  function bindControls() {
+    byId("homeworkCreateDraft").addEventListener("click", function () {
+      runAction(async function () {
+        const created = await window.HomeworkAdminService.createDraft(window.Auth);
+        await refreshCatalog();
+        await openEditor(created);
+        showStatus("Rascunho numerado criado. Nada foi disponibilizado aos alunos.");
+      });
+    });
+
+    byId("homeworkEditorForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+      runAction(async function () {
+        if (!currentExercise) return;
+        const draft = serializeEditor(currentExercise);
+        await window.HomeworkAdminService.saveVersion(window.Auth, draft);
+        const selected = currentExercise;
+        await refreshCatalog();
+        await openEditor({ ...selected, title: draft.title });
+        showStatus("Nova versão salva como rascunho. Aprovação do professor pendente.");
+      });
+    });
+
+    byId("homeworkCloseEditor").addEventListener("click", function () {
+      byId("homeworkEditor").hidden = true;
+      currentExercise = null;
+    });
   }
 
   function showTeacherPreview() {
-    const preview = document.getElementById("homeworkPreview");
-    const list = document.getElementById("homeworkActivityList");
-    if (!preview || !list) {
-      showStatus("A estrutura da pré-visualização está indisponível.");
-      return;
-    }
-
-    const drafts = window.HomeworkActivityModel.listDrafts(PREVIEW_ACTIVITY_COUNT);
-    const fragment = document.createDocumentFragment();
-    drafts.forEach(function (draft) {
-      fragment.appendChild(createActivityItem(draft));
+    byId("homeworkPreview").hidden = false;
+    bindControls();
+    showStatus("Acesso do professor confirmado. Carregando catálogo privado...");
+    refreshCatalog().then(function () {
+      showStatus("Catálogo privado carregado. O acesso dos alunos permanece desativado.");
+    }).catch(function (error) {
+      showStatus("Falha ao carregar atividades: " + error.message);
     });
-
-    list.replaceChildren(fragment);
-    preview.hidden = false;
-    showStatus("Acesso de professor confirmado. Nenhuma atividade foi publicada.");
   }
 
   async function initialize() {
@@ -57,7 +231,6 @@
       showStatus("Não foi possível iniciar a verificação de acesso.");
       return;
     }
-
     const ready = await window.ResourceWaiter.waitUntil(authIsReady, {
       maxAttempts: AUTH_MAX_ATTEMPTS,
       delayMs: AUTH_RETRY_DELAY_MS
@@ -66,7 +239,6 @@
       showStatus("A autenticação está indisponível. Atualize a página.");
       return;
     }
-
     const access = await window.HomeworkAccessService.resolveAccess(window.Auth);
     if (access === window.HomeworkAccessService.ACCESS.UNAUTHENTICATED) {
       window.location.replace(LOGIN_PATH + "?next=" + encodeURIComponent(HOMEWORK_PATH));
@@ -78,12 +250,11 @@
         : "Não foi possível validar a permissão administrativa. Acesso bloqueado.");
       return;
     }
-
     showTeacherPreview();
   }
 
   initialize().catch(function (error) {
     console.error("Falha na inicialização de TAREFAS PARA CASA:", error);
-    showStatus("Não foi possível abrir a pré-visualização. Acesso bloqueado.");
+    showStatus("Não foi possível abrir o gerenciamento. Acesso bloqueado.");
   });
 })();

@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow, noarchive">
   <meta name="theme-color" content="#02102B">
-  <title>Tarefas para Casa — Ambiente de Desenvolvimento</title>
+  <title>Tarefas para Casa — Gerenciamento Privado</title>
   <base href="/">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase_config.js?v=20260430-3"></script>
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260430-3"></script>
-  <link rel="stylesheet" href="/area-do-estudante/homeworks/foundation.css?v=20261015-1">
+  <link rel="stylesheet" href="/area-do-estudante/homeworks/foundation.css?v=20261015-2">
 </head>
 <body>
   <main class="homework-shell">
     <header class="homework-header">
       <p class="homework-kicker">TEACHER FLÁVIO</p>
       <h1>TAREFAS PARA CASA</h1>
-      <p>Ambiente de desenvolvimento — Etapa 1: Fundação e Arquitetura</p>
+      <p>Ambiente de desenvolvimento — Etapa 2: Banco de Dados e Gerenciamento</p>
       <p id="homeworkStatus" class="homework-status" role="status" aria-live="polite">
         Verificando acesso do professor...
       </p>
@@ -26,8 +26,33 @@
 
     <section id="homeworkPreview" class="homework-preview" aria-labelledby="homeworkPreviewTitle" hidden>
       <h2 id="homeworkPreviewTitle">Sequência de atividades</h2>
-      <p>Este é apenas o planejamento estrutural. As atividades ainda não têm conteúdo e não estão disponíveis aos alunos.</p>
+      <p>Catálogo administrativo de Reading, Writing e Grammar. Mesmo atividades publicadas internamente não estão disponíveis aos alunos.</p>
+      <button id="homeworkCreateDraft" type="button">Criar próximo rascunho</button>
       <ol id="homeworkActivityList" class="homework-activity-list"></ol>
+    </section>
+
+    <section id="homeworkEditor" class="homework-preview" aria-labelledby="homeworkEditorTitle" hidden>
+      <h2 id="homeworkEditorTitle">Editor de atividade</h2>
+      <p id="homeworkVersionLabel"></p>
+      <form id="homeworkEditorForm" class="homework-form">
+        <label for="homeworkTitle">Título</label>
+        <input id="homeworkTitle" type="text" maxlength="160" required>
+        <label id="homeworkMainLabel" for="homeworkMainText">Conteúdo principal</label>
+        <textarea id="homeworkMainText" rows="10" required></textarea>
+        <label id="homeworkGuidanceLabel" for="homeworkGuidance">Orientações (uma por linha)</label>
+        <textarea id="homeworkGuidance" rows="4"></textarea>
+        <label id="homeworkExamplesLabel" for="homeworkExamples">Exemplos (um por linha)</label>
+        <textarea id="homeworkExamples" rows="4"></textarea>
+        <div id="homeworkQuestionGroup" class="homework-question-group">
+          <label for="homeworkQuestions">Questões e gabarito</label>
+          <p id="homeworkQuestionHelp"></p>
+          <textarea id="homeworkQuestions" rows="10" spellcheck="false"></textarea>
+        </div>
+        <div class="homework-controls">
+          <button type="submit">Salvar nova versão</button>
+          <button id="homeworkCloseEditor" type="button">Fechar editor</button>
+        </div>
+      </form>
     </section>
 
     <nav class="homework-navigation" aria-label="Navegação">
@@ -38,6 +63,7 @@
   <script src="/resource_waiter.js?v=20260902-2"></script>
   <script src="/homework_activity_model.js?v=20261015-1"></script>
   <script src="/homework_access_service.js?v=20261015-1"></script>
-  <script src="/area-do-estudante/homeworks/foundation.js?v=20261015-1"></script>
+  <script src="/homework_admin_service.js?v=20261015-2"></script>
+  <script src="/area-do-estudante/homeworks/foundation.js?v=20261015-2"></script>
 </body>
 </html>

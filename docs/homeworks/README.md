@@ -1,8 +1,9 @@
 # TAREFAS PARA CASA — Plano técnico e critérios de liberação
 
-## Estado atual: ETAPA 1 — Fundação e Arquitetura
+## Histórico: ETAPA 1 — Fundação e Arquitetura
 
 O recurso é desenvolvido no repositório TeacherFlavius e permanece desativado para alunos.
+A ETAPA 2 acrescenta persistência e gerenciamento privativos ao professor, descritos ao final.
 A etapa inicial entrega apenas a pré-visualização estrutural de professor na rota
 /area-do-estudante/homeworks/. Não existe atividade publicável, resposta de aluno,
 correção por IA, pontuação ou integração nova de banco nesta etapa.
@@ -70,3 +71,29 @@ A nova rota tem noindex, nofollow, noarchive, não possui link de menu nem entra
 no sitemap. Nenhuma página pública de marketing, canonical, sitemap ou robots.txt
 foi alterada. A orientação noindex é coerente com o bloqueio de lançamento,
 mas o impacto dessa decisão deve ser comunicado ao proprietário.
+
+
+## ETAPA 2 — Estrutura do Banco de Dados e Gerenciamento das Atividades
+
+Implementação administrativa isolada, sem migração de dados do Portal de Exercícios.
+
+**Persistência:**
+
+- `exercises`: catálogo, numeração automática, alternância Reading → Writing → Grammar, estado e versão publicada.
+- `exercise_versions`: conteúdo editorial versionado; cada salvamento cria um snapshot adicional.
+- `exercise_questions`: perguntas ordenadas, tipo e gabarito (exclusivos do servidor/professor).
+- `exercise_assignments`: atribuições mantidas obrigatoriamente em `held`; nenhuma entrega é liberada.
+- `exercise_attempts`, `exercise_answers` e `exercise_feedback`: preparação do histórico para próximas etapas, sem escrita de alunos nem integração com IA ainda.
+
+A RLS exige simultaneamente a autorização `is_teacher_admin()` e sessão MFA AAL2 para todas as tabelas.
+As três tabelas editoriais recebem grants explícitos mínimos ao papel autenticado, filtrado por RLS; respostas e feedback não recebem grants de acesso estudantil nem de escrita pelo navegador. Alunos e usuários não autenticados **não recebem nenhuma política de acesso**. A lista antiga de exercícios e respectivas tabelas permanecem intactas.
+
+**Gerenciamento:** a rota de pré-visualização agora permite ao professor criar o próximo rascunho numerado, editar campos próprios de Reading, Writing e Grammar, salvar nova versão, aprová-la e marcar a publicação apenas internamente. A publicação é proibida sem aprovação de uma versão da mesma atividade. Reading exige dez perguntas com gabarito, Grammar ao menos uma e Writing não armazena perguntas objetivas. Versões aprovadas são imutáveis. Enunciados e gabaritos nunca são embutidos no HTML/JS estático.
+
+**Publicação interna não significa liberação:** a autorização RLS continua exclusiva do professor inclusive quando `status='published'`. Atribuições permanecem `held`. Nenhuma rota `/atividade_N/`, botão de aluno, processamento de resposta ou Edge Function de IA está disponível. A liberação será objeto de uma etapa posterior e depende de autorização expressa.
+
+**Operação e validação:** migração `supabase/migrations/20261015043416_homeworks_stage2_schema.sql`. Foi testada em transação de banco com `ROLLBACK`, incluindo criação, salvamento, aprovação, publicação e tentativas de leitura/escrita sem autorização. A migração deverá ser aplicada por fluxo versionado e auditado; **não executar reset no banco do repositório**, cuja baseline histórica não é reproduzível de forma limpa. Controles de revisão, testes automatizados e verificações de drift continuam obrigatórios.
+
+**Próximos incrementos:** editor com formatos adicionais (múltipla escolha e recursos multimídia), design completo de atividades, atribuição/entrega dos alunos após autorização, correção e rubrica de Writing por IA no servidor, observabilidade/custo/privacidade e testes de usabilidade.
+
+**SEO:** rota em desenvolvimento mantém `noindex, nofollow, noarchive`, sem inclusão no sitemap, links públicos ou mudanças em páginas comerciais.
