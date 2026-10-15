@@ -198,7 +198,11 @@ test('Writing is persisted, assessed by mocked AI and visible through progress',
   assert.equal(h.calls.ai.length, 1);
   const providerBody = JSON.parse(h.calls.ai[0].options.body);
   assert.equal(providerBody.store, false);
-  assert.equal(providerBody.model, 'gpt-4.1-mini');
+  assert.equal(providerBody.model, 'gpt-6-luna');
+  assert.equal(providerBody.reasoning.effort, 'none');
+  assert.equal(providerBody.max_output_tokens, 1400);
+  assert.equal(providerBody.text.format.type, 'json_schema');
+  assert.equal(providerBody.text.format.strict, true);
   assert.equal(h.calls.ai[0].options.headers.Authorization, 'Bearer server-test-only');
   assert.equal(JSON.stringify(providerBody).includes(STUDENT), false);
   const progress = await h.request({ action: 'progress', assignment_id: ASSIGNMENT });

@@ -202,7 +202,7 @@ O proprietário deve autorizar expressamente uma etapa de ativação posterior.
    determinísticas recebem nota final automática de 0 a 10.
 6. Writing armazena primeiro o texto original e faz correção na Edge Function
    autenticada. Usa chave `OPENAI_API_KEY` exclusivamente no servidor, modelo
-   `gpt-4.1-mini`, `store:false`, saída JSON estruturada e rubrica:
+   `gpt-6-luna`, `store:false`, saída JSON estruturada e rubrica:
    cumprimento do enunciado (40%), precisão linguística (30%) e
    clareza/vocabulário (30%). A nota é 0–10; há avaliação geral, original,
    corrigido e explicações em português.
