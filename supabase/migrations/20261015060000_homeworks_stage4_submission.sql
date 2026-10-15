@@ -362,3 +362,13 @@ comment on table public.homework_release_control is
   'Bloqueio operacional. enabled=false em producao ate autorizacao expressa do professor.';
 comment on function public.homework_submit(uuid,uuid,uuid,jsonb) is
   'Somente servidor autenticado: RLS de aluno nao permite escritas diretas.';
+
+-- Testes transacionais anteriores consumiram valores da identity mesmo apos ROLLBACK.
+-- Recupera a numeracao inicial somente quando ainda nao ha atividade cadastrada.
+do $sequence$
+begin
+  if not exists (select 1 from public.exercises) then
+    perform setval('public.exercises_exercise_number_seq'::regclass, 1, false);
+  end if;
+end;
+$sequence$;
