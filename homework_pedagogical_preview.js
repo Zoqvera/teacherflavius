@@ -172,7 +172,10 @@
         }
         const accepted = acceptedAnswers(question);
         if (!accepted.length) {
-          issues.push("A questão " + number + " não contém gabarito.");
+          issues.push("A questão " + number + " não contém gabarito válido.");
+        }
+        if (questionPoints(question) === null) {
+          issues.push("A questão " + number + " possui peso de pontuação inválido.");
         }
         if (question.question_type === "multiple_choice") {
           const options = Array.isArray(question.options) ? question.options : [];
