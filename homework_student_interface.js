@@ -265,21 +265,24 @@
       status("Atividade carregada. Responda antes de enviar.");
     }
 
-    async function open(assignmentId) {
-      return withLock(async function () {
-        if (!assignmentId || typeof assignmentId !== "string") {
-          throw new TypeError("Atividade não identificada.");
-        }
-        activeAssignment = assignmentId;
-        currentSubmission = null;
-        const detail = await service.detail(auth, assignmentId);
-        if (!Object.hasOwn(TYPES, detail.activity_type) || !Array.isArray(detail.questions)) {
-          throw new Error("Conteúdo da atividade inválido.");
-        }
-        currentDetail = detail;
-        const progress = await service.progress(auth, assignmentId);
-        showProgress(progress);
-      });
+    async function openActivity(assignmentId) {
+      if (!assignmentId || typeof assignmentId !== "string") {
+        throw new TypeError("Atividade não identificada.");
+      }
+      activeAssignment = assignmentId;
+      currentSubmission = null;
+      const detail = await service.detail(auth, assignmentId);
+      if (!detail || !Object.hasOwn(TYPES, detail.activity_type) ||
+        !Array.isArray(detail.questions)) {
+        throw new Error("Conteúdo da atividade inválido.");
+      }
+      currentDetail = detail;
+      const progress = await service.progress(auth, assignmentId);
+      showProgress(progress);
+    }
+
+    function open(assignmentId) {
+      return withLock(() => openActivity(assignmentId));
     }
 
     async function load() {
@@ -298,7 +301,7 @@
         const score = safeNumber(row.score);
         appendText(item, "span", score === null ? (row.status === "not_started"
           ? "Não realizada" : "Em processamento ou revisão") : "Nota: " + score + "/10");
-        item.appendChild(button("Abrir atividade", () => open(row.assignment_id)));
+        item.appendChild(button("Abrir atividade", () => openActivity(row.assignment_id)));
         list.appendChild(item);
       }
       fragment.appendChild(list);
