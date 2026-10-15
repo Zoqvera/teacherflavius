@@ -25,7 +25,8 @@
 
 - Links diretos de Google Forms compartilhados anteriormente podem continuar acessíveis fora da plataforma. A suspensão impede sua oferta pelo site e pelo catálogo autenticado, mas não revoga permissões no serviço externo.
 - **SEO:** conteúdo das páginas antigas mudou para um aviso de suspensão, preservando o `canonical`, `robots.txt` e o sitemap. Qualquer alteração de indexação ou redirecionamento requer decisão específica.
-- A página pública de divulgação do curso ainda menciona o Portal de Exercícios como recurso. Corrigir essa comunicação deve ser uma decisão específica, com avaliação de SEO, e não integra o encerramento técnico atual.
+- **Decisão de comunicação pública de 15/10/2026:** o responsável determinou manter a página de apresentação do curso mencionando o Portal de Exercícios como recurso disponível, inclusive no card de recursos e na seção de perguntas frequentes. Não remover, substituir, ocultar nem reescrever essas referências sem uma nova decisão explícita. A suspensão operacional para os alunos permanece vigente e não é afetada por essa decisão editorial.
+- **SEO da página de divulgação:** nenhum ajuste de texto público, `title`, descrição, `canonical`, diretrizes de indexação, `robots.txt` ou sitemap é autorizado nesta etapa. Eventual modificação futura deve ser apresentada previamente para decisão do responsável.
 
 ## Reativação futura
 
