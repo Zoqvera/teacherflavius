@@ -439,3 +439,55 @@ test("CI enables append-only proposal mode exclusively for pull requests", () =>
   assert.match(driftScript, /new_version.*production_tip/);
   assert.match(driftScript, /MIGRATION_PR_ALLOW_NEW/);
 });
+
+
+test("the singular Supabase-generated version alias passes only for identical pinned SQL", () => {
+  const filename = "20261015030100_add_regular_and_teacher_cancellation_email_notifications.sql";
+  const content = read("supabase/migrations/" + filename);
+  const expectedChecksum = "5dc7e85b53bc3ebad9b96a759e78f9ce681939f8bd0edb8e8baaa34a6978839e";
+  assert.equal(canonicalChecksum(content), expectedChecksum);
+
+  const accepted = runDriftCheck({
+    migrations: { [filename]: content },
+    remoteRows: [{
+      version: "20261015030846",
+      name: "add_regular_and_teacher_cancellation_email_notifications",
+      checksum: expectedChecksum,
+    }],
+  });
+  assert.equal(accepted.status, 0, accepted.stdout + accepted.stderr);
+  assert.match(accepted.stdout, /Exact SHA256 and name attest Supabase-generated migration alias/);
+
+  const tampered = runDriftCheck({
+    migrations: { [filename]: content + "\nselect 999;\n" },
+    remoteRows: [{
+      version: "20261015030846",
+      name: "add_regular_and_teacher_cancellation_email_notifications",
+      checksum: expectedChecksum,
+    }],
+  });
+  assert.equal(tampered.status, 1);
+  assert.match(tampered.stdout, /missing from supabase\/migrations|missing from production migration history/);
+});
+
+test("the attested alias rejects mismatched names, remote hashes and unrelated remote versions", () => {
+  const filename = "20261015030100_add_regular_and_teacher_cancellation_email_notifications.sql";
+  const content = read("supabase/migrations/" + filename);
+  const original = {
+    version: "20261015030846",
+    name: "add_regular_and_teacher_cancellation_email_notifications",
+    checksum: canonicalChecksum(content),
+  };
+  for (const changed of [
+    { ...original, name: "a_different_migration" },
+    { ...original, checksum: "0".repeat(64) },
+    { ...original, version: "20261015030847" },
+  ]) {
+    const result = runDriftCheck({
+      migrations: { [filename]: content },
+      remoteRows: [changed],
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /Production contains migration versions.*missing|supabase\/migrations contains versions.*missing/is);
+  }
+});
