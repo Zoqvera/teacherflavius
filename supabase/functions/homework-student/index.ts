@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.3";
 
 const ORIGIN = "https://teacherflavius.com";
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
-const MODEL = "gpt-4.1-mini";
+const MODEL = "gpt-6-luna";
 
 type StudentAction = "list" | "detail" | "progress" | "submit";
 type Payload = {
@@ -222,6 +222,7 @@ async function assessWriting(apiKey: string, original: string, prompt: string) {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: MODEL,
+        reasoning: { effort: "none" },
         store: false,
         max_output_tokens: 1400,
         input: [
