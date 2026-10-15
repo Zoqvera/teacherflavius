@@ -167,7 +167,7 @@ test("the dashboard uses the same modal for the browser and installed PWA", () =
 
   assert.match(html, /id="studentReviewInvitation"/);
   assert.match(html, /href="\/avaliar-aulas\/">AVALIAR AGORA<\/a>/);
-  assert.match(html, /student_review_invitation\.js\?v=20261015-1/);
+  assert.match(html, /student_review_invitation\.js\?v=20261015-funnel-2/);
   assert.match(html, /student_review_invitation\.css\?v=20261015-1/);
   assert.match(dashboard, /await initializeReviewInvitation\(\)/);
   assert.match(dashboard, /isProfessor: isProfessorSession\(\)/);

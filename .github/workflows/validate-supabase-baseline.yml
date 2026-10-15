@@ -182,7 +182,8 @@ jobs:
             supabase/baseline/377_manual_replacement_credits_all_students.sql \
             supabase/baseline/380_same_day_first_tuition_payment.sql \
             supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql \
-            supabase/baseline/390_expose_study_button_marker.sql
+            supabase/baseline/390_expose_study_button_marker.sql \
+            supabase/baseline/395_student_review_invitation_funnel.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -417,6 +418,15 @@ jobs:
           printf '%s\n' "$FUNCTION_DEF" | grep -F 'conflicting_due.reference_month <> generated_month.reference_month::date'
           printf '%s\n' "$FUNCTION_DEF" | grep -F 'conflicting_due.id <> public.monthly_tuition.id'
           printf '%s\n' "$FUNCTION_DEF" | grep -F 'then public.monthly_tuition.due_date'
+
+      - name: Verify student review invitation metrics ACL after restore
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < tests/sql/student_review_invitation_baseline_security.sql
 
       - name: Compare restored catalog with production fingerprint
         shell: bash
