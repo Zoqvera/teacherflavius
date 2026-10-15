@@ -60,6 +60,11 @@
     return !!(window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true);
   }
 
+  function trackPreparation(eventName) {
+    const flow = window.StudentPreparationFlow;
+    if (flow && typeof flow.track === "function") flow.track(eventName);
+  }
+
   function isRoadmapNavigation() {
     return isNewFlowEnabled() &&
       new URLSearchParams(window.location.search).get("source") === "roteiro-de-estudos";
@@ -97,6 +102,9 @@
       }
 
       nextLink.hidden = false;
+      nextLink.addEventListener("click", function () {
+        trackPreparation("preparation_next_lesson");
+      });
     } catch (error) {
       console.error("Falha ao localizar a próxima lição:", error);
       status.textContent = "Não foi possível consultar a próxima lição. Tente novamente.";
@@ -174,7 +182,13 @@
       if (legacyContent) legacyContent.hidden = isNewFlowEnabled();
       if (isNewFlowEnabled()) {
         if (progress) progress.hidden = false;
-        if (nextPartLink) nextPartLink.hidden = false;
+        if (nextPartLink) {
+          nextPartLink.hidden = false;
+          nextPartLink.addEventListener("click", function () {
+            trackPreparation("preparation_next_part");
+          });
+        }
+        trackPreparation("preparation_lesson_view");
         return;
       }
       if (plan.lesson.prepared) {
@@ -264,8 +278,14 @@
       return;
     }
 
+    const flow = window.StudentPreparationFlow;
+    if (flow && typeof flow.resolveEligibility === "function") {
+      await flow.resolveEligibility(window.Auth.getClient(), session.user.id);
+    }
+
     const lessonService = createLessonService();
     academicService = window.AcademicWorkflowService.create(window.Auth.getClient());
+    if (isRoadmapNavigation()) trackPreparation("preparation_roadmap_view");
 
     const params = new URLSearchParams(window.location.search);
     const lessonNumber = window.AcademicWorkflowService.normalizeLessonNumber(
