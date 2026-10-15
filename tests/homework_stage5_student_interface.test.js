@@ -280,6 +280,17 @@ test("Reading/Grammar pending states never instruct manual teacher review", asyn
   assert.doesNotMatch(displayText(h.mount), /revisão do professor/i);
 });
 
+test("Writing monthly budget pause restored by progress hides futile retry", async () => {
+  const h = harness();
+  h.setProgress({ status: "submitted", correction: "monthly_budget",
+    score: null, feedback: [] });
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  assert.match(displayText(h.mount), /limite mensal de correções por IA foi atingido/);
+  assert.doesNotMatch(displayText(h.mount), /Tentar corrigir novamente/);
+  assert.doesNotMatch(displayText(h.mount), /Nota:/);
+  assert.equal(h.calls.retries, 0);
+});
+
 test("Writing monthly budget pause preserves the sent text and shows a clear status", async () => {
   const h = harness();
   await h.controller.open("00000000-0000-4000-8000-000000000001");
