@@ -144,6 +144,9 @@ test("Writing submit displays official feedback immediately, without another-stu
   const h = harness();
   await h.controller.open("00000000-0000-4000-8000-000000000001");
   assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
+  assert.match(displayText(h.mount),
+    /seu texto será enviado ao serviço de IA da OpenAI/);
+  assert.match(displayText(h.mount), /Não inclua nomes completos/);
   const textarea = descendants(h.mount, "textarea")[0];
   assert.ok(textarea);
   textarea.value = "I study English every morning and I like it.";
@@ -185,6 +188,7 @@ test("Reading and Grammar inputs validate and submit server-side IDs without ans
     const h = harness(type);
     await h.controller.open("00000000-0000-4000-8000-000000000001");
   assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
+    assert.doesNotMatch(displayText(h.mount), /enviado ao serviço de IA da OpenAI/);
     const select = descendants(h.mount, "select")[0];
     const input = descendants(h.mount, "input")[0];
     assert.ok(select && input);

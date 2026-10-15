@@ -7,22 +7,30 @@
     grammar: "Grammar"
   });
 
+  // Igual à regra PostgreSQL oficial: ignora caixa e espaços repetidos.
+  // Não elimina acentos ou pontuação; essas variantes exigem gabarito alternativo.
   function normalizeAnswer(value) {
     return String(value == null ? "" : value)
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase("pt-BR")
-      .replace(/[^a-z0-9\s]/g, " ")
+      .trim()
       .replace(/\s+/g, " ")
-      .trim();
+      .toLowerCase();
   }
 
   function acceptedAnswers(question) {
     const key = question && question.answer_key;
-    if (!key || typeof key !== "object") return [];
+    if (!key || typeof key !== "object" || Array.isArray(key)) return [];
     const candidates = Array.isArray(key.accepted) ? key.accepted :
-      key.correct == null ? [] : [key.correct];
-    return candidates.map(String).filter(value => value.trim().length > 0);
+      typeof key.correct === "string" ? [key.correct] : [];
+    return candidates.length > 0 &&
+      candidates.every(value => typeof value === "string" && value.trim().length > 0)
+      ? candidates : [];
+  }
+
+  function questionPoints(question) {
+    if (question.points == null) return 1; // Padrão da tabela exercise_questions.
+    const points = question.points;
+    return typeof points === "number" && Number.isFinite(points) &&
+      points > 0 && points <= 100 ? points : null;
   }
 
   function evaluateResponses(questions, responses) {
@@ -30,24 +38,40 @@
         questions.length !== responses.length) {
       throw new TypeError("Questões e respostas incompatíveis.");
     }
+
+    let pointsTotal = 0;
+    let pointsEarned = 0;
     const results = questions.map(function (question, index) {
       const accepted = acceptedAnswers(question);
+      const points = questionPoints(question);
       const answer = normalizeAnswer(responses[index]);
-      const correct = answer.length > 0 && accepted.some(function (candidate) {
-        return normalizeAnswer(candidate) === answer;
-      });
-      return { correct: correct, graded: accepted.length > 0 };
+      const graded = accepted.length > 0 && points !== null;
+      const validOption = question.question_type !== "multiple_choice" ||
+        (Array.isArray(question.options) &&
+          question.options.includes(String(responses[index]).trim()));
+      const correct = graded && answer.length > 0 && validOption &&
+        accepted.some(candidate => normalizeAnswer(candidate) === answer);
+
+      if (graded) {
+        pointsTotal += points;
+        if (correct) pointsEarned += points;
+      }
+      return { correct, graded, valid: graded && answer.length > 0 && validOption };
     });
-    const graded = results.filter(result => result.graded);
-    const correct = graded.filter(result => result.correct).length;
+
+    const correct = results.filter(result => result.correct).length;
+    const ready = results.length > 0 && results.every(result => result.valid);
     return {
-      correct: correct,
-      total: graded.length,
-      score: graded.length ? Math.round(100 * correct / graded.length) / 10 : null,
-      results: results
+      correct,
+      total: results.filter(result => result.graded).length,
+      // A nota é sempre ponderada por questão como na RPC homework_submit.
+      // Sem respostas completas e gabaritos válidos, o servidor rejeita o envio.
+      score: ready && pointsTotal > 0
+        ? Math.round(1000 * pointsEarned / pointsTotal) / 100 : null,
+      ready,
+      results
     };
   }
-
 
   function countWords(value) {
     const words = String(value == null ? "" : value).trim().match(/\S+/g);
@@ -147,7 +171,10 @@
         }
         const accepted = acceptedAnswers(question);
         if (!accepted.length) {
-          issues.push("A questão " + number + " não contém gabarito.");
+          issues.push("A questão " + number + " não contém gabarito válido.");
+        }
+        if (questionPoints(question) === null) {
+          issues.push("A questão " + number + " possui peso de pontuação inválido.");
         }
         if (question.question_type === "multiple_choice") {
           const options = Array.isArray(question.options) ? question.options : [];
@@ -299,12 +326,13 @@
             ? "Alternativa diferente do gabarito."
             : "Resposta diferente do gabarito: na correção automática, vale zero.";
       });
-      summary.textContent = results.total
+      summary.textContent = results.ready
         ? "Simulação local: " + results.correct + " de " + results.total +
-          " respostas coincidiram com o gabarito. Correspondência aproximada: " +
-          (results.score * 10).toLocaleString("pt-BR") +
-          "%. Não é nota oficial; na entrega oficial, respostas divergentes recebem zero automaticamente."
-        : "Não há gabaritos suficientes para simular uma nota.";
+          " respostas coincidiram com o gabarito. Nota ponderada estimada: " +
+          results.score.toLocaleString("pt-BR") +
+          "/10. Não é nota oficial; a entrega real é corrigida pelo sistema."
+        : "Não é possível calcular nota: preencha todas as respostas e confira " +
+          "gabaritos, alternativas e pesos das questões.";
     });
     container.appendChild(form);
   }

@@ -13,21 +13,60 @@ function loadPreview() {
   return context.window.HomeworkPedagogicalPreview;
 }
 
-test("reading and grammar evaluations normalize answers but never award points for blanks", () => {
+test("reading and grammar preview preserves accents and punctuation like the official key", () => {
   const preview = loadPreview();
   const questions = [
-    { answer_key: { accepted: ["São Paulo", "SP"] } },
-    { answer_key: { accepted: ["has gone"] } },
-    { answer_key: { correct: "was" } },
-    { answer_key: null }
+    { answer_key: { accepted: ["São Paulo", "SP"] }, points: 1 },
+    { answer_key: { accepted: ["has gone"] }, points: 1 },
+    { answer_key: { correct: "was" }, points: 1 }
   ];
-  const result = preview.evaluateResponses(questions, ["sao  paulo!", "HAS GONE", "", "x"]);
+  const result = preview.evaluateResponses(questions,
+    ["sao paulo!", "HAS   GONE", "was"]);
   assert.equal(result.correct, 2);
   assert.equal(result.total, 3);
-  assert.equal(result.score, 6.7);
-  assert.equal(result.results[2].correct, false);
-  assert.equal(result.results[3].graded, false);
-  assert.equal(preview.normalizeAnswer("  Às  CIDADES? "), "as cidades");
+  assert.equal(result.score, 6.67);
+  assert.equal(result.ready, true);
+  assert.equal(result.results[0].correct, false);
+  assert.equal(preview.normalizeAnswer("  Às  CIDADES? "), "às cidades?");
+  assert.equal(preview.normalizeAnswer(" A    B "), "a b");
+});
+
+test("weighted local preview matches the official grading scale", () => {
+  const preview = loadPreview();
+  const questions = [
+    { answer_key: { correct: "hello" }, points: 3 },
+    { answer_key: { accepted: ["world", "earth"] }, points: 1 },
+    { answer_key: { correct: "yes" }, points: 6 }
+  ];
+  const result = preview.evaluateResponses(questions, ["HELLO", "wrong", "YES"]);
+  assert.equal(result.correct, 2);
+  assert.equal(result.total, 3);
+  assert.equal(result.score, 9);
+  assert.equal(result.ready, true);
+});
+
+test("incomplete answers, invalid key, or invalid choice cannot create a preview grade", () => {
+  const preview = loadPreview();
+  const validKey = { answer_key: { correct: "yes" }, points: 2 };
+  for (const questions of [
+    [validKey, { answer_key: null, points: 1 }],
+    [validKey, { answer_key: { accepted: ["yes", ""] }, points: 1 }],
+    [validKey, { answer_key: { correct: 42 }, points: 1 }],
+    [validKey, { answer_key: { correct: "no" }, points: -1 }],
+  ]) {
+    const result = preview.evaluateResponses(questions, ["yes", "no"]);
+    assert.equal(result.score, null);
+    assert.equal(result.ready, false);
+  }
+  const blank = preview.evaluateResponses([validKey], [" "]);
+  assert.equal(blank.score, null);
+  assert.equal(blank.ready, false);
+  const choice = preview.evaluateResponses([{
+    question_type: "multiple_choice", options: ["yes", "no"],
+    answer_key: { correct: "yes" }, points: 1
+  }], ["maybe"]);
+  assert.equal(choice.score, null);
+  assert.equal(choice.ready, false);
 });
 
 test("simulation rejects mismatched responses rather than inventing a score", () => {
@@ -36,6 +75,19 @@ test("simulation rejects mismatched responses rather than inventing a score", ()
   const response = preview.evaluateResponses([{ answer_key: null }], ["abc"]);
   assert.equal(response.score, null);
   assert.equal(response.total, 0);
+});
+
+test("teacher approval refuses a question with invalid grading weight", () => {
+  const preview = loadPreview();
+  const exercise = { activity_type: "grammar", exercise_number: 3 };
+  const version = { content: { explanation: "Present tense." } };
+  const invalid = [{
+    prompt: "Complete the sentence", question_type: "short_answer",
+    answer_key: { correct: "is" }, points: -2
+  }];
+  const report = preview.inspectForApproval(exercise, version, invalid);
+  assert.equal(report.ready, false);
+  assert.ok(report.issues.some(issue => issue.includes("peso de pontuação inválido")));
 });
 
 test("pedagogical renderer has no network, backend writes or embedded answer fixtures", () => {

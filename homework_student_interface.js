@@ -229,7 +229,8 @@
         label.appendChild(writing);
         form.appendChild(label);
         appendText(form, "p",
-          "Evite inserir nomes completos, telefones, endereços ou outras informações pessoais.");
+          "Para receber a correção automática, seu texto será enviado ao serviço de IA da OpenAI. " +
+          "Não inclua nomes completos, telefones, endereços ou outros dados pessoais.");
         const counter = createElement("p", "", "Caracteres: 0 / " + MAX_WRITING_LENGTH);
         counter.setAttribute("aria-live", "polite");
         writing.addEventListener("input", function () {
