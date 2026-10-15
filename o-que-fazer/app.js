@@ -13,6 +13,11 @@
     return !!(window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true);
   }
 
+  function trackPreparation(eventName) {
+    const flow = window.StudentPreparationFlow;
+    if (flow && typeof flow.track === "function") flow.track(eventName);
+  }
+
   function updateQuestionCount(elementId, count) {
     const element = document.getElementById(elementId);
     if (!element) return;
@@ -42,7 +47,10 @@
       button.disabled = !lessonUrl;
       if (lessonUrl) {
         fallback.hidden = true;
-        button.onclick = function () { window.location.href = lessonUrl; };
+        button.onclick = function () {
+          trackPreparation("preparation_lesson_view");
+          window.location.href = lessonUrl;
+        };
         setStatus("welcomePreparationStatus", "Sua próxima lição está disponível.");
       } else {
         fallback.hidden = false;
@@ -281,11 +289,6 @@
   }
 
   async function initialize() {
-    if (isSecondPartPage() && !isNewFlowEnabled()) {
-      window.location.replace("/o-que-fazer/");
-      return;
-    }
-
     const ready = await window.ResourceWaiter.waitUntil(resourcesReady, WAIT_OPTIONS);
     if (!ready) {
       setStatus("actionPlanStatus", "Não foi possível carregar os recursos da página.", "error");
@@ -299,16 +302,27 @@
       return;
     }
 
-    service = window.AcademicWorkflowService.create(window.Auth.getClient());
+    const flow = window.StudentPreparationFlow;
+    if (flow && typeof flow.resolveEligibility === "function") {
+      await flow.resolveEligibility(window.Auth.getClient(), session.user.id);
+    }
 
+    if (isSecondPartPage() && !isNewFlowEnabled()) {
+      window.location.replace("/o-que-fazer/");
+      return;
+    }
+
+    service = window.AcademicWorkflowService.create(window.Auth.getClient());
     document.body.classList.remove("auth-checking");
 
     if (isNewFlowEnabled() && !isSecondPartPage()) {
       showWelcome();
+      trackPreparation("preparation_welcome_view");
       await loadWelcome();
       return;
     }
 
+    if (isSecondPartPage()) trackPreparation("preparation_conversation_view");
     await loadPlan();
   }
 

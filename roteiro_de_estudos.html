@@ -30,7 +30,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260428-2"></script>
   <script src="/study_lesson_service.js?v=20260918-2"></script>
-  <script src="/student_preparation_flow.js?v=20261015-1"></script>
+  <script src="/student_preparation_flow.js?v=20261015-pilot-1"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260428-2">
   <style>
     .page-description {
@@ -312,6 +312,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       currentUser = session.user;
+      const preparationFlow = window.StudentPreparationFlow;
+      if (preparationFlow && typeof preparationFlow.resolveEligibility === "function") {
+        await preparationFlow.resolveEligibility(Auth.getClient(), session.user.id);
+      }
+      if (preparationFlow && preparationFlow.enabled === true &&
+          typeof preparationFlow.track === "function") {
+        preparationFlow.track("preparation_roadmap_view");
+      }
 
       let completionLoaded = true;
       let lessonPagesLoaded = true;

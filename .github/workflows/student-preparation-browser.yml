@@ -10,6 +10,8 @@ on:
       - "licao.js"
       - "roteiro_de_estudos.html"
       - "tests/student_preparation_flow_functional.test.js"
+      - "tests/student_preparation_pilot_gate.test.js"
+      - "supabase/migrations/20261015213000_student_preparation_pilot_eligibility.sql"
       - "student_preparation_flow.js"
       - "student_preparation_flow.css"
       - "scripts/student_preparation_browser_check.py"
@@ -44,6 +46,9 @@ jobs:
 
       - name: Run controller scenario tests
         run: node --test tests/student_preparation_flow_functional.test.js
+
+      - name: Validate identity pilot and consent gate
+        run: node --test tests/student_preparation_pilot_gate.test.js
 
       - name: Run real Chromium acceptance
         run: python3 scripts/student_preparation_browser_check.py
