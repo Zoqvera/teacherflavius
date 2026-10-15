@@ -70,3 +70,19 @@ Nesta subetapa **não se alteram** páginas públicas, title/description/canonic
 - Política vigente no próprio repositório: `privacidade/index.html`.
 - ANPD — Enunciado nº 1/2023 sobre dados de crianças e adolescentes: https://www.gov.br/anpd/pt-br/assuntos/noticias/anpd-divulga-enunciado-sobre-o-tratamento-de-dados-pessoais-de-criancas-e-adolescentes
 - OpenAI API — dados e retenção: https://developers.openai.com/api/docs/guides/your-data
+
+## 7. Implantação controlada da Edge Function — 15/10/2026
+
+**Implantação técnica concluída; liberação pedagógica e pública NÃO autorizadas.**
+
+- Projeto Supabase de produção: `wnigzpvgsbpjdxvjzugt`.
+- Edge Function: `homework-student`, implantada da versão **7** para **8**, com `status=ACTIVE` e `verify_jwt=true`.
+- Código-fonte implantado: `supabase/functions/homework-student/index.ts` do commit de merge **`d34fa0948e22465e751765d318e480122db1d388`**, PR [#737](https://github.com/Zoqvera/teacherflavius/pull/737). Leitura posterior da função confirmou **correspondência textual exata** ao arquivo versionado.
+- Mudança funcional: a operação `progress` devolve o motivo `monthly_budget` para Writing submetido sem nota quando o orçamento mensal de São Paulo não cobre a reserva conservadora. A interface não solicita uma nova correção inútil e permite retomada quando o orçamento é renovado; nenhum valor contábil é exposto ao navegador.
+- CI de PR #737 após conciliação de `main`: **18/18 workflows concluídos com sucesso**. O teste de restore foi reexecutado após falha transitória de conflito de porta local Docker `54322`; segunda execução passou. Testes automatizados não substituem uso físico e aceite humano.
+- **Leitura de segurança pós-implantação:** `homework_release_control.enabled=false`; **0** atribuições, **0** tentativas, **0** feedbacks, **0** versões de atividade e **0** chamadas registradas no orçamento do módulo. Nenhuma atividade ou acesso foi habilitado.
+- **Escopo do pós-deploy:** comparação de código, metadados da Edge e SQL de contagem/trava em produção. **Não** foi exercitada uma requisição autenticada de aluno real na produção. Os cenários HTTP E2E de aluno sintético usam ambiente descartável.
+- **Pendências:** definir e aprovar retenção e base legal para redações; revisar a política pública `/privacidade/` para indicar uso da OpenAI e a transferência internacional pertinente; confirmar tratamento de menores; validar amostras pedagógicas e acessibilidade física/assistiva; obter autorização separada de lançamento.
+- **SEO:** esta implantação não alterou URLs públicas, metadados, `canonical`, `robots`, sitemap ou texto da política pública indexável. A futura atualização de `/privacidade/` é decisão de conteúdo com impacto potencial sobre indexação e deve ser autorizada antes de publicada.
+
+**Próxima subetapa:** ETAPA 5 — Retenção, Transparência e Aceites Pedagógicos Finais. A ETAPA 6 só começará depois de todos os aceites e da autorização de lançamento.
