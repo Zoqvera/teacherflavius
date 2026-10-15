@@ -160,20 +160,15 @@ function foldIcsLines(lines: string[]): string {
 function makeIcsAttachment(
   studentId: string,
   classNumber: number,
-  studentName: string,
   className: string,
   startsAt: string,
   endsAt: string,
   meetingUrl: string,
-  audience: "teacher" | "student",
   createdAt: string,
 ): { filename: string; content: string; content_type: string } {
   const uid = `reposicao-${studentId}-${classNumber}-${formatCalendarInstant(startsAt)}@teacherflavius.com`;
-  const title = audience === "teacher"
-    ? `Reposição de aula — ${studentName} (${className})`
-    : `Reposição de inglês — ${className}`;
+  const title = `Reposição de inglês — ${className}`;
   const description = [
-    ...(audience === "teacher" ? [`Aluno: ${studentName}`] : []),
     `Turma: ${className}`,
     "Reposição agendada pelo TeacherFlavius.",
     `Link da aula: ${meetingUrl}`,
@@ -333,6 +328,22 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Schedule slot not found" }, 404);
   }
 
+  // Only the authenticated profile classification grants calendar actions to teachers.
+  // Unclassified and QUINTETO students never produce teacher calendar invites.
+  let isIndividualStudent = false;
+  if (isTeacherNotice) {
+    const { data: studentProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("class_type")
+      .eq("id", booking.student_id)
+      .single();
+    if (profileError || !studentProfile) {
+      await failNotification("Student classification could not be verified");
+      return jsonResponse({ error: "Student classification unavailable" }, 500);
+    }
+    isIndividualStudent = String(studentProfile.class_type ?? "").trim().toUpperCase() === "INDIVIDUAL";
+  }
+
   // Administrative notifications always go to the approved professor mailbox.
   const teacherEmail = "flaviofreitas@ufu.br";
   const recipientEmail = safeHeader(
@@ -372,7 +383,7 @@ Deno.serve(async (request: Request) => {
       `Horário: ${schedule}`,
       "",
       "A vaga da reposição foi liberada.",
-      "Se você salvou o compromisso no Google Agenda, remova-o manualmente.",
+      ...(isIndividualStudent ? ["Se você salvou o compromisso no Google Agenda, remova-o manualmente."] : []),
     ].join("\n");
 
     htmlBody = `
@@ -386,17 +397,21 @@ Deno.serve(async (request: Request) => {
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Horário</td><td>${escapeHtml(schedule)}</td></tr>
         </table>
         <p>A vaga da reposição foi liberada.</p>
-        <p style="color:#667085;font-size:13px">Se o evento foi salvo na sua agenda, remova-o manualmente.</p>
+        ${isIndividualStudent
+          ? '<p style="color:#667085;font-size:13px">Se o evento foi salvo na sua agenda, remova-o manualmente.</p>'
+          : ""}
       </div>
     `;
   } else if (isTeacherBooking) {
-    const calendarUrl = makeGoogleCalendarUrl(
-      studentName,
-      className,
-      slot.starts_at,
-      slot.ends_at,
-      meetingUrl,
-    );
+    const calendarUrl = isIndividualStudent
+      ? makeGoogleCalendarUrl(
+        studentName,
+        className,
+        slot.starts_at,
+        slot.ends_at,
+        meetingUrl,
+      )
+      : null;
     subject = `Nova reposição: ${studentName} — ${classDate}, ${startTime}`;
     textBody = [
       "Um aluno agendou uma reposição.",
@@ -406,10 +421,10 @@ Deno.serve(async (request: Request) => {
       `Data: ${classDate}`,
       `Horário: ${schedule}`,
       `Link da aula: ${meetingUrl}`,
-      "",
-      `Adicionar ao Google Agenda: ${calendarUrl}`,
-      "",
-      "O evento só será criado na sua agenda após você confirmar o salvamento no Google Agenda.",
+      ...(calendarUrl
+        ? ["", `Adicionar ao Google Agenda: ${calendarUrl}`, "",
+          "O evento só será criado na sua agenda após você confirmar o salvamento no Google Agenda."]
+        : []),
     ].join("\n");
 
     htmlBody = `
@@ -422,11 +437,15 @@ Deno.serve(async (request: Request) => {
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Data</td><td>${escapeHtml(classDate)}</td></tr>
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Horário</td><td>${escapeHtml(schedule)}</td></tr>
         </table>
-        <p style="margin:24px 0">
-          <a href="${escapeHtml(calendarUrl)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold">Adicionar ao Google Agenda</a>
-        </p>
+        ${calendarUrl
+          ? `<p style="margin:24px 0">
+               <a href="${escapeHtml(calendarUrl)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold">Adicionar ao Google Agenda</a>
+             </p>`
+          : ""}
         <p style="font-size:14px"><a href="${escapeHtml(meetingUrl)}">Abrir link da aula</a></p>
-        <p style="color:#667085;font-size:13px">Revise e salve o evento no Google Agenda. O evento não é atualizado automaticamente se a reposição for cancelada.</p>
+        ${calendarUrl
+          ? '<p style="color:#667085;font-size:13px">Revise e salve o evento no Google Agenda. O evento não é atualizado automaticamente se a reposição for cancelada.</p>'
+          : ""}
       </div>
     `;
   } else if (isCancellation) {
@@ -516,16 +535,14 @@ Deno.serve(async (request: Request) => {
       subject,
       text: textBody,
       html: htmlBody,
-      ...(!isCancellation ? {
+      ...(notificationType === "booking_confirmation" ? {
         attachments: [makeIcsAttachment(
           booking.student_id,
           booking.class_number,
-          studentName,
           className,
           slot.starts_at,
           slot.ends_at,
           meetingUrl!,
-          isTeacherNotice ? "teacher" : "student",
           notification.created_at,
         )],
       } : {}),
