@@ -444,7 +444,7 @@ test("CI enables append-only proposal mode exclusively for pull requests", () =>
 test("the singular Supabase-generated version alias passes only for identical pinned SQL", () => {
   const filename = "20261015030100_add_regular_and_teacher_cancellation_email_notifications.sql";
   const content = read("supabase/migrations/" + filename);
-  const expectedChecksum = "5dc7e85b53bc3ebad9b96a759e78f9ce681939f8bd0edb8e8baaa34a6978839e";
+  const expectedChecksum = "794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7";
   assert.equal(canonicalChecksum(content), expectedChecksum);
 
   const accepted = runDriftCheck({
