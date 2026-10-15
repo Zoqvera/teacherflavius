@@ -41,7 +41,7 @@ Tabela pública de preços consultada em 15/10/2026: `gpt-6-luna`, processamento
 
 O backend limita tentativas de correção de Writing a **5 por hora e 15 por dia por aluno**, mas **ainda não existe teto global de gasto ou de requisições de todos os alunos**. O código exige uma única avaliação formal por atribuição e recupera o feedback já salvo, mas falhas recuperáveis podem ocasionar novas chamadas e consumo adicional.
 
-**Decisão a tomar antes do lançamento:** definir um orçamento mensal total em USD ou BRL; limiar de alerta; ação em caso de extrapolação (desligar apenas correção Writing ou suspender o módulo); estratégia de observabilidade; e se será necessária integração com as configurações de budget da OpenAI. Nenhum limite global foi criado automaticamente.
+**Decisão registrada em 15/10/2026:** o professor aprovou **US$ 5 por mês** para a correção Writing pelo GPT-6 Luna, alerta aos **US$ 4 (80%)** e suspensão de novas correções antes de ultrapassar o saldo. A implementação do módulo usa uma reserva conservadora e atomicamente serializada no PostgreSQL antes de cada chamada à IA. O limite é específico das correções de Writing feitas por esta Edge Function; **não** limita a cobrança total da conta OpenAI por outras aplicações, chaves, projetos ou serviços. A política de retenção e os demais aceites permanecem pendentes.
 
 Fonte oficial: <https://developers.openai.com/api/docs/models/gpt-6-luna>.
 
@@ -61,3 +61,17 @@ O conjunto automatizado da ETAPA 5 já exercitou autenticação, isolamento de a
 **Não alterar a chave de liberação** e **não substituir o portal legado** com base apenas neste dossiê. Etapa atual: **ETAPA 5 — Homologação Integrada e Liberação Controlada**; próxima, se todas as condições forem cumpridas: **ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica**.
 
 Este dossiê não muda as configurações de SEO nem acrescenta páginas públicas.
+
+
+### Orçamento operacional implementado para Writing — USD 5,00/mês
+
+- **Período:** mês civil no fuso `America/Sao_Paulo`; o primeiro dia do mês abre um novo saldo automaticamente.
+- **Teto:** 5.000.000 micros de dólar (USD 5,00). Alerta ao contabilizar ao menos 4.000.000 micros (USD 4,00).
+- **Concorrência:** o banco serializa reservas com `SELECT FOR UPDATE` na linha do mês; chamadas de alunos diferentes não conseguem ultrapassar o saldo apenas por serem simultâneas.
+- **Antes da chamada:** reserva de até USD 0,0047 para cada avaliação, calculada de forma conservadora para 40.000 tokens de entrada e 1.400 de saída no nível `service_tier: 'default'` (Standard). Como os formulários limitam tamanho de entrada, o teto reservado supera confortavelmente o envelope de textos permitido. Se o saldo for menor que a reserva, a IA não será chamada e o texto original permanecerá salvo.
+- **Após resposta válida:** conciliação pelo campo `usage` da OpenAI (input/output, sem descontar cache, a favor da segurança). Se o provedor falhar ou não houver uso mensurável, a reserva continua comprometida ou é liquidada pelo máximo, respectivamente. Isso pode subestimar o orçamento disponível, mas não cria despesa desprotegida.
+- **Aviso aos 80% e no bloqueio:** os eventos são deduplicados por mês e integrados à fila preexistente de alertas de saúde do sistema. O sucesso de entrega depende das configurações/saúde dessa fila e deve ser monitorado; não se afirma confirmação de recebimento por e-mail antes de verificá-la.
+- **Acesso:** tabelas e funções de orçamento são restritas ao backend `service_role`; nunca vão ao cliente estudante. Os testes em PostgreSQL descartável verificam reserva, reconciliação, duplicidade, 80%, bloqueio e impossibilidade de consulta por `anon`/`authenticated`.
+- **Limitação financeira:** a reserva cobre somente o custo da operação de geração com o modelo e tarifa Standard verificada em outubro de 2026. Preços futuros, operações externas à Edge, tributos, diferenças de faturamento e despesas de infraestrutura não são controlados por esta funcionalidade. É recomendável definir também um limite e alertas no projeto da OpenAI como camada independente.
+
+**Importante:** a implementação do orçamento não constitui aceite de privacidade, não altera a trava de acesso e não autoriza lançamento.
