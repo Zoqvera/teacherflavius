@@ -1,0 +1,45 @@
+name: Student review invitation Stage 5 browser acceptance
+
+on:
+  pull_request:
+    paths:
+      - "area_do_estudante.html"
+      - "area_do_estudante.js"
+      - "student_review_invitation.js"
+      - "student_review_invitation.css"
+      - "scripts/student_review_invitation_browser_check.py"
+      - ".github/workflows/student-review-invitation-browser.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  student-review-browser:
+    name: Student review invitation — synthetic browser scenarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Verify production assets and private test isolation
+        run: |
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "scripts")
+          from static_site_files import is_public
+
+          for filename in (
+              "student_review_invitation.js",
+              "student_review_invitation.css",
+              "area_do_estudante.html",
+          ):
+              assert is_public(Path(filename)), f"Missing production asset: {filename}"
+          assert not is_public(Path("scripts/student_review_invitation_browser_check.py"))
+          print("PASS: production assets public; synthetic tests excluded.")
+          PY
+
+      - name: Run isolated real-browser tests
+        run: python3 scripts/student_review_invitation_browser_check.py
