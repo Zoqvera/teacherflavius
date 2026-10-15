@@ -531,6 +531,7 @@ Deno.serve(async (request: Request) => {
     },
     body: JSON.stringify({
       from: MAKEUP_FROM_EMAIL,
+      reply_to: "contato@teacherflavius.com",
       to: [recipientEmail],
       subject,
       text: textBody,
