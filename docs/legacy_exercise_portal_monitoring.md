@@ -2,7 +2,7 @@
 
 ## Objetivo e escopo
 
-Detectar regressões na suspensão do antigo Portal de Exercícios e na exclusão de suas atividades de Minha Semana, sem reativar o serviço ou modificar dados. Tarefas para Casa continua independente.
+Detectar regressões na suspensão do antigo Portal de Exercícios e na descontinuação de Minha Semana na Área do Estudante, sem reativar o serviço ou modificar dados. Tarefas para Casa continua independente.
 
 A apresentação pública do curso deve continuar mencionando o Portal de Exercícios como recurso disponível, conforme decisão explícita do responsável em 15/10/2026.
 
@@ -19,7 +19,7 @@ A apresentação pública do curso deve continuar mencionando o Portal de Exerc�
 
 1. As três páginas antigas exibem o aviso de suspensão e não expõem formulários externos ou chamadas de catálogo.
 2. A Área do Estudante e o PWA mantêm a atualização de cache, não exibem link ao portal e preservam a proteção de remoção defensiva.
-3. Minha Semana não consulta nem pontua exercícios antigos; referências às tarefas regulares continuam presentes.
+3. A antiga rota Minha Semana exibe apenas um aviso de descontinuação e retorno à Área do Estudante, sem executar consultas.
 4. O service worker só intercepta os recursos de instalação explicitamente permitidos.
 5. A apresentação do curso preserva as duas menções autorizadas ao Portal de Exercícios.
 6. A chave pública e o papel anônimo não conseguem visualizar os registros da tabela teacher_exercises nem resultados da função get_public_teacher_exercises.
@@ -30,12 +30,12 @@ A apresentação pública do curso deve continuar mencionando o Portal de Exerc�
 - O monitor não acessa o cache de um PWA já instalado em dispositivo real.
 - Falhas transitórias de rede ou bloqueios a tráfego automatizado podem produzir alertas sem regressão. Confirme a causa antes de alterar o código.
 - Links externos de Google Forms previamente compartilhados não são controlados.
-- Nenhuma alteração de SEO, conteúdo comercial, permissões ou disponibilidade do portal é efetuada.
+- O monitor não altera SEO, conteúdo comercial, permissões ou disponibilidade dos serviços; atua somente em leitura.
 
 ## Em caso de falha
 
 1. Consultar o job no GitHub Actions e identificar qual contrato foi violado.
 2. Verificar se houve problema de rede ou regressão funcional.
 3. Se houver exposição real, restaurar as proteções e abrir uma PR de correção com testes.
-4. Confirmar o resultado na Área do Estudante, Minha Semana e PWA.
+4. Confirmar que o card não reaparece na Área do Estudante ou no PWA, e que a rota Minha Semana apresenta apenas o aviso.
 5. Antes de qualquer alteração que afete SEO, solicitar decisão do responsável.
