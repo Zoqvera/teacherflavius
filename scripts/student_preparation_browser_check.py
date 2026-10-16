@@ -277,7 +277,7 @@ def copy_fixture_files(root: Path) -> None:
         dialog_markup = "".join(re.findall(r'<dialog\b[^>]*>[\s\S]*?</dialog>', html))
         is_lesson = page_name.startswith("licao/")
         if is_lesson:
-            header = re.search(r'<header class="header">[\\s\\S]*?</header>', html)
+            header = re.search(r'<header class="header">[\s\S]*?</header>', html)
             if header is None:
                 raise RuntimeError(f"Missing shared lesson header: {page_name}")
             main_markup = (
