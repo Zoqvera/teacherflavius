@@ -93,7 +93,9 @@
       const unnamed = visibleButtons.some(button => !button.textContent.trim());
       const overflow = document.documentElement.scrollWidth > window.innerWidth + 1;
       const writingDisclosure = !((activity === "writing" && state === "initial")) ||
-        mount.textContent.includes("seu texto será enviado ao serviço de IA da OpenAI");
+        mount.textContent.includes("as verificações de privacidade e faixa etária") &&
+        mount.textContent.includes("Quando autorizada") &&
+        mount.textContent.includes("OpenAI");
       const correctStatus = state !== "evaluated" || mount.textContent.includes("Nota:");
       const result = !overflow && !unnamed && writingDisclosure && correctStatus ?
         "PASS" : "FAIL";
