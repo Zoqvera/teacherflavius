@@ -28,12 +28,10 @@ test("the student area no longer offers exercises or overdue popups", function (
   assert.doesNotMatch(script, /get_public_teacher_exercises|showOverdueActivityIfNeeded|daily_exercise_completion/);
 });
 
-test("Minha Semana excludes suspended exercises from assignments and progress", function () {
-  const script = read("minha_semana_dashboard.js");
-  assert.doesNotMatch(script, /get_public_teacher_exercises|daily_exercise_completion|exercicios-diarios|currentExercise/);
-  assert.match(script, /flashcard_practice_days/);
-  assert.match(script, /grammar_lesson_completion/);
-  assert.match(script, /student_frequency/);
+test("retired Minha Semana no longer loads the suspended exercise catalog", function () {
+  const page = read("minha-semana/index.html");
+  assert.match(page, /Minha Semana descontinuada/);
+  assert.doesNotMatch(page, /get_public_teacher_exercises|daily_exercise_completion|minha_semana_dashboard/);
 });
 
 test("database restricts the legacy catalog to teachers without deleting records", function () {
@@ -47,9 +45,9 @@ test("student area fetches a versioned, uncached HTML document", function () {
   const shell = read("area-do-estudante/index.html");
   const html = read("area_do_estudante.html");
 
-  assert.ok(shell.includes('sourcePage + "?v=20261015-stage7-invitation-1"'));
+  assert.ok(shell.includes('sourcePage + "?v=20261016-retire-week-1"'));
   assert.match(shell, /cache: 'no-store'/);
-  assert.ok(html.includes("area_do_estudante.js?v=20261015-suspend-exercises-2"));
+  assert.ok(html.includes("area_do_estudante.js?v=20261016-retire-week-1"));
 });
 
 test("stale student-area cards for the suspended portal are removed", async function () {
@@ -59,6 +57,7 @@ test("stale student-area cards for the suspended portal are removed", async func
     "/exercicios-diarios/",
     "/exercicios-diarios",
     "https://teacherflavius.com/exercicios-diarios/?from=pwa",
+    "/minha-semana/",
     "/flashcards/",
     "https://example.com/exercicios-diarios/"
   ];
@@ -104,5 +103,5 @@ test("stale student-area cards for the suspended portal are removed", async func
     console
   });
   await Promise.resolve();
-  assert.deepEqual(removed, candidates.slice(0, 3));
+  assert.deepEqual(removed, candidates.slice(0, 4));
 });

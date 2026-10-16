@@ -1,73 +1,28 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- Google Consent Mode default -->
-<script>
-window.dataLayer = window.dataLayer || [];
-window.gtag = window.gtag || function(){dataLayer.push(arguments);};
-gtag('consent', 'default', {
-  analytics_storage: 'denied',
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  wait_for_update: 500
-});
-</script>
-<!-- End Google Consent Mode default -->
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
-<!-- End Google Tag Manager -->
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minha Semana - Teacher Flávio</title>
+  <title>Minha Semana descontinuada - Teacher Flávio</title>
   <link rel="canonical" href="/minha-semana/">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
-  <script src="/supabase_config.js?v=20260715-1"></script>
-    <script src="/module_loader.js?v=20260902-2"></script>
-<script src="/auth.js?v=20260730-1"></script>
-  <link rel="stylesheet" href="/aula_template.css?v=20260430-3">
   <style>
-    :root{--panel:rgba(255,255,255,.04);--border:rgba(255,255,255,.09);--text:#f8fafc;--muted:#94a3b8;--green:#86efac;--red:#fca5a5;--purple:#c4b5fd;--amber:#fde68a}
-    .container{max-width:900px}.week-heading{text-align:center;margin-bottom:20px}.week-heading h2{margin:0;color:var(--text);font-size:24px}.week-heading p{margin:8px 0 0;color:#cbd5e1;line-height:1.5}
-    .progress-panel{padding:20px;border:1px solid rgba(129,140,248,.32);border-radius:20px;background:rgba(129,140,248,.07);margin-bottom:18px}.progress-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px}.progress-head strong{color:var(--text);font-size:18px}.progress-head span{color:var(--purple);font-size:28px;font-weight:bold}.progress-caption{color:var(--muted);font-size:13px;margin-top:5px}.progress-track{height:11px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:13px}.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#818cf8,#a78bfa);transition:width .3s ease}
-    .task-list{display:grid;gap:11px}.week-task{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:13px;padding:15px;border:1px solid var(--border);border-radius:16px;background:var(--panel)}.week-task.done{border-color:rgba(74,222,128,.35);background:rgba(20,83,45,.16)}.week-task.danger{border-color:rgba(248,113,113,.45);background:rgba(127,29,29,.18)}.week-task.current{border-color:rgba(167,139,250,.42);background:rgba(76,29,149,.13)}.week-task.pending{border-color:rgba(251,191,36,.3);background:rgba(120,53,15,.12)}.task-icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--purple)}.task-icon svg{width:25px;height:25px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}.task-title{color:var(--text);font-weight:bold;line-height:1.35}.task-detail{color:var(--muted);font-size:12px;line-height:1.45;margin-top:4px}.task-button,.info-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(129,140,248,.4);border-radius:10px;background:rgba(129,140,248,.1);color:#e0e7ff;text-decoration:none;font-size:11px;font-weight:bold;padding:9px 11px;white-space:nowrap}
-    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.info-card{padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--panel)}.info-kicker{display:block;color:var(--muted);font-size:10px;letter-spacing:1px;margin-bottom:7px}.info-card strong{display:block;color:var(--text);font-size:16px;line-height:1.4}.info-card p{color:#cbd5e1;font-size:12px;line-height:1.5;margin:7px 0 12px}.roadmap-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:16px;border:1px solid rgba(129,140,248,.22);border-radius:16px;background:rgba(129,140,248,.05)}.roadmap-panel strong{display:block;color:var(--text);font-size:16px}.roadmap-panel p{color:var(--muted);font-size:12px;margin:6px 0 0}.loading-panel,.empty-panel{padding:22px;border:1px solid var(--border);border-radius:16px;background:var(--panel);color:#cbd5e1;text-align:center;line-height:1.6}#dashboard[hidden]{display:none}
-    @media(max-width:700px){.week-task{grid-template-columns:auto 1fr}.task-button{grid-column:1/-1;width:100%;box-sizing:border-box}.info-grid{grid-template-columns:1fr}.roadmap-panel{align-items:flex-start;flex-direction:column}.info-button{width:100%;box-sizing:border-box}.progress-head{align-items:flex-start;flex-direction:column}}
+    :root { color-scheme: light; font-family: Georgia, serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f8fafc; color: #0f172a; display: grid; place-items: center; padding: 24px; }
+    main { width: 100%; max-width: 630px; border: 1px solid #dbe3ef; border-radius: 16px; background: #fff; padding: clamp(24px, 6vw, 44px); text-align: center; }
+    svg { width: 42px; height: 42px; stroke: #475569; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    h1 { font-size: clamp(24px, 4vw, 32px); margin: 18px 0 12px; }
+    p { line-height: 1.7; color: #475569; }
+    a { display: inline-block; padding: 12px 22px; margin-top: 12px; border-radius: 10px; background: #1d4ed8; color: white; text-decoration: none; font-weight: bold; }
+    a:focus-visible { outline: 3px solid #0f172a; outline-offset: 3px; }
   </style>
 </head>
-<body class="auth-checking">
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-  <div class="container">
-    <div class="top-links"><a class="top-link" href="/">HOME</a><a class="top-link" href="/area-do-estudante/">ÁREA DO ESTUDANTE</a></div>
-    <div class="header"><div><span class="badge">TEACHER FLÁVIO</span></div><h1>Minha Semana</h1><div id="pageStatus" class="status">Carregando o que você precisa fazer nesta semana...</div></div>
-    <div class="divider"></div>
-    <div id="loadingPanel" class="loading-panel">Organizando suas tarefas da semana...</div>
-    <main id="dashboard" hidden>
-      <div class="week-heading"><h2 id="weekTitle">SEMANA</h2><p>O que eu preciso fazer esta semana?</p></div>
-      <section class="progress-panel"><div class="progress-head"><div><strong id="progressCount">0 de 0 tarefas concluídas</strong><div class="progress-caption">Progresso da semana</div></div><span id="progressPercent">0%</span></div><div class="progress-track"><div id="progressFill" class="progress-fill"></div></div></section>
-      <section id="taskList" class="task-list"></section>
-      <section class="info-grid">
-        <article class="info-card"><span class="info-kicker">PRÓXIMA AULA</span><strong id="nextClassValue">Carregando...</strong><p id="classNameValue">Carregando turma...</p><a class="info-button" href="/area-do-estudante/minhas-aulas/">CANCELAR</a></article>
-        <article id="roadmapPanel" class="info-card roadmap-panel"></article>
-      </section>
-    </main>
-  </div>
-  <script src="/minha_semana_dashboard.js?v=20261015-suspend-exercises-1"></script>
-  <script src="/animated_cards.js?v=20260807-1"></script>
-    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
-<script src="/site_asset_loader.js?v=20260902-1"></script>
-
-<script src="/site_runtime_config.js?v=20260903-1"></script>
-<script src="/site_page_runtime.js?v=20260903-1"></script>
-<script defer src="/site_footer.js?v=20260814-1"></script>
+<body>
+  <main>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+    <h1>Minha Semana descontinuada</h1>
+    <p>O painel Minha Semana foi descontinuado. Os demais recursos da Área do Estudante continuam disponíveis.</p>
+    <a href="/area-do-estudante/">VOLTAR À ÁREA DO ESTUDANTE</a>
+  </main>
 </body>
 </html>
