@@ -61,8 +61,9 @@ async function main() {
 
   const delivered = signPayload("email.delivered", "msg_resend_local_01");
   const first = await request(delivered);
-  assert.equal(first.status, 200, await first.text());
-  assert.deepEqual(await first.json(), { ok: true, duplicate: false });
+  const firstBody = await first.text();
+  assert.equal(first.status, 200, firstBody);
+  assert.deepEqual(JSON.parse(firstBody), { ok: true, duplicate: false });
 
   const replay = await request(delivered);
   assert.equal(replay.status, 200);
