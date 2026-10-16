@@ -12,12 +12,19 @@ begin
 end;
 $preflight$;
 
-insert into public.profiles (id,name,enrolled,archived)
+insert into public.profiles (id,name,enrolled,archived,date_of_birth)
 values
-  (:'student_a'::uuid,'HTTP E2E - Aluno fictício A',true,false),
-  (:'student_b'::uuid,'HTTP E2E - Aluno fictício B',true,false)
+  (:'student_a'::uuid,'HTTP E2E - Aluno fictício A',true,false,'1990-03-04'::date),
+  (:'student_b'::uuid,'HTTP E2E - Aluno fictício B',true,false,'1992-05-06'::date)
 on conflict(id) do update
-  set name=excluded.name,enrolled=true,archived=false;
+  set name=excluded.name,enrolled=true,archived=false,
+      date_of_birth=excluded.date_of_birth;
+
+-- Only disposable synthetic adult A is entitled to contact the test provider.
+-- The approval is administrative, not inferred from editable profiles.
+insert into public.homework_writing_age_verifications (student_id, verified_adult)
+values (:'student_a'::uuid,true), (:'student_b'::uuid,true)
+on conflict (student_id) do update set verified_adult=excluded.verified_adult;
 
 -- Um teste anterior faz ROLLBACK; seu incremento de identity não retrocede.
 select setval('public.exercises_exercise_number_seq'::regclass,1,false);

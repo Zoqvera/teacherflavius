@@ -38,6 +38,8 @@ function fakeData(overrides = {}) {
     aiEnabled: true,
     aiStatus: 200,
     aiScore: 8,
+    dateOfBirth: '1990-05-15',
+    ageVerified: true,
     aiAssessment: null,
     ...overrides,
   };
@@ -61,7 +63,11 @@ function buildHarness(overrides = {}) {
       spent_micro_usd: 5000000 - config.remainingBudgetMicros,
       reserved_micro_usd: 0,
     }],
-    profiles: [{ id: STUDENT, enrolled: true, archived: config.archived }],
+    profiles: [{ id: STUDENT, enrolled: true, archived: config.archived,
+      date_of_birth: config.dateOfBirth }],
+    homework_writing_age_verifications: config.ageVerified == null ? [] : [{
+      student_id: STUDENT, verified_adult: config.ageVerified,
+    }],
     exercise_assignments: [{ id: ASSIGNMENT, student_id: config.assignedTo,
       exercise_id: EXERCISE, version_id: VERSION, status: 'assigned' }],
     exercises: [{ id: EXERCISE, activity_type: activity, title: 'Task 1',
@@ -530,4 +536,40 @@ test('failed Writing assessment cannot invent token usage or release money prema
   assert.equal(h.calls.rpc.filter(x => x.name === 'homework_ai_budget_reserve').length, 1);
   assert.equal(h.calls.rpc.filter(x => x.name === 'homework_ai_budget_settle').length, 0);
   assert.equal(h.record.attempt.score, null);
+});
+
+test('unverified administrative age holds Writing without contacting the provider', async () => {
+  for (const ageVerified of [false, null]) {
+    const h = buildHarness({ released: true, ageVerified, dateOfBirth: '1980-05-05' });
+    const sent = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+      submission_key: SUBMISSION, answers: { text: 'Yesterday I studied English.' } });
+    assert.equal(sent.status, 200);
+    assert.equal(sent.body.correction, 'privacy_review');
+    assert.equal(sent.body.status, 'submitted');
+    assert.equal(sent.body.score, null);
+    assert.equal(h.calls.ai.length, 0);
+    assert.equal(h.calls.rpc.some(x => x.name === 'homework_claim_writing'), false);
+    assert.equal(h.calls.rpc.some(x => x.name === 'homework_ai_budget_reserve'), false);
+    const state = await h.request({ action: 'progress', assignment_id: ASSIGNMENT });
+    assert.equal(state.body.correction, 'privacy_review');
+    const retry = await h.request({ action: 'retry_correction', assignment_id: ASSIGNMENT });
+    assert.equal(retry.body.correction, 'privacy_review');
+    assert.equal(h.calls.ai.length, 0);
+    assert.equal(JSON.stringify(retry.body).includes('date_of_birth'), false);
+  }
+});
+
+test('adult Writing remains available and Reading is independent of the privacy gate', async () => {
+  const h = buildHarness({ released: true, dateOfBirth: '1999-02-14', ageVerified: true });
+  const result = await h.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { text: 'Yesterday I studied English.' } });
+  assert.equal(result.body.status, 'evaluated');
+  assert.equal(h.calls.ai.length, 1);
+  const reading = buildHarness({ released: true, ageVerified: null, writing: false });
+  const response = await reading.request({ action: 'submit', assignment_id: ASSIGNMENT,
+    submission_key: SUBMISSION, answers: { answers: [] } });
+  assert.equal(response.status, 200);
+  assert.equal(reading.calls.ai.length, 0);
+  assert.equal(reading.calls.tables.some(x =>
+    x.name === 'homework_writing_age_verifications'), false);
 });

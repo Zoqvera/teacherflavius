@@ -543,5 +543,51 @@ begin
 end;
 $relationship_student_denied$;
 RESET ROLE;
+
+DO $privacy_preflight$
+declare
+  test_id constant uuid := '09000000-0000-4000-8000-000000000002';
+begin
+  if to_regclass('public.homework_writing_age_verifications') is null then
+    raise exception 'Missing administrative Writing verification table.';
+  end if;
+  if has_table_privilege('authenticated',
+      'public.homework_writing_age_verifications','SELECT') or
+     has_table_privilege('authenticated',
+      'public.homework_writing_age_verifications','UPDATE') or
+     has_function_privilege('anon',
+       'public.homework_confirm_writing_age(uuid,boolean)','EXECUTE') then
+    raise exception 'Age verification metadata exposed to students.';
+  end if;
+
+  insert into public.homework_writing_age_verifications
+    (student_id,verified_adult)
+  values (test_id,false);
+  if (select verified_adult from public.homework_writing_age_verifications
+      where student_id=test_id) is distinct from false then
+    raise exception 'Default verification state must deny external processing.';
+  end if;
+end;
+$privacy_preflight$;
+
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub = '09000000-0000-4000-8000-000000000002';
+SET LOCAL request.jwt.claims =
+  '{"sub":"09000000-0000-4000-8000-000000000002","role":"authenticated","aal":"aal1"}';
+
+DO $privacy_student_denied$
+declare
+  denied boolean := false;
+begin
+  begin
+    perform public.homework_confirm_writing_age(
+      '09000000-0000-4000-8000-000000000002'::uuid, true);
+  exception when insufficient_privilege then denied := true;
+  end;
+  if not denied then raise exception 'Student verified their own age.'; end if;
+end;
+$privacy_student_denied$;
+
+RESET ROLE;
 -- Garante que nem as identidades fictícias nem a liberação temporária persistam.
 ROLLBACK;
