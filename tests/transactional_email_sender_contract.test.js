@@ -37,12 +37,12 @@ test("financial operational emails use dedicated sender and Workspace reply-to",
 });
 
 test("system health alerts are routed to the administrative mailbox", function () {
-  assert.match(systemHealthAlerts, /const ADMIN_NOTIFICATION_EMAIL = "contato@teacherflavius\\.com"/);
-  assert.match(systemHealthAlerts, /to: \\[ADMIN_NOTIFICATION_EMAIL\\]/);
-  assert.match(systemHealthAlerts, /reply_to: "contato@teacherflavius\\.com"/);
-  assert.match(systemHealthAlerts, /const fromEmail = Deno\\.env\\.get\\("ENROLLMENT_FROM_EMAIL"\\)/);
-  assert.doesNotMatch(systemHealthAlerts, /Deno\\.env\\.get\\("ENROLLMENT_NOTIFICATION_EMAIL"\\)/);
-  assert.match(systemHealthAlerts, /request\\.headers\\.get\\("x-webhook-secret"\\)/);
+  assert.match(systemHealthAlerts, /const ADMIN_NOTIFICATION_EMAIL = "contato@teacherflavius\.com"/);
+  assert.match(systemHealthAlerts, /to: \[ADMIN_NOTIFICATION_EMAIL\]/);
+  assert.match(systemHealthAlerts, /reply_to: "contato@teacherflavius\.com"/);
+  assert.match(systemHealthAlerts, /const fromEmail = Deno\.env\.get\("ENROLLMENT_FROM_EMAIL"\)/);
+  assert.doesNotMatch(systemHealthAlerts, /Deno\.env\.get\("ENROLLMENT_NOTIFICATION_EMAIL"\)/);
+  assert.match(systemHealthAlerts, /request\.headers\.get\("x-webhook-secret"\)/);
 });
 
 test("enrollment sends both student confirmation and existing administrative notice", function () {
