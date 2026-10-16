@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only monitoring for the suspended legacy exercise portal."""
+"""Read-only monitoring for suspended exercise portals and retired weekly views."""
 
 from __future__ import annotations
 
@@ -26,6 +26,11 @@ PUBLISHED_PATHS = LEGACY_PAGES + (
     "/area_do_estudante.html",
     "/area_do_estudante.js",
     "/minha-semana/",
+    "/professor/",
+    "/professor.html",
+    "/professor_home.js",
+    "/professor/professor_icons.js",
+    "/planos-semanais/",
     "/curso-de-ingles-online/",
     "/service-worker.js",
     "/supabase_config.js",
@@ -43,13 +48,18 @@ class AnchorReader(HTMLParser):
         self.links.extend(value for name, value in attrs if name == "href" and value)
 
 
-def points_to_suspended_portal(href: str) -> bool:
+def points_to_site_path(href: str, expected_path: str) -> bool:
+    """Resolve local navigation targets without trusting external hosts."""
     parsed = urlsplit(urljoin(SITE_ORIGIN + "/", href))
     return (
         parsed.scheme == "https"
         and parsed.netloc == "teacherflavius.com"
-        and parsed.path.rstrip("/") == SUSPENDED_PATH
+        and parsed.path.rstrip("/") == expected_path.rstrip("/")
     )
+
+
+def points_to_suspended_portal(href: str) -> bool:
+    return points_to_site_path(href, SUSPENDED_PATH)
 
 
 def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
@@ -82,8 +92,7 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
     links.feed(student_page)
     if any(points_to_suspended_portal(href) for href in links.links):
         problems.append("Área do Estudante: link para o portal antigo reapareceu")
-    if any(urlsplit(urljoin(SITE_ORIGIN + "/", href)).path.rstrip("/") == "/minha-semana"
-           for href in links.links):
+    if any(points_to_site_path(href, "/minha-semana/") for href in links.links):
         problems.append("Área do Estudante: card Minha Semana descontinuado reapareceu")
     if "area_do_estudante.js?v=20261016-retire-week-1" not in student_page:
         problems.append("Área do Estudante: versão de script desatualizada")
@@ -107,6 +116,59 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
         or "minha_semana_dashboard.js" in week_shell
     ):
         problems.append("Minha Semana: a página descontinuada foi reativada ou perdeu o aviso")
+
+    professor_shell = pages.get("/professor/", "")
+    if (
+        "/professor.html" not in professor_shell
+        or "cache: 'no-store'" not in professor_shell
+    ):
+        problems.append("Área do Professor: carregamento sem cache não preservado")
+
+    professor_page = pages.get("/professor.html", "")
+    professor_links = AnchorReader()
+    professor_links.feed(professor_page)
+    if any(
+        points_to_site_path(href, "/planos-semanais/")
+        for href in professor_links.links
+    ):
+        problems.append("Área do Professor: card Planos Semanais reapareceu")
+
+    professor_version = re.search(
+        r'professor_home\.js\?v=(20\d{6})-[A-Za-z0-9-]+',
+        professor_page,
+    )
+    icon_version = re.search(
+        r'professor_icons\.js\?v=(20\d{6})-[A-Za-z0-9-]+',
+        professor_page,
+    )
+    if (
+        not professor_version
+        or professor_version.group(1) < "20261016"
+        or not icon_version
+        or icon_version.group(1) < "20261016"
+    ):
+        problems.append("Área do Professor: versões de scripts anteriores à descontinuação")
+
+    professor_script = pages.get("/professor_home.js", "")
+    if (
+        'RETIRED_REPORT_CARD_ID = "planos-semanais"' not in professor_script
+        or "removeRetiredProfessorReportCard();" not in professor_script
+    ):
+        problems.append("Área do Professor: proteção contra card antigo ausente")
+
+    professor_icons = pages.get("/professor/professor_icons.js", "")
+    if "'planos-semanais':" in professor_icons:
+        problems.append("Área do Professor: ícone do relatório descontinuado reapareceu")
+
+    report_page = pages.get("/planos-semanais/", "")
+    if (
+        "Planos Semanais descontinuado" not in report_page
+        or 'href="/professor/"' not in report_page
+        or "planos_semanais_dashboard.js" in report_page
+        or "supabase_config.js" in report_page
+        or 'id="studentList"' in report_page
+    ):
+        problems.append("Planos Semanais: relatório descontinuado reativado ou aviso ausente")
 
     marketing = pages.get("/curso-de-ingles-online/", "")
     if marketing.count("Portal de Exercícios") < 2:
@@ -213,7 +275,7 @@ def main() -> int:
 
     print(
         "PASS: portal suspenso, Área do Estudante e PWA protegidos, "
-        "Minha Semana descontinuada, comunicação pública preservada, "
+        "Minha Semana e Planos Semanais descontinuados, comunicação pública preservada, "
         "acesso anônimo ao catálogo negado."
     )
     return 0
