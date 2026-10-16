@@ -778,6 +778,57 @@ jobs:
             echo 'ROLLBACK;'
           } | docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1
 
+      - name: Exercise signed Resend webhook through disposable local Supabase HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # All subsequent writes are in the isolated CLI database; the
+          # fixture is removed after CI. No Resend API request is made.
+          docker exec -i "$DB_CONTAINER" \
+            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < supabase/migrations/20261016213000_resend_delivery_tracking_and_retention.sql
+
+          umask 077
+          ENV_FILE="$(mktemp /tmp/resend-local-http.XXXXXXXX.env)"
+          TEST_SECRET="$(printf '%s' 'resend-test-fixture-secret-32bytes-only' | base64 -w 0)"
+          printf 'RESEND_WEBHOOK_SIGNING_SECRET=whsec_%s\nRESEND_DELIVERY_TRACKING_ENABLED=true\n' \
+            "$TEST_SECRET" > "$ENV_FILE"
+          unset TEST_SECRET
+
+          supabase functions serve resend-delivery-webhook --no-verify-jwt \
+            --env-file "$ENV_FILE" > /tmp/resend-local-http-edge.log 2>&1 &
+          EDGE_PID=$!
+          trap 'kill "$EDGE_PID" 2>/dev/null || true; rm -f "$ENV_FILE"' EXIT
+
+          if ! node tests/resend_delivery_local_http_integration.cjs; then
+            # No raw payloads, HTTP headers, secret values or identifying data.
+            grep -E 'error|Error|failed' /tmp/resend-local-http-edge.log \
+              | sed -E 's/(whsec_|Bearer )[A-Za-z0-9+/=_.-]+/REDACTED/g' \
+              | tail -n 12 || true
+            exit 1
+          fi
+
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 <<'SQL'
+          do $verify_resend_local_http$
+          begin
+            if (select count(*) from private.resend_delivery_events
+                where provider_email_id = 'resend-disposable-local-message-01') <> 2 then
+              raise exception 'Local HTTP webhook failed persistence or deduplication';
+            end if;
+            if exists (
+              select 1 from cron.job
+               where jobname = 'resend-delivery-evidence-retention'
+            ) then
+              raise exception 'Local webhook test must not activate a retention Cron';
+            end if;
+          end;
+          $verify_resend_local_http$;
+          SQL
+
       - name: Stop disposable Supabase stack
         if: always()
         run: supabase stop --no-backup
