@@ -77,8 +77,8 @@ test("both email flows remain transaction-only and avoid public user metadata", 
 });
 
 test("both administrative notification streams target the approved mailbox", function () {
-  assert.match(enrollment, /const notificationEmail = "flaviofreitas@ufu\.br"/);
-  assert.match(makeup, /const teacherEmail = "flaviofreitas@ufu\.br"/);
+  assert.match(enrollment, /const notificationEmail = "contato@teacherflavius\.com"/);
+  assert.match(makeup, /const teacherEmail = "contato@teacherflavius\.com"/);
   assert.match(enrollment, /WhatsApp: \$\{studentWhatsapp\}/);
   assert.match(enrollment, /to: studentEmail/);
 });
