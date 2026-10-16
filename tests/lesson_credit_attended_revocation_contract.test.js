@@ -6,7 +6,7 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 const migration = fs.readFileSync(path.join(
-  root, "supabase/migrations/20261016162500_justify_attended_cancelled_lesson_revocations.sql"
+  root, "supabase/migrations/20261016163745_justify_attended_cancelled_lesson_revocations.sql"
 ), "utf8");
 const adminScript = fs.readFileSync(path.join(root, "lesson_credit_admin.js"), "utf8");
 
