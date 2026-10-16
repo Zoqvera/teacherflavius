@@ -1,6 +1,6 @@
 # ETAPA 5 — Protocolo de retenção e aceite pedagógico de Writing
 Data: 15/10/2026
-Status: **prazo de retenção aprovado em 15/10/2026; operacionalização, base legal, transparência, menores e aceite pedagógico ainda pendentes**.
+Status: **prazo de retenção aprovado em 15/10/2026; aceite pedagógico amostral do Writing aprovado com ressalvas em 16/10/2026; ainda pendem requisitos LGPD, transparência, menores, acessibilidade física e lançamento**.
 Escopo: TAREFAS PARA CASA (Reading, Writing, Grammar), não Portal de Exercícios legado.
 
 ## 1. Constatações verificadas
@@ -55,7 +55,7 @@ O professor deve examinar a saída **real**, não uma correção inventada ou a 
 - [x] Exportação LGPD de respostas e feedbacks com isolamento A/B.
 - [x] Orçamento de Writing de US$ 5/mês com bloqueio preventivo.
 - [x] Aviso técnico mais claro na **interface privada** de Writing.
-- [ ] Homologação pedagógica do professor sobre exemplos A1/A2 em saídas do modelo.
+- [x] Homologação pedagógica amostral A1/A2 do professor sobre cinco saídas reais do GPT-6 Luna, **aprovada com ressalvas em 16/10/2026** (PRs #761 e #762; controle detalhado em `ETAPA_5_ACEITE_WRITING_PRIVACIDADE_20261016.md`).
 - [x] Prazo de retenção pedagógica de 12 meses civis após o encerramento formal, aprovado pelo controlador em 15/10/2026.
 - [ ] Operacionalização segura do marco de encerramento e eliminação, revisão do tratamento de menores e fundamentação jurídica apropriada.
 - [ ] Revisão/autorização de publicação da política pública `/privacidade/` contemplando OpenAI, transferência, finalidade e retenção.
@@ -127,3 +127,11 @@ O teste SQL transacional em ambiente descartável verifica arquivamento isolado,
 **SEO:** nenhum conteúdo público, metadado, canonical, robots, sitemap ou URL será alterado por esta PR. A futura edição da política de privacidade, por afetar conteúdo indexável, depende de autorização expressa.
 
 **Próxima subetapa:** ETAPA 5 — Homologação de Encerramento, Pedagogia e Privacidade. A ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica permanece condicionada aos aceites.
+
+## 10. Aceite pedagógico formalizado — 16/10/2026
+
+Decisão expressa do professor: **Writing aprovado pedagogicamente, em caráter amostral e com ressalvas**. A primeira bateria apontou invenção de fatos em texto fora do tema; a Edge v9 e o prompt foram ajustados na PR #761, e a segunda bateria sintética (PR #762) confirmou texto corrigido literalmente idêntico ao original no exemplo A2 fora do tema. As cinco notas foram verificadas com pesos 40/30/30. Acompanhar excesso eventual de generosidade em aderência ao enunciado e pontuação/aspas em feedback.
+
+**Gate técnico-pedagógico amostral: fechado.** **Gates jurídico/LGPD, menores, autorização da política pública, acessibilidade em dispositivos reais e liberação dos alunos: abertos.** Não ativar `homework_release_control` nem qualquer limpeza automática. A política pública `/privacidade/` segue sem publicação de alterações.
+
+**Próxima subetapa:** ETAPA 5 — Transparência LGPD, Tratamento de Menores e Acessibilidade em Dispositivos Reais. A próxima etapa principal continua ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica, após os aceites finais e autorização expressa.
