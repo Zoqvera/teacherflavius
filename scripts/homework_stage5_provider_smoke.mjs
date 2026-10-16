@@ -7,9 +7,10 @@ export const FIXTURE = Object.freeze({
   text: 'Yesterday I go to school. I meet my friend. We study English together.',
 });
 
-export function requestBody() {
+export function requestBody(fixture = FIXTURE) {
   return {
     model: MODEL,
+    service_tier: 'default',
     reasoning: { effort: 'none' },
     store: false,
     max_output_tokens: 1400,
@@ -29,8 +30,8 @@ export function requestBody() {
       {
         role: 'user',
         content: JSON.stringify({
-          enunciado: FIXTURE.prompt,
-          texto_do_estudante: FIXTURE.text,
+          enunciado: fixture.prompt,
+          texto_do_estudante: fixture.text,
         }),
       },
     ],
@@ -104,6 +105,9 @@ export function parseResponse(body) {
       criteria.linguistic_accuracy * 0.3 +
       criteria.clarity_vocabulary * 0.3).toFixed(2)),
     criteria,
+    corrected_text: assessment.corrected_text,
+    general_comment: assessment.general_comment,
+    explanations: assessment.explanations,
   };
 }
 
