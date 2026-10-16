@@ -14,7 +14,7 @@ A apresentação pública do curso deve continuar mencionando o Portal de Exerc�
 - Nos PRs: contratos locais sem consultas à produção.
 - Na main, agendamentos e execução manual: contratos locais, páginas públicas via HTTP e controle de acesso anônimo ao catálogo antigo no Supabase.
 - O job **Verify retired weekly features and suspended legacy portal** apresenta sucesso/falha no GitHub Actions.
-- Agendamentos e execuções manuais abrem um único chamado em **GitHub Issues** quando a auditoria da produção falha, sem criar duplicatas enquanto o chamado estiver aberto.
+- Agendamentos e execuções manuais na branch `main` abrem um único chamado em **GitHub Issues** quando a auditoria da produção falha, sem criar duplicatas enquanto o chamado estiver aberto.
 - Uma auditoria posterior bem-sucedida registra o resultado no chamado e o encerra automaticamente.
 - Falhas em PRs ou em pushes na main permanecem visíveis no GitHub Actions, sem criar Issues: isso evita alertas prematuros enquanto uma implantação ainda estiver em andamento.
 - O job de alertas possui permissão `issues: write` separada dos testes; não executa em PRs. Não foi configurado e-mail independente. Para receber notificações de Issues, é necessário acompanhar o repositório no GitHub e ativar as notificações pertinentes.
