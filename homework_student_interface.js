@@ -111,12 +111,17 @@
       } else if (resultStatus === "submitted") {
         const pausedForBudget = type === "writing" &&
           progress.correction === "monthly_budget";
-        appendText(panel, "p", pausedForBudget
-          ? "Seu texto foi salvo. O limite mensal de correções por IA foi atingido. " +
-            "A correção poderá ser retomada no mês seguinte."
-          : type === "writing"
-            ? "Seu texto está salvo. A correção está pendente; consulte o progresso mais tarde."
-            : "Suas respostas foram salvas. A nota automática está sendo confirmada.");
+        const pausedForPrivacy = type === "writing" &&
+          progress.correction === "privacy_review";
+        appendText(panel, "p", pausedForPrivacy
+          ? "Seu texto foi salvo. A correção por IA está suspensa até a validação " +
+            "da faixa etária e das medidas de privacidade. Consulte o professor."
+          : pausedForBudget
+            ? "Seu texto foi salvo. O limite mensal de correções por IA foi atingido. " +
+              "A correção poderá ser retomada no mês seguinte."
+            : type === "writing"
+              ? "Seu texto está salvo. A correção está pendente; consulte o progresso mais tarde."
+              : "Suas respostas foram salvas. A nota automática está sendo confirmada.");
       } else if (resultStatus === "evaluated") {
         appendText(panel, "h3", "Atividade corrigida");
         if (score !== null) appendText(panel, "p", "Nota: " + score + "/10");
@@ -125,7 +130,7 @@
       }
 
       if (type === "writing" && resultStatus === "submitted" &&
-          progress.correction !== "monthly_budget") {
+          !["monthly_budget", "privacy_review"].includes(progress.correction)) {
         panel.appendChild(button("Tentar corrigir novamente", async function () {
           status("Retomando a correção do texto já enviado...");
           const resumed = await service.retryCorrection(auth, activeAssignment);
@@ -288,9 +293,9 @@
               // Se a submissão foi confirmada, uma falha na consulta de progresso
               // não deve ocultar a nota ou induzir um segundo envio.
             }
-            // O status de progresso não inclui a razão administrativa da pausa.
-            // Preserve a resposta explícita da Edge quando o orçamento se esgota.
-            if (response?.correction === "monthly_budget") confirmed = response;
+            // Preserve pause reasons if the progress replica is briefly stale.
+            if (["monthly_budget", "privacy_review"].includes(response?.correction) &&
+                confirmed?.status !== "evaluated") confirmed = response;
             showProgress(confirmed);
           } catch (error) {
             // Conserva a mesma chave e as mesmas respostas após falhas de rede.
