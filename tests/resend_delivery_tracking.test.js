@@ -133,7 +133,7 @@ test("config gates webhook and senders; SQL prevents student-side access", () =>
   const webhook = fs.readFileSync(path.join(
     ROOT, "supabase/functions/resend-delivery-webhook/index.ts"), "utf8");
   const sql = fs.readFileSync(path.join(
-    ROOT, "supabase/migrations/20261015210000_resend_delivery_tracking_foundation.sql"), "utf8");
+    ROOT, "supabase/migrations/20261016213000_resend_delivery_tracking_and_retention.sql"), "utf8");
   const senders = [
     "notify-new-enrollment",
     "notify-makeup-booking",
@@ -155,5 +155,11 @@ test("config gates webhook and senders; SQL prevents student-side access", () =>
   assert.match(sql, /on conflict \(queue_name, notification_id, recipient_role\) do nothing/i);
   assert.match(sql, /revoke all on function public\.record_resend_delivery_event/i);
   assert.match(sql, /grant execute on function public\.record_resend_delivery_event[\s\S]*to service_role/i);
+  assert.match(sql, /interval '90 days'/i);
+  assert.match(sql, /interval '180 days'/i);
+  assert.match(sql, /security invoker/i);
+  assert.match(sql, /revoke all on function public\.prune_resend_delivery_evidence/i);
+  assert.match(sql, /grant delete on private\.resend_delivery_events to service_role/i);
+  assert.doesNotMatch(sql, /cron\.schedule\s*\(/i);
   assert.doesNotMatch(sql, /\bemail_address\b|\bsubject\b|\bbody_html\b/i);
 });
