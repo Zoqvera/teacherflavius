@@ -141,7 +141,12 @@ test("config gates webhook and senders; SQL prevents student-side access", () =>
   ];
 
   assert.match(config, /\[functions\.resend-delivery-webhook\]\s*verify_jwt = false/);
-  assert.match(webhook, /verifyResendWebhook\(rawBody, request\.headers, signingSecret\)/);
+  const handler = fs.readFileSync(path.join(
+    ROOT, "supabase/functions/_shared/resend_delivery_handler.mjs"), "utf8");
+  assert.match(webhook, /createResendDeliveryHandler/);
+  assert.match(handler, /verifyResendWebhook\(\s*rawBody, request\.headers, config\.signingSecret, now\(\)/);
+  assert.match(handler, /readRawBodyWithinLimit/);
+  assert.match(handler, /record_resend_delivery_event/);
   assert.match(webhook, /RESEND_WEBHOOK_SIGNING_SECRET/);
   assert.match(webhook, /RESEND_DELIVERY_TRACKING_ENABLED/);
   assert.doesNotMatch(webhook, /console\.(error|log)\([^)]*(request|rawBody|event\.data)/);
