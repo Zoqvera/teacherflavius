@@ -153,10 +153,10 @@ test("Writing submit displays official feedback immediately, without another-stu
   await h.controller.open("00000000-0000-4000-8000-000000000001");
   assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
   assert.match(displayText(h.mount),
-    /seu texto será enviado ao serviço de IA da OpenAI/);
+    /correção por IA só acontece após as verificações de privacidade e faixa etária/);
   assert.match(displayText(h.mount), /Não inclua nomes completos/);
-  assert.match(displayText(h.mount), /o texto original, a correção, a nota e as explicações/i);
-  assert.match(displayText(h.mount), /ficarão registrados na sua conta/i);
+  assert.match(displayText(h.mount), /o texto original e, se houver correção, a nota, as alterações e as explicações/i);
+  assert.match(displayText(h.mount), /ficam registrados na sua conta/i);
   assert.match(displayText(h.mount), /correção é automática e pode conter imprecisões/i);
   assert.match(displayText(h.mount), /CPF, telefones, endereços, informações de saúde/i);
   const textarea = descendants(h.mount, "textarea")[0];
@@ -319,4 +319,30 @@ test("provider privacy pause remains visible after reload and has no futile retr
   assert.doesNotMatch(displayText(h.mount), /Tentar corrigir novamente/);
   assert.doesNotMatch(displayText(h.mount), /Nota:/);
   assert.equal(h.calls.retries, 0);
+});
+
+test("Writing explains that external AI processing requires prior safeguards", async () => {
+  const h = harness();
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  const content = displayText(h.mount);
+  assert.match(content, /Você pode enviar sua redação para salvá-la/);
+  assert.match(content, /correção por IA só acontece após/);
+  assert.match(content, /verificações de privacidade e faixa etária/);
+  assert.match(content, /Quando autorizada, a redação/);
+  assert.match(content, /OpenAI/);
+  assert.doesNotMatch(content, /seu texto será enviado ao serviço de IA/);
+});
+
+test("Writing counter is linked to its field without announcements on every keystroke", async () => {
+  const h = harness();
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  const textArea = descendants(h.mount, "textarea")[0];
+  const counterId = textArea.attributes["aria-describedby"];
+  assert.match(counterId, /^homework-writing-counter-\d+$/);
+  const counter = descendants(h.mount, "p").find(node => node.attributes.id === counterId);
+  assert.ok(counter, "counter should be available by describedby reference");
+  assert.equal(counter.attributes["aria-live"], undefined);
+  textArea.value = "I study English every day.";
+  textArea.dispatch("input");
+  assert.match(counter.textContent, /Caracteres: 26 \/ 3000/);
 });

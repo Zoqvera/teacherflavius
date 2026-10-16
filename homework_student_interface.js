@@ -7,6 +7,7 @@
     grammar: "Grammar"
   });
   const MAX_WRITING_LENGTH = 3000;
+  let writingCounterSequence = 0;
 
   function createElement(tag, className, label) {
     const node = document.createElement(tag);
@@ -250,15 +251,20 @@
         label.appendChild(writing);
         form.appendChild(label);
         appendText(form, "p",
-          "Para receber a correção automática, seu texto será enviado ao serviço de IA da OpenAI. " +
-          "O texto original, a correção, a nota e as explicações ficarão registrados na sua conta " +
+          "Você pode enviar sua redação para salvá-la. A correção por IA só acontece após " +
+          "as verificações de privacidade e faixa etária. Quando autorizada, a redação " +
+          "e o enunciado são enviados à OpenAI. O texto original e, se houver correção, " +
+          "a nota, as alterações e as explicações ficam registrados na sua conta " +
           "para acompanhamento pedagógico.");
         appendText(form, "p",
           "A correção é automática e pode conter imprecisões. " +
           "Não inclua nomes completos, CPF, telefones, endereços, informações de saúde " +
           "ou outros dados pessoais seus ou de terceiros.");
         const counter = createElement("p", "", "Caracteres: 0 / " + MAX_WRITING_LENGTH);
-        counter.setAttribute("aria-live", "polite");
+        // Associate the live count with the field without reading every keystroke aloud.
+        const counterId = "homework-writing-counter-" + (++writingCounterSequence);
+        counter.setAttribute("id", counterId);
+        writing.setAttribute("aria-describedby", counterId);
         writing.addEventListener("input", function () {
           counter.textContent = "Caracteres: " + writing.value.length +
             " / " + MAX_WRITING_LENGTH;
