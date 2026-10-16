@@ -125,3 +125,28 @@ O professor/controlador respondeu **“Aprovo”** à pergunta sobre conceder o 
 **Exclusões expressas deste aceite:** não abrange acesso de alunos, publicação pública da política de privacidade, base legal e melhores interesses de menores, transferências internacionais de dados, testes físicos em Android/TalkBack/desktop NVDA/VoiceOver, expurgo automático ou abertura da Etapa 6.
 
 **Próxima subetapa:** ETAPA 5 — Transparência LGPD, Tratamento de Menores e Acessibilidade em Dispositivos Reais. Implementações que afetem `/privacidade/` (conteúdo indexável com potencial implicação de SEO) exigem autorização específica antes da publicação. `homework_release_control.enabled=false` deve ser preservado.
+
+## 16/10/2026 — Atendimento a menores confirmado; controle preventivo para o provedor externo
+
+O controlador confirmou expressamente que TAREFAS PARA CASA também será utilizado por estudantes **menores de 18 anos**. O aceite pedagógico de Writing já está aprovado com ressalvas; isso **não** concede o aceite de privacidade ou lançamento.
+
+Na verificação agregada do cadastro nesta data, foram encontrados **128 alunos ativos**, dos quais **8 têm idade registrada abaixo de 18 anos (inclusive 1 abaixo de 13)** e **4 não possuem data de nascimento cadastrada**. Nomes, e-mails e datas individuais não foram consultados nem incluídos neste documento.
+
+### Base de cautela e providências técnicas
+
+- [OpenAI, Under-18 guidance](https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance): para tratamento de dados pessoais de crianças com menos de 13 anos **ou abaixo da idade de consentimento digital aplicável**, exige-se previamente *Zero Data Retention* na API; o atual `store:false` **não comprova ZDR**. Também se recomendam divulgação em linguagem apropriada à idade, medidas de segurança e mitigação de riscos.
+- [ANPD, Enunciado CD/ANPD 1/2023](https://www.gov.br/anpd/pt-br/assuntos/noticias/anpd-divulga-enunciado-sobre-o-tratamento-de-dados-pessoais-de-criancas-e-adolescentes): hipótese legal da LGPD deve ser determinada caso a caso, com prevalência do **melhor interesse da criança e do adolescente**. Não presumir consentimento universal ou registro do responsável já obtido.
+- [ANPD, ECA Digital](https://www.gov.br/anpd/pt-br/assuntos/eca-digital/): Lei 15.211/2025 em vigor desde março de 2026; avaliar prevenção de riscos, privacidade por padrão, eventual aferição etária e supervisão parental conforme a natureza do produto, sem coleta desnecessária.
+- [ANPD, Resolução 19/2024](https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd/resolucao-cd-anpd-no-19-de-23-de-agosto-de-2024): identificar e documentar mecanismo aplicável a eventual transferência internacional; não declarar cláusulas contratadas sem evidência.
+
+**Controle técnico preventivo nesta PR:** a auditoria revelou que `profiles.date_of_birth` é editável diretamente pelo aluno e **não é prova de maioridade**. A Edge não confia nessa informação para habilitar a avaliação externa. Somente a tabela administrativa `homework_writing_age_verifications`, sem acesso para alunos, e a confirmação expressa do professor com MFA (`homework_confirm_writing_age`) poderão marcar um aluno como adulto verificado. Sem registro, ou com verificação negativa, a redação é salva, mas não existe chamada OpenAI, nota fabricada ou reserva de orçamento. `progress` preserva a suspensão e a interface não oferece tentativa inútil. Reading e Grammar continuam corrigidos por gabarito. **Nenhum estudante existente é aprovado automaticamente.**
+
+**Verificação administrativa:** o professor deve conferir a faixa etária por procedimento proporcional, sem guardar imagem facial, documento ou cópia extra da data de nascimento nessa tabela. A autorização por idade não substitui verificação jurídica das bases legais ou da transparência.
+
+Trata-se de suspensão cautelar **temporária**, não exclusão definitiva dos adolescentes do produto. Para eventualmente habilitar Writing automatizado para faixas menores, realizar revisão jurídica e técnica das bases legais, do melhor interesse, das medidas de transparência aos responsáveis, da política do provedor e das exigências de ZDR aplicáveis; qualquer mudança deverá ter PR e autorização separadas. Não utilizar apenas o preenchimento de aniversário como sinônimo de autorização legal.
+
+**Gates pendentes:** controle de responsável e comunicação adequada, parecer de proteção de dados para menores, evidência contratual sobre retenção e transferência internacional, revisão da política pública `/privacidade/` antes de publicá-la e testes físicos de acessibilidade. `homework_release_control.enabled=false` deve continuar vigente.
+
+**SEO:** alteração exclusivamente de código privado e documentação; a URL pública `/privacidade/` e seus metadados permanecem inalterados. A edição futura da política é mudança indexável que depende de autorização explícita.
+
+**Próxima subetapa:** ETAPA 5 — Conformidade para menores, transparência e testes físicos de acessibilidade.
