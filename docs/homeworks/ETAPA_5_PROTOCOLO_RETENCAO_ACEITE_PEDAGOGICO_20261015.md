@@ -111,3 +111,19 @@ A exclusão definitiva solicitada pelo titular permanece apoiada no fluxo separa
 **SEO:** a presente decisão e o registro técnico do prazo não alteram página pública, indexação ou metadados. Atualizar `/privacidade/` é alteração de conteúdo indexável com possível efeito de SEO e está sujeita a autorização separada.
 
 **Próxima subetapa:** ETAPA 5 — Protocolo de Encerramento do Vínculo e Homologação Pedagógica/Privacidade. A ETAPA 6 continua condicionada a todas as aprovações e à autorização de lançamento.
+
+## 9. Encerramento formal e prévia não destrutiva — 16/10/2026
+
+A política aprovada de **12 meses civis após o encerramento formal** passa a ter suporte técnico independente do simples arquivamento. Esta implementação **não autoriza expurgo** nem substitui os fluxos legados.
+
+A migração `20261016144000_homeworks_formal_relationship_retention.sql` registra eventos explícitos `ended` (após arquivamento, por decisão do professor) e `resumed` (após desarquivamento, por decisão do professor), preservando histórico e sem marcar automaticamente alunos já arquivados. A função `homework_record_relationship_event` exige professor com MFA; transições duplicadas ou inválidas são rejeitadas.
+
+A prévia administrativa `homework_retention_preview`, também sob MFA, devolve apenas datas e contagens, sem redações e sem qualquer exclusão. Considera o evento formal mais recente e a data de arquivamento para impedir que uma reativação seguida de arquivamento reative um prazo antigo. O intervalo de 12 meses é calculado em meses civis, não em 365 dias.
+
+O teste SQL transacional em ambiente descartável verifica arquivamento isolado, término há 11 e 13 meses, retomada, reativação sem registro, restrição de acesso por estudante e ausência de eliminação de respostas. Não houve migração retroativa de alunos existentes.
+
+**Pendências:** estabelecer o procedimento administrativo e eventual interface para indicar encerramento formal; examinar pedidos legais de conservação e backups; revisar uso de IA com menores; realizar aceite pedagógico com saídas reais sintéticas A1/A2; testar acessibilidade em dispositivos físicos; aprovar atualização pública de `/privacidade/` e a liberação posterior, de maneira separada.
+
+**SEO:** nenhum conteúdo público, metadado, canonical, robots, sitemap ou URL será alterado por esta PR. A futura edição da política de privacidade, por afetar conteúdo indexável, depende de autorização expressa.
+
+**Próxima subetapa:** ETAPA 5 — Homologação de Encerramento, Pedagogia e Privacidade. A ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica permanece condicionada aos aceites.
