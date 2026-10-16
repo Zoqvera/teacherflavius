@@ -4,10 +4,18 @@ on:
   pull_request:
     paths:
       - "scripts/homework_stage5_provider_smoke.mjs"
+      - "scripts/homework_stage5_pedagogical_review.mjs"
       - "tests/homework_stage5_provider_smoke.test.mjs"
+      - "tests/homework_stage5_pedagogical_review.test.mjs"
       - "supabase/functions/homework-student/index.ts"
       - ".github/workflows/homeworks-writing-provider-smoke.yml"
   workflow_dispatch:
+    inputs:
+      pedagogical_review:
+        description: "Run five billable, synthetic A1/A2 samples and upload a private teacher-review artifact"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -27,11 +35,11 @@ jobs:
           node-version: "22"
 
       - name: Test synthetic payload and provider failure isolation
-        run: node --test tests/homework_stage5_provider_smoke.test.mjs
+        run: node --test tests/homework_stage5_provider_smoke.test.mjs tests/homework_stage5_pedagogical_review.test.mjs
 
   openai-live-smoke:
     name: One synthetic OpenAI request (manual only)
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.pedagogical_review }}
     needs: validate-provider-contract
     runs-on: ubuntu-latest
     timeout-minutes: 3
@@ -57,3 +65,41 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: node scripts/homework_stage5_provider_smoke.mjs
+
+  pedagogical-acceptance-samples:
+    name: Five synthetic Writing samples for teacher acceptance (manual only)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.pedagogical_review }}
+    needs: validate-provider-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Verify manual review secret
+        env:
+          HAS_OPENAI_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
+        run: |
+          if [ "$HAS_OPENAI_KEY" != "true" ]; then
+            echo "::error::OPENAI_API_KEY repository secret is not configured."
+            exit 1
+          fi
+
+      - name: Generate the five real feedbacks using synthetic texts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          HOMEWORKS_REVIEW_REPORT_FILE: ${{ runner.temp }}/homeworks-writing-pedagogical-review.json
+        run: node scripts/homework_stage5_pedagogical_review.mjs
+
+      - name: Upload private pedagogical evidence for teacher review
+        uses: actions/upload-artifact@v4
+        with:
+          name: homeworks-writing-pedagogical-review
+          path: ${{ runner.temp }}/homeworks-writing-pedagogical-review.json
+          retention-days: 7
+          if-no-files-found: error
