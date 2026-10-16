@@ -42,7 +42,7 @@ test("regular notification webhook uses stored secret and non-public trigger fun
 
 test("regular cancellation emails use distinct idempotency keys and verified student email", () => {
   assert.match(regular, /Teacher Flávio <contato@teacherflavius\.com>/);
-  assert.match(regular, /const TEACHER_EMAIL = "flaviofreitas@ufu\.br"/);
+  assert.match(regular, /const TEACHER_EMAIL = "contato@teacherflavius\.com"/);
   assert.match(regular, /auth\.admin\.getUserById\(notice\.student_id\)/);
   assert.match(regular, /studentAuth\?\.user\?\.email/);
   assert.match(regular, /Idempotency-Key/);
