@@ -26,7 +26,6 @@ PUBLISHED_PATHS = LEGACY_PAGES + (
     "/area_do_estudante.html",
     "/area_do_estudante.js",
     "/minha-semana/",
-    "/minha_semana_dashboard.js",
     "/curso-de-ingles-online/",
     "/service-worker.js",
     "/supabase_config.js",
@@ -83,12 +82,17 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
     links.feed(student_page)
     if any(points_to_suspended_portal(href) for href in links.links):
         problems.append("Área do Estudante: link para o portal antigo reapareceu")
-    if "area_do_estudante.js?v=20261015-suspend-exercises-2" not in student_page:
+    if any(urlsplit(urljoin(SITE_ORIGIN + "/", href)).path.rstrip("/") == "/minha-semana"
+           for href in links.links):
+        problems.append("Área do Estudante: card Minha Semana descontinuado reapareceu")
+    if "area_do_estudante.js?v=20261016-retire-week-1" not in student_page:
         problems.append("Área do Estudante: versão de script desatualizada")
 
     student_script = pages.get("/area_do_estudante.js", "")
-    if "removeSuspendedPortalCards();" not in student_script:
-        problems.append("Área do Estudante: proteção do card antigo ausente")
+    if "removeUnavailableStudentCards();" not in student_script:
+        problems.append("Área do Estudante: proteção dos cards indisponíveis ausente")
+    if '"/minha-semana"' not in student_script:
+        problems.append("Área do Estudante: remoção de Minha Semana ausente")
     if any(value in student_script for value in (
         "get_public_teacher_exercises",
         "daily_exercise_completion",
@@ -97,22 +101,12 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
         problems.append("Área do Estudante: consulta ou alerta antigo reintroduzido")
 
     week_shell = pages.get("/minha-semana/", "")
-    if "minha_semana_dashboard.js" not in week_shell:
-        problems.append("Minha Semana: script principal ausente")
-
-    week_script = pages.get("/minha_semana_dashboard.js", "")
-    if any(value in week_script for value in (
-        "get_public_teacher_exercises",
-        "daily_exercise_completion",
-        "currentExercise",
-    )):
-        problems.append("Minha Semana: exercícios suspensos reintroduzidos")
-    if not all(value in week_script for value in (
-        "flashcard_practice_days",
-        "grammar_lesson_completion",
-        "student_frequency",
-    )):
-        problems.append("Minha Semana: tarefas regulares não confirmadas")
+    if (
+        "Minha Semana descontinuada" not in week_shell
+        or 'href="/area-do-estudante/"' not in week_shell
+        or "minha_semana_dashboard.js" in week_shell
+    ):
+        problems.append("Minha Semana: a página descontinuada foi reativada ou perdeu o aviso")
 
     marketing = pages.get("/curso-de-ingles-online/", "")
     if marketing.count("Portal de Exercícios") < 2:
@@ -219,7 +213,7 @@ def main() -> int:
 
     print(
         "PASS: portal suspenso, Área do Estudante e PWA protegidos, "
-        "Minha Semana sem exercícios antigos, comunicação pública preservada, "
+        "Minha Semana descontinuada, comunicação pública preservada, "
         "acesso anônimo ao catálogo negado."
     )
     return 0
