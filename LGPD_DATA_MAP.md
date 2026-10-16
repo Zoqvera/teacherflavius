@@ -83,7 +83,7 @@ Esse status é um controle operacional; não equivale a uma certificação jurí
 
 ### Resend
 
-Por decisão operacional do controlador, a notificação administrativa de nova matrícula inclui nome, WhatsApp, quantidade de aulas, valor combinado e data da matrícula. CPF, e-mail, código de matrícula e chave PIX continuam fora da mensagem. O envio é destinado somente ao endereço administrativo configurado em `ENROLLMENT_NOTIFICATION_EMAIL`.
+Por decisão operacional do controlador, a notificação administrativa de nova matrícula inclui nome, WhatsApp, quantidade de aulas, valor combinado e data da matrícula. CPF, e-mail, código de matrícula e chave PIX continuam fora da mensagem. O aviso administrativo é enviado exclusivamente a `contato@teacherflavius.com`, definido na Edge Function `notify-new-enrollment`. O Secret legado `ENROLLMENT_NOTIFICATION_EMAIL` não controla o destinatário dessa notificação.
 
 O remetente genérico `resend-email` não registra mais o corpo de erro devolvido pelo provedor; apenas o código HTTP é registrado. O frontend recebe somente `ok` e, quando disponível, o identificador técnico do envio.
 
