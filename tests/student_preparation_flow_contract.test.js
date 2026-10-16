@@ -85,3 +85,21 @@ test("the teacher lesson plan reflects registered preparation and refreshes whil
   assert.match(teacher, /PLAN_REFRESH_INTERVAL_MS = 30000/);
   assert.match(teacher, /document\.visibilityState === "visible"/);
 });
+
+
+test("question-study dialog is centered independently of the page scroll position", () => {
+  const css = read("student_preparation_flow.css");
+  const modalStyles = css.match(/\.student-preparation-dialog\s*\{([^}]+)\}/);
+  assert.ok(modalStyles, "Dialog styles must exist.");
+  for (const rule of [
+    /position:\s*fixed\s*;/,
+    /top:\s*50%\s*;/,
+    /left:\s*50%\s*;/,
+    /transform:\s*translate\(-50%,\s*-50%\)\s*;/,
+    /margin:\s*0\s*;/,
+    /overflow:\s*auto\s*;/
+  ]) {
+    assert.match(modalStyles[1], rule);
+  }
+  assert.match(secondPage, /student_preparation_flow\.css\?v=20261016-centered-dialog-1/);
+});

@@ -27,7 +27,9 @@ SCENARIOS = (
     ("unpublished", 390, 844),
     ("second", 320, 740),
     ("second", 390, 844),
+    ("second-dialog", 320, 740),
     ("second-dialog", 390, 844),
+    ("second-dialog", 1280, 900),
     ("second", 1280, 900),
     ("lesson", 320, 740),
     ("lesson", 390, 844),
@@ -158,6 +160,13 @@ VERIFIER = r"""
           "ESTUDAR MAIS UMA PERGUNTA" &&
         document.getElementById("finishQuestionStudyLink").getAttribute("href") ===
           "/area-do-estudante/";
+      if (dialog && dialog.open) {
+        const rect = dialog.getBoundingClientRect();
+        const offsetX = Math.abs(rect.left + rect.width / 2 - innerWidth / 2);
+        const offsetY = Math.abs(rect.top + rect.height / 2 - innerHeight / 2);
+        ok = ok && offsetX <= 3 && offsetY <= 3;
+        detail += ", dialogOffsets=" + offsetX.toFixed(1) + "/" + offsetY.toFixed(1);
+      }
       if (scenario === "second") {
         document.getElementById("studyAnotherQuestionButton").click();
         ok = ok && !dialog.open;
