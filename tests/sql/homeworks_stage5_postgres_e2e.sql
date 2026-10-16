@@ -426,5 +426,122 @@ end;
 $student_b_rls$;
 
 RESET ROLE;
+
+-- ETAPA 5: política de retenção — nenhum prazo nasce de mero arquivamento.
+-- As contas e atividades são inteiramente fictícias; o ROLLBACK preserva produção.
+DO $relationship_retention$
+declare
+  student_a constant uuid := '09000000-0000-4000-8000-000000000002';
+  student_b constant uuid := '09000000-0000-4000-8000-000000000003';
+  teacher_id constant uuid := '09000000-0000-4000-8000-000000000001';
+  eligible_count integer;
+  writing_count bigint;
+begin
+  if to_regclass('public.homework_relationship_events') is null or
+     to_regprocedure('public.homework_retention_preview(integer)') is null then
+    raise exception 'Fluxo de desligamento formal não está instalado.';
+  end if;
+  if has_table_privilege('anon', 'public.homework_relationship_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.homework_relationship_events', 'INSERT')
+     or has_function_privilege('anon', 'public.homework_retention_preview(integer)', 'EXECUTE')
+     or has_function_privilege('anon',
+       'public.homework_record_relationship_event(uuid,text)', 'EXECUTE') then
+    raise exception 'Histórico administrativo de desligamento está exposto.';
+  end if;
+  if date '2024-02-29' + interval '12 months' <>
+     timestamp '2025-02-28' then
+    raise exception 'Intervalo de 12 meses civis não tratou ano bissexto.';
+  end if;
+
+  -- Arquivamento de A e B NÃO registra desligamento de forma implícita.
+  update public.profiles set archived=true,
+    archived_at=now()-interval '14 months'
+    where id in (student_a, student_b);
+  if exists (select 1 from private.homework_retention_candidates()) then
+    raise exception 'Arquivamento isolado antecipou retenção.';
+  end if;
+  insert into public.homework_relationship_events
+    (student_id,event_type,occurred_at,recorded_by)
+  values (student_a,'ended',now()-interval '13 months',teacher_id);
+  select count(*), max(attempt_count) into eligible_count, writing_count
+    from private.homework_retention_candidates();
+  if eligible_count <> 1 or writing_count <> 2 then
+    raise exception 'Prévia deveria conter só A e duas tentativas.';
+  end if;
+
+  -- Encerramento há 11 meses ainda não vence.
+  insert into public.homework_relationship_events
+    (student_id,event_type,occurred_at,recorded_by)
+  values (student_b,'ended',now()-interval '11 months',teacher_id);
+  if (select count(*) from private.homework_retention_candidates()) <> 1 then
+    raise exception 'Prazo de onze meses não deveria vencer.';
+  end if;
+
+  -- Retomada explícita invalida desligamento anterior.
+  update public.profiles set archived=false,archived_at=null where id=student_b;
+  insert into public.homework_relationship_events
+    (student_id,event_type,recorded_by)
+  values (student_b,'resumed',teacher_id);
+  if (select count(*) from private.homework_retention_candidates()) <> 1 then
+    raise exception 'Retomada não preservou exclusão da prévia.';
+  end if;
+
+  -- Reativação não registrada, seguida de novo arquivamento, não pode
+  -- reutilizar um evento antigo e provocar eliminação prematura.
+  update public.profiles set archived=false,archived_at=null where id=student_a;
+  if exists(select 1 from private.homework_retention_candidates()) then
+    raise exception 'Aluno reativado permaneceu elegível.';
+  end if;
+  update public.profiles set archived=true,archived_at=now()-interval '1 month'
+    where id=student_a;
+  if exists(select 1 from private.homework_retention_candidates()) then
+    raise exception 'Novo arquivamento reutilizou desligamento antigo.';
+  end if;
+
+  if (select count(*) from public.exercise_attempts) <> 3 or
+     (select count(*) from public.exercise_feedback) <> 3 then
+    raise exception 'Prévia de retenção alterou histórico acadêmico.';
+  end if;
+end;
+$relationship_retention$;
+
+-- Uma sessão comum do estudante não pode registrar encerramentos,
+-- consultar prévias com identificadores ou acessar a função interna.
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub = '09000000-0000-4000-8000-000000000002';
+SET LOCAL request.jwt.claims = '{"sub":"09000000-0000-4000-8000-000000000002","role":"authenticated","aal":"aal1"}';
+DO $relationship_student_denied$
+declare
+  denied boolean := false;
+begin
+  begin
+    perform public.homework_record_relationship_event(
+      '09000000-0000-4000-8000-000000000002'::uuid, 'ended');
+  exception when sqlstate '42501' then denied := true;
+  end;
+  if not denied then
+    raise exception 'Aluno conseguiu registrar encerramento formal.';
+  end if;
+
+  denied := false;
+  begin
+    perform public.homework_retention_preview(100);
+  exception when sqlstate '42501' then denied := true;
+  end;
+  if not denied then
+    raise exception 'Aluno conseguiu acessar prévia de retenção.';
+  end if;
+
+  denied := false;
+  begin
+    perform private.homework_retention_candidates();
+  exception when insufficient_privilege then denied := true;
+  end;
+  if not denied then
+    raise exception 'Aluno conseguiu acessar consulta interna de retenção.';
+  end if;
+end;
+$relationship_student_denied$;
+RESET ROLE;
 -- Garante que nem as identidades fictícias nem a liberação temporária persistam.
 ROLLBACK;
