@@ -24,6 +24,7 @@ type MercadoPagoPayment = {
 };
 
 const FINANCIAL_FROM_EMAIL = "Financeiro Teacher Flávio <financeiro@teacherflavius.com>";
+const ADMIN_NOTIFICATION_EMAIL = "contato@teacherflavius.com";
 
 const ACTIVE_ATTEMPT_STATUSES = [
   "created",
@@ -176,10 +177,9 @@ async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
   paymentMethod: SupportedPaymentMethod;
 }): Promise<boolean> {
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
-  const notificationEmail = Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL") ?? "";
 
-  if (!resendApiKey || !notificationEmail) {
-    console.warn("Mercado Pago policy alert email is not configured");
+  if (!resendApiKey) {
+    console.warn("Mercado Pago policy alert email provider is not configured");
     return false;
   }
 
@@ -195,7 +195,7 @@ async function notifyProfessorOfMercadoPagoPolicyBlock(input: {
       body: JSON.stringify({
         from: FINANCIAL_FROM_EMAIL,
         reply_to: "contato@teacherflavius.com",
-        to: [notificationEmail],
+        to: [ADMIN_NOTIFICATION_EMAIL],
         subject: "Alerta: pagamento via Mercado Pago indisponível",
         text: [
           "O site detectou que o Mercado Pago recusou a criação de um pagamento por política interna.",
