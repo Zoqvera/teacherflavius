@@ -320,3 +320,29 @@ test("provider privacy pause remains visible after reload and has no futile retr
   assert.doesNotMatch(displayText(h.mount), /Nota:/);
   assert.equal(h.calls.retries, 0);
 });
+
+test("Writing explains that external AI processing requires prior safeguards", async () => {
+  const h = harness();
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  const content = displayText(h.mount);
+  assert.match(content, /Você pode enviar sua redação para salvá-la/);
+  assert.match(content, /correção por IA só acontece após/);
+  assert.match(content, /verificações de privacidade e faixa etária/);
+  assert.match(content, /Quando autorizada, a redação/);
+  assert.match(content, /OpenAI/);
+  assert.doesNotMatch(content, /seu texto será enviado ao serviço de IA/);
+});
+
+test("Writing counter is linked to its field without announcements on every keystroke", async () => {
+  const h = harness();
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  const textArea = descendants(h.mount, "textarea")[0];
+  const counterId = textArea.attributes["aria-describedby"];
+  assert.match(counterId, /^homework-writing-counter-\d+$/);
+  const counter = descendants(h.mount, "p").find(node => node.attributes.id === counterId);
+  assert.ok(counter, "counter should be available by describedby reference");
+  assert.equal(counter.attributes["aria-live"], undefined);
+  textArea.value = "I study English every day.";
+  textArea.dispatch("input");
+  assert.match(counter.textContent, /Caracteres: 26 \/ 3000/);
+});
