@@ -143,8 +143,15 @@ async function runStudentScenario({
   return { window, document, calls, service, node: (id) => document.getElementById(id) };
 }
 
-function question(id, marked = false, worked = false) {
-  return { id, text: "Question " + id, marked_studied: marked, worked, studied: false };
+function question(id, marked = false, worked = false, displayOrder = null) {
+  return {
+    id,
+    text: "Question " + id,
+    display_order: displayOrder,
+    marked_studied: marked,
+    worked,
+    studied: false
+  };
 }
 
 test("disabled rollout preserves the original O QUE FAZER experience", async () => {
@@ -221,6 +228,58 @@ test("second part reuses review cards, filters studied questions and updates cou
   assert.equal(state.node("reviewQuestionsCount").textContent, "2");
 });
 
+
+test("new preparation retains each catalog number as preceding questions disappear", async () => {
+  const plan = {
+    lesson: null,
+    questions: [
+      question("how", false, false, 1),
+      question("from", false, false, 2),
+      question("later", false, false, 12)
+    ]
+  };
+  const state = await runStudentScenario({
+    pathname: "/o-que-fazer/segunda-parte/",
+    enabled: true,
+    plan,
+    reviews: [question("review-20", true, false, 20), question("review-8", true, false, 8)]
+  });
+  const pending = state.node("actionQuestionList");
+  const reviews = state.node("reviewQuestionList");
+  const numbers = () => pending.children.map((item) => item.children[0].number);
+
+  assert.deepEqual(numbers(), [1, 2, 12]);
+  assert.deepEqual(reviews.children.map((item) => item.number), [20, 8]);
+
+  pending.children[0].children[1].children[0].handlers.click();
+  await flush();
+  assert.deepEqual(state.calls.studied, ["how"]);
+  assert.deepEqual(numbers(), [2, 12]);
+  assert.equal(state.node("questionStudiedDialog").open, true);
+
+  state.node("studyAnotherQuestionButton").handlers.click();
+  pending.children[0].children[1].children[0].handlers.click();
+  await flush();
+  assert.deepEqual(state.calls.studied, ["how", "from"]);
+  assert.deepEqual(numbers(), [12]);
+  assert.equal(state.node("questionsCount").textContent, "1");
+});
+
+test("legacy question numbering remains sequential and independent from catalog order", async () => {
+  const state = await runStudentScenario({
+    enabled: false,
+    plan: {
+      lesson: null,
+      questions: [question("later", false, false, 12), question("first", false, false, 1)]
+    },
+    reviews: [question("review", true, false, 20)]
+  });
+  assert.deepEqual(
+    state.node("actionQuestionList").children.map((item) => item.children[0].number),
+    [1, 2]
+  );
+  assert.equal(state.node("reviewQuestionList").children[0].number, 1);
+});
 
 test("success dialog appears only after persisting a question in the second part", async () => {
   const state = await runStudentScenario({
