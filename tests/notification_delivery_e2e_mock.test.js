@@ -169,7 +169,7 @@ test("individual booking: teacher email offers manual Google Agenda action witho
   assert.equal(fixture.notification.attempts, 1);
   assert.equal(fixture.sent.length, 1);
   const { message, key } = fixture.sent[0];
-  assert.deepEqual(message.to, ["flaviofreitas@ufu.br"]);
+  assert.deepEqual(message.to, ["contato@teacherflavius.com"]);
   assert.equal(message.reply_to, "contato@teacherflavius.com");
   assert.match(message.html, /Adicionar ao Google Agenda/);
   assert.match(message.text, /Adicionar ao Google Agenda: https:\/\/calendar\.google\.com/);
@@ -184,7 +184,7 @@ test("quinteto booking: teacher notice has no Google Agenda invitation or ICS", 
   assert.equal(response.status, 200);
   assert.equal(fixture.sent.length, 1);
   const { message } = fixture.sent[0];
-  assert.deepEqual(message.to, ["flaviofreitas@ufu.br"]);
+  assert.deepEqual(message.to, ["contato@teacherflavius.com"]);
   assert.match(message.text, /Aluno: Aluno de Teste/);
   assert.match(message.text, /Turma: Turma de teste/);
   assert.doesNotMatch(message.text + message.html, /Google Agenda|calendar\.google\.com/);
