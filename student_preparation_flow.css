@@ -88,8 +88,14 @@
 /* Study confirmation is available only in the gated Conversation step. */
 .student-preparation-dialog {
   box-sizing: border-box;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
   width: min(92vw, 480px);
   max-height: min(85vh, 640px);
+  overflow: auto;
   padding: 0;
   border: 1px solid rgba(129, 140, 248, .45);
   border-radius: 20px;
