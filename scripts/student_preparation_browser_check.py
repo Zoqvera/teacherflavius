@@ -134,6 +134,20 @@ VERIFIER = r"""
     const widthIsSafe = document.documentElement.scrollWidth <= innerWidth + 2;
     let ok = widthIsSafe;
     let detail = "viewport=" + innerWidth + ", document=" + document.documentElement.scrollWidth;
+    if (scenario.startsWith("lesson") || scenario.startsWith("roadmap")) {
+      const link = document.querySelector(".lesson-all-lessons-button");
+      const status = document.getElementById("lessonPageStatus");
+      const divider = document.querySelector(".lesson-page-container > .divider");
+      const rect = link && link.getBoundingClientRect();
+      const offsetX = rect && Math.abs(rect.left + rect.width / 2 - innerWidth / 2);
+      ok = ok && !!link && !!status && !!divider &&
+        link.getAttribute("href") === "/roteiro-de-estudos/" &&
+        !!rect && rect.width > 0 && rect.height >= 44 &&
+        offsetX <= 3 &&
+        status.getBoundingClientRect().bottom <= rect.top &&
+        rect.bottom <= divider.getBoundingClientRect().top;
+      detail += ", allLessonsCenteredOffset=" + (offsetX === null ? "missing" : offsetX.toFixed(1));
+    }
     if (scenario === "legacy") {
       ok = ok && !visible("studentPreparationWelcome") &&
         visible("legacyActionPlan") &&
@@ -263,10 +277,12 @@ def copy_fixture_files(root: Path) -> None:
         dialog_markup = "".join(re.findall(r'<dialog\b[^>]*>[\s\S]*?</dialog>', html))
         is_lesson = page_name.startswith("licao/")
         if is_lesson:
+            header = re.search(r'<header class="header">[\\s\\S]*?</header>', html)
+            if header is None:
+                raise RuntimeError(f"Missing shared lesson header: {page_name}")
             main_markup = (
                 '<div class="container lesson-page-container">'
-                '<p id="lessonDisplayNumber"></p><h1 id="lessonPageTitle">Lição</h1>'
-                '<p id="lessonPageStatus"></p>'
+                + header.group(0) + '<div class="divider"></div>'
                 + main_markup + '</div>'
             )
         files = [
