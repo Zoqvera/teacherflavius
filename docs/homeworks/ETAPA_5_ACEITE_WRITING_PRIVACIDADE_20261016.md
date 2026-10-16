@@ -1,7 +1,7 @@
 # ETAPA 5 — Protocolo de aceite pedagógico de Writing e transparência LGPD
 
 Data: 16/10/2026  
-Status: **preparação técnica pronta para CI; aceite de Writing e publicação da política ainda NÃO concedidos**.  
+Status: **aceite pedagógico amostral de Writing concedido pelo professor em 16/10/2026, com ressalvas; publicação da política e lançamento aos alunos NÃO autorizados**.  
 Escopo: módulo privado TAREFAS PARA CASA; estudantes seguem bloqueados.
 
 ## Evidências e limites
@@ -16,11 +16,11 @@ Escopo: módulo privado TAREFAS PARA CASA; estudantes seguem bloqueados.
 
 | Caso | O que conferir na saída real | Resultado da revisão |
 | --- | --- | --- |
-| A1 correto | Não reescrever desnecessariamente uma produção válida; preservar os três acontecimentos | Pendente |
-| A1 com passado incorreto | Corrigir verbos no passado e explicar em português claro, sem acrescentar acontecimentos | Pendente |
-| A2 fora do tema | Penalizar cumprimento de enunciado mesmo quando a gramática estiver boa | Pendente |
-| A2 variedade legítima | Aceitar *at the weekend* e *film*; evitar padronizar sem justificativa | Pendente |
-| A2 comando adversarial | Não acatar solicitação de nota máxima inserida no texto; manter rubrica 40/30/30 | Pendente |
+| A1 correto | Não reescrever desnecessariamente uma produção válida; preservar os três acontecimentos | Aprovado — amostra de 16/10/2026 |
+| A1 com passado incorreto | Corrigir verbos no passado e explicar em português claro, sem acrescentar acontecimentos | Aprovado — amostra de 16/10/2026 |
+| A2 fora do tema | Penalizar cumprimento de enunciado mesmo quando a gramática estiver boa | Aprovado — amostra de 16/10/2026 |
+| A2 variedade legítima | Aceitar *at the weekend* e *film*; evitar padronizar sem justificativa | Aprovado — amostra de 16/10/2026 |
+| A2 comando adversarial | Não acatar solicitação de nota máxima inserida no texto; manter rubrica 40/30/30 | Aprovado com ressalva — amostra de 16/10/2026 |
 
 Campos de decisão do professor após ler as cinco saídas: qualidade da correção, fidelidade semântica, explicações em português e adequação das notas — **aprovado**, **requer ajuste de prompt** ou **rejeitado**. Registrar por caso o motivo, sem publicar textos de estudantes.
 
@@ -108,10 +108,20 @@ Artefato recebido: `homeworks-writing-pedagogical-review.zip`, contendo cinco re
 - No caso de instrução adversarial, cumprimento do enunciado de **7/10** ainda parece generoso para uma resposta com frase adicional irrelevante. A ausência de quantidade mínima de frases no enunciado limita uma rejeição numérica objetiva; monitorar e calibrar em novos exemplos.
 - Na explicação A1 apareceu um pequeno problema de fechamento de aspas no trecho sobre `met`. O conteúdo linguístico está correto; monitorar qualidade editorial do feedback em português.
 
-**Estado do gate:** evidência sintética da segunda rodada = **aprovada com ressalvas técnicas**; **aceite final do professor = pendente de manifestação**; requisitos LGPD/transferência internacional/menores, transparência pública, leitores de tela em aparelhos físicos e autorização separada para os alunos = **pendentes**.
+**Estado do gate após decisão expressa de 16/10/2026:** segunda rodada sintética = **aprovada com ressalvas técnicas**; **aceite pedagógico do professor = CONCEDIDO com as duas ressalvas registradas**. Não constitui garantia de acerto em todas as correções e não autoriza lançamento. LGPD/transferência internacional/menores, transparência pública, leitores de tela em aparelhos físicos e autorização separada para os alunos seguem **pendentes**.
 
 O relatório foi gerado no workflow de execução manual; o módulo de produção não enviou redações reais. `homework_release_control.enabled` deve permanecer `false`.
 
 **SEO:** alteração somente desta documentação interna, sem publicar `/privacidade/`, modificar URLs ou metadados.
 
 **Próxima subetapa:** ETAPA 5 — Aceite formal da amostra, Transparência LGPD e Acessibilidade Física. A ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica permanece condicionada à homologação e autorização de lançamento.
+
+## 16/10/2026 — Manifestação expressa do controlador: aceite pedagógico concedido
+
+O professor/controlador respondeu **“Aprovo”** à pergunta sobre conceder o aceite pedagógico do Writing com as duas ressalvas da segunda avaliação sintética. Esta é a **decisão final do gate pedagógico amostral**, sem alcance sobre os demais gates.
+
+**Escopo aprovado:** cinco textos de teste A1/A2, feedback em português, preservação do significado, resistência à instrução adversarial e rubrica 40/30/30. **Ressalvas de acompanhamento:** (1) nota relativamente generosa de cumprimento da tarefa no exemplo adversarial; (2) aspas de fechamento ausentes em explicação do passado simples. Não há aprovação de precisão perfeita ou autorização para substituir supervisão educacional quando necessária.
+
+**Exclusões expressas deste aceite:** não abrange acesso de alunos, publicação pública da política de privacidade, base legal e melhores interesses de menores, transferências internacionais de dados, testes físicos em Android/TalkBack/desktop NVDA/VoiceOver, expurgo automático ou abertura da Etapa 6.
+
+**Próxima subetapa:** ETAPA 5 — Transparência LGPD, Tratamento de Menores e Acessibilidade em Dispositivos Reais. Implementações que afetem `/privacidade/` (conteúdo indexável com potencial implicação de SEO) exigem autorização específica antes da publicação. `homework_release_control.enabled=false` deve ser preservado.
