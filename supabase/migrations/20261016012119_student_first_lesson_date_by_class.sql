@@ -1,5 +1,4 @@
--- The first contracted lesson for an enrollment can start after payment.
--- All existing enrollments retain current scheduling while this field is null.
+-- First contracted lesson may start after enrollment, without moving tuition due dates.
 alter table public.class_students
   add column if not exists first_lesson_date date;
 
