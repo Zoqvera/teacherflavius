@@ -29,6 +29,7 @@ SCENARIOS = (
     ("second", 390, 844),
     ("second-dialog", 320, 740),
     ("second-dialog", 390, 844),
+    ("second-stable", 390, 844),
     ("second-dialog", 1280, 900),
     ("second", 1280, 900),
     ("lesson", 320, 740),
@@ -59,19 +60,25 @@ BOOTSTRAP = r"""
     lesson: { number: 7, prepared: false, has_material: scenario !== "unpublished" },
     questions: [
       {
-        id: "pending", text: "What do you study?", translation: "O que você estuda?",
+        id: "pending", display_order: 2, text: "Where are you from?", translation: "De onde você é?",
         examples: [{ answer: "I study English.", translation: "Eu estudo inglês." }],
         marked_studied: false, studied: false, worked: false
       },
       {
-        id: "already", text: "Where do you live?",
+        id: "already", display_order: 1, text: "How are you?",
         marked_studied: true, studied: true, worked: false
       }
     ]
   };
+  if (scenario === "second-stable") {
+    plan.questions.push({
+      id: "later", display_order: 12, text: "Do you have any brothers or sisters?",
+      marked_studied: false, studied: false, worked: false, examples: []
+    });
+  }
   const reviews = [
-    { id: "due-1", text: "Where are you from?", examples: [], marked_studied: true },
-    { id: "due-2", text: "Do you work?", examples: [], marked_studied: true }
+    { id: "due-1", display_order: 20, text: "Where are you from?", examples: [], marked_studied: true },
+    { id: "due-2", display_order: 4, text: "Do you work?", examples: [], marked_studied: true }
   ];
   const calls = { studied: [], prepared: [] };
   window.__qa = { scenario, plan, calls };
@@ -140,18 +147,32 @@ VERIFIER = r"""
       ok = ok && visible("studentPreparationWelcome") &&
         document.getElementById("startPreparationButton").disabled &&
         visible("startConversationFallback");
-    } else if (scenario === "second" || scenario === "second-dialog") {
+    } else if (scenario === "second" || scenario === "second-dialog" ||
+               scenario === "second-stable") {
+      const pendingCount = scenario === "second-stable" ? "2" : "1";
+      const remainingCount = scenario === "second-stable" ? "1" : "0";
+      const numbers = () => Array.from(
+        document.querySelectorAll("#actionQuestionList .conversation-card-number")
+      ).map(node => node.textContent.trim());
       const studiedButton = document.querySelector(
         "#actionQuestionList .academic-question-study-actions button:not(:disabled)"
       );
       ok = ok && !!studiedButton &&
         document.getElementById("reviewQuestionsCount").textContent === "2" &&
-        document.getElementById("questionsCount").textContent === "1" &&
-        document.getElementById("returnToLessonLink").getAttribute("href") === "/licao/?lesson=7";
+        document.getElementById("questionsCount").textContent === pendingCount &&
+        document.getElementById("returnToLessonLink").getAttribute("href") === "/licao/?lesson=7" &&
+        JSON.stringify(numbers()) === JSON.stringify(
+          scenario === "second-stable" ? ["2.", "12."] : ["2."]
+        );
       if (studiedButton) studiedButton.click();
       await new Promise(resolve => setTimeout(resolve, 120));
       ok = ok && calls.studied.length === 1 &&
-        document.getElementById("questionsCount").textContent === "0" &&
+        document.getElementById("questionsCount").textContent === remainingCount &&
+        JSON.stringify(numbers()) === JSON.stringify(
+          scenario === "second-stable" ? ["12."] : []
+        ) &&
+        Array.from(document.querySelectorAll("#reviewQuestionList .conversation-card-number"))
+          .map(node => node.textContent.trim()).join(",") === "20.,4." &&
         document.querySelectorAll("#reviewQuestionList .conversation-card").length === 2;
       const dialog = document.getElementById("questionStudiedDialog");
       ok = ok && !!dialog && dialog.open &&
