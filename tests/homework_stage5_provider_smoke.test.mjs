@@ -118,3 +118,21 @@ test('no API request without key, and external errors never print response bodie
   });
   assert.equal(called, 1);
 });
+
+
+test('Writing system instructions prohibit invented facts in off-topic corrections', () => {
+  const systemPrompt = requestBody().input[0].content;
+  const edgeCode = readFileSync('supabase/functions/homework-student/index.ts', 'utf8');
+  for (const guidance of [
+    'Se a resposta não atender ao tema solicitado',
+    'nunca reescreva o texto para fazê-lo cumprir a tarefa',
+    'preservando fatos, pessoas, ações, lugares e tempos',
+    'corrected_text deve repetir o texto original sem alteração',
+    "não invente 'Yesterday I studied'",
+  ]) {
+    assert.ok(systemPrompt.includes(guidance), 'Provider smoke missing semantic-fidelity rule');
+    assert.ok(edgeCode.includes(guidance), 'Production Edge missing semantic-fidelity rule');
+  }
+  assert.equal(requestBody().store, false);
+  assert.equal(requestBody().service_tier, 'default');
+});
