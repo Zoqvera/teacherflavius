@@ -153,10 +153,10 @@ test("Writing submit displays official feedback immediately, without another-stu
   await h.controller.open("00000000-0000-4000-8000-000000000001");
   assert.doesNotMatch(h.notice.textContent, /^Não foi possível/, h.notice.textContent);
   assert.match(displayText(h.mount),
-    /seu texto será enviado ao serviço de IA da OpenAI/);
+    /correção por IA só acontece após as verificações de privacidade e faixa etária/);
   assert.match(displayText(h.mount), /Não inclua nomes completos/);
-  assert.match(displayText(h.mount), /o texto original, a correção, a nota e as explicações/i);
-  assert.match(displayText(h.mount), /ficarão registrados na sua conta/i);
+  assert.match(displayText(h.mount), /o texto original e, se houver correção, a nota, as alterações e as explicações/i);
+  assert.match(displayText(h.mount), /ficam registrados na sua conta/i);
   assert.match(displayText(h.mount), /correção é automática e pode conter imprecisões/i);
   assert.match(displayText(h.mount), /CPF, telefones, endereços, informações de saúde/i);
   const textarea = descendants(h.mount, "textarea")[0];
