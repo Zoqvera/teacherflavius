@@ -26,7 +26,7 @@
     robots.content = "noindex,nofollow";
   }
 
-  async function readPilotEligibility(client, userId) {
+  async function readActiveStudentEligibility(client, userId) {
     if (!client || !userId || !PRODUCTION_HOSTNAMES.includes(hostname) ||
         !PRODUCTION_PILOT_ARMED) {
       return false;
@@ -65,7 +65,7 @@
     if (resolvedUserId !== userId) {
       enabled = false;
       resolvedUserId = userId;
-      resolution = readPilotEligibility(client, userId)
+      resolution = readActiveStudentEligibility(client, userId)
         .catch(function (error) {
           console.error("Falha ao verificar elegibilidade da preparação:", error);
           return false;
