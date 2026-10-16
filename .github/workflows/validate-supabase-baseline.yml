@@ -751,6 +751,10 @@ jobs:
             cat supabase/migrations/20261016213000_resend_delivery_tracking_and_retention.sql
             cat tests/sql/resend_delivery_tracking_e2e.sql
             cat tests/sql/resend_delivery_retention_e2e.sql
+            echo "select set_config('app.resend_retention_schedule_approved', 'true', true);"
+            cat supabase/operations/resend_delivery_retention_schedule.sql
+            cat supabase/operations/resend_delivery_retention_schedule.sql
+            cat tests/sql/resend_delivery_retention_cron_e2e.sql
             echo 'ROLLBACK;'
           } | docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1
 
