@@ -59,7 +59,7 @@ Os tipos de notificação são:
 - `teacher_booking`: aviso independente ao professor quando o aluno confirma uma reposição. Apenas alunos classificados como **INDIVIDUAL** apresentam o link **Adicionar ao Google Agenda**; **QUINTETO** recebe aviso sem ação de calendário.
 
 O aviso ao professor sai de `Teacher Flávio <contato@teacherflavius.com>`.
-O destinatário administrativo aprovado é `flaviofreitas@ufu.br`, definido
+O destinatário administrativo definido é `contato@teacherflavius.com`, definido
 explicitamente na Edge Function. O texto informa o aluno, a turma,
 a data, o horário de início e término e o link da aula.
 
@@ -67,7 +67,7 @@ a data, o horário de início e término e o link da aula.
 
 O cancelamento de **aula regular** cria, após a atualização confirmada do crédito, dois
 registros independentes em `public.regular_lesson_cancellation_email_notifications`,
-um para o aluno e outro para `flaviofreitas@ufu.br`. A Edge Function
+um para o aluno e outro para `contato@teacherflavius.com`. A Edge Function
 `notify-regular-lesson-cancellation` envia cada e-mail pelo remetente
 `Teacher Flávio <contato@teacherflavius.com>` e utiliza o e-mail verificado
 no Supabase Auth para localizar o aluno. A fila usa RLS, acesso de serviço
