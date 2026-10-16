@@ -217,11 +217,13 @@ async function progress(admin: ReturnType<typeof createClient>, userId: string, 
     .order("started_at", { ascending: false }).limit(1).maybeSingle(), "progress");
   if (!attempt) return { status: "not_started", score: null, feedback: [] };
   const feedback = await getFeedback(admin, attempt.id);
-  const budgetPaused = exercise.activity_type === "writing" &&
-    attempt.status === "submitted" && await isWritingBudgetPaused(admin);
+  const pendingWriting = exercise.activity_type === "writing" && attempt.status === "submitted";
+  const privacyPaused = pendingWriting && !await isWritingAiAllowed(admin, userId);
+  const budgetPaused = pendingWriting && !privacyPaused && await isWritingBudgetPaused(admin);
   return { attempt_id: attempt.id, status: attempt.status, score: attempt.score,
     submitted_at: attempt.submitted_at, evaluated_at: attempt.evaluated_at,
-    ...(budgetPaused ? { correction: "monthly_budget" } : {}),
+    ...(privacyPaused ? { correction: "privacy_review" } :
+      budgetPaused ? { correction: "monthly_budget" } : {}),
     feedback };
 }
 
@@ -335,6 +337,15 @@ async function assessWriting(apiKey: string, original: string, prompt: string) {
   }
 }
 
+// Only administrative, MFA-attested eligibility may unlock third-party processing.
+// Student profile fields are editable and must never authorize this operation.
+async function isWritingAiAllowed(admin: ReturnType<typeof createClient>, userId: string) {
+  const verified = unwrap(await admin.from("homework_writing_age_verifications")
+    .select("verified_adult").eq("student_id", userId).maybeSingle(),
+  "writing-age-verification");
+  return verified?.verified_adult === true;
+}
+
 async function submit(
   admin: ReturnType<typeof createClient>, userId: string, payload: Payload,
 ) {
@@ -357,6 +368,10 @@ async function assessSubmittedWriting(
   admin: ReturnType<typeof createClient>, userId: string,
   submitted: { attempt_id: string; status: string; activity_type: string; score: number | null },
 ) {
+  if (!await isWritingAiAllowed(admin, userId)) {
+    return { ...submitted, status: "submitted", correction: "privacy_review",
+      message: "Texto salvo. A correção automática aguarda verificações de privacidade e faixa etária." };
+  }
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) return { ...submitted, status: "submitted", correction: "unconfigured" };
   // Primeiro verifique o lease: consultas concorrentes não devem gastar cota.
