@@ -1,4 +1,4 @@
-name: Suspended exercise portal monitoring
+name: Retired weekly features and legacy portal monitoring
 
 on:
   schedule:
@@ -16,12 +16,19 @@ on:
       - "exercicios.diarios.html"
       - "exercicios_diarios.html"
       - "minha-semana/index.html"
+      - "professor/index.html"
+      - "professor.html"
+      - "professor_home.js"
+      - "professor/professor_icons.js"
+      - "planos-semanais/index.html"
       - "curso-de-ingles-online/index.html"
       - "service-worker.js"
       - "supabase_config.js"
       - "supabase/migrations/*suspend_legacy_student_exercise_portal.sql"
       - "scripts/monitor_suspended_portal.py"
       - "tests/test_monitor_suspended_portal.py"
+      - "tests/minha_semana_retirement.test.js"
+      - "tests/planos_semanais_retirement.test.js"
       - "tests/legacy_exercise_portal_suspension.test.js"
       - ".github/workflows/suspended-exercise-portal-monitor.yml"
   pull_request:
@@ -33,11 +40,18 @@ on:
       - "exercicios.diarios.html"
       - "exercicios_diarios.html"
       - "minha-semana/index.html"
+      - "professor/index.html"
+      - "professor.html"
+      - "professor_home.js"
+      - "professor/professor_icons.js"
+      - "planos-semanais/index.html"
       - "curso-de-ingles-online/index.html"
       - "service-worker.js"
       - "supabase_config.js"
       - "scripts/monitor_suspended_portal.py"
       - "tests/test_monitor_suspended_portal.py"
+      - "tests/minha_semana_retirement.test.js"
+      - "tests/planos_semanais_retirement.test.js"
       - ".github/workflows/suspended-exercise-portal-monitor.yml"
 
 permissions:
@@ -45,7 +59,7 @@ permissions:
 
 jobs:
   suspended-portal:
-    name: Verify suspended legacy portal
+    name: Verify retired weekly features and suspended legacy portal
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -53,6 +67,8 @@ jobs:
         uses: actions/checkout@v7
       - name: Verify regression contracts
         run: node --test tests/legacy_exercise_portal_suspension.test.js
+      - name: Verify retired weekly feature contracts
+        run: node --test tests/minha_semana_retirement.test.js tests/planos_semanais_retirement.test.js
       - name: Verify monitoring rules
         run: python3 -m unittest discover -s tests -p test_monitor_suspended_portal.py -v
       - name: Audit published site and anonymous Supabase access
