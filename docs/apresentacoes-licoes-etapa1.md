@@ -60,3 +60,33 @@ nao altera tabelas de frequencia, mensalidades ou exercicios.
    reconciliacao e comprovacao do ambiente isolado.
 
 **Proxima etapa apos homologacao desta fundacao: ETAPA 2 — Interface do Aluno.**
+
+
+## Homologacao sintética de 16/10/2026
+
+Uma branch remota temporaria foi criada no Supabase mediante autorizacao do
+custo de US$ 0,01344 por hora. O replay historico automatico falhou com
+`MIGRATIONS_FAILED`: `public.profiles` e `public.study_lesson_pages`
+nao existiam na branch inicialmente. O problema e consistente com as
+divergencias do ledger de migrations ja registradas em
+`docs/preparacao-supabase-branching.md`.
+
+Para nao manipular o ledger ou os dados produtivos, foi criada **apenas
+nessa branch** uma estrutura minima ficticia com `profiles`,
+`study_lesson_pages`, `teacher_admins` e `is_teacher_admin()` de teste.
+A migracao de apresentacoes foi aplicada com sucesso nessa estrutura.
+
+O teste transacional utilizou tres identidades Auth ficticias e validou:
+criacao, normalizacao de texto, versoes 1/2/3, ultima versao, rejeicao de
+duplicatas, autoria imutavel, data de criacao controlada pelo servidor,
+impedimento de escrita direta no historico, isolamento entre estudantes,
+consulta pelo professor e impossibilidade de o professor editar os textos.
+Resultado: **PASSED**; a transacao foi revertida, deixando zero usuarios,
+apresentacoes e versoes de teste no banco. O aviso de indice ausente na
+FK de paginas foi corrigido e revalidado no ambiente de teste.
+
+**Limites:** essa prova utilizou um helper de autorizacao simulado, nao
+todas as politicas e funcoes reais do projeto. Ela nao substitui uma
+branch remota reconstruida integralmente, nem autoriza cutover do historico
+ou execucao da nova migracao em producao. A PR permanece em rascunho,
+sem merge, ate a reconstrução integrada passar e a implantacao ser segura.
