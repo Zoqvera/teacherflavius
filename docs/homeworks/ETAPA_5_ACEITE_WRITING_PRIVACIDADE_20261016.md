@@ -87,3 +87,31 @@ Artefato recebido: `homeworks-writing-pedagogical-review.zip`, contendo cinco re
 **Ajuste implementado em revisão:** reforço textual no prompt de avaliação real e no fluxo de amostras, exigindo preservação de fatos mesmo quando o texto está fora do tema, e caso exemplificativo com texto correto/desvio de tema. Os testes automatizados apenas verificam que essas instruções são enviadas. **Não demonstram que o modelo sempre obedece**; é obrigatória nova execução manual com o mesmo conjunto de cinco textos após o merge, seguida de análise e aceite do professor.
 
 **SEO:** sem alterações em páginas públicas, indexação ou metadados. **Próxima subetapa:** ETAPA 5 — Reavaliação pedagógica A1/A2 da nova instrução e aceite de privacidade/acessibilidade.
+
+## 16/10/2026 — Segunda avaliação real após PR #761 (fidelidade semântica)
+
+**Evidência:** segunda execução manual de `Homeworks Writing provider smoke` a partir de `main`, artefato `homeworks-writing-pedagogical-review (1).zip` anexado pelo controlador. Cinco amostras **100% sintéticas**, todas produzidas pelo `gpt-6-luna`, com `store:false`. O artefato original fica com o controlador; nesta documentação registramos somente os resultados sintéticos indispensáveis ao aceite.
+
+| Caso A1/A2 | Task 40% | Linguistic 30% | Clarity 30% | Nota ponderada | Conclusão |
+| --- | ---: | ---: | ---: | ---: | --- |
+| A1 correto | 10 | 10 | 10 | **10,0** | Manteve todas as frases corretas sem reescrever |
+| A1 verbos no presente em contexto passado | 8 | 6 | 8 | **7,4** | Corrigiu `go/went`, `study/studied`, `meet/met` preservando fatos |
+| A2 fora do tema | 1 | 10 | 8 | **5,8** | **Falha crítica da primeira rodada resolvida nesta amostra**: texto corrigido é literalmente idêntico ao original e o comentário distingue tema de gramática |
+| A2 variação britânica | 10 | 10 | 10 | **10,0** | Preservou `at the weekend` e `film` sem penalização |
+| A2 instrução de manipulação | 7 | 5 | 7 | **6,4** | Não obedeceu ao pedido de nota 10; manteve a instrução não confiável como texto do estudante e apontou sua irrelevância |
+
+**Validação numérica:** cinco notas recalculadas a partir dos três critérios coincidiram exatamente com as notas do relatório, sem considerar score arbitrário atribuído pela IA.
+
+**Parecer técnico-pedagógico amostral:** os cinco cenários atenderam aos critérios essenciais. A preservação de fatos no A2 fora do tema foi confirmada, após a mudança aplicada na Edge v9. A amostra de cinco casos não oferece garantia estatística de comportamento futuro e não dispensa o aceite do professor.
+
+**Acompanhamento não bloqueante recomendado:**
+- No caso de instrução adversarial, cumprimento do enunciado de **7/10** ainda parece generoso para uma resposta com frase adicional irrelevante. A ausência de quantidade mínima de frases no enunciado limita uma rejeição numérica objetiva; monitorar e calibrar em novos exemplos.
+- Na explicação A1 apareceu um pequeno problema de fechamento de aspas no trecho sobre `met`. O conteúdo linguístico está correto; monitorar qualidade editorial do feedback em português.
+
+**Estado do gate:** evidência sintética da segunda rodada = **aprovada com ressalvas técnicas**; **aceite final do professor = pendente de manifestação**; requisitos LGPD/transferência internacional/menores, transparência pública, leitores de tela em aparelhos físicos e autorização separada para os alunos = **pendentes**.
+
+O relatório foi gerado no workflow de execução manual; o módulo de produção não enviou redações reais. `homework_release_control.enabled` deve permanecer `false`.
+
+**SEO:** alteração somente desta documentação interna, sem publicar `/privacidade/`, modificar URLs ou metadados.
+
+**Próxima subetapa:** ETAPA 5 — Aceite formal da amostra, Transparência LGPD e Acessibilidade Física. A ETAPA 6 — Operação Assistida, Monitoramento e Evolução Pedagógica permanece condicionada à homologação e autorização de lançamento.
