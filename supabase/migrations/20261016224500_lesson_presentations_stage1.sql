@@ -26,6 +26,9 @@ create table public.lesson_presentations (
 create index lesson_presentations_student_updated_idx
   on public.lesson_presentations (student_id, updated_at desc);
 
+create index lesson_presentations_page_idx
+  on public.lesson_presentations (lesson_page_id);
+
 comment on table public.lesson_presentations is
   'Versao atual da apresentacao do aluno, identificada pela licao numerada ou pela pagina de licao.';
 comment on column public.lesson_presentations.lesson_key is
