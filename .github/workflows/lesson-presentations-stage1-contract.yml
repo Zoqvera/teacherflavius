@@ -1,0 +1,21 @@
+name: Lesson presentations stage 1 contracts
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/*lesson_presentations_stage1.sql"
+      - "tests/test_lesson_presentations_stage1_contract.py"
+      - ".github/workflows/lesson-presentations-stage1-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lesson-presentations-schema-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Run lesson presentation schema contracts
+        run: python3 -m unittest discover -s tests -p "test_lesson_presentations_stage1_contract.py" -v
