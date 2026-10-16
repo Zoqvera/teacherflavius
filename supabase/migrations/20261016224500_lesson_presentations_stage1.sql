@@ -18,7 +18,7 @@ create table public.lesson_presentations (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint lesson_presentation_requires_lesson
-    check (lesson_number is not null or lesson_page_id is not null),
+    check ((lesson_number is not null) <> (lesson_page_id is not null)),
   constraint lesson_presentations_student_lesson_unique
     unique (student_id, lesson_key)
 );
@@ -56,16 +56,6 @@ begin
   if (select auth.uid()) is null or new.student_id is distinct from (select auth.uid()) then
     raise exception 'A apresentacao deve pertencer ao aluno autenticado.'
       using errcode = '42501';
-  end if;
-
-  if new.lesson_page_id is not null and new.lesson_number is not null
-     and not exists (
-       select 1 from public.study_lesson_pages page
-       where page.id = new.lesson_page_id
-         and page.roadmap_lesson_number = new.lesson_number
-     ) then
-    raise exception 'A pagina nao corresponde ao numero da licao.'
-      using errcode = '23514';
   end if;
 
   if tg_op = 'INSERT' then
@@ -110,6 +100,12 @@ security definer
 set search_path = ''
 as $function$
 begin
+  -- A funcao e invocada apenas pelo trigger, mas confirma a autoria.
+  if (select auth.uid()) is distinct from new.student_id then
+    raise exception 'A revisao nao corresponde ao aluno autenticado.'
+      using errcode = '42501';
+  end if;
+
   if tg_op = 'UPDATE'
      and new.revision_number is not distinct from old.revision_number then
     return new;
