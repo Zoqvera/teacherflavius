@@ -11,6 +11,7 @@
     revoked_unpaid: "Revogação prevista: mensalidade não quitada",
     revoked_excess: "Revogação prevista: crédito acima do plano atual",
     revoked_review: "Revogação a revisar",
+    revoked_attended_original_class: "Revogação justificada: compareceu à aula originalmente cancelada",
     active_unpaid: "Crédito ativo sem mensalidade quitada — intervenção necessária",
     active_excess: "Crédito ativo acima do plano atual — revisar direitos anteriores",
     approved_historical_exception: "Crédito histórico preservado por decisão expressa do professor"
@@ -53,8 +54,11 @@
     const status = revoked ? "Revogado" : credit.effective_status;
     const reason = REASONS[credit.classification] || "Revisar crédito";
     const critical = ["revoked_confirmed_booking", "active_unpaid"].includes(credit.classification);
-    const justified = credit.classification === "approved_historical_exception";
-    const statusClass = revoked ? "danger" : (critical ? "danger" : (justified ? "success" : "warning"));
+    const justified = [
+      "approved_historical_exception",
+      "revoked_attended_original_class"
+    ].includes(credit.classification);
+    const statusClass = critical ? "danger" : (justified ? "success" : (revoked ? "danger" : "warning"));
 
     return '<article class="credit-audit-row">' +
       '<div><strong>' + escapeHtml(credit.student_name || "Aluno") + '</strong>' +
@@ -62,6 +66,9 @@
       ' · Crédito ' + escapeHtml(credit.credit_number) +
       ' · Estado original: ' + escapeHtml(credit.original_status) + '</p>' +
       '<p>' + escapeHtml(reason) + '</p>' +
+      (credit.revocation_justification
+        ? '<p>Justificativa: ' + escapeHtml(credit.revocation_justification) + '</p>'
+        : '') +
       (revoked ? '<p>Revogado em ' + escapeHtml(formatRevocation(credit.revoked_at)) + '</p>' : '') +
       '</div><span class="status-pill ' + statusClass + '">' + escapeHtml(status) + '</span>' +
       '</article>';
@@ -79,6 +86,7 @@
       summaryMetric("Revogações registradas", summary.revoked_total),
       summaryMetric("Revogações esperadas: sem pagamento", summary.revoked_unpaid),
       summaryMetric("Revogações esperadas: redução de plano", summary.revoked_excess),
+      summaryMetric("Revogações justificadas: presença na aula original", summary.revoked_attended_original_class),
       summaryMetric("Exigem revisão", reviews),
       summaryMetric("Créditos históricos justificados", summary.approved_historical_exception),
       summaryMetric("Inconsistências críticas", risks)
@@ -86,7 +94,7 @@
 
     content.innerHTML =
       '<p class="credit-audit-explanation">A data de revogação prevalece sobre o estado histórico do crédito. ' +
-      'Créditos acima do plano atual exigem análise contratual antes de qualquer mudança; exceções aprovadas ficam registradas sem perda dos direitos anteriores.</p>' +
+      'Créditos acima do plano atual exigem análise contratual; presenças confirmadas após cancelamento justificam revogações documentadas, sem criar reposições extras.</p>' +
       '<div class="credit-audit-summary">' + metrics + '</div>' +
       '<details class="credit-audit-details"><summary>Consultar créditos auditados (' +
       escapeHtml(credits.length) + ' exibidos; limite de ' +
