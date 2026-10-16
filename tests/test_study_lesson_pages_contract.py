@@ -92,7 +92,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("#tf-mobile-top-menu-overlay", styles)
         self.assertIn("#globalLogoutButton", styles)
         self.assertIn(".lesson-page-container .tf-mobile-nav-source-active", styles)
-        self.assertIn("study_lesson_page.css?v=20261016-all-lessons-1", lesson)
+        self.assertIn("study_lesson_page.css?v=20261016-all-lessons-compact-1", lesson)
 
     def test_every_lesson_shows_a_centered_all_lessons_button_under_the_title(self) -> None:
         lesson = self.read("licao/index.html")
@@ -111,6 +111,11 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("max-width: 100%;", styles)
         self.assertIn(".lesson-all-lessons-nav,\n", styles)
         self.assertIn("focus-visible", styles)
+        compact_button = styles.split(".lesson-all-lessons-button {", 1)[1].split("}", 1)[0]
+        self.assertIn("min-height: 44px;", compact_button)
+        self.assertIn("padding: 9px 18px;", compact_button)
+        self.assertIn("font-size: 12px;", compact_button)
+        self.assertIn("border-radius: 12px;", compact_button)
 
     def test_roadmap_prefers_linked_internal_page(self) -> None:
         roadmap = self.read("roteiro_de_estudos.html")
