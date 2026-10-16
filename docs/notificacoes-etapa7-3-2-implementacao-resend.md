@@ -1,6 +1,6 @@
 # ETAPA 7.3.2 — Implementação controlada do monitor de entregabilidade Resend
 
-Atualizado em 15/10/2026. Issue de acompanhamento: [#696](https://github.com/Zoqvera/teacherflavius/issues/696).
+Atualizado em 16/10/2026. Issue de acompanhamento: [#696](https://github.com/Zoqvera/teacherflavius/issues/696).
 Complementa a [auditoria da Etapa 7.3](notificacoes-etapa7-3-auditoria-entregabilidade-resend.md).
 
 **Estado: código versionado para homologação; NÃO ATIVADO EM PRODUÇÃO.**
@@ -9,7 +9,7 @@ migração na produção, não cria registros reais e não dispara e-mails.
 
 ## Alterações desenvolvidas
 
-1. Migração **proposta** `20261015210000_resend_delivery_tracking_foundation.sql`
+1. Migração **proposta** `20261016213000_resend_delivery_tracking_and_retention.sql`
    cria duas tabelas no esquema `private`:
    `resend_delivery_messages` (uma mensagem por operação/destinatário)
    e `resend_delivery_events` (uma linha por evento assinado). Mantém
@@ -55,12 +55,14 @@ A implementação fica **desabilitada por padrão**. O segredo de assinatura
 
 ### Ordem de implantação proposta (não executada)
 
-1. **Política LGPD e retenção:** definir finalidade e prazo de retenção
-   dos metadados técnicos, acesso para suporte, tratamento de dados
-   estudantis e rotina de expurgo. Sem autorização de política, **não aplicar
-   a migração em produção**. Sugestão para deliberação: 90 dias para eventos
-   e 180 dias para vínculo por mensagem, sujeitos a revisão jurídica.
-   Não existe expurgo automático nesta versão.
+1. **Política LGPD e retenção:** aprovada pelo responsável em
+   **16/10/2026**: eventos retidos por 90 dias a contar do recebimento;
+   vínculos de mensagem retidos por 180 dias a contar da aceitação pelo
+   Resend. O estado resumido da mensagem permanece até o fim dos 180 dias,
+   mesmo após o descarte de eventos individuais. A rotina de expurgo
+   está implementada e protegida por `service_role`, mas **não agendada
+   nem aplicada em produção**. A revisão jurídica/da política de privacidade
+   e os controles de acesso continuam indispensáveis.
 2. Validar as RPCs e a migração em banco **descartável**, com dados
    integralmente fictícios, sem serviços de transporte ativos. Exercitar
    envio duplo, duplicação, assinatura inválida, chegada fora de ordem,
@@ -80,6 +82,35 @@ A implementação fica **desabilitada por padrão**. O segredo de assinatura
    e/ou webhook no Resend. Não apagar evidências nem reprocessar e-mails
    automaticamente. Mensagens históricas anteriores à instrumentação
    permanecem **não verificadas**, salvo reconciliação externa comprovada.
+
+## Expurgo seguro — política aprovada em 16/10/2026
+
+A função `public.prune_resend_delivery_evidence(p_batch_limit)` utiliza
+`SECURITY INVOKER` e permite execução apenas por `service_role`.
+O limite aceito por chamada é de 1 a 1.000 registros **em cada tabela**;
+500 é o valor padrão. Os critérios são:
+
+- **Eventos:** `received_at` estritamente anterior a 90 dias do instante
+  da execução. Isso preserva o prazo inteiro mesmo para eventos atrasados.
+- **Vínculos de mensagens:** `accepted_at` estritamente anterior a 180
+  dias. Limpeza de eventos não altera o `delivery_status` consolidado
+  enquanto o vínculo estiver dentro do prazo.
+
+A limpeza ocorre em lotes com `FOR UPDATE SKIP LOCKED`, sem manipular
+cadastros, filas de matrícula, reposição, créditos ou cobranças. Repetir
+a operação é seguro e não duplica efeitos. Retorna apenas contagens.
+
+**Ativação futura, sujeita a homologação e liberação:** agendar uma
+execução diária autorizada usando o módulo pg_cron existente, com lotes
+repetidos e limites operacionais para processar eventuais atrasos.
+Testar o job na branch isolada, o manejo de erros e a observabilidade.
+Não registrar esse job durante o merge do código: um agendamento ativo
+poderia executar a exclusão antes do aceite final de produção.
+
+**Reversão:** desativar primeiro o job e o flag de rastreio. Registros
+já expurgados não podem ser recuperados por simples reversão de versão.
+O procedimento de backup/restauração exige planejamento administrativo,
+sem restaurar indiscriminadamente dados além da retenção autorizada.
 
 ## Contratos e consultas de leitura (após implantação)
 
@@ -108,7 +139,8 @@ autorizado, em canal administrativo com mínimos privilégios.
 - Aceitação HTTP e entrega são fases distintas; o status do provedor pode
   demorar a chegar.
 - O webhook não é configurado nem ativado nesta implementação.
-- A rotina de expurgo permanece pendente da decisão sobre retenção.
+- A política 90/180 dias foi aprovada e a rotina foi implementada.
+  Ainda não existe agendamento de expurgo, que exige liberação separada.
 - A validação isolada de banco/integração real com Resend é condição
   para a liberação; testes automatizados de assinatura não a substituem.
 
