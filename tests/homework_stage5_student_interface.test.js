@@ -308,3 +308,15 @@ test("Writing monthly budget pause preserves the sent text and shows a clear sta
   assert.equal(h.calls.retries, 0);
   assert.doesNotMatch(displayText(h.mount), /Nota:/);
 });
+
+test("provider privacy pause remains visible after reload and has no futile retry", async () => {
+  const h = harness();
+  h.setProgress({ status: "submitted", correction: "privacy_review",
+    score: null, feedback: [] });
+  await h.controller.open("00000000-0000-4000-8000-000000000001");
+  assert.match(displayText(h.mount), /correção por IA está suspensa/);
+  assert.match(displayText(h.mount), /Consulte o professor/);
+  assert.doesNotMatch(displayText(h.mount), /Tentar corrigir novamente/);
+  assert.doesNotMatch(displayText(h.mount), /Nota:/);
+  assert.equal(h.calls.retries, 0);
+});
