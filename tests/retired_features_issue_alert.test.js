@@ -2,6 +2,8 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const {
   ALERT_MARKER,
@@ -97,4 +99,21 @@ test("untrusted execution links do not enter incident bodies", async () => {
     /Contexto da execução inválido/,
   );
   assert.equal(calls.length, 0);
+});
+
+test("workflow keeps issue-write access isolated from pull-request checks", () => {
+  const workflow = fs.readFileSync(
+    path.resolve(__dirname, "../.github/workflows/suspended-exercise-portal-monitor.yml"),
+    "utf8",
+  );
+  const [auditJob, alertJob] = workflow.split("  notify-regressions:");
+
+  assert.match(auditJob, /production_audit_outcome:/);
+  assert.doesNotMatch(auditJob, /issues: write/);
+  assert.match(alertJob, /needs: suspended-portal/);
+  assert.match(alertJob, /github\.event_name == 'schedule'/);
+  assert.match(alertJob, /github\.event_name == 'workflow_dispatch'/);
+  assert.match(alertJob, /issues: write/);
+  assert.match(alertJob, /actions\/github-script@v8/);
+  assert.match(alertJob, /needs\.suspended-portal\.outputs\.production_audit_outcome/);
 });
