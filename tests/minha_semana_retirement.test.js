@@ -45,9 +45,10 @@ test("public marketing and student app listing do not advertise the retired feat
   assert.equal(listing.fullDescription.includes("Minha Semana"), false);
 });
 
-test("the professor's independent weekly plans dashboard is retained", function () {
+test("the professor's former weekly report also displays a retirement notice", function () {
   const page = read("planos-semanais/index.html");
 
-  assert.equal(page.includes("planos_semanais_dashboard.js"), true);
-  assert.equal(page.includes("área do professor"), true);
+  assert.equal(page.includes("Planos Semanais descontinuado"), true);
+  assert.equal(page.includes("planos_semanais_dashboard.js"), false);
+  assert.equal(page.includes('href="/professor/"'), true);
 });
