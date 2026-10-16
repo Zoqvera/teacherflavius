@@ -18,10 +18,11 @@ function createScenario({
   hostname = "teacherflavius.com",
   armed = true,
   globalEnabled = false,
-  memberEnabled = false,
-  memberUserId = "student-1",
+  enrolled = true,
+  archived = false,
+  profileUserId = "student-1",
   globalError = false,
-  memberError = false,
+  profileError = false,
   analyticsConsent = true
 } = {}) {
   const reads = [];
@@ -30,7 +31,10 @@ function createScenario({
     from(table) {
       return {
         select(fields) {
-          assert.equal(fields, "enabled");
+          assert.equal(
+            fields,
+            table === "student_preparation_pilot_settings" ? "enabled" : "enrolled,archived"
+          );
           return {
             eq(column, value) {
               reads.push({ table, column, value });
@@ -38,14 +42,14 @@ function createScenario({
                 async maybeSingle() {
                   if (table === "student_preparation_pilot_settings") {
                     return {
-                      data: globalEnabled ? { enabled: true } : null,
-                      error: globalError ? new Error("No access") : null
+                      data: globalEnabled ? { enabled: true } : { enabled: false },
+                      error: globalError ? new Error("Master switch inaccessible") : null
                     };
                   }
-                  if (table === "student_preparation_pilot_members") {
+                  if (table === "profiles") {
                     return {
-                      data: memberEnabled && value === memberUserId ? { enabled: true } : null,
-                      error: memberError ? new Error("No access") : null
+                      data: value === profileUserId ? { enrolled, archived } : null,
+                      error: profileError ? new Error("Own profile inaccessible") : null
                     };
                   }
                   throw new Error("Unexpected table " + table);
@@ -69,75 +73,99 @@ function createScenario({
   return { client, window, reads, events };
 }
 
-test("production eligibility lookup requires explicit live master permission", async () => {
+test("general release requires the enabled database master switch", async () => {
   assert.match(script, /const PRODUCTION_PILOT_ARMED = true;/);
-  const context = createScenario({ memberEnabled: true });
+  const context = createScenario();
   assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"), false);
   assert.equal(context.window.StudentPreparationFlow.enabled, false);
-  assert.equal(context.reads.length, 1);
-  assert.equal(context.reads[0].table, "student_preparation_pilot_settings");
+  assert.deepEqual(context.reads.map(item => item.table), ["student_preparation_pilot_settings"]);
 });
 
-test("source-level emergency rollback bypasses data access", async () => {
-  const context = createScenario({
-    armed: false,
-    globalEnabled: true,
-    memberEnabled: true
-  });
+test("source-level emergency rollback bypasses all database reads", async () => {
+  const context = createScenario({ armed: false, globalEnabled: true });
   assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"), false);
   assert.equal(context.window.StudentPreparationFlow.enabled, false);
   assert.equal(context.reads.length, 0);
 });
 
-test("production gate requires both operator switch and the current student's row", async () => {
-  const context = createScenario({ armed: true, globalEnabled: true, memberEnabled: true });
+test("all active enrolled students are eligible without individual allowlist rows", async () => {
+  const context = createScenario({ globalEnabled: true });
   assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"), true);
   assert.equal(context.window.StudentPreparationFlow.enabled, true);
-  assert.equal(context.reads.length, 2);
   assert.deepEqual(context.reads.map(item => item.table), [
-    "student_preparation_pilot_settings",
-    "student_preparation_pilot_members"
+    "student_preparation_pilot_settings", "profiles"
   ]);
   assert.deepEqual(context.reads.map(item => item.value), [true, "student-1"]);
+  assert.deepEqual(context.reads.map(item => item.column), ["id", "id"]);
 });
 
-test("revoked global switch excludes the member without querying the allowlist", async () => {
-  const context = createScenario({ armed: true, memberEnabled: true });
-  assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"), false);
-  assert.equal(context.reads.length, 1);
+test("a new active enrolment is eligible without any pilot list registration", async () => {
+  const context = createScenario({
+    globalEnabled: true,
+    profileUserId: "newly-enrolled",
+    enrolled: true,
+    archived: false
+  });
+  assert.equal(
+    await context.window.StudentPreparationFlow.resolveEligibility(context.client, "newly-enrolled"),
+    true
+  );
+  assert.equal(context.reads.length, 2);
+  assert.ok(context.reads.every(item => item.table !== "student_preparation_pilot_members"));
 });
 
-test("missing, revoked, or inaccessible individual authorization fails closed", async () => {
-  for (const options of [
-    { armed: true, globalEnabled: true },
-    { armed: true, globalEnabled: true, memberEnabled: true, memberError: true },
-    { armed: true, globalEnabled: true, globalError: true }
-  ]) {
-    const context = createScenario(options);
-    assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"), false);
+test("archived, unenrolled, missing and inaccessible profiles fail closed", async () => {
+  const scenarios = [
+    { enrolled: true, archived: true },
+    { enrolled: false, archived: false },
+    { profileUserId: "other-student" },
+    { profileError: true },
+    { enrolled: undefined },
+    { archived: undefined }
+  ];
+  for (const options of scenarios) {
+    const context = createScenario({ globalEnabled: true, ...options });
+    assert.equal(
+      await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"),
+      false
+    );
     assert.equal(context.window.StudentPreparationFlow.enabled, false);
   }
 });
 
-test("no hostname spoofing, unidentified visitors, or arbitrary host activation", async () => {
+test("a revoked switch or inaccessible settings deny access before querying profiles", async () => {
+  for (const options of [{}, { globalEnabled: true, globalError: true }]) {
+    const context = createScenario(options);
+    assert.equal(
+      await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"),
+      false
+    );
+    assert.equal(context.reads.length, 1);
+  }
+});
+
+test("no hostname spoofing, unidentified visitors or unauthorized hostname activation", async () => {
   for (const hostname of ["preview.example", PREVIEW_HOST + ".bad.example", "random.example"]) {
-    const context = createScenario({ hostname, armed: true, globalEnabled: true, memberEnabled: true });
-    assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"), false);
+    const context = createScenario({ hostname, globalEnabled: true });
+    assert.equal(
+      await context.window.StudentPreparationFlow.resolveEligibility(context.client, "student-1"),
+      false
+    );
     assert.equal(context.reads.length, 0);
   }
-  const context = createScenario({ armed: true, globalEnabled: true, memberEnabled: true });
+  const context = createScenario({ globalEnabled: true });
   assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(context.client, ""), false);
   assert.equal(context.reads.length, 0);
 });
 
-test("preview remains available and does not query live pilot records", async () => {
+test("preview stays isolated and does not query production eligibility", async () => {
   const context = createScenario({ hostname: PREVIEW_HOST });
   assert.equal(await context.window.StudentPreparationFlow.resolveEligibility(null, null), true);
   assert.equal(context.window.StudentPreparationFlow.enabled, true);
   assert.equal(context.reads.length, 0);
 });
 
-test("monitoring emits only enumerated event names without student identifiers", async () => {
+test("tracking emits only enumerated events with analytics consent and no student identifiers", () => {
   const context = createScenario({ hostname: PREVIEW_HOST });
   const flow = context.window.StudentPreparationFlow;
   flow.track("preparation_next_part");
@@ -149,7 +177,7 @@ test("monitoring emits only enumerated event names without student identifiers",
   assert.equal(Object.keys(context.events[0][2]).length, 1);
 });
 
-test("RLS prevents unauthorized access and students cannot mutate pilot records", () => {
+test("pilot tables remain RLS-protected and cannot be changed by students", () => {
   for (const table of ["student_preparation_pilot_settings", "student_preparation_pilot_members"]) {
     assert.ok(migration.includes("alter table public." + table + " enable row level security"));
     assert.ok(migration.includes("revoke all on table public." + table + " from public, anon, authenticated"));
@@ -161,13 +189,13 @@ test("RLS prevents unauthorized access and students cannot mutate pilot records"
   assert.match(migration, /values \(true, false\)/);
 });
 
-test("analytics consent denial prevents pilot telemetry", () => {
+test("analytics consent denial prevents release telemetry", () => {
   const context = createScenario({ hostname: PREVIEW_HOST, analyticsConsent: false });
   context.window.StudentPreparationFlow.track("preparation_next_part");
   assert.equal(context.events.length, 0);
 });
 
-test("all three student views resolve identity after validating the session", () => {
+test("all student views verify a session before resolving eligibility", () => {
   for (const file of ["o-que-fazer/app.js", "licao.js", "roteiro_de_estudos.html"]) {
     const content = fs.readFileSync(path.join(root, file), "utf8");
     assert.match(content, /resolveEligibility\(/);
@@ -175,47 +203,36 @@ test("all three student views resolve identity after validating the session", ()
   }
 });
 
-test("changing authenticated identity clears the previous student's cached eligibility", async () => {
-  const context = createScenario({
-    armed: true,
-    globalEnabled: true,
-    memberEnabled: true,
-    memberUserId: "student-1"
-  });
+test("switching logged-in accounts immediately clears stale eligibility", async () => {
+  const context = createScenario({ globalEnabled: true, profileUserId: "student-1" });
   const flow = context.window.StudentPreparationFlow;
-
   assert.equal(await flow.resolveEligibility(context.client, "student-1"), true);
   assert.equal(flow.enabled, true);
   assert.equal(await flow.resolveEligibility(context.client, "student-2"), false);
   assert.equal(flow.enabled, false);
   assert.equal(await flow.resolveEligibility(context.client, "student-1"), true);
   assert.equal(flow.enabled, true);
-
   assert.equal(await flow.resolveEligibility(null, null), false);
   assert.equal(flow.enabled, false);
 });
 
-test("a previous session's delayed result cannot unlock the current student", async () => {
-  const context = createScenario({
-    armed: true,
-    globalEnabled: true,
-    memberEnabled: true,
-    memberUserId: "student-1"
-  });
+test("a delayed response from a prior account cannot unlock a later session", async () => {
+  const context = createScenario({ globalEnabled: true });
   const flow = context.window.StudentPreparationFlow;
-  let completeFirstMemberRequest;
-  const firstMemberRequest = new Promise(resolve => { completeFirstMemberRequest = resolve; });
+  let completeFirstProfileRequest;
+  const waiting = new Promise(resolve => { completeFirstProfileRequest = resolve; });
   const delayedClient = {
     from(table) {
-      if (table !== "student_preparation_pilot_members") return context.client.from(table);
+      if (table !== "profiles") return context.client.from(table);
       return {
-        select() {
+        select(fields) {
+          assert.equal(fields, "enrolled,archived");
           return {
             eq(column, value) {
-              assert.equal(column, "user_id");
+              assert.equal(column, "id");
               return {
                 async maybeSingle() {
-                  if (value === "student-1") return firstMemberRequest;
+                  if (value === "student-1") return waiting;
                   return { data: null, error: null };
                 }
               };
@@ -225,11 +242,10 @@ test("a previous session's delayed result cannot unlock the current student", as
       };
     }
   };
-
   const first = flow.resolveEligibility(delayedClient, "student-1");
   const second = flow.resolveEligibility(delayedClient, "student-2");
   assert.equal(await second, false);
-  completeFirstMemberRequest({ data: { enabled: true }, error: null });
+  completeFirstProfileRequest({ data: { enrolled: true, archived: false }, error: null });
   assert.equal(await first, false);
   assert.equal(flow.enabled, false);
 });
