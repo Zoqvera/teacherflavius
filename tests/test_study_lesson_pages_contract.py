@@ -92,7 +92,25 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("#tf-mobile-top-menu-overlay", styles)
         self.assertIn("#globalLogoutButton", styles)
         self.assertIn(".lesson-page-container .tf-mobile-nav-source-active", styles)
-        self.assertIn("study_lesson_page.css?v=20261007-print-2", lesson)
+        self.assertIn("study_lesson_page.css?v=20261016-all-lessons-1", lesson)
+
+    def test_every_lesson_shows_a_centered_all_lessons_button_under_the_title(self) -> None:
+        lesson = self.read("licao/index.html")
+        styles = self.read("study_lesson_page.css")
+
+        header = lesson.split('<header class="header">', 1)[1].split("</header>", 1)[0]
+        self.assertIn('href="/roteiro-de-estudos/">TODAS AS LIÇÕES</a>', header)
+        self.assertIn('class="lesson-all-lessons-nav"', header)
+        self.assertLess(header.index('id="lessonPageStatus"'), header.index('lesson-all-lessons-nav'))
+        self.assertLess(lesson.index('lesson-all-lessons-nav'), lesson.index('<div class="divider">'))
+        self.assertEqual(lesson.count('class="lesson-all-lessons-button"'), 1)
+
+        nav_styles = styles.split(".lesson-all-lessons-nav {", 1)[1].split("}", 1)[0]
+        self.assertIn("display: flex;", nav_styles)
+        self.assertIn("justify-content: center;", nav_styles)
+        self.assertIn("max-width: 100%;", styles)
+        self.assertIn(".lesson-all-lessons-nav,\n", styles)
+        self.assertIn("focus-visible", styles)
 
     def test_roadmap_prefers_linked_internal_page(self) -> None:
         roadmap = self.read("roteiro_de_estudos.html")
