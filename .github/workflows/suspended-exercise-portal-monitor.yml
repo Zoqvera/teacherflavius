@@ -29,6 +29,8 @@ on:
       - "tests/test_monitor_suspended_portal.py"
       - "tests/minha_semana_retirement.test.js"
       - "tests/planos_semanais_retirement.test.js"
+      - "tests/retired_features_issue_alert.test.js"
+      - "scripts/retired_features_issue_alert.js"
       - "tests/legacy_exercise_portal_suspension.test.js"
       - ".github/workflows/suspended-exercise-portal-monitor.yml"
   pull_request:
@@ -52,6 +54,8 @@ on:
       - "tests/test_monitor_suspended_portal.py"
       - "tests/minha_semana_retirement.test.js"
       - "tests/planos_semanais_retirement.test.js"
+      - "tests/retired_features_issue_alert.test.js"
+      - "scripts/retired_features_issue_alert.js"
       - ".github/workflows/suspended-exercise-portal-monitor.yml"
 
 permissions:
@@ -62,6 +66,8 @@ jobs:
     name: Verify retired weekly features and suspended legacy portal
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    outputs:
+      production_audit_outcome: ${{ steps.production_audit.outcome }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -71,6 +77,44 @@ jobs:
         run: node --test tests/minha_semana_retirement.test.js tests/planos_semanais_retirement.test.js
       - name: Verify monitoring rules
         run: python3 -m unittest discover -s tests -p test_monitor_suspended_portal.py -v
+      - name: Verify incident alert lifecycle
+        run: node --test tests/retired_features_issue_alert.test.js
       - name: Audit published site and anonymous Supabase access
+        id: production_audit
         if: github.event_name != 'pull_request'
         run: python3 scripts/monitor_suspended_portal.py
+
+  notify-regressions:
+    name: Create or resolve production regression incident
+    needs: suspended-portal
+    if: >-
+      ${{
+        always() &&
+        (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+        (needs.suspended-portal.outputs.production_audit_outcome == 'success' ||
+         needs.suspended-portal.outputs.production_audit_outcome == 'failure')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout trusted default branch
+        uses: actions/checkout@v7
+      - name: Synchronize regression alert in GitHub Issues
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { synchronizeMonitorIssue } = require('./scripts/retired_features_issue_alert.js');
+            const outcome = '${{ needs.suspended-portal.outputs.production_audit_outcome }}';
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            const result = await synchronizeMonitorIssue({
+              github,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              outcome,
+              runUrl,
+            });
+            core.info(`Production monitoring incident status: ${result}`);
