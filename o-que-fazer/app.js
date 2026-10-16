@@ -182,12 +182,21 @@
     }
   }
 
+  function questionCardNumber(question, index) {
+    if (!isSecondPartPage() || !isNewFlowEnabled()) return index + 1;
+
+    // Each number belongs to the original Conversation Questions catalog.
+    // Never renumber a filtered list after a question has been studied.
+    const displayOrder = Number(question && question.display_order);
+    return Number.isInteger(displayOrder) && displayOrder > 0 ? displayOrder : null;
+  }
+
   function createQuestionStudyItem(question, index) {
     const item = document.createElement("div");
     item.className = "academic-question-study-item";
 
     item.appendChild(window.ConversationQuestionCardRenderer.create(question, {
-      number: index + 1,
+      number: questionCardNumber(question, index),
       className: "academic-conversation-card"
     }));
 
@@ -224,7 +233,7 @@
     } else {
       reviews.forEach(function (question, index) {
         list.appendChild(window.ConversationQuestionCardRenderer.create(question, {
-          number: index + 1,
+          number: questionCardNumber(question, index),
           className: "academic-conversation-card"
         }));
       });
