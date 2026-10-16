@@ -49,6 +49,14 @@ function mockedProvider() {
   };
 }
 
+test('off-topic synthetic case remains factually unchanged when grammatical', () => {
+  const sample = REVIEW_CASES.find(item => item.id === 'a2-off-topic');
+  assert.equal(sample.text, 'My school is big and beautiful. I like my teacher. There are many rooms.');
+  assert.match(sample.focus, /does not describe yesterday/);
+  const prompt = requestBody(sample).input[0].content;
+  assert.match(prompt, /não invente/);
+});
+
 test('five immutable synthetic cases cover the intended A1/A2 risks', () => {
   assert.equal(REVIEW_CASES.length, 5);
   assert.equal(new Set(REVIEW_CASES.map(sample => sample.id)).size, 5);
