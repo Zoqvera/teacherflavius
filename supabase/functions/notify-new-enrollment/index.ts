@@ -128,7 +128,7 @@ Deno.serve(async (request: Request) => {
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   // Approved destination for administrative enrollment notices.
-  const notificationEmail = "flaviofreitas@ufu.br";
+  const notificationEmail = "contato@teacherflavius.com";
   const expectedWebhookSecret = Deno.env.get("ENROLLMENT_WEBHOOK_SECRET") ?? "";
 
   if (!supabaseUrl || !secretKey || !resendApiKey || !notificationEmail || !expectedWebhookSecret) {
