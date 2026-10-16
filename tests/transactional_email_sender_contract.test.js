@@ -13,6 +13,7 @@ const enrollment = read("supabase/functions/notify-new-enrollment/index.ts");
 const makeup = read("supabase/functions/notify-makeup-booking/index.ts");
 const paymentAlerts = read("supabase/functions/notify-payment-alert/index.ts");
 const paymentCreation = read("supabase/functions/create-mercado-pago-payment/index.ts");
+const systemHealthAlerts = read("supabase/functions/notify-system-health-alert/index.ts");
 
 test("enrollment and replacement use dedicated sender addresses", function () {
   assert.match(enrollment, /Matrículas <matriculas@teacherflavius\.com>/);
@@ -29,8 +30,19 @@ test("financial operational emails use dedicated sender and Workspace reply-to",
     assert.match(source, /from: FINANCIAL_FROM_EMAIL/);
     assert.match(source, /reply_to: "contato@teacherflavius\.com"/);
     assert.doesNotMatch(source, /Deno\.env\.get\("ENROLLMENT_FROM_EMAIL"\)/);
-    assert.match(source, /Deno\.env\.get\("ENROLLMENT_NOTIFICATION_EMAIL"\)/);
+    assert.match(source, /const ADMIN_NOTIFICATION_EMAIL = "contato@teacherflavius\.com"/);
+    assert.match(source, /to: \[ADMIN_NOTIFICATION_EMAIL\]/);
+    assert.doesNotMatch(source, /Deno\.env\.get\("ENROLLMENT_NOTIFICATION_EMAIL"\)/);
   }
+});
+
+test("system health alerts are routed to the administrative mailbox", function () {
+  assert.match(systemHealthAlerts, /const ADMIN_NOTIFICATION_EMAIL = "contato@teacherflavius\.com"/);
+  assert.match(systemHealthAlerts, /to: \[ADMIN_NOTIFICATION_EMAIL\]/);
+  assert.match(systemHealthAlerts, /reply_to: "contato@teacherflavius\.com"/);
+  assert.match(systemHealthAlerts, /const fromEmail = Deno\.env\.get\("ENROLLMENT_FROM_EMAIL"\)/);
+  assert.doesNotMatch(systemHealthAlerts, /Deno\.env\.get\("ENROLLMENT_NOTIFICATION_EMAIL"\)/);
+  assert.match(systemHealthAlerts, /request\.headers\.get\("x-webhook-secret"\)/);
 });
 
 test("enrollment sends both student confirmation and existing administrative notice", function () {

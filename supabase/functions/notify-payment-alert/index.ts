@@ -21,6 +21,7 @@ type WebhookPayload = {
 
 const encoder = new TextEncoder();
 const FINANCIAL_FROM_EMAIL = "Financeiro Teacher Flávio <financeiro@teacherflavius.com>";
+const ADMIN_NOTIFICATION_EMAIL = "contato@teacherflavius.com";
 
 const ALERT_SUBJECTS: Record<string, string> = {
   reconciliation_failure: "Alerta: falha na reconciliação de pagamento",
@@ -178,10 +179,9 @@ Deno.serve(async (request: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
-  const notificationEmail = Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL") ?? "";
   const expectedWebhookSecret = Deno.env.get("ENROLLMENT_WEBHOOK_SECRET") ?? "";
 
-  if (!supabaseUrl || !secretKey || !resendApiKey || !notificationEmail || !expectedWebhookSecret) {
+  if (!supabaseUrl || !secretKey || !resendApiKey || !expectedWebhookSecret) {
     console.error("Missing required environment variables for payment alerts");
     return jsonResponse({ error: "Server configuration is incomplete" }, 500);
   }
@@ -276,7 +276,7 @@ Deno.serve(async (request: Request) => {
         "Content-Type": "application/json",
         "Idempotency-Key": `payment-alert-${paymentAlert.id}`,
       },
-      body: JSON.stringify({ from: FINANCIAL_FROM_EMAIL, reply_to: "contato@teacherflavius.com", to: [notificationEmail], subject, text: textBody, html: htmlBody }),
+      body: JSON.stringify({ from: FINANCIAL_FROM_EMAIL, reply_to: "contato@teacherflavius.com", to: [ADMIN_NOTIFICATION_EMAIL], subject, text: textBody, html: htmlBody }),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
