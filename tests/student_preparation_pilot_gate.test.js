@@ -120,8 +120,8 @@ test("archived, unenrolled, missing and inaccessible profiles fail closed", asyn
     { enrolled: false, archived: false },
     { profileUserId: "other-student" },
     { profileError: true },
-    { enrolled: undefined },
-    { archived: undefined }
+    { enrolled: null },
+    { archived: null }
   ];
   for (const options of scenarios) {
     const context = createScenario({ globalEnabled: true, ...options });
