@@ -13,7 +13,7 @@ nao altera tabelas de frequencia, mensalidades ou exercicios.
 
 - Licao tradicional: `lesson_number`, chave `lesson:<numero>`.
 - Pagina dinamica vinculada ao roteiro: usar o numero vinculado, com o
-  `lesson_page_id` opcional. Assim os diferentes caminhos de navegacao
+  `lesson_page_id` vazio. Assim os diferentes caminhos de navegacao
   identificam a mesma apresentacao.
 - Pagina sem numero vinculado: usar `lesson_page_id`, chave `page:<uuid>`.
   Essas paginas so aparecerao no roteiro do professor se forem incluidas
