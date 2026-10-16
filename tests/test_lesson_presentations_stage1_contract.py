@@ -19,6 +19,8 @@ class LessonPresentationsStage1ContractTests(unittest.TestCase):
         self.assertIn("lesson_number integer check (lesson_number > 0)", self.sql)
         self.assertIn("lesson_key text generated always as", self.sql)
         self.assertIn("unique (student_id, lesson_key)", self.sql)
+        self.assertIn("create index lesson_presentations_page_idx", self.sql)
+        self.assertIn("on public.lesson_presentations (lesson_page_id)", self.sql)
         self.assertIn("(lesson_number is not null) <> (lesson_page_id is not null)", self.sql)
 
     def test_body_has_length_guard_and_revision_counter(self) -> None:
