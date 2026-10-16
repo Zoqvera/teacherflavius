@@ -10,6 +10,7 @@ type WebhookPayload = {
 };
 
 const encoder = new TextEncoder();
+const ADMIN_NOTIFICATION_EMAIL = "contato@teacherflavius.com";
 
 const SUBJECTS: Record<string, string> = {
   critical_application_errors: "Alerta crítico: erros de aplicação",
@@ -109,12 +110,11 @@ Deno.serve(async (request: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const secretKey = getDefaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
-  const notificationEmail = Deno.env.get("ENROLLMENT_NOTIFICATION_EMAIL") ?? "";
   const fromEmail = Deno.env.get("ENROLLMENT_FROM_EMAIL") ?? "";
   const expectedWebhookSecret = Deno.env.get("ENROLLMENT_WEBHOOK_SECRET") ?? "";
   const receivedWebhookSecret = request.headers.get("x-webhook-secret") ?? "";
 
-  if (!supabaseUrl || !secretKey || !resendApiKey || !notificationEmail || !fromEmail || !expectedWebhookSecret) {
+  if (!supabaseUrl || !secretKey || !resendApiKey || !fromEmail || !expectedWebhookSecret) {
     console.error("Server environment is incomplete for system health alerts");
     return json({ error: "Server configuration is incomplete" }, 500);
   }
@@ -184,7 +184,7 @@ Deno.serve(async (request: Request) => {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from: fromEmail, reply_to: "contato@teacherflavius.com", to: [notificationEmail], subject, text: textBody, html: htmlBody }),
+      body: JSON.stringify({ from: fromEmail, reply_to: "contato@teacherflavius.com", to: [ADMIN_NOTIFICATION_EMAIL], subject, text: textBody, html: htmlBody }),
     });
 
     if (!response.ok) {
