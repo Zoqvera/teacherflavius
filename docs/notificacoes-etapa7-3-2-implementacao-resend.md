@@ -112,6 +112,26 @@ já expurgados não podem ser recuperados por simples reversão de versão.
 O procedimento de backup/restauração exige planejamento administrativo,
 sem restaurar indiscriminadamente dados além da retenção autorizada.
 
+## Etapa 7.3.4 — Ensaio HTTP e preparação de liberação (16/10/2026)
+
+Consulte [o plano de homologação do webhook](notificacoes-etapa7-3-4-homologacao-webhook-resend.md).
+Foi adicionada uma suíte de requisições HTTP de verdade contra o mesmo
+handler da Edge Function, com HMAC-SHA256/Svix fictício. O CI também
+inicializa Supabase descartável e testa o POST assinado no Edge runtime
+local, verificando as duas linhas de evento, a resposta de duplicidade e
+a rejeição de alteração da assinatura.
+
+O agendamento de retenção é preparado em
+`supabase/operations/resend_delivery_retention_schedule.sql`, mas é
+criado inativo por padrão. **Não é incorporado automaticamente às
+migrações.** Ele exige sinalização administrativa na mesma transação e
+permanece sujeito a autorização separada antes da ativação.
+
+Ainda não houve teste de requisição assinada realmente enviada pelo
+Resend porque a conta do provedor não está conectada ao ambiente
+de homologação. A PR permanece em DRAFT; não instalar ou ativar
+componentes na produção sem novo aceite explícito.
+
 ## Contratos e consultas de leitura (após implantação)
 
 ```sql
