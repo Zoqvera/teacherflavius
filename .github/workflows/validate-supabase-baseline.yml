@@ -748,8 +748,9 @@ jobs:
           # No provider calls, cron jobs, or production writes occur here.
           {
             echo 'BEGIN;'
-            cat supabase/migrations/20261015210000_resend_delivery_tracking_foundation.sql
+            cat supabase/migrations/20261016213000_resend_delivery_tracking_and_retention.sql
             cat tests/sql/resend_delivery_tracking_e2e.sql
+            cat tests/sql/resend_delivery_retention_e2e.sql
             echo 'ROLLBACK;'
           } | docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1
 
