@@ -89,6 +89,28 @@ O remetente genérico `resend-email` não registra mais o corpo de erro devolvid
 
 E-mails destinados ao próprio aluno, como confirmação de matrícula e confirmação de reposição, usam o endereço da conta ou da reserva e contêm somente o mínimo necessário à mensagem transacional. As matrículas são enviadas por `Matrículas <matriculas@teacherflavius.com>` e as reposições por `Teacher Flávio <contato@teacherflavius.com>`. O endereço de destino do aluno não é incluído no corpo do aviso administrativo. O e-mail de matrícula é recuperado de Supabase Auth, não de metadados editáveis no perfil.
 
+#### Metadados de entregabilidade Resend — política aprovada (16/10/2026)
+
+**Estado: planejado, não implantado.** As tabelas privadas propostas
+`private.resend_delivery_events` e `private.resend_delivery_messages`
+tratam identificadores técnicos por e-mail, tipo de evento, função do
+destinatário, vínculo com a notificação e datas. Não armazenam destinatários,
+assuntos, corpos, IPs ou anexos. A finalidade específica é a auditoria da
+entrega das mensagens transacionais, inclusive suporte a reclamações
+de não recebimento.
+
+**Retenção aprovada:** 90 dias desde o recebimento para cada evento;
+180 dias desde a aceitação pelo provedor para o vínculo da mensagem.
+Uma função de limpeza em lotes, limitada a `service_role`, foi desenvolvida
+com testes isolados. O agendamento da exclusão e a coleta de novos eventos
+dependem de liberação operacional separada. A expiração local não determina
+nem altera a política de retenção mantida pelo fornecedor Resend.
+
+**Direitos do titular:** esses identificadores têm ligação indireta com
+cadastros por meio de `notification_id`. Solicitações de acesso e eliminação
+precisam considerar esse vínculo enquanto existir. Nenhum evento anterior
+à instrumentação pode ser declarado entregue sem prova externa.
+
 ### Mercado Pago → Resend
 
 O alerta administrativo usado quando o Mercado Pago bloqueia a criação de um pagamento não inclui mais e-mail do aluno, UUID da mensalidade ou UUID da tentativa. O alerta contém somente HTTP/código técnico e orienta o professor a consultar o Controle de Mensalidades no portal.
