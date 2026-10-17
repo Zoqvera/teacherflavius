@@ -91,7 +91,7 @@ function dataApi() {
 
         function perform() {
           requests.push({ table, type, filters: filters.map(f => f[0]) });
-          if (type === "select") return { data: rows(), error: null };
+          if (type === "select") return { data: rows().map(row => ({ ...row })), error: null };
 
           if (table === "lesson_presentations" && type === "insert") {
             if (body.student_id !== actor || actor === TEACHER) {
@@ -109,7 +109,7 @@ function dataApi() {
             };
             presentations.push(row);
             versions.push({ presentation_id: row.id, revision_number: 1, body: row.body });
-            return { data: projection ? row : null, error: null };
+            return { data: projection ? { ...row } : null, error: null };
           }
 
           if (table === "lesson_presentations" && type === "update") {
@@ -124,7 +124,7 @@ function dataApi() {
               revision_number: row.revision_number,
               body: row.body
             });
-            return { data: projection ? row : null, error: null };
+            return { data: projection ? { ...row } : null, error: null };
           }
 
           if (table === "lesson_presentation_views" && type === "insert") {
