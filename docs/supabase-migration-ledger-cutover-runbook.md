@@ -501,3 +501,30 @@ modificação do ledger ou da produção. Não altera páginas, rotas nem SEO.
 As funções efetivas de atendimento LGPD e manutenção automática exigem
 pacote separado antes de eventual restauração operacional. A PR #776
 permanece bloqueada.
+
+
+## ETAPA 1D.6 — auditoria das RPCs privilegiadas de privacidade
+
+Em 17/10/2026, a comparação protegida pós-PR #797 registrou **99 políticas
+RLS recuperadas de 109** e dez políticas ainda ausentes em oito relações
+não restauradas. Permanecem 1.081 objetos ausentes e 177 definições
+divergentes no inventário catalogado, sem certificação de paridade.
+
+A auditoria somente-leitura de 24 funções sensíveis `SECURITY DEFINER`
+em `public` não encontrou nenhuma com execução por `anon`, dez ficam
+restritas a `service_role` e catorze podem ser executadas pelo papel
+`authenticated`. Todas apresentam `search_path` configurado. Isso
+**não** atesta que suas regras internas de autorização estejam corretas.
+O helper `is_teacher_admin_mfa()` é um alias sem exigência própria de
+AAL2; antes de reconstruir RPCs destrutivas, definir e testar o nível
+adequado de autenticação para operações de exclusão e manutenção.
+
+A Action protegida de `main` verifica assinaturas e permissões por consulta
+a `pg_catalog`, sem extrair corpos de funções, segredos ou dados de
+alunos. Concessões novas ou mais amplas falham a checagem de CI.
+Detalhes, fontes e limites estão em
+[relatório 1D.6](supabase-privacy-stage1d6-audit.md).
+
+Esta etapa não cria funções, migrações, gatilhos, CRON, políticas ou
+esquemas produtivos. A PR #776 permanece em rascunho. Não houve
+alteração de SEO.
