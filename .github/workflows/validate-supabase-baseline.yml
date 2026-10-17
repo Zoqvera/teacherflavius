@@ -262,7 +262,10 @@ jobs:
             end if;
             if has_table_privilege('anon', 'private.auth_account_health_runs', 'SELECT')
               or has_table_privilege('authenticated', 'private.auth_account_health_runs', 'SELECT')
-              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'SELECT,INSERT,UPDATE,DELETE')
+              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'SELECT')
+              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'INSERT')
+              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'UPDATE')
+              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'DELETE')
             then
               raise exception 'Unsafe or missing Auth health storage grants';
             end if;
