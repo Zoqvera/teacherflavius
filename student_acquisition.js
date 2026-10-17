@@ -8,7 +8,7 @@
     { value: "referral", label: "Indicação de amigo ou familiar" },
     { value: "facebook", label: "Facebook" },
     { value: "getninjas", label: "GetNinjas" },
-    { value: "other", label: "Outro" },
+    { value: "other", label: "Outras fontes" },
     { value: "unknown", label: "Não me lembro" }
   ]);
   const LABELS = Object.freeze(Object.fromEntries(SOURCES.map(item => [item.value, item.label])));
