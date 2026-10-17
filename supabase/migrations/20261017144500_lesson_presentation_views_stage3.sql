@@ -45,7 +45,7 @@ create policy "Professor e autor consultam visualizações"
     or exists (
       select 1
       from public.lesson_presentations presentation
-      where presentation.id = presentation_id
+      where presentation.id = public.lesson_presentation_views.presentation_id
         and presentation.student_id = (select auth.uid())
     )
   );
@@ -59,8 +59,8 @@ create policy "Professor registra visualização da versão atual"
     and exists (
       select 1
       from public.lesson_presentations presentation
-      where presentation.id = presentation_id
-        and presentation.revision_number = revision_number
+      where presentation.id = public.lesson_presentation_views.presentation_id
+        and presentation.revision_number = public.lesson_presentation_views.revision_number
     )
   );
 
