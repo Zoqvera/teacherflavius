@@ -43,9 +43,12 @@ class PresentationStage5BContractTests(unittest.TestCase):
 
     def test_recovery_evidence_is_recent_and_source_attested(self) -> None:
         script = source("scripts/verify_lesson_presentations_stage5b_evidence.sh")
-        self.assertIn("BACKUP_RUN_ID=39043019631", script)
-        self.assertIn("RECOVERY_RUN_ID=39043160705", script)
+        self.assertIn("actions/workflows/supabase-backup-recovery-test.yml/runs", script)
+        self.assertIn("supabase-recovery-report-", script)
+        self.assertIn("report_name", script)
+        self.assertIn("backup_run_id", script)
         self.assertIn("backup_sha", script)
+        self.assertIn("conclusion == \\"success\\"", script)
         self.assertIn("recovery_sha", script)
         self.assertIn("assess_lesson_presentation_backup.py", script)
         self.assertIn("RECOVERY_EVIDENCE_CURRENT", script)
