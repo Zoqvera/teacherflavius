@@ -52,7 +52,7 @@ class AcademicRelationshipBaselineTests(unittest.TestCase):
             ROOT / "supabase/baseline/415_reconcile_canonical_policy_modes.sql"
         ).read_text(encoding="utf-8")
         workflow = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("restrictive_count <> 81", sql)
+        self.assertIn("restrictive_count <> 85", sql)\n        self.assertIn("restrictive_count <> 81", sql)
         self.assertIn("roles <> array['authenticated']::name[]", sql)
         self.assertIn("before_signature is distinct from after_signature", sql)
         self.assertIn("policy_row.qual", sql)
@@ -67,7 +67,7 @@ class AcademicRelationshipBaselineTests(unittest.TestCase):
         self.assertEqual(fingerprint["tables"], 53)
         self.assertEqual(fingerprint["constraints"], 271)
         self.assertEqual(fingerprint["non_constraint_indexes"], 117)
-        self.assertEqual(fingerprint["rls_policies"], 95)
+        self.assertEqual(fingerprint["rls_policies"], 91)
 
 
 if __name__ == "__main__":
