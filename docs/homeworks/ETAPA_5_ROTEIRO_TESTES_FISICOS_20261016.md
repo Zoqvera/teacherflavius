@@ -27,9 +27,9 @@ Não confundir **simulação de tela corrigida** com nota retornada por serviço
 
 ## B.1. Bancada autossuficiente para Android e desktop, sem servidor
 
-Para diminuir a dependência de um computador na primeira rodada de testes físicos, foi criada uma **cópia independente da interface real** em `tests/fixtures/homeworks-stage5-physical/offline.html`. Os módulos versionados de interface e estilo são incorporados ao mesmo arquivo, com dados inventados. O serviço é **simulado**, rejeita submissões e não acessa Supabase, OpenAI, Analytics nem qualquer outra API.
+Para diminuir a dependência de um computador na primeira rodada de testes físicos, foi criada uma **cópia independente da interface real** em `tests/fixtures/homeworks-stage5-physical/offline/index.html`. Os módulos versionados de interface e estilo são incorporados ao mesmo arquivo, com dados inventados. O serviço é **simulado**, rejeita submissões e não acessa Supabase, OpenAI, Analytics nem qualquer outra API.
 
-1. Baixar o arquivo **RAW** com extensão `.html` no GitHub (não abrir a visualização de código, que não executa scripts). Caminho no repositório: `tests/fixtures/homeworks-stage5-physical/offline.html`.
+1. Baixar o arquivo **RAW** com extensão `.html` no GitHub (não abrir a visualização de código, que não executa scripts). Caminho no repositório: `tests/fixtures/homeworks-stage5-physical/offline/index.html`.
 2. No Android, usar o aplicativo de arquivos para abrir o HTML com Chrome ou um navegador compatível com arquivos locais. Se a versão do Android bloquear abertura local, registrar **BLOQUEADO** e seguir pelo procedimento USB + `adb reverse` da seção B; não publicar a bancada para contornar a restrição.
 3. No próprio arquivo, escolher **Tipo de atividade** e **Situação fictícia**, tocar em **Abrir cenário**, habilitar TalkBack nas configurações de acessibilidade e percorrer os títulos, perguntas e controles. Para testar o retorno à lista, escolher `Lista de atividades`.
 4. Preencher os resultados observados (Aprovado/Falhou/Não executado) e tocar em **Gerar relatório de texto**. O relatório é gerado localmente, sem envio automático. Não introduzir nomes, e-mails ou redações reais.
