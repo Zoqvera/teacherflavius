@@ -42,6 +42,13 @@ class RlsPostureTests(unittest.TestCase):
         self.assertFalse(report.production_write_authorized)
         self.assertEqual(report.privilege_difference_examples, ("public.profiles.view",))
 
+    def test_public_grant_is_potentially_broader_than_authenticated(self) -> None:
+        baseline = parse_inventory(row("public.lessons.viewer", "SELECT", "public"))
+        production = parse_inventory(row("public.lessons.viewer", "SELECT", "authenticated"))
+        result = compare_policies(baseline, production)
+        self.assertEqual(result.changed_role_or_command, 1)
+        self.assertEqual(result.potential_baseline_role_broadening, 1)
+
     def test_matching_metadata_is_not_authorization_approval(self) -> None:
         rows = parse_inventory(row("public.profiles.owner", "SELECT", "authenticated"))
         report = compare_policies(rows, rows)
