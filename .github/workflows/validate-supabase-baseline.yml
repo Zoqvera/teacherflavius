@@ -188,7 +188,8 @@ jobs:
             supabase/baseline/405_restore_auth_account_health_run_storage.sql \
             supabase/baseline/410_restore_academic_relationship_event_storage.sql \
             supabase/baseline/415_reconcile_canonical_policy_modes.sql \
-            supabase/baseline/420_reconcile_financial_mfa_policies.sql
+            supabase/baseline/420_reconcile_financial_mfa_policies.sql \
+            supabase/baseline/425_restore_roadmap_teacher_and_exercise_read_policies.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
