@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
-# Verifica evidência originada dos workflows reais, nunca de conteúdo fornecido pelo navegador.
+# Evidence comes exclusively from successful, connected GitHub Actions runs.
 set -euo pipefail
 
-readonly BACKUP_RUN_ID=39043019631
-readonly RECOVERY_RUN_ID=39043160705
-readonly REPORT_NAME="supabase-recovery-report-${BACKUP_RUN_ID}"
 readonly REPORT_DIR="${RUNNER_TEMP:?}/lesson-presentation-recovery"
 
 if [[ -z "${GH_TOKEN:-}" || -z "${GITHUB_REPOSITORY:-}" ]]; then
@@ -12,8 +9,39 @@ if [[ -z "${GH_TOKEN:-}" || -z "${GITHUB_REPOSITORY:-}" ]]; then
   exit 1
 fi
 
-backup_info="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID")"
-recovery_info="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RECOVERY_RUN_ID")"
+# Query the recovery workflow directly; this repository runs many CI jobs per hour.
+recovery_runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/supabase-backup-recovery-test.yml/runs?per_page=30")"
+recovery_run_id="$(jq -r '
+  [.workflow_runs[]
+    | select(
+        .name == "Verify Supabase backup recovery"
+        and .event == "workflow_run"
+        and .head_branch == "main"
+        and .status == "completed"
+        and .conclusion == "success"
+      )
+  ] | first | .id // empty
+' <<< "$recovery_runs")"
+if [[ ! "$recovery_run_id" =~ ^[0-9]+$ ]]; then
+  echo 'No successful automatic production backup recovery run was found.' >&2
+  exit 1
+fi
+
+recovery_info="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$recovery_run_id")"
+artifacts="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$recovery_run_id/artifacts?per_page=100")"
+report_name="$(jq -r '
+  [.artifacts[]
+    | select(.expired == false)
+    | select(.name | test("^supabase-recovery-report-[0-9]+$"))
+  ] | sort_by(.created_at) | last | .name // empty
+' <<< "$artifacts")"
+if [[ ! "$report_name" =~ ^supabase-recovery-report-[0-9]+$ ]]; then
+  echo 'No valid restoration report artifact was found.' >&2
+  exit 1
+fi
+
+backup_run_id="${report_name##*-}"
+backup_info="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$backup_run_id")"
 
 jq -e '
   .name == "Encrypted Supabase logical backup"
@@ -24,6 +52,7 @@ jq -e '
 
 jq -e '
   .name == "Verify Supabase backup recovery"
+  and .event == "workflow_run"
   and .status == "completed"
   and .conclusion == "success"
   and .head_branch == "main"
@@ -37,9 +66,9 @@ if [[ -z "$backup_sha" || "$backup_sha" != "$recovery_sha" ]]; then
 fi
 
 mkdir -p "$REPORT_DIR"
-gh run download "$RECOVERY_RUN_ID" \
+gh run download "$recovery_run_id" \
   --repo "$GITHUB_REPOSITORY" \
-  --name "$REPORT_NAME" \
+  --name "$report_name" \
   --dir "$REPORT_DIR"
 
 report="$REPORT_DIR/recovery-verification-report.json"
@@ -60,4 +89,4 @@ jq -e '
   and .ledger_alignment_verified == false
 ' "$REPORT_DIR/assessment.json" > /dev/null
 
-echo 'Backup recovery and migration rehearsal evidence accepted. Schema preflight remains mandatory.'
+echo 'Recovery evidence is current and attested. Independent approval and schema preflight still required.'
