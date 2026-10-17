@@ -94,7 +94,11 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
         problems.append("Área do Estudante: link para o portal antigo reapareceu")
     if any(points_to_site_path(href, "/minha-semana/") for href in links.links):
         problems.append("Área do Estudante: card Minha Semana descontinuado reapareceu")
-    if "area_do_estudante.js?v=20261016-retire-week-1" not in student_page:
+    student_version = re.search(
+        r'area_do_estudante\.js\?v=(20\d{6})-[A-Za-z0-9-]+',
+        student_page,
+    )
+    if not student_version or student_version.group(1) < "20261016":
         problems.append("Área do Estudante: versão de script desatualizada")
 
     student_script = pages.get("/area_do_estudante.js", "")

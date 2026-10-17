@@ -178,13 +178,25 @@
     });
   }
 
+  async function initializeAcquisitionPrompt() {
+    const prompt = window.StudentAcquisitionPrompt;
+    if (!prompt || typeof prompt.initialize !== "function") return false;
+
+    return prompt.initialize({
+      client: Auth.getClient(),
+      studentId: state.session.user.id,
+      isProfessor: isProfessorSession()
+    });
+  }
+
   async function updateStatus() {
     const isAllowed = await guardStudentArea();
     if (!isAllowed) return;
 
     clearLoginStatus();
     initializePwaInstallExperience();
-    await initializeReviewInvitation();
+    const acquisitionPromptShown = await initializeAcquisitionPrompt();
+    if (!acquisitionPromptShown) await initializeReviewInvitation();
   }
 
   removeUnavailableStudentCards();
