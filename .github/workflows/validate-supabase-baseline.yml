@@ -184,7 +184,8 @@ jobs:
             supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql \
             supabase/baseline/390_expose_study_button_marker.sql \
             supabase/baseline/395_student_review_invitation_funnel.sql \
-            supabase/baseline/400_justify_attended_cancelled_lesson_revocations.sql
+            supabase/baseline/400_justify_attended_cancelled_lesson_revocations.sql \
+            supabase/baseline/405_restore_auth_account_health_run_storage.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -241,6 +242,39 @@ jobs:
             end if;
           end;
           $credit_overlay$;
+          SQL
+
+      - name: Verify private Auth health storage and role grants
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 <<'SQL'
+          do $auth_health_storage$
+          begin
+            if to_regclass('private.auth_account_health_runs') is null then
+              raise exception 'Missing Auth health storage table';
+            end if;
+            if to_regclass('private.auth_account_health_runs_completed_at_idx') is null then
+              raise exception 'Missing Auth health storage retention index';
+            end if;
+            if has_table_privilege('anon', 'private.auth_account_health_runs', 'SELECT')
+              or has_table_privilege('authenticated', 'private.auth_account_health_runs', 'SELECT')
+              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'SELECT')
+              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'INSERT')
+              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'UPDATE')
+              or not has_table_privilege('service_role', 'private.auth_account_health_runs', 'DELETE')
+            then
+              raise exception 'Unsafe or missing Auth health storage grants';
+            end if;
+            if (select c.relrowsecurity from pg_class c
+              where c.oid='private.auth_account_health_runs'::regclass) then
+              raise exception 'Auth health private table RLS deviates from reviewed production schema';
+            end if;
+          end
+          $auth_health_storage$;
           SQL
 
       - name: Verify least-privilege browser ACLs
