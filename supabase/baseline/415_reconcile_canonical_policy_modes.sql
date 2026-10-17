@@ -86,8 +86,7 @@ begin
   ) into after_signature
   from pg_catalog.pg_policies
   where schemaname in ('public', 'private')
-    and (schemaname || '.' || tablename || '.' || policyname)
-      in (select key from jsonb_object_keys(before_signature) as key);
+    and before_signature ? (schemaname || '.' || tablename || '.' || policyname);
 
   if before_signature is distinct from after_signature then
     raise exception 'Policy predicate, command or role changed during mode alignment';
