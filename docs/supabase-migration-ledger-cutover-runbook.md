@@ -407,3 +407,32 @@ O overlay local agora exige esses mesmos dois predicados, a
 operacao `ALL` e exatamente esses dois papeis antes de alterar
 seu modo. A recuperacao nao autoriza acesso de alunos a
 tentativas de pagamento.
+
+
+## ETAPA 1D.4 — Finanças e dependências das políticas ausentes
+
+Em 17/10/2026, as policies produtivas de `monthly_tuition`,
+`monthly_tuition_events` e `student_billing_settings` exigem
+`is_teacher_admin_mfa()`. O snapshot canônico usava
+`is_teacher_admin()`. O overlay 420 corrige essa diferença
+**somente** na base descartável, com guardas de estado de origem,
+operação, papel e modo. A verificação SQL confirma o resultado e a
+preservação da exigência de MFA nas páginas de lição.
+
+O workflow `Supabase canonical object inventory` passa a gerar
+`rls-policy-dependency-assessment.json`: relaciona as políticas
+faltantes com os identificadores das relações do bootstrap e classifica
+quantas dependem de tabelas ausentes. Os arquivos-fonte contêm só
+identificadores de catálogo e hashes; os artefatos contêm quantidades,
+nomes de tabelas e marcadores de recuperação. Não são publicados SQL
+de políticas, extratos de alunos, conteúdo de lições ou dados pessoais.
+
+Critérios para recuperar outras políticas: primeiro aplicar
+`CREATE TABLE` com constraints e dependências, confirmar grants e
+`relrowsecurity`, adicionar as policies exatas da migração revisada,
+executar testes fictícios de papéis e funções administrativas e,
+finalmente, auditar o hash da definição contra a produção. Na dúvida
+sobre mudança de segurança, manter o fluxo de acesso bloqueado.
+
+Nenhuma etapa aqui corrige diretamente o ledger de produção, cria
+branch remota com custo ou autoriza merge da PR #776.
