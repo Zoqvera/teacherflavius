@@ -130,3 +130,33 @@ Overlay `380_same_day_first_tuition_payment.sql` applies the automatic São Paul
 Production migration `20261015161503_track_student_review_invitation_funnel` adds a private one-row-per-student tracking table and two protected RPCs. Its replayable SQL is stored in `395_student_review_invitation_funnel.sql`. The automated reconstruction applies this overlay **after `390_expose_study_button_marker.sql`**. The catalog fingerprint counts the two additional public RPCs. The private table and its constraints are checked separately by `tests/sql/student_review_invitation_baseline_security.sql`, because the table and constraint counters in the fingerprint cover only the public schema.
 
 The overlay contains no production student records. Both event collection and reporting are restricted by the database. Do not backfill synthetic views or clicks.
+
+
+## ETAPA 1D — restauração de justificativas de créditos (17/10/2026)
+
+O overlay `400_justify_attended_cancelled_lesson_revocations.sql` é uma
+cópia **sem alterações de lógica** da migração já revisada
+`20261016162500_justify_attended_cancelled_lesson_revocations.sql`.
+Ele é aplicado **após 395**, exclusivamente à reconstrução do schema
+em Supabase CLI descartável. Não é uma nova migração, não é executado na
+produção e não contém dados pessoais.
+
+A mudança recompõe a tabela privada
+`private.lesson_credit_revocation_justifications`, a RPC protegida
+`public.justify_teacher_attended_cancelled_lesson(uuid)` e as versões
+de recuperação das funções de auditoria e sincronização dos créditos.
+A autorização da RPC usa o controle real de professor; a tabela privada
+é protegida por RLS e não possui grants para navegador.
+
+O fingerprint canônico aumenta uma função pública (192 -> 193).
+A tabela adicionada é do schema `private`, portanto não altera o
+indicador `tables`, que conta apenas tabelas públicas.
+A homologação do overlay exige teste de SQL real e ACL em CI,
+execução local repetível e consulta isolada de consistência.
+**Não** altera o ledger histórico da produção, não habilita
+Supabase Branching e não comprova paridade integral.
+
+Após esta correção isolada, permanecem pendentes outros objetos
+e definições identificados na auditoria estrutural da ETAPA 1C.
+Cada pacote adicional terá sua própria revisão funcional e segurança
+antes de integrar à reconstrução canônica.
