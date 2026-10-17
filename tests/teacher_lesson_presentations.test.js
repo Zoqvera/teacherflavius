@@ -83,14 +83,14 @@ function presentation(studentId = STUDENT, lessonKey = "lesson:12", revisionNumb
   };
 }
 
-test("teacher viewer is source-locked and makes no query in production", async () => {
+test("teacher viewer is source-enabled and loads records only with a provided client", async () => {
   const module = loadModule();
-  assert.equal(module.enabled, false);
-  const result = await module.loadPlan([row()], () => {
-    throw new Error("Production client must never be accessed");
-  }, TEACHER);
-  assert.equal(result, null);
-  assert.match(source, /const RELEASE_ENABLED = false;/);
+  assert.equal(module.enabled, true);
+  const db = createDb([presentation()], []);
+  const result = await module.loadPlan([row()], () => db.client, TEACHER);
+  assert.equal(result.records.size, 1);
+  assert.equal(result.records.get(STUDENT + "|lesson:12").body, presentation().body);
+  assert.match(source, /const RELEASE_ENABLED = true;/);
   assert.doesNotMatch(source, /localStorage|sessionStorage|URLSearchParams|location\.search/);
 });
 

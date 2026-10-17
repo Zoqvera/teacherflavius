@@ -38,8 +38,8 @@ jobs:
           node --check teacher_lesson_presentations.js
           node --check roteiro-da-aula/app.js
           node --test tests/teacher_lesson_presentations.test.js
-          grep -Fq 'const RELEASE_ENABLED = false;' teacher_lesson_presentations.js
-          grep -Fq 'const RELEASE_ENABLED = false;' lesson_presentation_editor.js
+          grep -Fq 'const RELEASE_ENABLED = true;' teacher_lesson_presentations.js
+          grep -Fq 'const RELEASE_ENABLED = true;' lesson_presentation_editor.js
 
   teacher-receipt-rls:
     runs-on: ubuntu-latest

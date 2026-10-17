@@ -27,6 +27,7 @@ function runDriftScript({
   gitRoot = ROOT,
   baseRef = "",
   allowPrNew = false,
+  mockPresentationCatalog = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-drift-"),
@@ -45,6 +46,10 @@ function runDriftScript({
   fs.writeFileSync(
     psqlPath,
     `#!/usr/bin/env bash
+if [[ "$*" == *"lesson_presentations_catalog_attestation.sql"* ]]; then
+  echo "${mockPresentationCatalog ? "t" : "f"}"
+  exit 0
+fi
 cat <<'REMOTE_ROWS'
 ${remoteOutput}
 REMOTE_ROWS
@@ -77,6 +82,7 @@ function runDriftCheck({
   remoteRows = [],
   cutoff = "20261006000000",
   allowPrNew = false,
+  mockPresentationCatalog = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-files-"),
@@ -92,6 +98,7 @@ function runDriftCheck({
       remoteRows,
       cutoff,
       allowPrNew,
+      mockPresentationCatalog,
     });
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -569,5 +576,43 @@ test("retired history allows only checksum-pinned production rows", () => {
   ]) {
     const rejected = runDriftCheck({migrations:{},remoteRows});
     assert.equal(rejected.status, 1, rejected.stdout + rejected.stderr);
+  }
+});
+
+
+test("manual 5B presentation ledger attestations allow only the exact pair and live ACLs", () => {
+  const first = "20261017133000_lesson_presentations_stage1.sql";
+  const second = "20261017144500_lesson_presentation_views_stage3.sql";
+  const source1 = read("supabase/migrations/" + first);
+  const source2 = read("supabase/migrations/" + second);
+  const emptySqlSha = canonicalChecksum("");
+  assert.equal(canonicalChecksum(source1),
+    "e7e1f1772e5906a056fb390811cde4b11c3923a8e3c969652c2c1a545fc0430f");
+  assert.equal(canonicalChecksum(source2),
+    "d5beaf8f0d3f4b3df92d8f519a80c6895323c4cae20041b90565ac6928898d42");
+
+  const migrations = { [first]: source1, [second]: source2 };
+  const remote = [
+    { version: "20261017133000", name: "lesson_presentations_stage1", checksum: emptySqlSha },
+    { version: "20261017144500", name: "lesson_presentation_views_stage3", checksum: emptySqlSha }
+  ];
+  const ok = runDriftCheck({
+    migrations, remoteRows: remote, mockPresentationCatalog: true
+  });
+  assert.equal(ok.status, 0, ok.stdout + "\n" + ok.stderr);
+  assert.match(ok.stdout, /attested by immutable Git SHA256 and live RLS\/ACL catalog/);
+
+  for (const scenario of [
+    { migrations, remoteRows: remote, mockPresentationCatalog: false },
+    { migrations, remoteRows: [remote[0]], mockPresentationCatalog: true },
+    { migrations, remoteRows: [{ ...remote[0], name: "forged" }, remote[1]],
+      mockPresentationCatalog: true },
+    { migrations, remoteRows: [remote[0], { ...remote[1], checksum: "1".repeat(64) }],
+      mockPresentationCatalog: true },
+    { migrations: { [first]: source1 + "\nselect 999;", [second]: source2 },
+      remoteRows: remote, mockPresentationCatalog: true }
+  ]) {
+    const rejected = runDriftCheck(scenario);
+    assert.equal(rejected.status, 1, rejected.stdout + "\n" + rejected.stderr);
   }
 });

@@ -83,10 +83,10 @@ class Stage5BackupReadinessTests(unittest.TestCase):
             self.assertFalse(result["production_write_authorized"])
             self.assertFalse(result["automatic_release_allowed"])
 
-    def test_no_new_migrations_or_release_gate_bypass_in_this_stage(self) -> None:
+    def test_backup_evidence_does_not_override_source_controlled_release(self) -> None:
         for item in ("lesson_presentation_editor.js", "teacher_lesson_presentations.js"):
             self.assertIn(
-                "const RELEASE_ENABLED = false;",
+                "const RELEASE_ENABLED = true;",
                 (ROOT / item).read_text(encoding="utf-8"),
             )
         for item in (

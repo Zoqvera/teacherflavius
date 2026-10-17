@@ -291,6 +291,14 @@ collect_remote_records() {
         order by version;"
 }
 
+# The approved, manually applied 5B SQL is canonical in Git; live ledger
+# versions have no statement snapshots. Compare exact digests plus live ACLs.
+verify_manual_presentation_catalog() {
+  local result
+  result="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+    --file "${ROOT_DIR}/scripts/sql/lesson_presentations_catalog_attestation.sql")"
+  [[ "${result}" == 't' ]]
+}
 filter_local_records_from_cutoff() {
   local records_file="$1"
 
@@ -373,6 +381,32 @@ VERIFIED_MIGRATION_ALIASES
     }
   ' "${joined_file}" > "${mismatch_file}"
 
+  # Exception for the exact canonical pair; every other drift remains fatal.
+  local empty_sha='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  local stage1_line stage3_line expected_stage1 expected_stage3
+  stage1_line="$(awk -F $'\t' '$1 == "20261017133000" {print}' "${mismatch_file}")"
+  stage3_line="$(awk -F $'\t' '$1 == "20261017144500" {print}' "${mismatch_file}")"
+  printf -v expected_stage1 '%s\t%s\t%s\t%s\t%s' \
+    '20261017133000' 'lesson_presentations_stage1' \
+    'lesson_presentations_stage1' "${empty_sha}" \
+    'e7e1f1772e5906a056fb390811cde4b11c3923a8e3c969652c2c1a545fc0430f'
+  printf -v expected_stage3 '%s\t%s\t%s\t%s\t%s' \
+    '20261017144500' 'lesson_presentation_views_stage3' \
+    'lesson_presentation_views_stage3' "${empty_sha}" \
+    'd5beaf8f0d3f4b3df92d8f519a80c6895323c4cae20041b90565ac6928898d42'
+  if [[ "${stage1_line}" == "${expected_stage1}" &&
+        "${stage3_line}" == "${expected_stage3}" ]]; then
+    if verify_manual_presentation_catalog; then
+      awk -F $'\t' \
+        '$1 != "20261017133000" && $1 != "20261017144500"' \
+        "${mismatch_file}" > "${TEMP_DIR}/remaining_identity_mismatch"
+      mv "${TEMP_DIR}/remaining_identity_mismatch" "${mismatch_file}"
+      echo "::notice::Two canonical 5B migrations attested by immutable Git SHA256 and live RLS/ACL catalog. All other drift remains enforced."
+    else
+      echo "::error::Presentation schema does not match approved 5B catalog attestation."
+      exit 1
+    fi
+  fi
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"
