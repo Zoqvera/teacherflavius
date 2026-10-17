@@ -25,7 +25,7 @@ with inventory as (
       a.attidentity,
       a.attgenerated,
       coalesce(pg_catalog.pg_get_expr(d.adbin, d.adrelid), ''),
-      a.attcollation::text)
+      a.attcollation::regcollation::text)
   from pg_catalog.pg_attribute a
   join pg_catalog.pg_class c on c.oid = a.attrelid
   join pg_catalog.pg_namespace n on n.oid = c.relnamespace
