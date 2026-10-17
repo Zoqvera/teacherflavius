@@ -80,13 +80,12 @@ function database() {
   };
 }
 
-test("release remains hard-disabled without a URL, storage or runtime override", async () => {
+test("release uses source control, validates context and rejects browser-side overrides", async () => {
   const instance = editor();
-  assert.equal(instance.enabled, false);
-  assert.equal(await instance.mount({
-    getClient() { throw new Error("Supabase must not be queried"); }
-  }), false);
-  assert.match(editorSource, /const RELEASE_ENABLED = false;/);
+  assert.equal(instance.enabled, true);
+  assert.equal(await instance.mount(null), false);
+  assert.equal(await instance.mount({}), false);
+  assert.match(editorSource, /const RELEASE_ENABLED = true;/);
   assert.doesNotMatch(editorSource, /localStorage|sessionStorage|URLSearchParams|location\.search/);
   assert.match(lessonSource, /editor\.enabled !== true/);
   assert.match(pageSource, /id="lessonPresentationSection"[^>]*hidden>/);
