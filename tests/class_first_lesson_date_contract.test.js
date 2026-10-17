@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const migration = fs.readFileSync(
-  path.join(root, "supabase/migrations/20261017013000_saturday_class_start_date.sql"),
+  path.join(root, "supabase/migrations/20261017012456_20261017013000_saturday_class_start_date.sql"),
   "utf8"
 );
 const adminPage = fs.readFileSync(path.join(root, "turma.html"), "utf8");
