@@ -43,8 +43,8 @@ class FastGateTests(unittest.TestCase):
     @patch("scripts.check_fast_critical_changes_gate.git_diff")
     def test_retired_migrations_require_exact_original_blobs(self, mocked_diff, mocked_git) -> None:
         path, expected_blob = next(iter(RETIRED_HOMEWORK_MIGRATIONS.items()))
-        mocked_diff.return_value = f"D\\t{path}\\n"
-        mocked_git.return_value.stdout = expected_blob + "\\n"
+        mocked_diff.return_value = f"D\t{path}\n"
+        mocked_git.return_value.stdout = expected_blob + "\n"
         ensure_historical_migrations_unchanged("base", "head")
         mocked_git.assert_called_once()
 
@@ -52,7 +52,7 @@ class FastGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Historical migrations"):
             ensure_historical_migrations_unchanged("base", "head")
 
-    @patch("scripts.check_fast_critical_changes_gate.git_diff", return_value="D\\tsupabase/migrations/other.sql\\n")
+    @patch("scripts.check_fast_critical_changes_gate.git_diff", return_value="D\tsupabase/migrations/other.sql\n")
     def test_other_migration_deletions_remain_blocked(self, _mocked_diff) -> None:
         with self.assertRaisesRegex(ValueError, "Historical migrations"):
             ensure_historical_migrations_unchanged("base", "head")
