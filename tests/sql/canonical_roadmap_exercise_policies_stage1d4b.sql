@@ -22,7 +22,7 @@ begin
         ('study_roadmap_completion','Professor pode inserir progresso do roteiro','INSERT'),
         ('study_roadmap_completion','Professor pode atualizar progresso do roteiro','UPDATE'),
         ('study_roadmap_completion','Professor pode excluir progresso do roteiro','DELETE'),
-        ('teacher_exercises','Apenas professores podem visualizar exercícios durante suspensão','SELECT')
+        ('teacher_exercises','Apenas professores podem visualizar exercícios durante suspens','SELECT')
     ) as expected(tablename, policyname, command_name)
   loop
     if not exists (
