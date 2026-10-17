@@ -8,7 +8,7 @@ on:
       - "homework_pedagogical_preview.js"
       - "tests/fixtures/homeworks-stage5-visual/index.html"
       - "tests/fixtures/homeworks-stage5-visual.js"
-      - "tests/fixtures/homeworks-stage5-physical/offline.html"
+      - "tests/fixtures/homeworks-stage5-physical/offline/index.html"
       - "tests/test_homeworks_stage5_offline_fixture.py"
       - "scripts/homeworks_stage5_browser_visual_check.py"
       - ".github/workflows/homeworks-stage5-browser-visual.yml"
@@ -43,7 +43,7 @@ jobs:
           for target in (
               Path("tests/fixtures/homeworks-stage5-visual/index.html"),
               Path("tests/fixtures/homeworks-stage5-visual.js"),
-              Path("tests/fixtures/homeworks-stage5-physical/offline.html"),
+              Path("tests/fixtures/homeworks-stage5-physical/offline/index.html"),
               Path("scripts/homeworks_stage5_browser_visual_check.py"),
           ):
               assert not is_public(target), f"Accidentally public QA artifact: {target}"
