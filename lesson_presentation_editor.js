@@ -2,7 +2,7 @@
   "use strict";
 
   // Stage 2 of 5: source-controlled release gate. Never enable via URL,
-  // localStorage, browser globals, or a missing database table.
+  // browser-controlled settings or the absence of the database table.
   // Stage 5 must verify the production migration before setting this to true.
   const RELEASE_ENABLED = false;
   const TABLE = "lesson_presentations";
