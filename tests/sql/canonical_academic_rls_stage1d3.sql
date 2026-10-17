@@ -48,6 +48,20 @@ begin
     raise exception 'Missing academic event lookup index';
   end if;
 
+  if (select count(*) from pg_policies
+      where schemaname in ('public', 'private') and permissive = 'RESTRICTIVE') <> 0 then
+    raise exception 'Restored schema still contains unintended restrictive policies';
+  end if;
+
+  if (select count(*) from pg_policies
+      where schemaname in ('public', 'private')) <> 95 then
+    raise exception 'Restored schema has an unexpected number of RLS policies';
+  end if;
+
+  if has_table_privilege('anon','public.study_lesson_pages','SELECT') then
+    raise exception 'Unauthenticated users can access lesson pages';
+  end if;
+
   select count(*) into student_page_count
   from pg_policies p
   where p.schemaname = 'public'
