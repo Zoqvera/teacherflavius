@@ -61,7 +61,7 @@ jobs:
 
           docker exec -i "${DB_CONTAINER}" psql -X -U postgres -d postgres \
             -v ON_ERROR_STOP=1 \
-            < supabase/migrations/20261017015000_lesson_presentations_stage1.sql
+            < supabase/migrations/20261017133000_lesson_presentations_stage1.sql
 
           docker exec -i "${DB_CONTAINER}" psql -X -U postgres -d postgres \
             -v ON_ERROR_STOP=1 \

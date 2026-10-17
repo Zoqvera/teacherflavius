@@ -6,7 +6,7 @@ Esta etapa adiciona apenas a migracao SQL e testes de contrato. Nenhum component
 visual, rota, texto publico ou configuracao de SEO e alterado. A funcionalidade
 ainda nao deve ser disponibilizada aos alunos.
 
-A migracao `20261017015000_lesson_presentations_stage1.sql` e incremental:
+A migracao `20261017133000_lesson_presentations_stage1.sql` e incremental:
 nao altera tabelas de frequencia, mensalidades ou exercicios.
 
 ## Identidade da licao
@@ -90,3 +90,12 @@ todas as politicas e funcoes reais do projeto. Ela nao substitui uma
 branch remota reconstruida integralmente, nem autoriza cutover do historico
 ou execucao da nova migracao em producao. A PR permanece em rascunho,
 sem merge, ate a reconstrução integrada passar e a implantacao ser segura.
+
+## Revisão do identificador de migração — 17/10/2026
+
+O CI de drift rejeitou o identificador inicial `20261017015000` porque a
+última versão já registrada no ledger remoto era `20261017110321`.
+A migração incremental foi renomeada para `20261017133000`, sem alterar
+suas instruções SQL, preservando as verificações de ordenação por versão.
+A correção não representa reconciliação do histórico legado nem
+autorização para aplicar SQL no banco produtivo.
