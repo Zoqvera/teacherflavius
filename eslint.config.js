@@ -7,6 +7,7 @@ module.exports = [
       "academic_workflow_service.js",
       "o-que-fazer/app.js",
       "roteiro-da-aula/app.js",
+      "teacher_lesson_presentations.js",
       "conversation_question_card_renderer.js",
       "conversation_questions_service.js",
       "conversation-questions/app.js",
