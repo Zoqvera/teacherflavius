@@ -1,11 +1,6 @@
 module.exports = [
   {
     files: [
-      "homework_activity_model.js",
-      "homework_access_service.js",
-      "homework_admin_service.js",
-      "homework_student_interface.js",
-      "area-do-estudante/homeworks/foundation.js",
       "accessibility.js",
       "area_do_estudante.js",
       "student_review_invitation.js",
