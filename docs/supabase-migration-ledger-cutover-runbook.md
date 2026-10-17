@@ -4,6 +4,61 @@
 **Natureza:** roteiro de revisão, sem autorização para escrita em produção.  
 **Estado:** BLOQUEADO até aprovação de todos os pré-requisitos.
 
+## Diagnóstico atualizado — 17/10/2026 (somente leitura)
+
+A verificação direta encontrou **314 migrações no Supabase de produção**
+e **265 arquivos SQL** em `supabase/migrations/` da `main`.
+Pelo identificador de versão, há 197 correspondências, 117 versões
+registradas somente na produção e 68 arquivos somente no Git.
+Essa comparação nao comprova equivalencia do corpo SQL. Estes dados
+substituem as contagens históricas de 289 / 237 mencionadas adiante.
+
+A tentativa autorizada de criar a branch remota
+`lesson-presentations-stage1-validation` em 16/10 terminou com
+`MIGRATIONS_FAILED`. A branch estava sem as tabelas fundamentais
+`public.profiles` e `public.study_lesson_pages` apos a falha.
+Foi posteriormente excluida; a exclusao foi confirmada, evitando custo
+de computacao persistente. Esse resultado **não valida** a reconstrução do
+schema completo, embora testes sintéticos da migração de apresentações
+tenham passado em um subconjunto de estruturas fictícias.
+
+A leitura agregada de `supabase_migrations.schema_migrations`, sem
+exportar `statements`, nao encontrou declaracoes explicitas de
+`CREATE TABLE public.teacher_admins` nem da tabela base
+`public.profiles` sob o padrao conservador de reconhecimento.
+Ela encontrou uma declaracao para `study_lesson_pages`. A ausencia
+de correspondencia textual e um **indicador**, nao prova definitiva:
+DDL dinâmica, aspas ou expressões variantes podem nao ser identificadas.
+Por outro lado, `teacher_admins` e referenciada em multiplos registros
+do historico, o que requer analisar o ponto exato de falha do replay.
+
+Ha dois mecanismos distintos:
+- Branch criada no **Dashboard/API**: reproduz o historico SQL da
+  propria produção (`supabase_migrations.schema_migrations`).
+- Branch vinculada ao **GitHub**: reproduz os arquivos de migrations
+  do repositorio. Uma cadeia canônica descartável, fora do diretório
+  histórico, não corrige nenhum desses mecanismos automaticamente.
+
+A Action `Supabase migration reconciliation` consulta as declaracoes de
+fundação **dentro do PostgreSQL** e publica somente contagens e indicadores
+no artefato `branch-foundation-assessment.json`. O status
+`POSSIBLE_MISSING_FOUNDATION` indica bloqueio de diagnóstico;
+`FOUNDATION_DECLARATIONS_DETECTED` não comprova replay, segurança
+ou autorização para executar mudanças. Os dados SQL originais e
+registros de alunos nunca são exportados para Actions.
+
+**Próxima investigação segura:** consultar os logs da etapa `migrate`
+de uma branch com erro **antes de excluí-la**, identificar o primeiro
+comando que falhou, comparar as dependências do bootstrap com a produção
+sem expor o SQL histórico e construir uma cadeia alternativa isolada.
+Uma nova branch remota com custo exige autorização de custo.
+O eventual `migration repair` do ledger produtivo exige ainda backup
+restaurável e aprovação específica; não decorre deste relatório.
+
+Documentação Supabase:
+https://supabase.com/docs/guides/deployment/branching/dashboard
+https://supabase.com/docs/guides/troubleshooting/branch-in-migrations-failed-status
+
 ## Fronteira de segurança
 
 A produção mantém o histórico original em
