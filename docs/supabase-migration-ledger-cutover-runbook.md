@@ -326,3 +326,10 @@ Até esse ponto, **Automatic Branching permanece desativado**.
 Este procedimento trata exclusivamente de infraestrutura de banco e
 testes; não altera páginas públicas, URLs, metadados, sitemap, robots
 ou canonical.
+
+
+## ETAPA 1D.2 - diagnostico das politicas RLS
+
+O workflow protegido `Supabase canonical object inventory` passa a gerar `rls-posture-assessment.json` e diferencia mudancas de papeis/comandos das diferencas nos predicados `USING` e `WITH CHECK`. A consulta retorna exclusivamente nomes de politicas, papeis, comandos e hashes SHA256 das expressoes. A CI publica apenas contagens e amostras limitadas de identificadores.
+
+As diferencas encontradas nao autorizam alterar autorizacoes em producao nem demonstram equivalencia funcional. Possiveis ampliacoes de acesso exigem revisao prioritaria e testes com contas ficticias. PRs nao recebem credenciais de producao; a consulta comparativa acontece apenas no workflow protegido da branch principal. Permanecem bloqueados o ajuste do ledger produtivo e a PR #776 ate verificacao completa.

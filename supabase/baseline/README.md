@@ -160,3 +160,8 @@ Após esta correção isolada, permanecem pendentes outros objetos
 e definições identificados na auditoria estrutural da ETAPA 1C.
 Cada pacote adicional terá sua própria revisão funcional e segurança
 antes de integrar à reconstrução canônica.
+
+
+## ETAPA 1D.2 - armazenamento de verificacoes de contas
+
+O overlay `405_restore_auth_account_health_run_storage.sql` recupera apenas a tabela privada `private.auth_account_health_runs`, seu indice temporal e as permissoes de `service_role`, com SQL extraido literalmente da migracao `20260910163542_add_auth_account_health_monitoring.sql`. Ele nao instala funcoes de monitoramento nem agenda tarefas. A configuracao de producao dessa tabela privada nao possui RLS e nega acesso direto a `anon` e `authenticated`. A reconstrucao preserva essas caracteristicas. O overlay e validado em banco descartavel e nao modifica o historico de migracoes produtivo. O numero de overlays passa de 81 para 82, sem mudanca nas contagens de objetos publicos.
