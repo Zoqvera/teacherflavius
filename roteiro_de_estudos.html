@@ -250,7 +250,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const pageTitle = linkedPage && typeof linkedPage.title === "string"
         ? linkedPage.title.trim()
         : "";
-      return "Lição " + lessonNumber + (pageTitle ? " - " + pageTitle : "");
+      return ("Lição " + lessonNumber + (pageTitle ? " - " + pageTitle : "")).toLocaleUpperCase("pt-BR");
     }
 
     function renderLessons() {

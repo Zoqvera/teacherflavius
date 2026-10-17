@@ -45,7 +45,7 @@ function createRoadmapHarness() {
   return { grid, roadmap: window.roadmapTest };
 }
 
-test("all linked lessons use the same numbered title pattern", () => {
+test("all linked lessons use uppercase numbered titles", () => {
   const { grid, roadmap } = createRoadmapHarness();
   const pages = Array.from({ length: 33 }, (_, index) => ({
     id: "test-page-" + (index + 1),
@@ -64,7 +64,7 @@ test("all linked lessons use the same numbered title pattern", () => {
 
   assert.equal(titles.length, 33);
   pages.forEach((page, index) => {
-    assert.equal(titles[index], "Lição " + page.roadmap_lesson_number + " - " + page.title);
+    assert.equal(titles[index], "LIÇÃO " + page.roadmap_lesson_number + " - " + page.title.toLocaleUpperCase("pt-BR"));
   });
 });
 
@@ -72,15 +72,41 @@ test("formatting preserves registered titles and safely escapes them in cards", 
   const { grid, roadmap } = createRoadmapHarness();
   assert.equal(
     roadmap.formatLessonCardTitle(7, { title: "  Home sweet home  " }),
-    "Lição 7 - Home sweet home"
+    "LIÇÃO 7 - HOME SWEET HOME"
   );
-  assert.equal(roadmap.formatLessonCardTitle(7, null), "Lição 7");
+  assert.equal(roadmap.formatLessonCardTitle(7, null), "LIÇÃO 7");
 
   roadmap.setLinkedPages([
     { id: "test-page-1", roadmap_lesson_number: 1, title: "English & <pronouns>" }
   ]);
   roadmap.renderLessons();
 
-  assert.match(grid.innerHTML, /Lição 1 - English &amp; &lt;pronouns&gt;/);
+  assert.match(grid.innerHTML, /LIÇÃO 1 - ENGLISH &amp; &lt;PRONOUNS&gt;/);
   assert.doesNotMatch(grid.innerHTML, /English & <pronouns>/);
+
+  assert.match(
+    grid.innerHTML,
+    /<p class="lesson-description">Nesta aula, você vai aprender a se apresentar/
+  );
+  assert.doesNotMatch(grid.innerHTML, /NESTA AULA, VOCÊ VAI APRENDER/);
+});
+
+test("new card descriptions retain their original letter case", () => {
+  const { grid, roadmap } = createRoadmapHarness();
+  roadmap.setLinkedPages([
+    {
+      id: "test-page-25",
+      roadmap_lesson_number: 25,
+      title: "Feelings & Emotions",
+      objective: "Practice describing how you feel in English."
+    }
+  ]);
+  roadmap.renderLessons();
+
+  assert.match(grid.innerHTML, /LIÇÃO 25 - FEELINGS &amp; EMOTIONS/);
+  assert.match(
+    grid.innerHTML,
+    /<p class="lesson-description">Practice describing how you feel in English\.<\/p>/
+  );
+  assert.doesNotMatch(grid.innerHTML, /PRACTICE DESCRIBING HOW YOU FEEL/);
 });
