@@ -356,3 +356,27 @@ overlay. Para os testes Homeworks, o workflow instala as funcoes
 da migracao ja existente depois da estrutura, em banco
 descartavel. Nao se executa reconciliacao no ledger da producao,
 nem se habilita branching remoto de forma automatica.
+
+
+## ETAPA 1D.3 - causa-raiz de 81 divergencias RLS
+
+O catalogo de producao em 17/10/2026 registra **120 policies
+permissivas e zero restritivas**. Em contraste, o snapshot canônico
+`10_public_schema.sql` declara 85 policies como `AS RESTRICTIVE`;
+depois dos overlays ja existentes, 81 policies restritivas restam.
+Assim, a maior parte do alerta anterior de modos/papeis refere-se
+a um defeito de reconstrução, e nao necessariamente a mudanca de
+papel autenticado para anonimo.
+
+O overlay 415 corrige **somente** o modo das 81 policies no banco
+descartavel. O SQL valida quantidade, schema e role e confirma
+equivalencia exata de nomes, comandos, roles e predicados antes e
+depois da operacao. Se falhar, nenhuma edicao de producao e
+autorizada. O conjunto resultante ainda precisa de verificacao
+de acesso real para aluno, professor sem MFA e professor com MFA.
+
+As quatro policies de `study_lesson_pages` continuam divergentes
+quanto a `is_teacher_admin()` versus `is_teacher_admin_mfa()`.
+O padrao mais restritivo do bootstrap sera mantido ate
+homologacao e decisao expressa sobre MFA de edicao das licoes.
+Nenhuma migracao historica, dado real ou segredo e exportado.
