@@ -5,6 +5,9 @@ on:
     branches:
       - main
     paths:
+      - "supabase/baseline/**"
+      - "scripts/compile_canonical_supabase_bootstrap.py"
+      - ".github/workflows/validate-supabase-baseline.yml"
       - "scripts/sql/supabase_schema_object_inventory_readonly.sql"
       - "scripts/compare_supabase_object_inventories.py"
       - "tests/test_supabase_schema_object_inventory.py"
@@ -16,6 +19,9 @@ on:
     branches:
       - main
     paths:
+      - "supabase/baseline/**"
+      - "scripts/compile_canonical_supabase_bootstrap.py"
+      - ".github/workflows/validate-supabase-baseline.yml"
       - "scripts/sql/supabase_schema_object_inventory_readonly.sql"
       - "scripts/compare_supabase_object_inventories.py"
       - "tests/test_supabase_schema_object_inventory.py"
