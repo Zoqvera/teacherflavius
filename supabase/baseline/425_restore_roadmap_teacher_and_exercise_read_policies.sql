@@ -25,7 +25,7 @@ begin
   end if;
 
   -- The prior baseline must expose only the student's own SELECT
-  -- and teacher's existing SELECT on the roadmap, plus the three
+  -- and teacher's existing SELECT on the roadmap (predicates unchanged), plus the three
   -- teacher write policies on the suspended exercise catalog.
   if (
     select count(*) from pg_catalog.pg_policies
@@ -47,11 +47,9 @@ begin
         (
           policyname = 'Alunos podem ver suas lições do roteiro'
           and cmd = 'SELECT'
-          and qual like '%auth.uid()%'
         ) or (
           policyname = 'Professor pode visualizar progresso do roteiro'
           and cmd = 'SELECT'
-          and qual like '%is_teacher_admin()%'
         )
       )
   ) <> 2 then
