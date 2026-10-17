@@ -20,6 +20,7 @@ SCENARIOS = (
     ("grammar", "initial"),
     ("writing", "initial"),
     ("writing", "submitted"),
+    ("writing", "privacy_review"),
     ("writing", "evaluated"),
     ("reading", "evaluated"),
 )
