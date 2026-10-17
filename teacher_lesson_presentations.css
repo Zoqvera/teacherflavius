@@ -1,0 +1,90 @@
+/* Etapa 3/5 — cards de apresentações, ainda protegidos por release gate. */
+.academic-presentation-section {
+  margin-top: 18px;
+  padding: 16px 0;
+  border-top: 1px solid var(--academic-border);
+  border-bottom: 1px solid var(--academic-border);
+}
+
+.academic-presentation-heading {
+  color: var(--academic-text);
+  font-size: 14px;
+  letter-spacing: .04em;
+  margin: 0 0 12px;
+}
+
+.academic-presentation-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 0 0 10px;
+}
+
+.academic-presentation-received,
+.academic-presentation-view-state {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(129, 140, 248, .5);
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: #e0e7ff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.academic-presentation-received {
+  border-color: rgba(110, 231, 183, .5);
+  color: #bbf7d0;
+}
+
+.academic-presentation-meta,
+.academic-presentation-feedback {
+  color: var(--academic-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.academic-presentation-details {
+  background: rgba(2, 16, 43, .42);
+  border: 1px solid var(--academic-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 10px;
+}
+
+.academic-presentation-summary {
+  color: var(--academic-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.academic-presentation-summary:focus-visible {
+  outline: 3px solid #a5b4fc;
+  outline-offset: 4px;
+}
+
+.academic-presentation-body {
+  color: var(--academic-text);
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 14px 0 0;
+}
+
+.academic-presentation-feedback {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 720px) {
+  .academic-presentation-details {
+    padding: 12px;
+  }
+}
+
+@media print {
+  .academic-presentation-section {
+    display: none !important;
+  }
+}
