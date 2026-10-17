@@ -10,21 +10,24 @@ select '00000000-0000-0000-0000-000000000000'::uuid,
   case n
     when 1 then '11111111-1111-4111-8111-111111111111'::uuid
     when 2 then '22222222-2222-4222-8222-222222222222'::uuid
-    else '33333333-3333-4333-8333-333333333333'::uuid end,
+    when 3 then '33333333-3333-4333-8333-333333333333'::uuid
+    else '44444444-4444-4444-8444-444444444444'::uuid end,
   'authenticated', 'authenticated',
   'lesson-stage3-' || n || '@invalid.test',
   '', now(), now(), now()
-from generate_series(1, 3) n;
+from generate_series(1, 4) n;
 
 insert into public.profiles (id) values
   ('11111111-1111-4111-8111-111111111111'),
   ('22222222-2222-4222-8222-222222222222'),
-  ('33333333-3333-4333-8333-333333333333')
+  ('33333333-3333-4333-8333-333333333333'),
+  ('44444444-4444-4444-8444-444444444444')
 on conflict (id) do nothing;
 
 insert into public.teacher_admins (user_id, email)
-values ('33333333-3333-4333-8333-333333333333',
-        'lesson-stage3-3@invalid.test');
+values
+  ('33333333-3333-4333-8333-333333333333', 'lesson-stage3-3@invalid.test'),
+  ('44444444-4444-4444-8444-444444444444', 'lesson-stage3-4@invalid.test');
 
 select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -112,12 +115,18 @@ begin
     raise exception 'O texto sintético não gerou uma segunda revisão.';
   end if;
 
+  -- A different authorized teacher did not mark revision 1 before the edit.
+  -- The policy must reject a stale receipt, not merely a duplicate row.
+  select set_config('request.jwt.claim.sub',
+    '44444444-4444-4444-8444-444444444444', true);
   begin
     insert into public.lesson_presentation_views
       (presentation_id, revision_number, teacher_id)
     values (presentation_uuid, 1, auth.uid());
     raise exception 'Recibo da revisão antiga aceito.';
-  exception when unique_violation then null; end;
+  exception when insufficient_privilege or check_violation then null; end;
+  select set_config('request.jwt.claim.sub',
+    '33333333-3333-4333-8333-333333333333', true);
 
   insert into public.lesson_presentation_views
     (presentation_id, revision_number, teacher_id)
