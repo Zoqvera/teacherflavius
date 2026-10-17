@@ -53,10 +53,11 @@ class PresentationStage5BContractTests(unittest.TestCase):
         self.assertIn("max_age = timedelta(hours=24)", assessor)
         self.assertIn('"automatic_migration_allowed": False', assessor)
 
-    def test_automatic_rollout_is_restricted_to_one_main_workflow_change(self) -> None:
+    def test_rollout_requires_manual_dispatch_on_main(self) -> None:
         workflow = source(".github/workflows/lesson-presentations-stage5b-production.yml")
-        self.assertIn("branches:\n      - main", workflow)
-        self.assertIn("paths:\n      - '.github/workflows/lesson-presentations-stage5b-production.yml'", workflow)
+        self.assertNotIn("  push:", workflow)
+        self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
+        self.assertIn("CONFIRMO_APRESENTACOES_5B", workflow)
         self.assertIn("workflow_dispatch:", workflow)
         self.assertIn("permissions:\n  contents: read\n  actions: read", workflow)
         self.assertIn("cancel-in-progress: false", workflow)
