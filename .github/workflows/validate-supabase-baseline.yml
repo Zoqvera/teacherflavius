@@ -187,7 +187,8 @@ jobs:
             supabase/baseline/400_justify_attended_cancelled_lesson_revocations.sql \
             supabase/baseline/405_restore_auth_account_health_run_storage.sql \
             supabase/baseline/410_restore_academic_relationship_event_storage.sql \
-            supabase/baseline/415_reconcile_canonical_policy_modes.sql
+            supabase/baseline/415_reconcile_canonical_policy_modes.sql \
+            supabase/baseline/420_reconcile_financial_mfa_policies.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -287,6 +288,16 @@ jobs:
           test -n "$DB_CONTAINER"
           docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
             -v ON_ERROR_STOP=1 < tests/sql/canonical_academic_rls_stage1d3.sql
+
+      - name: Verify financial MFA policies against production posture
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" \
+            psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < tests/sql/canonical_financial_mfa_stage1d4.sql
 
       - name: Verify least-privilege browser ACLs
         shell: bash
