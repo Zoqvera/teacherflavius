@@ -25,6 +25,20 @@ Não confundir **simulação de tela corrigida** com nota retornada por serviço
 5. Para estados demonstrativos, utilizar `state=initial`, `submitted`, `privacy_review` ou `evaluated`; testar também `activity=reading` e `activity=grammar`. Em Reading/Grammar, o leitor deve anunciar **o texto integral da pergunta**, não apenas 'Questão 1'.
 6. Não usar o endereço de produção do módulo como substituto: a liberação de estudantes deve continuar desligada. PWA e falhas de rede com backend exigem estágio protegido separado.
 
+## B.1. Bancada autossuficiente para Android e desktop, sem servidor
+
+Para diminuir a dependência de um computador na primeira rodada de testes físicos, foi criada uma **cópia independente da interface real** em `tests/fixtures/homeworks-stage5-physical/offline/index.html`. Os módulos versionados de interface e estilo são incorporados ao mesmo arquivo, com dados inventados. O serviço é **simulado**, rejeita submissões e não acessa Supabase, OpenAI, Analytics nem qualquer outra API.
+
+1. Baixar o arquivo **RAW** com extensão `.html` no GitHub (não abrir a visualização de código, que não executa scripts). Caminho no repositório: `tests/fixtures/homeworks-stage5-physical/offline/index.html`.
+2. No Android, usar o aplicativo de arquivos para abrir o HTML com Chrome ou um navegador compatível com arquivos locais. Se a versão do Android bloquear abertura local, registrar **BLOQUEADO** e seguir pelo procedimento USB + `adb reverse` da seção B; não publicar a bancada para contornar a restrição.
+3. No próprio arquivo, escolher **Tipo de atividade** e **Situação fictícia**, tocar em **Abrir cenário**, habilitar TalkBack nas configurações de acessibilidade e percorrer os títulos, perguntas e controles. Para testar o retorno à lista, escolher `Lista de atividades`.
+4. Preencher os resultados observados (Aprovado/Falhou/Não executado) e tocar em **Gerar relatório de texto**. O relatório é gerado localmente, sem envio automático. Não introduzir nomes, e-mails ou redações reais.
+5. Repetir no Windows com NVDA/teclado caso haja dispositivo compatível. O funcionamento do navegador na bancada é **evidência física parcial**, não aprovação da versão autenticada nem da LGPD.
+
+**Garantias técnicas da bancada:** CSP com `connect-src 'none'` e `default-src 'none'`, ausência de recursos externos, `noindex` e exclusão do diretório `tests` do build público. O CI valida que o arquivo corresponde exatamente aos módulos versionados e roda cenários sintéticos em Chrome; **não avalia a voz de TalkBack/NVDA**.
+
+**SEO:** o arquivo está fora da publicação do site, não altera `/privacidade/`, canonical, sitemap, indexação ou links públicos. Qualquer exposição desse arquivo como rota pública exigirá aprovação separada.
+
 ## C. Casos de teste e critérios de aceite
 
 Registrar **APROVADO / REPROVADO / BLOQUEADO**, nunca preencher antecipadamente como aprovado.

@@ -13,6 +13,7 @@ from urllib.parse import urlencode
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests" / "fixtures" / "homeworks-stage5-visual" / "index.html"
+OFFLINE_FIXTURE = ROOT / "tests" / "fixtures" / "homeworks-stage5-physical" / "offline" / "index.html"
 ARTIFACTS = ROOT / "_homeworks_visual_artifacts"
 VIEWPORTS = (("mobile", 390, 844), ("compact", 320, 740), ("desktop", 1280, 900))
 SCENARIOS = (
@@ -45,10 +46,13 @@ def dimensions(image: Path) -> tuple[int, int]:
 
 
 def assert_scenario(browser: str, viewport: tuple[str, int, int],
-                    activity: str, state: str) -> None:
+                    activity: str, state: str, offline: bool = False) -> None:
     label, width, height = viewport
-    artifact = ARTIFACTS / f"{label}-{activity}-{state}.png"
-    url = FIXTURE.as_uri() + "?" + urlencode({"activity": activity, "state": state})
+    prefix = "offline-" if offline else ""
+    artifact = ARTIFACTS / f"{prefix}{label}-{activity}-{state}.png"
+    fixture = OFFLINE_FIXTURE if offline else FIXTURE
+    separator = "#" if offline else "?"
+    url = fixture.as_uri() + separator + urlencode({"activity": activity, "state": state})
     cmd = [
         browser, "--headless=new", "--no-sandbox", "--disable-gpu",
         "--disable-dev-shm-usage", "--no-first-run", "--no-default-browser-check",
@@ -104,7 +108,16 @@ def main() -> int:
         for activity, state in SCENARIOS:
             assert_scenario(browser, viewport, activity, state)
             count += 1
-    print(f"PASS: {count} headless browser scenarios with actual student UI and no network.")
+    for activity, state in (
+        ("reading", "list"),
+        ("reading", "initial"),
+        ("writing", "initial"),
+        ("writing", "privacy_review"),
+        ("writing", "evaluated"),
+    ):
+        assert_scenario(browser, VIEWPORTS[0], activity, state, offline=True)
+        count += 1
+    print(f"PASS: {count} headless scenarios; 5 use the standalone offline fixture.")
     return 0
 
 
