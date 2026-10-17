@@ -52,6 +52,7 @@ module.exports = [
       "global_logout.js",
       "student_access_service.js",
       "student_access_renderer.js",
+      "lesson_presentation_editor.js",
       "study_lesson_service.js",
       "criar_licao.js",
       "licao.js",

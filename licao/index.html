@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="/study_lesson_page.css?v=20261016-all-lessons-compact-1">
   <link rel="stylesheet" href="/academic_workflow.css?v=20261004-1">
   <link rel="stylesheet" href="/student_preparation_flow.css?v=20261015-2">
+  <link rel="stylesheet" href="/lesson_presentation_editor.css?v=20261017-stage2-1">
 </head>
 <body class="auth-checking">
   <!-- Google Tag Manager (noscript) -->
@@ -124,6 +125,18 @@
           referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </section>
 
+      <section id="lessonPresentationSection" class="lesson-content-card lesson-presentation-card" aria-labelledby="lessonPresentationTitle" hidden>
+        <h2 id="lessonPresentationTitle" class="lesson-presentation-title">MINHA APRESENTAÇÃO</h2>
+        <p class="lesson-presentation-description">Escreva ou cole o texto que você apresentará na aula. Você poderá editá-lo depois de enviar.</p>
+        <form id="lessonPresentationForm" class="lesson-presentation-form">
+          <label for="lessonPresentationBody" class="lesson-presentation-label">TEXTO DA APRESENTAÇÃO</label>
+          <textarea id="lessonPresentationBody" class="lesson-presentation-textarea" name="presentation" maxlength="15000" rows="8" aria-describedby="lessonPresentationCount lessonPresentationStatus" placeholder="Digite ou cole sua apresentação aqui." required></textarea>
+          <p id="lessonPresentationCount" class="lesson-presentation-counter" aria-live="polite">0 / 15000</p>
+          <button id="lessonPresentationSubmit" class="lesson-presentation-submit" type="submit" disabled>ENVIAR APRESENTAÇÃO</button>
+          <p id="lessonPresentationStatus" class="lesson-presentation-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
       <section id="lessonPreparationSection" class="lesson-content-card academic-preparation-card" hidden>
         <div id="lessonLegacyPreparationContent">
           <p class="lesson-section-kicker">PREPARAÇÃO</p>
@@ -145,7 +158,8 @@
   <script src="/study_lesson_service.js?v=20261004-full-content-1"></script>
   <script src="/academic_workflow_service.js?v=20261004-1"></script>
   <script src="/student_preparation_flow.js?v=20261016-general-release-1"></script>
-  <script src="/licao.js?v=20261015-prepared-on-next-1"></script>
+  <script src="/lesson_presentation_editor.js?v=20261017-stage2-1"></script>
+  <script src="/licao.js?v=20261017-presentation-stage2-1"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>

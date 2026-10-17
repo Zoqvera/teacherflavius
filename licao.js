@@ -111,6 +111,17 @@
     }
   }
 
+  async function setupLessonPresentation(studentId, lessonNumber, pageId) {
+    const editor = window.LessonPresentationEditor;
+    if (!editor || editor.enabled !== true) return;
+    await editor.mount({
+      studentId: studentId,
+      lessonNumber: lessonNumber,
+      pageId: pageId,
+      getClient: function () { return window.Auth.getClient(); }
+    });
+  }
+
   function showDynamicSections(visible) {
     document.querySelectorAll(".dynamic-lesson-section").forEach(function (section) {
       section.hidden = !visible;
@@ -256,16 +267,18 @@
     }
   }
 
-  async function loadByLessonNumber(service, lessonNumber) {
+  async function loadByLessonNumber(service, lessonNumber, studentId) {
     const linkedPage = await service.getLinkedPageByLessonNumber(lessonNumber);
     if (linkedPage) {
       renderDynamicPage(linkedPage);
+      await setupLessonPresentation(studentId, lessonNumber, null);
       await setupPreparation(lessonNumber);
       await setupRoadmapNavigation(service, lessonNumber);
       return true;
     }
 
     if (renderLegacyLesson(lessonNumber)) {
+      await setupLessonPresentation(studentId, lessonNumber, null);
       await setupPreparation(lessonNumber);
       await setupRoadmapNavigation(service, lessonNumber);
       return true;
@@ -274,7 +287,7 @@
     return false;
   }
 
-  async function loadByPageId(service, pageId) {
+  async function loadByPageId(service, pageId, studentId) {
     if (!window.StudyLessonService.isValidPageId(pageId)) return false;
     const page = await service.getPage(pageId);
     if (!page) return false;
@@ -283,6 +296,7 @@
     const lessonNumber = window.AcademicWorkflowService.normalizeLessonNumber(
       page.roadmap_lesson_number
     );
+    await setupLessonPresentation(studentId, lessonNumber, lessonNumber ? null : page.id);
     await setupPreparation(lessonNumber);
     await setupRoadmapNavigation(service, Number(page.roadmap_lesson_number));
     return true;
@@ -323,8 +337,8 @@
 
     try {
       let loaded = false;
-      if (lessonNumber) loaded = await loadByLessonNumber(lessonService, lessonNumber);
-      else if (pageId) loaded = await loadByPageId(lessonService, pageId);
+      if (lessonNumber) loaded = await loadByLessonNumber(lessonService, lessonNumber, session.user.id);
+      else if (pageId) loaded = await loadByPageId(lessonService, pageId, session.user.id);
 
       if (!loaded) {
         setStatus("Esta lição não está disponível para sua conta.", true);
