@@ -249,3 +249,25 @@ adicional de suas tabelas e dos módulos respectivos. Nenhuma regra
 RLS deve ser copiada antes de recuperar seu objeto, suas relações,
 permissões e fluxos de autorização. A divergência das quatro
 políticas de páginas de lição permanece pendente de decisão de MFA.
+
+
+## ETAPA 1D.4B — recuperação das quatro policies de tabelas existentes
+
+O overlay `425_restore_roadmap_teacher_and_exercise_read_policies.sql`
+recompõe **exclusivamente no bootstrap descartável** quatro políticas
+que existem na produção, mas não no esquema canônico:
+as três operações de edição do progresso do roteiro executáveis
+apenas pelo professor e a consulta do catálogo antigo de exercícios
+restrita ao professor durante sua suspensão. O SQL segue as migrações
+já revisadas `20260909071400_restrict_study_roadmap_completion_to_teacher.sql`
+e `20261015135322_suspend_legacy_student_exercise_portal.sql`.
+
+O aluno continua com acesso SELECT somente ao próprio progresso;
+nenhuma política de mutação direta do aluno foi recriada. O portal
+de exercícios antigo continua inacessível a alunos. O restore aborta
+se as tabelas estiverem sem RLS ou se o conjunto de políticas de
+origem divergir do esperado. Há verificação SQL real no CI.
+
+O bootstrap passa a **86 overlays e 95 policies**: as 25 políticas
+produtivas restantes exigem reconstruir primeiro suas tabelas
+e dependências. Não se aplicam migrações nem grants na produção.
