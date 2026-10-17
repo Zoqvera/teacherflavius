@@ -9,19 +9,34 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
+_UTC_TIMESTAMP_PATTERN = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
+    r"(?:\.\d{1,6})?(?:Z|\+00(?::?00)?)"
+)
+
+
 def _utc_timestamp(value: object, name: str) -> datetime:
-    if not isinstance(value, str):
-        raise ValueError(f"{name} must be a UTC timestamp.")
+    """Parse UTC ISO 8601 timestamps from both GitHub and PostgreSQL.
+
+    GitHub report timestamps end in Z; PostgreSQL jsonb timestamp values
+    include a numeric UTC offset and may contain fractional seconds.
+    Require an explicit UTC offset to prevent local-time ambiguity.
+    """
+    if not isinstance(value, str) or not _UTC_TIMESTAMP_PATTERN.fullmatch(value):
+        raise ValueError(f"Invalid {name} UTC timestamp.")
     try:
-        parsed = datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as error:
-        raise ValueError(f"Invalid {name} timestamp.") from error
-    return parsed.replace(tzinfo=timezone.utc)
+        raise ValueError(f"Invalid {name} UTC timestamp.") from error
+    if parsed.tzinfo is None or parsed.utcoffset() != timedelta(0):
+        raise ValueError(f"Invalid {name} UTC timestamp.")
+    return parsed.astimezone(timezone.utc)
 
 
 def assess(report: dict[str, object], *, now: datetime) -> dict[str, object]:
