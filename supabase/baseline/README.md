@@ -212,3 +212,16 @@ no bootstrap. A mudanca remove um bloqueio de funcionamento causado
 por combinacao inadequada de policies RLS na reconstrução, sem
 modificar a producao. Para equivalencia de seguranca, continuam
 necessarios testes autenticados e auditoria das outras divergencias.
+
+
+### Quatro policies obsoletas da reconstrucao
+
+O restore inicialmente encontrou 85 policies restritivas, nao 81.
+Quatro delas nao existem no catalogo da producao: duas antigas
+policies de edicao de `study_roadmap_completion`, uma de consulta
+a `teacher_admins` e uma de consulta a `teacher_exercises`.
+O overlay 415 exige a presenca dessas quatro policies com nomes,
+operacoes e papel esperados, descarta apenas essas quatro no
+ambiente descartavel, e converte as 81 restantes.
+O numero final de policies fica em **91** (120 na producao,
+29 ainda ausentes no baseline). Nenhuma policy produtiva e apagada.
