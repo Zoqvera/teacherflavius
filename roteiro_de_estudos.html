@@ -246,14 +246,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return originalCards.concat(createdCards);
     }
 
+    function formatLessonCardTitle(lessonNumber, linkedPage) {
+      const pageTitle = linkedPage && typeof linkedPage.title === "string"
+        ? linkedPage.title.trim()
+        : "";
+      return "Lição " + lessonNumber + (pageTitle ? " - " + pageTitle : "");
+    }
+
     function renderLessons() {
       const grid = document.getElementById("lessonsGrid");
       const cards = roadmapLessonNumbers().map(function (lessonNumber) {
         const lessonId = "lesson-" + lessonNumber;
         const linkedPage = linkedLessonPages.get(lessonNumber);
-        const title = linkedPage && lessonNumber > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT
-          ? "Lição " + lessonNumber + " — " + linkedPage.title
-          : "Lição " + lessonNumber;
+        const title = formatLessonCardTitle(lessonNumber, linkedPage);
         const isDone = completedLessons.get(lessonId) === true;
 
         return (
