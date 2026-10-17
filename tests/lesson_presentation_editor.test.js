@@ -152,7 +152,7 @@ test("inserts only ownership, lesson identity and text, then edits only body", a
   };
   assert.equal(await ctl.save(), true);
   assert.equal(db.calls[2].type, "update");
-  assert.deepEqual(db.calls[2].payload, { body: "My revised presentation." });
+  assert.deepEqual(Object.entries(db.calls[2].payload), [["body", "My revised presentation."]]);
   assert.ok(db.calls[2].filters.some(([key, value]) => key === "revision_number" && value === 1));
   assert.ok(db.calls[2].filters.some(([key, value]) => key === "student_id" && value === AUTHOR));
   assert.equal(dom.status.dataset.tone, "success");
