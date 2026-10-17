@@ -31,8 +31,8 @@ executa nenhuma outra migração do diretório.
 ## Implantação
 
 O workflow `.github/workflows/lesson-presentations-stage5b-production.yml`
-é iniciado ao integrar pela primeira vez esse arquivo na `main`.
-Ele também aceita disparo manual, mediante a confirmação
+não executa migrações ao integrar a PR. Deve ser iniciado **manualmente**
+pelo GitHub Actions, na branch `main`, com a confirmação
 `CONFIRMO_APRESENTACOES_5B`. Reexecuções não reaplicam as migrações,
 porque o preflight bloqueia catálogos diferentes do estado original.
 
