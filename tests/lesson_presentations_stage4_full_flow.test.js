@@ -184,8 +184,8 @@ test("complete browser-module cycle: submit, receive, open, revise and re-read",
   const database = dataApi();
   const student = moduleFrom(studentSource, "LessonPresentationEditor");
   const teacher = moduleFrom(teacherSource, "TeacherLessonPresentations");
-  assert.equal(student.enabled, false);
-  assert.equal(teacher.enabled, false);
+  assert.equal(student.enabled, true);
+  assert.equal(teacher.enabled, true);
 
   const fields = dom();
   const editor = student.create({
@@ -270,13 +270,15 @@ test("conflicting sessions preserve the unsaved draft instead of overwriting", a
   assert.equal(database.versions.length, 2);
 });
 
-test("guarded pages, mobile styles, accessibility and route identity remain intact", async () => {
+test("released pages, mobile styles, accessibility and route identity remain intact", async () => {
   const student = moduleFrom(studentSource, "LessonPresentationEditor");
   const teacher = moduleFrom(teacherSource, "TeacherLessonPresentations");
-  assert.equal(await student.mount({ getClient: () => { throw new Error("Must stay locked"); } }), false);
-  assert.equal(await teacher.loadPlan([rosterRow()], () => {
-    throw new Error("Must stay locked");
-  }, TEACHER), null);
+  assert.equal(await student.mount(null), false);
+  const database = dataApi();
+  const result = await teacher.loadPlan(
+    [rosterRow()], () => database.client(TEACHER), TEACHER
+  );
+  assert.equal(result.records.size, 0);
 
   assert.equal(student.lessonIdentity(12, PAGE).key, "lesson:12");
   assert.equal(student.lessonIdentity(null, PAGE).key, "page:" + PAGE);
