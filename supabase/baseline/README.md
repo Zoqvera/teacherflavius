@@ -167,32 +167,6 @@ antes de integrar à reconstrução canônica.
 O overlay `405_restore_auth_account_health_run_storage.sql` recupera apenas a tabela privada `private.auth_account_health_runs`, seu indice temporal e as permissoes de `service_role`, com SQL extraido literalmente da migracao `20260910163542_add_auth_account_health_monitoring.sql`. Ele nao instala funcoes de monitoramento nem agenda tarefas. A configuracao de producao dessa tabela privada nao possui RLS e nega acesso direto a `anon` e `authenticated`. A reconstrucao preserva essas caracteristicas. O overlay e validado em banco descartavel e nao modifica o historico de migracoes produtivo. O numero de overlays passa de 81 para 82, sem mudanca nas contagens de objetos publicos.
 
 
-## ETAPA 1D.3 - armazenamento academico e preservacao de MFA
-
-O overlay `410_restore_academic_relationship_event_storage.sql`
-restaura somente a tabela publica `homework_relationship_events`, o
-indice de consulta e as permissoes/constraints da migracao
-`20261016144000_homeworks_formal_relationship_retention.sql`.
-A tabela possui RLS habilitada, nenhuma policy que permita acesso
-direto pelo navegador e REVOKE explicito para `anon` e
-`authenticated` na tabela e sequencia. Nao insere eventos, nao
-modifica alunos, nao ativa retencao, exclusao ou processos agendados.
-As rotinas restantes da migracao historica continuam sendo aplicadas
-nos testes Homeworks em ambiente descartavel, sem recriar a tabela.
-
-O fingerprint contabiliza uma tabela publica, cinco constraints e
-um indice independente adicional: 53 tabelas, 271 constraints e 117
-indices nao associados a constraints, com 84 overlays canonicos.
-A evidencia nao comprova equivalencia integral com a producao.
-
-As quatro policies `study_lesson_pages` do bootstrap mantem a
-funcao `is_teacher_admin_mfa()`, embora a consulta apenas de leitura
-tenha encontrado `is_teacher_admin()` nas quatro policies homonimas
-da producao em 17/10/2026. A divergencia fica registrada como
-diferenca **de autorizacao a revisar**, sem substituir a exigencia
-de MFA no bootstrap e sem alterar as policies de producao.
-
-
 ## ETAPA 1D.3 - reconciliacao dos modos das policies
 
 O overlay `415_reconcile_canonical_policy_modes.sql` existe **apenas na

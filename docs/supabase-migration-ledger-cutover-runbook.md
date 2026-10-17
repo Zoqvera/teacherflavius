@@ -335,7 +335,7 @@ O workflow protegido `Supabase canonical object inventory` passa a gerar `rls-po
 As diferencas encontradas nao autorizam alterar autorizacoes em producao nem demonstram equivalencia funcional. Possiveis ampliacoes de acesso exigem revisao prioritaria e testes com contas ficticias. PRs nao recebem credenciais de producao; a consulta comparativa acontece apenas no workflow protegido da branch principal. Permanecem bloqueados o ajuste do ledger produtivo e a PR #776 ate verificacao completa.
 
 
-## ETAPA 1D.3 - diferencas de permissao e restauracao academica
+## ETAPA 1D.3 - diferencas de permissao
 
 A analise das quatro policies da tabela `public.study_lesson_pages`
 identificou diferenca concreta entre `is_teacher_admin_mfa()`
@@ -348,14 +348,6 @@ do comportamento das quatro operacoes.
 As outras 81 diferencas na categoria papeis/comandos permanecem
 pendentes de comparacao semantica por policy. O resultado de zero
 ampliacoes detectadas automaticamente **nao** certifica seguranca.
-
-O pacote de armazenamento academico `410` e apenas a primeira
-peca do modulo de eventos de encerramento formal. Funcoes de
-monitoramento e rotinas de retencao nao sao ativadas por este
-overlay. Para os testes Homeworks, o workflow instala as funcoes
-da migracao ja existente depois da estrutura, em banco
-descartavel. Nao se executa reconciliacao no ledger da producao,
-nem se habilita branching remoto de forma automatica.
 
 
 ## ETAPA 1D.3 - causa-raiz de 81 divergencias RLS

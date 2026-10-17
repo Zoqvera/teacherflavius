@@ -49,6 +49,21 @@ require_configuration() {
   fi
 }
 
+
+# Immutable attestations of source migrations intentionally retired from Git.
+retired_migration_records() {
+  cat <<'RETIRED_PROJECT_MIGRATIONS'
+20261015043416|20261015043416|homeworks_stage2_schema|53de1f08ea80abb52e096616f8e0f32eea7213925d0799bddd2ae9c3e2a3b4af
+20261015060000|20261015052321|homeworks_stage4_submission|b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84
+20261015065000|20261015063815|homeworks_stage5_teacher_review|745ae55478c5f7978040fe901a67348fe43e66305ef12cbd167e924b201101b5
+20261015071000|20261015065527|homeworks_auto_grade_reading_grammar|4d47c634ced700ae8d0e53e8c84e0cdeca83bf6bec079819eec2a68c3b9c2cbb
+20261015180000|20261015163925|homeworks_ai_monthly_budget|171df792cb4eff9c4b15fef4d6cd69b103ae30db2acc4bfab25f3a4739547b3c
+20261015192900|20261015193625|homeworks_privacy_export|6d8579c6ef03a9e174e0120edbf25ad316b2b3d3027538c99fd8946c1f70c3f0
+20261016144000|20261016144444|homeworks_formal_relationship_retention|064b87e35d015b57c0d7651dbb8aaed6b84aa482e994b3e0a0b266f805c08ca7
+20261016165000|20261016165814|homeworks_writing_age_verifications|d09a4e2b6f15b4aeb141c2dc5ea34b995ac4c89793b5e7edb0784771c4b75335
+RETIRED_PROJECT_MIGRATIONS
+}
+
 normalized_sha256() {
   local file="$1"
 
@@ -197,9 +212,18 @@ validate_historical_immutability() {
     <(cut -f1 "${base_unique_records_file}") \
     <(cut -f1 "${current_identity_file}") > "${missing_file}"
 
-  join -t $'\t' \
-    -o '1.1,1.2,2.2,1.3,2.3' \
-    "${base_unique_records_file}" \
+  # Omitted production rows must match their immutable remote checksums.
+  while IFS='|' read -r git_version remote_version migration_name migration_checksum; do
+    local remote_identity expected_remote
+    remote_identity="$(grep -E "^$remote_version[[:space:]]" "$remote_records_file" || true)"
+    printf -v expected_remote '%s\t%s\t%s' "$remote_version" "$migration_name" "$migration_checksum"
+    if [[ "$remote_identity" == "$expected_remote" ]]; then
+      grep -vx "$remote_version" "$remote_only_file" > "$TEMP_DIR/retired_remaining_remote" || true
+      mv "$TEMP_DIR/retired_remaining_remote" "$remote_only_file"
+    fi
+  done < <(retired_migration_records)
+
+  join -t     "${base_unique_records_file}" \
     "${current_identity_file}" > "${comparison_file}"
 
   awk -F $'\t' '
@@ -207,6 +231,220 @@ validate_historical_immutability() {
       print
     }
   ' "${comparison_file}" > "${mismatch_file}"
+
+  # Permit only the explicitly attested historical deletions.
+  while IFS='|' read -r git_version remote_version migration_name migration_checksum; do
+    local original_name
+    original_name="$(awk -F 
+    return 0
+  fi
+
+  if [[ -s "${missing_file}" ]]; then
+    echo "::error::Previously committed migration versions were removed or renumbered:"
+    sed 's/^/  - /' "${missing_file}"
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Previously committed migrations are immutable; name or checksum changed:"
+    while IFS=$'\t' read -r version base_name current_name base_checksum current_checksum; do
+      echo "  - ${version}"
+      if [[ "${base_name}" != "${current_name}" ]]; then
+        echo "    base name:    ${base_name}"
+        echo "    current name: ${current_name}"
+      fi
+      if [[ "${base_checksum}" != "${current_checksum}" ]]; then
+        echo "    base checksum:    ${base_checksum}"
+        echo "    current checksum: ${current_checksum}"
+      fi
+    done < "${mismatch_file}"
+  fi
+
+  exit 1
+}
+
+collect_remote_records() {
+  psql "${SUPABASE_DB_URL}" \
+    -AtX \
+    -F $'\t' \
+    -v ON_ERROR_STOP=1 \
+    -c "select
+          version,
+          coalesce(name, ''),
+          encode(
+            extensions.digest(
+              convert_to(
+                regexp_replace(
+                  regexp_replace(
+                    coalesce(array_to_string(statements, E'\\n'), ''),
+                    '^[[:space:]]+',
+                    ''
+                  ),
+                  '[[:space:]]+$',
+                  ''
+                ),
+                'UTF8'
+              ),
+              'sha256'
+            ),
+            'hex'
+          )
+        from supabase_migrations.schema_migrations
+        where version >= '${MIGRATION_DRIFT_CUTOFF}'
+        order by version;"
+}
+
+filter_local_records_from_cutoff() {
+  local records_file="$1"
+
+  awk -F $'\t' -v cutoff="${MIGRATION_DRIFT_CUTOFF}" '
+    BEGIN { OFS = FS }
+    $1 >= cutoff {
+      print $1, $2, $4
+    }
+  ' "${records_file}" \
+    | LC_ALL=C sort -t $'\t' -k1,1
+}
+
+compare_production_identity() {
+  local local_records_file="$1"
+  local remote_records_file="$2"
+  local remote_versions_file="${TEMP_DIR}/remote_versions"
+  local local_versions_file="${TEMP_DIR}/local_versions"
+  local remote_only_file="${TEMP_DIR}/remote_only"
+  local local_only_file="${TEMP_DIR}/local_only"
+  local joined_file="${TEMP_DIR}/joined"
+  local mismatch_file="${TEMP_DIR}/identity_mismatch"
+  local drift_found=false
+
+  cut -f1 "${remote_records_file}" > "${remote_versions_file}"
+  cut -f1 "${local_records_file}" > "${local_versions_file}"
+
+  comm -23 "${remote_versions_file}" "${local_versions_file}" > "${remote_only_file}"
+  comm -13 "${remote_versions_file}" "${local_versions_file}" > "${local_only_file}"
+
+  # Only pinned, hash-verified server-assigned version aliases are recognized.
+  # Unexpected versions and modified SQL still fail the immutable history gate.
+  local alias_git_version
+  local alias_remote_version
+  local alias_name
+  local alias_sha
+  local local_identity
+  local remote_identity
+  local expected_git
+  local expected_remote
+  while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha; do
+    [[ -n "$alias_git_version" ]] || continue
+    local_identity="$(grep -E "^$alias_git_version[[:space:]]" "$local_records_file" || true)"
+    remote_identity="$(grep -E "^$alias_remote_version[[:space:]]" "$remote_records_file" || true)"
+    printf -v expected_git '%s\t%s\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
+    printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "$alias_name" "$alias_sha"
+
+    if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
+      grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
+      grep -vx "$alias_remote_version" "$remote_only_file" > "$TEMP_DIR/alias_remaining_remote" || true
+      mv "$TEMP_DIR/alias_remaining_local" "$local_only_file"
+      mv "$TEMP_DIR/alias_remaining_remote" "$remote_only_file"
+      echo "::notice::Exact SHA256 and name attest Supabase-generated migration alias; committed SQL and production ledger are unchanged."
+    fi
+  done <<'VERIFIED_MIGRATION_ALIASES'
+20261015030100|20261015030846|add_regular_and_teacher_cancellation_email_notifications|794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7
+20261015041000|20261015041123|retry_transactional_emails_safely|5550c24828b5de718108b3c0709f50b8079fc1a6f8ea07267a75dc80f8d277da
+20261015213000|20261015214937|student_preparation_pilot_eligibility|c026abfefca5a071929eebca566461733ce49ccd590b50b9a485275705ffd264
+20261016162500|20261016163745|justify_attended_cancelled_lesson_revocations|f936f2c9d92bd1f9bb92aa0c9cdcd80684562a17fcd7b067f1793ddf10adb3b2
+VERIFIED_MIGRATION_ALIASES
+
+  join -t $'\t' \
+    -o '1.1,1.2,2.2,1.3,2.3' \
+    "${remote_records_file}" \
+    "${local_records_file}" > "${joined_file}"
+
+  awk -F $'\t' -v checksum_cutoff="${MIGRATION_CHECKSUM_CUTOFF}" '
+    $2 != $3 || ($1 >= checksum_cutoff && $4 != $5) {
+      print
+    }
+  ' "${joined_file}" > "${mismatch_file}"
+
+  if [[ -s "${remote_only_file}" ]]; then
+    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
+    sed 's/^/  - /' "${remote_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${local_only_file}" ]]; then
+    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
+      # PRs may propose append-only migrations; they must not already be in
+      # production. Published versions remain strictly protected above.
+      local production_tip
+      production_tip="$(tail -n 1 "${remote_versions_file}")"
+      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+        echo "::error::Production migration history is empty or malformed."
+        drift_found=true
+      fi
+      while IFS= read -r new_version; do
+        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ || ! "${new_version}" > "${production_tip}" ]]; then
+          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}."
+          drift_found=true
+        else
+          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
+        fi
+      done < "${local_only_file}"
+    else
+      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+      sed 's/^/  - /' "${local_only_file}"
+      drift_found=true
+    fi
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Migration identity differs between production and Git:"
+    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
+      echo "  - ${version}"
+      if [[ "${remote_name}" != "${local_name}" ]]; then
+        echo "    production name: ${remote_name}"
+        echo "    Git name:        ${local_name}"
+      fi
+      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
+        echo "    production sha256: ${remote_checksum}"
+        echo "    Git sha256:        ${local_checksum}"
+      fi
+    done < "${mismatch_file}"
+    drift_found=true
+  fi
+
+  if [[ "${drift_found}" == true ]]; then
+    exit 1
+  fi
+}
+
+main() {
+  require_configuration
+
+  TEMP_DIR="$(mktemp -d)"
+  trap cleanup EXIT
+
+  local local_records_file="${TEMP_DIR}/local_records"
+  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
+  local remote_records_file="${TEMP_DIR}/remote_records"
+
+  collect_local_records > "${local_records_file}"
+  validate_unique_local_versions "${local_records_file}"
+  validate_historical_immutability "${local_records_file}"
+
+  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
+  collect_remote_records > "${remote_records_file}"
+
+  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
+
+  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
+}
+
+main "$@"
+\t' -v v="$git_version" '$1 == v { print $2 }' "$base_unique_records_file")"
+    if [[ "$original_name" == "$migration_name" ]]; then
+      grep -vx "$git_version" "$missing_file" > "$TEMP_DIR/retired_missing" || true
+      mv "$TEMP_DIR/retired_missing" "$missing_file"
+    fi
+  done < <(retired_migration_records)
 
   if [[ ! -s "${missing_file}" && ! -s "${mismatch_file}" ]]; then
     return 0
@@ -322,15 +560,437 @@ compare_production_identity() {
   done <<'VERIFIED_MIGRATION_ALIASES'
 20261015030100|20261015030846|add_regular_and_teacher_cancellation_email_notifications|794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7
 20261015041000|20261015041123|retry_transactional_emails_safely|5550c24828b5de718108b3c0709f50b8079fc1a6f8ea07267a75dc80f8d277da
-20261015060000|20261015052321|homeworks_stage4_submission|b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84
-20261015065000|20261015063815|homeworks_stage5_teacher_review|745ae55478c5f7978040fe901a67348fe43e66305ef12cbd167e924b201101b5
-20261015071000|20261015065527|homeworks_auto_grade_reading_grammar|4d47c634ced700ae8d0e53e8c84e0cdeca83bf6bec079819eec2a68c3b9c2cbb
-20261015180000|20261015163925|homeworks_ai_monthly_budget|171df792cb4eff9c4b15fef4d6cd69b103ae30db2acc4bfab25f3a4739547b3c
-20261015192900|20261015193625|homeworks_privacy_export|6d8579c6ef03a9e174e0120edbf25ad316b2b3d3027538c99fd8946c1f70c3f0
 20261015213000|20261015214937|student_preparation_pilot_eligibility|c026abfefca5a071929eebca566461733ce49ccd590b50b9a485275705ffd264
-20261016144000|20261016144444|homeworks_formal_relationship_retention|064b87e35d015b57c0d7651dbb8aaed6b84aa482e994b3e0a0b266f805c08ca7
 20261016162500|20261016163745|justify_attended_cancelled_lesson_revocations|f936f2c9d92bd1f9bb92aa0c9cdcd80684562a17fcd7b067f1793ddf10adb3b2
-20261016165000|20261016165814|homeworks_writing_age_verifications|d09a4e2b6f15b4aeb141c2dc5ea34b995ac4c89793b5e7edb0784771c4b75335
+VERIFIED_MIGRATION_ALIASES
+
+  join -t $'\t' \
+    -o '1.1,1.2,2.2,1.3,2.3' \
+    "${remote_records_file}" \
+    "${local_records_file}" > "${joined_file}"
+
+  awk -F $'\t' -v checksum_cutoff="${MIGRATION_CHECKSUM_CUTOFF}" '
+    $2 != $3 || ($1 >= checksum_cutoff && $4 != $5) {
+      print
+    }
+  ' "${joined_file}" > "${mismatch_file}"
+
+  if [[ -s "${remote_only_file}" ]]; then
+    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
+    sed 's/^/  - /' "${remote_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${local_only_file}" ]]; then
+    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
+      # PRs may propose append-only migrations; they must not already be in
+      # production. Published versions remain strictly protected above.
+      local production_tip
+      production_tip="$(tail -n 1 "${remote_versions_file}")"
+      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+        echo "::error::Production migration history is empty or malformed."
+        drift_found=true
+      fi
+      while IFS= read -r new_version; do
+        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ || ! "${new_version}" > "${production_tip}" ]]; then
+          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}."
+          drift_found=true
+        else
+          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
+        fi
+      done < "${local_only_file}"
+    else
+      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+      sed 's/^/  - /' "${local_only_file}"
+      drift_found=true
+    fi
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Migration identity differs between production and Git:"
+    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
+      echo "  - ${version}"
+      if [[ "${remote_name}" != "${local_name}" ]]; then
+        echo "    production name: ${remote_name}"
+        echo "    Git name:        ${local_name}"
+      fi
+      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
+        echo "    production sha256: ${remote_checksum}"
+        echo "    Git sha256:        ${local_checksum}"
+      fi
+    done < "${mismatch_file}"
+    drift_found=true
+  fi
+
+  if [[ "${drift_found}" == true ]]; then
+    exit 1
+  fi
+}
+
+main() {
+  require_configuration
+
+  TEMP_DIR="$(mktemp -d)"
+  trap cleanup EXIT
+
+  local local_records_file="${TEMP_DIR}/local_records"
+  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
+  local remote_records_file="${TEMP_DIR}/remote_records"
+
+  collect_local_records > "${local_records_file}"
+  validate_unique_local_versions "${local_records_file}"
+  validate_historical_immutability "${local_records_file}"
+
+  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
+  collect_remote_records > "${remote_records_file}"
+
+  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
+
+  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
+}
+
+main "$@"
+\t' \
+    -o '1.1,1.2,2.2,1.3,2.3' \
+    "${base_unique_records_file}" \
+    "${current_identity_file}" > "${comparison_file}"
+
+  awk -F $'\t' '
+    $2 != $3 || $4 != $5 {
+      print
+    }
+  ' "${comparison_file}" > "${mismatch_file}"
+
+  # Permit only the explicitly attested historical deletions.
+  while IFS='|' read -r git_version remote_version migration_name migration_checksum; do
+    local original_name
+    original_name="$(awk -F 
+    return 0
+  fi
+
+  if [[ -s "${missing_file}" ]]; then
+    echo "::error::Previously committed migration versions were removed or renumbered:"
+    sed 's/^/  - /' "${missing_file}"
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Previously committed migrations are immutable; name or checksum changed:"
+    while IFS=$'\t' read -r version base_name current_name base_checksum current_checksum; do
+      echo "  - ${version}"
+      if [[ "${base_name}" != "${current_name}" ]]; then
+        echo "    base name:    ${base_name}"
+        echo "    current name: ${current_name}"
+      fi
+      if [[ "${base_checksum}" != "${current_checksum}" ]]; then
+        echo "    base checksum:    ${base_checksum}"
+        echo "    current checksum: ${current_checksum}"
+      fi
+    done < "${mismatch_file}"
+  fi
+
+  exit 1
+}
+
+collect_remote_records() {
+  psql "${SUPABASE_DB_URL}" \
+    -AtX \
+    -F $'\t' \
+    -v ON_ERROR_STOP=1 \
+    -c "select
+          version,
+          coalesce(name, ''),
+          encode(
+            extensions.digest(
+              convert_to(
+                regexp_replace(
+                  regexp_replace(
+                    coalesce(array_to_string(statements, E'\\n'), ''),
+                    '^[[:space:]]+',
+                    ''
+                  ),
+                  '[[:space:]]+$',
+                  ''
+                ),
+                'UTF8'
+              ),
+              'sha256'
+            ),
+            'hex'
+          )
+        from supabase_migrations.schema_migrations
+        where version >= '${MIGRATION_DRIFT_CUTOFF}'
+        order by version;"
+}
+
+filter_local_records_from_cutoff() {
+  local records_file="$1"
+
+  awk -F $'\t' -v cutoff="${MIGRATION_DRIFT_CUTOFF}" '
+    BEGIN { OFS = FS }
+    $1 >= cutoff {
+      print $1, $2, $4
+    }
+  ' "${records_file}" \
+    | LC_ALL=C sort -t $'\t' -k1,1
+}
+
+compare_production_identity() {
+  local local_records_file="$1"
+  local remote_records_file="$2"
+  local remote_versions_file="${TEMP_DIR}/remote_versions"
+  local local_versions_file="${TEMP_DIR}/local_versions"
+  local remote_only_file="${TEMP_DIR}/remote_only"
+  local local_only_file="${TEMP_DIR}/local_only"
+  local joined_file="${TEMP_DIR}/joined"
+  local mismatch_file="${TEMP_DIR}/identity_mismatch"
+  local drift_found=false
+
+  cut -f1 "${remote_records_file}" > "${remote_versions_file}"
+  cut -f1 "${local_records_file}" > "${local_versions_file}"
+
+  comm -23 "${remote_versions_file}" "${local_versions_file}" > "${remote_only_file}"
+  comm -13 "${remote_versions_file}" "${local_versions_file}" > "${local_only_file}"
+
+  # Only pinned, hash-verified server-assigned version aliases are recognized.
+  # Unexpected versions and modified SQL still fail the immutable history gate.
+  local alias_git_version
+  local alias_remote_version
+  local alias_name
+  local alias_sha
+  local local_identity
+  local remote_identity
+  local expected_git
+  local expected_remote
+  while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha; do
+    [[ -n "$alias_git_version" ]] || continue
+    local_identity="$(grep -E "^$alias_git_version[[:space:]]" "$local_records_file" || true)"
+    remote_identity="$(grep -E "^$alias_remote_version[[:space:]]" "$remote_records_file" || true)"
+    printf -v expected_git '%s\t%s\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
+    printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "$alias_name" "$alias_sha"
+
+    if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
+      grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
+      grep -vx "$alias_remote_version" "$remote_only_file" > "$TEMP_DIR/alias_remaining_remote" || true
+      mv "$TEMP_DIR/alias_remaining_local" "$local_only_file"
+      mv "$TEMP_DIR/alias_remaining_remote" "$remote_only_file"
+      echo "::notice::Exact SHA256 and name attest Supabase-generated migration alias; committed SQL and production ledger are unchanged."
+    fi
+  done <<'VERIFIED_MIGRATION_ALIASES'
+20261015030100|20261015030846|add_regular_and_teacher_cancellation_email_notifications|794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7
+20261015041000|20261015041123|retry_transactional_emails_safely|5550c24828b5de718108b3c0709f50b8079fc1a6f8ea07267a75dc80f8d277da
+20261015213000|20261015214937|student_preparation_pilot_eligibility|c026abfefca5a071929eebca566461733ce49ccd590b50b9a485275705ffd264
+20261016162500|20261016163745|justify_attended_cancelled_lesson_revocations|f936f2c9d92bd1f9bb92aa0c9cdcd80684562a17fcd7b067f1793ddf10adb3b2
+VERIFIED_MIGRATION_ALIASES
+
+  join -t $'\t' \
+    -o '1.1,1.2,2.2,1.3,2.3' \
+    "${remote_records_file}" \
+    "${local_records_file}" > "${joined_file}"
+
+  awk -F $'\t' -v checksum_cutoff="${MIGRATION_CHECKSUM_CUTOFF}" '
+    $2 != $3 || ($1 >= checksum_cutoff && $4 != $5) {
+      print
+    }
+  ' "${joined_file}" > "${mismatch_file}"
+
+  if [[ -s "${remote_only_file}" ]]; then
+    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
+    sed 's/^/  - /' "${remote_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${local_only_file}" ]]; then
+    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
+      # PRs may propose append-only migrations; they must not already be in
+      # production. Published versions remain strictly protected above.
+      local production_tip
+      production_tip="$(tail -n 1 "${remote_versions_file}")"
+      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+        echo "::error::Production migration history is empty or malformed."
+        drift_found=true
+      fi
+      while IFS= read -r new_version; do
+        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ || ! "${new_version}" > "${production_tip}" ]]; then
+          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}."
+          drift_found=true
+        else
+          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
+        fi
+      done < "${local_only_file}"
+    else
+      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+      sed 's/^/  - /' "${local_only_file}"
+      drift_found=true
+    fi
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Migration identity differs between production and Git:"
+    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
+      echo "  - ${version}"
+      if [[ "${remote_name}" != "${local_name}" ]]; then
+        echo "    production name: ${remote_name}"
+        echo "    Git name:        ${local_name}"
+      fi
+      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
+        echo "    production sha256: ${remote_checksum}"
+        echo "    Git sha256:        ${local_checksum}"
+      fi
+    done < "${mismatch_file}"
+    drift_found=true
+  fi
+
+  if [[ "${drift_found}" == true ]]; then
+    exit 1
+  fi
+}
+
+main() {
+  require_configuration
+
+  TEMP_DIR="$(mktemp -d)"
+  trap cleanup EXIT
+
+  local local_records_file="${TEMP_DIR}/local_records"
+  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
+  local remote_records_file="${TEMP_DIR}/remote_records"
+
+  collect_local_records > "${local_records_file}"
+  validate_unique_local_versions "${local_records_file}"
+  validate_historical_immutability "${local_records_file}"
+
+  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
+  collect_remote_records > "${remote_records_file}"
+
+  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
+
+  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
+}
+
+main "$@"
+\t' -v v="$git_version" '$1 == v { print $2 }' "$base_unique_records_file")"
+    if [[ "$original_name" == "$migration_name" ]]; then
+      grep -vx "$git_version" "$missing_file" > "$TEMP_DIR/retired_missing" || true
+      mv "$TEMP_DIR/retired_missing" "$missing_file"
+    fi
+  done < <(retired_migration_records)
+
+  if [[ ! -s "${missing_file}" && ! -s "${mismatch_file}" ]]; then
+    return 0
+  fi
+
+  if [[ -s "${missing_file}" ]]; then
+    echo "::error::Previously committed migration versions were removed or renumbered:"
+    sed 's/^/  - /' "${missing_file}"
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Previously committed migrations are immutable; name or checksum changed:"
+    while IFS=$'\t' read -r version base_name current_name base_checksum current_checksum; do
+      echo "  - ${version}"
+      if [[ "${base_name}" != "${current_name}" ]]; then
+        echo "    base name:    ${base_name}"
+        echo "    current name: ${current_name}"
+      fi
+      if [[ "${base_checksum}" != "${current_checksum}" ]]; then
+        echo "    base checksum:    ${base_checksum}"
+        echo "    current checksum: ${current_checksum}"
+      fi
+    done < "${mismatch_file}"
+  fi
+
+  exit 1
+}
+
+collect_remote_records() {
+  psql "${SUPABASE_DB_URL}" \
+    -AtX \
+    -F $'\t' \
+    -v ON_ERROR_STOP=1 \
+    -c "select
+          version,
+          coalesce(name, ''),
+          encode(
+            extensions.digest(
+              convert_to(
+                regexp_replace(
+                  regexp_replace(
+                    coalesce(array_to_string(statements, E'\\n'), ''),
+                    '^[[:space:]]+',
+                    ''
+                  ),
+                  '[[:space:]]+$',
+                  ''
+                ),
+                'UTF8'
+              ),
+              'sha256'
+            ),
+            'hex'
+          )
+        from supabase_migrations.schema_migrations
+        where version >= '${MIGRATION_DRIFT_CUTOFF}'
+        order by version;"
+}
+
+filter_local_records_from_cutoff() {
+  local records_file="$1"
+
+  awk -F $'\t' -v cutoff="${MIGRATION_DRIFT_CUTOFF}" '
+    BEGIN { OFS = FS }
+    $1 >= cutoff {
+      print $1, $2, $4
+    }
+  ' "${records_file}" \
+    | LC_ALL=C sort -t $'\t' -k1,1
+}
+
+compare_production_identity() {
+  local local_records_file="$1"
+  local remote_records_file="$2"
+  local remote_versions_file="${TEMP_DIR}/remote_versions"
+  local local_versions_file="${TEMP_DIR}/local_versions"
+  local remote_only_file="${TEMP_DIR}/remote_only"
+  local local_only_file="${TEMP_DIR}/local_only"
+  local joined_file="${TEMP_DIR}/joined"
+  local mismatch_file="${TEMP_DIR}/identity_mismatch"
+  local drift_found=false
+
+  cut -f1 "${remote_records_file}" > "${remote_versions_file}"
+  cut -f1 "${local_records_file}" > "${local_versions_file}"
+
+  comm -23 "${remote_versions_file}" "${local_versions_file}" > "${remote_only_file}"
+  comm -13 "${remote_versions_file}" "${local_versions_file}" > "${local_only_file}"
+
+  # Only pinned, hash-verified server-assigned version aliases are recognized.
+  # Unexpected versions and modified SQL still fail the immutable history gate.
+  local alias_git_version
+  local alias_remote_version
+  local alias_name
+  local alias_sha
+  local local_identity
+  local remote_identity
+  local expected_git
+  local expected_remote
+  while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha; do
+    [[ -n "$alias_git_version" ]] || continue
+    local_identity="$(grep -E "^$alias_git_version[[:space:]]" "$local_records_file" || true)"
+    remote_identity="$(grep -E "^$alias_remote_version[[:space:]]" "$remote_records_file" || true)"
+    printf -v expected_git '%s\t%s\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
+    printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "$alias_name" "$alias_sha"
+
+    if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
+      grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
+      grep -vx "$alias_remote_version" "$remote_only_file" > "$TEMP_DIR/alias_remaining_remote" || true
+      mv "$TEMP_DIR/alias_remaining_local" "$local_only_file"
+      mv "$TEMP_DIR/alias_remaining_remote" "$remote_only_file"
+      echo "::notice::Exact SHA256 and name attest Supabase-generated migration alias; committed SQL and production ledger are unchanged."
+    fi
+  done <<'VERIFIED_MIGRATION_ALIASES'
+20261015030100|20261015030846|add_regular_and_teacher_cancellation_email_notifications|794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7
+20261015041000|20261015041123|retry_transactional_emails_safely|5550c24828b5de718108b3c0709f50b8079fc1a6f8ea07267a75dc80f8d277da
+20261015213000|20261015214937|student_preparation_pilot_eligibility|c026abfefca5a071929eebca566461733ce49ccd590b50b9a485275705ffd264
+20261016162500|20261016163745|justify_attended_cancelled_lesson_revocations|f936f2c9d92bd1f9bb92aa0c9cdcd80684562a17fcd7b067f1793ddf10adb3b2
 VERIFIED_MIGRATION_ALIASES
 
   join -t $'\t' \
