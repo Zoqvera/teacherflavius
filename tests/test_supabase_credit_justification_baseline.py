@@ -38,7 +38,7 @@ class CreditJustificationBaselineTests(unittest.TestCase):
         fingerprint = json.loads(FINGERPRINT.read_text(encoding="utf-8"))
         self.assertEqual(fingerprint["captured_from_migration_version"], "20261016162500")
         self.assertEqual(fingerprint["public_functions"], 193)
-        self.assertEqual(fingerprint["tables"], 52)
+        self.assertEqual(fingerprint["tables"], 53)
         self.assertEqual(fingerprint["rls_policies"], 95)
 
 
