@@ -9,6 +9,9 @@ on:
       - scripts/plan_supabase_branching_cutover.py
       - scripts/attest_supabase_migration_ledger.py
       - scripts/compare_supabase_schema_fingerprint.py
+      - scripts/assess_supabase_branch_foundation.py
+      - scripts/sql/supabase_branch_foundation_readonly.sql
+      - tests/test_supabase_branch_foundation.py
       - scripts/sql/supabase_catalog_fingerprint_readonly.sql
       - tests/test_supabase_schema_fingerprint_comparison.py
       - tests/test_supabase_ledger_rollback_rehearsal.py
@@ -25,6 +28,9 @@ on:
       - scripts/plan_supabase_branching_cutover.py
       - scripts/attest_supabase_migration_ledger.py
       - scripts/compare_supabase_schema_fingerprint.py
+      - scripts/assess_supabase_branch_foundation.py
+      - scripts/sql/supabase_branch_foundation_readonly.sql
+      - tests/test_supabase_branch_foundation.py
       - scripts/sql/supabase_catalog_fingerprint_readonly.sql
       - tests/test_supabase_schema_fingerprint_comparison.py
       - tests/test_supabase_ledger_rollback_rehearsal.py
@@ -52,6 +58,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_supabase_branching_cutover_plan.py
           python3 -m unittest discover -s tests -p test_supabase_ledger_rollback_rehearsal.py
           python3 -m unittest discover -s tests -p test_supabase_schema_fingerprint_comparison.py
+          python3 -m unittest discover -s tests -p test_supabase_branch_foundation.py
 
   synthetic-ledger-rollback:
     # Completely independent of secrets and the production Supabase project.
@@ -208,6 +215,23 @@ jobs:
             .verifies_backup_recoverability == false' \
             "${RUNNER_TEMP}/schema-fingerprint-comparison.json"
 
+      - name: Detect missing foundation declarations without exporting SQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql "${SUPABASE_DB_URL}" -X -qAt -v ON_ERROR_STOP=1 \
+            -f scripts/sql/supabase_branch_foundation_readonly.sql \
+            > "${RUNNER_TEMP}/branch-foundation-counts.json"
+          python3 -m scripts.assess_supabase_branch_foundation \
+            --counts-json "${RUNNER_TEMP}/branch-foundation-counts.json" \
+            --report-json "${RUNNER_TEMP}/branch-foundation-assessment.json"
+          jq -e '.metadata_only == true and
+            .statements_exported == false and
+            .dashboard_branch_replay_verified == false and
+            .github_branch_replay_verified == false and
+            .production_write_authorized == false' \
+            "${RUNNER_TEMP}/branch-foundation-assessment.json"
+
       - name: Save report without migration statements
         uses: actions/upload-artifact@v4
         if: always()
@@ -218,5 +242,6 @@ jobs:
             ${{ runner.temp }}/branching-cutover-plan.json
             ${{ runner.temp }}/migration-ledger-attestation.json
             ${{ runner.temp }}/schema-fingerprint-comparison.json
+            ${{ runner.temp }}/branch-foundation-assessment.json
           retention-days: 14
           if-no-files-found: ignore
