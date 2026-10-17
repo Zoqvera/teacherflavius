@@ -3,7 +3,6 @@
 
   const LEGACY_LESSON_FILE_IDS = Object.freeze({
     1: "1IcPBeVjsZfm0RnqqUwhDhwoF2QY3qIA1",
-    2: "1LDXrDtGGiMKNUe_DWFSLu-k3IKQmQcYB",
     3: "1-Sav9gssbAMYVUqVv0-MdwvUxT-H3eGX",
     4: "1Rjq4Oqpx_JRsAECFGLtteRrSINIDmFER",
     5: "1Ke_jLAODBKpd0OLaFF8sklof6JcperdY",
