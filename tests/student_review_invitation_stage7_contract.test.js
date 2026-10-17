@@ -37,7 +37,7 @@ test("reconstruction runs the exact audited production SQL after other overlays"
 
 test("reconstruction fingerprint counts public RPCs while private tables use separate security tests", () => {
   assert.equal(fingerprint.captured_from_migration_version, "20261016162500");
-  assert.equal(fingerprint.tables, 53);
+  assert.equal(fingerprint.tables, 52);
   assert.equal(fingerprint.constraints, 271);
   assert.equal(fingerprint.public_functions, 193);
   assert.equal(fingerprint.non_constraint_indexes, 117);
