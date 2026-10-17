@@ -1,9 +1,9 @@
 (function () {
   "use strict";
 
-  // Etapa 3/5. Ativar somente após homologação da migração em produção.
+  // Etapa 5C: esquema e políticas de produção auditados antes da liberação.
   // Esta constante não é configurável pela URL ou pelo navegador.
-  const RELEASE_ENABLED = false;
+  const RELEASE_ENABLED = true;
   const PRESENTATIONS_TABLE = "lesson_presentations";
   const RECEIPTS_TABLE = "lesson_presentation_views";
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
