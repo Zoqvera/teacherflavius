@@ -5,7 +5,7 @@
   "non_constraint_indexes": 117,
   "public_functions": 193,
   "private_functions": 37,
-  "rls_policies": 95,
+  "rls_policies": 91,
   "public_user_triggers": 47,
   "application_auth_triggers": 1,
   "application_event_triggers": 1,
