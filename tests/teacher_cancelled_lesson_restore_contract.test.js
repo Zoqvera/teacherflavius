@@ -55,7 +55,7 @@ test("teacher can review cancelled lessons without marking un-restored attendanc
   assert.match(workflow, /restore_teacher_cancelled_regular_lesson/);
   assert.match(migration, /plan\.attendance_status not in \('present', 'absent', 'cancelled', 'cancelled_finalized'\)/i);
   assert.match(page, /academic_workflow_service\.js\?v=20261015-cancelled-restoration-1/);
-  assert.match(page, /roteiro-da-aula\/app\.js\?v=20261015-preparation-refresh-1/);
+  assert.match(page, /roteiro-da-aula\/app\.js\?v=20261017-presentation-stage3-1/);
   assert.match(page, /<meta name="robots" content="noindex, nofollow">/);
   assert.doesNotMatch(teacherApp, /\bonline\b/i);
 });

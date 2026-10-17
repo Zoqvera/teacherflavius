@@ -11,6 +11,8 @@
 
   let service = null;
   let currentItems = [];
+  let currentTeacherId = null;
+  let presentationBundle = null;
 
   function resourcesReady() {
     return !!(
@@ -261,6 +263,9 @@
       ));
     }
     card.appendChild(actions);
+    if (presentationBundle && presentationBundle.records && presentationBundle.service) {
+      card.appendChild(presentationBundle.service.render(item, presentationBundle.records));
+    }
     card.appendChild(renderQuestionSection(
       "PERGUNTAS ESTUDADAS",
       Array.isArray(item.new_questions) ? item.new_questions : [],
@@ -367,6 +372,13 @@
 
     try {
       const items = await service.getTeacherLessonPlan(classDate);
+      // The teacher module returns before any network call while the release is locked.
+      const presentationService = window.TeacherLessonPresentations;
+      const bundle = presentationService
+        ? await presentationService.loadPlan(
+          items, function () { return window.Auth.getClient(); }, currentTeacherId
+        ) : null;
+      presentationBundle = bundle;
       renderPlan(items, classDate);
       setStatus(
         items.length
@@ -405,6 +417,7 @@
       return;
     }
 
+    currentTeacherId = session.user.id;
     service = window.AcademicWorkflowService.create(client);
     const dateInput = document.getElementById("teacherPlanDate");
     dateInput.value = saoPauloDate();
