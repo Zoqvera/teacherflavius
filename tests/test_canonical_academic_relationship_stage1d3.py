@@ -47,6 +47,21 @@ class AcademicRelationshipBaselineTests(unittest.TestCase):
         self.assertIn("student_page_count <> 1 or teacher_page_count <> 3", test)
         self.assertIn("Academic relationship events must not expose client policies", test)
 
+    def test_mode_repair_preserves_predicates_and_fails_closed(self) -> None:
+        sql = (
+            ROOT / "supabase/baseline/415_reconcile_canonical_policy_modes.sql"
+        ).read_text(encoding="utf-8")
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("restrictive_count <> 81", sql)
+        self.assertIn("roles <> array['authenticated']::name[]", sql)
+        self.assertIn("before_signature is distinct from after_signature", sql)
+        self.assertIn("policy_row.qual", sql)
+        self.assertIn("policy_row.with_check", sql)
+        self.assertIn("as permissive", sql)
+        self.assertIn("415_reconcile_canonical_policy_modes.sql", workflow)
+        self.assertNotIn("supabase_migrations", sql)
+        self.assertNotIn("cron.schedule", sql)
+
     def test_recovery_fingerprint_counts_public_table_constraints_and_index(self) -> None:
         fingerprint = json.loads(FINGERPRINT.read_text(encoding="utf-8"))
         self.assertEqual(fingerprint["tables"], 53)
