@@ -106,6 +106,38 @@ class SensitivePrivacyFunctionTests(unittest.TestCase):
         ):
             self.assertNotIn(expression, sql)
 
+    def test_audit_snapshot_is_self_consistent_and_not_an_authorization_claim(self) -> None:
+        snapshot = json.loads(
+            (ROOT / "docs/supabase-privacy-stage1d6-snapshot.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        inv = snapshot["object_inventory"]
+        self.assertEqual(
+            inv["matching_definitions"] + inv["differing_definitions"],
+            inv["common_objects"],
+        )
+        self.assertEqual(
+            inv["production_objects"] - inv["common_objects"],
+            inv["missing_in_baseline"],
+        )
+        rls = snapshot["rls"]
+        self.assertEqual(sum(rls["dependencies"].values()), rls["missing_policies"])
+        self.assertEqual(rls["missing_on_restored_relations"], 0)
+        self.assertEqual(rls["missing_on_absent_relations"], 10)
+        functions = snapshot["sensitive_privacy_functions"]
+        self.assertEqual(functions["privileged_function_count"], len(EXPECTED))
+        self.assertEqual(
+            functions["allowed_authenticated_execute"]
+            + functions["restricted_service_only"],
+            functions["privileged_function_count"],
+        )
+        self.assertFalse(functions["mfa_enforcement_verified"])
+        limits = snapshot["limits"]
+        self.assertTrue(limits["metadata_only"])
+        self.assertFalse(limits["production_write_authorized"])
+        self.assertFalse(limits["function_definitions_exported"])
+
     def test_cli_creates_metadata_only_report(self) -> None:
         from unittest.mock import patch
 
