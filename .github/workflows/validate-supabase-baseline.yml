@@ -208,6 +208,41 @@ jobs:
           );
           SQL
 
+      - name: Verify justified credit revocation overlay and RLS in disposable database
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 <<'SQL'
+          do $credit_overlay$
+          begin
+            if to_regclass('private.lesson_credit_revocation_justifications') is null
+              or to_regprocedure('public.justify_teacher_attended_cancelled_lesson(uuid)') is null then
+              raise exception 'Credit justification schema or teacher RPC missing';
+            end if;
+            if not exists (
+              select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+              where n.nspname='private'
+                and c.relname='lesson_credit_revocation_justifications'
+                and c.relrowsecurity
+            ) then
+              raise exception 'Credit justification table requires RLS';
+            end if;
+            if has_table_privilege('anon', 'private.lesson_credit_revocation_justifications', 'SELECT')
+               or has_table_privilege('authenticated', 'private.lesson_credit_revocation_justifications', 'SELECT')
+               or has_function_privilege('anon', 'public.justify_teacher_attended_cancelled_lesson(uuid)', 'EXECUTE') then
+              raise exception 'Unsafe browser grants on credit justification objects';
+            end if;
+            if not has_function_privilege('authenticated',
+                'public.justify_teacher_attended_cancelled_lesson(uuid)', 'EXECUTE') then
+              raise exception 'Teacher-facing RPC not executable by authenticated role';
+            end if;
+          end;
+          $credit_overlay$;
+          SQL
+
       - name: Verify least-privilege browser ACLs
         shell: bash
         run: |
