@@ -33,7 +33,7 @@
   });
 
   const selected = activities[activity];
-  if (!selected || !["initial", "submitted", "evaluated"].includes(state)) {
+  if (!selected || !["initial", "submitted", "evaluated", "privacy_review"].includes(state)) {
     document.documentElement.dataset.qaResult = "INVALID_SCENARIO";
     return;
   }
@@ -55,6 +55,8 @@
       source: "automatic", score: 9,
       general_comment: "Correção automática por comparação ao gabarito."
     }]
+  } : state === "privacy_review" ? {
+    status: "submitted", correction: "privacy_review", score: null, feedback: []
   } : state === "submitted" ? {
     status: "submitted", score: null, feedback: []
   } : { status: "not_started", score: null, feedback: [] };
@@ -129,7 +131,12 @@
         mount.textContent.includes("as verificações de privacidade e faixa etária") &&
         mount.textContent.includes("Quando autorizada") &&
         mount.textContent.includes("OpenAI");
-      const correctStatus = state !== "evaluated" || mount.textContent.includes("Nota:");
+      const correctStatus = (state !== "evaluated" || mount.textContent.includes("Nota:")) &&
+        (state !== "privacy_review" || (
+          mount.textContent.includes("correção por IA está suspensa") &&
+          !mount.textContent.includes("Nota:") &&
+          !visibleButtons.some(button => button.textContent.includes("Tentar corrigir novamente"))
+        ));
       const semanticAccessibility = hasAccessibleStructure(mount);
       const result = !overflow && !unnamed && writingDisclosure && correctStatus &&
         semanticAccessibility ? "PASS" : "FAIL";
