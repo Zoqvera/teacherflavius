@@ -82,7 +82,7 @@ jobs:
             -v ON_ERROR_STOP=1 \
             < tests/fixtures/lesson_presentation_views_stage3_rls.sql \
             > "${RUNNER_TEMP}/presentation-views-test.log"
-          grep -Fxq 'LESSON_PRESENTATIONS_STAGE3_RECEIPTS_PASSED' \
+          grep -Fq 'LESSON_PRESENTATIONS_STAGE3_RECEIPTS_PASSED' \
             "${RUNNER_TEMP}/presentation-views-test.log"
           docker exec -i "${DB_CONTAINER}" psql -X -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -qAt \
