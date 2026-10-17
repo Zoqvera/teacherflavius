@@ -66,7 +66,8 @@ class FoundationAssessmentTests(unittest.TestCase):
             "study_lesson_pages_creates": 1,
         }))
         output = json.dumps(report)
-        self.assertNotIn("statements", output)
+        self.assertNotIn("create table", output.lower())
+        self.assertFalse(report["statements_exported"])
         self.assertNotIn("auth.users", output)
         self.assertFalse(report["production_write_authorized"])
 
