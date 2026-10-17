@@ -19,8 +19,51 @@ begin
   from pg_catalog.pg_policies
   where schemaname in ('public', 'private') and permissive = 'RESTRICTIVE';
 
+  if restrictive_count <> 85 then
+    raise exception 'Unexpected count of restrictive policies: %; expected 85', restrictive_count;
+  end if;
+
+  -- Exactly four obsolete restrictive policies do not exist in production.
+  -- Fail closed if any name, operation, role or mode has drifted.
+  if (
+    select count(*) from pg_catalog.pg_policies
+    where schemaname = 'public'
+      and permissive = 'RESTRICTIVE'
+      and roles = array['authenticated']::name[]
+      and (
+        (tablename = 'study_roadmap_completion'
+          and policyname = 'Alunos podem atualizar suas lições do roteiro'
+          and cmd = 'UPDATE')
+        or (tablename = 'study_roadmap_completion'
+          and policyname = 'Alunos podem inserir suas lições do roteiro'
+          and cmd = 'INSERT')
+        or (tablename = 'teacher_admins'
+          and policyname = 'Professor pode verificar suas próprias credenciais'
+          and cmd = 'SELECT')
+        or (tablename = 'teacher_exercises'
+          and policyname = 'Alunos e professores podem visualizar exercícios'
+          and cmd = 'SELECT')
+      )
+  ) <> 4 then
+    raise exception 'Obsolete restrictive policy allowlist does not match';
+  end if;
+
+  -- These four named policies are absent from the production catalog.
+  -- Dropping them is only permitted during isolated recovery.
+  drop policy "Alunos podem atualizar suas lições do roteiro"
+    on public.study_roadmap_completion;
+  drop policy "Alunos podem inserir suas lições do roteiro"
+    on public.study_roadmap_completion;
+  drop policy "Professor pode verificar suas próprias credenciais"
+    on public.teacher_admins;
+  drop policy "Alunos e professores podem visualizar exercícios"
+    on public.teacher_exercises;
+
+  select count(*) into restrictive_count
+  from pg_catalog.pg_policies
+  where schemaname in ('public', 'private') and permissive = 'RESTRICTIVE';
   if restrictive_count <> 81 then
-    raise exception 'Unexpected count of restrictive policies: %; expected 81', restrictive_count;
+    raise exception 'Expected 81 remaining restrictive policies, found %', restrictive_count;
   end if;
 
   if exists (
