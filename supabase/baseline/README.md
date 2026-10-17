@@ -182,7 +182,7 @@ nos testes Homeworks em ambiente descartavel, sem recriar a tabela.
 
 O fingerprint contabiliza uma tabela publica, cinco constraints e
 um indice independente adicional: 53 tabelas, 271 constraints e 117
-indices nao associados a constraints, com 83 overlays canonicos.
+indices nao associados a constraints, com 84 overlays canonicos.
 A evidencia nao comprova equivalencia integral com a producao.
 
 As quatro policies `study_lesson_pages` do bootstrap mantem a
@@ -191,3 +191,24 @@ tenha encontrado `is_teacher_admin()` nas quatro policies homonimas
 da producao em 17/10/2026. A divergencia fica registrada como
 diferenca **de autorizacao a revisar**, sem substituir a exigencia
 de MFA no bootstrap e sem alterar as policies de producao.
+
+
+## ETAPA 1D.3 - reconciliacao dos modos das policies
+
+O overlay `415_reconcile_canonical_policy_modes.sql` existe **apenas na
+reconstrucao descartavel**. O snapshot inicial criava policies com
+`AS RESTRICTIVE`, mas a consulta somente de leitura ao catalogo da
+producao confirmou 120 policies `PERMISSIVE` e nenhuma restritiva.
+Os overlays intermediarios ja tinham substituido quatro policies.
+O overlay 415 exige exatamente 81 policies restritivas restantes, todas
+do schema publico e do papel `authenticated`, e as recria no modo
+`PERMISSIVE` sem mudar nomes, comandos, papeis, `USING` ou
+`WITH CHECK`. Um checksum estrutural por policy e comparado antes
+e depois; qualquer divergencia aborta o SQL integralmente.
+
+Essa reconciliacao nao copia as expressoes produtivas e nao enfraquece
+as quatro policies de `study_lesson_pages`, que continuam exigindo MFA
+no bootstrap. A mudanca remove um bloqueio de funcionamento causado
+por combinacao inadequada de policies RLS na reconstrução, sem
+modificar a producao. Para equivalencia de seguranca, continuam
+necessarios testes autenticados e auditoria das outras divergencias.
