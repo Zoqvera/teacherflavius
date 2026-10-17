@@ -178,7 +178,7 @@ test("an unanswered dialog can be dismissed without saving", async () => {
 
 test("catalog, protected write path and dashboard integration share one source of truth", () => {
   const catalog = read("student_acquisition.js");
-  const migration = read("supabase/migrations/20261017020000_student_acquisition_getninjas_popup.sql");
+  const migration = read("supabase/migrations/20261017015220_student_acquisition_getninjas_popup.sql");
   const html = read("area_do_estudante.html");
   const dashboard = read("area_do_estudante.js");
 
