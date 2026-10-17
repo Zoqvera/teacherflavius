@@ -182,7 +182,8 @@ jobs:
             supabase/baseline/405_restore_auth_account_health_run_storage.sql \
             supabase/baseline/415_reconcile_canonical_policy_modes.sql \
             supabase/baseline/420_reconcile_financial_mfa_policies.sql \
-            supabase/baseline/425_restore_roadmap_teacher_and_exercise_read_policies.sql
+            supabase/baseline/425_restore_roadmap_teacher_and_exercise_read_policies.sql \
+            supabase/baseline/430_restore_lgpd_privacy_catalog_stage1d5.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -301,6 +302,15 @@ jobs:
           test -n "$DB_CONTAINER"
           docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
             -v ON_ERROR_STOP=1 < tests/sql/canonical_roadmap_exercise_policies_stage1d4b.sql
+
+      - name: Verify LGPD catalog ACLs and student RLS with synthetic PostgreSQL data
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 < tests/sql/canonical_lgpd_privacy_stage1d5.sql
 
       - name: Verify least-privilege browser ACLs
         shell: bash
