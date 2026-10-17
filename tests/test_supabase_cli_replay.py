@@ -45,7 +45,7 @@ class PreviewReplayFixtureTests(unittest.TestCase):
             paths[0].read_text().rstrip().endswith(STOP_CRON.strip())
         )
         self.assertIn("if to_regclass('public.profiles') is null", paths[1].read_text())
-        self.assertEqual(report["reviewed_overlays"], 82)
+        self.assertEqual(report["reviewed_overlays"], 84)
         self.assertNotIn("service_role", (self.staging / "supabase/seed.sql").read_text())
 
     def test_seed_only_contains_two_test_classes_and_no_real_accounts(self) -> None:

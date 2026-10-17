@@ -61,7 +61,7 @@ jobs:
             --staging-root "${PREVIEW_DIR}" \
             --report-json "${PREVIEW_DIR}/artifacts/chain-audit.json"
           jq -e '.status == "LOCAL_CHAIN_VALIDATED" and
-            .reviewed_overlays == 82 and
+            .reviewed_overlays == 84 and
             .historical_migrations_replayed == false and
             .production_ledger_modified == false and
             .automatic_branching_safe == false' \

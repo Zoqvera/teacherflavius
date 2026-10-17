@@ -185,7 +185,9 @@ jobs:
             supabase/baseline/390_expose_study_button_marker.sql \
             supabase/baseline/395_student_review_invitation_funnel.sql \
             supabase/baseline/400_justify_attended_cancelled_lesson_revocations.sql \
-            supabase/baseline/405_restore_auth_account_health_run_storage.sql
+            supabase/baseline/405_restore_auth_account_health_run_storage.sql \
+            supabase/baseline/410_restore_academic_relationship_event_storage.sql \
+            supabase/baseline/415_reconcile_canonical_policy_modes.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -276,6 +278,15 @@ jobs:
           end
           $auth_health_storage$;
           SQL
+
+      - name: Verify academic relationship RLS and lesson-page MFA invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 < tests/sql/canonical_academic_rls_stage1d3.sql
 
       - name: Verify least-privilege browser ACLs
         shell: bash
@@ -702,9 +713,18 @@ jobs:
             supabase/migrations/20261016144000_homeworks_formal_relationship_retention.sql \
             supabase/migrations/20261016165000_homeworks_writing_age_verifications.sql
           do
-            docker exec -i "$DB_CONTAINER" \
-              psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-              < "$migration"
+            # This table now exists in the canonical disaster-recovery baseline.
+            # Reuse only the *remaining* reviewed migration definitions for the
+            # Homeworks integration fixture; never re-create or overwrite data.
+            if [[ "$migration" == "supabase/migrations/20261016144000_homeworks_formal_relationship_retention.sql" ]]; then
+              sed -n '/^-- Somente um professor com MFA pode declarar/,$p' "$migration" \
+                | docker exec -i "$DB_CONTAINER" \
+                    psql -U postgres -d postgres -v ON_ERROR_STOP=1
+            else
+              docker exec -i "$DB_CONTAINER" \
+                psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+                < "$migration"
+            fi
           done
 
           # A transação do teste usa ROLLBACK. A liberação é temporária só no CI.
