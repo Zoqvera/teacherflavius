@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from scripts.check_fast_critical_changes_gate import (
     classify_changes,
+    RETIRED_HOMEWORK_MIGRATIONS,
     ensure_historical_migrations_unchanged,
 )
 
@@ -37,6 +38,24 @@ class FastGateTests(unittest.TestCase):
     def test_new_migration_is_allowed(self, mocked_diff) -> None:
         ensure_historical_migrations_unchanged("base", "head")
         mocked_diff.assert_called_once()
+
+    @patch("scripts.check_fast_critical_changes_gate.subprocess.run")
+    @patch("scripts.check_fast_critical_changes_gate.git_diff")
+    def test_retired_migrations_require_exact_original_blobs(self, mocked_diff, mocked_git) -> None:
+        path, expected_blob = next(iter(RETIRED_HOMEWORK_MIGRATIONS.items()))
+        mocked_diff.return_value = f"D\\t{path}\\n"
+        mocked_git.return_value.stdout = expected_blob + "\\n"
+        ensure_historical_migrations_unchanged("base", "head")
+        mocked_git.assert_called_once()
+
+        mocked_git.return_value.stdout = "0" * 40
+        with self.assertRaisesRegex(ValueError, "Historical migrations"):
+            ensure_historical_migrations_unchanged("base", "head")
+
+    @patch("scripts.check_fast_critical_changes_gate.git_diff", return_value="D\\tsupabase/migrations/other.sql\\n")
+    def test_other_migration_deletions_remain_blocked(self, _mocked_diff) -> None:
+        with self.assertRaisesRegex(ValueError, "Historical migrations"):
+            ensure_historical_migrations_unchanged("base", "head")
 
     @patch("scripts.check_fast_critical_changes_gate.git_diff", return_value="M\tsupabase/migrations/old.sql\n")
     def test_modified_migration_is_rejected(self, _mocked_diff) -> None:
