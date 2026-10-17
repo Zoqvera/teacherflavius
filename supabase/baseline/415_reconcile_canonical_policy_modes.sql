@@ -3,7 +3,7 @@
 -- has zero restrictive policies. Later reviewed overlays already replace four;
 -- the remaining 81 are normalized here to match production's mode.
 --
--- Security conditions: explicit allowlist of one authenticated role, exactly 81
+-- Security conditions: explicit role allowlist including deny-all payment exception, exactly 81
 -- restrictive PUBLIC-schema policies, and exact conservation of every command,
 -- role and RLS predicate. No user rows or secrets are read or written.
 do $canonical_permissive_policy_repair$
@@ -66,10 +66,36 @@ begin
     raise exception 'Expected 81 remaining restrictive policies, found %', restrictive_count;
   end if;
 
+  -- One deny-all payment policy intentionally applies to both browser roles.
+  -- Its predicates must remain FALSE; any other multi-role policy is rejected.
+  if (
+    select count(*) from pg_catalog.pg_policies
+    where schemaname = 'public'
+      and tablename = 'tuition_payment_attempts'
+      and policyname = 'tuition_payment_attempts_no_direct_client_access'
+      and permissive = 'RESTRICTIVE'
+      and cmd = 'ALL'
+      and roles = array['anon','authenticated']::name[]
+      and qual = 'false'
+      and with_check = 'false'
+  ) <> 1 then
+    raise exception 'Payment deny-all policy no longer matches the reviewed source';
+  end if;
+
   if exists (
     select 1 from pg_catalog.pg_policies
     where permissive = 'RESTRICTIVE'
-      and (schemaname <> 'public' or roles <> array['authenticated']::name[])
+      and (
+        schemaname <> 'public'
+        or (
+          roles <> array['authenticated']::name[]
+          and not (
+            tablename = 'tuition_payment_attempts'
+            and policyname = 'tuition_payment_attempts_no_direct_client_access'
+            and roles = array['anon','authenticated']::name[]
+          )
+        )
+      )
   ) then
     raise exception 'Found restrictive policies outside the reviewed role/schema';
   end if;
@@ -93,9 +119,14 @@ begin
   loop
     -- Re-create the exact currently compiled policy; change mode only.
     declaration := format(
-      'create policy %I on %I.%I as permissive for %s to authenticated',
+      'create policy %I on %I.%I as permissive for %s to %s',
       policy_row.policyname, policy_row.schemaname,
-      policy_row.tablename, policy_row.cmd
+      policy_row.tablename, policy_row.cmd,
+      case
+        when policy_row.roles = array['anon','authenticated']::name[]
+          then 'anon, authenticated'
+        else 'authenticated'
+      end
     );
     if policy_row.qual is not null then
       declaration := declaration || ' using (' || policy_row.qual || ')';
