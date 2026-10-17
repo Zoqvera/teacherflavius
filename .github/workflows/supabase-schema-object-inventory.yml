@@ -17,6 +17,11 @@ on:
       - "scripts/triage_missing_supabase_rls_policies.py"
       - "tests/test_supabase_rls_dependency_triage.py"
       - "tests/test_supabase_stage1d4c_audit.py"
+      - "scripts/sql/supabase_sensitive_privacy_functions_readonly.sql"
+      - "scripts/audit_supabase_sensitive_privacy_functions.py"
+      - "tests/test_supabase_sensitive_privacy_functions.py"
+      - "docs/supabase-privacy-stage1d6-snapshot.json"
+      - "docs/supabase-privacy-stage1d6-audit.md"
       - "docs/supabase-rls-stage1d4c-snapshot.json"
       - "docs/supabase-rls-auditoria-etapa-1d4c.md"
       - ".github/workflows/supabase-schema-object-inventory.yml"
@@ -36,6 +41,11 @@ on:
       - "scripts/triage_missing_supabase_rls_policies.py"
       - "tests/test_supabase_rls_dependency_triage.py"
       - "tests/test_supabase_stage1d4c_audit.py"
+      - "scripts/sql/supabase_sensitive_privacy_functions_readonly.sql"
+      - "scripts/audit_supabase_sensitive_privacy_functions.py"
+      - "tests/test_supabase_sensitive_privacy_functions.py"
+      - "docs/supabase-privacy-stage1d6-snapshot.json"
+      - "docs/supabase-privacy-stage1d6-audit.md"
       - "docs/supabase-rls-stage1d4c-snapshot.json"
       - "docs/supabase-rls-auditoria-etapa-1d4c.md"
       - ".github/workflows/supabase-schema-object-inventory.yml"
@@ -59,6 +69,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_supabase_rls_dependency_triage.py -v
       - name: Validate stage 1D.4C audit provenance and aggregated counts
         run: python3 -m unittest discover -s tests -p test_supabase_stage1d4c_audit.py -v
+      - name: Validate privileged LGPD RPC inventory contracts
+        run: python3 -m unittest discover -s tests -p test_supabase_sensitive_privacy_functions.py -v
 
   canonical-object-comparison:
     if: github.event_name != 'pull_request'
@@ -191,6 +203,35 @@ jobs:
               (.missing_on_absent_relations + .missing_on_restored_relations))' \
             "${RUNNER_TEMP}/rls-policy-dependency-assessment.json"
 
+      - name: Audit privileged LGPD RPC grants without exporting SQL bodies
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql "${SUPABASE_DB_URL}" -X -qAt -F "$(printf '\t')" \
+            -v ON_ERROR_STOP=1 \
+            -f scripts/sql/supabase_sensitive_privacy_functions_readonly.sql \
+            > "${RUNNER_TEMP}/privacy-function-posture.tsv"
+
+          python3 -m scripts.audit_supabase_sensitive_privacy_functions \
+            --inventory "${RUNNER_TEMP}/privacy-function-posture.tsv" \
+            --output "${RUNNER_TEMP}/privacy-function-assessment.json"
+
+          jq -e '.metadata_only == true and
+            .function_definitions_exported == false and
+            .student_data_exported == false and
+            .production_write_authorized == false and
+            .function_authorization_verified == false and
+            .mfa_enforcement_verified == false and
+            .status == "PRIVACY_HIGH_PRIVILEGE_REVIEW_REQUIRED" and
+            .inspected_functions == 24 and
+            .authenticated_wrappers == 14 and
+            .service_only_functions == 10 and
+            .anon_exposed == 0 and
+            .missing_search_path == 0 and
+            .missing_service_execute == 0 and
+            .wrong_authenticated_access == 0' \
+            "${RUNNER_TEMP}/privacy-function-assessment.json"
+
       - name: Upload limited structural gap report only
         uses: actions/upload-artifact@v4
         if: always()
@@ -200,6 +241,7 @@ jobs:
             ${{ runner.temp }}/schema-object-gap-assessment.json
             ${{ runner.temp }}/rls-posture-assessment.json
             ${{ runner.temp }}/rls-policy-dependency-assessment.json
+            ${{ runner.temp }}/privacy-function-assessment.json
           retention-days: 14
           if-no-files-found: ignore
 

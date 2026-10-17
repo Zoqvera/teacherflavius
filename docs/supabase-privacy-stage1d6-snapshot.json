@@ -1,0 +1,59 @@
+{
+  "captured_at": "2026-10-17",
+  "source": {
+    "repository": "Zoqvera/teacherflavius",
+    "canonical_main_commit": "6c0c0af6783a54f4a5423e466872ffc59bd5506e",
+    "canonical_inventory_workflow_run": 39032446907,
+    "canonical_inventory_artifact": 12101255745,
+    "privacy_privilege_observation": "production pg_catalog / read-only queries, 2026-10-17"
+  },
+  "object_inventory": {
+    "baseline_objects": 1831,
+    "production_objects": 2911,
+    "common_objects": 1830,
+    "matching_definitions": 1653,
+    "differing_definitions": 177,
+    "missing_in_baseline": 1081,
+    "extra_in_baseline": 1
+  },
+  "rls": {
+    "baseline_policies": 99,
+    "production_policies": 109,
+    "missing_policies": 10,
+    "missing_on_restored_relations": 0,
+    "missing_on_absent_relations": 10,
+    "differing_commands_or_roles": 0,
+    "differing_predicates": 4,
+    "dependencies": {
+      "public.marketing_acquisition_events": 1,
+      "public.marketing_commercial_leads": 1,
+      "public.natanael_acquisition_events": 1,
+      "public.natanael_admins": 1,
+      "public.page_content_overrides": 3,
+      "public.student_course_states": 1,
+      "public.student_preparation_pilot_members": 1,
+      "public.student_preparation_pilot_settings": 1
+    }
+  },
+  "sensitive_privacy_functions": {
+    "privileged_function_count": 24,
+    "allowed_authenticated_execute": 14,
+    "restricted_service_only": 10,
+    "anon_executable": 0,
+    "without_configured_search_path": 0,
+    "function_bodies_with_aal2_literal": 0,
+    "function_bodies_referencing_admin_mfa_alias": 11,
+    "administrative_alias_directly_enforces_aal2": false,
+    "authorization_behavior_verified": false,
+    "mfa_enforcement_verified": false
+  },
+  "limits": {
+    "metadata_only": true,
+    "function_definitions_exported": false,
+    "student_data_exported": false,
+    "production_write_authorized": false,
+    "migration_ledger_modified": false,
+    "remote_branch_replay_verified": false,
+    "production_privilege_changes_authorized": false
+  }
+}
