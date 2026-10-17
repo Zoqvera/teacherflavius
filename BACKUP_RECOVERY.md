@@ -173,3 +173,26 @@ Verify at minimum:
 The repository is public. Backup artifacts must be treated as potentially discoverable by repository readers. Production database material is therefore encrypted before upload; plaintext backup data must never be committed, attached to issues, published as release assets or uploaded as unencrypted Actions artifacts.
 
 `recovery_manifest.json` is kept inside the encrypted archive even though it contains only technical counts/configuration. Recovery report artifacts intentionally contain status/timing metadata only, not database counts or user data.
+
+
+## Etapa 5 — Ensaio das migrações de apresentações no backup restaurado
+
+A partir de 17/10/2026, o verificador de recuperação testa também as duas
+migrações de apresentações `20261017133000` e `20261017144500`
+**somente depois** de restaurar o arquivo criptografado e comparar o
+fingerprint técnico com o backup original. O ensaio cria as três tabelas
+transitoriamente no banco descartável, valida RLS, seis políticas,
+gatilhos e concessões de acesso e executa `ROLLBACK`.
+
+O relatório de recuperação inclui o campo agregado
+`presentation_schema_rehearsal: "passed"` somente quando o ensaio for
+concluído. A consulta seguinte confirma que não restou nenhuma tabela
+de apresentações após a reversão. Não são adicionados dados de alunos
+nem consultado o conteúdo de registros da cópia restaurada.
+
+A alteração na documentação de homologação das apresentações aciona
+uma nova execução do workflow de backup criptografado em `main`, e
+uma restauração descartável após seu sucesso. Esses resultados são
+evidências importantes, mas não substituem a verificação do ledger
+produtivo e a autorização separada para aplicar migrações ou ativar
+interfaces no domínio público.
