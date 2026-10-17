@@ -14,6 +14,8 @@ on:
       - "scripts/sql/supabase_rls_policy_posture_readonly.sql"
       - "scripts/compare_supabase_rls_posture.py"
       - "tests/test_supabase_rls_posture.py"
+      - "scripts/triage_missing_supabase_rls_policies.py"
+      - "tests/test_supabase_rls_dependency_triage.py"
       - ".github/workflows/supabase-schema-object-inventory.yml"
   push:
     branches:
@@ -28,6 +30,8 @@ on:
       - "scripts/sql/supabase_rls_policy_posture_readonly.sql"
       - "scripts/compare_supabase_rls_posture.py"
       - "tests/test_supabase_rls_posture.py"
+      - "scripts/triage_missing_supabase_rls_policies.py"
+      - "tests/test_supabase_rls_dependency_triage.py"
       - ".github/workflows/supabase-schema-object-inventory.yml"
   workflow_dispatch:
 
@@ -45,6 +49,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_supabase_schema_object_inventory.py -v
       - name: Test RLS posture comparator without remote credentials
         run: python3 -m unittest discover -s tests -p test_supabase_rls_posture.py -v
+      - name: Test policy relation-dependency triage
+        run: python3 -m unittest discover -s tests -p test_supabase_rls_dependency_triage.py -v
 
   canonical-object-comparison:
     if: github.event_name != 'pull_request'
@@ -159,6 +165,24 @@ jobs:
             .remote_branch_replay_verified == false' \
             "${RUNNER_TEMP}/rls-posture-assessment.json"
 
+      - name: Identify missing policies blocked by absent tables
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m scripts.triage_missing_supabase_rls_policies \
+            --baseline-policies "${RUNNER_TEMP}/canonical-rls-posture.tsv" \
+            --production-policies "${RUNNER_TEMP}/production-rls-posture.tsv" \
+            --baseline-objects "${RUNNER_TEMP}/canonical-objects.tsv" \
+            --output "${RUNNER_TEMP}/rls-policy-dependency-assessment.json"
+
+          jq -e '.contains_predicates == false and
+            .contains_student_records == false and
+            .production_write_authorized == false and
+            .security_equivalence_verified == false and
+            (.missing_policies ==
+              (.missing_on_absent_relations + .missing_on_restored_relations))' \
+            "${RUNNER_TEMP}/rls-policy-dependency-assessment.json"
+
       - name: Upload limited structural gap report only
         uses: actions/upload-artifact@v4
         if: always()
@@ -167,6 +191,7 @@ jobs:
           path: |
             ${{ runner.temp }}/schema-object-gap-assessment.json
             ${{ runner.temp }}/rls-posture-assessment.json
+            ${{ runner.temp }}/rls-policy-dependency-assessment.json
           retention-days: 14
           if-no-files-found: ignore
 
