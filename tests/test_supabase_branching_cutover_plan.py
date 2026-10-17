@@ -95,7 +95,7 @@ class CutoverPlanTests(unittest.TestCase):
         before = source.read_bytes()
         local_entry = migration(source.name[:14], source.name[15:-4], source.read_text().strip())
         plan = create_plan(root, f"{local_entry.version}\t{local_entry.name}\t{local_entry.checksum}\n")
-        self.assertEqual(plan.bootstrap_overlays, 82)
+        self.assertEqual(plan.bootstrap_overlays, 83)
         self.assertEqual(plan.status, "BLOCKED_RECONCILIATION")
         self.assertEqual(before, source.read_bytes())
         self.assertFalse(plan.production_ledger_write_authorized)
