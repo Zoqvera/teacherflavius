@@ -291,22 +291,14 @@ collect_remote_records() {
         order by version;"
 }
 
-# Ledger rows created by the approved 5B psql transaction retain their
-# canonical version/name but do not contain SQL statement snapshots. The
-# two immutable Git digests below must match, and an independent read-only
-# production schema attestation must still pass.
+# The approved, manually applied 5B SQL is canonical in Git; live ledger
+# versions have no statement snapshots. Compare exact digests plus live ACLs.
 verify_manual_presentation_catalog() {
   local result
-
-  result="$(
-    psql "${SUPABASE_DB_URL}" \
-      -AtX \
-      -v ON_ERROR_STOP=1 \
-      --file "${ROOT_DIR}/scripts/sql/lesson_presentations_catalog_attestation.sql"
-  )"
+  result="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+    --file "${ROOT_DIR}/scripts/sql/lesson_presentations_catalog_attestation.sql")"
   [[ "${result}" == 't' ]]
 }
-
 filter_local_records_from_cutoff() {
   local records_file="$1"
 
@@ -389,259 +381,32 @@ VERIFIED_MIGRATION_ALIASES
     }
   ' "${joined_file}" > "${mismatch_file}"
 
-  # Exact exception for the two approved, canonical 5B psql ledger rows.
-  # A missing, changed or partial pair is NEVER waived.
-  local expected_empty_sha='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  # Exception for the exact canonical pair; every other drift remains fatal.
+  local empty_sha='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
   local stage1_line stage3_line expected_stage1 expected_stage3
-  stage1_line="$(awk -F 
-    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
-    sed 's/^/  - /' "${remote_only_file}"
-    drift_found=true
-  fi
-
-  if [[ -s "${local_only_file}" ]]; then
-    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
-      # PRs may propose append-only migrations; they must not already be in
-      # production. Published versions remain strictly protected above.
-      local production_tip
-      production_tip="$(tail -n 1 "${remote_versions_file}")"
-      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
-        echo "::error::Production migration history is empty or malformed."
-        drift_found=true
-      fi
-      while IFS= read -r new_version; do
-        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ || ! "${new_version}" > "${production_tip}" ]]; then
-          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}."
-          drift_found=true
-        else
-          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
-        fi
-      done < "${local_only_file}"
-    else
-      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
-      sed 's/^/  - /' "${local_only_file}"
-      drift_found=true
-    fi
-  fi
-
-  if [[ -s "${mismatch_file}" ]]; then
-    echo "::error::Migration identity differs between production and Git:"
-    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
-      echo "  - ${version}"
-      if [[ "${remote_name}" != "${local_name}" ]]; then
-        echo "    production name: ${remote_name}"
-        echo "    Git name:        ${local_name}"
-      fi
-      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
-        echo "    production sha256: ${remote_checksum}"
-        echo "    Git sha256:        ${local_checksum}"
-      fi
-    done < "${mismatch_file}"
-    drift_found=true
-  fi
-
-  if [[ "${drift_found}" == true ]]; then
-    exit 1
-  fi
-}
-
-main() {
-  require_configuration
-
-  TEMP_DIR="$(mktemp -d)"
-  trap cleanup EXIT
-
-  local local_records_file="${TEMP_DIR}/local_records"
-  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
-  local remote_records_file="${TEMP_DIR}/remote_records"
-
-  collect_local_records > "${local_records_file}"
-  validate_unique_local_versions "${local_records_file}"
-  validate_historical_immutability "${local_records_file}"
-
-  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
-  collect_remote_records > "${remote_records_file}"
-
-  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
-
-  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
-}
-
-main "$@"
-\\t' '$1 == "20261017133000" {print}' "${mismatch_file}")"
-  stage3_line="$(awk -F 
-    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
-    sed 's/^/  - /' "${remote_only_file}"
-    drift_found=true
-  fi
-
-  if [[ -s "${local_only_file}" ]]; then
-    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
-      # PRs may propose append-only migrations; they must not already be in
-      # production. Published versions remain strictly protected above.
-      local production_tip
-      production_tip="$(tail -n 1 "${remote_versions_file}")"
-      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
-        echo "::error::Production migration history is empty or malformed."
-        drift_found=true
-      fi
-      while IFS= read -r new_version; do
-        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ || ! "${new_version}" > "${production_tip}" ]]; then
-          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}."
-          drift_found=true
-        else
-          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
-        fi
-      done < "${local_only_file}"
-    else
-      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
-      sed 's/^/  - /' "${local_only_file}"
-      drift_found=true
-    fi
-  fi
-
-  if [[ -s "${mismatch_file}" ]]; then
-    echo "::error::Migration identity differs between production and Git:"
-    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
-      echo "  - ${version}"
-      if [[ "${remote_name}" != "${local_name}" ]]; then
-        echo "    production name: ${remote_name}"
-        echo "    Git name:        ${local_name}"
-      fi
-      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
-        echo "    production sha256: ${remote_checksum}"
-        echo "    Git sha256:        ${local_checksum}"
-      fi
-    done < "${mismatch_file}"
-    drift_found=true
-  fi
-
-  if [[ "${drift_found}" == true ]]; then
-    exit 1
-  fi
-}
-
-main() {
-  require_configuration
-
-  TEMP_DIR="$(mktemp -d)"
-  trap cleanup EXIT
-
-  local local_records_file="${TEMP_DIR}/local_records"
-  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
-  local remote_records_file="${TEMP_DIR}/remote_records"
-
-  collect_local_records > "${local_records_file}"
-  validate_unique_local_versions "${local_records_file}"
-  validate_historical_immutability "${local_records_file}"
-
-  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
-  collect_remote_records > "${remote_records_file}"
-
-  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
-
-  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
-}
-
-main "$@"
-\\t' '$1 == "20261017144500" {print}' "${mismatch_file}")"
-  printf -v expected_stage1 '%s\\t%s\\t%s\\t%s\\t%s' \\
-    '20261017133000' 'lesson_presentations_stage1' \\
-    'lesson_presentations_stage1' "${expected_empty_sha}" \\
+  stage1_line="$(awk -F $'\t' '$1 == "20261017133000" {print}' "${mismatch_file}")"
+  stage3_line="$(awk -F $'\t' '$1 == "20261017144500" {print}' "${mismatch_file}")"
+  printf -v expected_stage1 '%s\t%s\t%s\t%s\t%s' \
+    '20261017133000' 'lesson_presentations_stage1' \
+    'lesson_presentations_stage1' "${empty_sha}" \
     'e7e1f1772e5906a056fb390811cde4b11c3923a8e3c969652c2c1a545fc0430f'
-  printf -v expected_stage3 '%s\\t%s\\t%s\\t%s\\t%s' \\
-    '20261017144500' 'lesson_presentation_views_stage3' \\
-    'lesson_presentation_views_stage3' "${expected_empty_sha}" \\
+  printf -v expected_stage3 '%s\t%s\t%s\t%s\t%s' \
+    '20261017144500' 'lesson_presentation_views_stage3' \
+    'lesson_presentation_views_stage3' "${empty_sha}" \
     'd5beaf8f0d3f4b3df92d8f519a80c6895323c4cae20041b90565ac6928898d42'
   if [[ "${stage1_line}" == "${expected_stage1}" &&
         "${stage3_line}" == "${expected_stage3}" ]]; then
     if verify_manual_presentation_catalog; then
-      awk -F 
-    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
-    sed 's/^/  - /' "${remote_only_file}"
-    drift_found=true
-  fi
-
-  if [[ -s "${local_only_file}" ]]; then
-    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
-      # PRs may propose append-only migrations; they must not already be in
-      # production. Published versions remain strictly protected above.
-      local production_tip
-      production_tip="$(tail -n 1 "${remote_versions_file}")"
-      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
-        echo "::error::Production migration history is empty or malformed."
-        drift_found=true
-      fi
-      while IFS= read -r new_version; do
-        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ || ! "${new_version}" > "${production_tip}" ]]; then
-          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}."
-          drift_found=true
-        else
-          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
-        fi
-      done < "${local_only_file}"
-    else
-      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
-      sed 's/^/  - /' "${local_only_file}"
-      drift_found=true
-    fi
-  fi
-
-  if [[ -s "${mismatch_file}" ]]; then
-    echo "::error::Migration identity differs between production and Git:"
-    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
-      echo "  - ${version}"
-      if [[ "${remote_name}" != "${local_name}" ]]; then
-        echo "    production name: ${remote_name}"
-        echo "    Git name:        ${local_name}"
-      fi
-      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
-        echo "    production sha256: ${remote_checksum}"
-        echo "    Git sha256:        ${local_checksum}"
-      fi
-    done < "${mismatch_file}"
-    drift_found=true
-  fi
-
-  if [[ "${drift_found}" == true ]]; then
-    exit 1
-  fi
-}
-
-main() {
-  require_configuration
-
-  TEMP_DIR="$(mktemp -d)"
-  trap cleanup EXIT
-
-  local local_records_file="${TEMP_DIR}/local_records"
-  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
-  local remote_records_file="${TEMP_DIR}/remote_records"
-
-  collect_local_records > "${local_records_file}"
-  validate_unique_local_versions "${local_records_file}"
-  validate_historical_immutability "${local_records_file}"
-
-  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
-  collect_remote_records > "${remote_records_file}"
-
-  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
-
-  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
-}
-
-main "$@"
-\\t' \
+      awk -F $'\t' \
         '$1 != "20261017133000" && $1 != "20261017144500"' \
         "${mismatch_file}" > "${TEMP_DIR}/remaining_identity_mismatch"
       mv "${TEMP_DIR}/remaining_identity_mismatch" "${mismatch_file}"
-      echo "::notice::5B canonical psql migrations attested by pinned Git SHA256 and live RLS/ACL catalog. All other drift remains enforced."
+      echo "::notice::Two canonical 5B migrations attested by immutable Git SHA256 and live RLS/ACL catalog. All other drift remains enforced."
     else
-      echo "::error::Presentation schema does not match the approved 5B catalog attestation."
+      echo "::error::Presentation schema does not match approved 5B catalog attestation."
       exit 1
     fi
   fi
-
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"
