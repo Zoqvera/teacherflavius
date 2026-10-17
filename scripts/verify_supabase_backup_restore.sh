@@ -229,13 +229,13 @@ rehearse_presentation_schema_against_restored_backup() {
   # persisted recovery fingerprint.
   local rehearsal_log="$RUNNER_TEMP/lesson-presentation-stage5-rehearsal.log"
   {
-    printf 'begin;\\n'
-    printf "set local lock_timeout = '5s';\\n"
-    printf "set local statement_timeout = '30s';\\n"
+    echo 'begin;'
+    echo "set local lock_timeout = '5s';"
+    echo "set local statement_timeout = '30s';"
     cat "$GITHUB_WORKSPACE/supabase/migrations/20261017133000_lesson_presentations_stage1.sql"
     cat "$GITHUB_WORKSPACE/supabase/migrations/20261017144500_lesson_presentation_views_stage3.sql"
     cat "$GITHUB_WORKSPACE/tests/fixtures/lesson_presentations_stage5_restored_backup_checks.sql"
-    printf 'rollback;\\n'
+    echo 'rollback;'
   } | psql "$LOCAL_DB_URL" -X -qAt -v ON_ERROR_STOP=1 > "$rehearsal_log"
 
   if ! grep -Fxq 'LESSON_PRESENTATIONS_STAGE5_BACKUP_REHEARSAL_PASSED' "$rehearsal_log"; then
