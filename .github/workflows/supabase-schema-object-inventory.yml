@@ -8,6 +8,9 @@ on:
       - "scripts/sql/supabase_schema_object_inventory_readonly.sql"
       - "scripts/compare_supabase_object_inventories.py"
       - "tests/test_supabase_schema_object_inventory.py"
+      - "scripts/sql/supabase_rls_policy_posture_readonly.sql"
+      - "scripts/compare_supabase_rls_posture.py"
+      - "tests/test_supabase_rls_posture.py"
       - ".github/workflows/supabase-schema-object-inventory.yml"
   push:
     branches:
@@ -16,6 +19,9 @@ on:
       - "scripts/sql/supabase_schema_object_inventory_readonly.sql"
       - "scripts/compare_supabase_object_inventories.py"
       - "tests/test_supabase_schema_object_inventory.py"
+      - "scripts/sql/supabase_rls_policy_posture_readonly.sql"
+      - "scripts/compare_supabase_rls_posture.py"
+      - "tests/test_supabase_rls_posture.py"
       - ".github/workflows/supabase-schema-object-inventory.yml"
   workflow_dispatch:
 
@@ -31,6 +37,8 @@ jobs:
         uses: actions/checkout@v7
       - name: Test inventory parsing, privacy and comparison contracts
         run: python3 -m unittest discover -s tests -p test_supabase_schema_object_inventory.py -v
+      - name: Test RLS posture comparator without remote credentials
+        run: python3 -m unittest discover -s tests -p test_supabase_rls_posture.py -v
 
   canonical-object-comparison:
     if: github.event_name != 'pull_request'
@@ -115,12 +123,44 @@ jobs:
             .complete_schema_equivalence_verified == false' \
             "${RUNNER_TEMP}/schema-object-gap-assessment.json"
 
+      - name: Classify RLS role surfaces and predicates separately
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+
+          docker exec -i "${DB_CONTAINER}" \
+            psql -X -qAt -F "$(printf '\t')" -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            < scripts/sql/supabase_rls_policy_posture_readonly.sql \
+            > "${RUNNER_TEMP}/canonical-rls-posture.tsv"
+
+          psql "${SUPABASE_DB_URL}" -X -qAt -F "$(printf '\t')" \
+            -v ON_ERROR_STOP=1 \
+            -f scripts/sql/supabase_rls_policy_posture_readonly.sql \
+            > "${RUNNER_TEMP}/production-rls-posture.tsv"
+
+          python3 -m scripts.compare_supabase_rls_posture \
+            --baseline "${RUNNER_TEMP}/canonical-rls-posture.tsv" \
+            --production "${RUNNER_TEMP}/production-rls-posture.tsv" \
+            --output "${RUNNER_TEMP}/rls-posture-assessment.json"
+
+          jq -e '.expressions_exported == false and
+            .student_data_exported == false and
+            .production_write_authorized == false and
+            .security_equivalence_verified == false and
+            .remote_branch_replay_verified == false' \
+            "${RUNNER_TEMP}/rls-posture-assessment.json"
+
       - name: Upload limited structural gap report only
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: supabase-schema-object-gap-assessment
-          path: ${{ runner.temp }}/schema-object-gap-assessment.json
+          path: |
+            ${{ runner.temp }}/schema-object-gap-assessment.json
+            ${{ runner.temp }}/rls-posture-assessment.json
           retention-days: 14
           if-no-files-found: ignore
 
