@@ -6,7 +6,7 @@ Esta etapa adiciona apenas a migracao SQL e testes de contrato. Nenhum component
 visual, rota, texto publico ou configuracao de SEO e alterado. A funcionalidade
 ainda nao deve ser disponibilizada aos alunos.
 
-A migracao `20261016224500_lesson_presentations_stage1.sql` e incremental:
+A migracao `20261017015000_lesson_presentations_stage1.sql` e incremental:
 nao altera tabelas de frequencia, mensalidades ou exercicios.
 
 ## Identidade da licao
