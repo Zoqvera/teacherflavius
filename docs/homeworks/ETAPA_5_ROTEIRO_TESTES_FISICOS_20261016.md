@@ -20,9 +20,9 @@ Não confundir **simulação de tela corrigida** com nota retornada por serviço
 
 1. Fazer checkout do commit homologado no repositório; não colocar alunos reais ou tokens em fixtures.
 2. Em computador de desenvolvimento, servir os arquivos **apenas localmente** com `python3 -m http.server 8000 --bind 127.0.0.1` a partir da raiz do repositório.
-3. No desktop, abrir `http://127.0.0.1:8000/tests/fixtures/homeworks-stage5-visual/index.html?activity=writing&state=initial`.
+3. No desktop, abrir a lista fictícia em `http://127.0.0.1:8000/tests/fixtures/homeworks-stage5-visual/index.html?activity=writing&state=list` e navegar com **Tab → Abrir atividade → Enter → Voltar às atividades → Enter**; conferir se o foco entra no título correto em cada mudança.
 4. Para Android conectado por USB com depuração previamente autorizada, usar `adb reverse tcp:8000 tcp:8000` e, no Chrome Android, abrir `http://localhost:8000/tests/fixtures/homeworks-stage5-visual/index.html?activity=writing&state=initial`. O espelhamento de porta local evita publicar a bancada de testes na Internet.
-5. Para estados demonstrativos, trocar `state=initial` por `submitted` ou `evaluated`; testar também `activity=reading` e `activity=grammar`.
+5. Para estados demonstrativos, utilizar `state=initial`, `submitted`, `privacy_review` ou `evaluated`; testar também `activity=reading` e `activity=grammar`. Em Reading/Grammar, o leitor deve anunciar **o texto integral da pergunta**, não apenas 'Questão 1'.
 6. Não usar o endereço de produção do módulo como substituto: a liberação de estudantes deve continuar desligada. PWA e falhas de rede com backend exigem estágio protegido separado.
 
 ## C. Casos de teste e critérios de aceite
@@ -36,9 +36,9 @@ Registrar **APROVADO / REPROVADO / BLOQUEADO**, nunca preencher antecipadamente 
 | A11Y-03 | Android TalkBack | Abrir Writing em `state=submitted` | Informação de correção pendente compreensível, sem nota inventada | PENDENTE |
 | A11Y-04 | Android TalkBack | Abrir Writing em `state=evaluated` | Nota, comentário e retorno à lista identificáveis; navegação sem armadilha | PENDENTE |
 | A11Y-05 | Android Chrome | Simular largura reduzida, teclado aberto, rolagem, rotacionar aparelho | Nenhum campo cortado, controle acionável, rolagem previsível, sem sobreposição | PENDENTE |
-| A11Y-06 | Windows NVDA + Firefox/Chrome | Tab/Shift+Tab, Enter/Espaço, navegação por títulos em Reading/Grammar | Foco visível, nome de botões, campo e questão comunicados em ordem coerente | PENDENTE |
+| A11Y-06 | Windows NVDA + Firefox/Chrome | Tab/Shift+Tab, Enter/Espaço, navegação por títulos em Reading/Grammar | Foco visível, nome de botões; cada controle anuncia **o enunciado integral** via `aria-labelledby` da `legend` correspondente | PENDENTE |
 | A11Y-07 | macOS VoiceOver + Safari (se disponível) | Repetir Writing inicial/submetido/corrigido | Nome, papel e estado do foco, status/nota e conteúdo acessíveis | PENDENTE |
-| A11Y-08 | Desktop somente teclado | Ir da lista à atividade e retornar; testar títulos e botões | Foco não perdido, sem depender de mouse, Enter/Espaço funcionais | PENDENTE |
+| A11Y-08 | Desktop somente teclado | Abrir `state=list`; pressionar Tab, Enter em 'Abrir atividade', Tab até 'Voltar às atividades' e Enter | Foco no título a cada navegação; nenhum controle depende de mouse, Enter/Espaço funcionais | PENDENTE |
 | A11Y-09 | Desktop navegador | Examinar zoom 200% e largura equivalente a 320px | Sem rolagem horizontal obrigatória, informação e ações preservadas | PENDENTE |
 | INT-01 | Stage protegido com Auth/DB/Edge descartáveis | Salvar Writing fictício com verificação etária ausente | Texto persiste, `privacy_review`, nota nula, zero requisições OpenAI | PENDENTE — fixture visual NÃO basta |
 | INT-02 | Stage protegido com Auth/DB/Edge descartáveis | Simular queda de rede após envio e repetir mesma chave | Uma única tentativa persistida; recuperar resultado sem duplicidade | PENDENTE — fixture visual NÃO basta |
@@ -47,6 +47,13 @@ Registrar **APROVADO / REPROVADO / BLOQUEADO**, nunca preencher antecipadamente 
 | SEC-01 | Produção (somente leitura) | Ler controle global e volumes agregados, sem dados pessoais | Flag permanece `false`; nenhuma permissão nova ao estudante | PENDENTE para conferência final |
 
 **Observação:** o trabalho em banco e os testes HTTP isolados anteriores cobrem cenários técnicos de segurança, mas **não substituem** a evidência física exigida nesta matriz.
+
+
+### Estado da evidência após reforço automático (17/10/2026)
+
+A bancada agora permite a navegação a partir da lista fictícia (`state=list`), além dos estados `initial`, `submitted`, `privacy_review` e `evaluated`. Os testes de código conferem vínculo `aria-labelledby` aos enunciados, `role=status` e retorno do foco ao título. Isso **não é comprovação de anúncio de voz real**. A coluna de testes físicos permanece `PENDENTE`, independentemente do resultado do GitHub Actions. O `state=list` é simulado e não consulta o banco de produção.
+
+**Quando encerrar os testes físicos:** registrar dispositivo, leitor, resultado e evidência não identificadora na matriz acima; se houver defeito, abrir PR de reparo e repetir o caso. A confirmação de acessibilidade física e a análise jurídica exigem decisões independentes do controlador.
 
 ## D. Modelo de registro de evidência (sem PII)
 

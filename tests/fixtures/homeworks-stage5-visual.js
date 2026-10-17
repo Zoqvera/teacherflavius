@@ -33,7 +33,7 @@
   });
 
   const selected = activities[activity];
-  if (!selected || !["initial", "submitted", "evaluated", "privacy_review"].includes(state)) {
+  if (!selected || !["initial", "submitted", "evaluated", "privacy_review", "list"].includes(state)) {
     document.documentElement.dataset.qaResult = "INVALID_SCENARIO";
     return;
   }
@@ -85,6 +85,12 @@
     if (!title || document.activeElement !== title || title.tabIndex !== -1) {
       return false;
     }
+    if (state === "list") {
+      const list = mount.querySelector("ol.homework-student-list");
+      const open = list?.querySelector("button");
+      return title.textContent === "Minhas tarefas para casa" &&
+        Boolean(list?.querySelector("li") && open?.textContent === "Abrir atividade");
+    }
     if (state !== "initial") {
       const result = mount.querySelector(".homework-student-result");
       return result?.getAttribute("role") === "status" &&
@@ -107,8 +113,10 @@
     return questions.length === selected.questions.length && questions.every(fieldset => {
       const legend = fieldset.querySelector("legend");
       const control = fieldset.querySelector("select, input");
+      const labelId = legend?.getAttribute("id");
       return Boolean(legend?.textContent.trim() && control?.required &&
-        control.getAttribute("aria-label")?.trim());
+        labelId && control.getAttribute("aria-labelledby") === labelId &&
+        !control.hasAttribute("aria-label"));
     });
   }
 
@@ -120,7 +128,8 @@
     feedbackRenderer: window.HomeworkPedagogicalPreview
   });
 
-  controller.open(assignmentId).then(function () {
+  const launch = state === "list" ? controller.load() : controller.open(assignmentId);
+  launch.then(function () {
     // Measure DOM after the UI module actually rendered a full scenario.
     requestAnimationFrame(function () {
       const mount = document.getElementById("visualMount");
@@ -137,7 +146,10 @@
           !mount.textContent.includes("Nota:") &&
           !visibleButtons.some(button => button.textContent.includes("Tentar corrigir novamente"))
         ));
-      const semanticAccessibility = hasAccessibleStructure(mount);
+      const notice = document.getElementById("visualNotice");
+      const statusAccessible = notice?.getAttribute("role") === "status" &&
+        notice.getAttribute("aria-live") === "polite";
+      const semanticAccessibility = hasAccessibleStructure(mount) && statusAccessible;
       const result = !overflow && !unnamed && writingDisclosure && correctStatus &&
         semanticAccessibility ? "PASS" : "FAIL";
       document.documentElement.dataset.qaResult = result;

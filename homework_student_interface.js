@@ -8,6 +8,7 @@
   });
   const MAX_WRITING_LENGTH = 3000;
   let writingCounterSequence = 0;
+  let questionLabelSequence = 0;
 
   function createElement(tag, className, label) {
     const node = document.createElement(tag);
@@ -63,6 +64,10 @@
     let currentDetail = null;
     let currentSubmission = null;
     let busy = false;
+
+    // Ensure status updates are announced even when the host omitted ARIA attributes.
+    notice.setAttribute("role", "status");
+    notice.setAttribute("aria-live", "polite");
 
     function status(message) {
       notice.textContent = message;
@@ -199,6 +204,8 @@
       for (const [index, question] of detail.questions.entries()) {
         const fieldset = createElement("fieldset", "homework-student-question");
         const legend = createElement("legend", "", (index + 1) + ". " + question.prompt);
+        const legendId = "homework-question-label-" + (++questionLabelSequence);
+        legend.setAttribute("id", legendId);
         fieldset.appendChild(legend);
         if (question.question_type === "multiple_choice") {
           const options = Array.isArray(question.options) ? question.options : [];
@@ -213,7 +220,7 @@
             choice.value = String(option);
             select.appendChild(choice);
           }
-          select.setAttribute("aria-label", "Questão " + (index + 1));
+          select.setAttribute("aria-labelledby", legendId);
           fieldset.appendChild(select);
           fields.push({ id: question.id, read: () => select.value });
         } else if (question.question_type === "short_answer") {
@@ -221,7 +228,7 @@
           input.type = "text";
           input.maxLength = 2000;
           input.required = true;
-          input.setAttribute("aria-label", "Resposta da questão " + (index + 1));
+          input.setAttribute("aria-labelledby", legendId);
           fieldset.appendChild(input);
           fields.push({ id: question.id, read: () => input.value });
         } else {
