@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MIGRATION = ROOT / "supabase/migrations/20261016224500_lesson_presentations_stage1.sql"
+MIGRATION = ROOT / "supabase/migrations/20261017015000_lesson_presentations_stage1.sql"
 
 
 class LessonPresentationsStage1ContractTests(unittest.TestCase):
