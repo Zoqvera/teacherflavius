@@ -48,7 +48,7 @@ class PresentationStage5BContractTests(unittest.TestCase):
         self.assertIn("report_name", script)
         self.assertIn("backup_run_id", script)
         self.assertIn("backup_sha", script)
-        self.assertIn("conclusion == \\"success\\"", script)
+        self.assertIn('conclusion == "success"', script)
         self.assertIn("recovery_sha", script)
         self.assertIn("assess_lesson_presentation_backup.py", script)
         self.assertIn("RECOVERY_EVIDENCE_CURRENT", script)
