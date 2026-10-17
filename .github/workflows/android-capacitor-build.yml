@@ -63,6 +63,21 @@ jobs:
           ! grep -q 'subscription_checkout.js' _android_site/pagamento/index.html
           grep -q 'href="/o-que-fazer/index.html"' _android_site/area_do_estudante.html
 
+      - name: Assert presentations are bundled for Android lesson routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f _android_site/lesson_presentation_editor.js
+          test -f _android_site/teacher_lesson_presentations.js
+          grep -Fq 'const RELEASE_ENABLED = true;' _android_site/lesson_presentation_editor.js
+          grep -Fq 'const RELEASE_ENABLED = true;' _android_site/teacher_lesson_presentations.js
+          test -f _android_site/licao/index.html
+          test -f _android_site/roteiro-da-aula/index.html
+          grep -Fq 'lesson_presentation_editor.js?v=20261017-stage5c-1' _android_site/licao/index.html
+          grep -Fq 'teacher_lesson_presentations.js?v=20261017-stage5c-1' _android_site/roteiro-da-aula/index.html
+          grep -Fq 'noindex,nofollow' _android_site/licao/index.html
+          grep -Fq 'noindex, nofollow' _android_site/roteiro-da-aula/index.html
+
       - name: Generate Android project
         run: npx cap add android
 
