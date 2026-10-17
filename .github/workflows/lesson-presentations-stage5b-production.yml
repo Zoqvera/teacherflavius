@@ -1,11 +1,6 @@
 name: Stage 5B - Deploy lesson presentation schema
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/lesson-presentations-stage5b-production.yml'
   workflow_dispatch:
     inputs:
       confirmation:
@@ -26,6 +21,7 @@ jobs:
     name: Guarded, atomic production presentation schema
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: github.ref == 'refs/heads/main'
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
