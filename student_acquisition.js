@@ -7,6 +7,7 @@
     { value: "google", label: "Google" },
     { value: "referral", label: "Indicação de amigo ou familiar" },
     { value: "facebook", label: "Facebook" },
+    { value: "getninjas", label: "GetNinjas" },
     { value: "other", label: "Outro" },
     { value: "unknown", label: "Não me lembro" }
   ]);
