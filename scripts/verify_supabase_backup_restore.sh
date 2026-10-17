@@ -222,6 +222,43 @@ compare_recovery_state() {
   diff -u "$EXPECTED_NORMALIZED" "$ACTUAL_NORMALIZED"
 }
 
+rehearse_presentation_schema_against_restored_backup() {
+  # Restore is already verified; this transaction tests ONLY the proposed
+  # presentation DDL against the real production catalog restored locally.
+  # It never runs against production, inserts student rows or changes the
+  # persisted recovery fingerprint.
+  local rehearsal_log="$RUNNER_TEMP/lesson-presentation-stage5-rehearsal.log"
+  {
+    printf 'begin;\\n'
+    printf "set local lock_timeout = '5s';\\n"
+    printf "set local statement_timeout = '30s';\\n"
+    cat "$GITHUB_WORKSPACE/supabase/migrations/20261017133000_lesson_presentations_stage1.sql"
+    cat "$GITHUB_WORKSPACE/supabase/migrations/20261017144500_lesson_presentation_views_stage3.sql"
+    cat "$GITHUB_WORKSPACE/tests/fixtures/lesson_presentations_stage5_restored_backup_checks.sql"
+    printf 'rollback;\\n'
+  } | psql "$LOCAL_DB_URL" -X -qAt -v ON_ERROR_STOP=1 > "$rehearsal_log"
+
+  if ! grep -Fxq 'LESSON_PRESENTATIONS_STAGE5_BACKUP_REHEARSAL_PASSED' "$rehearsal_log"; then
+    echo '::error::Presentation DDL was not verified against the restored production schema.'
+    exit 1
+  fi
+
+  local post_rollback
+  post_rollback="$(psql "$LOCAL_DB_URL" -X -qAt -v ON_ERROR_STOP=1 -c \
+    "select case when
+      to_regclass('public.lesson_presentations') is null
+      and to_regclass('public.lesson_presentation_versions') is null
+      and to_regclass('public.lesson_presentation_views') is null
+    then 'RESTORED_SCHEMA_UNCHANGED' else 'REHEARSAL_LEFT_OBJECTS' end;")"
+
+  if [[ "$post_rollback" != 'RESTORED_SCHEMA_UNCHANGED' ]]; then
+    echo '::error::Presentation rehearsal changed the disposable restore.'
+    exit 1
+  fi
+
+  echo 'Presentation migrations: verified on restored catalog, no tables retained.'
+}
+
 write_report() {
   local finished_epoch duration verified_at captured_at
   finished_epoch="$(date +%s)"
@@ -279,6 +316,7 @@ main() {
   restore_application_triggers
   capture_restored_manifest_and_disable_crons
   compare_recovery_state
+  rehearse_presentation_schema_against_restored_backup
   write_report
 }
 
