@@ -45,8 +45,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'const RELEASE_ENABLED = false;' lesson_presentation_editor.js
-          grep -Fq 'const RELEASE_ENABLED = false;' teacher_lesson_presentations.js
+          grep -Fq 'const RELEASE_ENABLED = true;' lesson_presentation_editor.js
+          grep -Fq 'const RELEASE_ENABLED = true;' teacher_lesson_presentations.js
 
   disposable-rls-end-to-end:
     runs-on: ubuntu-latest
