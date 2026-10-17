@@ -1,0 +1,134 @@
+name: Supabase canonical object inventory
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/sql/supabase_schema_object_inventory_readonly.sql"
+      - "scripts/compare_supabase_object_inventories.py"
+      - "tests/test_supabase_schema_object_inventory.py"
+      - ".github/workflows/supabase-schema-object-inventory.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/sql/supabase_schema_object_inventory_readonly.sql"
+      - "scripts/compare_supabase_object_inventories.py"
+      - "tests/test_supabase_schema_object_inventory.py"
+      - ".github/workflows/supabase-schema-object-inventory.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  schema-object-inventory-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+      - name: Test inventory parsing, privacy and comparison contracts
+        run: python3 -m unittest discover -s tests -p test_supabase_schema_object_inventory.py -v
+
+  canonical-object-comparison:
+    if: github.event_name != 'pull_request'
+    needs: schema-object-inventory-contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Check out protected main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Fail closed without production read-only credential
+        shell: bash
+        run: |
+          if [[ -z "${SUPABASE_DB_URL}" ]]; then
+            echo "::error::SUPABASE_DB_URL is not configured."
+            exit 1
+          fi
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Rebuild canonical database in disposable local stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEST_DIR="${RUNNER_TEMP}/teacherflavius-schema-1c"
+          mkdir -p "${TEST_DIR}"
+          (cd "${TEST_DIR}" && supabase init --force)
+          python3 -m scripts.prepare_supabase_cli_replay \
+            --repo-root "${GITHUB_WORKSPACE}" \
+            --staging-root "${TEST_DIR}"
+          python3 -m scripts.audit_supabase_isolated_chain \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --staging-root "${TEST_DIR}" \
+            --report-json "${TEST_DIR}/artifacts/chain-audit.json"
+          jq -e '.status == "LOCAL_CHAIN_VALIDATED" and
+            .production_ledger_modified == false and
+            .automatic_branching_safe == false' \
+            "${TEST_DIR}/artifacts/chain-audit.json"
+          (cd "${TEST_DIR}" && supabase start)
+
+      - name: Compare hashed object identities without exporting SQL definitions
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+
+          docker exec -i "${DB_CONTAINER}" \
+            psql -X -qAt -F "$(printf '\t')" -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            < scripts/sql/supabase_schema_object_inventory_readonly.sql \
+            > "${RUNNER_TEMP}/canonical-objects.tsv"
+
+          psql "${SUPABASE_DB_URL}" -X -qAt -F "$(printf '\t')" \
+            -v ON_ERROR_STOP=1 \
+            -f scripts/sql/supabase_schema_object_inventory_readonly.sql \
+            > "${RUNNER_TEMP}/production-objects.tsv"
+
+          python3 -m scripts.compare_supabase_object_inventories \
+            --baseline-inventory "${RUNNER_TEMP}/canonical-objects.tsv" \
+            --production-inventory "${RUNNER_TEMP}/production-objects.tsv" \
+            --report-json "${RUNNER_TEMP}/schema-object-gap-assessment.json"
+
+          jq -e '.metadata_only == true and
+            .raw_definitions_exported == false and
+            .student_data_exported == false and
+            .production_write_authorized == false and
+            .migration_ledger_modified == false and
+            .remote_branch_replay_verified == false and
+            .complete_schema_equivalence_verified == false' \
+            "${RUNNER_TEMP}/schema-object-gap-assessment.json"
+
+      - name: Upload limited structural gap report only
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: supabase-schema-object-gap-assessment
+          path: ${{ runner.temp }}/schema-object-gap-assessment.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Stop isolated Supabase database
+        if: always()
+        shell: bash
+        run: |
+          TEST_DIR="${RUNNER_TEMP}/teacherflavius-schema-1c"
+          if [[ -f "${TEST_DIR}/supabase/config.toml" ]]; then
+            (cd "${TEST_DIR}" && supabase stop --no-backup)
+          fi
