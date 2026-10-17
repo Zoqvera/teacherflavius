@@ -56,7 +56,7 @@ class AcademicRlsRecoveryContracts(unittest.TestCase):
     def test_catalog_and_real_database_checks(self) -> None:
         fp = json.loads(FINGERPRINT.read_text(encoding="utf-8"))
         self.assertEqual(fp["rls_policies"], 95)
-        self.assertEqual(fp["tables"], 53)
+        self.assertEqual(fp["tables"], 52)
         wf = RESTORE.read_text(encoding="utf-8")
         self.assertIn("425_restore_roadmap_teacher_and_exercise_read_policies.sql", wf)
         self.assertIn("tests/sql/canonical_roadmap_exercise_policies_stage1d4b.sql", wf)

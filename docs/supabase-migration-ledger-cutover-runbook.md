@@ -335,7 +335,7 @@ O workflow protegido `Supabase canonical object inventory` passa a gerar `rls-po
 As diferencas encontradas nao autorizam alterar autorizacoes em producao nem demonstram equivalencia funcional. Possiveis ampliacoes de acesso exigem revisao prioritaria e testes com contas ficticias. PRs nao recebem credenciais de producao; a consulta comparativa acontece apenas no workflow protegido da branch principal. Permanecem bloqueados o ajuste do ledger produtivo e a PR #776 ate verificacao completa.
 
 
-## ETAPA 1D.3 - diferencas de permissao e restauracao academica
+## ETAPA 1D.3 - diferencas de permissao
 
 A analise das quatro policies da tabela `public.study_lesson_pages`
 identificou diferenca concreta entre `is_teacher_admin_mfa()`
@@ -348,14 +348,6 @@ do comportamento das quatro operacoes.
 As outras 81 diferencas na categoria papeis/comandos permanecem
 pendentes de comparacao semantica por policy. O resultado de zero
 ampliacoes detectadas automaticamente **nao** certifica seguranca.
-
-O pacote de armazenamento academico `410` e apenas a primeira
-peca do modulo de eventos de encerramento formal. Funcoes de
-monitoramento e rotinas de retencao nao sao ativadas por este
-overlay. Para os testes Homeworks, o workflow instala as funcoes
-da migracao ja existente depois da estrutura, em banco
-descartavel. Nao se executa reconciliacao no ledger da producao,
-nem se habilita branching remoto de forma automatica.
 
 
 ## ETAPA 1D.3 - causa-raiz de 81 divergencias RLS
@@ -438,18 +430,22 @@ Nenhuma etapa aqui corrige diretamente o ledger de produção, cria
 branch remota com custo ou autoriza merge da PR #776.
 
 
-## ETAPA 1D.4B — quatro policies recuperáveis
+## ETAPA 1D.4B — recuperação de quatro políticas acadêmicas após a PR #795
 
-A auditoria de dependências após a PR #793 revelou **29 policies
-ausentes**, das quais **25 pertencem a tabelas ainda inexistentes no
-bootstrap** e **4 pertencem a relações já reconstruídas**:
-três de `study_roadmap_completion` e uma de `teacher_exercises`.
-O overlay 425 recupera as quatro, com ACL e RLS intactos e proteção
-contra restauração de antigas políticas de mutação dos alunos e
-de visualização do catálogo suspenso.
+Após a PR #795, o módulo não publicado de Tarefas para Casa foi retirado.
+O bootstrap nesta etapa **não** recupera sua tabela de relacionamento,
+funções, workflows ou o overlay 410 removido.
 
-O tratamento das outras 25 policies deve seguir seus módulos, após
-restaurar definições, constraints, funções, triggers e privilégios
-das respectivas tabelas em bancos descartáveis.
-Os artefatos da auditoria são relatórios diagnósticos, não autorização
-de acesso ou permissão para alterar as regras produtivas.
+O overlay 425 recupera **somente em banco descartável** três políticas
+administrativas de `study_roadmap_completion` (INSERT, UPDATE e DELETE)
+e a política de leitura exclusiva do professor em `teacher_exercises`.
+As políticas de origem, RLS e predicados administrativos são verificados.
+
+A reconstrução passou de 84 para 85 overlays e de 91 para 95 políticas,
+com 52 tabelas públicas. A consulta produtiva de 17/10/2026 encontrou
+109 políticas públicas; comparar apenas totais não prova equivalência
+nem identifica todas as diferenças. A auditoria protegida de CI deve
+comparar operações, papéis e hashes das policies após o merge.
+
+Não alterar migrações produtivas, ledger, financeiro, rotas ou SEO.
+A PR #776 continua em rascunho, sem implantação autorizada.

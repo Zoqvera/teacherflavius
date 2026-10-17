@@ -5,12 +5,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      live_writing:
-        description: "Run one billable synthetic GPT-6 Luna correction through local Edge HTTP"
-        type: boolean
-        required: true
-        default: false
 permissions:
   contents: read
 
@@ -186,7 +180,6 @@ jobs:
             supabase/baseline/395_student_review_invitation_funnel.sql \
             supabase/baseline/400_justify_attended_cancelled_lesson_revocations.sql \
             supabase/baseline/405_restore_auth_account_health_run_storage.sql \
-            supabase/baseline/410_restore_academic_relationship_event_storage.sql \
             supabase/baseline/415_reconcile_canonical_policy_modes.sql \
             supabase/baseline/420_reconcile_financial_mfa_policies.sql \
             supabase/baseline/425_restore_roadmap_teacher_and_exercise_read_policies.sql
@@ -281,14 +274,14 @@ jobs:
           $auth_health_storage$;
           SQL
 
-      - name: Verify academic relationship RLS and lesson-page MFA invariants
+      - name: Verify lesson-page MFA invariants
         shell: bash
         run: |
           set -euo pipefail
           DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
           test -n "$DB_CONTAINER"
           docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
-            -v ON_ERROR_STOP=1 < tests/sql/canonical_academic_rls_stage1d3.sql
+            -v ON_ERROR_STOP=1 < tests/sql/canonical_lesson_page_mfa.sql
 
       - name: Verify financial MFA policies against production posture
         shell: bash
@@ -300,15 +293,14 @@ jobs:
             psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
             < tests/sql/canonical_financial_mfa_stage1d4.sql
 
-      - name: Verify restored academic RLS operations with real PostgreSQL
+      - name: Verify restored academic RLS in disposable PostgreSQL
         shell: bash
         run: |
           set -euo pipefail
           DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
           test -n "$DB_CONTAINER"
-          docker exec -i "$DB_CONTAINER" \
-            psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            < tests/sql/canonical_roadmap_exercise_policies_stage1d4b.sql
+          docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 < tests/sql/canonical_roadmap_exercise_policies_stage1d4b.sql
 
       - name: Verify least-privilege browser ACLs
         shell: bash
@@ -714,120 +706,6 @@ jobs:
           docker exec -i "$DB_CONTAINER" \
             psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
             < tests/sql/regular_cancellation_homologation.sql
-
-      - name: Homologate Homeworks in isolated PostgreSQL
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
-          test -n "$DB_CONTAINER"
-
-          # Explicit allowlist: migration history is not replayed wholesale.
-          # This stack contains only synthetic users; no emails or AI calls are sent.
-          for migration in \
-            supabase/migrations/20261015043416_homeworks_stage2_schema.sql \
-            supabase/migrations/20261015060000_homeworks_stage4_submission.sql \
-            supabase/migrations/20261015065000_homeworks_stage5_teacher_review.sql \
-            supabase/migrations/20261015071000_homeworks_auto_grade_reading_grammar.sql \
-            supabase/migrations/20261015180000_homeworks_ai_monthly_budget.sql \
-            supabase/migrations/20261015192900_homeworks_privacy_export.sql \
-            supabase/migrations/20261016144000_homeworks_formal_relationship_retention.sql \
-            supabase/migrations/20261016165000_homeworks_writing_age_verifications.sql
-          do
-            # This table now exists in the canonical disaster-recovery baseline.
-            # Reuse only the *remaining* reviewed migration definitions for the
-            # Homeworks integration fixture; never re-create or overwrite data.
-            if [[ "$migration" == "supabase/migrations/20261016144000_homeworks_formal_relationship_retention.sql" ]]; then
-              sed -n '/^-- Somente um professor com MFA pode declarar/,$p' "$migration" \
-                | docker exec -i "$DB_CONTAINER" \
-                    psql -U postgres -d postgres -v ON_ERROR_STOP=1
-            else
-              docker exec -i "$DB_CONTAINER" \
-                psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-                < "$migration"
-            fi
-          done
-
-          # A transação do teste usa ROLLBACK. A liberação é temporária só no CI.
-          docker exec -i "$DB_CONTAINER" \
-            psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            < tests/sql/homeworks_stage5_postgres_e2e.sql
-
-          # A fixture não pode deixar liberação nem registros.
-          docker exec -i "$DB_CONTAINER" \
-            psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
-          do $clean$
-          begin
-            if (select enabled from public.homework_release_control where id=1) or
-               exists(select 1 from public.exercise_attempts) or
-               exists(select 1 from public.exercises) then
-              raise exception 'Testes de Homeworks deixaram estado no banco isolado.';
-            end if;
-          end;
-          $clean$;
-          SQL
-
-      - name: Install production-equivalent Writing rate limiter in local fixture
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
-          test -n "$DB_CONTAINER"
-
-          # Only extract the real rate-limit table and RPC from its existing
-          # security migration. Do not replay unrelated production hardening.
-          sed -n \
-            '/^create table if not exists public.api_rate_limit_buckets/,/^grant execute on function public.consume_api_rate_limit/p' \
-            supabase/migrations/20260820183500_security_hardening.sql \
-            | docker exec -i "$DB_CONTAINER" \
-                psql -U postgres -d postgres -v ON_ERROR_STOP=1
-
-          docker exec -i "$DB_CONTAINER" \
-            psql -U postgres -d postgres -At -v ON_ERROR_STOP=1 \
-              -c "select to_regprocedure('public.consume_api_rate_limit(text,integer,integer)') is not null;" \
-            | grep -Fx t
-
-      - name: Exercise Homeworks through actual local Supabase Auth and Edge HTTP
-        shell: bash
-        env:
-          HOMEWORKS_LIVE_WRITING: ${{ github.event_name == 'workflow_dispatch' && inputs.live_writing && 'true' || 'false' }}
-          LOCAL_OPENAI_SECRET: ${{ github.event_name == 'workflow_dispatch' && inputs.live_writing && secrets.OPENAI_API_KEY || '' }}
-        run: |
-          set -euo pipefail
-
-          # A billable OpenAI call is possible only with a manual opt-in.
-          # On PRs, the same JWT/SQL/HTTP suite runs without a live provider.
-          if [ "$HOMEWORKS_LIVE_WRITING" = "true" ] && [ -z "$LOCAL_OPENAI_SECRET" ]; then
-            echo "::error::Add the GitHub Actions secret OPENAI_API_KEY."
-            exit 1
-          fi
-
-          # Functions receive their secret from a temporary restricted env file.
-          # All URLs and JWT keys resolve to the disposable local Supabase stack.
-          umask 077
-          SECRET_FILE="$(mktemp /tmp/homeworks-stage5-local.XXXXXXXX.env)"
-          printf 'OPENAI_API_KEY=%s\n' "$LOCAL_OPENAI_SECRET" > "$SECRET_FILE"
-          supabase functions serve homework-student --no-verify-jwt \
-            --env-file "$SECRET_FILE" \
-            > /tmp/homeworks-stage5-edge-local.log 2>&1 &
-          EDGE_PID=$!
-          trap 'kill "$EDGE_PID" 2>/dev/null || true; rm -f "$SECRET_FILE"' EXIT
-
-          if ! node tests/homeworks_stage5_http_integration.cjs; then
-            # Scrub keys from local Edge diagnostics (no response bodies).
-            sed -E 's/(Bearer |sk-[A-Za-z0-9_-]+)[A-Za-z0-9_.-]+/REDACTED/g' \
-              /tmp/homeworks-stage5-edge-local.log | tail -n 55
-            exit 1
-          fi
-
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
-          test -n "$DB_CONTAINER"
-          docker exec -i "$DB_CONTAINER" \
-            psql -U postgres -d postgres -At -v ON_ERROR_STOP=1 \
-              -c 'select not enabled from public.homework_release_control where id=1;' \
-            | grep -Fx t
 
       - name: Exercise real retry RPC with mocked pg_net, no outbound HTTP
         shell: bash

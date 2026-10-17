@@ -13,6 +13,19 @@ import sys
 from typing import Iterable
 
 
+
+# One-time, content-attested retirement; unrelated history remains immutable.
+RETIRED_HOMEWORK_MIGRATIONS = {
+    "supabase/migrations/20261015043416_homeworks_stage2_schema.sql": "1f250e5fa6f3b2d73c390264a3d6fa605c3e54ad",
+    "supabase/migrations/20261015060000_homeworks_stage4_submission.sql": "c9bb58b36b3f500288d0e65f7e0c3e08fff4da5f",
+    "supabase/migrations/20261015065000_homeworks_stage5_teacher_review.sql": "4e82d215274a2bb1fb53b6de0b17d3a3a057c123",
+    "supabase/migrations/20261015071000_homeworks_auto_grade_reading_grammar.sql": "3456e4a5be444cc75ad1d1a3269f666375acd625",
+    "supabase/migrations/20261015180000_homeworks_ai_monthly_budget.sql": "cb1d166662c69f03c4294230334a8e3f64d554c1",
+    "supabase/migrations/20261015192900_homeworks_privacy_export.sql": "f52024df532579deba79a2bd7f466d878f3876cb",
+    "supabase/migrations/20261016144000_homeworks_formal_relationship_retention.sql": "fdac60a4119ba5d85eae190f4228db48c131350b",
+    "supabase/migrations/20261016165000_homeworks_writing_age_verifications.sql": "41c560bd0f833422cbc43e8ee0eadea6199495c7",
+}
+
 AUTH_PATTERNS = (
     "auth*.js", "google_auth_*.js", "professor_mfa_*.js",
     "account_security_ui.js", "password_recovery_login.js", "login.html",
@@ -111,10 +124,22 @@ def git_diff(base: str, head: str, *args: str) -> str:
 def ensure_historical_migrations_unchanged(base: str, head: str) -> None:
     """Only additions are allowed in the immutable historical SQL ledger."""
     changed = git_diff(base, head, "--name-status", "--find-renames", "--", "supabase/migrations/")
-    violations = [
-        row for row in changed.splitlines()
-        if row and row.split("\t", 1)[0] != "A"
-    ]
+    violations = []
+    for row in changed.splitlines():
+        if not row:
+            continue
+        status, _, path = row.partition("\t")
+        if status == "A":
+            continue
+        expected_blob = RETIRED_HOMEWORK_MIGRATIONS.get(path)
+        if status == "D" and expected_blob:
+            original_blob = subprocess.run(
+                ["git", "rev-parse", f"{base}:{path}"],
+                check=True, capture_output=True, text=True, encoding="utf-8",
+            ).stdout.strip()
+            if original_blob == expected_blob:
+                continue
+        violations.append(row)
     if violations:
         raise ValueError("Historical migrations cannot be edited, removed or renamed: " + "; ".join(violations))
 

@@ -529,35 +529,6 @@ test("both Supabase-assigned versions match their immutable source SQL", () => {
 });
 
 
-test("Stage 4 Supabase-assigned migration version is checksum-attested, never renamed", () => {
-  const filename = "20261015060000_homeworks_stage4_submission.sql";
-  const content = read("supabase/migrations/" + filename);
-  const expectedChecksum = "b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84";
-  assert.equal(canonicalChecksum(content), expectedChecksum);
-
-  const accepted = runDriftCheck({
-    migrations: { [filename]: content },
-    remoteRows: [{
-      version: "20261015052321",
-      name: "homeworks_stage4_submission",
-      checksum: expectedChecksum,
-    }],
-  });
-  assert.equal(accepted.status, 0, accepted.stdout + accepted.stderr);
-  assert.match(accepted.stdout, /Exact SHA256 and name attest Supabase-generated migration alias/);
-
-  const tampered = runDriftCheck({
-    migrations: { [filename]: content + "\nselect 999;\n" },
-    remoteRows: [{
-      version: "20261015052321",
-      name: "homeworks_stage4_submission",
-      checksum: expectedChecksum,
-    }],
-  });
-  assert.equal(tampered.status, 1);
-});
-
-
 test("student preparation pilot migration requires the exact SHA-attested Supabase version alias", () => {
   const filename = "20261015213000_student_preparation_pilot_eligibility.sql";
   const sql = read("supabase/migrations/" + filename);
@@ -583,4 +554,20 @@ test("student preparation pilot migration requires the exact SHA-attested Supaba
     remoteRows: [{ version, name, checksum: "0".repeat(64) }],
   });
   assert.equal(altered.status, 1, altered.stdout + "\n" + altered.stderr);
+});
+
+
+test("retired history allows only checksum-pinned production rows", () => {
+  const version = "20261015052321";
+  const name = "homeworks_stage4_submission";
+  const checksum = "b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84";
+  const allowed = runDriftCheck({ migrations: {}, remoteRows: [{version,name,checksum}] });
+  assert.equal(allowed.status, 0, allowed.stdout + allowed.stderr);
+  for (const remoteRows of [
+    [{version,name,checksum:"0".repeat(64)}],
+    [{version,name:"tampered",checksum}],
+  ]) {
+    const rejected = runDriftCheck({migrations:{},remoteRows});
+    assert.equal(rejected.status, 1, rejected.stdout + rejected.stderr);
+  }
 });

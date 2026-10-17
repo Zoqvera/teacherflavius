@@ -167,32 +167,6 @@ antes de integrar à reconstrução canônica.
 O overlay `405_restore_auth_account_health_run_storage.sql` recupera apenas a tabela privada `private.auth_account_health_runs`, seu indice temporal e as permissoes de `service_role`, com SQL extraido literalmente da migracao `20260910163542_add_auth_account_health_monitoring.sql`. Ele nao instala funcoes de monitoramento nem agenda tarefas. A configuracao de producao dessa tabela privada nao possui RLS e nega acesso direto a `anon` e `authenticated`. A reconstrucao preserva essas caracteristicas. O overlay e validado em banco descartavel e nao modifica o historico de migracoes produtivo. O numero de overlays passa de 81 para 82, sem mudanca nas contagens de objetos publicos.
 
 
-## ETAPA 1D.3 - armazenamento academico e preservacao de MFA
-
-O overlay `410_restore_academic_relationship_event_storage.sql`
-restaura somente a tabela publica `homework_relationship_events`, o
-indice de consulta e as permissoes/constraints da migracao
-`20261016144000_homeworks_formal_relationship_retention.sql`.
-A tabela possui RLS habilitada, nenhuma policy que permita acesso
-direto pelo navegador e REVOKE explicito para `anon` e
-`authenticated` na tabela e sequencia. Nao insere eventos, nao
-modifica alunos, nao ativa retencao, exclusao ou processos agendados.
-As rotinas restantes da migracao historica continuam sendo aplicadas
-nos testes Homeworks em ambiente descartavel, sem recriar a tabela.
-
-O fingerprint contabiliza uma tabela publica, cinco constraints e
-um indice independente adicional: 53 tabelas, 271 constraints e 117
-indices nao associados a constraints, com 84 overlays canonicos.
-A evidencia nao comprova equivalencia integral com a producao.
-
-As quatro policies `study_lesson_pages` do bootstrap mantem a
-funcao `is_teacher_admin_mfa()`, embora a consulta apenas de leitura
-tenha encontrado `is_teacher_admin()` nas quatro policies homonimas
-da producao em 17/10/2026. A divergencia fica registrada como
-diferenca **de autorizacao a revisar**, sem substituir a exigencia
-de MFA no bootstrap e sem alterar as policies de producao.
-
-
 ## ETAPA 1D.3 - reconciliacao dos modos das policies
 
 O overlay `415_reconcile_canonical_policy_modes.sql` existe **apenas na
@@ -251,23 +225,16 @@ permissões e fluxos de autorização. A divergência das quatro
 políticas de páginas de lição permanece pendente de decisão de MFA.
 
 
-## ETAPA 1D.4B — recuperação das quatro policies de tabelas existentes
+## ETAPA 1D.4B — recuperação acadêmica após retirada de Tarefas para Casa
 
 O overlay `425_restore_roadmap_teacher_and_exercise_read_policies.sql`
-recompõe **exclusivamente no bootstrap descartável** quatro políticas
-que existem na produção, mas não no esquema canônico:
-as três operações de edição do progresso do roteiro executáveis
-apenas pelo professor e a consulta do catálogo antigo de exercícios
-restrita ao professor durante sua suspensão. O SQL segue as migrações
-já revisadas `20260909071400_restrict_study_roadmap_completion_to_teacher.sql`
-e `20261015135322_suspend_legacy_student_exercise_portal.sql`.
+restaura somente no bootstrap descartável três políticas de edição
+administrativa do roteiro e a leitura exclusivamente docente do catálogo
+antigo de exercícios, sem retomar o módulo de Tarefas para Casa retirado
+pela PR #795. Exige RLS, autorizações e predicados esperados e falha de
+forma fechada se o esquema divergir.
 
-O aluno continua com acesso SELECT somente ao próprio progresso;
-nenhuma política de mutação direta do aluno foi recriada. O portal
-de exercícios antigo continua inacessível a alunos. O restore aborta
-se as tabelas estiverem sem RLS ou se o conjunto de políticas de
-origem divergir do esperado. Há verificação SQL real no CI.
-
-O bootstrap passa a **86 overlays e 95 policies**: as 25 políticas
-produtivas restantes exigem reconstruir primeiro suas tabelas
-e dependências. Não se aplicam migrações nem grants na produção.
+O baseline atual tem **85 overlays, 52 tabelas públicas e 95 policies**.
+Este total substitui a contagem histórica acima de 85 overlays atribuída
+à etapa 1D.4: depois da PR #795 o overlay 420 era o 84º e o novo 425 é o
+85º. A paridade integral com produção permanece por comprovar.

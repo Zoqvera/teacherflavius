@@ -49,6 +49,21 @@ require_configuration() {
   fi
 }
 
+# Pinned audit identities for a retired and unreleased feature.
+retired_migration_records() {
+  cat <<'RETIRED_PROJECT_MIGRATIONS'
+20261015043416|20261015043416|homeworks_stage2_schema|53de1f08ea80abb52e096616f8e0f32eea7213925d0799bddd2ae9c3e2a3b4af
+20261015060000|20261015052321|homeworks_stage4_submission|b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84
+20261015065000|20261015063815|homeworks_stage5_teacher_review|745ae55478c5f7978040fe901a67348fe43e66305ef12cbd167e924b201101b5
+20261015071000|20261015065527|homeworks_auto_grade_reading_grammar|4d47c634ced700ae8d0e53e8c84e0cdeca83bf6bec079819eec2a68c3b9c2cbb
+20261015180000|20261015163925|homeworks_ai_monthly_budget|171df792cb4eff9c4b15fef4d6cd69b103ae30db2acc4bfab25f3a4739547b3c
+20261015192900|20261015193625|homeworks_privacy_export|6d8579c6ef03a9e174e0120edbf25ad316b2b3d3027538c99fd8946c1f70c3f0
+20261016144000|20261016144444|homeworks_formal_relationship_retention|064b87e35d015b57c0d7651dbb8aaed6b84aa482e994b3e0a0b266f805c08ca7
+20261016165000|20261016165814|homeworks_writing_age_verifications|d09a4e2b6f15b4aeb141c2dc5ea34b995ac4c89793b5e7edb0784771c4b75335
+20261017110321|20261017110321|retire_unreleased_homeworks_20261017|9f17ac9c4e3b6bcfbe36353a331f221d96ec3a50aa7da0effbc62afa3cb68deb
+RETIRED_PROJECT_MIGRATIONS
+}
+
 normalized_sha256() {
   local file="$1"
 
@@ -208,6 +223,16 @@ validate_historical_immutability() {
     }
   ' "${comparison_file}" > "${mismatch_file}"
 
+  # Only these exact historical migrations may be removed from Git.
+  while IFS='|' read -r git_version remote_version migration_name migration_checksum; do
+    local original_name
+    original_name="$(awk -F $'\t' -v v="$git_version" '$1 == v { print $2 }' "$base_unique_records_file")"
+    if [[ "$original_name" == "$migration_name" ]]; then
+      grep -vx "$git_version" "$missing_file" > "$TEMP_DIR/retired_missing" || true
+      mv "$TEMP_DIR/retired_missing" "$missing_file"
+    fi
+  done < <(retired_migration_records)
+
   if [[ ! -s "${missing_file}" && ! -s "${mismatch_file}" ]]; then
     return 0
   fi
@@ -322,16 +347,20 @@ compare_production_identity() {
   done <<'VERIFIED_MIGRATION_ALIASES'
 20261015030100|20261015030846|add_regular_and_teacher_cancellation_email_notifications|794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7
 20261015041000|20261015041123|retry_transactional_emails_safely|5550c24828b5de718108b3c0709f50b8079fc1a6f8ea07267a75dc80f8d277da
-20261015060000|20261015052321|homeworks_stage4_submission|b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84
-20261015065000|20261015063815|homeworks_stage5_teacher_review|745ae55478c5f7978040fe901a67348fe43e66305ef12cbd167e924b201101b5
-20261015071000|20261015065527|homeworks_auto_grade_reading_grammar|4d47c634ced700ae8d0e53e8c84e0cdeca83bf6bec079819eec2a68c3b9c2cbb
-20261015180000|20261015163925|homeworks_ai_monthly_budget|171df792cb4eff9c4b15fef4d6cd69b103ae30db2acc4bfab25f3a4739547b3c
-20261015192900|20261015193625|homeworks_privacy_export|6d8579c6ef03a9e174e0120edbf25ad316b2b3d3027538c99fd8946c1f70c3f0
 20261015213000|20261015214937|student_preparation_pilot_eligibility|c026abfefca5a071929eebca566461733ce49ccd590b50b9a485275705ffd264
-20261016144000|20261016144444|homeworks_formal_relationship_retention|064b87e35d015b57c0d7651dbb8aaed6b84aa482e994b3e0a0b266f805c08ca7
 20261016162500|20261016163745|justify_attended_cancelled_lesson_revocations|f936f2c9d92bd1f9bb92aa0c9cdcd80684562a17fcd7b067f1793ddf10adb3b2
-20261016165000|20261016165814|homeworks_writing_age_verifications|d09a4e2b6f15b4aeb141c2dc5ea34b995ac4c89793b5e7edb0784771c4b75335
 VERIFIED_MIGRATION_ALIASES
+
+  # Historical remote rows remain attested by both name and normalized digest.
+  while IFS='|' read -r git_version remote_version migration_name migration_checksum; do
+    local remote_identity expected_remote
+    remote_identity="$(grep -E "^$remote_version[[:space:]]" "$remote_records_file" || true)"
+    printf -v expected_remote '%s\t%s\t%s' "$remote_version" "$migration_name" "$migration_checksum"
+    if [[ "$remote_identity" == "$expected_remote" ]]; then
+      grep -vx "$remote_version" "$remote_only_file" > "$TEMP_DIR/retired_remaining_remote" || true
+      mv "$TEMP_DIR/retired_remaining_remote" "$remote_only_file"
+    fi
+  done < <(retired_migration_records)
 
   join -t $'\t' \
     -o '1.1,1.2,2.2,1.3,2.3' \
