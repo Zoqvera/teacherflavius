@@ -1,0 +1,112 @@
+name: Lesson presentations stage 4 end-to-end validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "tests/fixtures/lesson_presentations_stage4_full_cycle.sql"
+      - "tests/lesson_presentations_stage4_full_flow.test.js"
+      - "tests/test_lesson_presentations_stage4_readiness.py"
+      - "scripts/sql/lesson_presentations_production_preflight_readonly.sql"
+      - "scripts/assess_lesson_presentation_rollout.py"
+      - "docs/apresentacoes-licoes-etapa4.md"
+      - ".github/workflows/lesson-presentations-stage4-integration.yml"
+      - "package.json"
+  push:
+    branches:
+      - main
+    paths:
+      - "tests/fixtures/lesson_presentations_stage4_full_cycle.sql"
+      - "tests/lesson_presentations_stage4_full_flow.test.js"
+      - "tests/test_lesson_presentations_stage4_readiness.py"
+      - "scripts/sql/lesson_presentations_production_preflight_readonly.sql"
+      - "scripts/assess_lesson_presentation_rollout.py"
+      - "docs/apresentacoes-licoes-etapa4.md"
+      - ".github/workflows/lesson-presentations-stage4-integration.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  browser-flow-and-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Exercise both real browser modules with a shared, isolated API double
+        run: node --test tests/lesson_presentations_stage4_full_flow.test.js
+      - name: Validate metadata-only release preflight rules
+        run: python3 -m unittest discover -s tests -p test_lesson_presentations_stage4_readiness.py -v
+      - name: Verify both release gates remain hard-disabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'const RELEASE_ENABLED = false;' lesson_presentation_editor.js
+          grep -Fq 'const RELEASE_ENABLED = false;' teacher_lesson_presentations.js
+
+  disposable-rls-end-to-end:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: latest
+      - name: Reconstruct a disposable canonical database without remote credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE_DIR="${RUNNER_TEMP}/lesson-presentations-stage4"
+          mkdir -p "${STAGE_DIR}"
+          (cd "${STAGE_DIR}" && supabase init --force)
+          python3 -m scripts.prepare_supabase_cli_replay \
+            --repo-root "${GITHUB_WORKSPACE}" --staging-root "${STAGE_DIR}"
+          python3 -m scripts.audit_supabase_isolated_chain \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --staging-root "${STAGE_DIR}" \
+            --report-json "${STAGE_DIR}/artifacts/chain-audit.json"
+          jq -e '.status == "LOCAL_CHAIN_VALIDATED" and .automatic_branching_safe == false' \
+            "${STAGE_DIR}/artifacts/chain-audit.json"
+          (cd "${STAGE_DIR}" && supabase start)
+      - name: Exercise scoped candidate migrations and complete role-based lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+          for sql in \
+            supabase/migrations/20261017133000_lesson_presentations_stage1.sql \
+            supabase/migrations/20261017144500_lesson_presentation_views_stage3.sql
+          do
+            docker exec -i "${DB_CONTAINER}" psql -X -q -U postgres -d postgres \
+              -v ON_ERROR_STOP=1 < "${sql}"
+          done
+          docker exec -i "${DB_CONTAINER}" psql -X -qAt -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            < tests/fixtures/lesson_presentations_stage4_full_cycle.sql \
+            > "${RUNNER_TEMP}/stage4-cycle-result.log"
+          grep -Fxq 'LESSON_PRESENTATIONS_STAGE4_FULL_CYCLE_PASSED' \
+            "${RUNNER_TEMP}/stage4-cycle-result.log"
+          docker exec -i "${DB_CONTAINER}" psql -X -qAt -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            -c "select case when
+              (select count(*) from public.lesson_presentations)=0
+              and (select count(*) from public.lesson_presentation_versions)=0
+              and (select count(*) from public.lesson_presentation_views)=0
+              and not exists (
+                select 1 from auth.users
+                where email like 'lesson-stage4-%@invalid.test'
+              ) then 'EMPTY_AFTER_ROLLBACK' else 'TEST_DATA_REMAINED' end;" \
+            | grep -Fxq 'EMPTY_AFTER_ROLLBACK'
+      - name: Destroy isolated Supabase stack
+        if: always()
+        shell: bash
+        run: |
+          STAGE_DIR="${RUNNER_TEMP}/lesson-presentations-stage4"
+          if [[ -f "${STAGE_DIR}/supabase/config.toml" ]]; then
+            (cd "${STAGE_DIR}" && supabase stop --no-backup)
+          fi
