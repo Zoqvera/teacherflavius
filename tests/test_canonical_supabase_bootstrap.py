@@ -42,8 +42,9 @@ class CanonicalBootstrapTests(unittest.TestCase):
     def test_bootstrap_contains_exactly_the_existing_reviewed_overlays(self) -> None:
         root = Path(__file__).resolve().parents[1]
         compiled, manifest = compile_bootstrap(root)
-        self.assertEqual(compiled.count("-- BEGIN REVIEWED OVERLAY: "), 80)
-        self.assertEqual(manifest["overlay_count"], 80)
+        self.assertEqual(compiled.count("-- BEGIN REVIEWED OVERLAY: "), 81)
+        self.assertEqual(manifest["overlay_count"], 81)
+        self.assertIn("387_expand_turma_47_to_nine.sql", compiled)
         self.assertEqual(manifest["mode"], "disposable-only")
         self.assertEqual(
             manifest["bootstrap_sha256"],
@@ -83,7 +84,7 @@ class CanonicalBootstrapTests(unittest.TestCase):
             fingerprint = temporary / "fingerprint.sql"
             write_outputs(root, sql, manifest, fingerprint)
             report = json.loads(manifest.read_text())
-            self.assertEqual(report["overlay_count"], 80)
+            self.assertEqual(report["overlay_count"], 81)
             self.assertIn("public_functions", fingerprint.read_text())
             self.assertIn("select json_build_object(", fingerprint.read_text())
             self.assertIn("create table public.profiles", sql.read_text())
