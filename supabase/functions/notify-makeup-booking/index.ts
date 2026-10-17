@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
+import { recordResendAcceptance } from "../_shared/resend_delivery_core.mjs";
 
 type NotificationRecord = {
   id: string;
@@ -555,6 +556,18 @@ Deno.serve(async (request: Request) => {
     await failNotification(resendError);
     console.error("Resend rejected makeup notification", notification.id, resendResponse.status);
     return jsonResponse({ error: "Email provider rejected the message" }, 502);
+  }
+
+  if (Deno.env.get("RESEND_DELIVERY_TRACKING_ENABLED") === "true") {
+    const recipientRole = [TEACHER_BOOKING_TYPE, TEACHER_CANCELLATION_TYPE]
+      .includes(notificationType) ? "teacher" : "student";
+    const tracked = await recordResendAcceptance(supabase, resendResponse, {
+      queueName: "makeup", notificationId: notification.id, recipientRole,
+    });
+    if (!tracked) {
+      await failNotification("resend_tracking_unavailable");
+      return jsonResponse({ error: "Unable to record provider acceptance" }, 503);
+    }
   }
 
   const sentAt = new Date().toISOString();

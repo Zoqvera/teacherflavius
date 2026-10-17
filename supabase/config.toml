@@ -11,3 +11,8 @@ project_id = "teacherflavius-local-fixture"
 [db.seed]
 enabled = false
 sql_paths = ["./seed.sql"]
+
+# Resend authenticates with Svix HMAC, not Supabase JWTs.
+# The handler also requires RESEND_DELIVERY_TRACKING_ENABLED=true; OFF by default.
+[functions.resend-delivery-webhook]
+verify_jwt = false
