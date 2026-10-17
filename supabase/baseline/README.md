@@ -238,3 +238,29 @@ O baseline atual tem **85 overlays, 52 tabelas públicas e 95 policies**.
 Este total substitui a contagem histórica acima de 85 overlays atribuída
 à etapa 1D.4: depois da PR #795 o overlay 420 era o 84º e o novo 425 é o
 85º. A paridade integral com produção permanece por comprovar.
+
+
+## Stage 1D.5 — LGPD privacy catalog restoration (disposable database only)
+
+Overlay `430_restore_lgpd_privacy_catalog_stage1d5.sql` reconstructs only
+`public.data_subject_requests`, `public.data_retention_policies` and
+`public.data_retention_runs`, their 11 reviewed constraints, seven indexes
+(including three primary-key indexes), four SELECT-only RLS policies and
+browser table ACLs. The sources are historical migrations for data-subject
+rights and retention, reconciled against the production catalog on 17/10/2026.
+The teacher-only read policies keep the exact current authorization helper
+`is_teacher_admin_mfa()`; this helper is presently an alias and does not
+itself enforce AAL2. Owners can read only their own privacy requests;
+`anon` has no table access, and students have no direct write grants.
+
+**This is not a data migration or a privacy-deletion rollout.** The overlay
+neither inserts policy seeds nor creates privileged request/erasure RPCs,
+triggers, deletion functions, cron jobs or real records. These operational
+components remain gaps to review in separate packages. CI verifies the
+catalog and uses synthetic records inside a rolled-back transaction to check
+student ownership; remote production remains read-only and unchanged.
+
+With overlay 430, the canonical reconstruction now contains **86 overlays,
+55 public tables, 277 constraints, 120 non-constraint indexes, and 99 public
+RLS policies**. The previously documented historical totals above belong
+to earlier restore stages, not this stage. Tarefas para Casa remains retired.

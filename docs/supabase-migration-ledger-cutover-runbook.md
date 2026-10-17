@@ -474,3 +474,30 @@ A etapa é apenas diagnóstica: não concede direitos, não altera a
 produção nem liberta a PR #776. O próximo pacote deve reconstruir
 primeiro as estruturas e dependências de privacidade em ambiente
 inteiramente descartável.
+
+
+## ETAPA 1D.5 — reconstrução isolada do catálogo LGPD
+
+Em 17/10/2026 a auditoria 1D.4C apontou quatro políticas faltantes em três
+relações de privacidade. O overlay `430_restore_lgpd_privacy_catalog_stage1d5.sql`
+recria **apenas na reconstrução descartável** as relações de solicitações
+de titulares, regras de retenção e execuções, preservando os checks,
+índices, concessões e quatro políticas SELECT revisadas na produção.
+
+O pacote preserva acesso de leitura do titular somente às próprias
+solicitações, leitura administrativa ao professor via
+`is_teacher_admin_mfa()` e nenhuma permissão direta de escrita do
+aluno. A função atual `is_teacher_admin_mfa()` não exige AAL2 por si
+só, fato já identificado na etapa 1D.4C; não presumir MFA adicional.
+
+O bootstrap passa a **86 overlays, 55 tabelas públicas, 277 constraints,
+120 índices não associados a constraints e 99 políticas RLS**. A próxima
+auditoria protegida deverá avaliar os novos hashes e provar que as quatro
+políticas foram recuperadas sem criar novas ampliações de acesso.
+
+Não há carga de registros reais, inicialização de política de retenção,
+remoção de dados, execução de agendamentos, criação de RPCs privilegiadas,
+modificação do ledger ou da produção. Não altera páginas, rotas nem SEO.
+As funções efetivas de atendimento LGPD e manutenção automática exigem
+pacote separado antes de eventual restauração operacional. A PR #776
+permanece bloqueada.
