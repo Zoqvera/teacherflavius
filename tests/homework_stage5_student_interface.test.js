@@ -346,3 +346,51 @@ test("Writing counter is linked to its field without announcements on every keys
   textArea.dispatch("input");
   assert.match(counter.textContent, /Caracteres: 26 \/ 3000/);
 });
+
+test("status updates remain announced when host markup omits ARIA attributes", async () => {
+  const h = harness("writing");
+  assert.equal(h.notice.attributes.role, "status");
+  assert.equal(h.notice.attributes["aria-live"], "polite");
+  await h.controller.load();
+  assert.match(h.notice.textContent, /Lista de atividades atualizada/);
+});
+
+test("Reading and Grammar controls reference the entire question prompt", async () => {
+  for (const type of ["reading", "grammar"]) {
+    const h = harness(type);
+    await h.controller.open("00000000-0000-4000-8000-000000000001");
+    const fieldsets = descendants(h.mount, "fieldset");
+    assert.equal(fieldsets.length, 2);
+    for (const fieldset of fieldsets) {
+      const legend = descendants(fieldset, "legend")[0];
+      const control = descendants(fieldset, "select")[0] ||
+        descendants(fieldset, "input")[0];
+      assert.ok(legend && control);
+      assert.match(legend.textContent, /Which word\?|Your answer\?/);
+      assert.match(legend.attributes.id, /^homework-question-label-\d+$/);
+      assert.equal(control.attributes["aria-labelledby"], legend.attributes.id);
+      assert.equal(control.attributes["aria-label"], undefined);
+    }
+  }
+});
+
+test("synthetic list navigation preserves focus and does not submit activity", async () => {
+  const h = harness("reading");
+  await h.controller.load();
+  const openButton = descendants(h.mount, "button")
+    .find(button => button.textContent === "Abrir atividade");
+  assert.ok(openButton);
+  openButton.dispatch("click");
+  await flush();
+  assert.match(displayText(h.mount), /Which word\?/);
+  assert.equal(descendants(h.mount, "h2")[0].focused, true);
+
+  const backButton = descendants(h.mount, "button")
+    .find(button => button.textContent === "Voltar às atividades");
+  assert.ok(backButton);
+  backButton.dispatch("click");
+  await flush();
+  assert.match(displayText(h.mount), /Minhas tarefas para casa/);
+  assert.equal(descendants(h.mount, "h2")[0].focused, true);
+  assert.equal(h.calls.made, 0);
+});
