@@ -16,6 +16,8 @@ FIXTURE = ROOT / "tests" / "fixtures" / "homeworks-stage5-visual" / "index.html"
 ARTIFACTS = ROOT / "_homeworks_visual_artifacts"
 VIEWPORTS = (("mobile", 390, 844), ("compact", 320, 740), ("desktop", 1280, 900))
 SCENARIOS = (
+    ("reading", "list"),
+    ("writing", "list"),
     ("reading", "initial"),
     ("grammar", "initial"),
     ("writing", "initial"),
