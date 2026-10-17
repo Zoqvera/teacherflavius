@@ -32,6 +32,17 @@ class AcademicRlsRecoveryContracts(unittest.TestCase):
         self.assertIn(f'create policy "{name}"', suspension)
         self.assertEqual(recovery.lower().count("\ncreate policy "), 4)
 
+    def test_postgres_policy_identifier_is_checked_after_truncation(self) -> None:
+        full = "Apenas professores podem visualizar exercícios durante suspensão"
+        stored = "Apenas professores podem visualizar exercícios durante suspens"
+        self.assertGreater(len(full.encode("utf-8")), 63)
+        self.assertEqual(len(stored.encode("utf-8")), 63)
+        self.assertIn(f'create policy "{full}"', RECOVERY.read_text(encoding="utf-8"))
+        self.assertIn(
+            f"policyname = '{stored}'", RECOVERY.read_text(encoding="utf-8")
+        )
+        self.assertIn(stored, SQL_TEST.read_text(encoding="utf-8"))
+
     def test_no_student_mutations_or_exercise_reactivation(self) -> None:
         recovery = RECOVERY.read_text(encoding="utf-8")
         sql_test = SQL_TEST.read_text(encoding="utf-8")
