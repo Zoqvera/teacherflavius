@@ -436,3 +436,20 @@ sobre mudança de segurança, manter o fluxo de acesso bloqueado.
 
 Nenhuma etapa aqui corrige diretamente o ledger de produção, cria
 branch remota com custo ou autoriza merge da PR #776.
+
+
+## ETAPA 1D.4B — quatro policies recuperáveis
+
+A auditoria de dependências após a PR #793 revelou **29 policies
+ausentes**, das quais **25 pertencem a tabelas ainda inexistentes no
+bootstrap** e **4 pertencem a relações já reconstruídas**:
+três de `study_roadmap_completion` e uma de `teacher_exercises`.
+O overlay 425 recupera as quatro, com ACL e RLS intactos e proteção
+contra restauração de antigas políticas de mutação dos alunos e
+de visualização do catálogo suspenso.
+
+O tratamento das outras 25 policies deve seguir seus módulos, após
+restaurar definições, constraints, funções, triggers e privilégios
+das respectivas tabelas em bancos descartáveis.
+Os artefatos da auditoria são relatórios diagnósticos, não autorização
+de acesso ou permissão para alterar as regras produtivas.
