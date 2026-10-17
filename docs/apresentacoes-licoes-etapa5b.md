@@ -21,7 +21,8 @@ executa nenhuma outra migração do diretório.
 
 - Backup criptografado aprovado: execução GitHub Actions `39043019631`.
 - Restauração integral e ensaio das duas migrações aprovados: `39043160705`.
-- O artefato `supabase-recovery-report-39043019631` precisa estar íntegro,
+- O workflow seleciona automaticamente o último ensaio de recuperação
+  bem-sucedido e seu artefato `supabase-recovery-report-<ID>`; ele precisa
   conter `presentation_schema_rehearsal: passed` e ter menos de 24 horas.
 - A origem dos dois workflows é validada na API do GitHub antes da escrita.
 - Preflight do PostgreSQL exige exatamente 316 migrações, a versão
