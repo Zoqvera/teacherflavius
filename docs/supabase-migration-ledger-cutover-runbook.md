@@ -449,3 +449,28 @@ comparar operações, papéis e hashes das policies após o merge.
 
 Não alterar migrações produtivas, ledger, financeiro, rotas ou SEO.
 A PR #776 continua em rascunho, sem implantação autorizada.
+
+
+## ETAPA 1D.4C — diagnóstico protegido pós-merge em 17/10/2026
+
+A auditoria da `main` executada após a PR #794 identificou 95 políticas
+RLS na reconstrução e 109 em produção. As **14 políticas faltantes**
+pertencem exclusivamente a **11 relações ainda não reconstruídas**;
+nenhuma política está ausente de uma relação já presente no bootstrap.
+Há quatro diferenças de predicados em `study_lesson_pages` e nenhuma
+diferença de papéis ou comandos nas políticas comuns.
+
+A rotina `is_teacher_admin_mfa()` é atualmente um alias sem exigência
+AAL2 própria, tanto no overlay 42 quanto na produção; portanto o nome
+não deve ser tratado como prova de proteção MFA mais restritiva.
+O catálogo contém ainda 1.134 objetos ausentes, 175 definições divergentes
+e um gatilho extra a investigar. Comparações por contagem não comprovam
+comportamento equivalente.
+
+O [relatório da etapa 1D.4C](supabase-rls-auditoria-etapa-1d4c.md)
+registra a procedência dos dados e prioriza os módulos pendentes:
+privacidade, estado acadêmico, conteúdo gerenciável e aquisição.
+A etapa é apenas diagnóstica: não concede direitos, não altera a
+produção nem liberta a PR #776. O próximo pacote deve reconstruir
+primeiro as estruturas e dependências de privacidade em ambiente
+inteiramente descartável.
