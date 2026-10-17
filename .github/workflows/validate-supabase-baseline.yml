@@ -300,6 +300,16 @@ jobs:
             psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
             < tests/sql/canonical_financial_mfa_stage1d4.sql
 
+      - name: Verify restored academic RLS operations with real PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+          docker exec -i "$DB_CONTAINER" \
+            psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < tests/sql/canonical_roadmap_exercise_policies_stage1d4b.sql
+
       - name: Verify least-privilege browser ACLs
         shell: bash
         run: |
