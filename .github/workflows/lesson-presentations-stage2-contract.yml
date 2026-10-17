@@ -1,0 +1,57 @@
+name: Lesson presentation student editor stage 2
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "lesson_presentation_editor.js"
+      - "lesson_presentation_editor.css"
+      - "licao/index.html"
+      - "licao.js"
+      - "tests/lesson_presentation_editor.test.js"
+      - "docs/apresentacoes-licoes-etapa2.md"
+      - "package.json"
+      - "eslint.config.js"
+      - ".github/workflows/lesson-presentations-stage2-contract.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "lesson_presentation_editor.js"
+      - "lesson_presentation_editor.css"
+      - "licao/index.html"
+      - "licao.js"
+      - "tests/lesson_presentation_editor.test.js"
+      - "docs/apresentacoes-licoes-etapa2.md"
+      - ".github/workflows/lesson-presentations-stage2-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  student-editor-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Validate JS syntax and tested editor behavior
+        run: |
+          node --check lesson_presentation_editor.js
+          node --check licao.js
+          node --test tests/lesson_presentation_editor.test.js
+      - name: Ensure the student editor is not enabled prematurely
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'const RELEASE_ENABLED = false;' lesson_presentation_editor.js
+          grep -Fq '<meta name="robots" content="noindex,nofollow">' licao/index.html
+          if grep -Eq 'localStorage|sessionStorage|URLSearchParams|location.search' lesson_presentation_editor.js; then
+            echo "::error::Release gate must not be overridable from the browser."
+            exit 1
+          fi
