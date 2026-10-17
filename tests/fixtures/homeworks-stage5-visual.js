@@ -33,7 +33,7 @@
   });
 
   const selected = activities[activity];
-  if (!selected || !["initial", "submitted", "evaluated"].includes(state)) {
+  if (!selected || !["initial", "submitted", "evaluated", "privacy_review"].includes(state)) {
     document.documentElement.dataset.qaResult = "INVALID_SCENARIO";
     return;
   }
@@ -55,6 +55,8 @@
       source: "automatic", score: 9,
       general_comment: "Correção automática por comparação ao gabarito."
     }]
+  } : state === "privacy_review" ? {
+    status: "submitted", correction: "privacy_review", score: null, feedback: []
   } : state === "submitted" ? {
     status: "submitted", score: null, feedback: []
   } : { status: "not_started", score: null, feedback: [] };
@@ -77,6 +79,39 @@
     submit: () => { throw new Error("Envios indisponíveis no cenário visual."); }
   };
 
+  // Browser DOM contract only; physical assistive technology requires separate review.
+  function hasAccessibleStructure(mount) {
+    const title = mount.querySelector("h2.homework-student-heading");
+    if (!title || document.activeElement !== title || title.tabIndex !== -1) {
+      return false;
+    }
+    if (state !== "initial") {
+      const result = mount.querySelector(".homework-student-result");
+      return result?.getAttribute("role") === "status" &&
+        result.getAttribute("aria-live") === "polite";
+    }
+
+    if (activity === "writing") {
+      const writing = mount.querySelector("textarea");
+      const label = writing?.closest("label");
+      const counterId = writing?.getAttribute("aria-describedby");
+      const counter = counterId ? document.getElementById(counterId) : null;
+      return Boolean(writing?.required && writing.minLength === 20 &&
+        writing.maxLength === 3000 &&
+        label?.textContent.includes("Sua produção escrita") &&
+        counter?.textContent.includes("Caracteres: 0 / 3000") &&
+        !counter?.hasAttribute("aria-live"));
+    }
+
+    const questions = Array.from(mount.querySelectorAll("fieldset"));
+    return questions.length === selected.questions.length && questions.every(fieldset => {
+      const legend = fieldset.querySelector("legend");
+      const control = fieldset.querySelector("select, input");
+      return Boolean(legend?.textContent.trim() && control?.required &&
+        control.getAttribute("aria-label")?.trim());
+    });
+  }
+
   const controller = window.HomeworkStudentInterface.create({
     mount: document.getElementById("visualMount"),
     notice: document.getElementById("visualNotice"),
@@ -96,11 +131,18 @@
         mount.textContent.includes("as verificações de privacidade e faixa etária") &&
         mount.textContent.includes("Quando autorizada") &&
         mount.textContent.includes("OpenAI");
-      const correctStatus = state !== "evaluated" || mount.textContent.includes("Nota:");
-      const result = !overflow && !unnamed && writingDisclosure && correctStatus ?
-        "PASS" : "FAIL";
+      const correctStatus = (state !== "evaluated" || mount.textContent.includes("Nota:")) &&
+        (state !== "privacy_review" || (
+          mount.textContent.includes("correção por IA está suspensa") &&
+          !mount.textContent.includes("Nota:") &&
+          !visibleButtons.some(button => button.textContent.includes("Tentar corrigir novamente"))
+        ));
+      const semanticAccessibility = hasAccessibleStructure(mount);
+      const result = !overflow && !unnamed && writingDisclosure && correctStatus &&
+        semanticAccessibility ? "PASS" : "FAIL";
       document.documentElement.dataset.qaResult = result;
       document.documentElement.dataset.qaOverflow = String(overflow);
+      document.documentElement.dataset.qaA11y = String(semanticAccessibility);
       document.documentElement.dataset.qaActivity = activity;
       document.documentElement.dataset.qaState = state;
     });
