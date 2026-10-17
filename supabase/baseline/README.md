@@ -225,3 +225,27 @@ operacoes e papel esperados, descarta apenas essas quatro no
 ambiente descartavel, e converte as 81 restantes.
 O numero final de policies fica em **91** (120 na producao,
 29 ainda ausentes no baseline). Nenhuma policy produtiva e apagada.
+
+
+## ETAPA 1D.4 — Reconstrução de permissões financeiras com MFA
+
+O overlay `420_reconcile_financial_mfa_policies.sql` altera **somente no
+bootstrap canônico descartável** as expressões das três políticas que
+controlam mensalidades, seus eventos e as configurações financeiras.
+A produção já usa `is_teacher_admin_mfa()`; o snapshot de recuperação
+ainda usava `is_teacher_admin()`. O overlay exige o estado de origem
+esperado, mantém os papéis, nomes, operações, modo `PERMISSIVE` e a
+definição de todas as políticas não financeiras, e confirma as três
+expressões MFA após a alteração. Inconsistências interrompem o SQL.
+
+O número de overlays passa a **85**. Não há tabelas, índices,
+funções ou políticas adicionais, portanto os contadores estruturais
+do `schema-fingerprint.json` permanecem inalterados.
+A homologação inclui testes de catálogo em PostgreSQL descartável,
+além da auditoria de políticas em `main` somente-leitura.
+
+As 29 políticas produtivas ainda ausentes dependem de reconstrução
+adicional de suas tabelas e dos módulos respectivos. Nenhuma regra
+RLS deve ser copiada antes de recuperar seu objeto, suas relações,
+permissões e fluxos de autorização. A divergência das quatro
+políticas de páginas de lição permanece pendente de decisão de MFA.
