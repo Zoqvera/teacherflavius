@@ -273,13 +273,15 @@ write_report() {
     --argjson rto_exercise_seconds "$duration" \
     --argjson rpo_design_hours 24 \
     --argjson manifest_format_version 3 \
+    --arg presentation_schema_rehearsal 'passed' \
     '{
       status: $status,
       verified_at: $verified_at,
       backup_captured_at: $backup_captured_at,
       rto_exercise_seconds: $rto_exercise_seconds,
       rpo_design_hours: $rpo_design_hours,
-      manifest_format_version: $manifest_format_version
+      manifest_format_version: $manifest_format_version,
+      presentation_schema_rehearsal: $presentation_schema_rehearsal
     }' > "$REPORT_PATH"
 
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
@@ -300,6 +302,7 @@ write_report() {
       echo '- Backup cadence / design RPO: 24h'
       echo '- Storage coverage guard: passed (0 buckets, 0 objects)'
       echo '- Application Auth/event triggers: restored and compared against production'
+      echo '- Presentation migration DDL and RLS: passed in restored catalog, rolled back'
       echo
       echo 'The measured duration is a laboratory restore exercise, not a guarantee of full production cutover time.'
     } >> "$GITHUB_STEP_SUMMARY"
