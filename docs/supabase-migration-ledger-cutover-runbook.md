@@ -380,3 +380,19 @@ quanto a `is_teacher_admin()` versus `is_teacher_admin_mfa()`.
 O padrao mais restritivo do bootstrap sera mantido ate
 homologacao e decisao expressa sobre MFA de edicao das licoes.
 Nenhuma migracao historica, dado real ou segredo e exportado.
+
+
+### Evidencia de execucao e contagem corrigida
+
+O primeiro ensaio do overlay 415 detectou 85 policies restritivas:
+81 eram correspondentes a policies produtivas, e quatro eram
+policies adicionais que so aparecem no baseline. Essa divergencia
+fez o SQL interromper o bootstrap sem efeitos duradouros.
+A versao corrigida exige explicitamente as quatro policies
+adicionais por tabela/nome/operacao/papel, remove somente essas
+quatro do **banco descartavel** e depois reconcilia os modos das
+81 restantes sem alterar predicados, comandos ou papeis.
+A contagem canonica de policies passa de 95 para 91. Permanecem
+29 policies de producao ainda nao reconstruidas e quatro policies
+de `study_lesson_pages` com predicados diferentes pela exigencia
+de MFA no baseline.
