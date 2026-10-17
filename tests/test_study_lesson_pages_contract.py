@@ -117,6 +117,17 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("font-size: 12px;", compact_button)
         self.assertIn("border-radius: 12px;", compact_button)
 
+    def test_second_lesson_card_uses_the_replacement_content(self) -> None:
+        roadmap = self.read("roteiro_de_estudos.html")
+        academic_service = self.read("academic_workflow_service.js")
+        self.assertIn(
+            '"lesson-2": "Nesta aula, você vai aprender a falar sobre objetos que possui e utiliza no cotidiano,',
+            roadmap,
+        )
+        self.assertIn("linkedPage.title", roadmap)
+        self.assertNotIn("1LDXrDtGGiMKNUe_DWFSLu-k3IKQmQcYB", roadmap)
+        self.assertNotIn("1LDXrDtGGiMKNUe_DWFSLu-k3IKQmQcYB", academic_service)
+
     def test_roadmap_prefers_linked_internal_page(self) -> None:
         roadmap = self.read("roteiro_de_estudos.html")
         self.assertIn("linkedLessonPages", roadmap)
