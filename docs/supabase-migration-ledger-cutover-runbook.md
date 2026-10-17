@@ -396,3 +396,14 @@ A contagem canonica de policies passa de 95 para 91. Permanecem
 29 policies de producao ainda nao reconstruidas e quatro policies
 de `study_lesson_pages` com predicados diferentes pela exigencia
 de MFA no baseline.
+
+### Excecao protegida da politica de pagamento
+
+Uma das 81 policies de permissao usa deliberadamente ambos os
+papeis `anon` e `authenticated`: a policy
+`tuition_payment_attempts_no_direct_client_access`. Seu
+`USING` e `WITH CHECK` sao `FALSE` na producao.
+O overlay local agora exige esses mesmos dois predicados, a
+operacao `ALL` e exatamente esses dois papeis antes de alterar
+seu modo. A recuperacao nao autoriza acesso de alunos a
+tentativas de pagamento.
