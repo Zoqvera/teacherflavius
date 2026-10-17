@@ -1,10 +1,9 @@
 (function () {
   "use strict";
 
-  // Stage 2 of 5: source-controlled release gate. Never enable via URL,
-  // browser-controlled settings or the absence of the database table.
-  // Stage 5 must verify the production migration before setting this to true.
-  const RELEASE_ENABLED = false;
+  // Stage 5C: activated after verified production RLS and schema rollout.
+  // Release control remains source-defined, not editable by browser input.
+  const RELEASE_ENABLED = true;
   const TABLE = "lesson_presentations";
   const FIELDS = "id,body,revision_number,updated_at";
   const MAX_CHARACTERS = 15000;
