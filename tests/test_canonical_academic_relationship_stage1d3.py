@@ -72,7 +72,7 @@ class AcademicRelationshipBaselineTests(unittest.TestCase):
         self.assertEqual(fingerprint["tables"], 53)
         self.assertEqual(fingerprint["constraints"], 271)
         self.assertEqual(fingerprint["non_constraint_indexes"], 117)
-        self.assertEqual(fingerprint["rls_policies"], 91)
+        self.assertEqual(fingerprint["rls_policies"], 95)
 
 
 if __name__ == "__main__":
