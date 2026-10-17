@@ -183,7 +183,8 @@ jobs:
             supabase/baseline/380_same_day_first_tuition_payment.sql \
             supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql \
             supabase/baseline/390_expose_study_button_marker.sql \
-            supabase/baseline/395_student_review_invitation_funnel.sql
+            supabase/baseline/395_student_review_invitation_funnel.sql \
+            supabase/baseline/400_justify_attended_cancelled_lesson_revocations.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
