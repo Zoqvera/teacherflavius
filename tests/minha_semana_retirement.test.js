@@ -15,7 +15,7 @@ test("the student area no longer renders the weekly card or its empty section", 
   assert.equal(page.includes("MINHA SEMANA"), false);
   assert.equal(page.includes('href="/minha-semana/"'), false);
   assert.equal(page.includes("priority-group"), false);
-  assert.equal(shell.includes("20261016-retire-week-1"), true);
+  assert.equal(/sourcePage \+ "\\?v=202610(1[6-9]|[2-3][0-9])-[A-Za-z0-9-]+"/.test(shell), true);
 });
 
 test("the old weekly address is a static retirement notice with safe navigation", function () {
