@@ -109,7 +109,8 @@ def compare_policies(
         if privilege_changed:
             changed_permissions.add(name)
             if (
-                set(left.roles) > set(right.roles)
+                ("public" in left.roles and "public" not in right.roles)
+                or set(left.roles) > set(right.roles)
                 or (left.command == "ALL" and right.command != "ALL")
                 or (left.permissive == "PERMISSIVE" and right.permissive == "RESTRICTIVE")
             ):
