@@ -130,7 +130,7 @@ begin
           )
         ) or (
           tablename = 'teacher_exercises'
-          and policyname = 'Apenas professores podem visualizar exercícios durante suspensão'
+          and policyname = 'Apenas professores podem visualizar exercícios durante suspens'
           and cmd = 'SELECT'
           and qual like '%is_teacher_admin()%'
           and with_check is null
