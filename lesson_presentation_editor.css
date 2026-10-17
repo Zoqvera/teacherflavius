@@ -1,0 +1,109 @@
+/* Student lesson presentations — stage 2 (release gated). */
+.lesson-presentation-card {
+  display: grid;
+  gap: 14px;
+  background: rgba(30, 64, 175, 0.16);
+  border-color: rgba(96, 165, 250, 0.38);
+}
+
+#lessonPresentationSection[hidden] {
+  display: none !important;
+}
+
+.lesson-presentation-title {
+  margin: 0;
+  color: var(--tf-slate-100, #f1f5f9);
+  font-size: clamp(18px, 3vw, 22px);
+  line-height: 1.35;
+}
+
+.lesson-presentation-description,
+.lesson-presentation-counter {
+  color: var(--tf-slate-200, #e2e8f0);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.lesson-presentation-form {
+  display: grid;
+  gap: 12px;
+}
+
+.lesson-presentation-label {
+  color: var(--tf-slate-100, #f1f5f9);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.lesson-presentation-textarea {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(147, 197, 253, 0.65);
+  padding: 14px;
+  color: #f8fafc;
+  background: #0d2045;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.lesson-presentation-textarea:focus-visible,
+.lesson-presentation-submit:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+.lesson-presentation-submit {
+  min-height: 46px;
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: #1d4ed8;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lesson-presentation-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.lesson-presentation-status {
+  min-height: 1.5em;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--tf-slate-200, #e2e8f0);
+  overflow-wrap: anywhere;
+}
+
+.lesson-presentation-status[data-tone="error"] {
+  color: #fecaca;
+}
+
+.lesson-presentation-status[data-tone="success"] {
+  color: #bbf7d0;
+}
+
+@media (max-width: 639px) {
+  .lesson-presentation-textarea {
+    min-height: 180px;
+  }
+
+  .lesson-presentation-submit {
+    max-width: none;
+  }
+}
+
+@media print {
+  #lessonPresentationSection {
+    display: none !important;
+  }
+}
