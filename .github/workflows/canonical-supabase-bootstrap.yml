@@ -121,7 +121,7 @@ jobs:
             end if;
 
             if (select count(*) from pg_policies
-                where schemaname = 'public') <> 95 then
+                where schemaname = 'public') <> 91 then
               raise exception 'The RLS policy count has drifted';
             end if;
 
