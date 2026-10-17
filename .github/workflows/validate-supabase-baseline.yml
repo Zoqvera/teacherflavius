@@ -186,7 +186,8 @@ jobs:
             supabase/baseline/395_student_review_invitation_funnel.sql \
             supabase/baseline/400_justify_attended_cancelled_lesson_revocations.sql \
             supabase/baseline/405_restore_auth_account_health_run_storage.sql \
-            supabase/baseline/410_restore_academic_relationship_event_storage.sql
+            supabase/baseline/410_restore_academic_relationship_event_storage.sql \
+            supabase/baseline/415_reconcile_canonical_policy_modes.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
