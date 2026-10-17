@@ -1,0 +1,62 @@
+name: Stage 5B - Deploy lesson presentation schema
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/lesson-presentations-stage5b-production.yml'
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Enter CONFIRMO_APRESENTACOES_5B for manual execution'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: teacherflavius-production-presentation-schema
+  cancel-in-progress: false
+
+jobs:
+  schema-rollout:
+    name: Guarded, atomic production presentation schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      PRESENTATIONS_APPROVAL: ${{ inputs.confirmation }}
+
+    steps:
+      - name: Check out approved main revision
+        uses: actions/checkout@v7
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Validate rollout contracts and shell syntax
+        run: |
+          python3 -m unittest tests/test_lesson_presentations_stage5b_rollout.py
+          bash -n scripts/verify_lesson_presentations_stage5b_evidence.sh
+          bash -n scripts/apply_lesson_presentations_stage5b.sh
+
+      - name: Attest recent production backup and restored-catalog rehearsal
+        shell: bash
+        run: bash scripts/verify_lesson_presentations_stage5b_evidence.sh
+
+      - name: Apply two migrations with their canonical ledger versions
+        shell: bash
+        run: bash scripts/apply_lesson_presentations_stage5b.sh
+
+      - name: Verify schema metadata after atomic commit
+        shell: bash
+        run: |
+          psql -X --no-password --set=ON_ERROR_STOP=1 \
+            --dbname "$SUPABASE_DB_URL" \
+            --file scripts/sql/lesson_presentations_production_preflight_readonly.sql
