@@ -68,9 +68,9 @@ class PresentationStage5BContractTests(unittest.TestCase):
         self.assertIn("apply_lesson_presentations_stage5b.sh", workflow)
         self.assertNotIn("pull_request_target", workflow)
 
-    def test_code_gates_stay_disabled_until_production_security_review(self) -> None:
+    def test_code_release_gates_follow_verified_production_security_review(self) -> None:
         for path in ("lesson_presentation_editor.js", "teacher_lesson_presentations.js"):
-            self.assertIn("const RELEASE_ENABLED = false;", source(path))
+            self.assertIn("const RELEASE_ENABLED = true;", source(path))
 
 
 if __name__ == "__main__":
