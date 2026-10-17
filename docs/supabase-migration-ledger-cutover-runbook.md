@@ -59,6 +59,67 @@ Documentação Supabase:
 https://supabase.com/docs/guides/deployment/branching/dashboard
 https://supabase.com/docs/guides/troubleshooting/branch-in-migrations-failed-status
 
+## ETAPA 1C — Inventário estrutural de objetos (17/10/2026)
+
+O inventário da produção foi consultado diretamente em modo **somente leitura**.
+A consulta retornou **3.134 identificadores estruturais**, organizados assim:
+1.383 colunas, 724 restrições, 223 índices não associados a constraints,
+120 políticas RLS, 129 relações públicas/privadas (incluindo views),
+461 rotinas e 94 triggers públicos/privados. Nenhum registro de aluno,
+conteúdo de função, segredo Vault ou instrução de migração foi retornado.
+A extração é um retrato temporal e deve ser repetida ao longo do projeto.
+
+O esquema canônico versionado ainda é uma reconstrução parcial. Na última
+comparação por **contagens públicas**, apresentava 52 tabelas públicas,
+192 funções públicas e 95 políticas RLS, enquanto a produção apresentava
+96 tabelas públicas, 369 funções públicas e 120 políticas RLS.
+As métricas não medem equivalência de definição, dependência ou privilégio.
+
+O workflow `Supabase canonical object inventory` acrescenta:
+- Testes de contrato na PR, **sem credenciais da produção**;
+- após o merge, em `main`, Supabase CLI local e descartável reconstruído a
+  partir dos overlays canônicos, com Cron desativado e seed fictício;
+- a mesma consulta de catálogo nos bancos local e produtivo, retornando
+  exclusivamente `tipo\tidentificador\tSHA256(ddl_metadata)`;
+- comparação de objetos faltantes, extras e definições divergentes por
+  tipo e amostras limitadas, sem publicar as definições SQL, dumps ou
+  documentos privados;
+- o artefato `supabase-schema-object-gap-assessment` (retido por 14 dias)
+  armazena apenas números e, no máximo, 15 nomes estruturais por categoria.
+
+**Critério de aceitação:** um resultado `SCHEMA_OBJECTS_ALIGNED` é apenas
+uma evidência de equivalência dos objetos cobertos pela consulta, e não
+aprovação de implantação. Também é obrigatório conferir extensões, grants
+globais, Auth, Cron inerte, funções externas, email, pagamentos, backup e
+restauração em ambiente independente. Divergências em hashes devem ser
+inspecionadas antes de gerar overlays incrementais; nunca copiar ou
+publicar SQL histórico. Não usar `migration repair` ou reconstruir o
+projeto real como atalho.
+
+**Plano de transição segura:**
+
+1. **Diagnosticar:** gerar inventário de `main` protegido e classificar
+   diferenças por objeto, incluindo dependências prévias como
+   `profiles` e `teacher_admins`.
+2. **Completar o bootstrap descartável:** propor overlays faltantes em
+   PRs independentes, testando cada adição sobre um banco vazio. Nunca
+   sobrescrever migrações históricas ou converter os overlays em
+   migrações produtivas por simples cópia.
+3. **Verificar integridade:** ensaiar RLS, Auth, Cron desativado, grants,
+   exclusão de aluno, aulas, inscrições, cobranças e pagamentos fictícios.
+4. **Restaurar fora da produção:** confirmar backup recente, obter
+   autorização para eventual projeto adicional e comprovar restauração
+   independente, preservando Auth e histórico SQL privado.
+5. **Testar branching remoto:** criar uma única branch temporária **após
+   consentimento de custo**, verificar o primeiro erro de migração pelos
+   logs e destruir o ambiente após os ensaios.
+6. **Planejar cutover:** somente então propor mapeamento de versões,
+   snapshots privados, rollback e janela de manutenção com autorização
+   explícita antes de qualquer escrita na produção.
+
+Os controles acima não afetam páginas públicas, URLs, robots, canonical
+nem metadados de SEO.
+
 ## Fronteira de segurança
 
 A produção mantém o histórico original em
