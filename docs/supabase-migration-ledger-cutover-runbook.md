@@ -428,3 +428,24 @@ sobre mudança de segurança, manter o fluxo de acesso bloqueado.
 
 Nenhuma etapa aqui corrige diretamente o ledger de produção, cria
 branch remota com custo ou autoriza merge da PR #776.
+
+
+## ETAPA 1D.4B — recuperação de quatro políticas acadêmicas após a PR #795
+
+Após a PR #795, o módulo não publicado de Tarefas para Casa foi retirado.
+O bootstrap nesta etapa **não** recupera sua tabela de relacionamento,
+funções, workflows ou o overlay 410 removido.
+
+O overlay 425 recupera **somente em banco descartável** três políticas
+administrativas de `study_roadmap_completion` (INSERT, UPDATE e DELETE)
+e a política de leitura exclusiva do professor em `teacher_exercises`.
+As políticas de origem, RLS e predicados administrativos são verificados.
+
+A reconstrução passou de 84 para 85 overlays e de 91 para 95 políticas,
+com 52 tabelas públicas. A consulta produtiva de 17/10/2026 encontrou
+109 políticas públicas; comparar apenas totais não prova equivalência
+nem identifica todas as diferenças. A auditoria protegida de CI deve
+comparar operações, papéis e hashes das policies após o merge.
+
+Não alterar migrações produtivas, ledger, financeiro, rotas ou SEO.
+A PR #776 continua em rascunho, sem implantação autorizada.

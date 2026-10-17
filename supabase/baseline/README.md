@@ -223,3 +223,18 @@ adicional de suas tabelas e dos módulos respectivos. Nenhuma regra
 RLS deve ser copiada antes de recuperar seu objeto, suas relações,
 permissões e fluxos de autorização. A divergência das quatro
 políticas de páginas de lição permanece pendente de decisão de MFA.
+
+
+## ETAPA 1D.4B — recuperação acadêmica após retirada de Tarefas para Casa
+
+O overlay `425_restore_roadmap_teacher_and_exercise_read_policies.sql`
+restaura somente no bootstrap descartável três políticas de edição
+administrativa do roteiro e a leitura exclusivamente docente do catálogo
+antigo de exercícios, sem retomar o módulo de Tarefas para Casa retirado
+pela PR #795. Exige RLS, autorizações e predicados esperados e falha de
+forma fechada se o esquema divergir.
+
+O baseline atual tem **85 overlays, 52 tabelas públicas e 95 policies**.
+Este total substitui a contagem histórica acima de 85 overlays atribuída
+à etapa 1D.4: depois da PR #795 o overlay 420 era o 84º e o novo 425 é o
+85º. A paridade integral com produção permanece por comprovar.

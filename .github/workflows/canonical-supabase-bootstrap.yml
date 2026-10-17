@@ -34,7 +34,7 @@ jobs:
             --manifest "${RUNNER_TEMP}/canonical-manifest.json" \
             --fingerprint-sql "${RUNNER_TEMP}/canonical-fingerprint.sql"
 
-          jq -e '.mode == "disposable-only" and .overlay_count == 84' \
+          jq -e '.mode == "disposable-only" and .overlay_count == 85' \
             "${RUNNER_TEMP}/canonical-manifest.json"
 
       - name: Install Supabase CLI
@@ -121,7 +121,7 @@ jobs:
             end if;
 
             if (select count(*) from pg_policies
-                where schemaname = 'public') <> 91 then
+                where schemaname = 'public') <> 95 then
               raise exception 'The RLS policy count has drifted';
             end if;
 

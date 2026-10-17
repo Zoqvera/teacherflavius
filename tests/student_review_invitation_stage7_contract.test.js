@@ -41,7 +41,7 @@ test("reconstruction fingerprint counts public RPCs while private tables use sep
   assert.equal(fingerprint.constraints, 266);
   assert.equal(fingerprint.public_functions, 193);
   assert.equal(fingerprint.non_constraint_indexes, 116);
-  assert.equal(fingerprint.rls_policies, 91);
+  assert.equal(fingerprint.rls_policies, 95);
 });
 
 test("private metrics have no direct browser grants and RPCs enforce authorization", () => {

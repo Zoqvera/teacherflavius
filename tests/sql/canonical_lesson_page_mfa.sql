@@ -10,7 +10,7 @@ begin
   end if;
 
   if (select count(*) from pg_policies
-      where schemaname in ('public', 'private')) <> 91 then
+      where schemaname in ('public', 'private')) <> 95 then
     raise exception 'Restored schema has an unexpected number of RLS policies';
   end if;
 

@@ -39,7 +39,7 @@ class CreditJustificationBaselineTests(unittest.TestCase):
         self.assertEqual(fingerprint["captured_from_migration_version"], "20261016162500")
         self.assertEqual(fingerprint["public_functions"], 193)
         self.assertEqual(fingerprint["tables"], 52)
-        self.assertEqual(fingerprint["rls_policies"], 91)
+        self.assertEqual(fingerprint["rls_policies"], 95)
 
 
 if __name__ == "__main__":
