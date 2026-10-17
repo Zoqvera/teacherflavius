@@ -32,6 +32,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="stylesheet" href="professor.css?v=20260430-2">
   <style>
     .tf-nav-pending .top-links { visibility: hidden; }
+    .class-first-lesson-date { display:block; width:100%; max-width:320px; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 13px; color:#f1f5f9; font:inherit; margin:8px 0 12px; color-scheme:dark; }
     .class-attendance-row { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
     .class-attendance-row label { display: flex; align-items: center; gap: 10px; color: #f1f5f9; font-weight: bold; margin-bottom: 10px; }
     .class-attendance-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #818cf8; }
@@ -98,6 +99,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <div class="divider"></div>
+
+    <div class="panel">
+      <h2>Início das aulas</h2>
+      <p class="class-attendance-help">Defina a primeira data válida da turma. As aulas anteriores não serão exibidas no planejamento nem consumirão créditos. As mensalidades manterão seus vencimentos.</p>
+      <form id="classStartDateForm">
+        <label class="class-resource-label" for="classStartDate">Primeira aula da turma</label>
+        <input id="classStartDate" class="class-first-lesson-date" type="date" required />
+        <button class="delete-button" id="saveClassStartDateButton" type="submit">SALVAR DATA DE INÍCIO</button>
+        <div id="classStartDateMessage" class="empty" role="status" aria-live="polite"></div>
+      </form>
+    </div>
 
     <div class="panel">
       <h2>Links da turma</h2>
@@ -185,7 +197,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
   </script>
   <script src="class_recorded_lessons.js?v=20260430-2"></script>
-  <script src="turma.js?v=20260813-capacity-5"></script>
+  <script src="turma.js?v=20261017-class-start-1"></script>
   <script src="class_lesson_attendance.js?v=20260504-1"></script>
   <script src="animated_cards.js?v=20260430-2"></script>
   <script id="teacher-flavius-mobile-top-navigation" src="/mobile_top_navigation.js?v=20261008-private-menu-1"></script>
