@@ -45,6 +45,7 @@ jobs:
           node --test tests/tuition_due_day_enrollment_fallback.test.js
           node --test tests/quintet_capacity_eight_contract.test.js
           node --test tests/quintet_capacity_nine_exceptions_contract.test.js
+          node --test tests/quintet_capacity_sat10_nine_contract.test.js
           node --test tests/course_vacancy_visibility_contract.test.js
           node --test tests/tuition_after_enrollment_contract.test.js
           node --test tests/lesson_credits_contract.test.js
@@ -182,6 +183,7 @@ jobs:
             supabase/baseline/377_manual_replacement_credits_all_students.sql \
             supabase/baseline/380_same_day_first_tuition_payment.sql \
             supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql \
+            supabase/baseline/387_expand_turma_47_to_nine.sql \
             supabase/baseline/390_expose_study_button_marker.sql \
             supabase/baseline/395_student_review_invitation_funnel.sql
           do
