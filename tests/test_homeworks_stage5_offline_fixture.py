@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from static_site_files import is_public
 
-OFFLINE = Path("tests/fixtures/homeworks-stage5-physical/offline.html")
+OFFLINE = Path("tests/fixtures/homeworks-stage5-physical/offline/index.html")
 SOURCES = (
     "homework_student_interface.css",
     "area-do-estudante/homeworks/foundation.css",
