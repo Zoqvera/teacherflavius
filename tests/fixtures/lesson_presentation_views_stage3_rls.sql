@@ -117,7 +117,7 @@ begin
 
   -- A different authorized teacher did not mark revision 1 before the edit.
   -- The policy must reject a stale receipt, not merely a duplicate row.
-  select set_config('request.jwt.claim.sub',
+  perform set_config('request.jwt.claim.sub',
     '44444444-4444-4444-8444-444444444444', true);
   begin
     insert into public.lesson_presentation_views
@@ -125,7 +125,7 @@ begin
     values (presentation_uuid, 1, auth.uid());
     raise exception 'Recibo da revisão antiga aceito.';
   exception when insufficient_privilege or check_violation then null; end;
-  select set_config('request.jwt.claim.sub',
+  perform set_config('request.jwt.claim.sub',
     '33333333-3333-4333-8333-333333333333', true);
 
   insert into public.lesson_presentation_views
