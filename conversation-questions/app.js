@@ -12,7 +12,9 @@
     isTeacher: false,
     questions: [],
     completions: new Set(),
+    studyByQuestionId: new Map(),
     service: null,
+    academicService: null,
     reordering: false
   };
 
@@ -52,6 +54,7 @@
       window.ResourceWaiter &&
       window.ConversationQuestionsService &&
       window.ConversationQuestionCardRenderer &&
+      window.AcademicWorkflowService &&
       typeof window.Auth.getSession === "function" &&
       typeof window.Auth.getClient === "function"
     );
@@ -261,6 +264,71 @@
     return progress;
   }
 
+  function studentStudyButtonState(questionId) {
+    const progress = state.studyByQuestionId.get(questionId);
+
+    // Never allow another registration without confirmed per-student progress.
+    if (!progress || typeof progress.marked_studied !== "boolean") {
+      return { label: "ESTUDO INDISPONÍVEL", disabled: true };
+    }
+    if (progress.marked_studied) {
+      return { label: "PERGUNTA ESTUDADA", disabled: true };
+    }
+    if (progress.worked || progress.studied) {
+      return { label: "PERGUNTA JÁ TRABALHADA", disabled: true };
+    }
+    return { label: "ESTUDEI A PERGUNTA", disabled: false };
+  }
+
+  async function markStudentQuestionStudied(questionId, button) {
+    if (button.disabled || studentStudyButtonState(questionId).disabled) return;
+
+    button.disabled = true;
+    button.textContent = "REGISTRANDO...";
+
+    try {
+      const saved = await state.academicService.markQuestionStudied(questionId);
+      if (!saved || saved.ok !== true) {
+        throw new Error("Não foi possível confirmar o registro da pergunta.");
+      }
+
+      const previous = state.studyByQuestionId.get(questionId);
+      state.studyByQuestionId.set(questionId, Object.assign({}, previous, {
+        marked_studied: true,
+        studied: true
+      }));
+
+      renderQuestions();
+      showStatus("Pergunta marcada como estudada.", "success");
+    } catch (error) {
+      console.error("Falha ao registrar a pergunta estudada:", error);
+      button.disabled = false;
+      button.textContent = "ESTUDEI A PERGUNTA";
+      showStatus(
+        error && error.message ? error.message : "Não foi possível registrar a pergunta.",
+        "error"
+      );
+    }
+  }
+
+  function createStudentStudyAction(question) {
+    const action = document.createElement("div");
+    action.className = "conversation-student-study-action";
+
+    const button = document.createElement("button");
+    const status = studentStudyButtonState(question.id);
+    button.type = "button";
+    button.className = "conversation-study-button";
+    button.textContent = status.label;
+    button.disabled = status.disabled;
+    button.addEventListener("click", function () {
+      void markStudentQuestionStudied(question.id, button);
+    });
+
+    action.appendChild(button);
+    return action;
+  }
+
   function createStudentQuestionCard(question, index) {
     const card = createQuestionContent(
       question,
@@ -269,6 +337,7 @@
       "conversation-question-student-card"
     );
     card.appendChild(createStudentProgress(question));
+    card.appendChild(createStudentStudyAction(question));
     return card;
   }
 
@@ -363,7 +432,7 @@
     ui.modeLabel.textContent = "MEU PROGRESSO";
     ui.teacherTools.hidden = true;
     ui.professorLink.hidden = true;
-    ui.listHelp.textContent = "Cada card traz tradução, cinco modelos de resposta e seu progresso.";
+    ui.listHelp.textContent = "Cada card traz tradução, cinco modelos de resposta e o botão de registro do estudo.";
 
     const student = await state.service.getStudentProfile(state.session.user.id);
     if (!student || student.enrolled !== true || student.archived === true) {
@@ -384,8 +453,24 @@
       })
     );
 
-    renderQuestions();
-    clearStatus();
+    try {
+      const plan = await state.academicService.getMyActionPlan();
+      if (!plan || !Array.isArray(plan.questions)) {
+        throw new Error("Plano de estudo indisponível.");
+      }
+
+      state.studyByQuestionId = new Map(plan.questions.map(function (question) {
+        return [question.id, question];
+      }));
+      renderQuestions();
+      clearStatus();
+    } catch (error) {
+      // Keep the catalog readable, but never allow an unverified study write.
+      state.studyByQuestionId.clear();
+      renderQuestions();
+      showStatus("Não foi possível verificar os estudos registrados. Recarregue a página.", "error");
+      console.error("Falha ao verificar as perguntas estudadas:", error);
+    }
   }
 
   async function initialize() {
@@ -407,6 +492,9 @@
       const client = window.Auth.getClient();
       state.service = window.ConversationQuestionsService.create(client);
       state.isTeacher = await window.Auth.isTeacherAdmin();
+      if (!state.isTeacher) {
+        state.academicService = window.AcademicWorkflowService.create(client);
+      }
 
       if (state.isTeacher) await loadTeacherView();
       else await loadStudentView();
