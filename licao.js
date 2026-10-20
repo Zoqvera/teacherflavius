@@ -297,14 +297,20 @@
     const linkedPage = await service.getLinkedPageByLessonNumber(lessonNumber);
     if (linkedPage) {
       renderDynamicPage(linkedPage);
-      await setupLessonPresentation(studentId, lessonNumber, null);
+      // The optional presentation editor must never block essential lesson navigation.
+      void setupLessonPresentation(studentId, lessonNumber, null).catch(function (error) {
+        console.error("Falha ao iniciar editor de apresentação:", error);
+      });
       await setupPreparation(lessonNumber);
       await setupRoadmapNavigation(service, lessonNumber);
       return true;
     }
 
     if (renderLegacyLesson(lessonNumber)) {
-      await setupLessonPresentation(studentId, lessonNumber, null);
+      // The optional presentation editor must never block essential lesson navigation.
+      void setupLessonPresentation(studentId, lessonNumber, null).catch(function (error) {
+        console.error("Falha ao iniciar editor de apresentação:", error);
+      });
       await setupPreparation(lessonNumber);
       await setupRoadmapNavigation(service, lessonNumber);
       return true;
@@ -322,7 +328,11 @@
     const lessonNumber = window.AcademicWorkflowService.normalizeLessonNumber(
       page.roadmap_lesson_number
     );
-    await setupLessonPresentation(studentId, lessonNumber, lessonNumber ? null : page.id);
+    // Keep the preparation controls responsive if presentation data is delayed.
+    void setupLessonPresentation(studentId, lessonNumber, lessonNumber ? null : page.id)
+      .catch(function (error) {
+        console.error("Falha ao iniciar editor de apresentação:", error);
+      });
     await setupPreparation(lessonNumber);
     await setupRoadmapNavigation(service, Number(page.roadmap_lesson_number));
     return true;
