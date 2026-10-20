@@ -6,6 +6,8 @@
 
   let overview = null;
   let lessonCredits = [];
+  let lessonForecast = null;
+  let forecastLoadFailed = false;
   let replacementOptions = [];
   let pendingLateCancellationButton = null;
   let authenticatedStudentId = null;
@@ -100,6 +102,19 @@
     replacementOptions = overview && Number(overview.available_credits) > 0
       ? (await rpc("get_my_replacement_options") || [])
       : [];
+
+    lessonForecast = null;
+    forecastLoadFailed = false;
+    if (overview && Number(overview.classes_per_month) > 0) {
+      try {
+        lessonForecast = await rpc("get_my_lesson_forecast");
+      } catch (error) {
+        // Keep confirmed lessons and replacement actions available when
+        // the independent forecast service is temporarily unavailable.
+        forecastLoadFailed = true;
+        console.warn("Não foi possível consultar a previsão de aulas.", error);
+      }
+    }
   }
 
   function renderClassCards(classes, allowCancellation) {
@@ -224,6 +239,84 @@
     }).join("") + '</div>';
   }
 
+  function formatPaymentDueDate(value) {
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(value || ""))) return "";
+    const parts = value.split("-");
+    return parts[2] + "/" + parts[1] + "/" + parts[0];
+  }
+
+  function getForecastLessons() {
+    if (!lessonForecast) return [];
+
+    const prepaid = Array.isArray(lessonForecast.prepaid_lessons)
+      ? lessonForecast.prepaid_lessons
+      : [];
+    const predicted = Array.isArray(lessonForecast.predicted_lessons)
+      ? lessonForecast.predicted_lessons
+      : [];
+
+    return prepaid.concat(predicted)
+      .filter(function (lesson) {
+        if (lesson.status !== "confirmed" && lesson.status !== "predicted") return false;
+        const startsAt = new Date(lesson.starts_at);
+        return !Number.isNaN(startsAt.getTime()) && startsAt.getTime() > Date.now();
+      })
+      .sort(function (left, right) {
+        return new Date(left.starts_at).getTime() - new Date(right.starts_at).getTime();
+      });
+  }
+
+  function renderForecastSection() {
+    if (!overview || Number(overview.classes_per_month) < 1) return "";
+
+    if (forecastLoadFailed) {
+      return '<section class="surface-card">' +
+        '<h2>Próximas aulas</h2>' +
+        '<p class="empty-state">A previsão das próximas aulas está indisponível no momento. Suas aulas confirmadas continuam válidas.</p>' +
+      '</section>';
+    }
+
+    const lessons = getForecastLessons();
+    if (!lessons.length) return "";
+
+    const hasPredicted = lessons.some(function (lesson) {
+      return lesson.status === "predicted";
+    });
+    const paymentDueDate = formatPaymentDueDate(lessonForecast.next_payment_due_date);
+    const paymentNote = hasPredicted
+      ? '<div class="forecast-payment-note">' +
+          (paymentDueDate
+            ? '<strong>Próximo vencimento: ' + escapeHtml(paymentDueDate) + '.</strong> '
+            : '') +
+          'As aulas previstas ainda não estão confirmadas. ' +
+          '<a href="/pagamento/">CONSULTAR PAGAMENTO</a>' +
+        '</div>'
+      : "";
+
+    return '<section class="surface-card forecast-section">' +
+      '<h2>Próximo período de aulas</h2>' +
+      '<p class="card-description">Veja sua programação futura. As aulas previstas dependem da confirmação do pagamento.</p>' +
+      paymentNote +
+      '<div class="lesson-list">' +
+        lessons.map(function (lesson) {
+          const isPredicted = lesson.status === "predicted";
+          const label = isPredicted ? "AULA PREVISTA" : "CONFIRMADA";
+          const className = lesson.class_name || ("Turma " + lesson.class_number);
+          return '<article class="lesson-card' + (isPredicted ? ' forecast-lesson' : '') + '">' +
+            '<div class="lesson-topline">' +
+              '<h3>' + escapeHtml(className) + '</h3>' +
+              '<span class="status-pill ' + (isPredicted ? 'predicted' : '') + '">' + label + '</span>' +
+            '</div>' +
+            '<div class="lesson-meta">' + escapeHtml(formatDateTime(lesson.starts_at)) + '</div>' +
+            (isPredicted
+              ? '<p class="forecast-helper">Previsão de calendário, sem confirmação de pagamento.</p>'
+              : '<p class="forecast-helper">Mensalidade quitada. O período desta aula ainda não começou.</p>') +
+          '</article>';
+        }).join("") +
+      '</div>' +
+    '</section>';
+  }
+
   function getReplacementCalendarEvent(credit) {
     return {
       studentId: authenticatedStudentId,
@@ -302,6 +395,7 @@
       renderClassCards(classes, firstPaymentPending && classes.length > 0) +
       notice +
     '</section>' +
+    renderForecastSection() +
     renderReplacementSection(Number(overview.classes_per_month || 0) < 1);
   }
 
@@ -332,6 +426,7 @@
         ? '<div class="config-note">O professor ainda precisa definir a quantidade de aulas contratadas por mês no seu perfil.</div>'
         : renderLessonCards()) +
     '</section>' +
+    renderForecastSection() +
     renderReplacementSection(configurationPending);
   }
 
