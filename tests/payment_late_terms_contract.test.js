@@ -63,6 +63,6 @@ test("canonical restore includes the new overlay and account functions", () => {
   const workflow = read(".github/workflows/validate-supabase-baseline.yml");
   const fingerprint = JSON.parse(read("supabase/baseline/schema-fingerprint.json"));
   assert.match(workflow, /435_late_payment_policy_quote_foundation\.sql/);
-  assert.equal(fingerprint.public_functions, 196);
+  assert.equal(fingerprint.public_functions, 197);
   assert.equal(fingerprint.private_functions, 39);
 });
