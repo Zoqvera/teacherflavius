@@ -379,7 +379,8 @@ async function runLessonScenario({
   nextPublished = true,
   legacyNext = false,
   preparationError = null,
-  planError = null
+  planError = null,
+  presentationStalled = false
 } = {}) {
   const document = makeDocument([
     "lessonPageContent",
@@ -414,6 +415,10 @@ async function runLessonScenario({
       href: ""
     },
     StudentPreparationFlow: { enabled, secondPartUrl: "/o-que-fazer/segunda-parte/" },
+    LessonPresentationEditor: presentationStalled ? {
+      enabled: true,
+      mount: () => new Promise(() => {})
+    } : null,
     SUPABASE_CONFIG: {},
     Auth: {
       isConfigured: () => true,
@@ -507,6 +512,13 @@ test("already prepared lessons continue without exposing the legacy preparation 
   assert.equal(state.node("lessonNextPartLink").hidden, false);
   assert.equal(state.node("lessonLegacyPreparationContent").hidden, true);
   assert.deepEqual(state.calls.prepared, []);
+});
+
+test("unresponsive presentation editor cannot prevent PRÓXIMA PARTE", async () => {
+  const state = await runLessonScenario({ enabled: true, presentationStalled: true });
+  assert.equal(state.node("lessonPreparationSection").hidden, false);
+  assert.equal(state.node("lessonNextPartLink").hidden, false);
+  assert.equal(state.node("lessonFlowProgress").hidden, false);
 });
 
 test("previous lessons offer a clear link to the assigned lesson", async () => {
