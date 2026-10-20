@@ -74,7 +74,7 @@ jobs:
           test -f _android_site/licao/index.html
           test -f _android_site/roteiro-da-aula/index.html
           grep -Fq 'lesson_presentation_editor.js?v=20261017-stage5c-1' _android_site/licao/index.html
-          grep -Fq 'teacher_lesson_presentations.js?v=20261017-stage5c-1' _android_site/roteiro-da-aula/index.html
+          grep -Fq 'teacher_lesson_presentations.js?v=20261020-always-visible-1' _android_site/roteiro-da-aula/index.html
           grep -Fq 'noindex,nofollow' _android_site/licao/index.html
           grep -Fq 'noindex, nofollow' _android_site/roteiro-da-aula/index.html
 
