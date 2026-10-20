@@ -74,6 +74,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </aside>
 
+    <section id="latePaymentTermsConsent" class="late-payment-consent" aria-labelledby="latePaymentTermsHeading" hidden>
+      <h2 id="latePaymentTermsHeading">Atualização das condições de pagamento</h2>
+      <p>Para novos encargos contratuais, o aluno precisa concordar expressamente com as condições. Em mensalidades já vencidas, os novos percentuais somente poderão contar a partir do dia seguinte ao aceite, sem recálculo dos dias anteriores. Pagamentos já iniciados não serão alterados.</p>
+      <label class="late-payment-consent__check">
+        <input id="latePaymentTermsCheckbox" type="checkbox">
+        <span>Li e concordo com multa única de 2% e juros simples de 1% ao mês, proporcionais aos dias de atraso elegíveis.</span>
+      </label>
+      <button id="latePaymentTermsAcceptButton" class="secondary-button" type="button" disabled>REGISTRAR CONCORDÂNCIA</button>
+      <p id="latePaymentTermsStatus" role="status" aria-live="polite"></p>
+      <p class="late-payment-consent__detail">A concordância é voluntária. Ela não impede o pagamento dos valores originais já devidos. Para menores de idade, as novas condições precisam ser formalizadas com o responsável legal.</p>
+    </section>
+
     <section id="paymentWorkspace" class="payment-workspace" hidden>
       <aside class="tuition-panel" aria-labelledby="tuitionListTitle">
         <div class="panel-heading">
@@ -138,6 +150,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </section>
   </main>
 
+  <script src="/pagamento/late_payment_terms.js?v=20261020-1"></script>
   <script src="/pagamento/payment_idempotency.js?v=20260909-1"></script>
   <script src="/pagamento/tuition_history.js?v=20261008-1"></script>
   <script src="/pagamento/app.js?v=20261013-payment-deadline-1"></script>
