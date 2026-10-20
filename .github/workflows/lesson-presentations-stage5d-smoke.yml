@@ -37,5 +37,7 @@ jobs:
       - name: Test the smoke's negative and positive contracts
         run: python3 -m unittest tests/test_smoke_lesson_presentations_public.py
 
+      # Pull requests validate the new asset contract locally; production still serves main.
       - name: Inspect actual deployed HTTPS pages and guest Data API
+        if: github.event_name != 'pull_request'
         run: python3 scripts/smoke_lesson_presentations_public.py

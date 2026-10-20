@@ -20,7 +20,7 @@ MAX_RESPONSE_BYTES = 512_000
 STUDENT_PAGE = "/licao/"
 TEACHER_PAGE = "/roteiro-da-aula/"
 STUDENT_SCRIPT = "/lesson_presentation_editor.js?v=20261017-stage5c-1"
-TEACHER_SCRIPT = "/teacher_lesson_presentations.js?v=20261017-stage5c-1"
+TEACHER_SCRIPT = "/teacher_lesson_presentations.js?v=20261020-always-visible-1"
 CLIENT_CONFIG = "/supabase_config.js?v=20260918-1"
 
 
@@ -74,7 +74,7 @@ def check_public_pages(read=retrieve) -> None:
 
     if "lesson_presentation_editor.js?v=20261017-stage5c-1" not in student_page:
         raise SmokeFailure("Published student HTML is using an old editor script.")
-    if "teacher_lesson_presentations.js?v=20261017-stage5c-1" not in teacher_page:
+    if "teacher_lesson_presentations.js?v=20261020-always-visible-1" not in teacher_page:
         raise SmokeFailure("Published teacher HTML is using an old viewer script.")
     if 'id="lessonPresentationSection"' not in student_page:
         raise SmokeFailure("Published student form container is missing.")

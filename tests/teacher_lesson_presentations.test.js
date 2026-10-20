@@ -34,9 +34,19 @@ function domNode(tag) {
   };
 }
 
-function loadModule() {
+function loadModule(observers = []) {
   const context = {
-    window: {},
+    window: {
+      IntersectionObserver: class {
+        constructor(callback) {
+          this.callback = callback;
+          observers.push(this);
+        }
+        observe(target) { this.target = target; }
+        disconnect() { this.disconnected = true; }
+        notify(isIntersecting) { return this.callback([{ isIntersecting, target: this.target }]); }
+      }
+    },
     document: { createElement: domNode },
     console: { error() {} }
   };
@@ -154,24 +164,34 @@ test("mark viewed requires teacher identity, stores only the receipt key and nev
   await assert.rejects(() => service.markViewed({ id: "bad", revision_number: 1 }), /inválida/);
 });
 
-test("teacher expands plain text only; receipt follows an actual open event", async () => {
+test("presentation text stays visible and is marked viewed only on screen", async () => {
   const db = createDb([], []);
-  const module = loadModule();
+  const observers = [];
+  const module = loadModule(observers);
   const service = module.create({
     getClient: () => db.client, getTeacherId: () => TEACHER
   });
   const records = new Map([[STUDENT + "|lesson:12", presentation()]]);
   const section = service.render(row(), records);
   assert.equal(section.children[0].textContent, "APRESENTAÇÃO DO ALUNO");
-  const details = section.children.find(n => n.tagName === "details");
-  assert.ok(details);
-  assert.equal(details.children[1].textContent, records.get(STUDENT + "|lesson:12").body);
+  assert.equal(section.children.some(n => n.tagName === "details"), false);
+  const content = section.children.find(n => n.className === "academic-presentation-content");
+  assert.ok(content);
+  assert.equal(content.children[0].textContent, records.get(STUDENT + "|lesson:12").body);
   assert.equal(db.inserted.length, 0);
-  details.open = true;
-  await details.toggle();
+
+  await observers[0].notify(false);
+  assert.equal(db.inserted.length, 0, "Offscreen text must not be marked viewed");
+  await observers[0].notify(true);
   assert.equal(db.inserted.length, 1);
+  assert.equal(observers[0].disconnected, true);
   assert.equal(section.children[1].children[1].textContent, "VISUALIZADA");
-  assert.equal(details.children[2].textContent, "Visualização registrada.");
+  assert.equal(content.children[1].textContent, "Visualização registrada.");
+
+  const refreshed = service.render(row(), records);
+  assert.equal(refreshed.children.find(n => n.className === "academic-presentation-content")
+    .children[0].textContent, presentation().body);
+  assert.equal(db.inserted.length, 1, "Refreshing must not duplicate receipts");
 });
 
 test("missing presentation shows truthful absence and no receipt action", () => {

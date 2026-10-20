@@ -25,7 +25,7 @@ STUDENT_HTML = (
 )
 TEACHER_HTML = (
     '<meta name="robots" content="noindex, nofollow">'
-    '<script src="/teacher_lesson_presentations.js?v=20261017-stage5c-1"></script>'
+    '<script src="/teacher_lesson_presentations.js?v=20261020-always-visible-1"></script>'
 )
 EDITOR = "const RELEASE_ENABLED = true; window.LessonPresentationEditor = {};"
 VIEWER = "const RELEASE_ENABLED = true; window.TeacherLessonPresentations = {};"
@@ -66,7 +66,7 @@ class PublicPresentationSmokeTests(unittest.TestCase):
         with self.assertRaisesRegex(SmokeFailure, "old viewer script"):
             check_public_pages(static_loader({
                 SITE + TEACHER_PAGE: (200, TEACHER_HTML.replace(
-                    "20261017-stage5c-1", "20261017-stage3-1"
+                    "20261020-always-visible-1", "20261017-stage5c-1"
                 ))
             }))
 
