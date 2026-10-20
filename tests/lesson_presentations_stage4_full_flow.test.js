@@ -35,9 +35,24 @@ function node(tagName = "div") {
   };
 }
 
+const visibleObservers = [];
+
 function moduleFrom(source, globalName) {
   const context = {
-    window: {}, document: { createElement: node }, console: { error() {} },
+    window: {
+      IntersectionObserver: class {
+        constructor(callback) {
+          this.callback = callback;
+          visibleObservers.push(this);
+        }
+        observe(target) { this.target = target; }
+        disconnect() { this.disconnected = true; }
+        notify(isIntersecting) {
+          return this.callback([{ isIntersecting, target: this.target }]);
+        }
+      }
+    },
+    document: { createElement: node }, console: { error() {} },
     Date, Intl
   };
   vm.runInNewContext(source, context, { timeout: 1000 });
@@ -176,11 +191,14 @@ function rosterRow(studentId = STUDENT, lessonNumber = 12) {
   return { student_id: studentId, lesson_number: lessonNumber };
 }
 
-function details(section) {
-  return section.children.find(child => child.tagName === "details");
+function presentationText(section) {
+  const content = section.children.find(child =>
+    child.className === "academic-presentation-content"
+  );
+  return content && content.children[0];
 }
 
-test("complete browser-module cycle: submit, receive, open, revise and re-read", async () => {
+test("complete browser-module cycle: submit, display, revise and re-read", async () => {
   const database = dataApi();
   const student = moduleFrom(studentSource, "LessonPresentationEditor");
   const teacher = moduleFrom(teacherSource, "TeacherLessonPresentations");
@@ -212,13 +230,15 @@ test("complete browser-module cycle: submit, receive, open, revise and re-read",
 
   const card = viewer.render(rosterRow(), records);
   assert.equal(card.children[0].textContent, "APRESENTAÇÃO DO ALUNO");
-  const original = details(card);
+  const original = presentationText(card);
   assert.ok(original);
-  assert.equal(original.children[1].textContent,
+  assert.equal(original.textContent,
     "My <script>alert(1)</script> presentation.");
-  assert.equal(database.receipts.length, 0, "A passive read is not a view");
-  original.open = true;
-  await original.fire("toggle");
+  assert.equal(database.receipts.length, 0, "Text outside the viewport is not viewed");
+  const originalObserver = visibleObservers.shift();
+  await originalObserver.notify(false);
+  assert.equal(database.receipts.length, 0);
+  await originalObserver.notify(true);
   assert.equal(database.receipts.length, 1);
   assert.equal(card.children[1].children[1].textContent, "VISUALIZADA");
 
@@ -234,9 +254,8 @@ test("complete browser-module cycle: submit, receive, open, revise and re-read",
   const revisedCard = viewer.render(rosterRow(), records);
   assert.equal(revisedCard.children[1].children[1].textContent, "NÃO VISUALIZADA");
 
-  const editedDetails = details(revisedCard);
-  editedDetails.open = true;
-  await editedDetails.fire("toggle");
+  assert.equal(presentationText(revisedCard).textContent, "My revised presentation.");
+  await visibleObservers.shift().notify(true);
   assert.equal(database.receipts.length, 2);
   assert.equal(database.receipts[0].revision_number, 1);
   assert.equal(database.receipts[1].revision_number, 2);
@@ -291,5 +310,5 @@ test("released pages, mobile styles, accessibility and route identity remain int
   assert.match(studentCss, /@media \(max-width: 639px\)/);
   assert.match(teacherCss, /@media \(max-width: 720px\)/);
   assert.match(studentCss, /\.lesson-presentation-textarea:focus-visible/);
-  assert.match(teacherCss, /\.academic-presentation-summary:focus-visible/);
+  assert.match(teacherCss, /\.academic-presentation-content/);
 });
