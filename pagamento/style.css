@@ -205,6 +205,55 @@ a { color: inherit; }
 
 .late-payment-notice strong { color: #fff7dd; }
 
+.late-payment-consent {
+  margin: 0 0 24px;
+  padding: 22px;
+  border: 1px solid rgba(78, 154, 236, .38);
+  border-radius: var(--tf-radius-md);
+  background: rgba(9, 104, 188, .11);
+}
+
+.late-payment-consent[hidden] { display: none; }
+
+.late-payment-consent h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: var(--tf-white);
+}
+
+.late-payment-consent p {
+  color: var(--tf-slate-200);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.late-payment-consent__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  line-height: 1.5;
+}
+
+.late-payment-consent__check input {
+  flex: none;
+  margin-top: 5px;
+  width: 18px;
+  height: 18px;
+}
+
+.late-payment-consent button { margin-top: 10px; }
+
+.late-payment-consent button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.late-payment-consent #latePaymentTermsStatus.error { color: #fecaca; }
+
+.late-payment-consent__detail { font-size: 12px !important; }
+
+
 .payment-message[hidden] { display: none; }
 .payment-message.error { border-color: rgba(239, 68, 68, .45); color: #fecaca; background: rgba(239, 68, 68, .10); }
 .payment-message.success { border-color: rgba(34, 197, 94, .38); color: #bbf7d0; background: rgba(34, 197, 94, .09); }
