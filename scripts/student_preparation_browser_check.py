@@ -39,6 +39,7 @@ SCENARIOS = (
     ("roadmap", 320, 740),
     ("roadmap", 390, 844),
     ("roadmap", 1280, 900),
+    ("roadmap-past", 390, 844),
     ("roadmap-last", 390, 844),
     ("roadmap-disabled", 390, 844),
 )
@@ -70,6 +71,9 @@ BOOTSTRAP = r"""
       }
     ]
   };
+  if (scenario === "roadmap-past" || scenario === "roadmap-last") {
+    plan.lesson.number = 8;
+  }
   if (scenario === "second-stable") {
     plan.questions.push({
       id: "later", display_order: 12, text: "Do you have any brothers or sisters?",
@@ -219,6 +223,12 @@ VERIFIER = r"""
         !visible("lessonNextPartLink") &&
         visible("lessonPreparationSection") && visible("lessonPreparedButton");
     } else if (scenario === "roadmap") {
+      ok = ok && visible("lessonFlowProgress") &&
+        !visible("lessonPreparedButton") && visible("lessonNextPartLink") &&
+        !visible("lessonNextLessonLink") &&
+        document.getElementById("lessonNextPartLink").getAttribute("href") ===
+          "/o-que-fazer/segunda-parte/";
+    } else if (scenario === "roadmap-past") {
       ok = ok && !visible("lessonFlowProgress") &&
         !visible("lessonPreparedButton") && !visible("lessonNextPartLink") &&
         visible("lessonNextLessonLink") &&
