@@ -458,7 +458,7 @@ Deno.serve(async (request: Request) => {
 
   const { data: sameAttempt, error: sameAttemptError } = await supabaseAdmin
     .from("tuition_payment_attempts")
-    .select("id, tuition_id, student_id, provider_payment_id, status, created_at")
+    .select("id, tuition_id, student_id, provider_payment_id, status, created_at, amount")
     .eq("idempotency_key", idempotencyKey)
     .maybeSingle();
 
@@ -544,6 +544,67 @@ Deno.serve(async (request: Request) => {
     }, 409);
   }
 
+  // Preserve existing attempts. Only a new attempt can receive a new surcharge.
+  let paymentAmount = sameAttempt ? Number(sameAttempt.amount) : amount;
+  let lateBreakdown: JsonRecord | null = null;
+
+  // Independent deployment flag keeps legacy checkouts working until the
+  // reviewed PostgreSQL migration and the front-end are available.
+  if (!sameAttempt && Deno.env.get("LATE_PAYMENT_GATEWAY_ENABLED") === "true") {
+    const quoteResult = await supabaseAdmin.rpc("get_checkout_late_tuition_quote", {
+      target_tuition_id: tuitionId,
+    });
+    const quote = quoteResult.data as JsonRecord | null;
+    if (quoteResult.error || !isRecord(quote)) {
+      console.error("Unable to calculate late-payment quote", quoteResult.error?.message);
+      return jsonResponse(request, {
+        error: "Não foi possível atualizar a cobrança. Tente novamente mais tarde.",
+        code: "late_quote_unavailable",
+      }, 503);
+    }
+
+    const quotedPrincipal = Number(quote.principal_amount);
+    const quotedFine = Number(quote.fine_amount);
+    const quotedInterest = Number(quote.interest_amount);
+    const quotedTotal = Number(quote.total_amount);
+    const hasValidQuote = [quotedPrincipal, quotedFine, quotedInterest, quotedTotal]
+      .every((part) => Number.isFinite(part) && part >= 0) &&
+      quotedPrincipal === amount &&
+      Math.abs(quotedPrincipal + quotedFine + quotedInterest - quotedTotal) < 0.005;
+
+    if (!hasValidQuote) {
+      return jsonResponse(request, {
+        error: "O valor atualizado não pôde ser validado.",
+        code: "late_quote_invalid",
+      }, 503);
+    }
+
+    if (quote.billing_enabled === true && (quotedFine > 0 || quotedInterest > 0)) {
+      const expectedAmount = Number(body.expected_amount);
+      if (
+        body.expected_amount == null ||
+        !Number.isFinite(expectedAmount) ||
+        Math.abs(expectedAmount - quotedTotal) >= 0.005
+      ) {
+        return jsonResponse(request, {
+          error: "O valor mudou após o carregamento da página. Atualize a página para confirmar a cobrança.",
+          code: "late_quote_expired",
+        }, 409);
+      }
+    }
+
+    paymentAmount = quotedTotal;
+    lateBreakdown = {
+      late_principal_amount: quotedPrincipal,
+      late_fine_amount: quotedFine,
+      late_interest_amount: quotedInterest,
+      late_policy_version: "2026-10-20-v1",
+    };
+  }
+  if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
+    return jsonResponse(request, { error: "A tentativa possui valor inválido." }, 409);
+  }
+
   let attempt = sameAttempt;
   if (!attempt) {
     const { data: insertedAttempt, error: insertError } = await supabaseAdmin
@@ -552,7 +613,8 @@ Deno.serve(async (request: Request) => {
         tuition_id: tuitionId,
         student_id: user.id,
         idempotency_key: idempotencyKey,
-        amount,
+        amount: paymentAmount,
+        ...(lateBreakdown || {}),
         status: "created",
       })
       .select("id, tuition_id, student_id, provider_payment_id, status, created_at")
@@ -650,7 +712,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const mercadoPagoPayload: JsonRecord = {
-    transaction_amount: amount,
+    transaction_amount: paymentAmount,
     description: `Mensalidade Teacher Flávio — ${formatReferenceMonth(tuition.reference_month)}`,
     external_reference: attempt.id,
     payment_method_id: isPix ? "pix" : paymentMethodId,
