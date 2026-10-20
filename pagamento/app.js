@@ -222,7 +222,7 @@ function renderTuitionList() {
         ? "Pagamento pendente"
         : (overdue ? "Vencida" : "Em aberto");
     return '<button class="tuition-card' + (selected ? ' selected' : '') + '" type="button" data-tuition-id="' + escapeHtml(tuition.tuition_id) + '">' +
-      '<span class="tuition-card__top"><strong>' + escapeHtml(formatReferenceMonth(tuition.reference_month)) + '</strong><span class="tuition-card__amount">' + escapeHtml(formatCurrency(tuition.amount_due)) + '</span></span>' +
+      '<span class="tuition-card__top"><strong>' + escapeHtml(formatReferenceMonth(tuition.reference_month)) + '</strong><span class="tuition-card__amount">' + escapeHtml(formatCurrency(payableTuitionAmount(tuition))) + '</span></span>' +
       '<span class="tuition-card__bottom"><span>Vencimento: ' + escapeHtml(formatDate(tuition.due_date)) + '</span><span class="tuition-card__status' + (overdue ? ' overdue' : '') + '">' + statusLabel + '</span></span>' +
     '</button>';
   }).join("");
@@ -271,6 +271,7 @@ async function refreshSelectedLateQuote() {
     throw new Error("A cobrança atualizada não pôde ser consultada.");
   }
   tuition.lateQuote = quote;
+  renderTuitionList();
 }
 
 function renderLateBreakdown(tuition) {
