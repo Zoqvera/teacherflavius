@@ -264,3 +264,14 @@ With overlay 430, the canonical reconstruction now contains **86 overlays,
 55 public tables, 277 constraints, 120 non-constraint indexes, and 99 public
 RLS policies**. The previously documented historical totals above belong
 to earlier restore stages, not this stage. Tarefas para Casa remains retired.
+
+
+## Etapa financeira — termos e cotação sem cobrança automática (20/10/2026)
+
+O overlay `435_late_payment_policy_quote_foundation.sql` restaura os procedimentos versionados de concordância (`2026-10-20-v1`) e a cotação informativa de encargos, com multa contratual única de 2% e juros simples de 1% ao mês. O intervalo elegível para dívidas pré-existentes começa **somente após o aceite**, nunca no vencimento histórico. Alunos menores de idade são orientados à formalização com responsável legal.
+
+A cobrança efetiva permanece **desativada** (`billing_enabled=false` e `preview_only=true`); o servidor do Mercado Pago continua aplicando o valor principal original. Pagamentos externos iniciados anteriormente conservam seus valores. Nenhum registro histórico nem valor de mensalidade é atualizado nesta etapa.
+
+O painel de pagamento apresenta aceite opcional e auditável, sem bloquear a quitação do principal. A próxima etapa deve ampliar o registro financeiro, o fluxo de criação no Mercado Pago, as verificações de liquidação e os relatórios, e realizar homologação isolada antes da ativação.
+
+O overlay e a migração são idênticos. Os testes SQL no banco descartável verificam juros simples, dias elegíveis, arredondamento e permissões de execução.
