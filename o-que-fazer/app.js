@@ -345,6 +345,23 @@
       return;
     }
 
+    service = window.AcademicWorkflowService.create(window.Auth.getClient());
+    try {
+      const activeStudent = await service.isActiveStudent(session.user.id);
+      if (!activeStudent) {
+        const plan = document.getElementById("legacyActionPlan");
+        if (plan) plan.hidden = true;
+        setStatus("actionPlanStatus", "Esta página está disponível apenas para alunos ativos.", "error");
+        document.body.classList.remove("auth-checking");
+        return;
+      }
+    } catch (error) {
+      console.error("Falha ao verificar acesso ao plano de preparação:", error);
+      setStatus("actionPlanStatus", "Não foi possível confirmar seu acesso. Atualize a página e tente novamente.", "error");
+      document.body.classList.remove("auth-checking");
+      return;
+    }
+
     const flow = window.StudentPreparationFlow;
     if (flow && typeof flow.resolveEligibility === "function") {
       await flow.resolveEligibility(window.Auth.getClient(), session.user.id);
@@ -355,7 +372,6 @@
       return;
     }
 
-    service = window.AcademicWorkflowService.create(window.Auth.getClient());
     document.body.classList.remove("auth-checking");
 
     if (isNewFlowEnabled() && !isSecondPartPage()) {

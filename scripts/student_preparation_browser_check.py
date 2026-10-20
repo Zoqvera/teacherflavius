@@ -87,6 +87,7 @@ BOOTSTRAP = r"""
   const calls = { studied: [], prepared: [] };
   window.__qa = { scenario, plan, calls };
   const academic = {
+    isActiveStudent: async () => true,
     getMyActionPlan: async () => plan,
     getMyReviewQuestions: async () => reviews,
     async markQuestionStudied(id) {

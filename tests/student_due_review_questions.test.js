@@ -56,6 +56,9 @@ async function loadStudentPage(reviews, reviewError = null, planError = null, ac
     return elements.get(id);
   };
   const client = {
+    async isActiveStudent() {
+      return true;
+    },
     async getMyActionPlan() {
       if (planError) throw planError;
       return actionPlan || { lesson: null, questions: [] };
