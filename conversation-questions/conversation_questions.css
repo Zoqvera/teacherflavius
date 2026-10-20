@@ -359,6 +359,42 @@
   color: #bbf7d0;
 }
 
+.conversation-student-study-action {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.conversation-study-button {
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 1px solid rgba(78, 154, 236, .55);
+  border-radius: var(--tf-radius-sm);
+  background: rgba(5, 66, 136, .65);
+  color: var(--tf-slate-50);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.conversation-study-button:hover:not(:disabled),
+.conversation-study-button:focus-visible:not(:disabled) {
+  border-color: rgba(78, 154, 236, .9);
+  background: rgba(9, 104, 188, .75);
+}
+
+.conversation-study-button:focus-visible {
+  outline: 3px solid var(--tf-blue-300);
+  outline-offset: 3px;
+}
+
+.conversation-study-button:disabled {
+  border-color: rgba(148, 163, 184, .25);
+  background: rgba(148, 163, 184, .09);
+  color: var(--tf-slate-400);
+  cursor: not-allowed;
+}
+
 .conversation-empty {
   margin: 12px 0 0 54px;
   color: var(--tf-slate-400);
@@ -411,6 +447,10 @@
   .conversation-student-progress {
     align-self: flex-start;
     margin-left: 0;
+  }
+
+  .conversation-study-button {
+    width: 100%;
   }
 }
 
