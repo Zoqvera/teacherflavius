@@ -147,7 +147,9 @@ test("only due reviews are rendered in the priority panel, without altering the 
   const { getElementById } = await loadStudentPage(questions);
   const reviewItems = getElementById("reviewQuestionList").children;
   assert.equal(reviewItems.length, 2);
-  assert.deepEqual(reviewItems.map((item) => item.question.id), ["due-1", "due-2"]);
+  assert.deepEqual(reviewItems.map((item) => item.children[0].question.id), ["due-1", "due-2"]);
+  assert.equal(reviewItems[0].children[1].children[0].disabled, true);
+  assert.equal(reviewItems[0].children[1].children[0].textContent, "PERGUNTA JÁ TRABALHADA");
   assert.equal(getElementById("actionQuestionList").children.length, 1);
   assert.match(getElementById("reviewQuestionsStatus").textContent, /^$/);
 });
