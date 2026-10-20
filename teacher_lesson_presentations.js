@@ -138,6 +138,33 @@
       }
     }
 
+    function markWhenVisible(presentation, content, viewStatus, message) {
+      if (presentation.viewedAt) return;
+
+      async function registerView() {
+        try {
+          await markViewed(presentation);
+          viewStatus.textContent = "VISUALIZADA";
+          message.textContent = "Visualização registrada.";
+        } catch (error) {
+          console.error("Não foi possível registrar visualização:", error);
+          message.textContent = "Não foi possível registrar a visualização. A atualização automática tentará novamente.";
+        }
+      }
+
+      if (typeof window.IntersectionObserver !== "function") {
+        registerView();
+        return;
+      }
+
+      const observer = new window.IntersectionObserver(async function (entries) {
+        if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+        observer.disconnect();
+        await registerView();
+      });
+      observer.observe(content);
+    }
+
     function render(item, records) {
       const section = node("section", "academic-presentation-section");
       const heading = node("h4", "academic-presentation-heading", "APRESENTAÇÃO DO ALUNO");
@@ -165,25 +192,14 @@
         (dateLabel ? " · Enviada em " + dateLabel : "")
       ));
 
-      const details = node("details", "academic-presentation-details");
-      details.appendChild(node("summary", "academic-presentation-summary", "LER APRESENTAÇÃO"));
-      details.appendChild(node("p", "academic-presentation-body", presentation.body));
+      const content = node("div", "academic-presentation-content");
+      const body = node("p", "academic-presentation-body", presentation.body);
       const message = node("p", "academic-presentation-feedback");
       message.setAttribute("role", "status");
-      details.appendChild(message);
-
-      details.addEventListener("toggle", async function () {
-        if (!details.open || presentation.viewedAt) return;
-        try {
-          await markViewed(presentation);
-          viewStatus.textContent = "VISUALIZADA";
-          message.textContent = "Visualização registrada.";
-        } catch (error) {
-          console.error("Não foi possível registrar visualização:", error);
-          message.textContent = "Não foi possível registrar a visualização. Abra novamente para tentar.";
-        }
-      });
-      section.appendChild(details);
+      content.appendChild(body);
+      content.appendChild(message);
+      section.appendChild(content);
+      markWhenVisible(presentation, body, viewStatus, message);
       return section;
     }
 
