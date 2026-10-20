@@ -31,7 +31,7 @@ class CanonicalChainAuditTests(unittest.TestCase):
         second = check_chain(self.repository, self.directory)
         self.assertEqual(first, second)
         self.assertEqual(first.status, "LOCAL_CHAIN_VALIDATED")
-        self.assertEqual(first.reviewed_overlays, 86)
+        self.assertEqual(first.reviewed_overlays, 87)
         self.assertEqual(len(first.migration_sha256), 2)
         self.assertFalse(first.historical_migrations_replayed)
         self.assertFalse(first.production_ledger_modified)
