@@ -240,6 +240,55 @@ function renderTuitionList() {
   });
 }
 
+function payableTuitionAmount(tuition) {
+  const quote = tuition && tuition.lateQuote;
+  if (quote && quote.billing_enabled === true && Number.isFinite(Number(quote.total_amount))) {
+    return Number(quote.total_amount);
+  }
+  return Number(tuition.amount_due);
+}
+
+async function refreshSelectedLateQuote() {
+  if (!selectedTuition || isNativeCapacitorApp()) return;
+  const tuition = selectedTuition;
+  const response = await Auth.getClient().rpc("get_my_late_tuition_quote", {
+    target_tuition_id: tuition.tuition_id
+  });
+
+  if (response.error) {
+    // Deployments with the gateway still disabled may not have this RPC yet.
+    // Once the gateway is enabled, it will fail closed if the quote is missing.
+    if (/function .*get_my_late_tuition_quote.* does not exist|could not find the function/i.test(response.error.message || "")) {
+      tuition.lateQuote = null;
+      return;
+    }
+    throw response.error;
+  }
+
+  if (selectedTuition !== tuition) return;
+  const quote = response.data;
+  if (!quote || !Number.isFinite(Number(quote.total_amount))) {
+    throw new Error("A cobrança atualizada não pôde ser consultada.");
+  }
+  tuition.lateQuote = quote;
+}
+
+function renderLateBreakdown(tuition) {
+  const box = document.getElementById("checkoutLateBreakdown");
+  if (!box) return;
+  const quote = tuition && tuition.lateQuote;
+  const fine = quote ? Number(quote.fine_amount) : 0;
+  const interest = quote ? Number(quote.interest_amount) : 0;
+  const show = Boolean(quote && quote.billing_enabled === true && (fine > 0 || interest > 0));
+  box.hidden = !show;
+  if (!show) return;
+
+  document.getElementById("latePrincipalAmount").textContent = formatCurrency(quote.principal_amount);
+  document.getElementById("lateFineAmount").textContent = formatCurrency(fine);
+  document.getElementById("lateInterestAmount").textContent = formatCurrency(interest);
+  document.getElementById("lateTotalAmount").textContent = formatCurrency(quote.total_amount);
+}
+
 function updateCheckoutHeading() {
   const title = document.getElementById("checkoutTitle");
   const description = document.getElementById("checkoutDescription");
@@ -248,13 +297,22 @@ function updateCheckoutHeading() {
     description.textContent = "Selecione uma cobrança para carregar as opções de pagamento.";
     return;
   }
-  title.textContent = formatReferenceMonth(selectedTuition.reference_month) + " · " + formatCurrency(selectedTuition.amount_due);
+  title.textContent = formatReferenceMonth(selectedTuition.reference_month) + " · " + formatCurrency(payableTuitionAmount(selectedTuition));
   description.textContent = "Vencimento em " + formatDate(selectedTuition.due_date) + ". Escolha Pix ou cartão de débito abaixo.";
+  renderLateBreakdown(selectedTuition);
 }
 
 async function renderPaymentBrick() {
   if (!selectedTuition || !bricksBuilder) return;
   stopPaymentPolling();
+  try {
+    await refreshSelectedLateQuote();
+  } catch (error) {
+    setPageMessage("Não foi possível consultar o total atualizado. Atualize a página e tente novamente.", "error");
+    console.error("Falha ao consultar encargos de atraso:", error);
+    return;
+  }
+  updateCheckoutHeading();
   await destroyBricks();
   currentIdempotencyKey = loadPaymentAttemptKey(selectedTuition.tuition_id);
   document.getElementById("retryPaymentButton").hidden = true;
@@ -262,7 +320,7 @@ async function renderPaymentBrick() {
 
   const settings = {
     initialization: {
-      amount: Number(selectedTuition.amount_due),
+      amount: payableTuitionAmount(selectedTuition),
       payer: {
         email: paymentSession.user.email || ""
       }
@@ -288,6 +346,7 @@ async function renderPaymentBrick() {
             action: "pay",
             tuition_id: selectedTuition.tuition_id,
             idempotency_key: currentIdempotencyKey,
+            expected_amount: payableTuitionAmount(selectedTuition),
             selected_payment_method: submission.selectedPaymentMethod,
             payment_data: submission.formData
           });
@@ -497,6 +556,10 @@ async function initializePage() {
 document.getElementById("retryPaymentButton").addEventListener("click", function () {
   if (selectedTuition) clearPaymentAttemptKey(selectedTuition.tuition_id);
   renderPaymentBrick();
+});
+
+window.addEventListener("latepaymenttermsaccepted", function () {
+  if (selectedTuition && !isNativeCapacitorApp()) renderPaymentBrick();
 });
 
 window.addEventListener("beforeunload", function () {
