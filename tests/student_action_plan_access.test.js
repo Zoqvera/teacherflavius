@@ -57,9 +57,10 @@ test("O QUE FAZER validates active student access before calling student RPCs", 
   assert.match(actionPlanSource, /await service\.isActiveStudent\(session\.user\.id\)/);
   assert.match(actionPlanSource, /if \(!activeStudent\) \{/);
   assert.match(actionPlanSource, /Esta página está disponível apenas para alunos ativos\./);
+  const initializeSource = actionPlanSource.slice(actionPlanSource.indexOf("async function initialize()"));
   assert.ok(
-    actionPlanSource.indexOf("await service.isActiveStudent(session.user.id)") <
-    actionPlanSource.indexOf("await loadPlan();")
+    initializeSource.indexOf("await service.isActiveStudent(session.user.id)") <
+    initializeSource.indexOf("await loadPlan();")
   );
 });
 
