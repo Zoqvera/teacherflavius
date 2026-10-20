@@ -31,7 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="/auth.js?v=20260430-3"></script>
   <script src="https://sdk.mercadopago.com/js/v2"></script>
-  <link rel="stylesheet" href="/pagamento/style.css?v=20261020-late-consent-1">
+  <link rel="stylesheet" href="/pagamento/style.css?v=20261020-late-charges-1">
 </head>
 <body class="auth-checking payment-page">
 <!-- Google Tag Manager (noscript) -->
@@ -100,6 +100,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <p class="payment-eyebrow">Pagamento</p>
           <h2 id="checkoutTitle">Carregando mensalidade...</h2>
           <p id="checkoutDescription">A cobrança mais próxima será selecionada automaticamente.</p>
+          <div id="checkoutLateBreakdown" class="checkout-late-breakdown" hidden aria-live="polite">
+            <h3>Detalhamento da cobrança</h3>
+            <dl>
+              <div><dt>Mensalidade</dt><dd id="latePrincipalAmount">—</dd></div>
+              <div><dt>Multa por atraso</dt><dd id="lateFineAmount">—</dd></div>
+              <div><dt>Juros proporcionais</dt><dd id="lateInterestAmount">—</dd></div>
+              <div class="checkout-late-breakdown__total"><dt>Total a pagar</dt><dd id="lateTotalAmount">—</dd></div>
+            </dl>
+          </div>
         </div>
 
         <div id="paymentBrickLoading" class="brick-loading" hidden>Carregando o ambiente seguro do Mercado Pago...</div>
@@ -153,7 +162,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <script src="/pagamento/late_payment_terms.js?v=20261020-1"></script>
   <script src="/pagamento/payment_idempotency.js?v=20260909-1"></script>
   <script src="/pagamento/tuition_history.js?v=20261008-1"></script>
-  <script src="/pagamento/app.js?v=20261013-payment-deadline-1"></script>
+  <script src="/pagamento/app.js?v=20261020-late-charges-1"></script>
   <script>
     (function(){
       const button=document.getElementById('verifyPaymentButton');
