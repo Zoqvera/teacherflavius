@@ -23,6 +23,8 @@ alter table public.tuition_payment_attempts
     late_principal_amount is null
     or (
       late_principal_amount > 0
+      and late_fine_amount is not null
+      and late_interest_amount is not null
       and late_fine_amount >= 0
       and late_interest_amount >= 0
       and late_policy_version = '2026-10-20-v1'
