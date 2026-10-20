@@ -435,6 +435,7 @@ async function runLessonScenario({
     },
     AcademicWorkflowService: {
       normalizeLessonNumber: Number,
+      lessonUrl: (number) => "/licao/?lesson=" + number,
       legacyLessonPreviewUrl: (number) => legacyNext && number === requestedLesson + 1
         ? "https://drive.google.com/file/d/synthetic/preview" : "",
       create: () => ({
