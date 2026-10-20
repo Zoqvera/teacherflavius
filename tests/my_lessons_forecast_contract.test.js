@@ -9,7 +9,7 @@ const app = fs.readFileSync(
   path.join(root, "area-do-estudante/minhas-aulas/app.js"), "utf8"
 );
 const migration = fs.readFileSync(
-  path.join(root, "supabase/migrations/20261020224000_add_my_lesson_forecast.sql"),
+  path.join(root, "supabase/migrations/20261020230000_add_my_lesson_forecast.sql"),
   "utf8"
 );
 
