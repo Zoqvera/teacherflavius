@@ -339,6 +339,8 @@ compare_production_identity() {
   local remote_identity
   local expected_git
   local expected_remote
+  # Different remote names are accepted only when both names and the immutable
+  # normalized SQL digest are pinned and match the production ledger exactly.
   while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha alias_remote_name; do
     [[ -n "$alias_git_version" ]] || continue
     local_identity="$(grep -E "^$alias_git_version[[:space:]]" "$local_records_file" || true)"
@@ -361,8 +363,6 @@ compare_production_identity() {
 20261020133230|20261020175958|late_payment_policy_quote_foundation|086ead16caddc509b63e610b548d58b38dbe26a4b23d1172437ec6cf6d1eb534
 20261020164300|20261020180038|late_payment_settlement_gateway|19ad5781909218ee29e4bd553477cfd80e03b97b9bd452234c9dfaaedbaf6814
 20261020180500|20261020192815|guard_lessons_before_class_membership|56817fb3bce31e642645f624200fb8f2ae0583246852d8414927be98bbf13067
-# Verified from live production ledger and original Git source: same immutable SQL,
-# but the Supabase-assigned version and migration name differ from the Git filename.
 20261020224500|20261020224156|first_lesson_after_membership_start|6800e587d50bc1e162fc04f0852ee5b187b9ed315b549364ac54b4742f726874|first_lesson_after_membership_start_20261020
 VERIFIED_MIGRATION_ALIASES
 
