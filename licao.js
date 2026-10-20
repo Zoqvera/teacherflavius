@@ -7,6 +7,7 @@
   });
 
   let academicService = null;
+  let canPrepareLesson = false;
 
   function resourcesAreReady() {
     return !!(
@@ -209,7 +210,7 @@
     if (progress) progress.hidden = true;
     if (currentLessonStatus) currentLessonStatus.hidden = true;
     if (currentLessonLink) currentLessonLink.hidden = true;
-    if (!lessonNumber) {
+    if (!lessonNumber || !canPrepareLesson) {
       section.hidden = true;
       return;
     }
@@ -363,6 +364,11 @@
 
     const lessonService = createLessonService();
     academicService = window.AcademicWorkflowService.create(window.Auth.getClient());
+    try {
+      canPrepareLesson = await academicService.isActiveStudent(session.user.id);
+    } catch (error) {
+      console.error("Falha ao verificar acesso à preparação da lição:", error);
+    }
     if (isRoadmapNavigation()) trackPreparation("preparation_roadmap_view");
 
     const params = new URLSearchParams(window.location.search);

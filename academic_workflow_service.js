@@ -63,6 +63,17 @@
   function create(client) {
     const supabase = requireClient(client);
 
+    async function isActiveStudent(userId) {
+      if (!userId) return false;
+      const response = await supabase
+        .from("profiles")
+        .select("enrolled,archived")
+        .eq("id", userId)
+        .maybeSingle();
+      const profile = unwrap(response);
+      return !!profile && profile.enrolled === true && profile.archived === false;
+    }
+
     async function hydrateQuestions(questions) {
       if (!Array.isArray(questions) || questions.length === 0) return [];
 
@@ -235,6 +246,7 @@
       getMyActionPlan,
       getMyReviewQuestions,
       getTeacherLessonPlan,
+      isActiveStudent,
       markLessonPrepared,
       markLessonPresented,
       markQuestionStudied,
