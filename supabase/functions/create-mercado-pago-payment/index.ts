@@ -482,6 +482,21 @@ Deno.serve(async (request: Request) => {
     }
   }
 
+  // A local attempt without a provider payment may be retried only on the
+  // same São Paulo calendar date. Once sent to Mercado Pago, the frozen
+  // provider amount remains valid and is reconciled by the branch above.
+  if (sameAttempt && Deno.env.get("LATE_PAYMENT_GATEWAY_ENABLED") === "true") {
+    const localDate = (date: Date): string =>
+      date.toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+    const startedAt = new Date(sameAttempt.created_at);
+    if (!Number.isFinite(startedAt.getTime()) || localDate(startedAt) !== localDate(new Date())) {
+      return jsonResponse(request, {
+        error: "A cotação anterior expirou. Atualize a página para gerar uma nova tentativa de pagamento.",
+        code: "late_quote_expired",
+      }, 409);
+    }
+  }
+
   if (!sameAttempt) {
     const { data: activeAttempt, error: activeAttemptError } = await supabaseAdmin
       .from("tuition_payment_attempts")
