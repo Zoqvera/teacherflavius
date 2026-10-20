@@ -7,7 +7,7 @@ const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "..");
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), "utf8");
-const migration = read("supabase/migrations/20261020132500_late_payment_policy_quote_foundation.sql");
+const migration = read("supabase/migrations/20261020133230_late_payment_policy_quote_foundation.sql");
 const baseline = read("supabase/baseline/435_late_payment_policy_quote_foundation.sql");
 const checkout = read("pagamento/index.html");
 const consent = read("pagamento/late_payment_terms.js");
