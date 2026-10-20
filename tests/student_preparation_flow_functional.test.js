@@ -213,6 +213,14 @@ test("second part reuses review cards, filters studied questions and updates cou
     reviews: [question("due-1"), question("due-2")]
   });
   assert.equal(state.node("reviewQuestionList").children.length, 2);
+  assert.equal(
+    state.node("reviewQuestionList").children[0].children[1].children[0].disabled,
+    true
+  );
+  assert.equal(
+    state.node("reviewQuestionList").children[0].children[1].children[0].textContent,
+    "PERGUNTA JÁ TRABALHADA"
+  );
   assert.equal(state.node("reviewQuestionsCount").textContent, "2");
   assert.equal(state.node("actionQuestionList").children.length, 2);
   assert.equal(state.node("questionsCount").textContent, "2");
@@ -249,7 +257,7 @@ test("new preparation retains each catalog number as preceding questions disappe
   const numbers = () => pending.children.map((item) => item.children[0].number);
 
   assert.deepEqual(numbers(), [1, 2, 12]);
-  assert.deepEqual(reviews.children.map((item) => item.number), [20, 8]);
+  assert.deepEqual(reviews.children.map((item) => item.children[0].number), [20, 8]);
 
   pending.children[0].children[1].children[0].handlers.click();
   await flush();
@@ -278,7 +286,7 @@ test("legacy question numbering remains sequential and independent from catalog 
     state.node("actionQuestionList").children.map((item) => item.children[0].number),
     [1, 2]
   );
-  assert.equal(state.node("reviewQuestionList").children[0].number, 1);
+  assert.equal(state.node("reviewQuestionList").children[0].children[0].number, 1);
 });
 
 test("success dialog appears only after persisting a question in the second part", async () => {
