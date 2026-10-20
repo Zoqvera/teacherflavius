@@ -46,6 +46,7 @@ test("gateway independently verifies the authorized amount and rejects stale tot
   assert.match(paymentGateway, /Math\.abs\(expectedAmount - quotedTotal\) >= 0\.005/);
   assert.match(paymentGateway, /late_quote_expired/);
   assert.match(paymentGateway, /if \(sameAttempt\?\.provider_payment_id\)/);
+  assert.match(paymentGateway, /localDate\(startedAt\) !== localDate\(new Date\(\)\)/);
   assert.match(paymentGateway, /if \(activeAttempt\?\.provider_payment_id\)/);
   assert.match(paymentGateway, /is_first_tuition_payment_closed/);
   assert.match(checkout, /expected_amount: payableTuitionAmount\(selectedTuition\)/);
