@@ -161,7 +161,8 @@
   }
 
   async function handleQuestionStudied(question, button) {
-    if (!question || !question.id || question.studied || question.worked || button.disabled) return;
+    if (!question || !question.id || question.marked_studied || question.studied ||
+        question.worked || button.disabled) return;
 
     button.disabled = true;
     button.textContent = "REGISTRANDO...";
@@ -191,7 +192,7 @@
     return Number.isInteger(displayOrder) && displayOrder > 0 ? displayOrder : null;
   }
 
-  function createQuestionStudyItem(question, index) {
+  function createQuestionStudyItem(question, index, isReview) {
     const item = document.createElement("div");
     item.className = "academic-question-study-item";
 
@@ -204,13 +205,16 @@
     actions.className = "academic-question-study-actions";
 
     const button = document.createElement("button");
-    const questionUnavailable = !!question.studied || !!question.worked;
+    const questionUnavailable = !!isReview || !!question.marked_studied ||
+      !!question.studied || !!question.worked;
     button.className = "academic-button " + (questionUnavailable ? "success" : "primary");
     button.type = "button";
     button.disabled = questionUnavailable;
-    button.textContent = question.worked
-      ? "PERGUNTA JÁ TRABALHADA"
-      : (question.studied ? "PERGUNTA ESTUDADA" : "ESTUDEI A PERGUNTA");
+    button.textContent = question.marked_studied
+      ? "PERGUNTA ESTUDADA"
+      : (question.worked
+        ? "PERGUNTA JÁ TRABALHADA"
+        : (isReview ? "PERGUNTA PARA REVISAR" : "ESTUDEI A PERGUNTA"));
     button.addEventListener("click", function () {
       handleQuestionStudied(question, button);
     });
@@ -220,9 +224,11 @@
     return item;
   }
 
-  function renderReviewQuestions(questions) {
+  function renderReviewQuestions(questions, planQuestions) {
     const list = document.getElementById("reviewQuestionList");
     const reviews = Array.isArray(questions) ? questions : [];
+    const studyByQuestionId = new Map((Array.isArray(planQuestions) ? planQuestions : [])
+      .map(function (question) { return [question.id, question]; }));
     list.innerHTML = "";
 
     if (!reviews.length) {
@@ -232,10 +238,12 @@
       list.appendChild(empty);
     } else {
       reviews.forEach(function (question, index) {
-        list.appendChild(window.ConversationQuestionCardRenderer.create(question, {
-          number: questionCardNumber(question, index),
-          className: "academic-conversation-card"
-        }));
+        const progress = studyByQuestionId.get(question.id) || {};
+        const review = Object.assign({}, question, {
+          marked_studied: progress.marked_studied === true,
+          worked: true
+        });
+        list.appendChild(createQuestionStudyItem(review, index, true));
       });
     }
 
@@ -301,9 +309,10 @@
   }
 
   async function loadPlan() {
+    let currentPlan = null;
     try {
-      const plan = await service.getMyActionPlan();
-      render(plan || {});
+      currentPlan = await service.getMyActionPlan();
+      render(currentPlan || {});
     } catch (error) {
       console.error("Falha ao carregar O QUE FAZER:", error);
       setStatus("actionPlanStatus", "Não foi possível carregar seu plano de preparação.", "error");
@@ -311,7 +320,7 @@
 
     try {
       const reviews = await service.getMyReviewQuestions();
-      renderReviewQuestions(reviews);
+      renderReviewQuestions(reviews, currentPlan && currentPlan.questions);
     } catch (error) {
       console.error("Falha ao carregar revisões do aluno:", error);
       setStatus(
