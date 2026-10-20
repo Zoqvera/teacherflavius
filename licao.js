@@ -76,6 +76,10 @@
     const status = document.getElementById("lessonRoadmapStatus");
     if (!section || !nextLink || !status || !isRoadmapNavigation()) return;
 
+    // The current lesson must offer PRÓXIMA PARTE, even when opened from the roadmap.
+    const preparationSection = document.getElementById("lessonPreparationSection");
+    if (preparationSection && !preparationSection.hidden) return;
+
     section.hidden = false;
     nextLink.hidden = true;
     status.textContent = "";
@@ -199,12 +203,12 @@
     const section = document.getElementById("lessonPreparationSection");
     const nextPartLink = document.getElementById("lessonNextPartLink");
     const progress = document.getElementById("lessonFlowProgress");
+    const currentLessonStatus = document.getElementById("lessonCurrentLessonStatus");
+    const currentLessonLink = document.getElementById("lessonCurrentLessonLink");
     if (nextPartLink) nextPartLink.hidden = true;
     if (progress) progress.hidden = true;
-    if (isRoadmapNavigation()) {
-      section.hidden = true;
-      return;
-    }
+    if (currentLessonStatus) currentLessonStatus.hidden = true;
+    if (currentLessonLink) currentLessonLink.hidden = true;
     if (!lessonNumber) {
       section.hidden = true;
       return;
@@ -214,7 +218,27 @@
       const plan = await academicService.getMyActionPlan();
       const currentLesson = plan && plan.lesson ? Number(plan.lesson.number) : null;
       if (currentLesson !== lessonNumber) {
-        section.hidden = true;
+        // Keep historic roadmap navigation, but never strand a student who
+        // opened an outdated lesson directly or from a saved link.
+        const validCurrentLesson = window.AcademicWorkflowService.normalizeLessonNumber(currentLesson);
+        if (isNewFlowEnabled() && validCurrentLesson && !isRoadmapNavigation()) {
+          section.hidden = false;
+          const legacyContent = document.getElementById("lessonLegacyPreparationContent");
+          if (legacyContent) legacyContent.hidden = true;
+          if (currentLessonStatus) {
+            currentLessonStatus.textContent = "Esta não é a lição prevista para sua próxima aula. Continue pela Lição " + validCurrentLesson + ".";
+            currentLessonStatus.hidden = false;
+          }
+          if (currentLessonLink) {
+            currentLessonLink.href = window.AcademicWorkflowService.lessonUrl(validCurrentLesson);
+            currentLessonLink.hidden = false;
+          }
+        } else {
+          section.hidden = true;
+          if (isRoadmapNavigation()) {
+            setStatus("Esta lição é do roteiro de estudos. Para continuar sua preparação atual, acesse O QUE FAZER.");
+          }
+        }
         return;
       }
 
@@ -263,7 +287,9 @@
         }
       };
     } catch (error) {
+      console.error("Falha ao verificar preparação da lição:", error);
       section.hidden = true;
+      setStatus("Não foi possível verificar sua lição atual. Acesse O QUE FAZER e tente novamente.", true);
     }
   }
 
