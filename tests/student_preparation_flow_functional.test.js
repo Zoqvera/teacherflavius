@@ -84,7 +84,8 @@ async function runStudentScenario({
   session = true,
   planError = null,
   reviewError = null,
-  markError = null
+  markError = null,
+  activeStudent = true
 } = {}) {
   const document = makeDocument([
     "studentPreparationWelcome",
@@ -92,6 +93,9 @@ async function runStudentScenario({
   ]);
   const calls = { plans: 0, reviews: 0, studied: [], replaced: [] };
   const service = {
+    async isActiveStudent() {
+      return activeStudent;
+    },
     async getMyActionPlan() {
       calls.plans += 1;
       if (planError) throw planError;
@@ -388,7 +392,8 @@ async function runLessonScenario({
   legacyNext = false,
   preparationError = null,
   planError = null,
-  presentationStalled = false
+  presentationStalled = false,
+  activeStudent = true
 } = {}) {
   const document = makeDocument([
     "lessonPageContent",
@@ -452,6 +457,7 @@ async function runLessonScenario({
       legacyLessonPreviewUrl: (number) => legacyNext && number === requestedLesson + 1
         ? "https://drive.google.com/file/d/synthetic/preview" : "",
       create: () => ({
+        isActiveStudent: async () => activeStudent,
         getMyActionPlan: async () => {
           calls.plans += 1;
           if (planError) throw planError;
@@ -629,4 +635,19 @@ test("roadmap source does not alter the legacy experience with the rollout disab
   state.node("lessonPreparedButton").onclick();
   await flush();
   assert.deepEqual(state.calls.prepared, [7]);
+});
+
+test("an inactive account does not issue O QUE FAZER student RPCs", async () => {
+  const state = await runStudentScenario({ activeStudent: false });
+  assert.equal(state.calls.plans, 0);
+  assert.equal(state.calls.reviews, 0);
+  assert.equal(state.node("legacyActionPlan").hidden, true);
+  assert.match(state.node("actionPlanStatus").textContent, /apenas para alunos ativos/);
+});
+
+test("an inactive account can read lesson material without preparation RPCs", async () => {
+  const state = await runLessonScenario({ activeStudent: false, enabled: true });
+  assert.equal(state.node("lessonPageContent").hidden, false);
+  assert.equal(state.node("lessonPreparationSection").hidden, true);
+  assert.equal(state.calls.plans, 0);
 });
