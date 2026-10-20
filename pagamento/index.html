@@ -64,6 +64,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <p id="paymentPageMessage" class="payment-message" role="status" aria-live="polite">Verificando sua conta...</p>
 
+    <aside class="late-payment-notice" aria-labelledby="latePaymentNoticeTitle">
+      <svg class="late-payment-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.5h.01"></path>
+      </svg>
+      <div>
+        <h2 id="latePaymentNoticeTitle">Informações sobre pagamentos em atraso</h2>
+        <p>Quando previstos nas condições aplicáveis à contratação, pagamentos após o vencimento estão sujeitos a multa moratória de <strong>2% uma única vez</strong> e juros simples de <strong>1% ao mês</strong>, calculados proporcionalmente aos dias de atraso. Os encargos efetivamente exigíveis devem ser discriminados antes da confirmação do pagamento.</p>
+      </div>
+    </aside>
+
     <section id="paymentWorkspace" class="payment-workspace" hidden>
       <aside class="tuition-panel" aria-labelledby="tuitionListTitle">
         <div class="panel-heading">
