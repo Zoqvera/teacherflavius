@@ -80,7 +80,7 @@ class LgpdPrivacyBaselineContracts(unittest.TestCase):
     def test_disposable_postgresql_and_fingerprint_contracts(self) -> None:
         fingerprint = json.loads(FINGERPRINT.read_text(encoding="utf-8"))
         self.assertEqual(fingerprint["tables"], 55)
-        self.assertEqual(fingerprint["constraints"], 277)
+        self.assertEqual(fingerprint["constraints"], 280)
         self.assertEqual(fingerprint["non_constraint_indexes"], 120)
         self.assertEqual(fingerprint["rls_policies"], 99)
         workflow = RESTORE.read_text(encoding="utf-8")

@@ -275,3 +275,30 @@ A cobrança efetiva permanece **desativada** (`billing_enabled=false` e `preview
 O painel de pagamento apresenta aceite opcional e auditável, sem bloquear a quitação do principal. A próxima etapa deve ampliar o registro financeiro, o fluxo de criação no Mercado Pago, as verificações de liquidação e os relatórios, e realizar homologação isolada antes da ativação.
 
 O overlay e a migração são idênticos. Os testes SQL no banco descartável verificam juros simples, dias elegíveis, arredondamento e permissões de execução.
+
+
+## Etapa financeira 4 — gateway e conciliação, desativados por padrão (20/10/2026)
+
+O overlay 440_late_payment_settlement_gateway.sql adiciona um snapshot imutável por tentativa
+(late_principal_amount, late_fine_amount, late_interest_amount, late_policy_version)
+e campos separados para os encargos pagos em monthly_tuition.
+A liquidação exige o total idêntico ao da tentativa, mas compara o principal
+ao valor nominal da mensalidade. Estornos limpam os encargos pagos.
+
+A tabela privada late_payment_charge_settings nasce com enabled=false,
+RLS e acesso somente ao serviço. A Edge Function create-mercado-pago-payment
+exige também a configuração explícita LATE_PAYMENT_GATEWAY_ENABLED=true.
+Sem ambos os gates, o pagamento continua com o valor nominal anterior.
+
+Não ativar os dois gates antes de aplicar ambas as migrações, publicar a
+Edge Function, verificar o checkout e homologar webhooks, reconciliação,
+pagamentos duplicados e estornos em ambiente de testes isolado.
+
+A cotação do servidor é a fonte autoritativa do total. O checkout exibe
+principal, multa e juros antes de criar o pagamento, e o backend recusa
+uma cotação desatualizada. Pix já iniciado mantém valor e idempotência.
+Os dias anteriores ao aceite de 2026-10-20-v1 nunca recebem os novos
+encargos contratuais. Para alunos menores, o responsável legal precisa
+formalizar a nova condição. O pagamento do principal permanece possível.
+
+Nenhuma cobrança é criada pela migração. Nenhum segredo é publicado.

@@ -809,3 +809,28 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .tuition-history__chevron { transition: none; }
 }
+
+.checkout-late-breakdown {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(245, 158, 11, .4);
+  border-radius: var(--tf-radius-md);
+  background: rgba(245, 158, 11, .075);
+}
+
+.checkout-late-breakdown[hidden] { display: none; }
+.checkout-late-breakdown h3 { margin: 0 0 12px; font-size: 15px; }
+.checkout-late-breakdown dl { margin: 0; }
+.checkout-late-breakdown dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.checkout-late-breakdown dd { margin: 0; font-weight: 700; }
+.checkout-late-breakdown__total {
+  margin-top: 8px;
+  padding-top: 12px !important;
+  border-top: 1px solid rgba(245, 158, 11, .35);
+}
