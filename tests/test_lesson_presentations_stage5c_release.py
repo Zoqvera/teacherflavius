@@ -23,7 +23,7 @@ class PresentationStage5CReleaseTests(unittest.TestCase):
         student = read("licao/index.html")
         teacher = read("roteiro-da-aula/index.html")
         self.assertIn("lesson_presentation_editor.js?v=20261017-stage5c-1", student)
-        self.assertIn("teacher_lesson_presentations.js?v=20261017-stage5c-1", teacher)
+        self.assertIn("teacher_lesson_presentations.js?v=20261020-always-visible-1", teacher)
         self.assertIn('<meta name="robots" content="noindex,nofollow">', student)
         self.assertIn('<meta name="robots" content="noindex, nofollow">', teacher)
 
