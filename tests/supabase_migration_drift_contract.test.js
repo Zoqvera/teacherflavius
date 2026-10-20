@@ -616,3 +616,55 @@ test("manual 5B presentation ledger attestations allow only the exact pair and l
     assert.equal(rejected.status, 1, rejected.stdout + "\n" + rejected.stderr);
   }
 });
+
+
+const lateChargeAliases = [
+  {
+    gitVersion: "20261020133230",
+    remoteVersion: "20261020175958",
+    name: "late_payment_policy_quote_foundation",
+    checksum: "086ead16caddc509b63e610b548d58b38dbe26a4b23d1172437ec6cf6d1eb534",
+  },
+  {
+    gitVersion: "20261020164300",
+    remoteVersion: "20261020180038",
+    name: "late_payment_settlement_gateway",
+    checksum: "19ad5781909218ee29e4bd553477cfd80e03b97b9bd452234c9dfaaedbaf6814",
+  },
+];
+
+test("late-payment migration aliases are pinned to exact immutable SQL checksums", () => {
+  for (const alias of lateChargeAliases) {
+    const filename = `supabase/migrations/${alias.gitVersion}_${alias.name}.sql`;
+    const expectedLine = [
+      alias.gitVersion, alias.remoteVersion, alias.name, alias.checksum,
+    ].join("|");
+
+    assert.equal(canonicalChecksum(read(filename)), alias.checksum);
+    assert.ok(driftScript.includes(expectedLine), `Missing alias for ${alias.name}`);
+  }
+});
+
+test("server-assigned late-payment versions pass only with identical SQL", () => {
+  const migrations = Object.fromEntries(
+    lateChargeAliases.map((alias) => [
+      `${alias.gitVersion}_${alias.name}.sql`,
+      read(`supabase/migrations/${alias.gitVersion}_${alias.name}.sql`),
+    ]),
+  );
+  const remoteRows = lateChargeAliases.map((alias) => ({
+    version: alias.remoteVersion,
+    name: alias.name,
+    checksum: alias.checksum,
+  }));
+
+  const valid = runDriftCheck({ migrations, remoteRows });
+  assert.equal(valid.status, 0, valid.stdout + "\n" + valid.stderr);
+
+  const incorrectRows = remoteRows.map((row, index) =>
+    index === 1 ? { ...row, checksum: "0".repeat(64) } : row,
+  );
+  const invalid = runDriftCheck({ migrations, remoteRows: incorrectRows });
+  assert.notEqual(invalid.status, 0);
+  assert.match(invalid.stdout + invalid.stderr, /migration|drift|production|version/i);
+});
