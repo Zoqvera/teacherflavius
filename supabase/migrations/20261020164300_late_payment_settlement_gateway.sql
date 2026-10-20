@@ -452,7 +452,7 @@ begin
     'duplicate_payment_detected', duplicate_payment_detected
   );
 end;
-$function$
+$function$;
 
 
 notify pgrst, 'reload schema';
