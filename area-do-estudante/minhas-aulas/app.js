@@ -240,7 +240,7 @@
   }
 
   function formatPaymentDueDate(value) {
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(value || ""))) return "";
+    if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(String(value || ""))) return "";
     const parts = value.split("-");
     return parts[2] + "/" + parts[1] + "/" + parts[0];
   }
