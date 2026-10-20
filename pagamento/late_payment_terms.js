@@ -60,6 +60,7 @@
           throw new Error("O aceite não pôde ser confirmado.");
         }
         checkbox.disabled = true;
+        window.dispatchEvent(new Event("latepaymenttermsaccepted"));
         setFeedback(
           "Concordância registrada. Os valores das mensalidades atuais não foram modificados.",
           false
