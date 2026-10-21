@@ -399,3 +399,48 @@ body.late-cancellation-modal-open {
     backdrop-filter: none;
   }
 }
+
+/* Billing-cycle forecast is informational; it never exposes lesson actions. */
+.lesson-card.forecast-lesson {
+  border-style: dashed;
+  border-color: rgba(250, 204, 21, 0.36);
+  background: rgba(30, 41, 59, 0.38);
+}
+
+.status-pill.predicted {
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.5);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.forecast-payment-note {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  color: #fde68a;
+  border: 1px solid rgba(250, 204, 21, 0.30);
+  background: rgba(245, 158, 11, 0.09);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.forecast-payment-note a {
+  display: inline-block;
+  color: #fef3c7;
+  font-weight: 800;
+  margin-left: 3px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.forecast-helper {
+  color: #a5b4c9;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+.forecast-payment-note a:focus-visible {
+  outline: 2px solid #fef3c7;
+  outline-offset: 3px;
+}

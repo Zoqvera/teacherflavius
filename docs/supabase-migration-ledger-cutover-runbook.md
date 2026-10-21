@@ -4,6 +4,122 @@
 **Natureza:** roteiro de revisão, sem autorização para escrita em produção.  
 **Estado:** BLOQUEADO até aprovação de todos os pré-requisitos.
 
+## Diagnóstico atualizado — 17/10/2026 (somente leitura)
+
+A verificação direta encontrou **314 migrações no Supabase de produção**
+e **265 arquivos SQL** em `supabase/migrations/` da `main`.
+Pelo identificador de versão, há 197 correspondências, 117 versões
+registradas somente na produção e 68 arquivos somente no Git.
+Essa comparação nao comprova equivalencia do corpo SQL. Estes dados
+substituem as contagens históricas de 289 / 237 mencionadas adiante.
+
+A tentativa autorizada de criar a branch remota
+`lesson-presentations-stage1-validation` em 16/10 terminou com
+`MIGRATIONS_FAILED`. A branch estava sem as tabelas fundamentais
+`public.profiles` e `public.study_lesson_pages` apos a falha.
+Foi posteriormente excluida; a exclusao foi confirmada, evitando custo
+de computacao persistente. Esse resultado **não valida** a reconstrução do
+schema completo, embora testes sintéticos da migração de apresentações
+tenham passado em um subconjunto de estruturas fictícias.
+
+A leitura agregada de `supabase_migrations.schema_migrations`, sem
+exportar `statements`, nao encontrou declaracoes explicitas de
+`CREATE TABLE public.teacher_admins` nem da tabela base
+`public.profiles` sob o padrao conservador de reconhecimento.
+Ela encontrou uma declaracao para `study_lesson_pages`. A ausencia
+de correspondencia textual e um **indicador**, nao prova definitiva:
+DDL dinâmica, aspas ou expressões variantes podem nao ser identificadas.
+Por outro lado, `teacher_admins` e referenciada em multiplos registros
+do historico, o que requer analisar o ponto exato de falha do replay.
+
+Ha dois mecanismos distintos:
+- Branch criada no **Dashboard/API**: reproduz o historico SQL da
+  propria produção (`supabase_migrations.schema_migrations`).
+- Branch vinculada ao **GitHub**: reproduz os arquivos de migrations
+  do repositorio. Uma cadeia canônica descartável, fora do diretório
+  histórico, não corrige nenhum desses mecanismos automaticamente.
+
+A Action `Supabase migration reconciliation` consulta as declaracoes de
+fundação **dentro do PostgreSQL** e publica somente contagens e indicadores
+no artefato `branch-foundation-assessment.json`. O status
+`POSSIBLE_MISSING_FOUNDATION` indica bloqueio de diagnóstico;
+`FOUNDATION_DECLARATIONS_DETECTED` não comprova replay, segurança
+ou autorização para executar mudanças. Os dados SQL originais e
+registros de alunos nunca são exportados para Actions.
+
+**Próxima investigação segura:** consultar os logs da etapa `migrate`
+de uma branch com erro **antes de excluí-la**, identificar o primeiro
+comando que falhou, comparar as dependências do bootstrap com a produção
+sem expor o SQL histórico e construir uma cadeia alternativa isolada.
+Uma nova branch remota com custo exige autorização de custo.
+O eventual `migration repair` do ledger produtivo exige ainda backup
+restaurável e aprovação específica; não decorre deste relatório.
+
+Documentação Supabase:
+https://supabase.com/docs/guides/deployment/branching/dashboard
+https://supabase.com/docs/guides/troubleshooting/branch-in-migrations-failed-status
+
+## ETAPA 1C — Inventário estrutural de objetos (17/10/2026)
+
+O inventário da produção foi consultado diretamente em modo **somente leitura**.
+A consulta retornou **3.134 identificadores estruturais**, organizados assim:
+1.383 colunas, 724 restrições, 223 índices não associados a constraints,
+120 políticas RLS, 129 relações públicas/privadas (incluindo views),
+461 rotinas e 94 triggers públicos/privados. Nenhum registro de aluno,
+conteúdo de função, segredo Vault ou instrução de migração foi retornado.
+A extração é um retrato temporal e deve ser repetida ao longo do projeto.
+
+O esquema canônico versionado ainda é uma reconstrução parcial. Na última
+comparação por **contagens públicas**, apresentava 52 tabelas públicas,
+192 funções públicas e 95 políticas RLS, enquanto a produção apresentava
+96 tabelas públicas, 369 funções públicas e 120 políticas RLS.
+As métricas não medem equivalência de definição, dependência ou privilégio.
+
+O workflow `Supabase canonical object inventory` acrescenta:
+- Testes de contrato na PR, **sem credenciais da produção**;
+- após o merge, em `main`, Supabase CLI local e descartável reconstruído a
+  partir dos overlays canônicos, com Cron desativado e seed fictício;
+- a mesma consulta de catálogo nos bancos local e produtivo, retornando
+  exclusivamente `tipo\tidentificador\tSHA256(ddl_metadata)`;
+- comparação de objetos faltantes, extras e definições divergentes por
+  tipo e amostras limitadas, sem publicar as definições SQL, dumps ou
+  documentos privados;
+- o artefato `supabase-schema-object-gap-assessment` (retido por 14 dias)
+  armazena apenas números e, no máximo, 15 nomes estruturais por categoria.
+
+**Critério de aceitação:** um resultado `SCHEMA_OBJECTS_ALIGNED` é apenas
+uma evidência de equivalência dos objetos cobertos pela consulta, e não
+aprovação de implantação. Também é obrigatório conferir extensões, grants
+globais, Auth, Cron inerte, funções externas, email, pagamentos, backup e
+restauração em ambiente independente. Divergências em hashes devem ser
+inspecionadas antes de gerar overlays incrementais; nunca copiar ou
+publicar SQL histórico. Não usar `migration repair` ou reconstruir o
+projeto real como atalho.
+
+**Plano de transição segura:**
+
+1. **Diagnosticar:** gerar inventário de `main` protegido e classificar
+   diferenças por objeto, incluindo dependências prévias como
+   `profiles` e `teacher_admins`.
+2. **Completar o bootstrap descartável:** propor overlays faltantes em
+   PRs independentes, testando cada adição sobre um banco vazio. Nunca
+   sobrescrever migrações históricas ou converter os overlays em
+   migrações produtivas por simples cópia.
+3. **Verificar integridade:** ensaiar RLS, Auth, Cron desativado, grants,
+   exclusão de aluno, aulas, inscrições, cobranças e pagamentos fictícios.
+4. **Restaurar fora da produção:** confirmar backup recente, obter
+   autorização para eventual projeto adicional e comprovar restauração
+   independente, preservando Auth e histórico SQL privado.
+5. **Testar branching remoto:** criar uma única branch temporária **após
+   consentimento de custo**, verificar o primeiro erro de migração pelos
+   logs e destruir o ambiente após os ensaios.
+6. **Planejar cutover:** somente então propor mapeamento de versões,
+   snapshots privados, rollback e janela de manutenção com autorização
+   explícita antes de qualquer escrita na produção.
+
+Os controles acima não afetam páginas públicas, URLs, robots, canonical
+nem metadados de SEO.
+
 ## Fronteira de segurança
 
 A produção mantém o histórico original em
@@ -210,3 +326,205 @@ Até esse ponto, **Automatic Branching permanece desativado**.
 Este procedimento trata exclusivamente de infraestrutura de banco e
 testes; não altera páginas públicas, URLs, metadados, sitemap, robots
 ou canonical.
+
+
+## ETAPA 1D.2 - diagnostico das politicas RLS
+
+O workflow protegido `Supabase canonical object inventory` passa a gerar `rls-posture-assessment.json` e diferencia mudancas de papeis/comandos das diferencas nos predicados `USING` e `WITH CHECK`. A consulta retorna exclusivamente nomes de politicas, papeis, comandos e hashes SHA256 das expressoes. A CI publica apenas contagens e amostras limitadas de identificadores.
+
+As diferencas encontradas nao autorizam alterar autorizacoes em producao nem demonstram equivalencia funcional. Possiveis ampliacoes de acesso exigem revisao prioritaria e testes com contas ficticias. PRs nao recebem credenciais de producao; a consulta comparativa acontece apenas no workflow protegido da branch principal. Permanecem bloqueados o ajuste do ledger produtivo e a PR #776 ate verificacao completa.
+
+
+## ETAPA 1D.3 - diferencas de permissao
+
+A analise das quatro policies da tabela `public.study_lesson_pages`
+identificou diferenca concreta entre `is_teacher_admin_mfa()`
+no baseline e `is_teacher_admin()` nas policies produtivas.
+Nao copiar automaticamente as expressoes produtivas: alinhar essa
+autorizacao exige revisao de necessidade de MFA, simulacao de um
+aluno, um professor em AAL1, um professor em AAL2, e verificacao
+do comportamento das quatro operacoes.
+
+As outras 81 diferencas na categoria papeis/comandos permanecem
+pendentes de comparacao semantica por policy. O resultado de zero
+ampliacoes detectadas automaticamente **nao** certifica seguranca.
+
+
+## ETAPA 1D.3 - causa-raiz de 81 divergencias RLS
+
+O catalogo de producao em 17/10/2026 registra **120 policies
+permissivas e zero restritivas**. Em contraste, o snapshot canônico
+`10_public_schema.sql` declara 85 policies como `AS RESTRICTIVE`;
+depois dos overlays ja existentes, 81 policies restritivas restam.
+Assim, a maior parte do alerta anterior de modos/papeis refere-se
+a um defeito de reconstrução, e nao necessariamente a mudanca de
+papel autenticado para anonimo.
+
+O overlay 415 corrige **somente** o modo das 81 policies no banco
+descartavel. O SQL valida quantidade, schema e role e confirma
+equivalencia exata de nomes, comandos, roles e predicados antes e
+depois da operacao. Se falhar, nenhuma edicao de producao e
+autorizada. O conjunto resultante ainda precisa de verificacao
+de acesso real para aluno, professor sem MFA e professor com MFA.
+
+As quatro policies de `study_lesson_pages` continuam divergentes
+quanto a `is_teacher_admin()` versus `is_teacher_admin_mfa()`.
+O padrao mais restritivo do bootstrap sera mantido ate
+homologacao e decisao expressa sobre MFA de edicao das licoes.
+Nenhuma migracao historica, dado real ou segredo e exportado.
+
+
+### Evidencia de execucao e contagem corrigida
+
+O primeiro ensaio do overlay 415 detectou 85 policies restritivas:
+81 eram correspondentes a policies produtivas, e quatro eram
+policies adicionais que so aparecem no baseline. Essa divergencia
+fez o SQL interromper o bootstrap sem efeitos duradouros.
+A versao corrigida exige explicitamente as quatro policies
+adicionais por tabela/nome/operacao/papel, remove somente essas
+quatro do **banco descartavel** e depois reconcilia os modos das
+81 restantes sem alterar predicados, comandos ou papeis.
+A contagem canonica de policies passa de 95 para 91. Permanecem
+29 policies de producao ainda nao reconstruidas e quatro policies
+de `study_lesson_pages` com predicados diferentes pela exigencia
+de MFA no baseline.
+
+### Excecao protegida da politica de pagamento
+
+Uma das 81 policies de permissao usa deliberadamente ambos os
+papeis `anon` e `authenticated`: a policy
+`tuition_payment_attempts_no_direct_client_access`. Seu
+`USING` e `WITH CHECK` sao `FALSE` na producao.
+O overlay local agora exige esses mesmos dois predicados, a
+operacao `ALL` e exatamente esses dois papeis antes de alterar
+seu modo. A recuperacao nao autoriza acesso de alunos a
+tentativas de pagamento.
+
+
+## ETAPA 1D.4 — Finanças e dependências das políticas ausentes
+
+Em 17/10/2026, as policies produtivas de `monthly_tuition`,
+`monthly_tuition_events` e `student_billing_settings` exigem
+`is_teacher_admin_mfa()`. O snapshot canônico usava
+`is_teacher_admin()`. O overlay 420 corrige essa diferença
+**somente** na base descartável, com guardas de estado de origem,
+operação, papel e modo. A verificação SQL confirma o resultado e a
+preservação da exigência de MFA nas páginas de lição.
+
+O workflow `Supabase canonical object inventory` passa a gerar
+`rls-policy-dependency-assessment.json`: relaciona as políticas
+faltantes com os identificadores das relações do bootstrap e classifica
+quantas dependem de tabelas ausentes. Os arquivos-fonte contêm só
+identificadores de catálogo e hashes; os artefatos contêm quantidades,
+nomes de tabelas e marcadores de recuperação. Não são publicados SQL
+de políticas, extratos de alunos, conteúdo de lições ou dados pessoais.
+
+Critérios para recuperar outras políticas: primeiro aplicar
+`CREATE TABLE` com constraints e dependências, confirmar grants e
+`relrowsecurity`, adicionar as policies exatas da migração revisada,
+executar testes fictícios de papéis e funções administrativas e,
+finalmente, auditar o hash da definição contra a produção. Na dúvida
+sobre mudança de segurança, manter o fluxo de acesso bloqueado.
+
+Nenhuma etapa aqui corrige diretamente o ledger de produção, cria
+branch remota com custo ou autoriza merge da PR #776.
+
+
+## ETAPA 1D.4B — recuperação de quatro políticas acadêmicas após a PR #795
+
+Após a PR #795, o módulo não publicado de Tarefas para Casa foi retirado.
+O bootstrap nesta etapa **não** recupera sua tabela de relacionamento,
+funções, workflows ou o overlay 410 removido.
+
+O overlay 425 recupera **somente em banco descartável** três políticas
+administrativas de `study_roadmap_completion` (INSERT, UPDATE e DELETE)
+e a política de leitura exclusiva do professor em `teacher_exercises`.
+As políticas de origem, RLS e predicados administrativos são verificados.
+
+A reconstrução passou de 84 para 85 overlays e de 91 para 95 políticas,
+com 52 tabelas públicas. A consulta produtiva de 17/10/2026 encontrou
+109 políticas públicas; comparar apenas totais não prova equivalência
+nem identifica todas as diferenças. A auditoria protegida de CI deve
+comparar operações, papéis e hashes das policies após o merge.
+
+Não alterar migrações produtivas, ledger, financeiro, rotas ou SEO.
+A PR #776 continua em rascunho, sem implantação autorizada.
+
+
+## ETAPA 1D.4C — diagnóstico protegido pós-merge em 17/10/2026
+
+A auditoria da `main` executada após a PR #794 identificou 95 políticas
+RLS na reconstrução e 109 em produção. As **14 políticas faltantes**
+pertencem exclusivamente a **11 relações ainda não reconstruídas**;
+nenhuma política está ausente de uma relação já presente no bootstrap.
+Há quatro diferenças de predicados em `study_lesson_pages` e nenhuma
+diferença de papéis ou comandos nas políticas comuns.
+
+A rotina `is_teacher_admin_mfa()` é atualmente um alias sem exigência
+AAL2 própria, tanto no overlay 42 quanto na produção; portanto o nome
+não deve ser tratado como prova de proteção MFA mais restritiva.
+O catálogo contém ainda 1.134 objetos ausentes, 175 definições divergentes
+e um gatilho extra a investigar. Comparações por contagem não comprovam
+comportamento equivalente.
+
+O [relatório da etapa 1D.4C](supabase-rls-auditoria-etapa-1d4c.md)
+registra a procedência dos dados e prioriza os módulos pendentes:
+privacidade, estado acadêmico, conteúdo gerenciável e aquisição.
+A etapa é apenas diagnóstica: não concede direitos, não altera a
+produção nem liberta a PR #776. O próximo pacote deve reconstruir
+primeiro as estruturas e dependências de privacidade em ambiente
+inteiramente descartável.
+
+
+## ETAPA 1D.5 — reconstrução isolada do catálogo LGPD
+
+Em 17/10/2026 a auditoria 1D.4C apontou quatro políticas faltantes em três
+relações de privacidade. O overlay `430_restore_lgpd_privacy_catalog_stage1d5.sql`
+recria **apenas na reconstrução descartável** as relações de solicitações
+de titulares, regras de retenção e execuções, preservando os checks,
+índices, concessões e quatro políticas SELECT revisadas na produção.
+
+O pacote preserva acesso de leitura do titular somente às próprias
+solicitações, leitura administrativa ao professor via
+`is_teacher_admin_mfa()` e nenhuma permissão direta de escrita do
+aluno. A função atual `is_teacher_admin_mfa()` não exige AAL2 por si
+só, fato já identificado na etapa 1D.4C; não presumir MFA adicional.
+
+O bootstrap passa a **86 overlays, 55 tabelas públicas, 277 constraints,
+120 índices não associados a constraints e 99 políticas RLS**. A próxima
+auditoria protegida deverá avaliar os novos hashes e provar que as quatro
+políticas foram recuperadas sem criar novas ampliações de acesso.
+
+Não há carga de registros reais, inicialização de política de retenção,
+remoção de dados, execução de agendamentos, criação de RPCs privilegiadas,
+modificação do ledger ou da produção. Não altera páginas, rotas nem SEO.
+As funções efetivas de atendimento LGPD e manutenção automática exigem
+pacote separado antes de eventual restauração operacional. A PR #776
+permanece bloqueada.
+
+
+## ETAPA 1D.6 — auditoria das RPCs privilegiadas de privacidade
+
+Em 17/10/2026, a comparação protegida pós-PR #797 registrou **99 políticas
+RLS recuperadas de 109** e dez políticas ainda ausentes em oito relações
+não restauradas. Permanecem 1.081 objetos ausentes e 177 definições
+divergentes no inventário catalogado, sem certificação de paridade.
+
+A auditoria somente-leitura de 24 funções sensíveis `SECURITY DEFINER`
+em `public` não encontrou nenhuma com execução por `anon`, dez ficam
+restritas a `service_role` e catorze podem ser executadas pelo papel
+`authenticated`. Todas apresentam `search_path` configurado. Isso
+**não** atesta que suas regras internas de autorização estejam corretas.
+O helper `is_teacher_admin_mfa()` é um alias sem exigência própria de
+AAL2; antes de reconstruir RPCs destrutivas, definir e testar o nível
+adequado de autenticação para operações de exclusão e manutenção.
+
+A Action protegida de `main` verifica assinaturas e permissões por consulta
+a `pg_catalog`, sem extrair corpos de funções, segredos ou dados de
+alunos. Concessões novas ou mais amplas falham a checagem de CI.
+Detalhes, fontes e limites estão em
+[relatório 1D.6](supabase-privacy-stage1d6-audit.md).
+
+Esta etapa não cria funções, migrações, gatilhos, CRON, políticas ou
+esquemas produtivos. A PR #776 permanece em rascunho. Não houve
+alteração de SEO.

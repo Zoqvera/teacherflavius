@@ -24,12 +24,27 @@ def valid_pages() -> dict[str, str]:
     pages["/area-do-estudante/"] = 'sourcePage + "?v=20261015-invitation-retry-1" { cache: \'no-store\' }'
     pages["/area_do_estudante.html"] = (
         '<a href="/flashcards/">Flashcards</a>'
-        '<script src="/area_do_estudante.js?v=20261015-suspend-exercises-2"></script>'
+        '<script src="/area_do_estudante.js?v=20261016-retire-week-1"></script>'
     )
-    pages["/area_do_estudante.js"] = "removeSuspendedPortalCards();"
-    pages["/minha-semana/"] = '<script src="/minha_semana_dashboard.js"></script>'
-    pages["/minha_semana_dashboard.js"] = (
-        "flashcard_practice_days grammar_lesson_completion student_frequency"
+    pages["/area_do_estudante.js"] = 'removeUnavailableStudentCards(); "/minha-semana"'
+    pages["/minha-semana/"] = (
+        '<h1>Minha Semana descontinuada</h1>'
+        '<a href="/area-do-estudante/">VOLTAR</a>'
+    )
+    pages["/professor/"] = "fetch('/professor.html', { cache: 'no-store' })"
+    pages["/professor.html"] = (
+        '<a href="/radar-de-alunos/">Radar</a>'
+        '<script src="professor_home.js?v=20261016-retire-plans-1"></script>'
+        '<script src="/professor/professor_icons.js?v=20261016-retire-plans-1"></script>'
+    )
+    pages["/professor_home.js"] = (
+        'const RETIRED_REPORT_CARD_ID = "planos-semanais"; '
+        'removeRetiredProfessorReportCard();'
+    )
+    pages["/professor/professor_icons.js"] = "'alunos': '<svg />'"
+    pages["/planos-semanais/"] = (
+        '<h1>Planos Semanais descontinuado</h1>'
+        '<a href="/professor/">VOLTAR</a>'
     )
     pages["/curso-de-ingles-online/"] = "Portal de Exercícios ... Portal de Exercícios"
     pages["/service-worker.js"] = 'if (!isInstallAsset(event.request)) return;'
@@ -75,12 +90,76 @@ class SuspendedPortalMonitoringTests(unittest.TestCase):
             any("link para o portal antigo" in item for item in validate_published_pages(pages))
         )
 
-    def test_hidden_portal_activities_returning_to_week_fail(self) -> None:
+    def test_weekly_dashboard_reactivation_fails(self) -> None:
         pages = valid_pages()
-        pages["/minha_semana_dashboard.js"] += " daily_exercise_completion"
+        pages["/minha-semana/"] += '<script src="/minha_semana_dashboard.js"></script>'
         self.assertTrue(
-            any("Minha Semana" in item for item in validate_published_pages(pages))
+            any("Minha Semana:" in item for item in validate_published_pages(pages))
         )
+
+    def test_retired_week_link_reappearing_in_student_area_fails(self) -> None:
+        pages = valid_pages()
+        pages["/area_do_estudante.html"] += '<a href="/minha-semana/">Minha Semana</a>'
+        self.assertTrue(
+            any("Minha Semana descontinuado reapareceu" in item for item in validate_published_pages(pages))
+        )
+
+    def test_professor_card_reappearance_fails(self) -> None:
+        pages = valid_pages()
+        pages["/professor.html"] += (
+            '<a href="/planos-semanais/?from=dashboard">Planos Semanais</a>'
+        )
+        self.assertTrue(any(
+            "card Planos Semanais reapareceu" in item
+            for item in validate_published_pages(pages)
+        ))
+
+    def test_professor_cached_card_protection_must_remain(self) -> None:
+        pages = valid_pages()
+        pages["/professor_home.js"] = "ensureDynamicProfessorCards();"
+        self.assertTrue(any(
+            "proteção contra card antigo ausente" in item
+            for item in validate_published_pages(pages)
+        ))
+
+    def test_professor_shell_must_bypass_cache(self) -> None:
+        pages = valid_pages()
+        pages["/professor/"] = "fetch('/professor.html')"
+        self.assertTrue(any(
+            "carregamento sem cache" in item
+            for item in validate_published_pages(pages)
+        ))
+
+    def test_professor_script_versions_must_not_regress(self) -> None:
+        pages = valid_pages()
+        pages["/professor.html"] = pages["/professor.html"].replace(
+            "20261016-retire-plans-1", "20261008-old",
+        )
+        self.assertTrue(any(
+            "versões de scripts anteriores" in item
+            for item in validate_published_pages(pages)
+        ))
+
+    def test_retired_report_must_keep_its_notice(self) -> None:
+        pages = valid_pages()
+        pages["/planos-semanais/"] = (
+            '<div id="studentList"></div>'
+            '<script src="/planos_semanais_dashboard.js"></script>'
+        )
+        self.assertTrue(any(
+            "relatório descontinuado reativado" in item
+            for item in validate_published_pages(pages)
+        ))
+
+    def test_retired_professor_icon_must_not_reappear(self) -> None:
+        pages = valid_pages()
+        pages["/professor/professor_icons.js"] += (
+            " 'planos-semanais': '<svg />'"
+        )
+        self.assertTrue(any(
+            "ícone do relatório descontinuado" in item
+            for item in validate_published_pages(pages)
+        ))
 
     def test_published_portal_must_keep_suspension_banner(self) -> None:
         pages = valid_pages()

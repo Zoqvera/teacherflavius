@@ -179,7 +179,7 @@ test("late cancellation: professor gets explicit no-credit message", async () =>
   assert.equal(response.status, 200);
   assert.equal(fixture.recordedRequests.length, 1);
   const { message, key } = fixture.recordedRequests[0];
-  assert.deepEqual(message.to, ["flaviofreitas@ufu.br"]);
+  assert.deepEqual(message.to, ["contato@teacherflavius.com"]);
   assert.match(message.text, /não foi concedido crédito de reposição/);
   assert.match(message.text, /Aluno: Aluno Fictício/);
   assert.equal(message.attachments, undefined);

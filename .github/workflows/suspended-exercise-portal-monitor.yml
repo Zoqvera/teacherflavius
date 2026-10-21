@@ -1,4 +1,4 @@
-name: Suspended exercise portal monitoring
+name: Retired weekly features and legacy portal monitoring
 
 on:
   schedule:
@@ -16,13 +16,21 @@ on:
       - "exercicios.diarios.html"
       - "exercicios_diarios.html"
       - "minha-semana/index.html"
-      - "minha_semana_dashboard.js"
+      - "professor/index.html"
+      - "professor.html"
+      - "professor_home.js"
+      - "professor/professor_icons.js"
+      - "planos-semanais/index.html"
       - "curso-de-ingles-online/index.html"
       - "service-worker.js"
       - "supabase_config.js"
       - "supabase/migrations/*suspend_legacy_student_exercise_portal.sql"
       - "scripts/monitor_suspended_portal.py"
       - "tests/test_monitor_suspended_portal.py"
+      - "tests/minha_semana_retirement.test.js"
+      - "tests/planos_semanais_retirement.test.js"
+      - "tests/retired_features_issue_alert.test.js"
+      - "scripts/retired_features_issue_alert.js"
       - "tests/legacy_exercise_portal_suspension.test.js"
       - ".github/workflows/suspended-exercise-portal-monitor.yml"
   pull_request:
@@ -34,12 +42,20 @@ on:
       - "exercicios.diarios.html"
       - "exercicios_diarios.html"
       - "minha-semana/index.html"
-      - "minha_semana_dashboard.js"
+      - "professor/index.html"
+      - "professor.html"
+      - "professor_home.js"
+      - "professor/professor_icons.js"
+      - "planos-semanais/index.html"
       - "curso-de-ingles-online/index.html"
       - "service-worker.js"
       - "supabase_config.js"
       - "scripts/monitor_suspended_portal.py"
       - "tests/test_monitor_suspended_portal.py"
+      - "tests/minha_semana_retirement.test.js"
+      - "tests/planos_semanais_retirement.test.js"
+      - "tests/retired_features_issue_alert.test.js"
+      - "scripts/retired_features_issue_alert.js"
       - ".github/workflows/suspended-exercise-portal-monitor.yml"
 
 permissions:
@@ -47,16 +63,59 @@ permissions:
 
 jobs:
   suspended-portal:
-    name: Verify suspended legacy portal
+    name: Verify retired weekly features and suspended legacy portal
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    outputs:
+      production_audit_outcome: ${{ steps.production_audit.outcome }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
       - name: Verify regression contracts
         run: node --test tests/legacy_exercise_portal_suspension.test.js
+      - name: Verify retired weekly feature contracts
+        run: node --test tests/minha_semana_retirement.test.js tests/planos_semanais_retirement.test.js
       - name: Verify monitoring rules
         run: python3 -m unittest discover -s tests -p test_monitor_suspended_portal.py -v
+      - name: Verify incident alert lifecycle
+        run: node --test tests/retired_features_issue_alert.test.js
       - name: Audit published site and anonymous Supabase access
+        id: production_audit
         if: github.event_name != 'pull_request'
         run: python3 scripts/monitor_suspended_portal.py
+
+  notify-regressions:
+    name: Create or resolve production regression incident
+    needs: suspended-portal
+    if: >-
+      ${{
+        always() &&
+        (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+        github.ref == 'refs/heads/main' &&
+        (needs.suspended-portal.outputs.production_audit_outcome == 'success' ||
+         needs.suspended-portal.outputs.production_audit_outcome == 'failure')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout trusted default branch
+        uses: actions/checkout@v7
+      - name: Synchronize regression alert in GitHub Issues
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { synchronizeMonitorIssue } = require('./scripts/retired_features_issue_alert.js');
+            const outcome = '${{ needs.suspended-portal.outputs.production_audit_outcome }}';
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            const result = await synchronizeMonitorIssue({
+              github,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              outcome,
+              runUrl,
+            });
+            core.info(`Production monitoring incident status: ${result}`);

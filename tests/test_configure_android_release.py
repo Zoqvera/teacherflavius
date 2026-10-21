@@ -17,8 +17,8 @@ class ConfigureAndroidReleaseTests(unittest.TestCase):
         )
 
         self.assertEqual(config["applicationId"], "com.teacherflavius.app")
-        self.assertEqual(config["versionCode"], 1)
-        self.assertEqual(config["versionName"], "1.0.0")
+        self.assertEqual(config["versionCode"], 2)
+        self.assertEqual(config["versionName"], "1.0.1")
         self.assertEqual(config["brand"]["sourceSvg"], "assets/favicon.svg")
 
     def test_configures_version_and_vector_branding(self) -> None:

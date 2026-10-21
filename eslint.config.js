@@ -1,17 +1,13 @@
 module.exports = [
   {
     files: [
-      "homework_activity_model.js",
-      "homework_access_service.js",
-      "homework_admin_service.js",
-      "homework_student_interface.js",
-      "area-do-estudante/homeworks/foundation.js",
       "accessibility.js",
       "area_do_estudante.js",
       "student_review_invitation.js",
       "academic_workflow_service.js",
       "o-que-fazer/app.js",
       "roteiro-da-aula/app.js",
+      "teacher_lesson_presentations.js",
       "conversation_question_card_renderer.js",
       "conversation_questions_service.js",
       "conversation-questions/app.js",
@@ -57,6 +53,7 @@ module.exports = [
       "global_logout.js",
       "student_access_service.js",
       "student_access_renderer.js",
+      "lesson_presentation_editor.js",
       "study_lesson_service.js",
       "criar_licao.js",
       "licao.js",

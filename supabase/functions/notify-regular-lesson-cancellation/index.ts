@@ -23,7 +23,7 @@ type CancellationNotification = {
 };
 
 const FROM_EMAIL = "Teacher Flávio <contato@teacherflavius.com>";
-const TEACHER_EMAIL = "flaviofreitas@ufu.br";
+const TEACHER_EMAIL = "contato@teacherflavius.com";
 const TIME_ZONE = "America/Sao_Paulo";
 const encoder = new TextEncoder();
 

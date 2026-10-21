@@ -30,6 +30,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260428-2"></script>
   <script src="/study_lesson_service.js?v=20260918-2"></script>
+  <script src="/student_preparation_flow.js?v=20261016-general-release-1"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260428-2">
   <style>
     .page-description {
@@ -133,7 +134,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     const lessonLinks = {
       "lesson-1": "https://drive.google.com/file/d/1IcPBeVjsZfm0RnqqUwhDhwoF2QY3qIA1/view?usp=sharing",
-      "lesson-2": "https://drive.google.com/file/d/1LDXrDtGGiMKNUe_DWFSLu-k3IKQmQcYB/view?usp=sharing",
       "lesson-3": "https://drive.google.com/file/d/1-Sav9gssbAMYVUqVv0-MdwvUxT-H3eGX/view?usp=sharing",
       "lesson-4": "https://drive.google.com/file/d/1Rjq4Oqpx_JRsAECFGLtteRrSINIDmFER/view?usp=sharing",
       "lesson-5": "https://drive.google.com/file/d/1Ke_jLAODBKpd0OLaFF8sklof6JcperdY/view?usp=sharing",
@@ -156,7 +156,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     const lessonDescriptions = {
       "lesson-1": "Nesta aula, você vai aprender a se apresentar em inglês de forma simples, clara e natural, falando sobre informações pessoais básicas.",
-      "lesson-2": "Nesta aula, você vai aprender a fazer perguntas simples e educadas para conhecer outra pessoa em inglês, falando sobre aspectos gerais da vida dela sem ser invasivo, inconveniente ou excessivamente pessoal.",
+      "lesson-2": "Nesta aula, você vai aprender a falar sobre objetos que possui e utiliza no cotidiano, descrevendo suas características, cores e quantidades com estruturas simples em inglês.",
       "lesson-3": "Nesta aula, você vai aprender a falar sobre sua rotina em inglês, descrevendo atividades habituais de maneira simples, clara e organizada.",
       "lesson-4": "Nesta aula, você vai aprender a expressar seus gostos e preferências em inglês de forma simples, clara e natural, falando sobre aquilo de que gosta, não gosta e prefere em diferentes situações do dia a dia.",
       "lesson-5": "Nesta aula, você vai aprender a falar sobre sua família e sobre pessoas próximas em inglês, descrevendo quem essas pessoas são, qual é sua relação com elas e algumas características básicas de cada uma.",
@@ -207,13 +207,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function renderLessonTitle(lessonId, title) {
       const lessonNumber = Number(lessonId.replace("lesson-", ""));
       const linkedPage = linkedLessonPages.get(lessonNumber);
-      const lessonUrl = linkedPage
+      const newFlowEnabled = !!(window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true);
+      const originalUrl = linkedPage
         ? window.StudyLessonService.lessonPageUrl(linkedPage.id)
         : lessonLinks[lessonId];
+      const lessonUrl = !newFlowEnabled ? originalUrl
+        : linkedPage
+          ? originalUrl + "&source=roteiro-de-estudos"
+          : originalUrl
+            ? "/licao/?lesson=" + encodeURIComponent(lessonNumber) + "&source=roteiro-de-estudos"
+            : "";
       const inner = '<span><span class="icon">📖</span>' + escapeHtml(title) + '</span><span class="arrow">›</span>';
 
       if (!lessonUrl) return '<div class="lesson-title">' + inner + '</div>';
-      if (linkedPage) return '<a class="lesson-title" href="' + lessonUrl + '">' + inner + '</a>';
+      if (linkedPage || newFlowEnabled) return '<a class="lesson-title" href="' + lessonUrl + '">' + inner + '</a>';
       return '<a class="lesson-title" href="' + lessonUrl + '" target="_blank" rel="noopener noreferrer">' + inner + '</a>';
     }
 
@@ -238,14 +245,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return originalCards.concat(createdCards);
     }
 
+    function formatLessonCardTitle(lessonNumber, linkedPage) {
+      const pageTitle = linkedPage && typeof linkedPage.title === "string"
+        ? linkedPage.title.trim()
+        : "";
+      return ("Lição " + lessonNumber + (pageTitle ? " - " + pageTitle : "")).toLocaleUpperCase("pt-BR");
+    }
+
     function renderLessons() {
       const grid = document.getElementById("lessonsGrid");
       const cards = roadmapLessonNumbers().map(function (lessonNumber) {
         const lessonId = "lesson-" + lessonNumber;
         const linkedPage = linkedLessonPages.get(lessonNumber);
-        const title = linkedPage && lessonNumber > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT
-          ? "Lição " + lessonNumber + " — " + linkedPage.title
-          : "Lição " + lessonNumber;
+        const title = formatLessonCardTitle(lessonNumber, linkedPage);
         const isDone = completedLessons.get(lessonId) === true;
 
         return (
@@ -304,6 +316,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       currentUser = session.user;
+      const preparationFlow = window.StudentPreparationFlow;
+      if (preparationFlow && typeof preparationFlow.resolveEligibility === "function") {
+        await preparationFlow.resolveEligibility(Auth.getClient(), session.user.id);
+      }
+      if (preparationFlow && preparationFlow.enabled === true &&
+          typeof preparationFlow.track === "function") {
+        preparationFlow.track("preparation_roadmap_view");
+      }
 
       let completionLoaded = true;
       let lessonPagesLoaded = true;

@@ -62,7 +62,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("service.getLinkedPageByLessonNumber(lessonNumber)", controller)
         self.assertNotIn("service.listLinkedPages()", controller)
         self.assertIn("study_lesson_service.js?v=20261004-full-content-1", lesson)
-        self.assertIn("licao.js?v=20261007-print-1", lesson)
+        self.assertIn('src="/licao.js?v=', lesson)
 
     def test_lesson_page_contains_required_support_cards(self) -> None:
         lesson = self.read("licao/index.html")
@@ -92,7 +92,41 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("#tf-mobile-top-menu-overlay", styles)
         self.assertIn("#globalLogoutButton", styles)
         self.assertIn(".lesson-page-container .tf-mobile-nav-source-active", styles)
-        self.assertIn("study_lesson_page.css?v=20261007-print-2", lesson)
+        self.assertIn("study_lesson_page.css?v=20261016-all-lessons-compact-1", lesson)
+
+    def test_every_lesson_shows_a_centered_all_lessons_button_under_the_title(self) -> None:
+        lesson = self.read("licao/index.html")
+        styles = self.read("study_lesson_page.css")
+
+        header = lesson.split('<header class="header">', 1)[1].split("</header>", 1)[0]
+        self.assertIn('href="/roteiro-de-estudos/">TODAS AS LIÇÕES</a>', header)
+        self.assertIn('class="lesson-all-lessons-nav"', header)
+        self.assertLess(header.index('id="lessonPageStatus"'), header.index('lesson-all-lessons-nav'))
+        self.assertLess(lesson.index('lesson-all-lessons-nav'), lesson.index('<div class="divider">'))
+        self.assertEqual(lesson.count('class="lesson-all-lessons-button"'), 1)
+
+        nav_styles = styles.split(".lesson-all-lessons-nav {", 1)[1].split("}", 1)[0]
+        self.assertIn("display: flex;", nav_styles)
+        self.assertIn("justify-content: center;", nav_styles)
+        self.assertIn("max-width: 100%;", styles)
+        self.assertIn(".lesson-all-lessons-nav,\n", styles)
+        self.assertIn("focus-visible", styles)
+        compact_button = styles.split(".lesson-all-lessons-button {", 1)[1].split("}", 1)[0]
+        self.assertIn("min-height: 44px;", compact_button)
+        self.assertIn("padding: 9px 18px;", compact_button)
+        self.assertIn("font-size: 12px;", compact_button)
+        self.assertIn("border-radius: 12px;", compact_button)
+
+    def test_second_lesson_card_uses_the_replacement_content(self) -> None:
+        roadmap = self.read("roteiro_de_estudos.html")
+        academic_service = self.read("academic_workflow_service.js")
+        self.assertIn(
+            '"lesson-2": "Nesta aula, você vai aprender a falar sobre objetos que possui e utiliza no cotidiano,',
+            roadmap,
+        )
+        self.assertIn("linkedPage.title", roadmap)
+        self.assertNotIn("1LDXrDtGGiMKNUe_DWFSLu-k3IKQmQcYB", roadmap)
+        self.assertNotIn("1LDXrDtGGiMKNUe_DWFSLu-k3IKQmQcYB", academic_service)
 
     def test_roadmap_prefers_linked_internal_page(self) -> None:
         roadmap = self.read("roteiro_de_estudos.html")

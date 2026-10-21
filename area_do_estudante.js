@@ -7,8 +7,9 @@
   const STUDENT_AREA_PATH = "/area-do-estudante/";
   const STUDENT_RESOURCES_PATH = "/area-do-estudante/recursos/";
   const LOGIN_PATH = "/login/";
-  const SUSPENDED_PORTAL_PATHS = new Set([
-    "/exercicios-diarios"
+  const UNAVAILABLE_STUDENT_PATHS = new Set([
+    "/exercicios-diarios",
+    "/minha-semana"
   ]);
 
   const state = {
@@ -97,7 +98,7 @@
   }
 
 
-  function removeSuspendedPortalCards() {
+  function removeUnavailableStudentCards() {
     const cards = document.querySelectorAll(".menu-groups a[href]");
 
     for (const card of cards) {
@@ -112,9 +113,14 @@
       }
 
       const path = target.pathname.replace(/\/+$/, "");
-      if (target.origin === window.location.origin && SUSPENDED_PORTAL_PATHS.has(path)) {
+      if (target.origin === window.location.origin && UNAVAILABLE_STUDENT_PATHS.has(path)) {
         card.remove();
       }
+    }
+
+    const formerPriorityGroup = document.querySelector(".priority-group");
+    if (formerPriorityGroup && !formerPriorityGroup.querySelector("a[href]")) {
+      formerPriorityGroup.remove();
     }
   }
 
@@ -172,16 +178,28 @@
     });
   }
 
+  async function initializeAcquisitionPrompt() {
+    const prompt = window.StudentAcquisitionPrompt;
+    if (!prompt || typeof prompt.initialize !== "function") return false;
+
+    return prompt.initialize({
+      client: Auth.getClient(),
+      studentId: state.session.user.id,
+      isProfessor: isProfessorSession()
+    });
+  }
+
   async function updateStatus() {
     const isAllowed = await guardStudentArea();
     if (!isAllowed) return;
 
     clearLoginStatus();
     initializePwaInstallExperience();
-    await initializeReviewInvitation();
+    const acquisitionPromptShown = await initializeAcquisitionPrompt();
+    if (!acquisitionPromptShown) await initializeReviewInvitation();
   }
 
-  removeSuspendedPortalCards();
+  removeUnavailableStudentCards();
   ensureStudentResourcesCard();
   updateStatus();
 })();

@@ -5,6 +5,15 @@ const PROFESSOR_AUTH_MAX_ATTEMPTS = 40;
 const PROFESSOR_AUTH_RETRY_DELAY_MS = 100;
 const PROFESSOR_PATH = "/professor/";
 const LOGIN_PATH = "/login/";
+const RETIRED_REPORT_CARD_ID = "planos-semanais";
+
+function removeRetiredProfessorReportCard() {
+  const grid = document.getElementById("professorMenuGrid");
+  if (!grid) return;
+
+  const retiredCard = grid.querySelector('[data-card-id="' + RETIRED_REPORT_CARD_ID + '"]');
+  if (retiredCard) retiredCard.remove();
+}
 function applyProfessorCardOrder(grid) {
   if (!grid) return;
   try {
@@ -235,5 +244,6 @@ async function guardProfessorHome() {
   }
 }
 
+removeRetiredProfessorReportCard();
 ensureDynamicProfessorCards();
 guardProfessorHome();

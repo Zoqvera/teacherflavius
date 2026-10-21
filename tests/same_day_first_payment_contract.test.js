@@ -77,7 +77,7 @@ test("checkout explains administrative recovery without disabling verification",
   assert.match(checkout, /VERIFICAR PAGAMENTO NOVAMENTE/);
   assert.match(checkoutMarkup, /id="verifyPaymentButton"/);
   assert.match(checkoutMarkup, /noindex, nofollow/);
-  assert.match(checkoutMarkup, /\/pagamento\/app\.js\?v=20261013-payment-deadline-1/);
+  assert.match(checkoutMarkup, /\/pagamento\/app\.js\?v=20261021-revert-1/);
 });
 
 test("month-end recurring due day keeps its original day with a short-month clamp", () => {
@@ -92,7 +92,7 @@ test("reconstruction includes policy overlay and fingerprint", () => {
   const workflow = read(".github/workflows/validate-supabase-baseline.yml");
   const fingerprint = JSON.parse(read("supabase/baseline/schema-fingerprint.json"));
   assert.match(workflow, /380_same_day_first_tuition_payment\.sql/);
-  assert.equal(fingerprint.public_functions, 192);
-  assert.equal(fingerprint.private_functions, 37);
+  assert.equal(fingerprint.public_functions, 197);
+  assert.equal(fingerprint.private_functions, 39);
   assert.equal(fingerprint.public_user_triggers, 47);
 });

@@ -130,3 +130,175 @@ Overlay `380_same_day_first_tuition_payment.sql` applies the automatic São Paul
 Production migration `20261015161503_track_student_review_invitation_funnel` adds a private one-row-per-student tracking table and two protected RPCs. Its replayable SQL is stored in `395_student_review_invitation_funnel.sql`. The automated reconstruction applies this overlay **after `390_expose_study_button_marker.sql`**. The catalog fingerprint counts the two additional public RPCs. The private table and its constraints are checked separately by `tests/sql/student_review_invitation_baseline_security.sql`, because the table and constraint counters in the fingerprint cover only the public schema.
 
 The overlay contains no production student records. Both event collection and reporting are restricted by the database. Do not backfill synthetic views or clicks.
+
+
+## ETAPA 1D — restauração de justificativas de créditos (17/10/2026)
+
+O overlay `400_justify_attended_cancelled_lesson_revocations.sql` é uma
+cópia **sem alterações de lógica** da migração já revisada
+`20261016162500_justify_attended_cancelled_lesson_revocations.sql`.
+Ele é aplicado **após 395**, exclusivamente à reconstrução do schema
+em Supabase CLI descartável. Não é uma nova migração, não é executado na
+produção e não contém dados pessoais.
+
+A mudança recompõe a tabela privada
+`private.lesson_credit_revocation_justifications`, a RPC protegida
+`public.justify_teacher_attended_cancelled_lesson(uuid)` e as versões
+de recuperação das funções de auditoria e sincronização dos créditos.
+A autorização da RPC usa o controle real de professor; a tabela privada
+é protegida por RLS e não possui grants para navegador.
+
+O fingerprint canônico aumenta uma função pública (192 -> 193).
+A tabela adicionada é do schema `private`, portanto não altera o
+indicador `tables`, que conta apenas tabelas públicas.
+A homologação do overlay exige teste de SQL real e ACL em CI,
+execução local repetível e consulta isolada de consistência.
+**Não** altera o ledger histórico da produção, não habilita
+Supabase Branching e não comprova paridade integral.
+
+Após esta correção isolada, permanecem pendentes outros objetos
+e definições identificados na auditoria estrutural da ETAPA 1C.
+Cada pacote adicional terá sua própria revisão funcional e segurança
+antes de integrar à reconstrução canônica.
+
+
+## ETAPA 1D.2 - armazenamento de verificacoes de contas
+
+O overlay `405_restore_auth_account_health_run_storage.sql` recupera apenas a tabela privada `private.auth_account_health_runs`, seu indice temporal e as permissoes de `service_role`, com SQL extraido literalmente da migracao `20260910163542_add_auth_account_health_monitoring.sql`. Ele nao instala funcoes de monitoramento nem agenda tarefas. A configuracao de producao dessa tabela privada nao possui RLS e nega acesso direto a `anon` e `authenticated`. A reconstrucao preserva essas caracteristicas. O overlay e validado em banco descartavel e nao modifica o historico de migracoes produtivo. O numero de overlays passa de 81 para 82, sem mudanca nas contagens de objetos publicos.
+
+
+## ETAPA 1D.3 - reconciliacao dos modos das policies
+
+O overlay `415_reconcile_canonical_policy_modes.sql` existe **apenas na
+reconstrucao descartavel**. O snapshot inicial criava policies com
+`AS RESTRICTIVE`, mas a consulta somente de leitura ao catalogo da
+producao confirmou 120 policies `PERMISSIVE` e nenhuma restritiva.
+Os overlays intermediarios ja tinham substituido quatro policies.
+O overlay 415 exige exatamente 81 policies restritivas restantes, todas
+do schema publico e do papel `authenticated`, e as recria no modo
+`PERMISSIVE` sem mudar nomes, comandos, papeis, `USING` ou
+`WITH CHECK`. Um checksum estrutural por policy e comparado antes
+e depois; qualquer divergencia aborta o SQL integralmente.
+
+Essa reconciliacao nao copia as expressoes produtivas e nao enfraquece
+as quatro policies de `study_lesson_pages`, que continuam exigindo MFA
+no bootstrap. A mudanca remove um bloqueio de funcionamento causado
+por combinacao inadequada de policies RLS na reconstrução, sem
+modificar a producao. Para equivalencia de seguranca, continuam
+necessarios testes autenticados e auditoria das outras divergencias.
+
+
+### Quatro policies obsoletas da reconstrucao
+
+O restore inicialmente encontrou 85 policies restritivas, nao 81.
+Quatro delas nao existem no catalogo da producao: duas antigas
+policies de edicao de `study_roadmap_completion`, uma de consulta
+a `teacher_admins` e uma de consulta a `teacher_exercises`.
+O overlay 415 exige a presenca dessas quatro policies com nomes,
+operacoes e papel esperados, descarta apenas essas quatro no
+ambiente descartavel, e converte as 81 restantes.
+O numero final de policies fica em **91** (120 na producao,
+29 ainda ausentes no baseline). Nenhuma policy produtiva e apagada.
+
+
+## ETAPA 1D.4 — Reconstrução de permissões financeiras com MFA
+
+O overlay `420_reconcile_financial_mfa_policies.sql` altera **somente no
+bootstrap canônico descartável** as expressões das três políticas que
+controlam mensalidades, seus eventos e as configurações financeiras.
+A produção já usa `is_teacher_admin_mfa()`; o snapshot de recuperação
+ainda usava `is_teacher_admin()`. O overlay exige o estado de origem
+esperado, mantém os papéis, nomes, operações, modo `PERMISSIVE` e a
+definição de todas as políticas não financeiras, e confirma as três
+expressões MFA após a alteração. Inconsistências interrompem o SQL.
+
+O número de overlays passa a **85**. Não há tabelas, índices,
+funções ou políticas adicionais, portanto os contadores estruturais
+do `schema-fingerprint.json` permanecem inalterados.
+A homologação inclui testes de catálogo em PostgreSQL descartável,
+além da auditoria de políticas em `main` somente-leitura.
+
+As 29 políticas produtivas ainda ausentes dependem de reconstrução
+adicional de suas tabelas e dos módulos respectivos. Nenhuma regra
+RLS deve ser copiada antes de recuperar seu objeto, suas relações,
+permissões e fluxos de autorização. A divergência das quatro
+políticas de páginas de lição permanece pendente de decisão de MFA.
+
+
+## ETAPA 1D.4B — recuperação acadêmica após retirada de Tarefas para Casa
+
+O overlay `425_restore_roadmap_teacher_and_exercise_read_policies.sql`
+restaura somente no bootstrap descartável três políticas de edição
+administrativa do roteiro e a leitura exclusivamente docente do catálogo
+antigo de exercícios, sem retomar o módulo de Tarefas para Casa retirado
+pela PR #795. Exige RLS, autorizações e predicados esperados e falha de
+forma fechada se o esquema divergir.
+
+O baseline atual tem **85 overlays, 52 tabelas públicas e 95 policies**.
+Este total substitui a contagem histórica acima de 85 overlays atribuída
+à etapa 1D.4: depois da PR #795 o overlay 420 era o 84º e o novo 425 é o
+85º. A paridade integral com produção permanece por comprovar.
+
+
+## Stage 1D.5 — LGPD privacy catalog restoration (disposable database only)
+
+Overlay `430_restore_lgpd_privacy_catalog_stage1d5.sql` reconstructs only
+`public.data_subject_requests`, `public.data_retention_policies` and
+`public.data_retention_runs`, their 11 reviewed constraints, seven indexes
+(including three primary-key indexes), four SELECT-only RLS policies and
+browser table ACLs. The sources are historical migrations for data-subject
+rights and retention, reconciled against the production catalog on 17/10/2026.
+The teacher-only read policies keep the exact current authorization helper
+`is_teacher_admin_mfa()`; this helper is presently an alias and does not
+itself enforce AAL2. Owners can read only their own privacy requests;
+`anon` has no table access, and students have no direct write grants.
+
+**This is not a data migration or a privacy-deletion rollout.** The overlay
+neither inserts policy seeds nor creates privileged request/erasure RPCs,
+triggers, deletion functions, cron jobs or real records. These operational
+components remain gaps to review in separate packages. CI verifies the
+catalog and uses synthetic records inside a rolled-back transaction to check
+student ownership; remote production remains read-only and unchanged.
+
+With overlay 430, the canonical reconstruction now contains **86 overlays,
+55 public tables, 277 constraints, 120 non-constraint indexes, and 99 public
+RLS policies**. The previously documented historical totals above belong
+to earlier restore stages, not this stage. Tarefas para Casa remains retired.
+
+
+## Etapa financeira — termos e cotação sem cobrança automática (20/10/2026)
+
+O overlay `435_late_payment_policy_quote_foundation.sql` restaura os procedimentos versionados de concordância (`2026-10-20-v1`) e a cotação informativa de encargos, com multa contratual única de 2% e juros simples de 1% ao mês. O intervalo elegível para dívidas pré-existentes começa **somente após o aceite**, nunca no vencimento histórico. Alunos menores de idade são orientados à formalização com responsável legal.
+
+A cobrança efetiva permanece **desativada** (`billing_enabled=false` e `preview_only=true`); o servidor do Mercado Pago continua aplicando o valor principal original. Pagamentos externos iniciados anteriormente conservam seus valores. Nenhum registro histórico nem valor de mensalidade é atualizado nesta etapa.
+
+O painel de pagamento apresenta aceite opcional e auditável, sem bloquear a quitação do principal. A próxima etapa deve ampliar o registro financeiro, o fluxo de criação no Mercado Pago, as verificações de liquidação e os relatórios, e realizar homologação isolada antes da ativação.
+
+O overlay e a migração são idênticos. Os testes SQL no banco descartável verificam juros simples, dias elegíveis, arredondamento e permissões de execução.
+
+
+## Etapa financeira 4 — gateway e conciliação, desativados por padrão (20/10/2026)
+
+O overlay 440_late_payment_settlement_gateway.sql adiciona um snapshot imutável por tentativa
+(late_principal_amount, late_fine_amount, late_interest_amount, late_policy_version)
+e campos separados para os encargos pagos em monthly_tuition.
+A liquidação exige o total idêntico ao da tentativa, mas compara o principal
+ao valor nominal da mensalidade. Estornos limpam os encargos pagos.
+
+A tabela privada late_payment_charge_settings nasce com enabled=false,
+RLS e acesso somente ao serviço. A Edge Function create-mercado-pago-payment
+exige também a configuração explícita LATE_PAYMENT_GATEWAY_ENABLED=true.
+Sem ambos os gates, o pagamento continua com o valor nominal anterior.
+
+Não ativar os dois gates antes de aplicar ambas as migrações, publicar a
+Edge Function, verificar o checkout e homologar webhooks, reconciliação,
+pagamentos duplicados e estornos em ambiente de testes isolado.
+
+A cotação do servidor é a fonte autoritativa do total. O checkout exibe
+principal, multa e juros antes de criar o pagamento, e o backend recusa
+uma cotação desatualizada. Pix já iniciado mantém valor e idempotência.
+Os dias anteriores ao aceite de 2026-10-20-v1 nunca recebem os novos
+encargos contratuais. Para alunos menores, o responsável legal precisa
+formalizar a nova condição. O pagamento do principal permanece possível.
+
+Nenhuma cobrança é criada pela migração. Nenhum segredo é publicado.

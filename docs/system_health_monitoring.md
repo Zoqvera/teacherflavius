@@ -19,7 +19,7 @@ O ciclo interno é executado a cada 5 minutos:
 5. O scanner cruza probes, erros da aplicação, HTTP 5xx, autenticação, CSP e jobs agendados.
 6. O resultado é persistido em `private.system_health_runs`.
 7. Issues geram registros deduplicados em `private.system_health_alerts`.
-8. Alertas novos são enviados por `notify-system-health-alert`, usando o mesmo segredo de webhook operacional e o Resend.
+8. Alertas novos são enviados por `notify-system-health-alert`, usando o mesmo segredo de webhook operacional e o Resend. O destinatário administrativo é `contato@teacherflavius.com`, definido diretamente na Edge Function, independentemente do Secret legado `ENROLLMENT_NOTIFICATION_EMAIL`. O remetente continua configurado por `ENROLLMENT_FROM_EMAIL` e as respostas são encaminhadas por `Reply-To: contato@teacherflavius.com`.
 
 Um watchdog separado, `system-health-watchdog`, executa a cada 10 minutos. Ele detecta se o próprio health check global deixou de produzir resultados, detecta atraso do health check de qualidade de dados e também recoloca alertas falhados na fila, com limite de tentativas.
 

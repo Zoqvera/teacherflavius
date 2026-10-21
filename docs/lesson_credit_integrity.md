@@ -23,7 +23,8 @@ health check operacional. A auditoria separa:
 | --- | --- | --- |
 | `revoked_unpaid` | Mensalidade sem pagamento ou isenção | Esperado |
 | `revoked_excess` | Crédito acima do plano mensal atual, revogado | Esperado; verificar histórico se necessário |
-| `revoked_review` | Revogação sem causa identificada na situação atual | Revisão (warning) |
+| `revoked_review` | Revogação sem causa identificada ou sem evidência suficiente | Revisão (warning) |
+| `revoked_attended_original_class` | Cancelamento preservado, presença confirmada e revogação expressamente justificada | Histórico justificado (informativo) |
 | `revoked_confirmed_booking` | Revogado, mas com reserva confirmada | Crítico |
 | `active_unpaid` | Contratual não revogado, porém mensalidade não quitada | Crítico |
 | `active_excess` | Contratual ativo acima do plano atual e sem justificativa documentada | Revisão (warning) |
@@ -35,6 +36,25 @@ sincronização de mensalidades quitadas deve respeitar essas exceções sem
 reescrever `credit_origin = 'contract'` e sem revogar direitos preservados.
 Se uma mensalidade for estornada, a proteção de créditos não pagos mantém
 precedência e a exceção não impede o bloqueio financeiro.
+
+### Presença após cancelamento
+
+Se o aluno comparecer à aula originalmente cancelada, o professor poderá
+revogar o crédito de reposição, sem apagar o registro do cancelamento.
+
+O motivo fica em `private.lesson_credit_revocation_justifications`, com
+data e autoria. A RPC `public.justify_teacher_attended_cancelled_lesson(uuid)`
+somente aceita créditos contratuais revogados e sem reserva de reposição, com
+cancelamento preservado e presença confirmada no registro de frequência e
+na ocorrência acadêmica.
+
+A auditoria classifica esses casos como `revoked_attended_original_class`
+apenas enquanto as evidências forem válidas. Caso contrário, mantém
+`revoked_review`. Reservas ainda confirmadas e mensalidades não pagas
+continuam prioritárias.
+
+A sincronização financeira não restaura automaticamente um crédito revogado
+com justificativa registrada, mesmo quando a mensalidade está quitada.
 
 **Limitação temporal:** `student_billing_settings.classes_per_month` descreve
 o plano atual, e não necessariamente a quantidade contratada na competência
@@ -69,7 +89,10 @@ leitura direta de tabelas privadas no navegador nem operação de alteração.
    atual devem ser apenas sinalizados como `active_excess` até conferência.
 5. **Reserva em crédito revogado**: uma reserva ainda confirmada produz alerta
    crítico; a função de agendamento recusa a utilização de crédito revogado.
-6. **Autorização**: estudantes não acessam a RPC administrativa, mesmo
+6. **Comparecimento após cancelamento**: preservar o cancelamento, confirmar a presença e justificar a revogação.
+7. **Ressincronização**: mensalidade paga não pode reativar crédito revogado com justificativa.
+8. **Evidência ausente**: justificar sem presença ou cancelamento não elimina o alerta.
+9. **Autorização**: estudantes não acessam a RPC administrativa, mesmo
    conhecendo seu nome.
 
 Não há alteração no conteúdo público, nas configurações de indexação ou no sitemap.

@@ -1,0 +1,104 @@
+{
+  "snapshot_date": "2026-10-17",
+  "source": {
+    "repository": "Zoqvera/teacherflavius",
+    "commit": "1bd51c12387d9640ae6805d238d2243b023ca927",
+    "workflow_run": 39030867812,
+    "artifact": 12099914402,
+    "source_type": "protected_main_disposable_schema_inventory"
+  },
+  "schema": {
+    "baseline_objects": 1778,
+    "production_objects": 2911,
+    "shared_identifiers": 1777,
+    "identical_definitions": 1602,
+    "different_definitions": 175,
+    "missing_in_baseline": 1134,
+    "extra_in_baseline": 1,
+    "by_kind": {
+      "column": {
+        "baseline": 814,
+        "production": 1289,
+        "missing_in_baseline": 475,
+        "extra_in_baseline": 0,
+        "different_definitions": 55
+      },
+      "constraint": {
+        "baseline": 380,
+        "production": 651,
+        "missing_in_baseline": 271,
+        "extra_in_baseline": 0,
+        "different_definitions": 3
+      },
+      "index": {
+        "baseline": 138,
+        "production": 212,
+        "missing_in_baseline": 74,
+        "extra_in_baseline": 0,
+        "different_definitions": 0
+      },
+      "policy": {
+        "baseline": 95,
+        "production": 109,
+        "missing_in_baseline": 14,
+        "extra_in_baseline": 0,
+        "different_definitions": 4
+      },
+      "relation": {
+        "baseline": 71,
+        "production": 117,
+        "missing_in_baseline": 46,
+        "extra_in_baseline": 0,
+        "different_definitions": 21
+      },
+      "routine": {
+        "baseline": 230,
+        "production": 442,
+        "missing_in_baseline": 212,
+        "extra_in_baseline": 0,
+        "different_definitions": 92
+      },
+      "trigger": {
+        "baseline": 50,
+        "production": 91,
+        "missing_in_baseline": 42,
+        "extra_in_baseline": 1,
+        "different_definitions": 0
+      }
+    }
+  },
+  "rls": {
+    "baseline_policies": 95,
+    "production_policies": 109,
+    "missing_policies": 14,
+    "missing_on_restored_relations": 0,
+    "missing_on_absent_relations": 14,
+    "matching_policies": 91,
+    "changed_role_or_command": 0,
+    "changed_predicates_only": 4,
+    "potential_baseline_role_broadening": 0,
+    "table_dependencies": {
+      "public.data_retention_policies": 1,
+      "public.data_retention_runs": 1,
+      "public.data_subject_requests": 2,
+      "public.marketing_acquisition_events": 1,
+      "public.marketing_commercial_leads": 1,
+      "public.natanael_acquisition_events": 1,
+      "public.natanael_admins": 1,
+      "public.page_content_overrides": 3,
+      "public.student_course_states": 1,
+      "public.student_preparation_pilot_members": 1,
+      "public.student_preparation_pilot_settings": 1
+    }
+  },
+  "limitations": {
+    "metadata_only": true,
+    "raw_definitions_exported": false,
+    "student_records_exported": false,
+    "production_write_authorized": false,
+    "migration_ledger_modified": false,
+    "remote_branch_replay_verified": false,
+    "complete_schema_equivalence_verified": false,
+    "security_equivalence_verified": false
+  }
+}

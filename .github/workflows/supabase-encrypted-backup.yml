@@ -10,6 +10,7 @@ on:
       - 'supabase/recovery/**'
       - '.github/workflows/supabase-encrypted-backup.yml'
       - '.github/workflows/supabase-backup-recovery-test.yml'
+      - 'docs/apresentacoes-licoes-etapa5.md'
   schedule:
     # 03:17 UTC = 00:17 in America/Sao_Paulo.
     - cron: '17 3 * * *'

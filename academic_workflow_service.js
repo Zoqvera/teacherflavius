@@ -3,7 +3,6 @@
 
   const LEGACY_LESSON_FILE_IDS = Object.freeze({
     1: "1IcPBeVjsZfm0RnqqUwhDhwoF2QY3qIA1",
-    2: "1LDXrDtGGiMKNUe_DWFSLu-k3IKQmQcYB",
     3: "1-Sav9gssbAMYVUqVv0-MdwvUxT-H3eGX",
     4: "1Rjq4Oqpx_JRsAECFGLtteRrSINIDmFER",
     5: "1Ke_jLAODBKpd0OLaFF8sklof6JcperdY",
@@ -63,6 +62,17 @@
 
   function create(client) {
     const supabase = requireClient(client);
+
+    async function isActiveStudent(userId) {
+      if (!userId) return false;
+      const response = await supabase
+        .from("profiles")
+        .select("enrolled,archived")
+        .eq("id", userId)
+        .maybeSingle();
+      const profile = unwrap(response);
+      return !!profile && profile.enrolled === true && profile.archived === false;
+    }
 
     async function hydrateQuestions(questions) {
       if (!Array.isArray(questions) || questions.length === 0) return [];
@@ -173,6 +183,16 @@
       return hydrateTeacherLessonPlan(items);
     }
 
+    async function restoreCancelledRegularLesson(item, classDate) {
+      if (!item || item.lesson_kind !== "regular") {
+        throw new Error("Somente cancelamentos de aulas regulares podem ser revertidos.");
+      }
+      return unwrap(await supabase.rpc("restore_teacher_cancelled_regular_lesson", {
+        target_entry_id: item.entry_id,
+        target_date: normalizeDate(classDate)
+      }));
+    }
+
     async function finalizeTeacherLessonSession(classNumber, startsAt, classDate) {
       const normalizedClassNumber = Number(classNumber);
       const normalizedStartsAt = String(startsAt || "").trim();
@@ -226,11 +246,13 @@
       getMyActionPlan,
       getMyReviewQuestions,
       getTeacherLessonPlan,
+      isActiveStudent,
       markLessonPrepared,
       markLessonPresented,
       markQuestionStudied,
       markQuestionsStudied,
       rateQuestion,
+      restoreCancelledRegularLesson,
       setAttendance
     });
   }

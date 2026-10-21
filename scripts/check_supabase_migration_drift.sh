@@ -49,6 +49,21 @@ require_configuration() {
   fi
 }
 
+# Pinned audit identities for a retired and unreleased feature.
+retired_migration_records() {
+  cat <<'RETIRED_PROJECT_MIGRATIONS'
+20261015043416|20261015043416|homeworks_stage2_schema|53de1f08ea80abb52e096616f8e0f32eea7213925d0799bddd2ae9c3e2a3b4af
+20261015060000|20261015052321|homeworks_stage4_submission|b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84
+20261015065000|20261015063815|homeworks_stage5_teacher_review|745ae55478c5f7978040fe901a67348fe43e66305ef12cbd167e924b201101b5
+20261015071000|20261015065527|homeworks_auto_grade_reading_grammar|4d47c634ced700ae8d0e53e8c84e0cdeca83bf6bec079819eec2a68c3b9c2cbb
+20261015180000|20261015163925|homeworks_ai_monthly_budget|171df792cb4eff9c4b15fef4d6cd69b103ae30db2acc4bfab25f3a4739547b3c
+20261015192900|20261015193625|homeworks_privacy_export|6d8579c6ef03a9e174e0120edbf25ad316b2b3d3027538c99fd8946c1f70c3f0
+20261016144000|20261016144444|homeworks_formal_relationship_retention|064b87e35d015b57c0d7651dbb8aaed6b84aa482e994b3e0a0b266f805c08ca7
+20261016165000|20261016165814|homeworks_writing_age_verifications|d09a4e2b6f15b4aeb141c2dc5ea34b995ac4c89793b5e7edb0784771c4b75335
+20261017110321|20261017110321|retire_unreleased_homeworks_20261017|9f17ac9c4e3b6bcfbe36353a331f221d96ec3a50aa7da0effbc62afa3cb68deb
+RETIRED_PROJECT_MIGRATIONS
+}
+
 normalized_sha256() {
   local file="$1"
 
@@ -208,6 +223,16 @@ validate_historical_immutability() {
     }
   ' "${comparison_file}" > "${mismatch_file}"
 
+  # Only these exact historical migrations may be removed from Git.
+  while IFS='|' read -r git_version remote_version migration_name migration_checksum; do
+    local original_name
+    original_name="$(awk -F $'\t' -v v="$git_version" '$1 == v { print $2 }' "$base_unique_records_file")"
+    if [[ "$original_name" == "$migration_name" ]]; then
+      grep -vx "$git_version" "$missing_file" > "$TEMP_DIR/retired_missing" || true
+      mv "$TEMP_DIR/retired_missing" "$missing_file"
+    fi
+  done < <(retired_migration_records)
+
   if [[ ! -s "${missing_file}" && ! -s "${mismatch_file}" ]]; then
     return 0
   fi
@@ -266,6 +291,14 @@ collect_remote_records() {
         order by version;"
 }
 
+# The approved, manually applied 5B SQL is canonical in Git; live ledger
+# versions have no statement snapshots. Compare exact digests plus live ACLs.
+verify_manual_presentation_catalog() {
+  local result
+  result="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+    --file "${ROOT_DIR}/scripts/sql/lesson_presentations_catalog_attestation.sql")"
+  [[ "${result}" == 't' ]]
+}
 filter_local_records_from_cutoff() {
   local records_file="$1"
 
@@ -301,16 +334,20 @@ compare_production_identity() {
   local alias_remote_version
   local alias_name
   local alias_sha
+  local alias_remote_name
+  local alias_remote_sha
   local local_identity
   local remote_identity
   local expected_git
   local expected_remote
-  while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha; do
+  # Different remote names are accepted only when both names and the immutable
+  # normalized SQL digest are pinned and match the production ledger exactly.
+  while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha alias_remote_name alias_remote_sha; do
     [[ -n "$alias_git_version" ]] || continue
     local_identity="$(grep -E "^$alias_git_version[[:space:]]" "$local_records_file" || true)"
     remote_identity="$(grep -E "^$alias_remote_version[[:space:]]" "$remote_records_file" || true)"
     printf -v expected_git '%s\t%s\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
-    printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "$alias_name" "$alias_sha"
+    printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "${alias_remote_name:-$alias_name}" "${alias_remote_sha:-$alias_sha}"
 
     if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
       grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
@@ -322,11 +359,25 @@ compare_production_identity() {
   done <<'VERIFIED_MIGRATION_ALIASES'
 20261015030100|20261015030846|add_regular_and_teacher_cancellation_email_notifications|794aede48c9eb4aa382e32882704a38041b71636c7d9892256c6c0fbab539db7
 20261015041000|20261015041123|retry_transactional_emails_safely|5550c24828b5de718108b3c0709f50b8079fc1a6f8ea07267a75dc80f8d277da
-20261015060000|20261015052321|homeworks_stage4_submission|b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84
-20261015065000|20261015063815|homeworks_stage5_teacher_review|745ae55478c5f7978040fe901a67348fe43e66305ef12cbd167e924b201101b5
-20261015071000|20261015065527|homeworks_auto_grade_reading_grammar|4d47c634ced700ae8d0e53e8c84e0cdeca83bf6bec079819eec2a68c3b9c2cbb
-20261015180000|20261015163925|homeworks_ai_monthly_budget|171df792cb4eff9c4b15fef4d6cd69b103ae30db2acc4bfab25f3a4739547b3c
+20261015213000|20261015214937|student_preparation_pilot_eligibility|c026abfefca5a071929eebca566461733ce49ccd590b50b9a485275705ffd264
+20261016162500|20261016163745|justify_attended_cancelled_lesson_revocations|f936f2c9d92bd1f9bb92aa0c9cdcd80684562a17fcd7b067f1793ddf10adb3b2
+20261020133230|20261020175958|late_payment_policy_quote_foundation|086ead16caddc509b63e610b548d58b38dbe26a4b23d1172437ec6cf6d1eb534
+20261020164300|20261020180038|late_payment_settlement_gateway|19ad5781909218ee29e4bd553477cfd80e03b97b9bd452234c9dfaaedbaf6814
+20261021013000|20261021014028|deactivate_late_payment_policy|ef460e16063d7237a0160e83b99fc936c0d59aadfa81378c27fb95084b72fb0e||6db4482a6a303867ad3ee7237abacb828c7270e1ad2894077ed77f371aa6c328
+20261020180500|20261020192815|guard_lessons_before_class_membership|56817fb3bce31e642645f624200fb8f2ae0583246852d8414927be98bbf13067
+20261020224500|20261020224156|first_lesson_after_membership_start|6800e587d50bc1e162fc04f0852ee5b187b9ed315b549364ac54b4742f726874|first_lesson_after_membership_start_20261020
 VERIFIED_MIGRATION_ALIASES
+
+  # Historical remote rows remain attested by both name and normalized digest.
+  while IFS='|' read -r git_version remote_version migration_name migration_checksum; do
+    local remote_identity expected_remote
+    remote_identity="$(grep -E "^$remote_version[[:space:]]" "$remote_records_file" || true)"
+    printf -v expected_remote '%s\t%s\t%s' "$remote_version" "$migration_name" "$migration_checksum"
+    if [[ "$remote_identity" == "$expected_remote" ]]; then
+      grep -vx "$remote_version" "$remote_only_file" > "$TEMP_DIR/retired_remaining_remote" || true
+      mv "$TEMP_DIR/retired_remaining_remote" "$remote_only_file"
+    fi
+  done < <(retired_migration_records)
 
   join -t $'\t' \
     -o '1.1,1.2,2.2,1.3,2.3' \
@@ -339,6 +390,32 @@ VERIFIED_MIGRATION_ALIASES
     }
   ' "${joined_file}" > "${mismatch_file}"
 
+  # Exception for the exact canonical pair; every other drift remains fatal.
+  local empty_sha='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  local stage1_line stage3_line expected_stage1 expected_stage3
+  stage1_line="$(awk -F $'\t' '$1 == "20261017133000" {print}' "${mismatch_file}")"
+  stage3_line="$(awk -F $'\t' '$1 == "20261017144500" {print}' "${mismatch_file}")"
+  printf -v expected_stage1 '%s\t%s\t%s\t%s\t%s' \
+    '20261017133000' 'lesson_presentations_stage1' \
+    'lesson_presentations_stage1' "${empty_sha}" \
+    'e7e1f1772e5906a056fb390811cde4b11c3923a8e3c969652c2c1a545fc0430f'
+  printf -v expected_stage3 '%s\t%s\t%s\t%s\t%s' \
+    '20261017144500' 'lesson_presentation_views_stage3' \
+    'lesson_presentation_views_stage3' "${empty_sha}" \
+    'd5beaf8f0d3f4b3df92d8f519a80c6895323c4cae20041b90565ac6928898d42'
+  if [[ "${stage1_line}" == "${expected_stage1}" &&
+        "${stage3_line}" == "${expected_stage3}" ]]; then
+    if verify_manual_presentation_catalog; then
+      awk -F $'\t' \
+        '$1 != "20261017133000" && $1 != "20261017144500"' \
+        "${mismatch_file}" > "${TEMP_DIR}/remaining_identity_mismatch"
+      mv "${TEMP_DIR}/remaining_identity_mismatch" "${mismatch_file}"
+      echo "::notice::Two canonical 5B migrations attested by immutable Git SHA256 and live RLS/ACL catalog. All other drift remains enforced."
+    else
+      echo "::error::Presentation schema does not match approved 5B catalog attestation."
+      exit 1
+    fi
+  fi
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"

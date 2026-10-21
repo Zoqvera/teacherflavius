@@ -35,6 +35,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="stylesheet" href="aula_template.css?v=20260430-3">
   <link rel="stylesheet" href="area_do_estudante.css?v=20261008-install-card-help-1">
   <link rel="stylesheet" href="/student_review_invitation.css?v=20261015-1">
+  <link rel="stylesheet" href="/student_acquisition_prompt.css?v=20261017-1">
 </head>
 <body class="auth-checking student-dashboard">
 <!-- Google Tag Manager (noscript) -->
@@ -77,21 +78,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               ÁREA DO PROFESSOR
             </span>
             <span class="arrow" aria-hidden="true">›</span>
-          </a>
-        </div>
-      </section>
-
-      <section class="menu-group priority-group" aria-labelledby="priorityTitle">
-        <div class="group-heading">
-          <h2 id="priorityTitle">Comece por aqui</h2>
-          <p>As ações mais frequentes do seu curso</p>
-        </div>
-        <div class="priority-grid">
-          <a class="priority-card" href="/minha-semana/">
-            <span><strong>MINHA SEMANA</strong><small>Veja aulas, atividades e o que fazer agora.</small></span>
-            <span class="priority-icon" aria-hidden="true">
-              <svg class="tf-icon-svg" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="m9 15 2 2 4-4"/></svg>
-            </span>
           </a>
         </div>
       </section>
@@ -162,6 +148,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
+  <p id="studentAcquisitionSaved" role="status" aria-live="polite" hidden></p>
+  <dialog id="studentAcquisitionPrompt" class="student-acquisition-prompt"
+    aria-labelledby="studentAcquisitionPromptTitle"
+    aria-describedby="studentAcquisitionPromptDescription" aria-modal="true">
+    <h2 id="studentAcquisitionPromptTitle">Como você conheceu nossas aulas?</h2>
+    <p id="studentAcquisitionPromptDescription">
+      Conte onde conheceu as aulas de inglês do Teacher Flávio. Sua resposta será registrada uma única vez.
+    </p>
+    <form id="studentAcquisitionPromptForm">
+      <label for="studentAcquisitionPromptSource">Onde você conheceu as aulas?</label>
+      <select id="studentAcquisitionPromptSource" required>
+        <option value="">Selecione uma opção</option>
+      </select>
+      <div data-acquisition-detail hidden>
+        <label for="studentAcquisitionPromptDetail">Qual outra fonte?</label>
+        <input id="studentAcquisitionPromptDetail" type="text" maxlength="120" autocomplete="off">
+      </div>
+      <p id="studentAcquisitionPromptError" class="student-acquisition-prompt__error"
+        role="alert" hidden></p>
+      <div class="student-acquisition-prompt__actions">
+        <button id="studentAcquisitionPromptSubmit"
+          class="student-acquisition-prompt__submit" type="submit">ENVIAR RESPOSTA</button>
+        <button id="studentAcquisitionPromptClose"
+          class="student-acquisition-prompt__close" type="button">AGORA NÃO</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="studentReviewInvitation" class="student-review-invitation"
     aria-labelledby="studentReviewInvitationTitle" aria-describedby="studentReviewInvitationDescription" aria-modal="true">
     <span class="student-review-invitation__icon" aria-hidden="true">
@@ -182,7 +196,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <script src="/resource_waiter.js?v=20260902-1"></script>
   <script src="/pwa_install_prompt.js?v=20261006-1"></script>
   <script src="/web_push_notifications.js?v=20261005-1"></script>
-  <script src="area_do_estudante.js?v=20261015-suspend-exercises-2"></script>
+  <script src="/student_acquisition.js?v=20261017-1"></script>
+  <script src="/student_acquisition_prompt.js?v=20261017-1"></script>
+  <script src="area_do_estudante.js?v=20261017-acquisition-1"></script>
   <script src="animated_cards.js?v=20260430-3"></script>
   <script id="teacher-flavius-mobile-top-navigation" defer src="/mobile_top_navigation.js?v=20261008-private-menu-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>

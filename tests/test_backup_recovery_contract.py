@@ -166,6 +166,41 @@ class BackupRecoveryContractTests(unittest.TestCase):
         self.assertIn("LC_ALL=C sort -r", script)
         self.assertIn("sed -n '1p'", script)
 
+    def test_presentation_rehearsal_runs_only_after_validated_backup_restore(self) -> None:
+        script = self.read("scripts/verify_supabase_backup_restore.sh")
+        sql = self.read(
+            "tests/fixtures/lesson_presentations_stage5_restored_backup_checks.sql"
+        )
+        main = script.split("main() {", maxsplit=1)[1]
+
+        self.assertLess(main.index("compare_recovery_state"),
+                        main.index("rehearse_presentation_schema_against_restored_backup"))
+        self.assertLess(main.index("rehearse_presentation_schema_against_restored_backup"),
+                        main.index("write_report"))
+        self.assertIn("set local lock_timeout", script)
+        self.assertIn("set local statement_timeout", script)
+        self.assertIn("20261017133000_lesson_presentations_stage1.sql", script)
+        self.assertIn("20261017144500_lesson_presentation_views_stage3.sql", script)
+        self.assertIn("lesson_presentations_stage5_restored_backup_checks.sql", script)
+        self.assertIn("echo 'begin;'", script)
+        self.assertIn("echo 'rollback;'", script)
+        self.assertIn("echo \"set local lock_timeout", script)
+        self.assertNotIn("printf 'begin;", script)
+        self.assertNotIn("printf 'rollback;", script)
+        self.assertIn("RESTORED_SCHEMA_UNCHANGED", script)
+        self.assertIn("LESSON_PRESENTATIONS_STAGE5_BACKUP_REHEARSAL_PASSED", sql)
+        self.assertIn("pg_catalog.pg_policies", sql)
+        self.assertIn("relrowsecurity", sql)
+        self.assertIn("has_column_privilege", sql)
+        self.assertNotIn("insert into", sql.lower())
+        self.assertNotIn("delete from", sql.lower())
+        self.assertNotIn("update public.", sql.lower())
+
+    def test_backup_workflow_is_retriggered_by_stage5_homologation(self) -> None:
+        workflow = self.read(".github/workflows/supabase-encrypted-backup.yml")
+        self.assertIn("'docs/apresentacoes-licoes-etapa5.md'", workflow)
+        self.assertIn("Encrypted Supabase logical backup", workflow)
+
     def test_recovery_baseline_versions_every_application_cron(self) -> None:
         platform_config = self.read("supabase/baseline/30_platform_config.sql")
 

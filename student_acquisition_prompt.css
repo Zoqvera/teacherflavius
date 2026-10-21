@@ -1,0 +1,100 @@
+.student-acquisition-prompt {
+  box-sizing: border-box;
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  overflow-y: auto;
+  border: 1px solid rgba(113, 183, 248, .36);
+  border-radius: 22px;
+  color: #eff6ff;
+  background: linear-gradient(155deg, #082957 0%, #03152d 100%);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .48);
+}
+
+.student-acquisition-prompt::backdrop {
+  background: rgba(0, 8, 26, .78);
+  backdrop-filter: blur(4px);
+}
+
+.student-acquisition-prompt h2 {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: clamp(1.3rem, 5vw, 1.6rem);
+}
+
+.student-acquisition-prompt p {
+  margin: 0 0 20px;
+  color: #c7d9ef;
+  line-height: 1.5;
+}
+
+.student-acquisition-prompt label {
+  display: block;
+  margin-bottom: 8px;
+  color: #eff6ff;
+  font-weight: 700;
+}
+
+.student-acquisition-prompt select,
+.student-acquisition-prompt input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid rgba(199, 217, 239, .4);
+  border-radius: 10px;
+  color: #02102b;
+  background: #fff;
+  font: inherit;
+}
+
+.student-acquisition-prompt [data-acquisition-detail] {
+  margin-top: 18px;
+}
+
+.student-acquisition-prompt__actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.student-acquisition-prompt__actions button {
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.student-acquisition-prompt__submit {
+  border: 1px solid #4f9ee8;
+  color: #fff;
+  background: #1266bc;
+}
+
+.student-acquisition-prompt__close {
+  border: 1px solid rgba(199, 217, 239, .4);
+  color: #d8e7fa;
+  background: transparent;
+}
+
+.student-acquisition-prompt__actions button:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.student-acquisition-prompt__error {
+  margin: 12px 0 0;
+  color: #ffd5d5;
+}
+
+.student-acquisition-prompt :is(select, input, button):focus-visible {
+  outline: 3px solid #b7e2ff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .student-acquisition-prompt { padding: 24px 20px; }
+}

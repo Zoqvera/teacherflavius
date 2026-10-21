@@ -4,6 +4,69 @@
   const WAIT_OPTIONS = Object.freeze({ maxAttempts: 30, delayMs: 120 });
   let service = null;
 
+  function isSecondPartPage() {
+    return String(window.location.pathname || "").replace(/\/+$/, "") ===
+      "/o-que-fazer/segunda-parte";
+  }
+
+  function isNewFlowEnabled() {
+    return !!(window.StudentPreparationFlow && window.StudentPreparationFlow.enabled === true);
+  }
+
+  function trackPreparation(eventName) {
+    const flow = window.StudentPreparationFlow;
+    if (flow && typeof flow.track === "function") flow.track(eventName);
+  }
+
+  function updateQuestionCount(elementId, count) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.textContent = String(count);
+    element.setAttribute("aria-label", count + " perguntas");
+  }
+
+  function showWelcome() {
+    const welcome = document.getElementById("studentPreparationWelcome");
+    const legacy = document.getElementById("legacyActionPlan");
+    const description = document.getElementById("legacyActionPlanDescription");
+    if (welcome) welcome.hidden = false;
+    if (legacy) legacy.hidden = true;
+    if (description) description.hidden = true;
+  }
+
+  async function loadWelcome() {
+    try {
+      const plan = await service.getMyActionPlan();
+      const lesson = plan && plan.lesson;
+      const button = document.getElementById("startPreparationButton");
+      const fallback = document.getElementById("startConversationFallback");
+      const lessonUrl = lesson && lesson.has_material
+        ? window.AcademicWorkflowService.lessonUrl(lesson.number)
+        : "";
+
+      button.disabled = !lessonUrl;
+      if (lessonUrl) {
+        fallback.hidden = true;
+        button.onclick = function () {
+          trackPreparation("preparation_lesson_view");
+          window.location.href = lessonUrl;
+        };
+        setStatus("welcomePreparationStatus", "Sua próxima lição está disponível.");
+      } else {
+        fallback.hidden = false;
+        const message = lesson
+          ? "O material da próxima lição ainda não foi publicado. Você pode preparar a conversação."
+          : "Não há uma próxima lição disponível. Você pode preparar a conversação.";
+        setStatus("welcomePreparationStatus", message);
+      }
+      setStatus("actionPlanStatus", "", "");
+    } catch (error) {
+      console.error("Falha ao carregar a próxima lição:", error);
+      setStatus("welcomePreparationStatus", "Não foi possível consultar sua próxima lição.", "error");
+      setStatus("actionPlanStatus", "Não foi possível carregar seu plano de preparação.", "error");
+    }
+  }
+
   function resourcesReady() {
     return !!(
       window.Auth &&
@@ -24,7 +87,8 @@
   }
 
   function redirectToLogin() {
-    window.location.href = "/login/?next=" + encodeURIComponent("/o-que-fazer/");
+    const nextPath = isSecondPartPage() ? "/o-que-fazer/segunda-parte/" : "/o-que-fazer/";
+    window.location.href = "/login/?next=" + encodeURIComponent(nextPath);
   }
 
   function lessonStatusLabel(lesson) {
@@ -33,6 +97,7 @@
 
   function renderLesson(plan) {
     const container = document.getElementById("nextLessonContainer");
+    if (!container) return;
     const lesson = plan.lesson;
     container.innerHTML = "";
 
@@ -71,8 +136,33 @@
     container.appendChild(link);
   }
 
+  function showQuestionStudiedDialog() {
+    if (!isNewFlowEnabled() || !isSecondPartPage()) return;
+
+    const dialog = document.getElementById("questionStudiedDialog");
+    if (dialog && !dialog.open) dialog.showModal();
+  }
+
+  function initializeQuestionStudiedDialog() {
+    if (!isNewFlowEnabled() || !isSecondPartPage()) return;
+
+    const dialog = document.getElementById("questionStudiedDialog");
+    const continueButton = document.getElementById("studyAnotherQuestionButton");
+    if (!dialog || !continueButton) return;
+
+    continueButton.addEventListener("click", function () {
+      dialog.close();
+      const nextQuestion = document.querySelector(
+        "#actionQuestionList .academic-question-study-actions button:not(:disabled)"
+      );
+      const focusTarget = nextQuestion || document.getElementById("questionsTitle");
+      if (focusTarget) focusTarget.focus();
+    });
+  }
+
   async function handleQuestionStudied(question, button) {
-    if (!question || !question.id || question.studied || question.worked || button.disabled) return;
+    if (!question || !question.id || question.marked_studied || question.studied ||
+        question.worked || button.disabled) return;
 
     button.disabled = true;
     button.textContent = "REGISTRANDO...";
@@ -80,6 +170,7 @@
     try {
       await service.markQuestionStudied(question.id);
       await loadPlan();
+      showQuestionStudiedDialog();
     } catch (error) {
       console.error("Falha ao registrar pergunta estudada:", error);
       setStatus(
@@ -92,12 +183,21 @@
     }
   }
 
-  function createQuestionStudyItem(question, index) {
+  function questionCardNumber(question, index) {
+    if (!isSecondPartPage() || !isNewFlowEnabled()) return index + 1;
+
+    // Each number belongs to the original Conversation Questions catalog.
+    // Never renumber a filtered list after a question has been studied.
+    const displayOrder = Number(question && question.display_order);
+    return Number.isInteger(displayOrder) && displayOrder > 0 ? displayOrder : null;
+  }
+
+  function createQuestionStudyItem(question, index, isReview) {
     const item = document.createElement("div");
     item.className = "academic-question-study-item";
 
     item.appendChild(window.ConversationQuestionCardRenderer.create(question, {
-      number: index + 1,
+      number: questionCardNumber(question, index),
       className: "academic-conversation-card"
     }));
 
@@ -105,13 +205,16 @@
     actions.className = "academic-question-study-actions";
 
     const button = document.createElement("button");
-    const questionUnavailable = !!question.studied || !!question.worked;
+    const questionUnavailable = !!isReview || !!question.marked_studied ||
+      !!question.studied || !!question.worked;
     button.className = "academic-button " + (questionUnavailable ? "success" : "primary");
     button.type = "button";
     button.disabled = questionUnavailable;
-    button.textContent = question.worked
-      ? "PERGUNTA JÁ TRABALHADA"
-      : (question.studied ? "PERGUNTA ESTUDADA" : "ESTUDEI A PERGUNTA");
+    button.textContent = question.marked_studied
+      ? "PERGUNTA ESTUDADA"
+      : (question.worked
+        ? "PERGUNTA JÁ TRABALHADA"
+        : (isReview ? "PERGUNTA PARA REVISAR" : "ESTUDEI A PERGUNTA"));
     button.addEventListener("click", function () {
       handleQuestionStudied(question, button);
     });
@@ -121,9 +224,11 @@
     return item;
   }
 
-  function renderReviewQuestions(questions) {
+  function renderReviewQuestions(questions, planQuestions) {
     const list = document.getElementById("reviewQuestionList");
     const reviews = Array.isArray(questions) ? questions : [];
+    const studyByQuestionId = new Map((Array.isArray(planQuestions) ? planQuestions : [])
+      .map(function (question) { return [question.id, question]; }));
     list.innerHTML = "";
 
     if (!reviews.length) {
@@ -133,13 +238,16 @@
       list.appendChild(empty);
     } else {
       reviews.forEach(function (question, index) {
-        list.appendChild(window.ConversationQuestionCardRenderer.create(question, {
-          number: index + 1,
-          className: "academic-conversation-card"
-        }));
+        const progress = studyByQuestionId.get(question.id) || {};
+        const review = Object.assign({}, question, {
+          marked_studied: progress.marked_studied === true,
+          worked: true
+        });
+        list.appendChild(createQuestionStudyItem(review, index, true));
       });
     }
 
+    updateQuestionCount("reviewQuestionsCount", reviews.length);
     setStatus("reviewQuestionsStatus", "", "");
   }
 
@@ -161,6 +269,8 @@
       return !question.marked_studied;
     });
 
+    updateQuestionCount("questionsCount", questions.length);
+
     if (!questions.length) {
       const item = document.createElement("p");
       item.className = "academic-empty";
@@ -180,15 +290,29 @@
   }
 
   function render(plan) {
-    renderLesson(plan);
+    if (isSecondPartPage()) {
+      const backLink = document.getElementById("returnToLessonLink");
+      const lesson = plan && plan.lesson;
+      const lessonUrl = lesson && lesson.has_material
+        ? window.AcademicWorkflowService.lessonUrl(lesson.number)
+        : "";
+
+      if (backLink) {
+        backLink.href = lessonUrl || "/o-que-fazer/";
+        backLink.textContent = lessonUrl ? "VOLTAR À LIÇÃO" : "VOLTAR AO INÍCIO";
+      }
+    } else {
+      renderLesson(plan);
+    }
     renderQuestions(plan);
     setStatus("actionPlanStatus", "Plano atualizado.", "success");
   }
 
   async function loadPlan() {
+    let currentPlan = null;
     try {
-      const plan = await service.getMyActionPlan();
-      render(plan || {});
+      currentPlan = await service.getMyActionPlan();
+      render(currentPlan || {});
     } catch (error) {
       console.error("Falha ao carregar O QUE FAZER:", error);
       setStatus("actionPlanStatus", "Não foi possível carregar seu plano de preparação.", "error");
@@ -196,7 +320,7 @@
 
     try {
       const reviews = await service.getMyReviewQuestions();
-      renderReviewQuestions(reviews);
+      renderReviewQuestions(reviews, currentPlan && currentPlan.questions);
     } catch (error) {
       console.error("Falha ao carregar revisões do aluno:", error);
       setStatus(
@@ -222,8 +346,45 @@
     }
 
     service = window.AcademicWorkflowService.create(window.Auth.getClient());
+    try {
+      const activeStudent = await service.isActiveStudent(session.user.id);
+      if (!activeStudent) {
+        const plan = document.getElementById("legacyActionPlan");
+        if (plan) plan.hidden = true;
+        setStatus("actionPlanStatus", "Esta página está disponível apenas para alunos ativos.", "error");
+        document.body.classList.remove("auth-checking");
+        return;
+      }
+    } catch (error) {
+      console.error("Falha ao verificar acesso ao plano de preparação:", error);
+      setStatus("actionPlanStatus", "Não foi possível confirmar seu acesso. Atualize a página e tente novamente.", "error");
+      document.body.classList.remove("auth-checking");
+      return;
+    }
+
+    const flow = window.StudentPreparationFlow;
+    if (flow && typeof flow.resolveEligibility === "function") {
+      await flow.resolveEligibility(window.Auth.getClient(), session.user.id);
+    }
+
+    if (isSecondPartPage() && !isNewFlowEnabled()) {
+      window.location.replace("/o-que-fazer/");
+      return;
+    }
 
     document.body.classList.remove("auth-checking");
+
+    if (isNewFlowEnabled() && !isSecondPartPage()) {
+      showWelcome();
+      trackPreparation("preparation_welcome_view");
+      await loadWelcome();
+      return;
+    }
+
+    if (isSecondPartPage()) {
+      initializeQuestionStudiedDialog();
+      trackPreparation("preparation_conversation_view");
+    }
     await loadPlan();
   }
 

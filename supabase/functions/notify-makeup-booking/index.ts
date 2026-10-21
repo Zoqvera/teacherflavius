@@ -346,7 +346,7 @@ Deno.serve(async (request: Request) => {
   }
 
   // Administrative notifications always go to the approved professor mailbox.
-  const teacherEmail = "flaviofreitas@ufu.br";
+  const teacherEmail = "contato@teacherflavius.com";
   const recipientEmail = safeHeader(
     isTeacherNotice ? teacherEmail : booking.student_email,
     "",

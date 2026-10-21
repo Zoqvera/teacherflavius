@@ -25,7 +25,7 @@ test("each booking confirmation queues a distinct and deduplicated teacher email
 test("teacher notice is sent from the usual account to a separate configured recipient", function () {
   assert.match(notifier, /Teacher Flávio <contato@teacherflavius\.com>/);
   assert.match(notifier, /TEACHER_BOOKING_TYPE = "teacher_booking"/);
-  assert.match(notifier, /const teacherEmail = "flaviofreitas@ufu\.br"/);
+  assert.match(notifier, /const teacherEmail = "contato@teacherflavius\.com"/);
   assert.doesNotMatch(notifier, /Deno\.env\.get\("MAKEUP_TEACHER_NOTIFICATION_EMAIL"\)/);
   assert.match(notifier, /isTeacherNotice \? teacherEmail : booking\.student_email/);
   assert.match(notifier, /isTeacherBooking\)[\s\S]*Nova reposição:/);

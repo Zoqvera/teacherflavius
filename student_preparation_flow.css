@@ -1,0 +1,145 @@
+.student-preparation-welcome {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.student-preparation-welcome .student-preparation-intro {
+  font-size: clamp(17px, 3vw, 21px);
+  line-height: 1.65;
+}
+
+.student-preparation-steps {
+  margin: 14px 0 22px;
+  padding-left: 27px;
+  line-height: 1.9;
+  font-weight: 700;
+}
+
+.student-preparation-welcome .academic-button {
+  min-width: min(100%, 240px);
+  text-align: center;
+  margin-top: 12px;
+}
+
+.student-preparation-fallback {
+  display: inline-block;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.student-preparation-progress {
+  color: #a5b4fc;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.student-preparation-next-link {
+  display: inline-block;
+  margin-top: 14px;
+  text-align: center;
+}
+
+.student-preparation-count {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 3px 9px;
+  border: 1px solid rgba(129, 140, 248, .38);
+  border-radius: 999px;
+  font-size: 12px;
+  vertical-align: middle;
+  color: #c7d2fe;
+}
+
+#lessonLegacyPreparationContent[hidden],
+#lessonRoadmapNavigation[hidden],
+#legacyActionPlan[hidden],
+#legacyActionPlanDescription[hidden],
+#studentPreparationWelcome[hidden],
+.student-preparation-fallback[hidden],
+.student-preparation-next-link[hidden],
+.student-preparation-progress[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 639px) {
+  .student-preparation-welcome .academic-button,
+  .student-preparation-next-link {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media print {
+  .student-preparation-progress,
+  .student-preparation-next-link {
+    display: none !important;
+  }
+}
+
+.student-preparation-roadmap-nav {
+  text-align: center;
+}
+
+.student-preparation-roadmap-nav .student-preparation-next-link {
+  min-width: min(100%, 240px);
+}
+
+/* Study confirmation is available only in the gated Conversation step. */
+.student-preparation-dialog {
+  box-sizing: border-box;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  width: min(92vw, 480px);
+  max-height: min(85vh, 640px);
+  overflow: auto;
+  padding: 0;
+  border: 1px solid rgba(129, 140, 248, .45);
+  border-radius: 20px;
+  background: #101c3d;
+  color: #f8fafc;
+  box-shadow: 0 24px 64px rgba(2, 6, 23, .6);
+}
+
+.student-preparation-dialog::backdrop {
+  background: rgba(2, 6, 23, .78);
+}
+
+.student-preparation-dialog-content {
+  padding: clamp(22px, 6vw, 38px);
+  text-align: center;
+}
+
+.student-preparation-dialog-content h2 {
+  margin: 0 0 26px;
+  font-size: clamp(28px, 6vw, 36px);
+  line-height: 1.2;
+  color: #f8fafc;
+}
+
+.student-preparation-dialog-actions {
+  display: grid;
+  gap: 14px;
+}
+
+.student-preparation-dialog-actions .academic-button {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-preparation-dialog,
+  .student-preparation-dialog::backdrop {
+    transition: none;
+    animation: none;
+  }
+}

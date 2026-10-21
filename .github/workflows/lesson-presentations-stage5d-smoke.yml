@@ -1,0 +1,43 @@
+name: Lesson presentations Stage 5D live public smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/smoke_lesson_presentations_public.py"
+      - "tests/test_smoke_lesson_presentations_public.py"
+      - ".github/workflows/lesson-presentations-stage5d-smoke.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/smoke_lesson_presentations_public.py"
+      - "tests/test_smoke_lesson_presentations_public.py"
+      - ".github/workflows/lesson-presentations-stage5d-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  published-smoke:
+    name: Published student and teacher assets, guest API restrictions
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Test the smoke's negative and positive contracts
+        run: python3 -m unittest tests/test_smoke_lesson_presentations_public.py
+
+      # Pull requests validate the new asset contract locally; production still serves main.
+      - name: Inspect actual deployed HTTPS pages and guest Data API
+        if: github.event_name != 'pull_request'
+        run: python3 scripts/smoke_lesson_presentations_public.py

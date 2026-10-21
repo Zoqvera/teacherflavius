@@ -63,6 +63,21 @@ jobs:
           ! grep -q 'subscription_checkout.js' _android_site/pagamento/index.html
           grep -q 'href="/o-que-fazer/index.html"' _android_site/area_do_estudante.html
 
+      - name: Assert presentations are bundled for Android lesson routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f _android_site/lesson_presentation_editor.js
+          test -f _android_site/teacher_lesson_presentations.js
+          grep -Fq 'const RELEASE_ENABLED = true;' _android_site/lesson_presentation_editor.js
+          grep -Fq 'const RELEASE_ENABLED = true;' _android_site/teacher_lesson_presentations.js
+          test -f _android_site/licao/index.html
+          test -f _android_site/roteiro-da-aula/index.html
+          grep -Fq 'lesson_presentation_editor.js?v=20261017-stage5c-1' _android_site/licao/index.html
+          grep -Fq 'teacher_lesson_presentations.js?v=20261020-always-visible-1' _android_site/roteiro-da-aula/index.html
+          grep -Fq 'noindex,nofollow' _android_site/licao/index.html
+          grep -Fq 'noindex, nofollow' _android_site/roteiro-da-aula/index.html
+
       - name: Generate Android project
         run: npx cap add android
 
@@ -110,8 +125,20 @@ jobs:
           ! grep -q 'sdk.mercadopago.com' android/app/src/main/assets/public/pagamento/index.html
           grep -q 'isNativeCapacitorApp' android/app/src/main/assets/public/clean_urls.js
           grep -q 'href="/o-que-fazer/index.html"' android/app/src/main/assets/public/area_do_estudante.html
-          grep -q 'versionCode 1' android/app/build.gradle
-          grep -q 'versionName "1.0.0"' android/app/build.gradle
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          config = json.loads(Path("mobile/android_release.json").read_text(encoding="utf-8"))
+          gradle = Path("android/app/build.gradle").read_text(encoding="utf-8")
+          assert f"versionCode {config['versionCode']}" in gradle
+          assert f'versionName "{config["versionName"]}"' in gradle
+          PY
+          test -f android/app/src/main/assets/public/student_acquisition_prompt.js
+          test -f android/app/src/main/assets/public/student_acquisition_prompt.css
+          grep -q 'student_acquisition_prompt.js' android/app/src/main/assets/public/area_do_estudante.html
+          grep -q 'studentAcquisitionPrompt' android/app/src/main/assets/public/area_do_estudante.html
+          grep -q 'value: "getninjas"' android/app/src/main/assets/public/student_acquisition.js
           test -f android/app/src/main/res/drawable/ic_teacher_flavio_foreground.xml
           test -f android/app/src/main/res/drawable/splash.xml
           test -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml

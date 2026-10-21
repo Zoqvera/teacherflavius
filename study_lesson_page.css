@@ -24,6 +24,42 @@
   text-transform: uppercase;
 }
 
+.lesson-all-lessons-nav {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.lesson-all-lessons-button {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 9px 18px;
+  border: 1px solid rgba(96, 165, 250, 0.52);
+  border-radius: 12px;
+  background: rgba(30, 64, 175, 0.22);
+  color: var(--tf-slate-100, #f1f5f9);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+}
+
+.lesson-all-lessons-button:hover {
+  border-color: rgba(96, 165, 250, 0.82);
+  background: rgba(30, 64, 175, 0.38);
+}
+
+.lesson-all-lessons-button:focus-visible {
+  outline: 2px solid var(--tf-blue-300, #93c5fd);
+  outline-offset: 3px;
+}
+
 .lesson-section {
   padding: 10px 4px;
 }
@@ -215,6 +251,7 @@
   }
 
   .lesson-page-container .top-links,
+  .lesson-all-lessons-nav,
   .lesson-page-container .tf-mobile-nav-source-active,
   .lesson-page-actions,
   .lesson-tools,

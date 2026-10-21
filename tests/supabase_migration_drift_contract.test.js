@@ -27,6 +27,7 @@ function runDriftScript({
   gitRoot = ROOT,
   baseRef = "",
   allowPrNew = false,
+  mockPresentationCatalog = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-drift-"),
@@ -45,6 +46,10 @@ function runDriftScript({
   fs.writeFileSync(
     psqlPath,
     `#!/usr/bin/env bash
+if [[ "$*" == *"lesson_presentations_catalog_attestation.sql"* ]]; then
+  echo "${mockPresentationCatalog ? "t" : "f"}"
+  exit 0
+fi
 cat <<'REMOTE_ROWS'
 ${remoteOutput}
 REMOTE_ROWS
@@ -77,6 +82,7 @@ function runDriftCheck({
   remoteRows = [],
   cutoff = "20261006000000",
   allowPrNew = false,
+  mockPresentationCatalog = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-files-"),
@@ -92,6 +98,7 @@ function runDriftCheck({
       remoteRows,
       cutoff,
       allowPrNew,
+      mockPresentationCatalog,
     });
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -529,30 +536,159 @@ test("both Supabase-assigned versions match their immutable source SQL", () => {
 });
 
 
-test("Stage 4 Supabase-assigned migration version is checksum-attested, never renamed", () => {
-  const filename = "20261015060000_homeworks_stage4_submission.sql";
-  const content = read("supabase/migrations/" + filename);
-  const expectedChecksum = "b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84";
-  assert.equal(canonicalChecksum(content), expectedChecksum);
+test("student preparation pilot migration requires the exact SHA-attested Supabase version alias", () => {
+  const filename = "20261015213000_student_preparation_pilot_eligibility.sql";
+  const sql = read("supabase/migrations/" + filename);
+  const checksum = canonicalChecksum(sql);
+  const version = "20261015214937";
+  const name = "student_preparation_pilot_eligibility";
+  assert.equal(checksum, "c026abfefca5a071929eebca566461733ce49ccd590b50b9a485275705ffd264");
+  assert.ok(
+    driftScript.includes(
+      "20261015213000|" + version + "|" + name + "|" + checksum
+    )
+  );
 
-  const accepted = runDriftCheck({
-    migrations: { [filename]: content },
-    remoteRows: [{
-      version: "20261015052321",
-      name: "homeworks_stage4_submission",
-      checksum: expectedChecksum,
-    }],
+  const authorized = runDriftCheck({
+    migrations: { [filename]: sql },
+    remoteRows: [{ version, name, checksum }],
   });
-  assert.equal(accepted.status, 0, accepted.stdout + accepted.stderr);
-  assert.match(accepted.stdout, /Exact SHA256 and name attest Supabase-generated migration alias/);
+  assert.equal(authorized.status, 0, authorized.stdout + "\n" + authorized.stderr);
+  assert.match(authorized.stdout, /verified migration alias|hash.*attest|exact sha256/i);
 
-  const tampered = runDriftCheck({
-    migrations: { [filename]: content + "\nselect 999;\n" },
-    remoteRows: [{
-      version: "20261015052321",
-      name: "homeworks_stage4_submission",
-      checksum: expectedChecksum,
-    }],
+  const altered = runDriftCheck({
+    migrations: { [filename]: sql },
+    remoteRows: [{ version, name, checksum: "0".repeat(64) }],
   });
-  assert.equal(tampered.status, 1);
+  assert.equal(altered.status, 1, altered.stdout + "\n" + altered.stderr);
+});
+
+
+test("retired history allows only checksum-pinned production rows", () => {
+  const version = "20261015052321";
+  const name = "homeworks_stage4_submission";
+  const checksum = "b4805f5df17c9898411646cc5d5249f98c68903a19a5abd3ff5a09a9d8520f84";
+  const allowed = runDriftCheck({ migrations: {}, remoteRows: [{version,name,checksum}] });
+  assert.equal(allowed.status, 0, allowed.stdout + allowed.stderr);
+  for (const remoteRows of [
+    [{version,name,checksum:"0".repeat(64)}],
+    [{version,name:"tampered",checksum}],
+  ]) {
+    const rejected = runDriftCheck({migrations:{},remoteRows});
+    assert.equal(rejected.status, 1, rejected.stdout + rejected.stderr);
+  }
+});
+
+
+test("manual 5B presentation ledger attestations allow only the exact pair and live ACLs", () => {
+  const first = "20261017133000_lesson_presentations_stage1.sql";
+  const second = "20261017144500_lesson_presentation_views_stage3.sql";
+  const source1 = read("supabase/migrations/" + first);
+  const source2 = read("supabase/migrations/" + second);
+  const emptySqlSha = canonicalChecksum("");
+  assert.equal(canonicalChecksum(source1),
+    "e7e1f1772e5906a056fb390811cde4b11c3923a8e3c969652c2c1a545fc0430f");
+  assert.equal(canonicalChecksum(source2),
+    "d5beaf8f0d3f4b3df92d8f519a80c6895323c4cae20041b90565ac6928898d42");
+
+  const migrations = { [first]: source1, [second]: source2 };
+  const remote = [
+    { version: "20261017133000", name: "lesson_presentations_stage1", checksum: emptySqlSha },
+    { version: "20261017144500", name: "lesson_presentation_views_stage3", checksum: emptySqlSha }
+  ];
+  const ok = runDriftCheck({
+    migrations, remoteRows: remote, mockPresentationCatalog: true
+  });
+  assert.equal(ok.status, 0, ok.stdout + "\n" + ok.stderr);
+  assert.match(ok.stdout, /attested by immutable Git SHA256 and live RLS\/ACL catalog/);
+
+  for (const scenario of [
+    { migrations, remoteRows: remote, mockPresentationCatalog: false },
+    { migrations, remoteRows: [remote[0]], mockPresentationCatalog: true },
+    { migrations, remoteRows: [{ ...remote[0], name: "forged" }, remote[1]],
+      mockPresentationCatalog: true },
+    { migrations, remoteRows: [remote[0], { ...remote[1], checksum: "1".repeat(64) }],
+      mockPresentationCatalog: true },
+    { migrations: { [first]: source1 + "\nselect 999;", [second]: source2 },
+      remoteRows: remote, mockPresentationCatalog: true }
+  ]) {
+    const rejected = runDriftCheck(scenario);
+    assert.equal(rejected.status, 1, rejected.stdout + "\n" + rejected.stderr);
+  }
+});
+
+
+const lateChargeAliases = [
+  {
+    gitVersion: "20261020133230",
+    remoteVersion: "20261020175958",
+    name: "late_payment_policy_quote_foundation",
+    checksum: "086ead16caddc509b63e610b548d58b38dbe26a4b23d1172437ec6cf6d1eb534",
+  },
+  {
+    gitVersion: "20261020164300",
+    remoteVersion: "20261020180038",
+    name: "late_payment_settlement_gateway",
+    checksum: "19ad5781909218ee29e4bd553477cfd80e03b97b9bd452234c9dfaaedbaf6814",
+  },
+];
+
+test("late-payment migration aliases are pinned to exact immutable SQL checksums", () => {
+  for (const alias of lateChargeAliases) {
+    const filename = `supabase/migrations/${alias.gitVersion}_${alias.name}.sql`;
+    const expectedLine = [
+      alias.gitVersion, alias.remoteVersion, alias.name, alias.checksum,
+    ].join("|");
+
+    assert.equal(canonicalChecksum(read(filename)), alias.checksum);
+    assert.ok(driftScript.includes(expectedLine), `Missing alias for ${alias.name}`);
+  }
+});
+
+test("server-assigned late-payment versions pass only with identical SQL", () => {
+  const migrations = Object.fromEntries(
+    lateChargeAliases.map((alias) => [
+      `${alias.gitVersion}_${alias.name}.sql`,
+      read(`supabase/migrations/${alias.gitVersion}_${alias.name}.sql`),
+    ]),
+  );
+  const remoteRows = lateChargeAliases.map((alias) => ({
+    version: alias.remoteVersion,
+    name: alias.name,
+    checksum: alias.checksum,
+  }));
+
+  const valid = runDriftCheck({ migrations, remoteRows });
+  assert.equal(valid.status, 0, valid.stdout + "\n" + valid.stderr);
+
+  const incorrectRows = remoteRows.map((row, index) =>
+    index === 1 ? { ...row, checksum: "0".repeat(64) } : row,
+  );
+  const invalid = runDriftCheck({ migrations, remoteRows: incorrectRows });
+  assert.notEqual(invalid.status, 0);
+  assert.match(invalid.stdout + invalid.stderr, /migration|drift|production|version/i);
+});
+
+
+test("withdrawn fee-policy ledger alias requires both exact SQL digests", () => {
+  const name = "deactivate_late_payment_policy";
+  const gitVersion = "20261021013000";
+  const remoteVersion = "20261021014028";
+  const localChecksum = "ef460e16063d7237a0160e83b99fc936c0d59aadfa81378c27fb95084b72fb0e";
+  const remoteChecksum = "6db4482a6a303867ad3ee7237abacb828c7270e1ad2894077ed77f371aa6c328";
+  const filename = gitVersion + "_" + name + ".sql";
+  const source = read("supabase/migrations/" + filename);
+  assert.equal(canonicalChecksum(source), localChecksum);
+  const migrations = { [filename]: source };
+  const remoteRows = [{ version: remoteVersion, name, checksum: remoteChecksum }];
+  const allowed = runDriftCheck({ migrations, remoteRows });
+  assert.equal(allowed.status, 0, allowed.stdout + allowed.stderr);
+
+  for (const forged of [
+    [{ version: remoteVersion, name, checksum: "0".repeat(64) }],
+    [{ version: remoteVersion, name: "changed", checksum: remoteChecksum }],
+  ]) {
+    const rejected = runDriftCheck({ migrations, remoteRows: forged });
+    assert.equal(rejected.status, 1, rejected.stdout + rejected.stderr);
+  }
 });
