@@ -33,19 +33,24 @@ def valid_pages() -> dict[str, str]:
     )
     pages["/professor/"] = "fetch('/professor.html', { cache: 'no-store' })"
     pages["/professor.html"] = (
-        '<a href="/radar-de-alunos/">Radar</a>'
-        '<script src="professor_home.js?v=20261016-retire-plans-1"></script>'
-        '<script src="/professor/professor_icons.js?v=20261016-retire-plans-1"></script>'
+        '<a href="/perfil-dos-alunos/">Alunos</a>'
+        '<script src="professor_home.js?v=20261021-retire-radar-1"></script>'
+        '<script src="/professor/professor_icons.js?v=20261021-retire-radar-1"></script>'
     )
     pages["/professor_home.js"] = (
-        'const RETIRED_REPORT_CARD_ID = "planos-semanais"; '
-        'removeRetiredProfessorReportCard();'
+        'const RETIRED_PROFESSOR_CARD_IDS = Object.freeze(["planos-semanais", "radar-de-alunos"]); '
+        'removeRetiredProfessorCards();'
     )
     pages["/professor/professor_icons.js"] = "'alunos': '<svg />'"
     pages["/planos-semanais/"] = (
         '<h1>Planos Semanais descontinuado</h1>'
         '<a href="/professor/">VOLTAR</a>'
     )
+    for radar_path in ("/radar-de-alunos/", "/radar_alunos.html"):
+        pages[radar_path] = (
+            '<h1>Radar de Alunos descontinuado</h1>'
+            '<a href="/professor/">VOLTAR</a>'
+        )
     pages["/curso-de-ingles-online/"] = "Portal de Exercícios ... Portal de Exercícios"
     pages["/service-worker.js"] = 'if (!isInstallAsset(event.request)) return;'
     pages["/supabase_config.js"] = (
@@ -114,6 +119,14 @@ class SuspendedPortalMonitoringTests(unittest.TestCase):
             for item in validate_published_pages(pages)
         ))
 
+    def test_radar_card_reappearance_fails(self) -> None:
+        pages = valid_pages()
+        pages["/professor.html"] += '<a href="/radar-de-alunos/">Radar</a>'
+        self.assertTrue(any(
+            "card Radar de Alunos reapareceu" in item
+            for item in validate_published_pages(pages)
+        ))
+
     def test_professor_cached_card_protection_must_remain(self) -> None:
         pages = valid_pages()
         pages["/professor_home.js"] = "ensureDynamicProfessorCards();"
@@ -133,7 +146,7 @@ class SuspendedPortalMonitoringTests(unittest.TestCase):
     def test_professor_script_versions_must_not_regress(self) -> None:
         pages = valid_pages()
         pages["/professor.html"] = pages["/professor.html"].replace(
-            "20261016-retire-plans-1", "20261008-old",
+            "20261021-retire-radar-1", "20261008-old",
         )
         self.assertTrue(any(
             "versões de scripts anteriores" in item
@@ -151,6 +164,19 @@ class SuspendedPortalMonitoringTests(unittest.TestCase):
             for item in validate_published_pages(pages)
         ))
 
+    def test_retired_radar_must_keep_its_notice(self) -> None:
+        for path in ("/radar-de-alunos/", "/radar_alunos.html"):
+            with self.subTest(path=path):
+                pages = valid_pages()
+                pages[path] = (
+                    '<div id="radarList"></div>'
+                    '<script src="/radar_alunos.js"></script>'
+                )
+                self.assertTrue(any(
+                    "Radar de Alunos: página descontinuada" in item
+                    for item in validate_published_pages(pages)
+                ))
+
     def test_retired_professor_icon_must_not_reappear(self) -> None:
         pages = valid_pages()
         pages["/professor/professor_icons.js"] += (
@@ -158,6 +184,16 @@ class SuspendedPortalMonitoringTests(unittest.TestCase):
         )
         self.assertTrue(any(
             "ícone do relatório descontinuado" in item
+            for item in validate_published_pages(pages)
+        ))
+
+    def test_retired_radar_icon_must_not_reappear(self) -> None:
+        pages = valid_pages()
+        pages["/professor/professor_icons.js"] += (
+            " 'radar-de-alunos': '<svg />'"
+        )
+        self.assertTrue(any(
+            "ícone do Radar de Alunos" in item
             for item in validate_published_pages(pages)
         ))
 
