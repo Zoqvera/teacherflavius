@@ -22,13 +22,17 @@
       <p>Três turmas individuais, cobrança recorrente por semana e acesso do aluno bloqueado.</p>
     </header>
     <p id="pageStatus" role="status" aria-live="polite">Verificando autorização...</p>
-    <form id="weeklyEnrollmentForm" hidden>
+    <form id="weeklyEnrollmentForm" autocomplete="off" hidden>
       <section>
         <h2>Dados da aluna</h2>
         <label>Nome completo<input name="name" type="text" maxlength="160" required></label>
         <div class="fields">
           <label>WhatsApp<input name="whatsapp" type="tel" autocomplete="off"></label>
-          <label>E-mail de contato (opcional)<input name="contact_email" type="email" maxlength="320"></label>
+          <div>
+            <label><input name="enable_contact_email" type="checkbox" autocomplete="off"> Incluir e-mail de contato</label>
+            <label>E-mail da aluna (opcional)<input name="contact_email" type="email" maxlength="320" autocomplete="off" disabled placeholder="Ative a opção acima para preencher"></label>
+            <p class="hint">Não informe o seu e-mail de professor nem um endereço já vinculado a outra conta. Se Silvia não informou um e-mail, deixe esta opção desmarcada.</p>
+          </div>
         </div>
       </section>
       <section>

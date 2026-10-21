@@ -229,6 +229,15 @@ Deno.serve(async (request: Request) => {
     return json({ error: error instanceof Error ? error.message : "Dados inválidos." }, 422, origin);
   }
 
+  const enteredEmail = enrollment.contact_email?.trim().toLowerCase();
+  const loggedInEmail = session.user.email?.trim().toLowerCase();
+  if (enteredEmail && loggedInEmail && enteredEmail === loggedInEmail) {
+    return json({
+      error: "O e-mail informado pertence ao cadastro do professor. " +
+        "Remova o e-mail de contato para cadastrar a aluna sem endereço eletrônico.",
+    }, 422, origin);
+  }
+
   // A separate Auth identity is necessary because profiles and class memberships
   // reference auth.users. It is banned and has no student-controlled credentials.
   const temporaryEmail = "student-" + crypto.randomUUID() + "@administrativo.teacherflavius.com";
@@ -315,6 +324,10 @@ Deno.serve(async (request: Request) => {
         ? String(error.message)
         : "Falha ao finalizar matrícula.";
     console.error("Administrative enrollment failed", message);
-    return json({ error: message }, 422, origin);
+    const safeMessage = message === "Já existe cadastro ativo com este e-mail."
+      ? "O e-mail de contato já pertence a outro cadastro. " +
+        "Retire esse endereço do formulário ou informe um e-mail exclusivo da aluna."
+      : message;
+    return json({ error: safeMessage }, 422, origin);
   }
 });
