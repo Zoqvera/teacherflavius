@@ -54,6 +54,7 @@ jobs:
           node --test tests/conversation_question_cards_contract.test.js
           node --test tests/web_push_notifications.test.js
           node --test tests/tuition_release_eligibility_contract.test.js
+          node --test tests/sync_next_tuition_after_billing_change_contract.test.js
           node --test tests/student_policy_notice_contract.test.js
           node --test tests/data_quality_lesson_history_contract.test.js
           node --test tests/historical_credit_integrity_contract.test.js
@@ -186,7 +187,8 @@ jobs:
             supabase/baseline/430_restore_lgpd_privacy_catalog_stage1d5.sql \
             supabase/baseline/435_late_payment_policy_quote_foundation.sql \
             supabase/baseline/440_late_payment_settlement_gateway.sql \
-            supabase/baseline/445_deactivate_late_payment_policy.sql
+            supabase/baseline/445_deactivate_late_payment_policy.sql \
+            supabase/baseline/450_sync_next_tuition_after_billing_change.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
