@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Matrícula administrativa — Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js"></script>
+  <script src="/module_loader.js"></script>
+  <script src="/auth.js"></script>
+  <link rel="stylesheet" href="/matricula-administrativa/styles.css">
+</head>
+<body class="auth-checking">
+  <main class="container">
+    <nav><a href="/professor/">Área do professor</a><a href="/perfil-dos-alunos/">Alunos</a></nav>
+    <header>
+      <span class="eyebrow">GESTÃO ADMINISTRATIVA</span>
+      <h1>Matricular aluno</h1>
+      <p>Cadastre o aluno, vincule-o à turma e defina suas mensalidades. O acesso ao portal permanece bloqueado.</p>
+    </header>
+    <p id="pageStatus" role="status" aria-live="polite">Verificando acesso do professor...</p>
+    <form id="enrollmentForm" hidden>
+      <section>
+        <h2>Identificação</h2>
+        <label>Nome completo <input name="name" type="text" autocomplete="off" maxlength="160" required></label>
+        <div class="fields">
+          <label>E-mail de contato (opcional) <input name="contact_email" type="email" maxlength="320" autocomplete="off"></label>
+          <label>WhatsApp (opcional) <input name="whatsapp" type="tel" inputmode="tel" autocomplete="off"></label>
+        </div>
+      </section>
+      <section>
+        <h2>Vínculo acadêmico</h2>
+        <label>Turma <select name="class_number" id="classNumber" required><option value="">Selecione a turma</option></select></label>
+        <label>Primeira aula do aluno <input name="first_lesson_date" id="firstLessonDate" type="date" required></label>
+        <p id="classHint" class="hint">Selecione uma turma para conferir o dia e horário.</p>
+      </section>
+      <section>
+        <h2>Plano financeiro</h2>
+        <div class="fields">
+          <label>Mensalidade (R$) <input name="monthly_fee" type="number" min="0.01" max="100000" step="0.01" value="50.00" required></label>
+          <label>Aulas por mês <input name="classes_per_month" type="number" min="1" max="31" step="1" value="4" required></label>
+          <label>Dia recorrente do vencimento <input name="due_day" type="number" min="1" max="31" step="1" value="10" required></label>
+          <label>Primeiro vencimento <input name="first_due_date" id="firstDueDate" type="date" required></label>
+        </div>
+        <p class="hint">O primeiro vencimento pode ser diferente do dia recorrente. Cobranças serão geradas em aberto; pagamentos serão registrados separadamente.</p>
+      </section>
+      <section class="access">
+        <svg viewBox="0 0 24 24" role="img" aria-label="Acesso bloqueado">
+          <rect x="5" y="10" width="14" height="11" rx="2"></rect>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+        </svg>
+        <div>
+          <strong>Acesso do aluno desabilitado</strong>
+          <p>Nenhuma credencial de acesso será enviada ou disponibilizada ao aluno.</p>
+        </div>
+      </section>
+      <button id="submitButton" type="submit">Confirmar matrícula administrativa</button>
+      <p id="formStatus" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+  <script src="/matricula-administrativa/validation.js"></script>
+  <script src="/matricula-administrativa/app.js"></script>
+</body>
+</html>
