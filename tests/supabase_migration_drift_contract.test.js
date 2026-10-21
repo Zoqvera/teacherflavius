@@ -28,6 +28,7 @@ function runDriftScript({
   baseRef = "",
   allowPrNew = false,
   mockPresentationCatalog = false,
+  mockResendCatalog = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-drift-"),
@@ -48,6 +49,10 @@ function runDriftScript({
     `#!/usr/bin/env bash
 if [[ "$*" == *"lesson_presentations_catalog_attestation.sql"* ]]; then
   echo "${mockPresentationCatalog ? "t" : "f"}"
+  exit 0
+fi
+if [[ "$*" == *"resend_delivery_catalog_attestation.sql"* ]]; then
+  echo "${mockResendCatalog ? "t" : "f"}"
   exit 0
 fi
 cat <<'REMOTE_ROWS'
@@ -83,6 +88,7 @@ function runDriftCheck({
   cutoff = "20261006000000",
   allowPrNew = false,
   mockPresentationCatalog = false,
+  mockResendCatalog = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-files-"),
@@ -99,6 +105,7 @@ function runDriftCheck({
       cutoff,
       allowPrNew,
       mockPresentationCatalog,
+      mockResendCatalog,
     });
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -690,5 +697,46 @@ test("withdrawn fee-policy ledger alias requires both exact SQL digests", () => 
   ]) {
     const rejected = runDriftCheck({ migrations, remoteRows: forged });
     assert.equal(rejected.status, 1, rejected.stdout + rejected.stderr);
+  }
+});
+
+test("manual Resend migration permits only the exact pinned SQL and attested catalog", () => {
+  const filename = "20261016213000_resend_delivery_tracking_and_retention.sql";
+  const sql = read("supabase/migrations/" + filename);
+  const attestation = read("scripts/sql/resend_delivery_catalog_attestation.sql");
+  const digest = "e7e2b901b2b7d2f7aa9346e622cbe61282205ff943af4d865512465fba2936a7";
+  const remote = [{
+    version: "20261016213000",
+    name: "resend_delivery_tracking_and_retention",
+    checksum: canonicalChecksum(""),
+  }];
+
+  assert.equal(canonicalChecksum(sql), digest);
+  assert.ok(driftScript.includes(digest));
+  assert.match(driftScript, /verify_manual_resend_delivery_catalog/);
+  assert.match(attestation, /supabase_migrations\.schema_migrations/);
+  assert.match(attestation, /relrowsecurity/);
+  assert.match(attestation, /has_function_privilege/);
+  assert.match(attestation, /has_table_privilege/);
+  assert.match(attestation, /prune_resend_delivery_evidence/);
+  assert.doesNotMatch(attestation, /^\s*(?:insert|update|delete|drop|alter|create|truncate)\s+/gim);
+
+  const accepted = runDriftCheck({
+    migrations: { [filename]: sql },
+    remoteRows: remote,
+    mockResendCatalog: true,
+  });
+  assert.equal(accepted.status, 0, accepted.stdout + "\n" + accepted.stderr);
+  assert.match(accepted.stdout, /Pinned Resend SHA256 and read-only production catalog attestation match/);
+
+  for (const scenario of [
+    { migrations: { [filename]: sql }, remoteRows: remote, mockResendCatalog: false },
+    { migrations: { [filename]: sql + "\nselect 999;" }, remoteRows: remote, mockResendCatalog: true },
+    { migrations: { [filename]: sql }, remoteRows: [{ ...remote[0], name: "forged" }], mockResendCatalog: true },
+    { migrations: { [filename]: sql }, remoteRows: [{ ...remote[0], checksum: "0".repeat(64) }], mockResendCatalog: true },
+    { migrations: { [filename]: sql }, remoteRows: [{ ...remote[0], version: "20261016213001" }], mockResendCatalog: true },
+  ]) {
+    const rejected = runDriftCheck(scenario);
+    assert.equal(rejected.status, 1, rejected.stdout + "\n" + rejected.stderr);
   }
 });
