@@ -289,3 +289,60 @@ where credit_origin = 'contract'
   and regular_starts_at is not null;
 
 revoke all on function private.sync_lesson_credits_for_tuition(uuid) from public, anon, authenticated;
+
+-- New enrollments on a lesson weekday begin the following week.
+CREATE OR REPLACE FUNCTION private.assign_first_lesson_after_membership()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  scheduled_weekday smallint;
+  scheduled_time time without time zone;
+  class_first_date date;
+  assignment_time timestamptz := coalesce(new.created_at, statement_timestamp());
+  candidate_date date;
+begin
+  select tc.class_weekday, tc.class_start_time, tc.first_lesson_date
+  into scheduled_weekday, scheduled_time, class_first_date
+  from public.teacher_classes tc
+  where tc.class_number = new.class_number;
+
+  if scheduled_weekday is null or scheduled_time is null then
+    return new;
+  end if;
+
+  candidate_date := (assignment_time at time zone 'America/Sao_Paulo')::date;
+  candidate_date := candidate_date
+    + ((scheduled_weekday::integer - extract(isodow from candidate_date)::integer + 7) % 7);
+
+  -- Enrollment on the same weekday starts in the following week, even
+  -- when the lesson has not started yet.
+  if candidate_date = (assignment_time at time zone 'America/Sao_Paulo')::date then
+    candidate_date := candidate_date + 7;
+  end if;
+
+  -- A lesson that has already started cannot be the student's first lesson.
+  if ((candidate_date + scheduled_time) at time zone 'America/Sao_Paulo')
+     <= assignment_time then
+    candidate_date := candidate_date + 7;
+  end if;
+
+  -- Respect a class-level start date and any later explicit student date.
+  if class_first_date is not null and candidate_date < class_first_date then
+    candidate_date := class_first_date
+      + ((scheduled_weekday::integer - extract(isodow from class_first_date)::integer + 7) % 7);
+  end if;
+
+  new.first_lesson_date := greatest(
+    coalesce(new.first_lesson_date, candidate_date),
+    candidate_date
+  );
+
+  return new;
+end;
+$function$
+;
+
+revoke all on function private.assign_first_lesson_after_membership() from public, anon, authenticated;
