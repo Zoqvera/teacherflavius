@@ -309,7 +309,11 @@ Deno.serve(async (request: Request) => {
     if (cleanupError) {
       console.error("Could not remove incomplete administrative student identity", cleanupError.message);
     }
-    const message = error instanceof Error ? error.message : "Falha ao finalizar matrícula.";
+    const message = error instanceof Error
+      ? error.message
+      : error && typeof error === "object" && "message" in error
+        ? String(error.message)
+        : "Falha ao finalizar matrícula.";
     console.error("Administrative enrollment failed", message);
     return json({ error: message }, 422, origin);
   }
