@@ -79,8 +79,6 @@ module.exports = [
       "analytics_payments.js",
       "trial_lesson_scheduler.js",
       "reservas-de-vagas/reservations.js",
-      "alunos-do-dia/whatsapp_contact.js",
-      "alunos-do-dia/alunos_do_dia.js",
       "payment_operations_dashboard.js",
       "payment_refund_operations.js",
       "payment_chargeback_operations.js",
