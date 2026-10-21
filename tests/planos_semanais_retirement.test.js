@@ -15,17 +15,19 @@ test("professor dashboard omits the Planos Semanais card and keeps other reports
   assert.doesNotMatch(dashboard, /data-card-id="planos-semanais"|href="\/planos-semanais\/"/);
   assert.doesNotMatch(icons, /'planos-semanais':/);
   assert.match(dashboard, /data-card-id="relatorios"/);
-  assert.match(dashboard, /data-card-id="radar-de-alunos"/);
-  assert.match(dashboard, /professor_home\.js\?v=20261016-retire-plans-1/);
+  assert.doesNotMatch(dashboard, /data-card-id="radar-de-alunos"/);
+  assert.match(dashboard, /professor_home\.js\?v=20261021-retire-radar-1/);
 });
 
-test("professor dashboard removes the obsolete card from cached markup", () => {
+test("professor dashboard removes retired cards from cached markup", () => {
   const script = read("professor_home.js");
 
-  assert.match(script, /const RETIRED_REPORT_CARD_ID = "planos-semanais";/);
-  assert.match(script, /function removeRetiredProfessorReportCard\(\)/);
+  assert.match(script, /const RETIRED_PROFESSOR_CARD_IDS = Object\.freeze\(\[/);
+  assert.match(script, /"planos-semanais"/);
+  assert.match(script, /"radar-de-alunos"/);
+  assert.match(script, /function removeRetiredProfessorCards\(\)/);
   assert.match(script, /if \(retiredCard\) retiredCard\.remove\(\);/);
-  assert.ok(script.indexOf("removeRetiredProfessorReportCard();") < script.indexOf("ensureDynamicProfessorCards();"));
+  assert.ok(script.indexOf("removeRetiredProfessorCards();") < script.indexOf("ensureDynamicProfessorCards();"));
 });
 
 test("retired report URL displays a static notice without loading student data", () => {
