@@ -12,6 +12,7 @@ let studentBillingLoaded = false;
 let studentCourseStateMap = new Map();
 let studentCourseStateLoaded = false;
 let studentAcquisitionMap = new Map();
+let administrativeStudentIds = new Set();
 let selectedStudentForCourseState = null;
 
 function redirectToLogin() {
@@ -173,6 +174,10 @@ function filterStudents(students) {
     return students.filter(function (student) { return !hasAssignedClass(student); });
   }
 
+  if (currentStudentFilter === "administrative") {
+    return students.filter(student => administrativeStudentIds.has(String(student.user_id || student.id)));
+  }
+
   if (currentStudentFilter === "enrolled") {
     return students.filter(isEnrolledStudent);
   }
@@ -205,6 +210,11 @@ function getFilterMetadata() {
       title: "Todos os alunos",
       heading: "Perfis completos",
       empty: "Nenhum aluno matriculado ou pré-matriculado encontrado."
+    },
+    administrative: {
+      title: "Matrículas administrativas",
+      heading: "Alunos sem acesso ao portal",
+      empty: "Nenhum aluno com matrícula administrativa encontrado."
     },
     without_class: {
       title: "Alunos sem turma",
@@ -917,7 +927,8 @@ function renderProfileCard(student) {
   const userId = student.user_id || "";
   const studentName = student.name || student.email || "Aluno sem nome";
   const assignedClasses = getStudentClassNames(student);
-  const pillLabel = preEnrolled ? "Pré-matriculado" : "Matriculado";
+  const isAdministrative = administrativeStudentIds.has(String(userId));
+  const pillLabel = preEnrolled ? "Pré-matriculado" : (isAdministrative ? "Matrícula administrativa — sem acesso" : "Matriculado");
   const sourceLabel = preEnrolled ? "Pré-matrícula por convite" : (student.source || "Não informado");
   const acquisition = studentAcquisitionMap.get(String(userId)) || {};
   const courseState = getStudentCourseState(student);
@@ -1018,7 +1029,12 @@ window.applyStudentFilter = applyStudentFilter;
 async function renderStudentProfiles() {
   const list = document.getElementById("studentProfilesList");
   try {
-    const students = await loadStudents();
+    const [students, modeResponse] = await Promise.all([
+      loadStudents(),
+      Auth.getClient().rpc("get_teacher_administrative_student_ids")
+    ]);
+    if (modeResponse.error) throw modeResponse.error;
+    administrativeStudentIds = new Set((modeResponse.data || []).map(item => String(item.student_id)));
     cachedVisibleStudents = students.filter(isVisibleStudent);
     updateExcelDownloadButton();
     renderFilteredStudents();
