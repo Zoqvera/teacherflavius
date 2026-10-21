@@ -31,7 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="/auth.js?v=20260430-3"></script>
   <script src="https://sdk.mercadopago.com/js/v2"></script>
-  <link rel="stylesheet" href="/pagamento/style.css?v=20261020-late-charges-1">
+  <link rel="stylesheet" href="/pagamento/style.css?v=20261021-revert-1">
 </head>
 <body class="auth-checking payment-page">
 <!-- Google Tag Manager (noscript) -->
@@ -64,28 +64,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <p id="paymentPageMessage" class="payment-message" role="status" aria-live="polite">Verificando sua conta...</p>
 
-    <aside class="late-payment-notice" aria-labelledby="latePaymentNoticeTitle">
-      <svg class="late-payment-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.5h.01"></path>
-      </svg>
-      <div>
-        <h2 id="latePaymentNoticeTitle">Informações sobre pagamentos em atraso</h2>
-        <p>Quando previstos nas condições aplicáveis à contratação, pagamentos após o vencimento estão sujeitos a multa moratória de <strong>2% uma única vez</strong> e juros simples de <strong>1% ao mês</strong>, calculados proporcionalmente aos dias de atraso. Os encargos efetivamente exigíveis devem ser discriminados antes da confirmação do pagamento.</p>
-      </div>
-    </aside>
-
-    <section id="latePaymentTermsConsent" class="late-payment-consent" aria-labelledby="latePaymentTermsHeading" hidden>
-      <h2 id="latePaymentTermsHeading">Atualização das condições de pagamento</h2>
-      <p>Para novos encargos contratuais, o aluno precisa concordar expressamente com as condições. Em mensalidades já vencidas, os novos percentuais somente poderão contar a partir do dia seguinte ao aceite, sem recálculo dos dias anteriores. Pagamentos já iniciados não serão alterados.</p>
-      <label class="late-payment-consent__check">
-        <input id="latePaymentTermsCheckbox" type="checkbox" aria-label="Concordo com as condições de multa e juros por atraso">
-        <span>Li e concordo com multa única de 2% e juros simples de 1% ao mês, proporcionais aos dias de atraso elegíveis.</span>
-      </label>
-      <button id="latePaymentTermsAcceptButton" class="secondary-button" type="button" disabled>REGISTRAR CONCORDÂNCIA</button>
-      <p id="latePaymentTermsStatus" role="status" aria-live="polite"></p>
-      <p class="late-payment-consent__detail">A concordância é voluntária. Ela não impede o pagamento dos valores originais já devidos. Para menores de idade, as novas condições precisam ser formalizadas com o responsável legal.</p>
-    </section>
-
     <section id="paymentWorkspace" class="payment-workspace" hidden>
       <aside class="tuition-panel" aria-labelledby="tuitionListTitle">
         <div class="panel-heading">
@@ -100,15 +78,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <p class="payment-eyebrow">Pagamento</p>
           <h2 id="checkoutTitle">Carregando mensalidade...</h2>
           <p id="checkoutDescription">A cobrança mais próxima será selecionada automaticamente.</p>
-          <div id="checkoutLateBreakdown" class="checkout-late-breakdown" hidden aria-live="polite">
-            <h3>Detalhamento da cobrança</h3>
-            <dl>
-              <div><dt>Mensalidade</dt><dd id="latePrincipalAmount">—</dd></div>
-              <div><dt>Multa por atraso</dt><dd id="lateFineAmount">—</dd></div>
-              <div><dt>Juros proporcionais</dt><dd id="lateInterestAmount">—</dd></div>
-              <div class="checkout-late-breakdown__total"><dt>Total a pagar</dt><dd id="lateTotalAmount">—</dd></div>
-            </dl>
-          </div>
         </div>
 
         <div id="paymentBrickLoading" class="brick-loading" hidden>Carregando o ambiente seguro do Mercado Pago...</div>
@@ -159,10 +128,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </section>
   </main>
 
-  <script src="/pagamento/late_payment_terms.js?v=20261020-1"></script>
   <script src="/pagamento/payment_idempotency.js?v=20260909-1"></script>
   <script src="/pagamento/tuition_history.js?v=20261008-1"></script>
-  <script src="/pagamento/app.js?v=20261020-late-charges-1"></script>
+  <script src="/pagamento/app.js?v=20261021-revert-1"></script>
   <script>
     (function(){
       const button=document.getElementById('verifyPaymentButton');

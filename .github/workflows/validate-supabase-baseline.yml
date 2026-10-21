@@ -24,8 +24,6 @@ jobs:
 
       - name: Validate application database contracts
         run: |
-          node --test tests/payment_late_terms_contract.test.js
-          node --test tests/payment_late_gateway_contract.test.js
           node --test tests/student_two_class_links_contract.test.js
           node --test tests/tuition_due_day_required_contract.test.js
           node --test tests/first_tuition_data_integrity_contract.test.js
@@ -187,7 +185,8 @@ jobs:
             supabase/baseline/425_restore_roadmap_teacher_and_exercise_read_policies.sql \
             supabase/baseline/430_restore_lgpd_privacy_catalog_stage1d5.sql \
             supabase/baseline/435_late_payment_policy_quote_foundation.sql \
-            supabase/baseline/440_late_payment_settlement_gateway.sql
+            supabase/baseline/440_late_payment_settlement_gateway.sql \
+            supabase/baseline/445_deactivate_late_payment_policy.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
@@ -536,24 +535,6 @@ jobs:
           test -n "$DB_CONTAINER"
           docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
             < tests/sql/student_review_invitation_baseline_security.sql
-
-      - name: Verify late-payment arithmetic in disposable PostgreSQL
-        shell: bash
-        run: |
-          set -euo pipefail
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
-          test -n "$DB_CONTAINER"
-          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            < tests/sql/late_payment_quote_contract.sql
-
-      - name: Verify immutable late-payment settlement in disposable PostgreSQL
-        shell: bash
-        run: |
-          set -euo pipefail
-          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
-          test -n "$DB_CONTAINER"
-          docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            < tests/sql/late_payment_gateway_homologation.sql
 
       - name: Compare restored catalog with production fingerprint
         shell: bash

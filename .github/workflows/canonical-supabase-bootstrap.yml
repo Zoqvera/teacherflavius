@@ -34,7 +34,7 @@ jobs:
             --manifest "${RUNNER_TEMP}/canonical-manifest.json" \
             --fingerprint-sql "${RUNNER_TEMP}/canonical-fingerprint.sql"
 
-          jq -e '.mode == "disposable-only" and .overlay_count == 88' \
+          jq -e '.mode == "disposable-only" and .overlay_count == 89' \
             "${RUNNER_TEMP}/canonical-manifest.json"
 
       - name: Install Supabase CLI

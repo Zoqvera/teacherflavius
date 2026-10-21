@@ -136,8 +136,7 @@ jobs:
       - name: Validate payment contracts
         run: >-
           node --test
-          tests/payment_late_terms_contract.test.js
-          tests/payment_late_gateway_contract.test.js
+          tests/payment_fee_rollback_contract.test.js
           tests/payment_idempotency.test.js
           tests/payment_gateway_contract.test.js
           tests/payment_reconciliation_monitor_contract.test.js
