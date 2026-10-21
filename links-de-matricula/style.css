@@ -1,0 +1,35 @@
+@import url('/brand_palette.css?v=20260820-3');
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:#06132c;color:#eef3ff;font-family:Arial,Helvetica,sans-serif}
+body{margin:0;min-height:100vh;background:linear-gradient(140deg,#031028,#112b5e)}
+.shell{width:min(100% - 32px,980px);margin:auto;padding:36px 0 70px}
+.back-link{color:#a8cfff;text-decoration:none;font-size:.95rem}
+.page-header{margin:28px 0}
+.eyebrow{font-size:.75rem;letter-spacing:.13em;font-weight:700;color:#91bcff}
+h1{font-size:clamp(2rem,4vw,3rem);margin:.4rem 0}
+h2{font-size:1.2rem;margin:0}
+p{color:#c3d1e9;line-height:1.55}
+.panel{margin:24px 0;padding:clamp(18px,3vw,28px);border:1px solid #49638b;border-radius:16px;background:#0b1d3c}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.invite-card{padding:20px 0;border-bottom:1px solid #3c5176}
+.invite-card:last-child{border-bottom:none}
+.invite-title{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.invite-title strong{font-size:1.05rem}
+.state{border:1px solid #7d9cc6;border-radius:30px;padding:3px 10px;color:#dae8ff;font-size:.8rem}
+.state.is-inactive{border-color:#a87979;color:#facccc}
+.invite-meta{margin:8px 0;font-size:.91rem;color:#b9cee9}
+.invite-url{width:100%;display:block;font-size:.87rem;white-space:normal;overflow-wrap:anywhere;color:#daebff;background:#091630;border:1px solid #334d76;padding:12px;border-radius:7px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+button{border:0;border-radius:8px;padding:11px 16px;font-size:.91rem;font-weight:700;cursor:pointer;background:#dfeaff;color:#071730}
+button.primary{background:#5f9eff;color:#04142e;margin-top:20px}
+button.secondary{background:#233d68;color:#fff;border:1px solid #6486b8}
+button:disabled{opacity:.6;cursor:wait}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+label{display:flex;flex-direction:column;gap:8px;font-weight:700;color:#e2ecff}
+input,select{width:100%;border-radius:8px;border:1px solid #6580a7;background:#071833;color:#f3f7ff;padding:12px;font:inherit}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #78b1ff;outline-offset:2px}
+.status{max-width:980px;margin:20px auto;padding:16px;color:#ffcfca}
+.status:empty{display:none}
+.notice{font-size:.88rem}
+@media(max-width:640px){.form-grid{grid-template-columns:1fr}.shell{padding-top:24px}.panel{padding:18px}.section-title{align-items:flex-start}}
