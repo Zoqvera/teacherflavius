@@ -7,7 +7,8 @@ const PROFESSOR_PATH = "/professor/";
 const LOGIN_PATH = "/login/";
 const RETIRED_PROFESSOR_CARD_IDS = Object.freeze([
   "planos-semanais",
-  "radar-de-alunos"
+  "radar-de-alunos",
+  "alunos-do-dia"
 ]);
 
 function removeRetiredProfessorCards() {
@@ -162,12 +163,6 @@ function ensureDynamicProfessorCards() {
     href: "/aulas-experimentais/",
     label: "AULAS EXPERIMENTAIS",
     beforeId: "reposicoes"
-  });
-  ensureProfessorDashboardCard({
-    id: "alunos-do-dia",
-    href: "/alunos-do-dia/",
-    label: "ALUNOS DO DIA",
-    beforeId: "aulas-experimentais"
   });
   ensureProfessorDashboardCard({
     id: "marketing-acquisition",

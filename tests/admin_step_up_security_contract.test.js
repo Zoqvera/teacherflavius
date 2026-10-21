@@ -17,7 +17,6 @@ const healthHtml = read("saude-do-sistema/index.html");
 const studentAccess = read("acessos_dos_alunos.js");
 const lessonEditor = read("criar_licao.js");
 const trialScheduler = read("trial_lesson_scheduler.js");
-const studentsOfDay = read("alunos-do-dia/alunos_do_dia.js");
 
 test("professor dashboard no longer exposes MFA step-up routing", function () {
   assert.equal(professorHome.includes("ProfessorMfaGate"), false);
@@ -32,7 +31,6 @@ test("administrative pages rely on the teacher role without MFA client gates", f
     studentAccess,
     lessonEditor,
     trialScheduler,
-    studentsOfDay,
     mensalidades,
     systemHealth
   ]) {
