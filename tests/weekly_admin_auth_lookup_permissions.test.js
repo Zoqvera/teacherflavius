@@ -30,7 +30,7 @@ test("the enrollment RPC uses invoker rights and never reads auth.users directly
   );
   assert.match(wrapper, /private\.is_banned_administrative_identity\(target_user_id\)/);
   assert.doesNotMatch(wrapper, /from auth\.users/i);
-  assert.match(wrapper, /security invoker/i);
+  assert.doesNotMatch(wrapper, /security definer/i);
   assert.match(migration, /revoke all on function public\.create_teacher_administrative_weekly_student_internal\([\s\S]*?from public,anon,authenticated/i);
 });
 
