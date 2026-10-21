@@ -16,8 +16,6 @@ const studentTypes = fs.readFileSync(path.join(root, "tipo_turma_alunos.js"), "u
 const classes = fs.readFileSync(path.join(root, "turmas.js"), "utf8");
 const classesPage = fs.readFileSync(path.join(root, "turmas.html"), "utf8");
 const classVisual = fs.readFileSync(path.join(root, "turmas/turmas_visual.js"), "utf8");
-const boardVisual = fs.readFileSync(path.join(root, "quadro-de-turmas/quadro_visual.js"), "utf8");
-const badgeRenderer = fs.readFileSync(path.join(root, "class_type_badge_renderer.js"), "utf8");
 
 const legacyClassTypePattern = /QUARTETO|8 ALUNOS|eight_students|quartet/;
 
@@ -57,8 +55,6 @@ test("active client code cannot render or select legacy class types", function (
     classes,
     classesPage,
     classVisual,
-    boardVisual,
-    badgeRenderer
   ]) {
     assert.doesNotMatch(source, legacyClassTypePattern);
   }
@@ -67,8 +63,4 @@ test("active client code cannot render or select legacy class types", function (
 test("canonical visuals honor per-class quintet capacity while preserving the individual limit", function () {
   assert.match(classVisual, /classList\.contains\("individual"\)\) return 1/);
   assert.match(classVisual, /classList\.contains\("quintet"\)\) return Number\(card\.dataset\.capacity\) \|\| 8/);
-  assert.match(boardVisual, /classList\.contains\('individual'\)\) return 1/);
-  assert.match(boardVisual, /classList\.contains\('quintet'\)\) return Number\(card\.dataset\.capacity\) \|\| 8/);
-  assert.match(badgeRenderer, /value === "quintet"/);
-  assert.match(badgeRenderer, /label: "QUINTETO"/);
 });

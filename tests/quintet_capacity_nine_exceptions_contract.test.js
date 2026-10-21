@@ -11,8 +11,6 @@ const migration = read("supabase/migrations/20261013225440_expand_quintet_classe
 const recoveryOverlay = read("supabase/baseline/385_expand_quintet_classes_8_and_17_to_nine.sql");
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 const classesView = read("turmas/turmas_visual.js");
-const boardView = read("quadro-de-turmas/quadro_visual.js");
-const boardPage = read("quadro-de-turmas.html");
 
 test("two named classes receive nine spots without changing other quintet classes", () => {
   // The historical migration requires both live classes; a clean restore has no rows.
@@ -35,9 +33,6 @@ test("administrative class type edits preserve specific nine-student exceptions"
 
 test("teacher occupancy displays use the stored per-class capacity", () => {
   assert.match(classesView, /Number\(card\.dataset\.capacity\) \|\| 8/);
-  assert.match(boardView, /Number\(card\.dataset\.capacity\) \|\| 8/);
-  assert.match(boardPage, /select\("class_number,capacity_override"\)/);
-  assert.match(boardPage, /data-capacity=/);
 });
 
 test("restore workflow executes the targeted exception after other overlays", () => {

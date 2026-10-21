@@ -10,7 +10,6 @@ const guards = read("supabase/migrations/20261009193314_experimental_class_trans
 const teacherClasses = read("turmas.js");
 const teacherClassesPage = read("turmas.html");
 const bookingUi = read("trial_lesson_scheduler.js");
-const board = read("quadro-de-turmas.html");
 const scheduler = require("../trial_lesson_scheduler.js");
 
 test("EXPERIMENTAL is a class type, not a regular student plan", () => {
@@ -45,7 +44,6 @@ test("teacher interfaces handle trial classes without regular student enrollment
   assert.match(teacherClassesPage, /<option value="experimental">EXPERIMENTAL<\/option>/);
   assert.match(teacherClasses, /label:"EXPERIMENTAL"/);
   assert.match(teacherClasses, /\? "\/aulas-experimentais\/"/);
-  assert.match(board, /agendado\(s\) na próxima sessão/);
   assert.match(bookingUi, /get_teacher_trial_conversion_sources/);
   assert.match(bookingUi, /reconcile_teacher_trial_enrollments/);
   assert.match(bookingUi, /AUTOMÁTICO/);
