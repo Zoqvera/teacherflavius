@@ -118,7 +118,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <input id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" required />
             </div>
 
-            <div id="classModeField" class="field full">
+            <div id="classModeField" class="field full" hidden>
               <label class="field-label" for="classMode">Tipo de aula</label>
               <select id="classMode" required>
                 <option value="" selected disabled>Selecione o tipo de aula</option>
@@ -236,7 +236,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       codeStep.hidden = !state.requiresAccessCode;
       accessForm.hidden = !state.requiresAccessCode || state.formUnlocked;
       profileForm.hidden = !state.formUnlocked;
-      classModeField.hidden = !state.requiresClassMode;
+      // An invitation already defines the modality on the server: no extra question.
+      // Legacy access codes retain their selection until those enrollments are retired.
+      classModeField.hidden = !state.requiresClassMode || !!authorizedInviteMode;
       classMode.required = state.requiresClassMode && !authorizedInviteMode;
       classMode.disabled = state.requiresClassMode && !!authorizedInviteMode;
       if (authorizedInviteMode && state.requiresClassMode) {
@@ -400,6 +402,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       try {
         const state = await refreshOnboardingState();
+        await applyAuthorizedPlan(state);
         configureFormForState(state);
 
         if (state.mode === "complete") {
@@ -424,7 +427,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (birthResponse.error) throw birthResponse.error;
 
         if (state.requiresClassMode) {
-          const classMode = document.getElementById("classMode").value;
+          const classMode = authorizedInviteMode || document.getElementById("classMode").value;
           const classType = classMode === "group"
             ? "QUINTETO"
             : classMode === "individual"
