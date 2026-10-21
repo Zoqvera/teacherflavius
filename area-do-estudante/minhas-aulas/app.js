@@ -306,7 +306,7 @@
       return '<p class="empty-state">A previsão das próximas aulas está indisponível no momento. Suas aulas confirmadas continuam válidas.</p>';
     }
 
-    const hasPredicted = getForecastLessons().some(function (lesson) {
+    const hasPredicted = getStudentAgendaLessons().some(function (lesson) {
       return lesson.status === "predicted";
     });
     if (!hasPredicted) return "";
