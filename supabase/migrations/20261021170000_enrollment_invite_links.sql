@@ -182,10 +182,8 @@ begin
     from private.enrollment_invite_links link
     where link.id = access_row.invite_link_id;
 
-    if selected_link.token = token_value then
-      return jsonb_build_object('ok', true, 'already_authorized', true);
-    end if;
-    raise exception 'Há outro plano validado para esta matrícula.';
+    -- Already-authorized students keep their original terms, even after a link rotates.
+    return jsonb_build_object('ok', true, 'already_authorized', true);
   end if;
 
   if access_row.authorized_at is not null then
@@ -193,7 +191,8 @@ begin
   end if;
 
   if access_row.locked_until is not null and access_row.locked_until > now() then
-    raise exception 'Muitas tentativas. Tente novamente em 15 minutos.';
+    return jsonb_build_object('ok', false, 'error',
+      'Muitas tentativas. Tente novamente em 15 minutos.');
   end if;
 
   if length(token_value) = 48 and token_value ~ '^[0-9a-f]+$' then
@@ -214,7 +213,8 @@ begin
         updated_at = now()
     where user_id = requester_id;
 
-    raise exception 'Link de matrícula inválido ou desativado.';
+    return jsonb_build_object('ok', false, 'error',
+      'Link de matrícula inválido ou desativado.');
   end if;
 
   update private.student_enrollment_access
