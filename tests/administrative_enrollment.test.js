@@ -58,7 +58,7 @@ test("validates fee, contracted classes and class type", () => {
 
 test("backend enrollment is atomic, service-role only and blocks portal access", () => {
   const sql = readFileSync(join(__dirname,
-    "../supabase/migrations/20261021170000_administrative_student_enrollment.sql"), "utf8");
+    "../supabase/migrations/20261021170211_administrative_student_enrollment.sql"), "utf8");
   assert.match(sql, /create_teacher_administrative_student_internal/);
   assert.match(sql, /security invoker/i);
   assert.match(sql, /grant execute on function public\.create_teacher_administrative_student_internal\([\s\S]*?to service_role/i);
