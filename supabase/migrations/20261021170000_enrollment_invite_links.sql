@@ -342,8 +342,8 @@ begin
     from private.student_enrollment_access access
     where access.user_id = new.id and access.authorized_at is not null;
 
-    if bound_mode is not null and new.class_type is distinct from
-      case bound_mode when 'group' then 'QUINTETO' else 'INDIVIDUAL' end
+    if (bound_mode = 'group' and new.class_type is distinct from 'QUINTETO')
+       or (bound_mode = 'individual' and new.class_type is distinct from 'INDIVIDUAL')
     then
       raise exception 'O tipo de aula não corresponde ao link de matrícula autorizado.'
         using errcode = '42501';
