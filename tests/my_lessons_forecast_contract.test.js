@@ -128,7 +128,7 @@ test("previously paying student can see forecast even when current tuition is ou
     paid: false,
     forecast: {
       prepaid_lessons: [],
-      predicted_lessons: [1, 2, 3, 4].map((day) => makeLesson("predicted", day)),
+      predicted_lessons: [5, 6, 7, 8].map((day) => makeLesson("predicted", day)),
       next_payment_due_date: "2026-10-20"
     }
   });
