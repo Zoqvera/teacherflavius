@@ -1,106 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- Google Consent Mode default -->
-<script>
-window.dataLayer = window.dataLayer || [];
-window.gtag = window.gtag || function(){dataLayer.push(arguments);};
-gtag('consent', 'default', {
-  analytics_storage: 'denied',
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  wait_for_update: 500
-});
-</script>
-<!-- End Google Consent Mode default -->
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
-<!-- End Google Tag Manager -->
-
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Criar Exercício - Teacher Flávio</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
-  <script src="supabase_config.js?v=20260429-2"></script>
-    <script src="/module_loader.js?v=20260902-2"></script>
-<script src="auth.js?v=20260429-2"></script>
-  <link rel="stylesheet" href="professor.css?v=20260429-2">
   <style>
-    .form-panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 20px; backdrop-filter: blur(12px); margin-bottom: 18px; }
-    .form-panel label { display:block; color:#cbd5e1; font-size:13px; margin:12px 0 6px; }
-    .form-panel input { width:100%; background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 13px; color:#f1f5f9; font-size:14px; font-family:Georgia, serif; }
-    .form-panel input:focus { outline:none; border-color:#818cf8; }
-    .schedule-grid { display:grid; grid-template-columns:1fr; gap:10px; }
-    .field-help { color:#94a3b8; font-size:12px; line-height:1.5; margin-top:7px; }
-    .exercise-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
-    .exercise-card strong { display:block; color:#f1f5f9; margin-bottom:8px; }
-    .exercise-card p { color:#cbd5e1; font-size:13px; line-height:1.5; margin:4px 0; word-break:break-word; }
-    @media (min-width: 680px) { .schedule-grid { grid-template-columns:1fr 1fr; } }
+    :root { color-scheme: light; font-family: Georgia, serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f8fafc; color: #0f172a; display: grid; place-items: center; padding: 24px; }
+    main { width: 100%; max-width: 630px; border: 1px solid #dbe3ef; border-radius: 16px; background: #fff; padding: clamp(24px, 6vw, 44px); text-align: center; }
+    svg { width: 42px; height: 42px; stroke: #475569; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    h1 { font-size: clamp(24px, 4vw, 32px); margin: 18px 0 12px; }
+    p { line-height: 1.7; color: #475569; }
+    a { display: inline-block; padding: 12px 22px; margin-top: 12px; border-radius: 10px; background: #1d4ed8; color: white; text-decoration: none; font-weight: bold; }
+    a:focus-visible { outline: 3px solid #0f172a; outline-offset: 3px; }
   </style>
 </head>
-<body class="auth-checking">
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-  <div class="container">
-    <div class="top-links">
-      <a class="top-link" href="professor.html">ÁREA DO PROFESSOR</a>
-      <a class="top-link" href="index.html">HOME</a>
-    </div>
-
-    <div class="header">
-      <div><span class="badge">TEACHER FLÁVIO</span></div>
-      <h1>Criar Exercício</h1>
-      <div id="adminStatus" class="status">Verificando credenciais de professor...</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="form-panel">
-      <h2>Novo exercício</h2>
-      <form id="createExerciseForm">
-        <label for="exerciseTitle">Título do exercício</label>
-        <input id="exerciseTitle" type="text" placeholder="Ex.: Exercício 30.04.26" required />
-
-        <label for="exerciseUrl">Link do exercício</label>
-        <input id="exerciseUrl" type="url" placeholder="https://..." required />
-
-        <div class="schedule-grid">
-          <div>
-            <label for="publishDate">Data de publicação</label>
-            <input id="publishDate" type="date" />
-          </div>
-          <div>
-            <label for="publishTime">Hora de publicação</label>
-            <input id="publishTime" type="time" />
-          </div>
-        </div>
-        <div class="field-help">Se data e hora ficarem em branco, o exercício será publicado imediatamente. Para programar a publicação, preencha os dois campos.</div>
-
-        <button class="delete-button" type="submit" style="border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">SALVAR EXERCÍCIO</button>
-        <div id="createExerciseMessage" class="empty" style="margin-top:10px;"></div>
-      </form>
-    </div>
-
-    <div class="panel">
-      <h2>Exercícios criados</h2>
-      <div id="teacherExercisesList" class="empty">Carregando exercícios...</div>
-    </div>
-  </div>
-  <script src="criar_exercicio.js?v=20260710-1"></script>
-  <script src="animated_cards.js?v=20260429-2"></script>
-    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
-<script src="/site_asset_loader.js?v=20260902-1"></script>
-
-<script src="/site_runtime_config.js?v=20260903-1"></script>
-<script src="/site_page_runtime.js?v=20260903-1"></script>
-<script defer src="/site_footer.js?v=20260814-1"></script>
+<body>
+  <main>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+    <h1>Criar Exercício descontinuado</h1>
+    <p>A criação e a exclusão de exercícios por esta ferramenta foram descontinuadas. Os exercícios anteriores e os registros de conclusão dos alunos estão preservados.</p>
+    <a href="/professor/">VOLTAR À ÁREA DO PROFESSOR</a>
+  </main>
 </body>
 </html>
