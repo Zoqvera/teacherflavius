@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#02102B">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Links de matrícula | Área do professor</title>
+  <link rel="stylesheet" href="/links-de-matricula/style.css?v=20261021-1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260429-9"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260818-google-auth-1"></script>
+  <script src="/enrollment_invite_client.js?v=20261021-1"></script>
+  <script src="/links-de-matricula/app.js?v=20261021-1" defer></script>
+</head>
+<body>
+  <main class="shell" id="adminPage" hidden>
+    <a class="back-link" href="/professor/">Voltar para a área do professor</a>
+    <header class="page-header">
+      <span class="eyebrow">ADMINISTRAÇÃO</span>
+      <h1>Links de matrícula</h1>
+      <p>Envie ao aluno o link correspondente ao plano contratado. Preço, frequência e modalidade serão definidos pelo servidor.</p>
+    </header>
+
+    <section class="panel" aria-labelledby="registeredHeading">
+      <div class="section-title">
+        <h2 id="registeredHeading">Links cadastrados</h2>
+        <button type="button" class="secondary" id="refreshLinks">Atualizar</button>
+      </div>
+      <div id="linksList" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="createHeading">
+      <h2 id="createHeading">Criar outro plano</h2>
+      <p>Para alterar o preço de uma oferta já compartilhada, crie outra e desative a anterior. Autorizações existentes serão preservadas.</p>
+      <form id="newLinkForm">
+        <div class="form-grid">
+          <label>Nome do plano
+            <input name="label" maxlength="80" minlength="3" required placeholder="Ex.: Grupo · 2 aulas por semana">
+          </label>
+          <label>Modalidade
+            <select name="classMode" required>
+              <option value="group">Aulas em grupo</option>
+              <option value="individual">Aulas individuais</option>
+            </select>
+          </label>
+          <label>Mensalidade (R$)
+            <input name="monthlyFee" type="number" min="0.01" max="10000" step="0.01" required placeholder="50,00">
+          </label>
+          <label>Aulas por mês
+            <input name="classesPerMonth" type="number" min="1" max="31" step="1" value="4" required>
+          </label>
+        </div>
+        <button type="submit" class="primary" id="createLink">Criar link de matrícula</button>
+      </form>
+    </section>
+    <p class="notice">Os códigos atuais continuam funcionando durante a transição. Links desativados impedem novas autorizações, sem alterar matrículas já iniciadas.</p>
+  </main>
+  <div class="status" id="adminStatus" role="status" aria-live="polite">Verificando acesso do professor...</div>
+</body>
+</html>
