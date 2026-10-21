@@ -9,7 +9,7 @@ const legacyFunction = fs.readFileSync(
   "utf8"
 );
 const migration = fs.readFileSync(
-  path.join(root, "supabase/migrations/20261021230000_hide_cancelled_students_after_class_finalization.sql"),
+  path.join(root, "supabase/migrations/20261021221000_hide_cancelled_students_after_class_finalization.sql"),
   "utf8"
 );
 
