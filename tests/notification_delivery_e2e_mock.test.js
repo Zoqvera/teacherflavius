@@ -126,7 +126,11 @@ function createNotificationFixture(options = {}) {
     "",
   );
   assert.ok(strippedImport.length < typescript.length, "strip only the known external SDK import");
-  const script = stripTypeScriptTypes(strippedImport);
+  const withoutDeliveryImport = strippedImport.replace(
+    /^import \{ recordResendAcceptance \} from "[^"]+";\r?\n/,
+    "",
+  );
+  const script = stripTypeScriptTypes(withoutDeliveryImport);
   vm.runInNewContext(script, {
     Deno: deno,
     createClient: () => supabase,

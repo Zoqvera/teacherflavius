@@ -41,6 +41,10 @@ class PreviewReplayFixtureTests(unittest.TestCase):
             "enabled = true",
             (self.repository / "supabase/config.toml").read_text(encoding="utf-8"),
         )
+        self.assertNotIn(
+            "[functions.resend-delivery-webhook]",
+            (self.staging / "supabase/config.toml").read_text(encoding="utf-8"),
+        )
         self.assertTrue(
             paths[0].read_text().rstrip().endswith(STOP_CRON.strip())
         )

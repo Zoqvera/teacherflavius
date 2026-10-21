@@ -93,9 +93,18 @@ def stage_replay(repository_root: Path, staging_root: Path) -> dict:
     disabled_setting = "enabled = false"
     if repository_config.count(disabled_setting) != 1:
         raise ValueError("Expected one disabled seed configuration.")
+    # Never copy production function/secret configuration into the
+    # disposable baseline replay. In particular, external webhook function
+    # entries require source files that are intentionally absent here.
+    # Preserve only the minimal known-safe project/seed fixture settings.
+    staging_config = (
+        'project_id = "teacherflavius-local-fixture"\n'
+        '\n[db.seed]\n'
+        'enabled = true\n'
+        'sql_paths = ["./seed.sql"]\n'
+    )
     (sql_dir / "config.toml").write_text(
-        repository_config.replace(disabled_setting, "enabled = true", 1),
-        encoding="utf-8",
+        staging_config, encoding="utf-8",
     )
     migrations_dir = sql_dir / "migrations"
     migrations_dir.mkdir(parents=True, exist_ok=True)
