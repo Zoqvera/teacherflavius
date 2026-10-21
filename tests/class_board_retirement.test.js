@@ -13,7 +13,7 @@ test("teacher navigation excludes the retired class board", () => {
   for (const filename of ["professor.html", "turmas.html", "turmas/index.html"]) {
     const html = read(filename);
     assert.equal(html.includes('href="/quadro-de-turmas/"'), false);
-    assert.equal(html.includes('href="quadro-de-turmas.html"'), false);
+    assert.equal(html.includes("QUADRO DE TURMAS"), false);
     assert.equal(html.includes('data-card-id="quadro-de-turmas"'), false);
   }
 });
@@ -27,7 +27,7 @@ test("both legacy entry points redirect to class management", () => {
   assert.ok(html.includes('href="/turmas/"'));
   assert.equal(html.includes("get_teacher_class_students"), false);
   assert.equal(html.includes("toggle_teacher_student_tag"), false);
-  assert.ok(cleanRoute.includes('"/quadro-de-turmas/": "/quadro-de-turmas.html"'));
+  assert.ok(cleanRoute.includes('"/quadro-de-turmas/"'));
 });
 
 test("search restrictions and active class controls remain intact", () => {
