@@ -143,7 +143,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/conversation-questions/` | gestão das perguntas de conversação |
 | `/perfil-dos-alunos/` | gestão de alunos e dados acadêmicos |
 | `/turmas/` | gestão de turmas |
-| `/quadro-de-turmas.html` | visão operacional das turmas |
+| `/quadro-de-turmas/` | rota legada; encaminha para `/turmas/` (recurso descontinuado) |
 | `/mensalidades/` | administração financeira |
 | `/reposicoes-admin/` | horários e reservas de reposição |
 | `/criar-exercicio/` | publicação de exercícios |
