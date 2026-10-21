@@ -668,3 +668,27 @@ test("server-assigned late-payment versions pass only with identical SQL", () =>
   assert.notEqual(invalid.status, 0);
   assert.match(invalid.stdout + invalid.stderr, /migration|drift|production|version/i);
 });
+
+
+test("withdrawn fee-policy ledger alias requires both exact SQL digests", () => {
+  const name = "deactivate_late_payment_policy";
+  const gitVersion = "20261021013000";
+  const remoteVersion = "20261021014028";
+  const localChecksum = "ef460e16063d7237a0160e83b99fc936c0d59aadfa81378c27fb95084b72fb0e";
+  const remoteChecksum = "6db4482a6a303867ad3ee7237abacb828c7270e1ad2894077ed77f371aa6c328";
+  const filename = gitVersion + "_" + name + ".sql";
+  const source = read("supabase/migrations/" + filename);
+  assert.equal(canonicalChecksum(source), localChecksum);
+  const migrations = { [filename]: source };
+  const remoteRows = [{ version: remoteVersion, name, checksum: remoteChecksum }];
+  const allowed = runDriftCheck({ migrations, remoteRows });
+  assert.equal(allowed.status, 0, allowed.stdout + allowed.stderr);
+
+  for (const forged of [
+    [{ version: remoteVersion, name, checksum: "0".repeat(64) }],
+    [{ version: remoteVersion, name: "changed", checksum: remoteChecksum }],
+  ]) {
+    const rejected = runDriftCheck({ migrations, remoteRows: forged });
+    assert.equal(rejected.status, 1, rejected.stdout + rejected.stderr);
+  }
+});
