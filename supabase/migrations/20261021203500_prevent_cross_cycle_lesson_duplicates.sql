@@ -260,7 +260,7 @@ begin
       else private.lesson_credits.regular_ends_at
     end;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.get_my_lesson_credits()
@@ -345,7 +345,7 @@ begin
     credit.reference_month asc,
     credit.credit_number asc;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.get_my_lesson_forecast()
@@ -548,5 +548,5 @@ begin
     'next_payment_due_date', next_payment_due_date
   );
 end;
-$function$
+$function$;
 
