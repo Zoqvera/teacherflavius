@@ -299,6 +299,15 @@ verify_manual_presentation_catalog() {
     --file "${ROOT_DIR}/scripts/sql/lesson_presentations_catalog_attestation.sql")"
   [[ "${result}" == 't' ]]
 }
+# Catalog-only verification for a manually registered Resend migration.
+# This must not rewrite production migration history or replay schema objects.
+verify_manual_resend_delivery_catalog() {
+  local result
+  result="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+    --file "${ROOT_DIR}/scripts/sql/resend_delivery_catalog_attestation.sql")"
+  [[ "${result}" == 't' ]]
+}
+
 filter_local_records_from_cutoff() {
   local records_file="$1"
 
@@ -416,6 +425,27 @@ VERIFIED_MIGRATION_ALIASES
       exit 1
     fi
   fi
+  # The pinned Resend migration is already applied, but its manually
+  # registered production ledger entry has no SQL statement snapshot.
+  # Accept only its exact immutable Git digest and a passing live catalog audit.
+  local resend_line expected_resend
+  resend_line="$(awk -F $'\t' '$1 == "20261016213000" {print}' "${mismatch_file}")"
+  printf -v expected_resend '%s\t%s\t%s\t%s\t%s' \
+    '20261016213000' 'resend_delivery_tracking_and_retention' \
+    'resend_delivery_tracking_and_retention' "${empty_sha}" \
+    'e7e2b901b2b7d2f7aa9346e622cbe61282205ff943af4d865512465fba2936a7'
+  if [[ "${resend_line}" == "${expected_resend}" ]]; then
+    if verify_manual_resend_delivery_catalog; then
+      awk -F $'\t' '$1 != "20261016213000"' "${mismatch_file}" \
+        > "${TEMP_DIR}/remaining_resend_identity_mismatch"
+      mv "${TEMP_DIR}/remaining_resend_identity_mismatch" "${mismatch_file}"
+      echo "::notice::Pinned Resend SHA256 and read-only production catalog attestation match; all other drift remains enforced."
+    else
+      echo "::error::Resend live catalog does not match the approved read-only attestation."
+      exit 1
+    fi
+  fi
+
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"
