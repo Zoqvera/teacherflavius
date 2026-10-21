@@ -285,7 +285,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
         const profile = await Auth.ensureProfileForUser(session.user);
         if (!profile || profile.profile_completed !== true) {
-          window.location.replace("/complete-cadastro/?next=" + encodeURIComponent(safeNext()));
+          const destination = safeNext();
+          // Preserve the invitation through the Google OAuth callback.
+          if (destination === "/complete-cadastro/" ||
+              destination.startsWith("/complete-cadastro/?")) {
+            window.location.replace(destination);
+          } else {
+            window.location.replace("/complete-cadastro/?next=" + encodeURIComponent(destination));
+          }
           return;
         }
         window.location.replace(safeNext());
