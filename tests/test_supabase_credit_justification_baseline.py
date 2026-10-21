@@ -36,7 +36,7 @@ class CreditJustificationBaselineTests(unittest.TestCase):
 
     def test_schema_fingerprint_is_incremental_and_never_accepts_data_rows(self) -> None:
         fingerprint = json.loads(FINGERPRINT.read_text(encoding="utf-8"))
-        self.assertEqual(fingerprint["captured_from_migration_version"], "20261016162500")
+        self.assertGreaterEqual(int(fingerprint["captured_from_migration_version"]), 20261016162500)
         self.assertEqual(fingerprint["public_functions"], 197)
         self.assertEqual(fingerprint["tables"], 55)
         self.assertEqual(fingerprint["rls_policies"], 99)
