@@ -309,7 +309,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         });
         if (response.error) throw response.error;
         if (!response.data || response.data.ok !== true) {
-          throw new Error("Este link de matrícula não está disponível.");
+          throw new Error(response.data && response.data.error || "Este link de matrícula não está disponível.");
         }
         return refreshOnboardingState();
       } catch (error) {
