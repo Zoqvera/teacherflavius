@@ -31,6 +31,8 @@ PUBLISHED_PATHS = LEGACY_PAGES + (
     "/professor_home.js",
     "/professor/professor_icons.js",
     "/planos-semanais/",
+    "/radar-de-alunos/",
+    "/radar_alunos.html",
     "/curso-de-ingles-online/",
     "/service-worker.js",
     "/supabase_config.js",
@@ -136,6 +138,11 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
         for href in professor_links.links
     ):
         problems.append("Área do Professor: card Planos Semanais reapareceu")
+    if any(
+        points_to_site_path(href, "/radar-de-alunos/")
+        for href in professor_links.links
+    ):
+        problems.append("Área do Professor: card Radar de Alunos reapareceu")
 
     professor_version = re.search(
         r'professor_home\.js\?v=(20\d{6})-[A-Za-z0-9-]+',
@@ -155,14 +162,18 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
 
     professor_script = pages.get("/professor_home.js", "")
     if (
-        'RETIRED_REPORT_CARD_ID = "planos-semanais"' not in professor_script
-        or "removeRetiredProfessorReportCard();" not in professor_script
+        'RETIRED_PROFESSOR_CARD_IDS = Object.freeze([' not in professor_script
+        or '"planos-semanais"' not in professor_script
+        or '"radar-de-alunos"' not in professor_script
+        or "removeRetiredProfessorCards();" not in professor_script
     ):
         problems.append("Área do Professor: proteção contra card antigo ausente")
 
     professor_icons = pages.get("/professor/professor_icons.js", "")
     if "'planos-semanais':" in professor_icons:
         problems.append("Área do Professor: ícone do relatório descontinuado reapareceu")
+    if "'radar-de-alunos':" in professor_icons:
+        problems.append("Área do Professor: ícone do Radar de Alunos reapareceu")
 
     report_page = pages.get("/planos-semanais/", "")
     if (
@@ -173,6 +184,18 @@ def validate_published_pages(pages: Mapping[str, str]) -> list[str]:
         or 'id="studentList"' in report_page
     ):
         problems.append("Planos Semanais: relatório descontinuado reativado ou aviso ausente")
+
+    for radar_path in ("/radar-de-alunos/", "/radar_alunos.html"):
+        radar_page = pages.get(radar_path, "")
+        if (
+            "Radar de Alunos descontinuado" not in radar_page
+            or 'href="/professor/"' not in radar_page
+            or "radar_alunos.js" in radar_page
+            or "radar_visual.js" in radar_page
+            or "supabase_config.js" in radar_page
+            or 'id="radarList"' in radar_page
+        ):
+            problems.append("Radar de Alunos: página descontinuada reativada ou aviso ausente")
 
     marketing = pages.get("/curso-de-ingles-online/", "")
     if marketing.count("Portal de Exercícios") < 2:

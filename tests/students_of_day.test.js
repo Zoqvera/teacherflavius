@@ -228,5 +228,5 @@ test("provides an SVG icon for the Alunos do dia professor card", function () {
     professorIconsScript,
     /'alunos-do-dia': '<svg[^']+<\/svg>'/
   );
-  assert.match(professorPage, /professor_icons\.js\?v=20261016-retire-plans-1/);
+  assert.match(professorPage, /professor_icons\.js\?v=20261021-retire-radar-1/);
 });
