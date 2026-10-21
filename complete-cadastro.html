@@ -31,6 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260818-google-auth-1"></script>
   <script src="/enrollment_onboarding_state.js?v=20261006-1"></script>
+  <script src="/enrollment_invite_client.js?v=20261021-1"></script>
   <script src="/student_acquisition.js?v=20261017-1"></script>
   <script src="/student_profile_optional.js?v=20260902-1"></script>
   
@@ -83,6 +84,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </form>
 
       <form id="completeProfileForm" hidden>
+        <section id="enrollmentPlanSummary" class="form-section enrollment-plan-summary" aria-label="Plano de matrícula" hidden></section>
         <section class="form-section" aria-labelledby="personalDataTitle">
           <div class="section-heading">
             <h2 id="personalDataTitle">Dados do estudante</h2>
@@ -197,6 +199,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const NEW_ENROLLMENT_MODE = "new_enrollment";
     const EXISTING_PROFILE_MODE = "existing_student_profile_completion";
     let currentOnboardingState = null;
+    let authorizedInviteMode = null;
 
     function getOnboardingStateService() {
       if (!window.EnrollmentOnboardingState) {
@@ -234,7 +237,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       accessForm.hidden = !state.requiresAccessCode || state.formUnlocked;
       profileForm.hidden = !state.formUnlocked;
       classModeField.hidden = !state.requiresClassMode;
-      classMode.required = state.requiresClassMode;
+      classMode.required = state.requiresClassMode && !authorizedInviteMode;
+      classMode.disabled = state.requiresClassMode && !!authorizedInviteMode;
+      if (authorizedInviteMode && state.requiresClassMode) {
+        classMode.value = authorizedInviteMode;
+      }
       document.getElementById("acquisitionSource").required = !existingProfile;
 
       codeStep.classList.toggle("is-current", state.requiresAccessCode && !state.formUnlocked);
@@ -256,12 +263,69 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       updateSubmitButton(state);
     }
 
+
+    async function applyAuthorizedPlan(state) {
+      authorizedInviteMode = null;
+      const summary = document.getElementById("enrollmentPlanSummary");
+      summary.hidden = true;
+      summary.textContent = "";
+
+      if (state.mode !== NEW_ENROLLMENT_MODE || !state.formUnlocked) return;
+
+      const response = await Auth.getClient().rpc("get_my_authorized_enrollment_plan");
+      if (response.error) throw response.error;
+
+      const plan = response.data || {};
+      if (plan.class_mode === "group" || plan.class_mode === "individual") {
+        authorizedInviteMode = plan.class_mode;
+      }
+
+      if (plan.monthly_fee != null && plan.classes_per_month != null) {
+        const title = document.createElement("h2");
+        title.textContent = "Seu plano de matrícula";
+        const detail = document.createElement("p");
+        const amount = Number(plan.monthly_fee).toLocaleString("pt-BR", {
+          style: "currency", currency: "BRL"
+        });
+        const modality = authorizedInviteMode === "group"
+          ? "Aulas em grupo"
+          : authorizedInviteMode === "individual"
+            ? "Aulas individuais"
+            : "Modalidade selecionada no cadastro";
+        detail.textContent = modality + " · " + plan.classes_per_month +
+          " aulas por mês · " + amount + " por mês";
+        summary.append(title, detail);
+        summary.hidden = false;
+      }
+    }
+
+    async function applyInvitation(state) {
+      const token = window.EnrollmentInviteClient.readInviteToken(window.location.search);
+      if (!token || state.mode !== NEW_ENROLLMENT_MODE) return state;
+
+      try {
+        const response = await Auth.getClient().rpc("authorize_my_enrollment_link", {
+          target_token: token
+        });
+        if (response.error) throw response.error;
+        if (!response.data || response.data.ok !== true) {
+          throw new Error("Este link de matrícula não está disponível.");
+        }
+        return refreshOnboardingState();
+      } catch (error) {
+        document.getElementById("enrollmentAccessMessage").textContent =
+          error.message || "Não foi possível validar o link. Solicite um novo ao professor.";
+        return state;
+      }
+    }
+
     async function initialize() {
       const user = await Auth.requireAuth({ skipProfileCheck: true });
       if (!user) return;
 
       const profile = await Auth.ensureProfileForUser(user);
-      const state = await refreshOnboardingState();
+      let state = await refreshOnboardingState();
+      state = await applyInvitation(state);
 
       if (state.mode === "complete") {
         window.location.replace(getNextPath());
@@ -284,6 +348,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (acquisition.error) throw acquisition.error;
       const recorded = acquisition.data || {};
       window.StudentAcquisition.setup("acquisitionSource", "acquisitionDetail", recorded.source, recorded.detail);
+      await applyAuthorizedPlan(state);
       configureFormForState(state);
     }
 
@@ -313,6 +378,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         codeInput.value = "";
         const state = await refreshOnboardingState();
+        await applyAuthorizedPlan(state);
         configureFormForState(state);
         document.getElementById("name").focus();
       } catch (error) {
@@ -416,7 +482,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
     });
 
-    initialize();
+    initialize().catch(function (error) {
+      document.getElementById("enrollmentAccessMessage").textContent =
+        error.message || "Não foi possível carregar sua matrícula.";
+    });
   </script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
