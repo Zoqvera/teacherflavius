@@ -232,7 +232,14 @@ Deno.serve(async (request: Request) => {
   // A separate Auth identity is necessary because profiles and class memberships
   // reference auth.users. It is banned and has no student-controlled credentials.
   const temporaryEmail = "student-" + crypto.randomUUID() + "@administrativo.teacherflavius.com";
-  const randomPassword = crypto.randomUUID() + crypto.randomUUID() + crypto.randomUUID();
+  // Each UUID contributes 32 cryptographically random hexadecimal characters.
+  // Keep the full technical password below Supabase Auth's 72-byte bcrypt limit.
+  // These credentials are never delivered and the account is banned separately.
+  const randomPassword = [
+    crypto.randomUUID().replaceAll("-", ""),
+    crypto.randomUUID().replaceAll("-", ""),
+    "Aa1!",
+  ].join("");
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email: temporaryEmail,
     password: randomPassword,
