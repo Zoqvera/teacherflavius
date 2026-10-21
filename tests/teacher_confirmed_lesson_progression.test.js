@@ -8,7 +8,7 @@ const read = (relativePath) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
 const progressionMigration = read(
-  "supabase/migrations/20261021142500_advance_lesson_only_after_teacher_presentation.sql"
+  "supabase/migrations/20261021142907_advance_lesson_only_after_teacher_presentation.sql"
 );
 const academicWorkflow = read(
   "supabase/migrations/20261004080244_add_academic_lesson_workflow.sql"
