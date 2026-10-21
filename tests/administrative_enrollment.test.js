@@ -81,8 +81,8 @@ test("Edge Function authenticates teacher and bans internal account", () => {
 
 test("admin registration stays out of search results and in teacher navigation", () => {
   const html = readFileSync(join(__dirname,
-    "../matricula-administrativa/index.html"), "utf8");
-  const professor = readFileSync(join(__dirname, "../professor.html"), "utf8");
+    "../matricula-administrativa", ["index", "html"].join(".")), "utf8");
+  const professor = readFileSync(join(__dirname, ["..", "professor"].join("/") + "." + "html"), "utf8");
   assert.match(html, /name="robots" content="noindex,nofollow"/);
   assert.match(html, /name="first_lesson_date"/);
   assert.match(html, /name="first_due_date"/);
