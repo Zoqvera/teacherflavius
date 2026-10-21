@@ -18,27 +18,6 @@
       src: "/animated_cards_visuals.js?v=20260902-1",
       missingMessage: "O módulo visual dos cards não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o módulo visual dos cards."
-    }),
-    Object.freeze({
-      globalName: "ClassTypeService",
-      selector: 'script[src^="/class_type_service.js"]',
-      src: "/class_type_service.js?v=20260902-1",
-      missingMessage: "O serviço de tipos de turma não foi inicializado.",
-      loadErrorMessage: "Não foi possível carregar o serviço de tipos de turma."
-    }),
-    Object.freeze({
-      globalName: "ClassTypeBadgeRenderer",
-      selector: 'script[src^="/class_type_badge_renderer.js"]',
-      src: "/class_type_badge_renderer.js?v=20261009-experimental-1",
-      missingMessage: "O renderer de etiquetas de turma não foi inicializado.",
-      loadErrorMessage: "Não foi possível carregar o renderer de etiquetas de turma."
-    }),
-    Object.freeze({
-      globalName: "ClassTypeBadges",
-      selector: 'script[src^="/class_type_badges.js"]',
-      src: "/class_type_badges.js?v=20260902-2",
-      missingMessage: "O módulo de etiquetas de turma não foi inicializado.",
-      loadErrorMessage: "Não foi possível carregar o módulo de etiquetas de turma."
     })
   ]);
 
@@ -85,12 +64,10 @@
 
   function initializeFeatures() {
     initializeModule("AnimatedCardsVisuals");
-    initializeModule("ClassTypeBadges");
   }
 
   function refreshFeatures() {
     refreshModule("AnimatedCardsVisuals");
-    refreshModule("ClassTypeBadges");
   }
 
   function observeDynamicContent() {
