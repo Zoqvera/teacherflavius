@@ -17,8 +17,8 @@ test("Radar de Alunos is absent from the professor dashboard and icon registry",
   assert.doesNotMatch(icons, /'radar-de-alunos':/);
   assert.match(script, /"radar-de-alunos"/);
   assert.match(script, /removeRetiredProfessorCards\(\);/);
-  assert.match(dashboard, /professor_home\.js\?v=20261021-retire-radar-1/);
-  assert.match(dashboard, /professor_icons\.js\?v=20261021-retire-radar-1/);
+  assert.match(dashboard, /professor_home\.js\?v=20261021-retire-exercise-1/);
+  assert.match(dashboard, /professor_icons\.js\?v=20261021-retire-exercise-1/);
 });
 
 test("both legacy URLs explain retirement without loading student data", () => {

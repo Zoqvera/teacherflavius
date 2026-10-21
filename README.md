@@ -146,7 +146,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/quadro-de-turmas/` | rota legada; encaminha para `/turmas/` (recurso descontinuado) |
 | `/mensalidades/` | administração financeira |
 | `/reposicoes-admin/` | horários e reservas de reposição |
-| `/criar-exercicio/` | publicação de exercícios |
+| `/criar-exercicio/` | rota administrativa descontinuada; histórico preservado |
 | `/exercicios-dos-alunos/` | acompanhamento de atividades |
 | `/acessos-dos-alunos/` | relatório de acesso administrativo |
 | `/relatorios/` | relatórios administrativos |

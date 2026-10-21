@@ -8,6 +8,7 @@ const LOGIN_PATH = "/login/";
 const RETIRED_PROFESSOR_CARD_IDS = Object.freeze([
   "planos-semanais",
   "radar-de-alunos",
+  "criar-exercicio",
   "alunos-do-dia"
 ]);
 
