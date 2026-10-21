@@ -346,3 +346,92 @@ $function$
 ;
 
 revoke all on function private.assign_first_lesson_after_membership() from public, anon, authenticated;
+
+-- Read-only integrity report for periodic administrative audits. An allocated
+-- lesson extending beyond the invoice due date is NOT an error.
+create or replace function private.audit_paid_lesson_schedule_integrity()
+returns table (
+  issue_code text,
+  student_id uuid,
+  tuition_id uuid,
+  credit_id uuid,
+  starts_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select
+    'duplicate_confirmed_slot'::text,
+    credit.student_id,
+    credit.tuition_id,
+    credit.id,
+    credit.regular_starts_at
+  from private.lesson_credits credit
+  where credit.credit_origin = 'contract'
+    and credit.status = 'scheduled'
+    and credit.revoked_at is null
+    and credit.regular_starts_at is not null
+    and exists (
+      select 1
+      from private.lesson_credits other_credit
+      where other_credit.student_id = credit.student_id
+        and other_credit.id <> credit.id
+        and other_credit.credit_origin = 'contract'
+        and other_credit.status = 'scheduled'
+        and other_credit.revoked_at is null
+        and other_credit.regular_class_number = credit.regular_class_number
+        and other_credit.regular_starts_at = credit.regular_starts_at
+    )
+
+  union all
+
+  select
+    'paid_credit_without_lesson'::text,
+    credit.student_id,
+    credit.tuition_id,
+    credit.id,
+    credit.regular_starts_at
+  from private.lesson_credits credit
+  join public.monthly_tuition tuition
+    on tuition.id = credit.tuition_id
+  join public.profiles profile
+    on profile.id = credit.student_id
+  where credit.credit_origin = 'contract'
+    and credit.status = 'available'
+    and credit.revoked_at is null
+    and credit.cancelled_at is null
+    and credit.makeup_booking_id is null
+    and credit.regular_starts_at is null
+    and credit.regular_class_number is null
+    and profile.archived = false
+    and (tuition.payment_date is not null or coalesce(tuition.is_exempt, false))
+    and private.get_tuition_coverage_end(tuition.id)
+      > (now() at time zone 'America/Sao_Paulo')::date
+    and exists (
+      select 1
+      from public.class_students membership
+      join public.teacher_classes class
+        on class.class_number = membership.class_number
+      where membership.user_id = credit.student_id
+        and class.is_active = true
+    )
+
+  union all
+
+  select
+    'scheduled_credit_without_timestamp'::text,
+    credit.student_id,
+    credit.tuition_id,
+    credit.id,
+    credit.regular_starts_at
+  from private.lesson_credits credit
+  where credit.credit_origin = 'contract'
+    and credit.status = 'scheduled'
+    and credit.revoked_at is null
+    and credit.regular_starts_at is null;
+$function$;
+
+revoke all on function private.audit_paid_lesson_schedule_integrity()
+  from public, anon, authenticated;
