@@ -9,6 +9,7 @@ const serviceSource = fs.readFileSync(path.join(ROOT, "academic_workflow_service
 const actionPlanSource = fs.readFileSync(path.join(ROOT, "o-que-fazer/app.js"), "utf8");
 const lessonSource = fs.readFileSync(path.join(ROOT, "licao.js"), "utf8");
 const actionPlanPage = fs.readFileSync(path.join(ROOT, "o-que-fazer/index.html"), "utf8");
+const secondPartPage = fs.readFileSync(path.join(ROOT, "o-que-fazer/segunda-parte/index.html"), "utf8");
 const lessonPage = fs.readFileSync(path.join(ROOT, "licao/index.html"), "utf8");
 
 function createService(profile, error = null) {
@@ -72,10 +73,11 @@ test("lesson previews skip student-specific preparation for non-active accounts"
 });
 
 test("student pages load the updated versioned scripts without changing indexing rules", () => {
-  for (const page of [actionPlanPage, lessonPage]) {
+  for (const page of [actionPlanPage, secondPartPage, lessonPage]) {
     assert.match(page, /academic_workflow_service\.js\?v=20261020-active-student-guard-1/);
     assert.match(page, /<meta name="robots" content="noindex[, ]+nofollow">/);
   }
   assert.match(actionPlanPage, /o-que-fazer\/app\.js\?v=20261020-active-student-guard-1/);
+  assert.match(secondPartPage, /o-que-fazer\/app\.js\?v=20261020-active-student-guard-1/);
   assert.match(lessonPage, /licao\.js\?v=20261020-active-student-guard-1/);
 });
