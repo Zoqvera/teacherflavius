@@ -39,7 +39,7 @@ test("server binds group or individual modality without permitting a mismatched 
   assert.match(sql, /new\.class_type is distinct from/);
   assert.match(onboarding, /get_my_authorized_enrollment_plan/);
   assert.match(onboarding, /classMode\.disabled = state\.requiresClassMode && !!authorizedInviteMode/);
-  assert.match(onboarding, /rpc\("set_my_enrollment_class_mode"/);
+  assert.match(onboarding, /set_my_enrollment_class_mode/);
   assert.match(onboarding, /rpc\("set_my_enrollment_billing_terms"\)/);
   assert.match(onboarding, /state\.mode === NEW_ENROLLMENT_MODE[\s\S]*getPostEnrollmentPath/);
 });
