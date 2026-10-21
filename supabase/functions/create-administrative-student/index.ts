@@ -203,6 +203,22 @@ Deno.serve(async (request: Request) => {
     if (error) throw error;
     return json({ ok: true, enrollment: data }, 200, origin);
   } catch (error) {
+    // The RPC may have committed even when its HTTP response was interrupted.
+    // Deleting the Auth identity after a committed enrollment would cascade
+    // academic records and detach billing history, so confirm before cleanup.
+    const { data: existingProfile, error: lookupError } = await admin
+      .from("profiles")
+      .select("id,access_mode")
+      .eq("id", studentId)
+      .maybeSingle();
+    if (existingProfile?.access_mode === "administrative" || lookupError) {
+      console.error("Administrative enrollment state must be verified", {
+        studentId, lookupError: lookupError?.message,
+      });
+      return json({
+        error: "O resultado da matrícula não pôde ser confirmado. Verifique a lista de alunos antes de tentar novamente.",
+      }, 503, origin);
+    }
     const { error: cleanupError } = await admin.auth.admin.deleteUser(studentId);
     if (cleanupError) {
       console.error("Could not remove incomplete administrative student identity", cleanupError.message);
