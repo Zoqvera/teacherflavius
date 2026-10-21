@@ -353,6 +353,8 @@ begin
 end;
 $function$;
 
+revoke all on function private.enforce_link_enrollment_class_mode() from public, anon, authenticated;
+
 drop trigger if exists zz_enforce_link_enrollment_class_mode on public.profiles;
 create trigger zz_enforce_link_enrollment_class_mode
 before update of profile_completed, class_type on public.profiles
