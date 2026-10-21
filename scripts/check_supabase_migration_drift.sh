@@ -335,18 +335,19 @@ compare_production_identity() {
   local alias_name
   local alias_sha
   local alias_remote_name
+  local alias_remote_sha
   local local_identity
   local remote_identity
   local expected_git
   local expected_remote
   # Different remote names are accepted only when both names and the immutable
   # normalized SQL digest are pinned and match the production ledger exactly.
-  while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha alias_remote_name; do
+  while IFS='|' read -r alias_git_version alias_remote_version alias_name alias_sha alias_remote_name alias_remote_sha; do
     [[ -n "$alias_git_version" ]] || continue
     local_identity="$(grep -E "^$alias_git_version[[:space:]]" "$local_records_file" || true)"
     remote_identity="$(grep -E "^$alias_remote_version[[:space:]]" "$remote_records_file" || true)"
     printf -v expected_git '%s\t%s\t%s' "$alias_git_version" "$alias_name" "$alias_sha"
-    printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "${alias_remote_name:-$alias_name}" "$alias_sha"
+    printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "${alias_remote_name:-$alias_name}" "${alias_remote_sha:-$alias_sha}"
 
     if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
       grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
