@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Cobranças semanais — Teacher Flávio</title>
+  <link rel="stylesheet" href="/matricula-administrativa/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js"></script>
+  <script src="/module_loader.js"></script>
+  <script src="/auth.js"></script>
+  <style>
+    .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .summary div{background:#141e30;padding:16px;border:1px solid #334155;border-radius:12px}
+    .summary strong{display:block;font-size:23px;padding-top:9px}.summary span{font-size:13px;color:#94a3b8}
+    .invoice{border:1px solid #334155;border-radius:12px;padding:16px;margin:12px 0;background:#141e30}
+    .invoice-head{display:flex;justify-content:space-between;align-items:start;gap:16px}
+    .invoice-head h3{font-size:17px;margin:0 0 8px}.invoice-head p{margin:0;color:#94a3b8}
+    .invoice button{margin-top:12px}.tag{font-size:13px;color:#a5b4fc}
+    .filters{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.filters select{width:auto}
+    .details{font-size:13px;color:#94a3b8;margin-top:9px}
+    @media(max-width:620px){.summary{grid-template-columns:1fr}.invoice-head{flex-direction:column}}
+  </style>
+</head>
+<body class="auth-checking">
+  <main class="container">
+    <nav><a href="/professor/">Área do professor</a>
+      <a href="/mensalidades/">Mensalidades</a>
+      <a href="/matricula-semanal/">Matricular aluno semanal</a></nav>
+    <header><span class="eyebrow">FINANCEIRO DO PROFESSOR</span>
+      <h1>Cobranças semanais</h1>
+      <p>Controle de cobranças semanais, separadas das mensalidades. O registro de pagamento não altera o valor dos próximos vencimentos.</p>
+    </header>
+    <p id="pageStatus" role="status" aria-live="polite">Verificando acesso...</p>
+    <div id="content" hidden>
+      <div class="summary">
+        <div><span>Total previsto no período listado</span><strong id="totalAmount">R$ 0,00</strong></div>
+        <div><span>Total efetivamente recebido</span><strong id="paidAmount">R$ 0,00</strong></div>
+        <div><span>Em aberto</span><strong id="openAmount">R$ 0,00</strong></div>
+      </div>
+      <div class="filters">
+        <label>Exibir
+          <select id="statusFilter"><option value="all">Todas</option><option value="open">Não pagas</option><option value="paid">Pagas</option></select>
+        </label>
+        <button id="refreshButton" type="button" style="width:auto">Atualizar cobranças</button>
+      </div>
+      <div id="invoices"></div>
+    </div>
+    <form id="paymentForm" hidden>
+      <section>
+        <h2 id="paymentTitle">Registrar pagamento</h2>
+        <input type="hidden" name="tuition_id">
+        <div class="fields">
+          <label>Data do pagamento<input type="date" name="payment_date" required></label>
+          <label>Valor recebido (R$)<input type="number" name="amount_paid" min="0.01" step="0.01" required></label>
+          <label>Forma de pagamento<select name="payment_method" required>
+            <option value="pix">PIX</option><option value="cash">Dinheiro</option>
+            <option value="bank_transfer">Transferência</option>
+            <option value="card">Cartão</option><option value="other">Outro</option>
+          </select></label>
+          <label>Observações<input name="payment_notes" maxlength="500"></label>
+        </div>
+        <button type="submit" id="confirmPayment">Registrar pagamento</button>
+        <button type="button" id="cancelPayment" style="margin-top:10px;background:#334155">Cancelar</button>
+        <p id="paymentStatus" role="status" aria-live="polite"></p>
+      </section>
+    </form>
+  </main>
+  <script src="/cobrancas-semanais/app.js"></script>
+</body>
+</html>

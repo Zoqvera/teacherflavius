@@ -7,6 +7,7 @@ let selectedStudentForClass = null;
 let cachedVisibleStudents = [];
 let currentStudentFilter = "all";
 let studentBillingMap = new Map();
+let weeklyStudentBillingMap = new Map();
 let selectedStudentForBilling = null;
 let studentBillingLoaded = false;
 let studentCourseStateMap = new Map();
@@ -128,7 +129,9 @@ function getStudentBilling(student) {
 
 function hasBillingConfigured(student) {
   const billing = getStudentBilling(student);
-  return !!(billing && billing.monthly_fee != null);
+  const studentId = student && (student.user_id || student.id);
+  return !!((billing && billing.monthly_fee != null)
+    || (studentId && weeklyStudentBillingMap.has(String(studentId))));
 }
 
 function getStudentCourseState(student) {
@@ -366,7 +369,8 @@ function downloadEnrolledStudentsExcel() {
     "WhatsApp",
     "Chave PIX",
     "Código de matrícula",
-    "Mensalidade (R$)",
+    "Valor contratado (R$)",
+    "Periodicidade",
     "Turma",
     "Data da matrícula",
     "Disponibilidade",
@@ -387,7 +391,10 @@ function downloadEnrolledStudentsExcel() {
         String(student.whatsapp || ""),
         student.pix_key || "",
         student.enrollment_code || "",
-        hasBillingConfigured(student) ? Number(getStudentBilling(student).monthly_fee) : "",
+        weeklyStudentBillingMap.has(String(student.user_id || student.id))
+          ? weeklyStudentBillingMap.get(String(student.user_id || student.id))
+          : getStudentBilling(student)?.monthly_fee ?? "",
+        weeklyStudentBillingMap.has(String(student.user_id || student.id)) ? "Semanal" : "Mensal",
         getStudentClassNames(student),
         enrollmentDate instanceof Date && !Number.isNaN(enrollmentDate.getTime()) ? enrollmentDate : "",
         formatAvailabilityForSpreadsheet(student),
@@ -397,7 +404,7 @@ function downloadEnrolledStudentsExcel() {
     });
 
   const worksheet = XLSX.utils.aoa_to_sheet([headers].concat(rows), { cellDates: true });
-  worksheet["!autofilter"] = { ref: "A1:K" + (rows.length + 1) };
+  worksheet["!autofilter"] = { ref: "A1:L" + (rows.length + 1) };
   worksheet["!cols"] = [
     { wch: 30 },
     { wch: 32 },
@@ -406,6 +413,7 @@ function downloadEnrolledStudentsExcel() {
     { wch: 26 },
     { wch: 20 },
     { wch: 18 },
+    { wch: 16 },
     { wch: 24 },
     { wch: 20 },
     { wch: 52 },
@@ -415,7 +423,7 @@ function downloadEnrolledStudentsExcel() {
   for (let rowIndex = 2; rowIndex <= rows.length + 1; rowIndex++) {
     const feeCell = worksheet["G" + rowIndex];
     if (feeCell && feeCell.t === "n") feeCell.z = 'R$ #,##0.00';
-    const dateCell = worksheet["I" + rowIndex];
+    const dateCell = worksheet["J" + rowIndex];
     if (dateCell && dateCell.t === "d") dateCell.z = "dd/mm/yyyy hh:mm";
   }
 
@@ -484,13 +492,24 @@ async function loadStudentBillingMap() {
   const client = Auth.getClient();
   const responses = await Promise.all([
     client.rpc("get_teacher_billing_students"),
-    client.rpc("get_teacher_student_lesson_plans")
+    client.rpc("get_teacher_student_lesson_plans"),
+    client.rpc("get_teacher_administrative_weekly_tuition")
   ]);
   const billingResponse = responses[0];
   const lessonPlanResponse = responses[1];
+  const weeklyResponse = responses[2];
 
   if (billingResponse.error) throw billingResponse.error;
   if (lessonPlanResponse.error) throw lessonPlanResponse.error;
+  if (weeklyResponse.error) throw weeklyResponse.error;
+
+  weeklyStudentBillingMap = new Map();
+  (weeklyResponse.data || []).forEach(function (row) {
+    const studentId = String(row.student_id);
+    if (!weeklyStudentBillingMap.has(studentId)) {
+      weeklyStudentBillingMap.set(studentId, Number(row.amount_due));
+    }
+  });
 
   const lessonPlanMap = new Map();
   (lessonPlanResponse.data || []).forEach(function (item) {
@@ -933,10 +952,15 @@ function renderProfileCard(student) {
   const acquisition = studentAcquisitionMap.get(String(userId)) || {};
   const courseState = getStudentCourseState(student);
   const billing = getStudentBilling(student);
-  const billingConfigured = !!(billing && billing.monthly_fee != null);
+  const weeklyFee = weeklyStudentBillingMap.get(String(userId));
+  const isWeekly = Number.isFinite(weeklyFee);
+  const billingConfigured = hasBillingConfigured(student);
   const billingLabel = !studentBillingLoaded
     ? "Indisponível"
-    : (preEnrolled ? "Disponível após matrícula" : (billingConfigured ? formatCurrency(billing.monthly_fee) : "Não configurada"));
+    : (preEnrolled ? "Disponível após matrícula"
+      : isWeekly ? formatCurrency(weeklyFee) + " por semana"
+      : billingConfigured ? formatCurrency(billing.monthly_fee) + " por mês"
+      : "Não configurada");
   const billingClass = billingConfigured ? "configured" : (studentBillingLoaded && !preEnrolled ? "unconfigured" : "");
 
   const editButton = userId
@@ -953,7 +977,9 @@ function renderProfileCard(student) {
       '">ALTERAR SITUAÇÃO</button>'
     : '';
 
-  const billingButton = userId && !preEnrolled && studentBillingLoaded
+  const billingButton = isWeekly
+    ? '<a class="delete-button" href="/cobrancas-semanais/" style="display:inline-flex;justify-content:center;text-decoration:none;">VER COBRANÇAS SEMANAIS</a>'
+    : userId && !preEnrolled && studentBillingLoaded
     ? '<button class="delete-button billing-settings-button" type="button" data-student-id="' + escapeHtml(userId) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(52,211,153,0.48); background:rgba(16,185,129,0.11); color:#a7f3d0;">' + (billingConfigured ? 'EDITAR MENSALIDADE' : 'DEFINIR MENSALIDADE') + '</button>'
     : '';
 
@@ -964,7 +990,9 @@ function renderProfileCard(student) {
     '<p><b>Turma:</b> ' + escapeHtml(assignedClasses) + '</p>' +
     (!preEnrolled ? '<div class="student-course-summary"><p><b>Situação no curso:</b> ' +
        escapeHtml(getCourseStateLabel(courseState)) + '</p>' +
-       '<p><b>Cobrança:</b> ' + escapeHtml(getStudentBillingStatusLabel(courseState)) + '</p>' +
+       '<p><b>Cobrança:</b> ' + escapeHtml(isWeekly && courseState?.course_status !== "paused"
+         && courseState?.billing_exemption !== "permanent"
+         ? "Ativa (semanal)" : getStudentBillingStatusLabel(courseState)) + '</p>' +
        (courseState && courseState.status_since ?
          '<p><b>Registrada em:</b> ' + escapeHtml(formatCourseStatusDate(courseState.status_since)) + '</p>' : '') +
        (courseState && courseState.status_reason ?
@@ -981,7 +1009,7 @@ function renderProfileCard(student) {
     '<p><b>Como conheceu as aulas:</b> ' + escapeHtml(window.StudentAcquisition.label(acquisition.source, acquisition.detail)) + '</p>' +
     '<p><b>Status da pré-matrícula:</b> ' + escapeHtml(student.pre_enrollment_status || (preEnrolled ? "pending" : "completed")) + '</p>' +
     '<p><b>Criado em:</b> ' + escapeHtml(formatCreatedAt(student.created_at)) + '</p>' +
-    '<div class="student-billing-row"><b>Mensalidade</b><span class="billing-category ' + billingClass + '">' + escapeHtml(billingLabel) + '</span></div>' +
+    '<div class="student-billing-row"><b>Plano de cobrança</b><span class="billing-category ' + billingClass + '">' + escapeHtml(billingLabel) + '</span></div>' +
     '<div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">' +
       '<p><b>Disponibilidade para aulas:</b></p>' + formatAvailability(student) +
     '</div>' +

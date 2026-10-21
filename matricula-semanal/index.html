@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Matrícula com cobrança semanal — Teacher Flávio</title>
+  <link rel="stylesheet" href="/matricula-administrativa/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js"></script>
+  <script src="/module_loader.js"></script>
+  <script src="/auth.js"></script>
+</head>
+<body class="auth-checking">
+  <main class="container">
+    <nav><a href="/professor/">Área do professor</a>
+      <a href="/matricula-administrativa/">Matrícula mensal</a>
+      <a href="/cobrancas-semanais/">Cobranças semanais</a></nav>
+    <header>
+      <span class="eyebrow">CADASTRO DO PROFESSOR</span>
+      <h1>Matrícula com cobrança semanal</h1>
+      <p>Três turmas individuais, cobrança recorrente por semana e acesso do aluno bloqueado.</p>
+    </header>
+    <p id="pageStatus" role="status" aria-live="polite">Verificando autorização...</p>
+    <form id="weeklyEnrollmentForm" hidden>
+      <section>
+        <h2>Dados da aluna</h2>
+        <label>Nome completo<input name="name" type="text" maxlength="160" required></label>
+        <div class="fields">
+          <label>WhatsApp<input name="whatsapp" type="tel" autocomplete="off"></label>
+          <label>E-mail de contato (opcional)<input name="contact_email" type="email" maxlength="320"></label>
+        </div>
+      </section>
+      <section>
+        <h2>Turmas e primeiras aulas</h2>
+        <p class="hint">Selecione a turma de cada dia e informe quando a aluna começará. Datas anteriores não serão registradas como faltas.</p>
+        <div id="classRows"></div>
+      </section>
+      <section>
+        <h2>Cobrança semanal</h2>
+        <div class="fields">
+          <label>Valor por semana (R$)<input name="weekly_fee" type="number" min="0.01" max="100000" step="0.01" value="180.00" required></label>
+          <label>Primeiro vencimento — terça-feira<input name="first_due_date" type="date" required></label>
+        </div>
+        <p class="hint">Cada terça-feira será lançada uma única cobrança semanal, independentemente das três aulas. Não será criada mensalidade adicional.</p>
+      </section>
+      <section class="access">
+        <svg viewBox="0 0 24 24" aria-label="Acesso bloqueado" role="img"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+        <div><strong>Acesso ao portal desabilitado</strong><p>Nenhuma credencial será fornecida à aluna.</p></div>
+      </section>
+      <button id="saveWeekly" type="submit">Matricular e ativar cobrança semanal</button>
+      <p id="formStatus" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+  <script src="/matricula-semanal/app.js"></script>
+</body>
+</html>
