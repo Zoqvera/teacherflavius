@@ -20,6 +20,70 @@ type EnrollmentPayload = {
   first_due_date: string;
 };
 
+
+type WeeklyEnrollmentPayload = {
+  billing_frequency: "weekly";
+  name: string;
+  contact_email?: string;
+  whatsapp?: string;
+  weekly_fee: number;
+  first_due_date: string;
+  classes: { class_number: number; first_lesson_date: string }[];
+};
+
+function isTuesday(date: string): boolean {
+  return new Date(date + "T12:00:00Z").getUTCDay() === 2;
+}
+
+function parseWeeklyEnrollment(value: Record<string, unknown>): WeeklyEnrollmentPayload {
+  const name = typeof value.name === "string" ? value.name.trim() : "";
+  const email = typeof value.contact_email === "string" ? value.contact_email.trim() : "";
+  const whatsapp = typeof value.whatsapp === "string" ? value.whatsapp.replace(/\D/g, "") : "";
+  const fee = value.weekly_fee;
+  if (name.length < 3 || name.length > 160) throw new Error("Nome do aluno inválido.");
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    throw new Error("E-mail inválido.");
+  }
+  if (whatsapp && (whatsapp.length < 10 || whatsapp.length > 13)) {
+    throw new Error("WhatsApp inválido.");
+  }
+  if (typeof fee !== "number" || !Number.isFinite(fee) || fee <= 0 || fee > 100000) {
+    throw new Error("Informe um valor semanal válido.");
+  }
+  if (!validDate(value.first_due_date) || !isTuesday(value.first_due_date)) {
+    throw new Error("O primeiro vencimento deve ocorrer numa terça-feira.");
+  }
+  const classes = value.classes;
+  if (!Array.isArray(classes) || classes.length !== 3) {
+    throw new Error("Selecione exatamente três turmas individuais.");
+  }
+  const seen = new Set<number>();
+  for (const item of classes) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error("Turma inválida.");
+    }
+    const candidate = item as Record<string, unknown>;
+    if (!Number.isInteger(candidate.class_number)
+      || Number(candidate.class_number) <= 0
+      || !validDate(candidate.first_lesson_date)) {
+      throw new Error("Informe a turma e a primeira aula de cada dia.");
+    }
+    if (seen.has(Number(candidate.class_number))) {
+      throw new Error("Não repita turmas.");
+    }
+    seen.add(Number(candidate.class_number));
+  }
+  return {
+    billing_frequency: "weekly",
+    name,
+    contact_email: email || undefined,
+    whatsapp: whatsapp || undefined,
+    weekly_fee: Math.round(fee * 100) / 100,
+    first_due_date: value.first_due_date,
+    classes: classes as WeeklyEnrollmentPayload["classes"],
+  };
+}
+
 function secretKey(envName: string, legacyName: string): string {
   const value = Deno.env.get(envName);
   if (value) {
@@ -153,12 +217,14 @@ Deno.serve(async (request: Request) => {
     return json({ error: "Acesso exclusivo do professor." }, 403, origin);
   }
 
-  let enrollment: EnrollmentPayload;
+  let enrollment: EnrollmentPayload | WeeklyEnrollmentPayload;
   try {
     const raw = await request.text();
     if (raw.length > MAX_REQUEST_BYTES) throw new Error("Requisição muito grande.");
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    enrollment = parseEnrollment(parsed);
+    enrollment = parsed.billing_frequency === "weekly"
+      ? parseWeeklyEnrollment(parsed)
+      : parseEnrollment(parsed);
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "Dados inválidos." }, 422, origin);
   }
@@ -187,19 +253,32 @@ Deno.serve(async (request: Request) => {
     });
     if (banError) throw banError;
 
-    const { data, error } = await admin.rpc("create_teacher_administrative_student_internal", {
-      target_user_id: studentId,
-      target_actor_id: session.user.id,
-      target_name: enrollment.name,
-      target_contact_email: enrollment.contact_email || null,
-      target_whatsapp: enrollment.whatsapp || null,
-      target_class_number: enrollment.class_number,
-      target_first_lesson_date: enrollment.first_lesson_date,
-      target_monthly_fee: enrollment.monthly_fee,
-      target_classes_per_month: enrollment.classes_per_month,
-      target_due_day: enrollment.due_day,
-      target_first_due_date: enrollment.first_due_date,
-    });
+    const isWeekly = "billing_frequency" in enrollment
+      && enrollment.billing_frequency === "weekly";
+    const { data, error } = isWeekly
+      ? await admin.rpc("create_teacher_administrative_weekly_student_internal", {
+        target_user_id: studentId,
+        target_actor_id: session.user.id,
+        target_name: enrollment.name,
+        target_contact_email: enrollment.contact_email || null,
+        target_whatsapp: enrollment.whatsapp || null,
+        target_weekly_fee: (enrollment as WeeklyEnrollmentPayload).weekly_fee,
+        target_first_due_date: enrollment.first_due_date,
+        target_classes: (enrollment as WeeklyEnrollmentPayload).classes,
+      })
+      : await admin.rpc("create_teacher_administrative_student_internal", {
+        target_user_id: studentId,
+        target_actor_id: session.user.id,
+        target_name: enrollment.name,
+        target_contact_email: enrollment.contact_email || null,
+        target_whatsapp: enrollment.whatsapp || null,
+        target_class_number: (enrollment as EnrollmentPayload).class_number,
+        target_first_lesson_date: (enrollment as EnrollmentPayload).first_lesson_date,
+        target_monthly_fee: (enrollment as EnrollmentPayload).monthly_fee,
+        target_classes_per_month: (enrollment as EnrollmentPayload).classes_per_month,
+        target_due_day: (enrollment as EnrollmentPayload).due_day,
+        target_first_due_date: enrollment.first_due_date,
+      });
     if (error) throw error;
     return json({ ok: true, enrollment: data }, 200, origin);
   } catch (error) {
