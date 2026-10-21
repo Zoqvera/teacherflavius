@@ -12,6 +12,7 @@
   const formStatus = document.getElementById("formStatus");
   const saveButton = document.getElementById("saveWeekly");
   const classes = new Map();
+  let teacherEmail = "";
 
   const localToday = () => {
     const fields = new Intl.DateTimeFormat("en-CA", {
@@ -120,11 +121,18 @@
     if (whatsapp && (whatsapp.length < 10 || whatsapp.length > 13)) {
       throw new Error("WhatsApp inválido.");
     }
+    const contactEmail = String(fields.get("contact_email") || "").trim();
+    if (contactEmail && contactEmail.toLowerCase() === teacherEmail) {
+      throw new Error(
+        "O e-mail de contato pertence à sua conta de professor. Desmarque a opção " +
+        "'Incluir e-mail de contato' para matricular Silvia sem e-mail."
+      );
+    }
     return {
       billing_frequency: "weekly",
       name,
       whatsapp,
-      contact_email: String(fields.get("contact_email") || "").trim(),
+      contact_email: contactEmail,
       weekly_fee: Math.round(weeklyFee * 100) / 100,
       first_due_date: firstDue,
       classes: selected,
@@ -153,6 +161,7 @@
         "Matrícula confirmada nas três turmas. Primeira cobrança semanal: " +
         data.enrollment.first_due_date + ". Acesso do aluno bloqueado.",false);
       form.reset();
+      form.elements.namedItem("contact_email").disabled = true;
     } catch (error) {
       setStatus(formStatus, "Não foi possível matricular: " + error.message, true);
     } finally {
@@ -172,12 +181,22 @@
         window.location.replace("/login/?next=" + encodeURIComponent("/matricula-semanal/"));
         return;
       }
+      teacherEmail = String(session.user.email || "").trim().toLowerCase();
       const client = Auth.getClient();
       const role = await client.rpc("is_teacher_admin");
       if (role.error || role.data !== true) throw new Error("Acesso exclusivo do professor.");
       await loadClasses(client);
       form.hidden = false;
       document.querySelector('input[name="first_due_date"]').min = localToday();
+      const useEmail = form.elements.namedItem("enable_contact_email");
+      const emailField = form.elements.namedItem("contact_email");
+      emailField.disabled = true;
+      emailField.value = "";
+      useEmail.checked = false;
+      useEmail.addEventListener("change", () => {
+        emailField.disabled = !useEmail.checked;
+        if (!useEmail.checked) emailField.value = "";
+      });
       form.addEventListener("submit", handleSubmit);
       setStatus(pageStatus, "Preencha os dados e confirme as datas de início.", false);
     } catch (error) {
