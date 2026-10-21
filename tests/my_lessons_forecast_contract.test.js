@@ -26,7 +26,7 @@ function makeLesson(status, daysFromNow) {
   };
 }
 
-async function renderStudentPage({ paid = true, forecast, forecastFails = false }) {
+async function renderStudentPage({ paid = true, forecast, forecastFails = false, credits = null }) {
   const elements = {
     loginStatus: { textContent: "" },
     pageMessage: { textContent: "", className: "", hidden: true },
@@ -41,7 +41,7 @@ async function renderStudentPage({ paid = true, forecast, forecastFails = false 
       classes_per_month: 4,
       classes: [{ class_number: 29, class_name: "Turma 29", class_start_time: "10:00" }]
     },
-    get_my_lesson_credits: [1, 2, 3, 4].map(function (day) {
+    get_my_lesson_credits: credits || [1, 2, 3, 4].map(function (day) {
       return {
         ...makeLesson("scheduled", day),
         credit_id: "credit-" + day,
@@ -100,9 +100,13 @@ test("four paid lessons appear with four non-actionable predicted lessons", asyn
   assert.match(page.html, /Próximo vencimento: 05\/11\/2026/);
   assert.match(page.html, /href="\/pagamento\/"/);
 
-  const forecastSection = page.html.split('class="surface-card forecast-section"')[1];
-  assert.ok(forecastSection);
-  assert.doesNotMatch(forecastSection, /data-credit-id|regular-cancel-button|ACESSAR AULA|MARCAR REPOSIÇÃO/);
+  // The confirmed and predicted items share one chronological agenda.
+  assert.match(page.html, /<h2>Minhas aulas<\/h2>/);
+  const predictedCards = page.html.match(/<article class="lesson-card forecast-lesson"[\s\S]*?<\/article>/g) || [];
+  assert.equal(predictedCards.length, 4);
+  predictedCards.forEach((card) => {
+    assert.doesNotMatch(card, /data-credit-id|regular-cancel-button|ACESSAR AULA|MARCAR REPOSIÇÃO/);
+  });
   assert.ok(page.rpcCalls.includes("get_my_lesson_forecast"));
 });
 
@@ -129,8 +133,34 @@ test("previously paying student can see forecast even when current tuition is ou
     }
   });
   assert.equal((page.html.match(/AULA PREVISTA/g) || []).length, 4);
-  assert.ok(!page.rpcCalls.includes("get_my_lesson_credits"));
-  assert.doesNotMatch(page.html, /data-credit-id|regular-cancel-button/);
+  assert.ok(page.rpcCalls.includes("get_my_lesson_credits"));
+  assert.equal((page.html.match(/>CONFIRMADA<\/span>/g) || []).length, 4);
+  assert.match(page.html, /regular-cancel-button/);
+});
+
+test("the same paid class cannot appear twice as both credit and prepaid forecast", async () => {
+  const startsAt = futureDate(8);
+  const paidCredit = {
+    status: "scheduled",
+    class_number: 29,
+    class_name: "Turma 29",
+    starts_at: startsAt,
+    credit_id: "already-paid",
+    can_cancel: true,
+    cancellation_deadline: futureDate(7)
+  };
+  const page = await renderStudentPage({
+    paid: false,
+    credits: [paidCredit],
+    forecast: {
+      prepaid_lessons: [{ ...paidCredit, status: "confirmed" }],
+      predicted_lessons: [{ ...paidCredit, status: "predicted" }],
+      next_payment_due_date: "2026-11-05"
+    }
+  });
+  assert.equal((page.html.match(/>CONFIRMADA<\/span>/g) || []).length, 1);
+  assert.equal((page.html.match(/AULA PREVISTA/g) || []).length, 0);
+  assert.equal((page.html.match(/regular-cancel-button/g) || []).length, 1);
 });
 
 test("a forecast service failure does not hide confirmed lesson cards", async () => {
