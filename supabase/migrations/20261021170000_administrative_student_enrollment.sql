@@ -10,6 +10,31 @@ alter table public.profiles
 comment on column public.profiles.access_mode is
   'Administrative students have internal technical identities but no student portal access.';
 
+-- Students cannot assign or reactivate their own access classification.
+create or replace function private.protect_student_access_mode()
+returns trigger language plpgsql security invoker set search_path = ''
+as $function$
+begin
+  if (select auth.uid()) = new.id then
+    if tg_op = 'INSERT' and new.access_mode <> 'portal' then
+      raise exception 'A modalidade de acesso é definida pelo professor.'
+        using errcode = '42501';
+    end if;
+    if tg_op = 'UPDATE' and new.access_mode is distinct from old.access_mode then
+      raise exception 'A modalidade de acesso é definida pelo professor.'
+        using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end;
+$function$;
+revoke all on function private.protect_student_access_mode()
+  from public, anon, authenticated;
+drop trigger if exists protect_student_access_mode on public.profiles;
+create trigger protect_student_access_mode
+before insert or update of access_mode on public.profiles
+for each row execute function private.protect_student_access_mode();
+
 -- Do not enqueue student onboarding emails for teacher-managed, non-portal records.
 create or replace function public.queue_enrollment_email_notification()
 returns trigger language plpgsql security definer set search_path = ''
@@ -95,6 +120,13 @@ begin
     or normalized_email !~ '^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$'
   ) then
     raise exception 'E-mail de contato inválido.';
+  end if;
+  if normalized_email is not null and exists (
+    select 1 from public.profiles p
+    where lower(btrim(coalesce(p.email, ''))) = normalized_email
+      and coalesce(p.archived, false) is false
+  ) then
+    raise exception 'Já existe um aluno ativo com este e-mail de contato.';
   end if;
   if requested_fee is null or requested_fee <= 0 or requested_fee > 100000 then
     raise exception 'Informe uma mensalidade válida.';
