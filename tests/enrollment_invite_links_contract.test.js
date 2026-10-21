@@ -6,7 +6,7 @@ const path = require("node:path");
 
 const ROOT = path.join(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(ROOT, file), "utf8");
-const sql = read("supabase/migrations/20261021170000_enrollment_invite_links.sql");
+const sql = read("supabase/migrations/20261021165704_enrollment_invite_links.sql");
 const onboarding = read("complete-cadastro.html");
 const login = read("login.html");
 const admin = read("links-de-matricula/index.html");
