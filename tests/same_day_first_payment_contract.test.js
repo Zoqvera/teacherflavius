@@ -93,6 +93,6 @@ test("reconstruction includes policy overlay and fingerprint", () => {
   const fingerprint = JSON.parse(read("supabase/baseline/schema-fingerprint.json"));
   assert.match(workflow, /380_same_day_first_tuition_payment\.sql/);
   assert.equal(fingerprint.public_functions, 197);
-  assert.equal(fingerprint.private_functions, 39);
-  assert.equal(fingerprint.public_user_triggers, 47);
+  assert.equal(fingerprint.private_functions, 40);
+  assert.equal(fingerprint.public_user_triggers, 48);
 });
