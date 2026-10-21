@@ -20,7 +20,6 @@ Em 1º de outubro de 2026, a plataforma possui:
 - módulos acadêmicos de alunos, turmas, frequência, lições, exercícios, flashcards, roteiro de estudos, Conversation Questions e reposições;
 - páginas de lição gerenciáveis no Roteiro de Estudos, com cards dinâmicos, numeração editorial, tradução e fallback para PDFs;
 - turmas `INDIVIDUAL` e `QUINTETO`, overrides de capacidade e vínculo simultâneo de cada aluno com até duas turmas compatíveis;
-- módulo **Alunos do dia** para aulas regulares e reposições confirmadas, além da gestão separada de aulas experimentais e conversões;
 - oferta pública de aulas em grupo padronizada em R$ 50,00 por mês e até cinco alunos;
 - módulo financeiro com mensalidades, Pix/cartão de débito, primeira mensalidade disponível após definição do valor e próxima competência liberada dois dias após o pagamento anterior;
 - infraestrutura legada de assinaturas recorrentes do Mercado Pago preservada para histórico e conciliação, com criação de novas assinaturas desativada;
@@ -140,7 +139,6 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | Rota | Finalidade |
 | --- | --- |
 | `/professor/` | painel principal |
-| `/alunos-do-dia/` | agenda de aulas regulares e reposições confirmadas |
 | `/aulas-experimentais/` | agendamentos, presença e conversão de aulas experimentais |
 | `/conversation-questions/` | gestão das perguntas de conversação |
 | `/perfil-dos-alunos/` | gestão de alunos e dados acadêmicos |
