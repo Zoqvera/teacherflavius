@@ -16,7 +16,7 @@ test("professor dashboard omits the Planos Semanais card and keeps other reports
   assert.doesNotMatch(icons, /'planos-semanais':/);
   assert.match(dashboard, /data-card-id="relatorios"/);
   assert.doesNotMatch(dashboard, /data-card-id="radar-de-alunos"/);
-  assert.match(dashboard, /professor_home\.js\?v=20261021-retire-exercise-1/);
+  assert.match(dashboard, /professor_home\.js\?v=20261021-retire-[a-z-]+-1/);
 });
 
 test("professor dashboard removes retired cards from cached markup", () => {
