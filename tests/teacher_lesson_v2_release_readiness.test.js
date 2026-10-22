@@ -99,6 +99,7 @@ test("current attendance only follows successful evaluation acknowledgements", a
   const service = ratings.create({
     async rpc() { return { data: null, error: { code: "P0001", message: "closed" } }; }
   });
-  await assert.rejects(service.rate(student, "2026-10-22", id, "good", []), /closed/);
+  await assert.rejects(service.rate(student, "2026-10-22", id, "good", []),
+    (error) => error.code === "P0001" && error.message === "closed");
   assert.equal(student.attendance_status, "scheduled");
 });
