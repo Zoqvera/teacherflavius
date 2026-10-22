@@ -196,6 +196,30 @@ class BackupRecoveryContractTests(unittest.TestCase):
         self.assertNotIn("delete from", sql.lower())
         self.assertNotIn("update public.", sql.lower())
 
+    def test_recovery_supports_populated_presentation_tables_read_only(self) -> None:
+        script = self.read("scripts/verify_supabase_backup_restore.sh")
+        sql = self.read(
+            "tests/fixtures/lesson_presentations_stage5_restored_backup_checks.sql"
+        )
+
+        self.assertIn("presentation_state", script)
+        self.assertIn("if [[ \"$presentation_state\" == 'complete' ]]", script)
+        self.assertIn("begin transaction read only;", script)
+        self.assertIn("Restored presentation schema is partially present", script)
+        self.assertIn("return 0", script)
+        self.assertIn(
+            "teacherflavius.recovery_expect_empty_presentation_tables",
+            script,
+        )
+        self.assertIn(
+            "current_setting('teacherflavius.recovery_expect_empty_presentation_tables', true)",
+            sql,
+        )
+        self.assertLess(
+            script.index("compare_recovery_state"),
+            script.index("rehearse_presentation_schema_against_restored_backup"),
+        )
+
     def test_backup_workflow_is_retriggered_by_stage5_homologation(self) -> None:
         workflow = self.read(".github/workflows/supabase-encrypted-backup.yml")
         self.assertIn("'docs/apresentacoes-licoes-etapa5.md'", workflow)
