@@ -839,6 +839,30 @@ jobs:
           $verify_resend_local_http$;
           SQL
 
+      - name: Homologate teacher lesson v2 SQL in disposable database
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # Use production-faithful SQL, but only in the existing disposable
+          # Supabase CLI database. Schema, audit, Cron and all data ROLLBACK.
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20261022202000_teacher_question_ratings_v2.sql
+            cat supabase/migrations/20261022212500_academic_v2_auto_attendance_and_closure.sql
+            cat supabase/migrations/20261022214500_academic_v2_private_table_rls.sql
+            cat supabase/migrations/20261022220000_academic_v2_shared_closure_lock.sql
+            cat tests/sql/teacher_v2_disposable_rehearsal.sql
+            echo 'ROLLBACK;'
+          } | docker exec -i "$DB_CONTAINER" \
+            psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            | tee "${RUNNER_TEMP}/teacher-v2-disposable-test.log"
+
+          grep -Fq 'TEACHER_V2_DISPOSABLE_REHEARSAL_PASSED' \
+            "${RUNNER_TEMP}/teacher-v2-disposable-test.log"
+
       - name: Stop disposable Supabase stack
         if: always()
         run: supabase stop --no-backup
