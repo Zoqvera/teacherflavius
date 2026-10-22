@@ -218,7 +218,26 @@ begin
   select
     closed.class_number, closed.class_name, closed.starts_at,
     closed.finalized_at,
-    coalesce(snapshot.students, (
+    case when snapshot.students is not null then (
+      select coalesce(jsonb_agg(
+        student_row.details || jsonb_build_object(
+          'attendance_status', case
+            when student_row.details->>'attendance_status' = 'cancelled'
+              then 'cancelled'
+            else coalesce(occurrence.attendance_status,
+              student_row.details->>'attendance_status')
+          end
+        ) order by student_row.position
+      ), '[]'::jsonb)
+      from jsonb_array_elements(snapshot.students) with ordinality
+        as student_row(details, position)
+      left join private.academic_lesson_occurrences occurrence
+        on occurrence.occurrence_key = private.academic_occurrence_key(
+          student_row.details->>'lesson_kind',
+          (student_row.details->>'entry_id')::uuid,
+          closed.class_date
+        )
+    ) else (
       select coalesce(jsonb_agg(jsonb_build_object(
         'student_id', occurrence.student_id,
         'student_name', coalesce(profile.name, 'Aluno'),
@@ -231,7 +250,7 @@ begin
       left join public.profiles profile on profile.id = occurrence.student_id
       where occurrence.class_number = closed.class_number
         and occurrence.starts_at = closed.starts_at
-    )) as students
+    ) end as students
   from private.academic_class_session_finalizations closed
   left join private.academic_v2_closed_session_snapshots snapshot
     on snapshot.class_number = closed.class_number
