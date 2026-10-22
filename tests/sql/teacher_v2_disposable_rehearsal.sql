@@ -159,6 +159,12 @@ begin
       class_type = excluded.class_type,
       tuition_first_due_date = excluded.tuition_first_due_date;
 
+  -- The production enrollment trigger intentionally moves a newly linked
+  -- student into the future. In this isolated historical-session fixture,
+  -- disable ONLY that date-assignment trigger and restore it immediately.
+  alter table public.class_students
+    disable trigger assign_first_lesson_after_membership_trigger;
+
   insert into public.class_students (
     class_number, user_id, first_lesson_date
   )
@@ -167,6 +173,9 @@ begin
     ('99000000-0000-4000-8000-00000000000' || index_value)::uuid,
     class_date
   from generate_series(1, 3) as index_value;
+
+  alter table public.class_students
+    enable trigger assign_first_lesson_after_membership_trigger;
 
   -- Student 1 previously participated. No other action is required.
   student_id := '99000000-0000-4000-8000-000000000001'::uuid;
