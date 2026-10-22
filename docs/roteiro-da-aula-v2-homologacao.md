@@ -92,6 +92,43 @@ Após todos os testes:
 5. Se qualquer verificação falhar, manter as chaves desativadas, não
    alterar o menu e não afetar a página atual.
 
+## Etapa 5C — implantação seletiva preparada (ainda não executada)
+
+O workflow `.github/workflows/teacher-v2-stage5c-schema.yml` é
+**somente manual**, na branch `main`. Exige a frase específica
+`CONFIRMO_ROTEIRO_V2_5C`, um backup criptografado recente com restauração
+atestada e uma execução manual do workflow
+`Validate Supabase baseline restore` bem-sucedida na **mesma revisão
+Git**, há menos de 24 horas.
+
+O SQL `scripts/sql/teacher_v2_stage5c_selective_rollout.sql` verifica
+exatamente o histórico produtivo esperado (350 versões e ponta
+`20261022205054`), exige ausência dos objetos da versão nova, aplica
+**somente quatro migrações imutáveis** e grava as respectivas versões
+canônicas em uma única transação PostgreSQL. Qualquer conflito ou falha
+de DDL cancela toda a transação.
+
+O pós-teste exige 354 versões, tabelas privadas com RLS, permissão
+administrativa sem acesso anônimo, tabelas de auditoria vazias e o
+controle `enabled=false`, `enabled_from=null`. O worker pode estar
+agendado mas executa `return 0`; nenhuma aula é encerrada por ele.
+Os três flags de gravação da página v2 também permanecem desativados.
+
+**Nenhum workflow manual de implantação foi iniciado nesta etapa.**
+Não há autorização implícita para trocar a URL ativa, habilitar os
+botões ou finalizar aulas reais. A verificação de ponta a ponta em
+navegador e a reversão operacional são condições da etapa seguinte.
+
+### Pendência de homologação
+
+O primeiro ensaio estendido da turma fictícia encontrou diferença no
+esquema do banco descartável (coluna de primeira aula). O segundo
+detectou a taxonomia `quintet` para turmas no esquema canônico.
+Esses ajustes foram realizados exclusivamente nos testes. É obrigatório
+obter uma execução **completa e aprovada** do ensaio de presença,
+ausência, cancelamento, idempotência, auditoria e recuperação antes
+de qualquer implantação produtiva.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual
