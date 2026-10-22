@@ -159,6 +159,9 @@
         if (Array.isArray(item.review_questions)) {
           allQuestions.push.apply(allQuestions, item.review_questions);
         }
+        if (Array.isArray(item.today_questions)) {
+          allQuestions.push.apply(allQuestions, item.today_questions);
+        }
       });
 
       if (!allQuestions.length) return planItems;
@@ -177,16 +180,39 @@
       return planItems.map(function (item) {
         return Object.assign({}, item, {
           new_questions: hydrateCollection(item.new_questions),
-          review_questions: hydrateCollection(item.review_questions)
+          review_questions: hydrateCollection(item.review_questions),
+          today_questions: hydrateCollection(item.today_questions)
         });
       });
     }
 
     async function getTeacherLessonPlan(classDate) {
-      const items = unwrap(await supabase.rpc("get_teacher_lesson_plan", {
-        target_date: normalizeDate(classDate)
-      })) || [];
-      return hydrateTeacherLessonPlan(items);
+      const targetDate = normalizeDate(classDate);
+      const [planResponse, historyResponse] = await Promise.all([
+        supabase.rpc("get_teacher_lesson_plan", { target_date: targetDate }),
+        supabase.rpc("get_teacher_study_history_for_plan", { target_date: targetDate })
+      ]);
+      const items = unwrap(planResponse) || [];
+      const history = unwrap(historyResponse) || [];
+      if (!Array.isArray(items) || !Array.isArray(history)) {
+        throw new Error("Dados do roteiro pedagógico inválidos.");
+      }
+
+      const historyByLesson = new Map(history.map(function (row) {
+        return [row.student_id + "|" + row.starts_at, row];
+      }));
+      const enrichedItems = items.map(function (item) {
+        const record = historyByLesson.get(item.student_id + "|" + item.starts_at);
+        return Object.assign({}, item, {
+          previously_studied_numbers: record && Array.isArray(record.previously_studied_numbers)
+            ? record.previously_studied_numbers
+            : [],
+          today_questions: record && Array.isArray(record.today_questions)
+            ? record.today_questions
+            : []
+        });
+      });
+      return hydrateTeacherLessonPlan(enrichedItems);
     }
 
     async function restoreCancelledRegularLesson(item, classDate) {

@@ -319,6 +319,41 @@
   color: #cbd5e1;
 }
 
+.academic-history-count {
+  margin: 0 0 12px;
+}
+
+.academic-history-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.academic-history-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 36px;
+  padding: 5px 9px;
+  border: 1px solid var(--academic-border);
+  border-radius: 10px;
+  color: var(--academic-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.academic-history-disclosure summary {
+  cursor: pointer;
+  color: #cbd5e1;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+.academic-history-disclosure[open] .academic-history-numbers {
+  margin-top: 10px;
+}
+
 .academic-question-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
