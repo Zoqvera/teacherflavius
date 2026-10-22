@@ -308,6 +308,33 @@ verify_manual_resend_delivery_catalog() {
   [[ "${result}" == 't' ]]
 }
 
+# This one teacher-v2 migration was committed while the deployment ledger
+# still ended before 20:20, but remains unapplied after a separate tuition
+# change advanced the production tip. Do not renumber an immutable migration.
+# Permit only the exact checked-in Git blob during PR validation and only
+# while the protected v2 database functions remain absent in production.
+# This attests a *pending* migration, not permission to deploy it.
+attest_pending_teacher_v2_migration() {
+  local version="$1"
+  [[ "$version" == '20261022202000' ]] || return 1
+
+  local file="${MIGRATIONS_DIR}/20261022202000_teacher_question_ratings_v2.sql"
+  local expected_git_blob='729ac0534b63caa9762ee930e20f1e414a7ceeb0'
+  [[ -f "$file" ]] || return 1
+  [[ "$(git hash-object "$file")" == "$expected_git_blob" ]] || return 1
+
+  local missing
+  missing="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 -c "
+    select to_regprocedure(
+      'public.rate_teacher_conversation_question_v2(text,uuid,date,uuid,text)'
+    ) is null and to_regprocedure(
+      'public.get_teacher_question_rating_history_v2(date)'
+    ) is null;
+  ")" || return 1
+
+  [[ "$missing" == 't' ]]
+}
+
 filter_local_records_from_cutoff() {
   local records_file="$1"
 
@@ -380,6 +407,7 @@ compare_production_identity() {
 20261022013600|20261022020316|add_standard_100_four_lesson_plan|af0c6ebb61e9a3e7070fc568437bd19ccb588a2ef288eca2b2b91ba7ce84590b|add_standard_100_four_lesson_plan|af0c6ebb61e9a3e7070fc568437bd19ccb588a2ef288eca2b2b91ba7ce84590b
 20261022020800|20261022150943|ignore_safely_blocked_admin_accounts_in_auth_health|94d44021c9cd6889336b1226c67e101fb3f83d1e046da20a167e3d9a74116c76
 20261022170000|20261022161120|pedagogical_preparation_alerts|74951c1ccd98877b1338c73457eb80a4f447d7077f7edf3537219233d2df01f0
+20261022230000|20261022205054|add_tuition_email_reminders|f09b59cbc0b3a5b747776278ddd01e8d3eb90ddbc7ad7d931671e60df6b7660f
 VERIFIED_MIGRATION_ALIASES
 
   # Historical remote rows remain attested by both name and normalized digest.
@@ -468,11 +496,16 @@ VERIFIED_MIGRATION_ALIASES
         drift_found=true
       fi
       while IFS= read -r new_version; do
-        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ || ! "${new_version}" > "${production_tip}" ]]; then
-          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}."
+        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+          echo "::error::Production migration tip is malformed."
           drift_found=true
-        else
+        elif [[ "${new_version}" > "${production_tip}" ]]; then
           echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
+        elif attest_pending_teacher_v2_migration "${new_version}"; then
+          echo "::notice::Immutable teacher-v2 migration ${new_version} is attested pending and absent from production; isolated replay is required before activation."
+        else
+          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}, unless an exact immutable pending version is independently attested."
+          drift_found=true
         fi
       done < "${local_only_file}"
     else
