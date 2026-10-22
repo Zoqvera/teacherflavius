@@ -24,6 +24,26 @@ segundo `docs/supabase-migration-ledger-cutover-runbook.md` e
 `docs/apresentacoes-licoes-etapa5b.md`. Nunca editar o ledger para
 mascarar divergências.
 
+## Bloqueio identificado na auditoria de 22/10/2026
+
+Durante a homologação, o histórico produtivo avançou para
+`20261022205054 — add_tuition_email_reminders`. O repositório contém
+`20261022230000_add_tuition_email_reminders.sql`, ainda sem equivalência
+de checksum atestada para esse par de versões.
+
+A verificação `compare-production-history` da PR #876 interrompeu a
+integração pelos seguintes motivos:
+- `20261022205054` existe somente no ledger de produção;
+- `20261022202000_teacher_question_ratings_v2.sql` é uma migração local
+  pendente anterior à nova ponta de produção.
+
+Os testes de interface não substituem esse gate. Não alterar a
+migração já commitada `20261022202000`, não suprimir o erro e não
+forçar merge. Antes de implementar o cutover, é necessária uma
+reconciliação **auditável e versionada**, apoiada por backup e testes
+em ambiente descartável, para garantir que a migração pendente possa ser
+aplicada sem reordenar incorretamente a cadeia SQL.
+
 ## 5A — Integração de segurança (preparada)
 
 - Reutilizar a mesma trava transacional entre encerramento e registros
