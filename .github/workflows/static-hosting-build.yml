@@ -131,11 +131,16 @@ jobs:
           grep -q '/site_privacy_analytics.js?v=20260902-1' "$tmp_dir/site/index.html"
           grep -q 'GTM-K2NWR2NK' "$tmp_dir/site/index.html"
           test -f "$tmp_dir/site/mensalidades/index.html"
+          test -f "$tmp_dir/site/aula-experimental/index.html"
 
       - name: Validate publish output
         run: |
           test -f _site/index.html
           test -f _site/404.html
+          test -f _site/aula-experimental/index.html
+          test -f _site/aula-experimental/styles.css
+          grep -q 'aula-experimental/index.html' _site/clean_route_loader.js
+          node --test tests/trial_meet_access.test.js
           test -f _site/robots.txt
           test -f _site/sitemap.xml
           test -f _site/error_monitor.js
