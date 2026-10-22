@@ -48,6 +48,7 @@ jobs:
           node --test tests/retire_legacy_makeup_flow_contract.test.js
           node --test tests/enrollment_commercial_terms_contract.test.js
           node --test tests/billing_plan_integrity_contract.test.js
+          node --test tests/standard_100_four_lesson_plan_contract.test.js
           node --test tests/reviewed_legacy_billing_plan_contract.test.js
           node --test tests/first_tuition_reference_month_contract.test.js
           node --test tests/academic_lesson_workflow_contract.test.js
@@ -188,7 +189,8 @@ jobs:
             supabase/baseline/435_late_payment_policy_quote_foundation.sql \
             supabase/baseline/440_late_payment_settlement_gateway.sql \
             supabase/baseline/445_deactivate_late_payment_policy.sql \
-            supabase/baseline/450_sync_next_tuition_after_billing_change.sql
+            supabase/baseline/450_sync_next_tuition_after_billing_change.sql \
+            supabase/baseline/455_add_standard_100_four_lesson_plan.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
