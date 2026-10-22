@@ -31,7 +31,7 @@ test("each experimental class opens its exact Google Meet address", () => {
 });
 
 test("404 recovery renders the experimental form on bare and trailing-slash paths", async () => {
-  assert.match(notFoundPage, /clean_route_loader\\.js\\?v=20261022-trial-fallback-1/);
+  assert.ok(notFoundPage.includes("clean_route_loader.js?v=20261022-trial-fallback-1"));
 
   for (const pathname of ["/aula-experimental", "/aula-experimental/"]) {
     const requested = [];
@@ -57,11 +57,11 @@ test("404 recovery renders the experimental form on bare and trailing-slash path
     await new Promise(setImmediate);
 
     assert.equal(requested.length, 1);
-    assert.equal(requested[0].url, "/aula-experimental/index.html");
+    assert.equal(requested[0].url, "/aula-experimental/" + "index.html");
     assert.equal(requested[0].options.cache, "no-store");
     assert.equal(written.length, 1);
     assert.match(written[0], /AULAS EXPERIMENTAIS/);
-    assert.match(written[0], /<base href="\\/">/);
+    assert.ok(written[0].includes('<base href="/">'));
   }
 });
 
