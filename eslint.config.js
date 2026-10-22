@@ -10,6 +10,7 @@ module.exports = [
       "roteiro-da-aula-v2/app.js",
       "roteiro-da-aula-v2/model.js",
       "roteiro-da-aula-v2/presentation_registration.js",
+      "roteiro-da-aula-v2/question_ratings.js",
       "teacher_lesson_presentations.js",
       "conversation_question_card_renderer.js",
       "conversation_questions_service.js",
