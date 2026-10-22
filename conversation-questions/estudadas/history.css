@@ -1,0 +1,74 @@
+.studied-questions-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.studied-questions-heading h1 {
+  margin: 8px 0;
+}
+
+.studied-questions-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 36px;
+}
+
+.studied-questions-summary p {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.studied-questions-summary strong {
+  color: var(--academic-text);
+  font-size: 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+.studied-questions-summary span {
+  color: var(--academic-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+
+.studied-questions-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.studied-question-day h2 {
+  font-size: clamp(17px, 3vw, 22px);
+}
+
+.studied-question-day .academic-question-card-list {
+  margin-bottom: 0;
+}
+
+.studied-question-entry {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.studied-question-time {
+  color: var(--academic-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .studied-questions-heading {
+    align-items: stretch;
+  }
+
+  .studied-questions-heading .academic-all-questions-link {
+    white-space: normal;
+  }
+
+  .studied-questions-summary {
+    justify-content: space-between;
+  }
+}
