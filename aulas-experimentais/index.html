@@ -34,6 +34,19 @@
 
     <section id="trialSummary" class="trial-summary" aria-label="Resumo dos agendamentos"></section>
 
+    <section class="trial-panel" aria-labelledby="trialMeetAccessTitle">
+      <div class="trial-section-heading">
+        <div>
+          <span class="trial-eyebrow">ACESSOS AO GOOGLE MEET</span>
+          <h2 id="trialMeetAccessTitle">Participantes identificados pelo formulário</h2>
+          <p>Os registros indicam quem clicou para entrar; não comprovam presença na reunião.</p>
+        </div>
+        <button id="trialMeetRefreshButton" class="trial-secondary-button" type="button">ATUALIZAR ACESSOS</button>
+      </div>
+      <p id="trialMeetReportMessage" class="trial-message" role="status" aria-live="polite"></p>
+      <div id="trialMeetReportList" class="trial-list" aria-live="polite"></div>
+    </section>
+
     <section class="trial-panel" aria-labelledby="trialFormTitle">
       <div class="trial-section-heading">
         <div>
@@ -131,6 +144,7 @@
   </main>
 
   <script src="/trial_lesson_scheduler.js?v=20261012-origin-1"></script>
+  <script src="/trial_meet_report.js?v=20261022-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
   <script src="/site_runtime_config.js?v=20260903-1"></script>
