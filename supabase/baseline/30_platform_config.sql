@@ -16,12 +16,14 @@ begin
       values
         ('auth-account-health-check', '22,52 * * * *', 'select private.run_auth_account_health_check(true);'),
         ('daily-data-retention-maintenance', '35 5 * * *', 'select public.perform_data_retention_maintenance(''cron'');'),
+        ('daily-lesson-credit-integrity-23h', '0 2 * * *', 'select private.run_daily_lesson_credit_integrity();'),
         ('mercado-pago-chargeback-reconciliation', '17,47 * * * *', 'select private.dispatch_mercado_pago_chargeback_reconciliation();'),
         ('mercado-pago-reconciliation', '*/5 * * * *', 'select private.dispatch_mercado_pago_reconciliation();'),
         ('pedagogical-preparation-alerts', '*/5 * * * *', 'select private.dispatch_pedagogical_preparation_alerts();'),
         ('operational-data-quality-health-check', '12,42 * * * *', 'select private.run_operational_data_quality_check(true);'),
         ('payment-alert-health-scan', '*/5 * * * *', 'select private.scan_payment_alert_conditions();'),
         ('payment-financial-health-check', '3,8,13,18,23,28,33,38,43,48,53,58 * * * *', 'select private.run_payment_financial_health_check(true);'),
+        ('retry-lesson-credit-integrity-email-15m', '*/15 * * * *', 'select private.retry_lesson_credit_integrity_emails();'),
         ('sync-auto-makeup-slots-30-days', '15 6 * * *', 'select public.sync_auto_makeup_slots_30_days();'),
         ('system-health-watchdog', '4,14,24,34,44,54 * * * *', 'select private.system_health_watchdog();'),
         ('system-synthetic-probe', '1-59/5 * * * *', 'select private.dispatch_system_synthetic_probe();'),
@@ -46,6 +48,6 @@ $$;
 --   teacherflavius_notification_webhook_secret
 
 -- Current production inventory at recovery-baseline time:
--- Application-owned Cron jobs: 12 (including pedagogical-preparation-alerts).
+-- Application-owned Cron jobs: 14 (including pedagogical-preparation-alerts and lesson-credit-integrity jobs).
 -- Storage buckets: none.
 -- Custom storage RLS policies: none.
