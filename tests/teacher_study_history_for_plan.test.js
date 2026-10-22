@@ -6,7 +6,7 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
-const sql = read("supabase/migrations/20261022154000_teacher_study_history_for_plan.sql");
+const sql = read("supabase/migrations/20261022153922_teacher_study_history_for_plan.sql");
 const serviceSource = read("academic_workflow_service.js");
 const teacherApp = read("roteiro-da-aula/app.js");
 const teacherPage = read("roteiro-da-aula/index.html");
