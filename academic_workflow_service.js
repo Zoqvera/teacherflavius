@@ -220,6 +220,19 @@
       }));
     }
 
+    async function setPlannedLesson(item, classDate, lessonNumber) {
+      const normalized = lessonNumber === null ? null : normalizeLessonNumber(lessonNumber);
+      if (lessonNumber !== null && !normalized) {
+        throw new Error("Informe uma lição válida, de 1 a 74.");
+      }
+      return unwrap(await supabase.rpc("set_teacher_planned_lesson", {
+        target_lesson_kind: item.lesson_kind,
+        target_entry_id: item.entry_id,
+        target_date: normalizeDate(classDate),
+        target_lesson_number: normalized
+      }));
+    }
+
     async function markLessonPresented(item, classDate) {
       const lessonNumber = normalizeLessonNumber(item.lesson_number);
       if (!lessonNumber) throw new Error("Não há lição prevista para registrar.");
@@ -253,7 +266,8 @@
       markQuestionsStudied,
       rateQuestion,
       restoreCancelledRegularLesson,
-      setAttendance
+      setAttendance,
+      setPlannedLesson
     });
   }
 

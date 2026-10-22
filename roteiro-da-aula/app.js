@@ -162,6 +162,37 @@
     return section;
   }
 
+  function changePlannedLesson(item, classDate) {
+    const response = window.prompt(
+      "Qual lição " + item.student_name + " apresentará nesta aula? (1 a 74)",
+      String(item.lesson_number || 1)
+    );
+    if (response === null) return Promise.resolve(false);
+
+    const number = Number(response.trim());
+    if (!Number.isInteger(number) || number < 1 || number > 74) {
+      setStatus("Informe um número de lição de 1 a 74.", "error");
+      return Promise.resolve(false);
+    }
+    return reloadAfter(
+      function () { return service.setPlannedLesson(item, classDate, number); },
+      "Lição " + number + " programada para " + item.student_name +
+        ". O histórico de apresentações não foi alterado."
+    );
+  }
+
+  function restoreAutomaticLesson(item, classDate) {
+    const confirmed = window.confirm(
+      "Restaurar a sequência automática para " + item.student_name +
+      "? Nenhuma lição apresentada será alterada."
+    );
+    if (!confirmed) return Promise.resolve(false);
+    return reloadAfter(
+      function () { return service.setPlannedLesson(item, classDate, null); },
+      "Sequência automática restaurada para " + item.student_name + "."
+    );
+  }
+
   function renderStudent(item, classDate) {
     const card = element("article", "academic-student-card");
     const header = element("div");
@@ -208,6 +239,21 @@
         item.attendance_status === "cancelled_finalized"
       ));
     }
+
+    actions.appendChild(actionButton(
+      "ALTERAR LIÇÃO",
+      "",
+      function () { return changePlannedLesson(item, classDate); },
+      item.lesson_status === "presented" ||
+        item.attendance_status === "absent" || isCancelled(item)
+    ));
+    actions.appendChild(actionButton(
+      "USAR SEQUÊNCIA AUTOMÁTICA",
+      "",
+      function () { return restoreAutomaticLesson(item, classDate); },
+      item.lesson_status === "presented" ||
+        item.attendance_status === "absent" || isCancelled(item)
+    ));
 
     actions.appendChild(actionButton(
       "PRESENTE",
