@@ -47,10 +47,6 @@ create table if not exists private.academic_v2_attendance_audit (
 create index if not exists academic_v2_attendance_audit_student_idx
   on private.academic_v2_attendance_audit (student_id, starts_at desc);
 
-alter table private.academic_v2_automation_control enable row level security;
-alter table private.academic_v2_closed_session_snapshots enable row level security;
-alter table private.academic_v2_attendance_audit enable row level security;
-
 revoke all on table private.academic_v2_automation_control,
   private.academic_v2_closed_session_snapshots,
   private.academic_v2_attendance_audit from public, anon, authenticated;
@@ -335,8 +331,7 @@ begin
           and profile.enrolled is true and profile.archived is false
           and (slot.starts_at at time zone 'America/Sao_Paulo')::date = lesson_date
       )
-      select candidate.class_number,
-        min(candidate.class_name) as class_name, candidate.starts_at
+      select distinct candidate.class_number, candidate.class_name, candidate.starts_at
       from candidates candidate
       where candidate.starts_at >= control.enabled_from
         and candidate.starts_at + interval '90 minutes' <= now()
@@ -345,7 +340,6 @@ begin
           where closed.class_number = candidate.class_number
             and closed.starts_at = candidate.starts_at
         )
-      group by candidate.class_number, candidate.starts_at
       order by candidate.starts_at, candidate.class_number
     loop
       snapshot_students := '[]'::jsonb;
