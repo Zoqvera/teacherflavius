@@ -27,8 +27,11 @@
   }
 
   function validateRegistration(item, classDate) {
-    if (!DATE.test(String(classDate || "")) ||
-        Number.isNaN(Date.parse(classDate + "T12:00:00Z"))) {
+    const dateValue = String(classDate || "");
+    const parsedDate = DATE.test(dateValue)
+      ? new Date(dateValue + "T12:00:00Z") : new Date(NaN);
+    if (Number.isNaN(parsedDate.getTime()) ||
+        parsedDate.toISOString().slice(0, 10) !== dateValue) {
       throw new Error("Data da aula inválida.");
     }
     if (!canRegister(item)) {
@@ -37,10 +40,15 @@
     if (!item.starts_at || Number.isNaN(Date.parse(item.starts_at))) {
       throw new Error("Horário da aula inválido.");
     }
-    const lessonDate = new Intl.DateTimeFormat("en-CA", {
+    const parts = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/Sao_Paulo", year: "numeric",
       month: "2-digit", day: "2-digit"
-    }).format(new Date(item.starts_at));
+    }).formatToParts(new Date(item.starts_at));
+    const values = {};
+    parts.forEach(function (part) {
+      if (part.type !== "literal") values[part.type] = part.value;
+    });
+    const lessonDate = values.year + "-" + values.month + "-" + values.day;
     if (lessonDate !== classDate) {
       throw new Error("A apresentação pertence a outra data.");
     }
