@@ -3,6 +3,7 @@
 
   const ROUTES = {
     "/acesso-por-senha/": "/acesso-por-senha/index.html",
+    "/aula-experimental/": "/aula-experimental/index.html",
     "/aulas-de-gramatica-interface-do-professor/": "/aulas-de-gramatica-interface-do-professor.html",
     "/aulas-de-gramatica/": "/aulas-de-gramatica.html",
     "/cadastro/": "/cadastro.html",
