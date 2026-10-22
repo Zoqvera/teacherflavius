@@ -115,6 +115,10 @@ test("worker is server-only, initially disabled, idempotent and threshold gated"
   assert.match(SQL, /if not coalesce\(control\.enabled, false\) or control\.enabled_from is null then\s+return 0/i);
   assert.match(SQL, /candidate\.starts_at >= control\.enabled_from/i);
   assert.match(SQL, /candidate\.starts_at \+ interval '90 minutes' <= now\(\)/i);
+  assert.match(SQL, /alter table private\.academic_v2_automation_control enable row level security/i);
+  assert.match(SQL, /alter table private\.academic_v2_closed_session_snapshots enable row level security/i);
+  assert.match(SQL, /alter table private\.academic_v2_attendance_audit enable row level security/i);
+  assert.match(SQL, /group by candidate\.class_number, candidate\.starts_at/i);
   assert.match(SQL, /pg_catalog\.pg_try_advisory_xact_lock/i);
   assert.match(SQL, /on conflict \(class_number, starts_at\) do nothing/i);
   assert.match(SQL, /cron\.schedule\([\s\S]*'teacher-v2-auto-finalize'/i);
