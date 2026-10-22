@@ -210,7 +210,7 @@ test("roster includes the protected section before studied questions", () => {
   assert.match(app, /presentationBundle\.service\.render\(item, presentationBundle\.records\)/);
   assert.ok(
     app.indexOf("card.appendChild(presentationBundle.service.render") <
-    app.indexOf('"PERGUNTAS ESTUDADAS"')
+    app.indexOf("card.appendChild(renderPreviouslyStudiedQuestions(")
   );
   assert.match(page, /teacher_lesson_presentations\.js\?v=/);
   assert.match(page, /teacher_lesson_presentations\.css\?v=/);

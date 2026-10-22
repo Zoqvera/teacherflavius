@@ -117,14 +117,23 @@
     await loadPlan(false);
   }
 
-  function renderQuestionRow(question, item, classDate) {
+  function renderQuestionRow(question, item, classDate, onlyPending) {
     const row = element("div", "academic-question-row");
     const questionCard = window.ConversationQuestionCardRenderer.create(question, {
       number: question.display_order,
       className: "academic-conversation-card academic-teacher-question-card"
     });
     const actions = element("div", "academic-rating-actions");
-    const canRate = item.attendance_status === "present";
+    const alreadyRated = onlyPending && !(Array.isArray(item.new_questions) &&
+      item.new_questions.some(function (pending) { return pending.id === question.id; }));
+    const canRate = item.attendance_status === "present" && !alreadyRated;
+
+    if (alreadyRated) {
+      actions.appendChild(element("p", "academic-muted", "PERGUNTA JÁ TRABALHADA"));
+      row.appendChild(questionCard);
+      row.appendChild(actions);
+      return row;
+    }
 
     Object.keys(RATING_LABELS).forEach(function (rating) {
       actions.appendChild(actionButton(
@@ -147,7 +156,7 @@
     return row;
   }
 
-  function renderQuestionSection(title, questions, item, classDate) {
+  function renderQuestionSection(title, questions, item, classDate, onlyPending) {
     const section = element("section", "academic-question-section");
     section.appendChild(element("h4", "", title));
 
@@ -157,8 +166,53 @@
     }
 
     questions.forEach(function (question) {
-      section.appendChild(renderQuestionRow(question, item, classDate));
+      section.appendChild(renderQuestionRow(question, item, classDate, onlyPending));
     });
+    return section;
+  }
+
+  function renderPreviouslyStudiedQuestions(numbers) {
+    const section = element("section", "academic-question-section academic-previous-studies");
+    section.appendChild(element("h4", "", "PERGUNTAS ESTUDADAS ANTERIORMENTE"));
+
+    const orderedNumbers = Array.from(new Set(
+      (Array.isArray(numbers) ? numbers : [])
+        .map(Number)
+        .filter(function (number) { return Number.isInteger(number) && number > 0; })
+    )).sort(function (first, second) { return first - second; });
+
+    if (!orderedNumbers.length) {
+      section.appendChild(element("p", "academic-muted", "Nenhuma pergunta estudada anteriormente."));
+      return section;
+    }
+
+    section.appendChild(element(
+      "p",
+      "academic-muted academic-history-count",
+      orderedNumbers.length + (orderedNumbers.length === 1
+        ? " pergunta estudada anteriormente."
+        : " perguntas estudadas anteriormente.")
+    ));
+
+    const list = element("div", "academic-history-numbers");
+    list.setAttribute("role", "list");
+    list.setAttribute("aria-label", "Números das perguntas estudadas anteriormente");
+    orderedNumbers.forEach(function (number) {
+      const chip = element("span", "academic-history-number", String(number));
+      chip.setAttribute("role", "listitem");
+      chip.setAttribute("aria-label", "Pergunta " + number);
+      list.appendChild(chip);
+    });
+
+    if (orderedNumbers.length > 20) {
+      const disclosure = element("details", "academic-history-disclosure");
+      disclosure.appendChild(element("summary", "", "VER TODAS AS PERGUNTAS"));
+      disclosure.appendChild(list);
+      section.appendChild(disclosure);
+    } else {
+      section.appendChild(list);
+    }
+
     return section;
   }
 
@@ -312,11 +366,13 @@
     if (presentationBundle && presentationBundle.records && presentationBundle.service) {
       card.appendChild(presentationBundle.service.render(item, presentationBundle.records));
     }
+    card.appendChild(renderPreviouslyStudiedQuestions(item.previously_studied_numbers));
     card.appendChild(renderQuestionSection(
-      "PERGUNTAS ESTUDADAS",
-      Array.isArray(item.new_questions) ? item.new_questions : [],
+      "PERGUNTAS ESTUDADAS PARA HOJE",
+      Array.isArray(item.today_questions) ? item.today_questions : [],
       item,
-      classDate
+      classDate,
+      true
     ));
     card.appendChild(renderQuestionSection(
       "REVISÕES PROGRAMADAS",
