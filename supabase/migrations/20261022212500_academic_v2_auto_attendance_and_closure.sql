@@ -362,6 +362,8 @@ begin
             on class.class_number = membership.class_number
           join public.profiles profile on profile.id = membership.user_id
           where class.class_number = due_class.class_number
+            and class.is_active is true
+            and class.class_weekday = extract(isodow from lesson_date)::smallint
             and ((lesson_date + class.class_start_time)
               at time zone 'America/Sao_Paulo') = due_class.starts_at
             and profile.enrolled is true and profile.archived is false
