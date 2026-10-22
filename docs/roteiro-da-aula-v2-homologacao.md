@@ -104,11 +104,11 @@ Git**, há menos de 24 horas.
 O SQL `scripts/sql/teacher_v2_stage5c_selective_rollout.sql` verifica
 exatamente o histórico produtivo esperado (350 versões e ponta
 `20261022205054`), exige ausência dos objetos da versão nova, aplica
-**somente quatro migrações imutáveis** e grava as respectivas versões
+**somente cinco migrações imutáveis** e grava as respectivas versões
 canônicas em uma única transação PostgreSQL. Qualquer conflito ou falha
 de DDL cancela toda a transação.
 
-O pós-teste exige 354 versões, tabelas privadas com RLS, permissão
+O pós-teste exige 355 versões, tabelas privadas com RLS, permissão
 administrativa sem acesso anônimo, tabelas de auditoria vazias e o
 controle `enabled=false`, `enabled_from=null`. O worker pode estar
 agendado mas executa `return 0`; nenhuma aula é encerrada por ele.
