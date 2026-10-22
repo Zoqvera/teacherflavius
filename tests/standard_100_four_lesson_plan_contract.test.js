@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const ROOT = path.join(__dirname, "..");
 const FILES = [
-  "supabase/migrations/20261022013600_add_standard_100_four_lesson_plan.sql",
+  "supabase/migrations/20261022020000_add_standard_100_four_lesson_plan.sql",
   "supabase/baseline/455_add_standard_100_four_lesson_plan.sql",
 ];
 
