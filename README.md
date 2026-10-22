@@ -24,7 +24,7 @@ Em 1º de outubro de 2026, a plataforma possui:
 - módulo financeiro com mensalidades, Pix/cartão de débito, primeira mensalidade disponível após definição do valor e próxima competência liberada dois dias após o pagamento anterior;
 - infraestrutura legada de assinaturas recorrentes do Mercado Pago preservada para histórico e conciliação, com criação de novas assinaturas desativada;
 - analytics consentido com GTM/GA4, eventos financeiros server-side e OpenAI Pixel para conversões comerciais;
-- sincronização de exercícios recebidos por Google Forms;
+- sincronização por Google Forms descontinuada em 21/10/2026, mantendo históricos existentes;
 - observabilidade com monitor de erros, CSP reporting, health interno, probes sintéticos e filtros estritos de ruído conhecido;
 - suíte automatizada de qualidade em JavaScript e Python, contratos especializados e amostragem estabilizada do Lighthouse;
 - backup lógico criptografado do Supabase, teste automatizado de restauração e baseline versionado para disaster recovery.
@@ -50,7 +50,7 @@ flowchart TB
   Functions --> MercadoPagoAPI["Mercado Pago\nPayments API"]
   Functions --> GA4["GA4\nserver-side consentido"]
   MercadoPagoAPI -->|"Webhook assinado"| Functions
-  Forms["Google Forms / Sheets"] --> Functions
+  Forms["Google Forms / Sheets (legado descontinuado)"] -.->|"Desativado"| Functions
 
   Actions["GitHub Actions"] --> Quality["Quality gates / contratos"]
   Actions --> Build["Build / materialização"]
@@ -284,7 +284,7 @@ Procedimento: [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md).
 | `flashcards/` | módulo de flashcards |
 | `conversation-questions/` | perguntas de conversação e progresso |
 | `pagamento/` | checkout e componentes financeiros |
-| `integracao-google-forms/` | gestão da integração de exercícios |
+| `integracao-google-forms/` | aviso estático de integração descontinuada |
 | `supabase/functions/` | Edge Functions |
 | `supabase/migrations/` | migrations |
 | `supabase/baseline/` | baseline de reconstrução |
