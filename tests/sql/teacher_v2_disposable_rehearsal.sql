@@ -151,7 +151,13 @@ begin
     'ALUNO TESTE V2 ' || index_value,
     'teacher-v2-synthetic-' || index_value || '@invalid.test',
     true, false, 'QUINTETO', class_date
-  from generate_series(1, 3) as index_value;
+  from generate_series(1, 3) as index_value
+  on conflict (id) do update
+  set name = excluded.name,
+      enrolled = excluded.enrolled,
+      archived = excluded.archived,
+      class_type = excluded.class_type,
+      tuition_first_due_date = excluded.tuition_first_due_date;
 
   insert into public.class_students (
     class_number, user_id, first_lesson_date
