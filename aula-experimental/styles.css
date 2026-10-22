@@ -87,4 +87,63 @@ h1 { margin: 0; color: #071c39; font-size: clamp(1.5rem, 5vw, 2rem); line-height
 .privacy-note { margin: 18px 0 0; color: #596b83; font-size: 0.79rem; line-height: 1.55; }
 .privacy-note a { color: #105b9b; }
 .honeypot { display: none !important; }
+
+/* Fill the available width on phones and narrow viewports. Some Android
+   browsers request a ~980px desktop viewport even on a small screen. */
+@media (max-width: 1024px) {
+  .page-shell {
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: clamp(20px, 3vw, 36px) clamp(12px, 2vw, 24px) 36px;
+  }
+
+  .entry-card {
+    width: 100%;
+    max-width: 900px;
+    padding: clamp(24px, 4vw, 40px);
+  }
+
+  .brand { font-size: 0.875rem; }
+  h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); }
+  .intro { font-size: 1rem; line-height: 1.5; }
+  .field label, .lesson-options legend { font-size: 1rem; }
+  .field input { min-height: 58px; }
+  .lesson-option { min-height: 56px; font-size: 1rem; }
+  .lesson-option input {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+  }
+  .submit-button { min-height: 62px; font-size: 1.04rem; }
+  .privacy-note { font-size: 0.875rem; }
+}
+
+@media (max-width: 767px) {
+  :root { font-size: 17px; }
+  .page-shell { padding: 18px 12px 28px; }
+  .entry-card { padding: 24px 20px; border-radius: 18px; }
+  .brand { font-size: 0.8rem; }
+  h1 { font-size: clamp(1.65rem, 6.2vw, 2rem); }
+  .lesson-option { padding: 12px; }
+  .submit-button { font-size: 1rem; }
+}
+
+/* Android 'Desktop site' can retain touch interaction with a 980px layout. */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root { font-size: 20px; }
+  #trialMeetForm #visitorName,
+  #trialMeetForm #visitorWhatsapp {
+    font-size: 20px !important;
+  }
+}
+
+@media (max-width: 359px) {
+  .entry-card { padding: 22px 16px; }
+  h1 { font-size: 1.55rem; }
+}
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
