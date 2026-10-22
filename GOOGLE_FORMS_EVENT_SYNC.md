@@ -1,3 +1,9 @@
+> **DESCONTINUADO em 21/10/2026.** Este documento é apenas histórico. Os endpoints
+> `google-forms-exercise-sync` e `google-forms-integration-manager` retornam HTTP 410,
+> e as RPCs administrativas foram revogadas. Não execute as etapas de implantação
+> abaixo nem configure novos gatilhos. Os gatilhos existentes no Google Apps Script
+> devem ser removidos separadamente na conta que os criou.
+
 # Sincronização automática de exercícios via Google Forms
 
 Esta integração registra automaticamente em `daily_exercise_completion` as respostas recebidas em planilhas do Google Forms.
