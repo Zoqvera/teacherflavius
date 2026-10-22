@@ -73,9 +73,9 @@ test("lesson previews skip student-specific preparation for non-active accounts"
 
 test("student pages load the updated versioned scripts without changing indexing rules", () => {
   for (const page of [actionPlanPage, lessonPage]) {
-    assert.match(page, /academic_workflow_service\.js\?v=20261020-active-student-guard-1/);
+    assert.match(page, /academic_workflow_service\.js\?v=20261022-apresentacoes-1/);
     assert.match(page, /<meta name="robots" content="noindex[, ]+nofollow">/);
   }
-  assert.match(actionPlanPage, /o-que-fazer\/app\.js\?v=20261020-active-student-guard-1/);
-  assert.match(lessonPage, /licao\.js\?v=20261020-active-student-guard-1/);
+  assert.match(actionPlanPage, /o-que-fazer\/app\.js\?v=20261022-apresentacoes-1/);
+  assert.match(lessonPage, /licao\.js\?v=20261022-apresentacoes-1/);
 });
