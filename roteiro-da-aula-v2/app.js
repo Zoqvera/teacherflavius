@@ -5,10 +5,20 @@
   const QUESTION_BATCH_SIZE = 80;
   // Etapa 2 preparada: manter registros indisponíveis até a liberação integral.
   const PRESENTATION_REGISTRATION_ENABLED = false;
+  const QUESTION_RATINGS_ENABLED = false;
+  const RATINGS = Object.freeze({
+    good: "BOM",
+    medium: "MÉDIO",
+    improve: "MELHORAR"
+  });
   const MODEL = window.TeacherWorkspaceModel;
   const state = {
     service: null,
     registration: null,
+    questionRatings: null,
+    questionHistory: new Map(),
+    ratingHistoryAvailable: false,
+    openSections: new Map(),
     loadedDate: null,
     groups: [],
     catalog: new Map(),
@@ -223,30 +233,117 @@
     return control;
   }
 
-  function questionCard(question, showRatings) {
+  function questionHistory(item) {
+    return state.questionHistory.get(window.TeacherQuestionRatings.occurrenceKey(item)) || [];
+  }
+
+  function evaluationSummary(questionId, history) {
+    const ratings = window.TeacherQuestionRatings;
+    const current = ratings.currentRating(history, questionId);
+    const latest = current || ratings.latestRating(history, questionId);
+    if (!latest) return null;
+    const label = current ? "AVALIADA NESTA AULA" : "ÚLTIMA AVALIAÇÃO";
+    return label + ": " + ratings.ratingLabel(latest.rating);
+  }
+
+  async function rateQuestion(item, question, rating, control) {
+    const date = document.getElementById("workspaceDate").value;
+    if (!QUESTION_RATINGS_ENABLED || !state.ratingHistoryAvailable ||
+        state.view !== "questions" || state.loadedDate !== date) {
+      status("Atualize o roteiro antes de avaliar uma pergunta.", "error");
+      return;
+    }
+
+    const questionId = question.id;
+    const controls = Array.from(
+      control.closest(".academic-rating-actions").querySelectorAll("button")
+    );
+    controls.forEach(function (button) { button.disabled = true; });
+    control.textContent = "SALVANDO...";
+    try {
+      const result = await state.questionRatings.rate(
+        item, date, questionId, rating, questionHistory(item)
+      );
+      if (document.getElementById("workspaceDate").value !== date ||
+          state.loadedDate !== date) return;
+      const key = window.TeacherQuestionRatings.occurrenceKey(item);
+      const records = state.questionHistory.get(key) || [];
+      if (!window.TeacherQuestionRatings.currentRating(records, questionId)) {
+        state.questionHistory.set(key, [{
+          question_id: questionId,
+          rating: result.rating,
+          is_current: true,
+          practiced_at: new Date().toISOString(),
+          lesson_starts_at: item.starts_at
+        }].concat(records));
+      }
+      item.attendance_status = "present";
+      render();
+      await loadPlan(
+        "Pergunta avaliada como " +
+          window.TeacherQuestionRatings.ratingLabel(result.rating) +
+          ". Presença confirmada."
+      );
+    } catch (error) {
+      console.error("Falha ao avaliar pergunta:", error);
+      status(error && error.message ? error.message :
+        "Não foi possível registrar a avaliação.", "error");
+      control.textContent = RATINGS[rating];
+      controls.forEach(function (button) { button.disabled = false; });
+    }
+  }
+
+  function questionRatingActions(item, question, history) {
+    const actions = node("div", "academic-rating-actions");
+    const date = document.getElementById("workspaceDate").value;
+    if (!QUESTION_RATINGS_ENABLED || !state.ratingHistoryAvailable) {
+      Object.keys(RATINGS).forEach(function (rating) {
+        actions.appendChild(readonlyAction(RATINGS[rating]));
+      });
+      return actions;
+    }
+    if (!window.TeacherQuestionRatings.canRate(item, date, question.id, history)) {
+      return actions;
+    }
+    Object.keys(RATINGS).forEach(function (rating) {
+      const control = button(RATINGS[rating], function () {
+        rateQuestion(item, question, rating, control);
+      }, "academic-button" + (rating === "good" ? " success" : ""));
+      actions.appendChild(control);
+    });
+    return actions;
+  }
+
+  function questionCard(question, item, showRatings, history) {
     const wrapper = node("div", "workspace-question");
     wrapper.appendChild(window.ConversationQuestionCardRenderer.create(question, {
       number: question.display_order,
       className: "academic-conversation-card academic-teacher-question-card"
     }));
-    if (showRatings) {
-      const actions = node("div", "academic-rating-actions");
-      ["BOM", "MÉDIO", "MELHORAR"].forEach(function (rating) {
-        actions.appendChild(readonlyAction(rating));
-      });
-      wrapper.appendChild(actions);
+    const lastRating = evaluationSummary(question.id, history);
+    if (lastRating) {
+      wrapper.appendChild(node("p", "workspace-rating-history", lastRating));
+    }
+    if (showRatings &&
+        !window.TeacherQuestionRatings.currentRating(history, question.id)) {
+      wrapper.appendChild(questionRatingActions(item, question, history));
     }
     return wrapper;
   }
 
-  function questionSection(label, questions, expanded, showRatings) {
+  function questionSection(label, questions, item, expanded, showRatings, history) {
     const section = node("details", "workspace-question-section");
-    section.open = expanded;
+    const key = window.TeacherQuestionRatings.occurrenceKey(item) + "|" + label;
+    section.open = state.openSections.has(key)
+      ? state.openSections.get(key) : expanded;
+    section.addEventListener("toggle", function () {
+      state.openSections.set(key, section.open);
+    });
     section.appendChild(node("summary", "", label + " (" + questions.length + ")"));
     const content = node("div", "workspace-question-list");
     if (!questions.length) content.appendChild(muted("Nenhuma pergunta nesta seção."));
     questions.forEach(function (question) {
-      content.appendChild(questionCard(question, showRatings));
+      content.appendChild(questionCard(question, item, showRatings, history));
     });
     section.appendChild(content);
     return section;
@@ -259,14 +356,17 @@
       card.appendChild(muted("Aula cancelada. Histórico disponível apenas para consulta."));
     }
     const questions = MODEL.questionsForStudent(item, state.catalog);
+    const history = questionHistory(item);
     card.appendChild(questionSection(
-      "PERGUNTAS ESTUDADAS PARA HOJE", questions.today, true, !MODEL.isCancelled(item)
+      "PERGUNTAS ESTUDADAS PARA HOJE", questions.today, item, true,
+      !MODEL.isCancelled(item), history
     ));
     card.appendChild(questionSection(
-      "PERGUNTAS A SEREM REVISADAS", questions.review, false, !MODEL.isCancelled(item)
+      "PERGUNTAS A SEREM REVISADAS", questions.review, item, false,
+      !MODEL.isCancelled(item), history
     ));
     card.appendChild(questionSection(
-      "TODAS AS PERGUNTAS ESTUDADAS", questions.all, false, false
+      "TODAS AS PERGUNTAS ESTUDADAS", questions.all, item, false, false, history
     ));
     return card;
   }
@@ -327,23 +427,28 @@
     try {
       const client = window.Auth.getClient();
       const items = await state.service.getTeacherLessonPlan(date);
-      const [catalog, bundle] = await Promise.all([
+      const [catalog, bundle, questionHistory] = await Promise.all([
         loadQuestionCatalog(client, items),
         window.TeacherLessonPresentations.loadPlan(
           items, function () { return client; }, state.teacherId
-        )
+        ),
+        state.questionRatings.getHistory(date)
       ]);
       if (requestId !== state.requestId) return;
       state.groups = MODEL.groupByClass(items);
       state.loadedDate = date;
       state.catalog = catalog;
       state.presentations = bundle ? bundle.records : new Map();
+      state.ratingHistoryAvailable = questionHistory.available;
+      state.questionHistory = questionHistory.byOccurrence;
       if (state.selectedClass && !state.groups.some(function (group) {
         return group.key === state.selectedClass;
       })) state.selectedClass = null;
       render();
       status(successMessage || state.groups.length +
-        " turma(s) carregada(s). Registro na prévia ainda desativado.", "success");
+        " turma(s) carregada(s). Registros na prévia ainda desativados." +
+        (state.ratingHistoryAvailable ? "" : " Histórico de avaliações ainda não disponível."),
+        "success");
     } catch (error) {
       if (requestId !== state.requestId) return;
       console.error("Falha ao carregar a prévia:", error);
@@ -357,7 +462,8 @@
         window.AcademicWorkflowService &&
         window.TeacherLessonPresentations &&
         window.ConversationQuestionCardRenderer &&
-        window.TeacherPresentationRegistration && MODEL);
+        window.TeacherPresentationRegistration &&
+        window.TeacherQuestionRatings && MODEL);
     }, WAIT_OPTIONS);
     if (!ready) {
       status("Recursos indisponíveis.", "error");
@@ -378,6 +484,7 @@
     state.teacherId = session.user.id;
     state.service = window.AcademicWorkflowService.create(client);
     state.registration = window.TeacherPresentationRegistration.create(state.service);
+    state.questionRatings = window.TeacherQuestionRatings.create(client);
     const datePicker = document.getElementById("workspaceDate");
     datePicker.value = currentDate();
     datePicker.addEventListener("change", function () {
