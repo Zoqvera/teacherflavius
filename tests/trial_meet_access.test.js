@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 
 const entry = require("../trial_meet_access.js");
 const report = require("../trial_meet_report.js");
@@ -12,6 +13,8 @@ const admin = fs.readFileSync(path.join(__dirname, "..", "aulas-experimentais", 
 const migration = fs.readFileSync(
   path.join(__dirname, "../supabase/migrations/20261022135918_trial_meet_accesses_20261022.sql"), "utf8"
 );
+const routeLoader = fs.readFileSync(path.join(__dirname, "..", "clean_route_loader.js"), "utf8");
+const notFoundPage = fs.readFileSync(path.join(__dirname, "..", "404.html"), "utf8");
 const endpoint = fs.readFileSync(
   path.join(__dirname, "../supabase/functions/trial-meet-access/index.ts"), "utf8"
 );
@@ -24,6 +27,41 @@ test("each experimental class opens its exact Google Meet address", () => {
   assert.equal(entry.getMeetUrl("other"), "");
   for (const slot of ["monday_18", "tuesday_10", "tuesday_15", "thursday_20"]) {
     assert.match(page, new RegExp('value="' + slot + '"'));
+  }
+});
+
+test("404 recovery renders the experimental form on bare and trailing-slash paths", async () => {
+  assert.match(notFoundPage, /clean_route_loader\\.js\\?v=20261022-trial-fallback-1/);
+
+  for (const pathname of ["/aula-experimental", "/aula-experimental/"]) {
+    const requested = [];
+    const written = [];
+    const context = {
+      window: { location: { pathname } },
+      document: {
+        open() {},
+        write(html) { written.push(html); },
+        close() {}
+      },
+      fetch: async (url, options) => {
+        requested.push({ url, options });
+        return {
+          ok: true,
+          text: async () => '<!DOCTYPE html><html><head><title>AULAS EXPERIMENTAIS</title></head><body>Formulário</body></html>'
+        };
+      },
+      console: { error(message) { throw new Error(message); } }
+    };
+
+    vm.runInNewContext(routeLoader, context, { filename: "clean_route_loader.js" });
+    await new Promise(setImmediate);
+
+    assert.equal(requested.length, 1);
+    assert.equal(requested[0].url, "/aula-experimental/index.html");
+    assert.equal(requested[0].options.cache, "no-store");
+    assert.equal(written.length, 1);
+    assert.match(written[0], /AULAS EXPERIMENTAIS/);
+    assert.match(written[0], /<base href="\\/">/);
   }
 });
 
