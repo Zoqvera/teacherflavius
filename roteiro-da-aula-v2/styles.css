@@ -158,3 +158,45 @@
     padding: 9px 6px;
   }
 }
+
+.workspace-rating-history {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin: 10px 0 4px;
+  padding: 5px 10px;
+  border: 1px solid rgba(110, 231, 183, .35);
+  border-radius: 10px;
+  color: var(--academic-success);
+  background: rgba(110, 231, 183, .06);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1.4;
+}
+
+.workspace-question .academic-rating-actions .academic-button {
+  min-height: 40px;
+}
+
+.workspace-question-search {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--academic-border);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, .92);
+  color: var(--academic-text);
+  font: inherit;
+}
+
+.workspace-question-search:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 2px;
+}
+
+.workspace-question[hidden] {
+  display: none;
+}

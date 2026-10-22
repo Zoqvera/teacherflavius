@@ -53,12 +53,42 @@ A página atual continua sendo a única interface autorizada para registrar aula
 integrada de duplicidade/concorrência em banco após homologação, antes da
 ativação definitiva.
 
-## Etapa 3 — avaliações de perguntas
+## Etapa 3 — avaliações de perguntas (implementação preparada)
 
-Habilitar BOM/MÉDIO/MELHORAR em perguntas estudadas para hoje e em revisão.
-Manter histórico completo de avaliações por aula e atualizações imediatas.
-Definir a consulta histórica que preserve perguntas já estudadas mas ainda
-não avaliadas e o algoritmo de revisões espaçadas.
+- Serviço separado em `roteiro-da-aula-v2/question_ratings.js`: valida
+  pergunta estudada ou de revisão, tipo/identificador da aula, frequência,
+  cancelamentos e data local; controla cliques concorrentes e confirma o
+  retorno da RPC antes de marcar a avaliação como registrada.
+- `rate_teacher_conversation_question_v2`: nova RPC aditiva com acesso
+  administrativo obrigatório. Sincroniza a presença como `present` e
+  avalia a pergunta em uma única transação PostgreSQL. Se a avaliação
+  falhar, a presença é revertida. Reutiliza os intervalos de revisão
+  `good=5`, `medium=3`, `improve=1` já existentes.
+- Uma pergunta já avaliada na mesma ocorrência não é reavaliada por esta
+  nova RPC; concorrência por pergunta é serializada. O histórico por
+  ocorrência continua preservado em
+  `private.conversation_question_practice_log`. Correção auditável de
+  uma avaliação feita por engano será tratada separadamente antes da
+  ativação, não por novo clique silencioso.
+- `get_teacher_question_rating_history_v2`: consulta somente de leitura,
+  limitada às turmas da data pedida e à conta do professor. Recupera
+  avaliações anteriores e identifica as realizadas na ocorrência atual.
+  A Data API não recebe acesso direto à tabela privada.
+- Interface: BOTÕES BOM/MÉDIO/MELHORAR em perguntas estudadas para hoje
+  ou previstas para revisão, identificação da última avaliação e seção
+  TODAS AS PERGUNTAS ESTUDADAS com busca. Estado de expansão das seções
+  é preservado após atualização na mesma sessão.
+- Quando a migração ainda não estiver disponível, a prévia indica
+  histórico indisponível e mantém as operações desativadas.
+- **Liberação bloqueada:** `QUESTION_RATINGS_ENABLED = false`.
+  `PRESENTATION_REGISTRATION_ENABLED` também permanece `false`.
+  A migração foi versionada no repositório; não foi executada
+  manualmente em alunos ou registros da produção nesta etapa.
+- Testes abrangem validação de permissão, cancelamentos, datas,
+  avaliações anteriores, chamadas concorrentes, retorno da RPC e
+  recuperação após falha.
+
+O Roteiro da Aula atual não foi modificado e continua operativo.
 
 ## Etapa 4 — frequência e encerramento automáticos
 
