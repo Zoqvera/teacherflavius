@@ -1,0 +1,350 @@
+(function () {
+  "use strict";
+
+  const WAIT_OPTIONS = Object.freeze({ maxAttempts: 30, delayMs: 120 });
+  const QUESTION_BATCH_SIZE = 80;
+  const MODEL = window.TeacherWorkspaceModel;
+  const state = {
+    service: null,
+    groups: [],
+    catalog: new Map(),
+    presentations: new Map(),
+    view: "home",
+    selectedClass: null,
+    requestId: 0
+  };
+
+  function node(tag, className, content) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (content !== undefined && content !== null) element.textContent = content;
+    return element;
+  }
+
+  function status(message, tone) {
+    const output = document.getElementById("workspaceStatus");
+    output.textContent = message;
+    if (tone) output.dataset.tone = tone;
+    else delete output.dataset.tone;
+  }
+
+  function currentDate() {
+    const segments = new Intl.DateTimeFormat("en-CA", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      timeZone: "America/Sao_Paulo"
+    }).formatToParts(new Date());
+    const parts = {};
+    segments.forEach(function (part) {
+      if (part.type !== "literal") parts[part.type] = part.value;
+    });
+    return parts.year + "-" + parts.month + "-" + parts.day;
+  }
+
+  function classTime(startsAt) {
+    return new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit", minute: "2-digit"
+    }).format(new Date(startsAt));
+  }
+
+  function button(label, action, className) {
+    const control = node("button", className || "workspace-navigation-card", label);
+    control.type = "button";
+    control.addEventListener("click", action);
+    return control;
+  }
+
+  function muted(message) {
+    return node("p", "academic-muted", message);
+  }
+
+  function readonlyAction(label) {
+    const control = node("button", "academic-button workspace-disabled-action", label);
+    control.type = "button";
+    control.disabled = true;
+    control.title = "Registro disponível após a validação da nova versão.";
+    return control;
+  }
+
+  function formatSectionLabel() {
+    return state.view === "presentations" ? "APRESENTAÇÕES DO DIA" : "PERGUNTAS DO DIA";
+  }
+
+  function setView(view, selectedClass) {
+    state.view = view;
+    state.selectedClass = selectedClass || null;
+    render();
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  function renderBreadcrumbs(group) {
+    const nav = document.getElementById("workspaceBreadcrumbs");
+    nav.replaceChildren();
+    if (state.view === "home") return;
+    nav.appendChild(button("INÍCIO", function () { setView("home"); }, "workspace-breadcrumb"));
+    nav.appendChild(node("span", "academic-muted", " / "));
+    if (group) {
+      nav.appendChild(button(formatSectionLabel(), function () {
+        setView(state.view);
+      }, "workspace-breadcrumb"));
+      nav.appendChild(node("span", "academic-muted", " / "));
+      nav.appendChild(node("span", "workspace-breadcrumb-current", group.className));
+    } else {
+      nav.appendChild(node("span", "workspace-breadcrumb-current", formatSectionLabel()));
+    }
+  }
+
+  function renderHome(container) {
+    const grid = node("div", "workspace-grid");
+    [
+      { title: "APRESENTAÇÕES DO DIA", description: "Apresentações previstas por turma.", view: "presentations" },
+      { title: "PERGUNTAS DO DIA", description: "Perguntas estudadas, revisões e histórico por aluno.", view: "questions" }
+    ].forEach(function (entry) {
+      const card = button("", function () { setView(entry.view); });
+      card.appendChild(node("strong", "", entry.title));
+      card.appendChild(node("span", "", entry.description));
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  }
+
+  function classDescription(group) {
+    const summary = MODEL.classSummary(group);
+    if (state.view === "presentations") {
+      return summary.presented + "/" + summary.total + " apresentações registradas" +
+        (summary.cancelled ? " · " + summary.cancelled + " cancelamento(s)" : "");
+    }
+    return summary.total + " aluno(s) · " + summary.studiedToday +
+      " pergunta(s) estudada(s) para hoje" +
+      (summary.cancelled ? " · " + summary.cancelled + " cancelamento(s)" : "");
+  }
+
+  function renderClasses(container) {
+    container.appendChild(node("h2", "workspace-section-title", formatSectionLabel()));
+    if (!state.groups.length) {
+      container.appendChild(muted("Nenhuma turma encontrada para a data selecionada."));
+      return;
+    }
+    const grid = node("div", "workspace-grid");
+    state.groups.forEach(function (group) {
+      const card = button("", function () { setView(state.view, group.key); });
+      card.appendChild(node("strong", "", group.className + " · " + classTime(group.startsAt)));
+      card.appendChild(node("span", "", classDescription(group)));
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  }
+
+  function studentHeading(item) {
+    const heading = node("div", "workspace-student-heading");
+    const title = node("h3", "", item.student_name);
+    heading.appendChild(title);
+    const description = item.lesson_kind === "makeup" ? "Reposição" : "Aula regular";
+    heading.appendChild(node("span", "academic-muted", description));
+    const pill = node("span", "academic-pill", MODEL.isCancelled(item)
+      ? "AULA CANCELADA"
+      : item.attendance_status === "present" ? "PRESENTE"
+        : item.attendance_status === "absent" ? "AUSENTE" : "AGUARDANDO");
+    heading.appendChild(pill);
+    return heading;
+  }
+
+  function presentationFor(item) {
+    const key = window.TeacherLessonPresentations.rosterKey(
+      item.student_id, item.lesson_number
+    );
+    return key ? state.presentations.get(key) : null;
+  }
+
+  function renderPresentation(item) {
+    const card = node("article", "academic-student-card workspace-student");
+    card.appendChild(studentHeading(item));
+    if (MODEL.isCancelled(item)) {
+      card.appendChild(muted("Aula cancelada. Nenhum registro de apresentação nesta prévia."));
+      return card;
+    }
+    card.appendChild(node("p", "workspace-lesson-label", item.lesson_number
+      ? "APRESENTAÇÃO " + item.lesson_number : "APRESENTAÇÕES CONCLUÍDAS"));
+    const presentation = presentationFor(item);
+    if (item.lesson_status === "presented") {
+      card.appendChild(node("span", "academic-pill presented", "APRESENTAÇÃO REGISTRADA"));
+    } else if (item.lesson_number) {
+      card.appendChild(readonlyAction("REGISTRAR APRESENTAÇÃO"));
+    }
+    if (!presentation) {
+      card.appendChild(muted("APRESENTAÇÃO NÃO ENVIADA"));
+    } else {
+      card.appendChild(node("p", "workspace-presentation-text", presentation.body));
+      card.appendChild(muted("Versão " + presentation.revision_number));
+    }
+    return card;
+  }
+
+  function questionCard(question, showRatings) {
+    const wrapper = node("div", "workspace-question");
+    wrapper.appendChild(window.ConversationQuestionCardRenderer.create(question, {
+      number: question.display_order,
+      className: "academic-conversation-card academic-teacher-question-card"
+    }));
+    if (showRatings) {
+      const actions = node("div", "academic-rating-actions");
+      ["BOM", "MÉDIO", "MELHORAR"].forEach(function (rating) {
+        actions.appendChild(readonlyAction(rating));
+      });
+      wrapper.appendChild(actions);
+    }
+    return wrapper;
+  }
+
+  function questionSection(label, questions, expanded, showRatings) {
+    const section = node("details", "workspace-question-section");
+    section.open = expanded;
+    section.appendChild(node("summary", "", label + " (" + questions.length + ")"));
+    const content = node("div", "workspace-question-list");
+    if (!questions.length) content.appendChild(muted("Nenhuma pergunta nesta seção."));
+    questions.forEach(function (question) {
+      content.appendChild(questionCard(question, showRatings));
+    });
+    section.appendChild(content);
+    return section;
+  }
+
+  function renderQuestions(item) {
+    const card = node("article", "academic-student-card workspace-student");
+    card.appendChild(studentHeading(item));
+    if (MODEL.isCancelled(item)) {
+      card.appendChild(muted("Aula cancelada. Histórico disponível apenas para consulta."));
+    }
+    const questions = MODEL.questionsForStudent(item, state.catalog);
+    card.appendChild(questionSection(
+      "PERGUNTAS ESTUDADAS PARA HOJE", questions.today, true, !MODEL.isCancelled(item)
+    ));
+    card.appendChild(questionSection(
+      "PERGUNTAS A SEREM REVISADAS", questions.review, false, !MODEL.isCancelled(item)
+    ));
+    card.appendChild(questionSection(
+      "TODAS AS PERGUNTAS ESTUDADAS", questions.all, false, false
+    ));
+    return card;
+  }
+
+  function renderClass(container, group) {
+    container.appendChild(node("h2", "workspace-section-title",
+      group.className + " · " + classTime(group.startsAt)));
+    container.appendChild(muted(formatSectionLabel()));
+    const active = group.students.filter(function (student) {
+      return !MODEL.isCancelled(student);
+    });
+    const cancelled = group.students.filter(MODEL.isCancelled);
+    active.forEach(function (item) {
+      container.appendChild(state.view === "presentations"
+        ? renderPresentation(item) : renderQuestions(item));
+    });
+    if (cancelled.length) {
+      container.appendChild(node("h3", "workspace-section-title", "AULAS CANCELADAS"));
+      cancelled.forEach(function (item) {
+        container.appendChild(state.view === "presentations"
+          ? renderPresentation(item) : renderQuestions(item));
+      });
+    }
+  }
+
+  function render() {
+    const content = document.getElementById("workspaceContent");
+    content.replaceChildren();
+    const group = state.groups.find(function (item) {
+      return item.key === state.selectedClass;
+    });
+    renderBreadcrumbs(group);
+    if (state.view === "home") renderHome(content);
+    else if (group) renderClass(content, group);
+    else renderClasses(content);
+  }
+
+  async function loadQuestionCatalog(client, items) {
+    const numbers = MODEL.studiedNumbers(items);
+    const catalog = new Map();
+    for (let position = 0; position < numbers.length; position += QUESTION_BATCH_SIZE) {
+      const chunk = numbers.slice(position, position + QUESTION_BATCH_SIZE);
+      const result = await client.from("conversation_questions")
+        .select("id,display_order,question_text,question_translation,answer_examples")
+        .in("display_order", chunk);
+      if (result.error) throw result.error;
+      (result.data || []).forEach(function (question) {
+        catalog.set(Number(question.display_order), question);
+      });
+    }
+    return catalog;
+  }
+
+  async function loadPlan() {
+    const requestId = ++state.requestId;
+    const date = document.getElementById("workspaceDate").value;
+    status("Carregando turmas...", "");
+    try {
+      const client = window.Auth.getClient();
+      const items = await state.service.getTeacherLessonPlan(date);
+      const [catalog, bundle] = await Promise.all([
+        loadQuestionCatalog(client, items),
+        window.TeacherLessonPresentations.loadPlan(
+          items, function () { return client; }, state.teacherId
+        )
+      ]);
+      if (requestId !== state.requestId) return;
+      state.groups = MODEL.groupByClass(items);
+      state.catalog = catalog;
+      state.presentations = bundle ? bundle.records : new Map();
+      if (state.selectedClass && !state.groups.some(function (group) {
+        return group.key === state.selectedClass;
+      })) state.selectedClass = null;
+      render();
+      status(state.groups.length + " turma(s) carregada(s). Prévia somente para consulta.", "success");
+    } catch (error) {
+      if (requestId !== state.requestId) return;
+      console.error("Falha ao carregar a prévia:", error);
+      status(error && error.message ? error.message : "Falha ao carregar a prévia.", "error");
+    }
+  }
+
+  async function initialize() {
+    const ready = await window.ResourceWaiter.waitUntil(function () {
+      return Boolean(window.Auth && window.Auth.isConfigured() &&
+        window.AcademicWorkflowService &&
+        window.TeacherLessonPresentations &&
+        window.ConversationQuestionCardRenderer && MODEL);
+    }, WAIT_OPTIONS);
+    if (!ready) {
+      status("Recursos indisponíveis.", "error");
+      document.body.classList.remove("auth-checking");
+      return;
+    }
+    const session = await window.Auth.getSession();
+    if (!session || !session.user) {
+      window.location.href = "/login/?next=" + encodeURIComponent("/roteiro-da-aula-v2/");
+      return;
+    }
+    const client = window.Auth.getClient();
+    const permission = await client.rpc("is_teacher_admin");
+    if (permission.error || permission.data !== true) {
+      window.location.href = "/acesso-negado/";
+      return;
+    }
+    state.teacherId = session.user.id;
+    state.service = window.AcademicWorkflowService.create(client);
+    const datePicker = document.getElementById("workspaceDate");
+    datePicker.value = currentDate();
+    datePicker.addEventListener("change", function () {
+      setView("home");
+      loadPlan();
+    });
+    document.getElementById("workspaceReload").addEventListener("click", loadPlan);
+    document.body.classList.remove("auth-checking");
+    await loadPlan();
+  }
+
+  initialize().catch(function (error) {
+    console.error("Falha na inicialização do Roteiro v2:", error);
+    status("Não foi possível abrir a prévia.", "error");
+    document.body.classList.remove("auth-checking");
+  });
+})();
