@@ -158,3 +158,23 @@
     padding: 9px 6px;
   }
 }
+
+.workspace-rating-history {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin: 10px 0 4px;
+  padding: 5px 10px;
+  border: 1px solid rgba(110, 231, 183, .35);
+  border-radius: 10px;
+  color: var(--academic-success);
+  background: rgba(110, 231, 183, .06);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1.4;
+}
+
+.workspace-question .academic-rating-actions .academic-button {
+  min-height: 40px;
+}
