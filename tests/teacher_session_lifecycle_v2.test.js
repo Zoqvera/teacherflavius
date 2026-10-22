@@ -11,6 +11,7 @@ const PAGE = read("roteiro-da-aula-v2/index.html");
 const APP = read("roteiro-da-aula-v2/app.js");
 const OLD_PAGE = read("roteiro-da-aula/index.html");
 const SQL = read("supabase/migrations/20261022212500_academic_v2_auto_attendance_and_closure.sql");
+const RLS_SQL = read("supabase/migrations/20261022214500_academic_v2_private_table_rls.sql");
 
 const context = vm.createContext({ window: {} });
 vm.runInContext(SOURCE, context);
@@ -115,6 +116,9 @@ test("worker is server-only, initially disabled, idempotent and threshold gated"
   assert.match(SQL, /if not coalesce\(control\.enabled, false\) or control\.enabled_from is null then\s+return 0/i);
   assert.match(SQL, /candidate\.starts_at >= control\.enabled_from/i);
   assert.match(SQL, /candidate\.starts_at \+ interval '90 minutes' <= now\(\)/i);
+  assert.match(RLS_SQL, /alter table private\.academic_v2_automation_control\s+enable row level security/i);
+  assert.match(RLS_SQL, /alter table private\.academic_v2_closed_session_snapshots\s+enable row level security/i);
+  assert.match(RLS_SQL, /alter table private\.academic_v2_attendance_audit\s+enable row level security/i);
   assert.match(SQL, /pg_catalog\.pg_try_advisory_xact_lock/i);
   assert.match(SQL, /on conflict \(class_number, starts_at\) do nothing/i);
   assert.match(SQL, /cron\.schedule\([\s\S]*'teacher-v2-auto-finalize'/i);
