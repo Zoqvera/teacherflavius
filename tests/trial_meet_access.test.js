@@ -9,7 +9,7 @@ const report = require("../trial_meet_report.js");
 const page = fs.readFileSync(path.join(__dirname, "../aula-experimental/index.html"), "utf8");
 const admin = fs.readFileSync(path.join(__dirname, "../aulas-experimentais/index.html"), "utf8");
 const migration = fs.readFileSync(
-  path.join(__dirname, "../supabase/migrations/20261022140000_trial_meet_accesses.sql"), "utf8"
+  path.join(__dirname, "../supabase/migrations/20261022135918_trial_meet_accesses_20261022.sql"), "utf8"
 );
 const endpoint = fs.readFileSync(
   path.join(__dirname, "../supabase/functions/trial-meet-access/index.ts"), "utf8"
