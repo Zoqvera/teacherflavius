@@ -104,8 +104,10 @@ Git**, há menos de 24 horas.
 O SQL `scripts/sql/teacher_v2_stage5c_selective_rollout.sql` verifica
 exatamente o histórico produtivo esperado (350 versões e ponta
 `20261022205054`), exige ausência dos objetos da versão nova, aplica
-**somente cinco migrações imutáveis** e grava as respectivas versões
-canônicas em uma única transação PostgreSQL. Qualquer conflito ou falha
+**somente cinco migrações imutáveis** e grava as respectivas versões e os conteúdos SQL completos na tabela
+`supabase_migrations.schema_migrations` em uma única transação PostgreSQL.
+Isso preserva a verificação normal do histórico de migrações, sem
+exceções de checksum nem modificações nas migrações antigas. Qualquer conflito ou falha
 de DDL cancela toda a transação.
 
 O pós-teste exige 355 versões, tabelas privadas com RLS, permissão
