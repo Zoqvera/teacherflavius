@@ -12,7 +12,6 @@ type Message = { subject: string; text: string; html: string };
 type Outcome = "sent" | "failed" | "skipped";
 
 const SENDER = "Financeiro Teacher Flávio <financeiro@teacherflavius.com>";
-const REPLY_TO = "contato@teacherflavius.com";
 const PAYMENT_URL = "https://teacherflavius.com/pagamento/";
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const encoder = new TextEncoder();
@@ -169,7 +168,7 @@ async function sendReminder(
       },
       body: JSON.stringify({
         from: SENDER,
-        reply_to: REPLY_TO,
+        reply_to: "contato@teacherflavius.com",
         to: [address],
         subject: message.subject,
         text: message.text,
