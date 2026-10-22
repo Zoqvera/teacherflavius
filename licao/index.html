@@ -26,7 +26,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex,nofollow">
-  <title>Lição - Teacher Flávio</title>
+  <title>Apresentação - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase_config.js?v=20260918-1"></script>
   <script src="/module_loader.js?v=20260902-2"></script>
@@ -52,10 +52,10 @@
     <header class="header">
       <div><span class="badge">TEACHER FLÁVIO</span></div>
       <p id="lessonDisplayNumber" class="lesson-display-number"></p>
-      <h1 id="lessonPageTitle">Lição</h1>
-      <div id="lessonPageStatus" class="status" role="status">Carregando lição...</div>
-      <nav class="lesson-all-lessons-nav" aria-label="Navegação pelas lições">
-        <a class="lesson-all-lessons-button" href="/roteiro-de-estudos/">TODAS AS LIÇÕES</a>
+      <h1 id="lessonPageTitle">Apresentação</h1>
+      <div id="lessonPageStatus" class="status" role="status">Carregando apresentação...</div>
+      <nav class="lesson-all-lessons-nav" aria-label="Navegação pelas apresentações">
+        <a class="lesson-all-lessons-button" href="/roteiro-de-estudos/">TODAS AS APRESENTAÇÕES</a>
       </nav>
     </header>
 
@@ -63,17 +63,17 @@
 
     <main id="lessonPageContent" hidden>
       <p id="lessonFlowProgress" class="student-preparation-progress" hidden>ETAPA 1 DE 2 — APRESENTAÇÃO</p>
-      <section class="lesson-page-actions" aria-label="Ações da lição">
+      <section class="lesson-page-actions" aria-label="Ações da apresentação">
         <button id="printLessonButton" class="lesson-print-button" type="button">
           <svg class="lesson-print-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M7 3h10v4H7V3Zm10 16H7v2h10v-2Zm2-11H5a3 3 0 0 0-3 3v5h4v-3h12v3h4v-5a3 3 0 0 0-3-3Zm-3 9H8v-5h8v5Z" fill="currentColor"/>
           </svg>
-          <span>IMPRIMIR LIÇÃO</span>
+          <span>IMPRIMIR APRESENTAÇÃO</span>
         </button>
       </section>
 
       <section class="lesson-section lesson-objective-section dynamic-lesson-section">
-        <p class="lesson-section-kicker">OBJETIVO DA LIÇÃO</p>
+        <p class="lesson-section-kicker">OBJETIVO DA APRESENTAÇÃO</p>
         <p id="lessonObjective" class="lesson-rich-text lesson-objective-text"></p>
       </section>
 
@@ -116,11 +116,11 @@
       </section>
 
       <section id="legacyLessonMaterial" class="lesson-content-card" hidden>
-        <p class="lesson-section-kicker">MATERIAL DA LIÇÃO</p>
+        <p class="lesson-section-kicker">MATERIAL DA APRESENTAÇÃO</p>
         <iframe
           id="legacyLessonFrame"
           class="academic-lesson-frame"
-          title="Material da lição"
+          title="Material da apresentação"
           loading="lazy"
           referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </section>
@@ -140,28 +140,28 @@
       <section id="lessonPreparationSection" class="lesson-content-card academic-preparation-card" hidden>
         <div id="lessonLegacyPreparationContent">
           <p class="lesson-section-kicker">PREPARAÇÃO</p>
-          <h2>Terminou de preparar esta lição?</h2>
-          <p class="lesson-rich-text">Registre sua preparação. A lição só será considerada concluída quando o professor marcar que ela foi apresentada.</p>
+          <h2>Terminou de preparar esta apresentação?</h2>
+          <p class="lesson-rich-text">Registre sua preparação. A apresentação só será considerada concluída quando o professor marcar que ela foi apresentada.</p>
           <button id="lessonPreparedButton" class="academic-button primary" type="button">ESTOU PREPARADO</button>
           <p id="lessonPreparationStatus" class="academic-status" role="status"></p>
         </div>
         <a id="lessonNextPartLink" class="academic-button primary student-preparation-next-link" href="/o-que-fazer/segunda-parte/" hidden>PRÓXIMA PARTE</a>
         <p id="lessonCurrentLessonStatus" class="academic-status" role="status" hidden></p>
-        <a id="lessonCurrentLessonLink" class="academic-button primary student-preparation-next-link" href="/o-que-fazer/" hidden>ABRIR LIÇÃO ATUAL</a>
+        <a id="lessonCurrentLessonLink" class="academic-button primary student-preparation-next-link" href="/o-que-fazer/" hidden>ABRIR APRESENTAÇÃO ATUAL</a>
       </section>
       <nav id="lessonRoadmapNavigation" class="lesson-content-card student-preparation-roadmap-nav" aria-label="Navegação do roteiro de estudos" hidden>
-        <a id="lessonNextLessonLink" class="academic-button primary student-preparation-next-link" hidden>PRÓXIMA LIÇÃO</a>
+        <a id="lessonNextLessonLink" class="academic-button primary student-preparation-next-link" hidden>PRÓXIMA APRESENTAÇÃO</a>
         <p id="lessonRoadmapStatus" class="academic-status" role="status"></p>
       </nav>
     </main>
   </div>
 
   <script src="/resource_waiter.js?v=20260902-2"></script>
-  <script src="/study_lesson_service.js?v=20261004-full-content-1"></script>
-  <script src="/academic_workflow_service.js?v=20261020-active-student-guard-1"></script>
+  <script src="/study_lesson_service.js?v=20261022-apresentacoes-1"></script>
+  <script src="/academic_workflow_service.js?v=20261022-apresentacoes-1"></script>
   <script src="/student_preparation_flow.js?v=20261016-general-release-1"></script>
-  <script src="/lesson_presentation_editor.js?v=20261017-stage5c-1"></script>
-  <script src="/licao.js?v=20261020-active-student-guard-1"></script>
+  <script src="/lesson_presentation_editor.js?v=20261022-apresentacoes-1"></script>
+  <script src="/licao.js?v=20261022-apresentacoes-1"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>

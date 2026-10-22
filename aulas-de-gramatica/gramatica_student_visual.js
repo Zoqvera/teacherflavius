@@ -32,7 +32,7 @@
       const done = card.classList.contains('done');
       const stateKey = done ? 'done' : 'open';
       const heading = card.querySelector('h2');
-      const title = heading ? heading.textContent.trim() : 'Lição de gramática';
+      const title = heading ? heading.textContent.trim() : 'Apresentação de gramática';
 
       let state = card.querySelector('.lesson-state');
       if (!state && heading) {

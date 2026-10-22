@@ -26,7 +26,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex,nofollow">
-  <title>Criar Lição - Teacher Flávio</title>
+  <title>Criar Apresentação - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase_config.js?v=20260918-1"></script>
   <script src="/module_loader.js?v=20260902-2"></script>
@@ -48,8 +48,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div class="header">
       <div><span class="badge">TEACHER FLÁVIO</span></div>
-      <h1>Criar Lição</h1>
-      <p class="lesson-editor-intro">Crie a página da lição e escolha entre conectá-la a um card já existente ou criar um novo card no Roteiro de Estudos.</p>
+      <h1>Criar Apresentação</h1>
+      <p class="lesson-editor-intro">Crie a página da apresentação e escolha entre conectá-la a um card já existente ou criar um novo card no Roteiro de Estudos.</p>
       <div id="lessonEditorStatus" class="status" role="status">Verificando credenciais de professor...</div>
     </div>
 
@@ -60,7 +60,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="editor-panel-heading">
           <div>
             <p class="editor-kicker">CONTEÚDO</p>
-            <h2 id="lessonFormTitle">Nova página de lição</h2>
+            <h2 id="lessonFormTitle">Nova página de apresentação</h2>
           </div>
           <button id="cancelEditButton" class="secondary-button" type="button" hidden>CANCELAR EDIÇÃO</button>
         </div>
@@ -68,7 +68,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <form id="lessonForm" novalidate>
           <div class="form-field">
             <div class="field-heading">
-              <label for="lessonNumber">Número da lição</label>
+              <label for="lessonNumber">Número da apresentação</label>
               <span id="lessonNumberCount" class="character-count">0/50</span>
             </div>
             <input id="lessonNumber" name="lesson_number" type="text" maxlength="50" required autocomplete="off">
@@ -76,7 +76,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
           <div class="form-field">
             <div class="field-heading">
-              <label for="lessonTitle">Título da Lição</label>
+              <label for="lessonTitle">Título da Apresentação</label>
               <span id="lessonTitleCount" class="character-count">0/200</span>
             </div>
             <input id="lessonTitle" name="title" type="text" maxlength="200" required autocomplete="off">
@@ -84,7 +84,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
           <div class="form-field">
             <div class="field-heading">
-              <label for="lessonObjective">Objetivo da Lição</label>
+              <label for="lessonObjective">Objetivo da Apresentação</label>
               <span id="lessonObjectiveCount" class="character-count">0/500</span>
             </div>
             <textarea id="lessonObjective" name="objective" maxlength="500" required rows="5"></textarea>
@@ -132,7 +132,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
 
           <div class="form-actions">
-            <button id="saveLessonButton" class="primary-button" type="submit">SALVAR LIÇÃO</button>
+            <button id="saveLessonButton" class="primary-button" type="submit">SALVAR APRESENTAÇÃO</button>
           </div>
         </form>
       </section>
@@ -141,18 +141,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="editor-panel-heading">
           <div>
             <p class="editor-kicker">PÁGINAS CRIADAS</p>
-            <h2>Gerenciar lições</h2>
+            <h2>Gerenciar apresentações</h2>
           </div>
         </div>
-        <p id="lessonListStatus" class="list-status">Carregando páginas de lição...</p>
+        <p id="lessonListStatus" class="list-status">Carregando páginas de apresentação...</p>
         <div id="lessonPagesList" class="lesson-pages-list"></div>
       </section>
     </main>
   </div>
 
   <script src="/resource_waiter.js?v=20260902-2"></script>
-  <script src="/study_lesson_service.js?v=20260918-3"></script>
-  <script src="/criar_licao.js?v=20260925-stepup-1"></script>
+  <script src="/study_lesson_service.js?v=20261022-apresentacoes-1"></script>
+  <script src="/criar_licao.js?v=20261022-apresentacoes-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
   <script src="/site_runtime_config.js?v=20260903-1"></script>

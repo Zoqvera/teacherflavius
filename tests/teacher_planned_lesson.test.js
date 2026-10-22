@@ -29,7 +29,7 @@ const studentLesson = {
   lesson_number: 1
 };
 
-test("programa a lição da ocorrência sem registrar apresentação", async () => {
+test("programa a apresentação da ocorrência sem registrar apresentação", async () => {
   const { service, calls } = createWorkflow();
   await service.setPlannedLesson(studentLesson, "2026-10-21", 2);
 
@@ -49,15 +49,15 @@ test("permite restaurar a sequência automática da ocorrência", async () => {
   assert.equal(calls[0].payload.target_lesson_number, null);
 });
 
-test("rejeita lições fora da faixa sem enviar RPC", async () => {
+test("rejeita apresentações fora da faixa sem enviar RPC", async () => {
   const { service, calls } = createWorkflow();
   await assert.rejects(
     service.setPlannedLesson(studentLesson, "2026-10-21", 75),
-    /lição válida/i
+    /apresentação válida/i
   );
   await assert.rejects(
     service.setPlannedLesson(studentLesson, "2026-10-21", 0),
-    /lição válida/i
+    /apresentação válida/i
   );
   assert.equal(calls.length, 0);
 });

@@ -46,6 +46,12 @@
     return match ? match[3] + "/" + match[2] + "/" + match[1].slice(2) : String(value || "");
   }
 
+  function formatPresentationCode(value) {
+    const code = String(value || "");
+    const match = /^L([1-9]\d?)$/i.exec(code);
+    return match ? "Apresentação " + match[1] : code;
+  }
+
   function lessonOptions() {
     let html = '<option value="">Selecione</option>';
     SPECIAL_LESSONS.forEach(function (option) {
@@ -53,7 +59,7 @@
     });
     html += '<option disabled>──────────</option>';
     for (let i = 1; i <= 74; i++) {
-      html += '<option value="L' + i + '">L' + i + '</option>';
+      html += '<option value="L' + i + '">Apresentação ' + i + '</option>';
     }
     return html;
   }
@@ -155,13 +161,13 @@
   function renderHistory(userId) {
     const records = recordsByUser.get(userId) || [];
     if (!records.length) {
-      return '<div class="student-lessons-empty">Nenhuma lição registrada para este aluno.</div>';
+      return '<div class="student-lessons-empty">Nenhuma apresentação registrada para este aluno.</div>';
     }
 
     return '<div class="student-lessons-history">' + records.map(function (record) {
       return '<div class="student-lesson-row">' +
         '<span>' + escapeHtml(formatDate(record.class_date)) + '</span>' +
-        '<span class="student-lesson-code">' + escapeHtml(record.lesson_code) + '</span>' +
+        '<span class="student-lesson-code">' + escapeHtml(formatPresentationCode(record.lesson_code)) + '</span>' +
         '<span class="student-lesson-class">' + escapeHtml(className(record.class_number)) + '</span>' +
       '</div>';
     }).join("") + '</div>';
@@ -185,7 +191,7 @@
     const records = recordsByUser.get(userId) || [];
     if (!records.length) return "Nenhum registro";
     const latest = records[0];
-    return records.length + (records.length === 1 ? " registro" : " registros") + " · Última: " + latest.lesson_code + " em " + formatDate(latest.class_date);
+    return records.length + (records.length === 1 ? " registro" : " registros") + " · Última: " + formatPresentationCode(latest.lesson_code) + " em " + formatDate(latest.class_date);
   }
 
   function buildPanel(userId) {
@@ -199,14 +205,14 @@
     details.className = "student-lessons-panel";
     details.dataset.lessonsUserId = userId;
     details.innerHTML =
-      '<summary><span>📘 LIÇÕES</span><span class="student-lessons-summary-meta">' + escapeHtml(latestSummary(userId)) + '</span></summary>' +
+      '<summary><span>APRESENTAÇÕES</span><span class="student-lessons-summary-meta">' + escapeHtml(latestSummary(userId)) + '</span></summary>' +
       '<div class="student-lessons-body">' +
         renderHistory(userId) +
         '<div class="student-lesson-form">' +
           '<label class="full">Turma<select data-lesson-class>' + renderClassOptions(userId) + '</select></label>' +
           '<label>Data<input data-lesson-date type="date" value="' + todayIso() + '"></label>' +
-          '<label>Lição<select data-lesson-code>' + lessonOptions() + '</select></label>' +
-          '<button class="student-lesson-save" data-save-student-lesson type="button"' + (canRegister ? '' : ' disabled') + '>' + (canRegister ? 'REGISTRAR LIÇÃO' : 'ATRIBUA UMA TURMA PRIMEIRO') + '</button>' +
+          '<label>Apresentação<select data-lesson-code>' + lessonOptions() + '</select></label>' +
+          '<button class="student-lesson-save" data-save-student-lesson type="button"' + (canRegister ? '' : ' disabled') + '>' + (canRegister ? 'REGISTRAR APRESENTAÇÃO' : 'ATRIBUA UMA TURMA PRIMEIRO') + '</button>' +
           '<div class="student-lesson-message" data-lesson-message></div>' +
         '</div>' +
       '</div>';
@@ -253,7 +259,7 @@
     }
     if (!lessonCode) {
       message.classList.add("error");
-      message.textContent = "Selecione a lição ou ocorrência.";
+      message.textContent = "Selecione a apresentação ou ocorrência.";
       return;
     }
 
@@ -278,13 +284,13 @@
       const newMessage = replacement.querySelector("[data-lesson-message]");
       if (newMessage) {
         newMessage.classList.add("success");
-        newMessage.textContent = "Lição registrada com sucesso.";
+        newMessage.textContent = "Apresentação registrada com sucesso.";
       }
     } catch (error) {
       message.classList.add("error");
-      message.textContent = "Não foi possível registrar a lição: " + (error.message || "erro desconhecido") + ".";
+      message.textContent = "Não foi possível registrar a apresentação: " + (error.message || "erro desconhecido") + ".";
       button.disabled = false;
-      button.textContent = "REGISTRAR LIÇÃO";
+      button.textContent = "REGISTRAR APRESENTAÇÃO";
     }
   }
 
@@ -309,7 +315,7 @@
         await loadData(false);
         attachSections();
       } catch (error) {
-        console.error("Não foi possível carregar o histórico de lições dos alunos.", error);
+        console.error("Não foi possível carregar o histórico de apresentações dos alunos.", error);
       }
     }, 80);
   }
@@ -325,7 +331,7 @@
       await loadData(false);
       attachSections();
     } catch (error) {
-      console.error("Não foi possível iniciar o painel de lições dos alunos.", error);
+      console.error("Não foi possível iniciar o painel de apresentações dos alunos.", error);
     }
 
     const list = document.getElementById("studentProfilesList");

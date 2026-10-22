@@ -238,7 +238,7 @@ VERIFIER = r"""
     } else if (scenario === "roadmap-last") {
       ok = ok && !visible("lessonPreparedButton") && !visible("lessonNextPartLink") &&
         !visible("lessonNextLessonLink") && visible("lessonRoadmapNavigation") &&
-        /Não há uma próxima lição/.test(document.getElementById("lessonRoadmapStatus").textContent);
+        /Não há uma próxima apresentação/.test(document.getElementById("lessonRoadmapStatus").textContent);
     } else if (scenario === "roadmap-disabled") {
       ok = ok && visible("lessonPreparedButton") && !visible("lessonNextPartLink") &&
         !visible("lessonNextLessonLink");

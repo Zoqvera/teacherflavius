@@ -22,7 +22,7 @@ class PresentationStage5CReleaseTests(unittest.TestCase):
     def test_private_pages_load_updated_scripts_and_stay_nonindexable(self) -> None:
         student = read("licao/index.html")
         teacher = read("roteiro-da-aula/index.html")
-        self.assertIn("lesson_presentation_editor.js?v=20261017-stage5c-1", student)
+        self.assertIn("lesson_presentation_editor.js?v=20261022-apresentacoes-1", student)
         self.assertIn("teacher_lesson_presentations.js?v=20261020-always-visible-1", teacher)
         self.assertIn('<meta name="robots" content="noindex,nofollow">', student)
         self.assertIn('<meta name="robots" content="noindex, nofollow">', teacher)

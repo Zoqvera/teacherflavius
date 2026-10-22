@@ -48,13 +48,13 @@ test("dashboard exposes retained history as an informational metric", () => {
   assert.match(dashboard, /Histórico preservado/);
   assert.match(
     dashboard,
-    /Registro de lição com referência de turma inválida/,
+    /Registro de apresentação com referência de turma inválida/,
   );
 });
 
 test("notifier describes the actionable lesson-class finding precisely", () => {
   assert.match(
     notifier,
-    /Alerta: registro de lição com referência de turma inválida/,
+    /Alerta: registro de apresentação com referência de turma inválida/,
   );
 });
