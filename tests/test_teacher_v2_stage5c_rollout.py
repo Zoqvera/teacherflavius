@@ -16,6 +16,9 @@ class TeacherV2Stage5CContracts(unittest.TestCase):
         self.assertIn("latest_version <> '20261022205054'", sql)
         self.assertIn("lock table supabase_migrations.schema_migrations", sql)
         self.assertIn("pg_advisory_xact_lock", sql)
+        self.assertIn("schema_migrations(version,name,statements)", sql)
+        self.assertIn("cardinality(statements) <> 1", sql)
+        self.assertIn("ARRAY[:'v2_sql_1']::text[]", sql)
         for version in ("20261022202000", "20261022212500",
                         "20261022214500", "20261022220000",
                         "20261022234500"):
@@ -37,6 +40,8 @@ class TeacherV2Stage5CContracts(unittest.TestCase):
                       "CONFIRMO_ROTEIRO_V2_5C", "--single-transaction",
                       "--set=ON_ERROR_STOP=1", "SUPABASE_DB_URL"):
             self.assertIn(guard, script)
+        self.assertIn("git hash-object", script)
+        self.assertIn('sql_arguments+=(--set="v2_sql_', script)
         self.assertNotIn("supabase db push", script)
 
     def test_fresh_restorable_backup_and_own_commit_disposable_test_required(self):
