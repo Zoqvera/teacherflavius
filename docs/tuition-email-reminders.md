@@ -16,7 +16,7 @@ Só é elegível a mensalidade com payment_date nulo, is_exempt falso, amount_du
 
 ## Infraestrutura
 
-- Migração: supabase/migrations/20261022230000_add_tuition_email_reminders.sql.
+- Migração: supabase/migrations/20261022205054_add_tuition_email_reminders.sql.
 - Fila privada: private.tuition_email_reminders, RLS ativa e sem permissão aos papéis públicos.
 - Enfileiramento: job tuition-email-enqueue-09h às 12h UTC (09h São Paulo). Sem backfill; a primeira data permitida é 23/10/2026.
 - Despacho: job tuition-email-dispatch-5m; até três tentativas, espaçadas em pelo menos dez minutos, somente no dia previsto, entre 09h e 19h. Resend recebe uma chave de idempotência estável por aviso.
