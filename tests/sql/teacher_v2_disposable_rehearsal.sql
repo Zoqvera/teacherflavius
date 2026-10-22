@@ -110,6 +110,14 @@ begin
 end;
 $teacher_v2_unauthenticated$;
 
+-- The canonical disposable baseline is intentionally older than some
+-- additive production schema details. Align only the tested nullable fields
+-- inside the surrounding ROLLBACK, never on the operational Supabase project.
+alter table public.teacher_classes
+  add column if not exists first_lesson_date date;
+alter table public.class_students
+  add column if not exists first_lesson_date date;
+
 -- Synthetic worker test. Deliberately does not call outgoing-email APIs.
 -- The outer transaction is rolled back by CI, including Auth and lesson rows.
 do $teacher_v2_synthetic_setup$
