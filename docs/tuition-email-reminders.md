@@ -26,6 +26,10 @@ Só é elegível a mensalidade com payment_date nulo, is_exempt falso, amount_du
 
 O estado sent indica aceite do Resend, e não leitura ou entrega final. Falhas podem ser reprocessadas com a mesma chave de idempotência dentro da janela diária. Avisos antigos nunca são enviados em datas posteriores.
 
+## Identificador de implantação em produção
+
+Em 22/10/2026, o Supabase registrou a migração efetivamente aplicada como versão 20261022205054, nome add_tuition_email_reminders. No Git, o arquivo histórico já incorporado à main é supabase/migrations/20261022230000_add_tuition_email_reminders.sql. **Não renomear ou apagar esse arquivo histórico após o merge**: a proteção de imutabilidade do repositório o impede. Em uma futura publicação com Supabase CLI, reconciliar explicitamente os identificadores do ledger conforme o runbook antes de executar migrações pendentes. A fila e os jobs de produção já foram aplicados e não devem ser recriados manualmente por causa dessa diferença de nomenclatura.
+
 ## Publicação e validação
 
 1. Confirmar a integridade do ledger de migrações antes de aplicar a nova migração. Não reaplicar históricos.
