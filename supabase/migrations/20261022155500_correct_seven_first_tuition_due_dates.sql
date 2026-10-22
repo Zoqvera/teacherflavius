@@ -566,7 +566,7 @@ insert into public.monthly_tuition_events (
 )
 select
   tuition.id,
-  'due_date_corrected_two_days_after_enrollment',
+  'due_date_corrected_after_enrollment',
   null,
   jsonb_build_object(
     'reason', 'Solicitação administrativa de 22/10/2026',
@@ -605,7 +605,7 @@ begin
   from public.monthly_tuition_events as event
   join public.monthly_tuition as tuition on tuition.id = event.tuition_id
   join tf_seven_tuition_corrections as target on target.student_id = tuition.student_id
-  where event.action = 'due_date_corrected_two_days_after_enrollment'
+  where event.action = 'due_date_corrected_after_enrollment'
     and event.details->>'reason' = 'Solicitação administrativa de 22/10/2026';
   if corrected_count <> 15 then
     raise exception 'Expected 15 tuition due-date audit entries; found %', corrected_count;
