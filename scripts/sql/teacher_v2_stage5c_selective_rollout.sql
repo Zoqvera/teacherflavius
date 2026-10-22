@@ -21,7 +21,7 @@ begin
   if exists (
     select 1 from supabase_migrations.schema_migrations
     where version in (
-      '20261022202000','20261022212500','20261022214500','20261022220000'
+      '20261022202000','20261022212500','20261022214500','20261022220000','20261022234500'
     )
   ) then
     raise exception 'Roteiro v2: partial migration ledger exists. Abort.';
@@ -51,27 +51,29 @@ begin
 end;
 $preflight$;
 
--- The four immutable Git files may include a version that predates the
+-- The five immutable Git files may include a version that predates the
 -- current ledger tip, but no migration is replayed or renumbered.
 \ir ../../supabase/migrations/20261022202000_teacher_question_ratings_v2.sql
 \ir ../../supabase/migrations/20261022212500_academic_v2_auto_attendance_and_closure.sql
 \ir ../../supabase/migrations/20261022214500_academic_v2_private_table_rls.sql
 \ir ../../supabase/migrations/20261022220000_academic_v2_shared_closure_lock.sql
+\ir ../../supabase/migrations/20261022234500_fix_teacher_v2_closure_day_alias.sql
 
 -- Record only these four canonical identities with DDL in one transaction.
 insert into supabase_migrations.schema_migrations(version,name) values
  ('20261022202000','teacher_question_ratings_v2'),
  ('20261022212500','academic_v2_auto_attendance_and_closure'),
  ('20261022214500','academic_v2_private_table_rls'),
- ('20261022220000','academic_v2_shared_closure_lock');
+ ('20261022220000','academic_v2_shared_closure_lock'),
+ ('20261022234500','fix_teacher_v2_closure_day_alias');
 
 do $postflight$
 declare
   job_count integer;
   inactive integer;
 begin
-  if (select count(*) from supabase_migrations.schema_migrations) <> 354 or
-     (select max(version) from supabase_migrations.schema_migrations) <> '20261022220000' then
+  if (select count(*) from supabase_migrations.schema_migrations) <> 355 or
+     (select max(version) from supabase_migrations.schema_migrations) <> '20261022234500' then
     raise exception 'Roteiro v2: unexpected migration ledger after DDL.';
   end if;
 
