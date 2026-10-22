@@ -86,7 +86,7 @@
     status.textContent = "";
 
     if (!Number.isInteger(lessonNumber) || lessonNumber < 1) {
-      status.textContent = "Esta lição não tem sequência definida no roteiro de estudos.";
+      status.textContent = "Esta apresentação não tem sequência definida no roteiro de estudos.";
       return;
     }
 
@@ -102,7 +102,7 @@
         nextLink.href = "/licao/?lesson=" + encodeURIComponent(nextNumber) +
           "&source=roteiro-de-estudos";
       } else {
-        status.textContent = "Não há uma próxima lição publicada no momento.";
+        status.textContent = "Não há uma próxima apresentação publicada no momento.";
         return;
       }
 
@@ -111,8 +111,8 @@
         trackPreparation("preparation_next_lesson");
       });
     } catch (error) {
-      console.error("Falha ao localizar a próxima lição:", error);
-      status.textContent = "Não foi possível consultar a próxima lição. Tente novamente.";
+      console.error("Falha ao localizar a próxima apresentação:", error);
+      status.textContent = "Não foi possível consultar a próxima apresentação. Tente novamente.";
     }
   }
 
@@ -133,9 +133,18 @@
     });
   }
 
+  function formatPresentationDisplayText(value) {
+    const text = String(value || "").trim();
+    const legacyCode = /^L(\d+)$/i.exec(text);
+    if (legacyCode) return "APRESENTAÇÃO " + legacyCode[1];
+    return text.replace(/LIÇÕES|LIÇÃO|Lições|Lição|lições|lição/g, function (term) {
+      return { "LIÇÕES": "APRESENTAÇÕES", "LIÇÃO": "APRESENTAÇÃO", "Lições": "Apresentações", "Lição": "Apresentação", "lições": "apresentações", "lição": "apresentação" }[term];
+    });
+  }
+
   function renderDynamicPage(page) {
-    document.getElementById("lessonDisplayNumber").textContent = page.lesson_number_label;
-    document.getElementById("lessonPageTitle").textContent = page.title;
+    document.getElementById("lessonDisplayNumber").textContent = formatPresentationDisplayText(page.lesson_number_label);
+    document.getElementById("lessonPageTitle").textContent = formatPresentationDisplayText(page.title);
     document.getElementById("lessonObjective").textContent = page.objective;
     document.getElementById("lessonExample").textContent = page.example;
     document.getElementById("lessonTranslation").textContent = page.translation;
@@ -144,9 +153,9 @@
 
     showDynamicSections(true);
     document.getElementById("legacyLessonMaterial").hidden = true;
-    document.title = page.title + " - Teacher Flávio";
+    document.title = formatPresentationDisplayText(page.title) + " - Teacher Flávio";
     document.getElementById("lessonPageContent").hidden = false;
-    setStatus("Conteúdo da lição carregado.");
+    setStatus("Conteúdo da apresentação carregado.");
   }
 
   function renderLegacyLesson(lessonNumber) {
@@ -154,13 +163,13 @@
     if (!previewUrl) return false;
 
     showDynamicSections(false);
-    document.getElementById("lessonDisplayNumber").textContent = "LIÇÃO " + lessonNumber;
-    document.getElementById("lessonPageTitle").textContent = "Lição " + lessonNumber;
+    document.getElementById("lessonDisplayNumber").textContent = "APRESENTAÇÃO " + lessonNumber;
+    document.getElementById("lessonPageTitle").textContent = "Apresentação " + lessonNumber;
     document.getElementById("legacyLessonFrame").src = previewUrl;
     document.getElementById("legacyLessonMaterial").hidden = false;
     document.getElementById("lessonPageContent").hidden = false;
-    document.title = "Lição " + lessonNumber + " - Teacher Flávio";
-    setStatus("Material da lição carregado.");
+    document.title = "Apresentação " + lessonNumber + " - Teacher Flávio";
+    setStatus("Material da apresentação carregado.");
     return true;
   }
 
@@ -227,7 +236,7 @@
           const legacyContent = document.getElementById("lessonLegacyPreparationContent");
           if (legacyContent) legacyContent.hidden = true;
           if (currentLessonStatus) {
-            currentLessonStatus.textContent = "Esta não é a lição prevista para sua próxima aula. Continue pela Lição " + validCurrentLesson + ".";
+            currentLessonStatus.textContent = "Esta não é a apresentação prevista para sua próxima aula. Continue pela Apresentação " + validCurrentLesson + ".";
             currentLessonStatus.hidden = false;
           }
           if (currentLessonLink) {
@@ -237,7 +246,7 @@
         } else {
           section.hidden = true;
           if (isRoadmapNavigation()) {
-            setStatus("Esta lição é do roteiro de estudos. Para continuar sua preparação atual, acesse O QUE FAZER.");
+            setStatus("Esta apresentação é do roteiro de estudos. Para continuar sua preparação atual, acesse O QUE FAZER.");
           }
         }
         return;
@@ -274,7 +283,7 @@
           await academicService.markLessonPrepared(lessonNumber);
           disablePreparedButton("PREPARAÇÃO REGISTRADA");
           setPreparationStatus(
-            "Preparação registrada. O professor verá esta lição como ALUNO PREPARADO.",
+            "Preparação registrada. O professor verá esta apresentação como ALUNO PREPARADO.",
             "success"
           );
         } catch (error) {
@@ -288,9 +297,9 @@
         }
       };
     } catch (error) {
-      console.error("Falha ao verificar preparação da lição:", error);
+      console.error("Falha ao verificar preparação da apresentação:", error);
       section.hidden = true;
-      setStatus("Não foi possível verificar sua lição atual. Acesse O QUE FAZER e tente novamente.", true);
+      setStatus("Não foi possível verificar sua apresentação atual. Acesse O QUE FAZER e tente novamente.", true);
     }
   }
 
@@ -367,7 +376,7 @@
     try {
       canPrepareLesson = await academicService.isActiveStudent(session.user.id);
     } catch (error) {
-      console.error("Falha ao verificar acesso à preparação da lição:", error);
+      console.error("Falha ao verificar acesso à preparação da apresentação:", error);
     }
     if (isRoadmapNavigation()) trackPreparation("preparation_roadmap_view");
 
@@ -383,11 +392,11 @@
       else if (pageId) loaded = await loadByPageId(lessonService, pageId, session.user.id);
 
       if (!loaded) {
-        setStatus("Esta lição não está disponível para sua conta.", true);
+        setStatus("Esta apresentação não está disponível para sua conta.", true);
       }
     } catch (error) {
-      console.error("Falha ao carregar página de lição:", error);
-      setStatus("Não foi possível carregar esta lição.", true);
+      console.error("Falha ao carregar página de apresentação:", error);
+      setStatus("Não foi possível carregar esta apresentação.", true);
     } finally {
       document.body.classList.remove("auth-checking");
     }

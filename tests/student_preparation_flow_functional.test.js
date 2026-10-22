@@ -542,7 +542,7 @@ test("previous lessons offer a clear link to the assigned lesson", async () => {
   assert.equal(state.node("lessonLegacyPreparationContent").hidden, true);
   assert.equal(state.node("lessonCurrentLessonLink").hidden, false);
   assert.equal(state.node("lessonCurrentLessonLink").href, "/licao/?lesson=8");
-  assert.match(state.node("lessonCurrentLessonStatus").textContent, /Lição 8/);
+  assert.match(state.node("lessonCurrentLessonStatus").textContent, /Apresentação 8/);
   assert.deepEqual(state.calls.prepared, []);
 });
 
@@ -610,7 +610,7 @@ test("unpublished next lesson does not lead to a broken link", async () => {
   });
   assert.equal(state.node("lessonRoadmapNavigation").hidden, false);
   assert.equal(state.node("lessonNextLessonLink").hidden, true);
-  assert.match(state.node("lessonRoadmapStatus").textContent, /não há uma próxima lição/i);
+  assert.match(state.node("lessonRoadmapStatus").textContent, /não há uma próxima apresentação/i);
 });
 
 test("action-plan errors are visible rather than silently hiding preparation", async () => {
@@ -620,7 +620,7 @@ test("action-plan errors are visible rather than silently hiding preparation", a
   });
   assert.equal(state.node("lessonPreparationSection").hidden, true);
   assert.equal(state.node("lessonNextPartLink").hidden, true);
-  assert.match(state.node("lessonPageStatus").textContent, /Não foi possível verificar sua lição atual/);
+  assert.match(state.node("lessonPageStatus").textContent, /Não foi possível verificar sua apresentação atual/);
 });
 
 test("roadmap source does not alter the legacy experience with the rollout disabled", async () => {

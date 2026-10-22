@@ -64,7 +64,7 @@ test("all linked lessons use uppercase numbered titles", () => {
 
   assert.equal(titles.length, 33);
   pages.forEach((page, index) => {
-    assert.equal(titles[index], "LIÇÃO " + page.roadmap_lesson_number + " - " + page.title.toLocaleUpperCase("pt-BR"));
+    assert.equal(titles[index], "APRESENTAÇÃO " + page.roadmap_lesson_number + " - " + page.title.toLocaleUpperCase("pt-BR"));
   });
 });
 
@@ -72,16 +72,16 @@ test("formatting preserves registered titles and safely escapes them in cards", 
   const { grid, roadmap } = createRoadmapHarness();
   assert.equal(
     roadmap.formatLessonCardTitle(7, { title: "  Home sweet home  " }),
-    "LIÇÃO 7 - HOME SWEET HOME"
+    "APRESENTAÇÃO 7 - HOME SWEET HOME"
   );
-  assert.equal(roadmap.formatLessonCardTitle(7, null), "LIÇÃO 7");
+  assert.equal(roadmap.formatLessonCardTitle(7, null), "APRESENTAÇÃO 7");
 
   roadmap.setLinkedPages([
     { id: "test-page-1", roadmap_lesson_number: 1, title: "English & <pronouns>" }
   ]);
   roadmap.renderLessons();
 
-  assert.match(grid.innerHTML, /LIÇÃO 1 - ENGLISH &amp; &lt;PRONOUNS&gt;/);
+  assert.match(grid.innerHTML, /APRESENTAÇÃO 1 - ENGLISH &amp; &lt;PRONOUNS&gt;/);
   assert.doesNotMatch(grid.innerHTML, /English & <pronouns>/);
 
   assert.match(
@@ -103,7 +103,7 @@ test("new card descriptions retain their original letter case", () => {
   ]);
   roadmap.renderLessons();
 
-  assert.match(grid.innerHTML, /LIÇÃO 25 - FEELINGS &amp; EMOTIONS/);
+  assert.match(grid.innerHTML, /APRESENTAÇÃO 25 - FEELINGS &amp; EMOTIONS/);
   assert.match(
     grid.innerHTML,
     /<p class="lesson-description">Practice describing how you feel in English\.<\/p>/

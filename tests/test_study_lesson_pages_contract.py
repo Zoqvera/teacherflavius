@@ -14,7 +14,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         professor = self.read("professor.html")
         self.assertIn('href="/criar-licao/"', professor)
         self.assertIn('data-card-id="criar-licao"', professor)
-        self.assertIn("CRIAR LIÇÃO", professor)
+        self.assertIn("CRIAR APRESENTAÇÃO", professor)
 
     def test_editor_enforces_requested_character_limits(self) -> None:
         editor = self.read("criar-licao/index.html")
@@ -77,7 +77,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         styles = self.read("study_lesson_page.css")
 
         self.assertIn('id="printLessonButton"', lesson)
-        self.assertIn("IMPRIMIR LIÇÃO", lesson)
+        self.assertIn("IMPRIMIR APRESENTAÇÃO", lesson)
         self.assertIn("bindPrintLessonAction", controller)
         self.assertIn("window.print()", controller)
         self.assertIn("@media print", styles)
@@ -99,7 +99,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         styles = self.read("study_lesson_page.css")
 
         header = lesson.split('<header class="header">', 1)[1].split("</header>", 1)[0]
-        self.assertIn('href="/roteiro-de-estudos/">TODAS AS LIÇÕES</a>', header)
+        self.assertIn('href="/roteiro-de-estudos/">TODAS AS APRESENTAÇÕES</a>', header)
         self.assertIn('class="lesson-all-lessons-nav"', header)
         self.assertLess(header.index('id="lessonPageStatus"'), header.index('lesson-all-lessons-nav'))
         self.assertLess(lesson.index('lesson-all-lessons-nav'), lesson.index('<div class="divider">'))

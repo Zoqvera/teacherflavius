@@ -54,7 +54,7 @@
     data_quality_makeup_booking_class_mismatch: "Reposição vinculada à turma incorreta",
     data_quality_makeup_status_timestamp_mismatch: "Status de reposição inconsistente",
     data_quality_future_auto_slot_invalid_class: "Reposição automática ligada a turma inválida",
-    data_quality_lesson_orphan_class: "Registro de lição com referência de turma inválida",
+    data_quality_lesson_orphan_class: "Registro de apresentação com referência de turma inválida",
     data_quality_frequency_invalid_subject_ref: "Frequência com referência de aluno inválida",
     data_quality_tuition_subject_mismatch: "Mensalidade com referência de aluno inconsistente",
     data_quality_payment_attempt_subject_mismatch: "Tentativa de pagamento com referência inconsistente",

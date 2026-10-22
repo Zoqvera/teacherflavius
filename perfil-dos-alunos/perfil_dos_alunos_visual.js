@@ -15,11 +15,11 @@
     summaries.forEach(function (summary) {
       const title = summary.querySelector(':scope > span:first-child');
       if (!title || title.dataset.visualUpgraded === '1') return;
-      if (!String(title.textContent || '').toUpperCase().includes('LIÇÕES')) return;
+      if (!String(title.textContent || '').toUpperCase().includes('APRESENTAÇÕES')) return;
 
       title.dataset.visualUpgraded = '1';
       title.classList.add('student-lessons-title-icon');
-      title.innerHTML = LESSON_ICON + '<span>LIÇÕES</span>';
+      title.innerHTML = LESSON_ICON + '<span>APRESENTAÇÕES</span>';
     });
   }
 

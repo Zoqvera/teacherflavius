@@ -149,7 +149,7 @@ test("O QUE FAZER does not render student-area or classes top buttons", function
 test("O QUE FAZER links the predicted lesson card to the complete study roadmap", function () {
   assert.match(
     studentPage,
-    /<div id="nextLessonContainer"><\/div>\s*<a class="academic-study-roadmap-link" href="\/roteiro-de-estudos\/">Ver todas as lições<\/a>/
+    /<div id="nextLessonContainer"><\/div>\s*<a class="academic-study-roadmap-link" href="\/roteiro-de-estudos\/">Ver todas as apresentações<\/a>/
   );
 });
 

@@ -15,7 +15,7 @@
     Object.freeze({
       name: "Duolingo",
       accessLabel: "Plano gratuito",
-      description: "Lições curtas e gamificadas para desenvolver vocabulário, leitura, escrita, compreensão auditiva e fala.",
+      description: "Apresentações curtas e gamificadas para desenvolver vocabulário, leitura, escrita, compreensão auditiva e fala.",
       differential: "Excelente para criar constância diária com metas, níveis, sequência de estudos e feedback imediato.",
       url: "https://pt.duolingo.com/"
     }),
@@ -29,7 +29,7 @@
     Object.freeze({
       name: "Busuu",
       accessLabel: "Plano gratuito",
-      description: "Curso organizado por níveis com lições de vocabulário, gramática, compreensão e produção em situações comunicativas.",
+      description: "Curso organizado por níveis com apresentações de vocabulário, gramática, compreensão e produção em situações comunicativas.",
       differential: "Combina uma trilha progressiva de estudos com exercícios curtos e foco em uso prático do idioma.",
       url: "https://www.busuu.com/pt"
     }),
@@ -116,7 +116,7 @@
     Object.freeze({
       name: "Breaking News English",
       accessLabel: "Gratuito",
-      description: "Lições de inglês construídas a partir de notícias atuais, com textos, áudio, vocabulário e exercícios variados.",
+      description: "Apresentações de inglês construídas a partir de notícias atuais, com textos, áudio, vocabulário e exercícios variados.",
       differential: "Cada notícia gera uma sequência extensa de atividades que integra leitura, listening, vocabulário, discussão e escrita.",
       url: "https://breakingnewsenglish.com/"
     }),
@@ -175,7 +175,7 @@
     Object.freeze({
       name: "Espresso English Podcast",
       accessLabel: "Spotify",
-      description: "Lições rápidas sobre vocabulário, gramática, frases, expressões e outros aspectos práticos da língua inglesa.",
+      description: "Apresentações rápidas sobre vocabulário, gramática, frases, expressões e outros aspectos práticos da língua inglesa.",
       differential: "O formato curto facilita encaixar pequenos momentos de estudo na rotina diária.",
       url: "https://open.spotify.com/show/3apZ4F9LH9oI6DIjiQl6zR"
     }),

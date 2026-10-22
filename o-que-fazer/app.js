@@ -51,18 +51,18 @@
           trackPreparation("preparation_lesson_view");
           window.location.href = lessonUrl;
         };
-        setStatus("welcomePreparationStatus", "Sua próxima lição está disponível.");
+        setStatus("welcomePreparationStatus", "Sua próxima apresentação está disponível.");
       } else {
         fallback.hidden = false;
         const message = lesson
-          ? "O material da próxima lição ainda não foi publicado. Você pode preparar a conversação."
-          : "Não há uma próxima lição disponível. Você pode preparar a conversação.";
+          ? "O material da próxima apresentação ainda não foi publicado. Você pode preparar a conversação."
+          : "Não há uma próxima apresentação disponível. Você pode preparar a conversação.";
         setStatus("welcomePreparationStatus", message);
       }
       setStatus("actionPlanStatus", "", "");
     } catch (error) {
-      console.error("Falha ao carregar a próxima lição:", error);
-      setStatus("welcomePreparationStatus", "Não foi possível consultar sua próxima lição.", "error");
+      console.error("Falha ao carregar a próxima apresentação:", error);
+      setStatus("welcomePreparationStatus", "Não foi possível consultar sua próxima apresentação.", "error");
       setStatus("actionPlanStatus", "Não foi possível carregar seu plano de preparação.", "error");
     }
   }
@@ -103,13 +103,13 @@
 
     if (!lesson) {
       container.className = "academic-empty";
-      container.textContent = "Você concluiu todas as lições disponíveis.";
+      container.textContent = "Você concluiu todas as apresentações disponíveis.";
       return;
     }
 
     if (!lesson.has_material) {
       container.className = "academic-empty";
-      container.textContent = "A Lição " + lesson.number + " está prevista, mas o material ainda não foi publicado.";
+      container.textContent = "A Apresentação " + lesson.number + " está prevista, mas o material ainda não foi publicado.";
       return;
     }
 
@@ -120,7 +120,7 @@
 
     const text = document.createElement("span");
     const title = document.createElement("strong");
-    title.textContent = "Lição " + lesson.number;
+    title.textContent = "Apresentação " + lesson.number;
     const status = document.createElement("small");
     status.textContent = "Status: " + lessonStatusLabel(lesson);
     text.appendChild(title);
@@ -299,7 +299,7 @@
 
       if (backLink) {
         backLink.href = lessonUrl || "/o-que-fazer/";
-        backLink.textContent = lessonUrl ? "VOLTAR À LIÇÃO" : "VOLTAR AO INÍCIO";
+        backLink.textContent = lessonUrl ? "VOLTAR À APRESENTAÇÃO" : "VOLTAR AO INÍCIO";
       }
     } else {
       renderLesson(plan);
