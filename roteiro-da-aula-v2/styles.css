@@ -200,3 +200,19 @@
 .workspace-question[hidden] {
   display: none;
 }
+
+.workspace-closed-status {
+  margin: 12px 0 20px;
+  padding: 12px 16px;
+  border: 1px solid rgba(148, 163, 184, .32);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, .08);
+  color: var(--academic-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.workspace-participation-action,
+.workspace-correction-action {
+  margin: 10px 0 16px;
+}
