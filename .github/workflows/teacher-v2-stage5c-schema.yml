@@ -1,0 +1,73 @@
+name: Teacher v2 Stage 5C - Install isolated schema only
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Enter CONFIRMO_ROTEIRO_V2_5C for schema-only release'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: teacherflavius-production-academic-v2-schema
+  cancel-in-progress: false
+
+jobs:
+  deploy-schema:
+    name: Atomic, manually approved teacher-v2 schema installation
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: github.ref == 'refs/heads/main'
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      TEACHER_V2_APPROVAL: ${{ inputs.confirmation }}
+
+    steps:
+      - name: Checkout exactly the approved main revision
+        uses: actions/checkout@v7
+
+      - name: Reject missing manual confirmation
+        shell: bash
+        run: |
+          test "$TEACHER_V2_APPROVAL" = 'CONFIRMO_ROTEIRO_V2_5C'
+          test "$GITHUB_REF" = 'refs/heads/main'
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Verify rollout scripts and immutable migration contracts
+        run: |
+          python3 -m unittest discover -s tests -p test_teacher_v2_stage5c_rollout.py
+          bash -n scripts/verify_teacher_v2_stage5c_evidence.sh
+          bash -n scripts/apply_teacher_v2_stage5c.sh
+
+      - name: Require fresh backup, independent recovery and disposable rehearsal
+        run: bash scripts/verify_teacher_v2_stage5c_evidence.sh
+
+      - name: Install only four teacher-v2 migrations in one transaction
+        run: bash scripts/apply_teacher_v2_stage5c.sh
+
+      - name: Attest the server automation stayed disabled after commit
+        shell: bash
+        run: |
+          result="$(psql -X --no-password --set=ON_ERROR_STOP=1 \
+            --dbname "$SUPABASE_DB_URL" --tuples-only --no-align \
+            -c "select (
+              (select enabled = false and enabled_from is null
+               from private.academic_v2_automation_control where singleton = true)
+              and to_regprocedure('private.run_teacher_v2_auto_finalizations()') is not null
+              and (select count(*) = 1 from cron.job
+                   where jobname = 'teacher-v2-auto-finalize')
+              and (select count(*) = 354 from supabase_migrations.schema_migrations)
+              and (select max(version) = '20261022220000'
+                   from supabase_migrations.schema_migrations)
+            )")"
+          test "$result" = 't'
+          echo 'Teacher v2 schema present; automatic class closure remains disabled.'
