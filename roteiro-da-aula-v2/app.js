@@ -3,9 +3,13 @@
 
   const WAIT_OPTIONS = Object.freeze({ maxAttempts: 30, delayMs: 120 });
   const QUESTION_BATCH_SIZE = 80;
+  // Etapa 2 preparada: manter registros indisponíveis até a liberação integral.
+  const PRESENTATION_REGISTRATION_ENABLED = false;
   const MODEL = window.TeacherWorkspaceModel;
   const state = {
     service: null,
+    registration: null,
+    loadedDate: null,
     groups: [],
     catalog: new Map(),
     presentations: new Map(),
@@ -168,8 +172,10 @@
     const presentation = presentationFor(item);
     if (item.lesson_status === "presented") {
       card.appendChild(node("span", "academic-pill presented", "APRESENTAÇÃO REGISTRADA"));
+    } else if (window.TeacherPresentationRegistration.canRegister(item)) {
+      card.appendChild(presentationAction(item));
     } else if (item.lesson_number) {
-      card.appendChild(readonlyAction("REGISTRAR APRESENTAÇÃO"));
+      card.appendChild(muted("Registro indisponível para esta ocorrência."));
     }
     if (!presentation) {
       card.appendChild(muted("APRESENTAÇÃO NÃO ENVIADA"));
@@ -178,6 +184,43 @@
       card.appendChild(muted("Versão " + presentation.revision_number));
     }
     return card;
+  }
+
+  async function registerPresentation(item, control) {
+    const classDate = document.getElementById("workspaceDate").value;
+    if (!PRESENTATION_REGISTRATION_ENABLED || state.view !== "presentations" ||
+        state.loadedDate !== classDate) {
+      status("Atualize o roteiro antes de registrar uma apresentação.", "error");
+      return;
+    }
+
+    control.disabled = true;
+    control.textContent = "SALVANDO...";
+    try {
+      await state.registration.register(item, classDate);
+      // The existing RPC atomically confirms attendance and lesson completion.
+      item.lesson_status = "presented";
+      item.attendance_status = "present";
+      render();
+      await loadPlan("Apresentação " + item.lesson_number +
+        " registrada para " + item.student_name + ". Presença confirmada.");
+    } catch (error) {
+      console.error("Falha ao registrar apresentação:", error);
+      status(error && error.message
+        ? error.message : "Não foi possível confirmar a apresentação.", "error");
+      control.textContent = "REGISTRAR APRESENTAÇÃO";
+      control.disabled = false;
+    }
+  }
+
+  function presentationAction(item) {
+    if (!PRESENTATION_REGISTRATION_ENABLED) {
+      return readonlyAction("REGISTRAR APRESENTAÇÃO");
+    }
+    const control = button("REGISTRAR APRESENTAÇÃO", function () {
+      registerPresentation(item, control);
+    }, "academic-button primary workspace-save-action");
+    return control;
   }
 
   function questionCard(question, showRatings) {
@@ -277,7 +320,7 @@
     return catalog;
   }
 
-  async function loadPlan() {
+  async function loadPlan(successMessage) {
     const requestId = ++state.requestId;
     const date = document.getElementById("workspaceDate").value;
     status("Carregando turmas...", "");
@@ -292,13 +335,15 @@
       ]);
       if (requestId !== state.requestId) return;
       state.groups = MODEL.groupByClass(items);
+      state.loadedDate = date;
       state.catalog = catalog;
       state.presentations = bundle ? bundle.records : new Map();
       if (state.selectedClass && !state.groups.some(function (group) {
         return group.key === state.selectedClass;
       })) state.selectedClass = null;
       render();
-      status(state.groups.length + " turma(s) carregada(s). Prévia somente para consulta.", "success");
+      status(successMessage || state.groups.length +
+        " turma(s) carregada(s). Registro na prévia ainda desativado.", "success");
     } catch (error) {
       if (requestId !== state.requestId) return;
       console.error("Falha ao carregar a prévia:", error);
@@ -311,7 +356,8 @@
       return Boolean(window.Auth && window.Auth.isConfigured() &&
         window.AcademicWorkflowService &&
         window.TeacherLessonPresentations &&
-        window.ConversationQuestionCardRenderer && MODEL);
+        window.ConversationQuestionCardRenderer &&
+        window.TeacherPresentationRegistration && MODEL);
     }, WAIT_OPTIONS);
     if (!ready) {
       status("Recursos indisponíveis.", "error");
@@ -331,13 +377,16 @@
     }
     state.teacherId = session.user.id;
     state.service = window.AcademicWorkflowService.create(client);
+    state.registration = window.TeacherPresentationRegistration.create(state.service);
     const datePicker = document.getElementById("workspaceDate");
     datePicker.value = currentDate();
     datePicker.addEventListener("change", function () {
       setView("home");
       loadPlan();
     });
-    document.getElementById("workspaceReload").addEventListener("click", loadPlan);
+    document.getElementById("workspaceReload").addEventListener("click", function () {
+      loadPlan();
+    });
     document.body.classList.remove("auth-checking");
     await loadPlan();
   }
