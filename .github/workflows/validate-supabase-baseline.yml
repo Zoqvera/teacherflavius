@@ -857,6 +857,7 @@ jobs:
             cat supabase/migrations/20261022212500_academic_v2_auto_attendance_and_closure.sql
             cat supabase/migrations/20261022214500_academic_v2_private_table_rls.sql
             cat supabase/migrations/20261022220000_academic_v2_shared_closure_lock.sql
+            cat supabase/migrations/20261022234500_fix_teacher_v2_closure_day_alias.sql
             cat tests/sql/teacher_v2_disposable_rehearsal.sql
             echo 'ROLLBACK;'
           } | docker exec -i "$DB_CONTAINER" \
