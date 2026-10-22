@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Perguntas já estudadas - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260918-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260912-1"></script>
+  <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
+  <link rel="stylesheet" href="/academic_workflow.css?v=20261014-all-questions-link-1">
+  <link rel="stylesheet" href="/conversation_question_cards.css?v=20261004-1">
+  <link rel="stylesheet" href="/conversation-questions/estudadas/history.css?v=20261022-study-history-1">
+</head>
+<body class="auth-checking">
+  <main class="academic-shell">
+    <header class="academic-header">
+      <p class="academic-kicker">MEU HISTÓRICO DE ESTUDOS</p>
+      <div class="studied-questions-heading">
+        <h1>PERGUNTAS JÁ ESTUDADAS</h1>
+        <a class="academic-all-questions-link" href="/conversation-questions/">TODAS AS PERGUNTAS</a>
+      </div>
+      <p class="academic-description">Perguntas que você marcou em ESTUDEI A PERGUNTA, organizadas pela data do primeiro estudo.</p>
+      <a class="academic-study-roadmap-link" href="/o-que-fazer/segunda-parte/">VOLTAR À SEGUNDA PARTE</a>
+    </header>
+
+    <section class="academic-panel" aria-label="Resumo de estudos">
+      <div class="studied-questions-summary">
+        <p><strong id="studiedQuestionCount">0</strong><span>PERGUNTAS ESTUDADAS</span></p>
+        <p><strong id="studiedDayCount">0</strong><span>DIAS DE ESTUDO</span></p>
+      </div>
+    </section>
+
+    <p id="studiedQuestionsStatus" class="academic-status" role="status" aria-live="polite">Carregando seu histórico...</p>
+    <div id="studiedQuestionGroups" class="studied-questions-groups" aria-label="Perguntas estudadas por dia"></div>
+  </main>
+
+  <script src="/resource_waiter.js?v=20260902-2"></script>
+  <script src="/conversation_question_card_renderer.js?v=20261004-1"></script>
+  <script src="/academic_workflow_service.js?v=20261022-study-history-1"></script>
+  <script src="/conversation-questions/estudadas/history.js?v=20261022-study-history-1"></script>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+  <script defer src="/site_footer.js?v=20260820-ux-3"></script>
+</body>
+</html>
