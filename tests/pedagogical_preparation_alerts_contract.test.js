@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, "..");
 const read = (name) => fs.readFileSync(path.join(root, name), "utf8");
 
 const migration = read(
-  "supabase/migrations/20261022153000_pedagogical_preparation_alerts.sql",
+  "supabase/migrations/20261022170000_pedagogical_preparation_alerts.sql",
 );
 const sender = read(
   "supabase/functions/notify-pedagogical-preparation/index.ts",
