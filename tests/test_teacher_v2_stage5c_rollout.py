@@ -17,12 +17,13 @@ class TeacherV2Stage5CContracts(unittest.TestCase):
         self.assertIn("lock table supabase_migrations.schema_migrations", sql)
         self.assertIn("pg_advisory_xact_lock", sql)
         for version in ("20261022202000", "20261022212500",
-                        "20261022214500", "20261022220000"):
+                        "20261022214500", "20261022220000",
+                        "20261022234500"):
             self.assertIn(f"../../supabase/migrations/{version}_", sql)
             self.assertIn(f"('{version}'", sql)
         self.assertIn("enabled=false and enabled_from is null", sql)
         self.assertIn("private.run_teacher_v2_auto_finalizations()", sql)
-        self.assertIn("count(*) from supabase_migrations.schema_migrations) <> 354", sql)
+        self.assertIn("count(*) from supabase_migrations.schema_migrations) <> 355", sql)
         self.assertIn("has_function_privilege('anon'", sql)
         self.assertIn("not c.relrowsecurity", sql)
         self.assertIn("if exists (select 1 from private.academic_v2_closed_session_snapshots)", sql)
