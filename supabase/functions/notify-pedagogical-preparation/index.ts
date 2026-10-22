@@ -271,6 +271,13 @@ Deno.serve(async (request: Request) => {
         alert, classInfo.data.class_name || "Turma " + alert.class_number, active,
       );
 
+      // Never send a reminder with less than six hours remaining.
+      if (new Date(alert.starts_at).getTime() - Date.now() < SIX_HOURS_MS) {
+        await finish("skipped", "six_hour_deadline_elapsed");
+        skipped += 1;
+        continue;
+      }
+
       const provider = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
