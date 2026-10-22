@@ -616,7 +616,18 @@
     }
     state.teacherId = session.user.id;
     state.service = window.AcademicWorkflowService.create(client);
-    state.registration = window.TeacherPresentationRegistration.create(state.service);
+    state.registration = window.TeacherPresentationRegistration.create({
+      markLessonPresented: async function (item, date) {
+        const response = await client.rpc("mark_teacher_lesson_presented_v2", {
+          target_lesson_kind: item.lesson_kind,
+          target_entry_id: item.entry_id,
+          target_date: date,
+          target_lesson_number: item.lesson_number
+        });
+        if (response.error) throw response.error;
+        return response.data;
+      }
+    });
     state.questionRatings = window.TeacherQuestionRatings.create(client);
     state.lifecycle = window.TeacherSessionLifecycle.create(client);
     const datePicker = document.getElementById("workspaceDate");
