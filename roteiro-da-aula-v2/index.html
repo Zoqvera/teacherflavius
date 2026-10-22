@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Roteiro da Aula — Nova experiência (prévia) | Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260918-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260912-1"></script>
+  <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
+  <link rel="stylesheet" href="/academic_workflow.css?v=20261022-previous-studies-1">
+  <link rel="stylesheet" href="/conversation_question_cards.css?v=20261004-1">
+  <link rel="stylesheet" href="/roteiro-da-aula-v2/styles.css?v=20261022-etapa1">
+</head>
+<body class="auth-checking">
+  <main class="academic-shell">
+    <nav class="academic-top-links" aria-label="Navegação principal">
+      <a class="academic-top-link" href="/professor/">ÁREA DO PROFESSOR</a>
+      <a class="academic-top-link" href="/roteiro-da-aula/">ROTEIRO DA AULA ATUAL</a>
+    </nav>
+    <header class="academic-header">
+      <p class="academic-kicker">PRÉVIA RESTRITA · ETAPA 1</p>
+      <h1>ROTEIRO DA AULA</h1>
+      <p class="academic-description">Apresentações e perguntas organizadas por turma. Esta prévia é somente para consulta e não substitui o roteiro atual.</p>
+      <p id="workspaceStatus" class="academic-status" role="status">Verificando acesso...</p>
+    </header>
+    <div class="academic-toolbar">
+      <label class="academic-muted" for="workspaceDate">Data da aula</label>
+      <input type="date" id="workspaceDate">
+      <button class="academic-button" id="workspaceReload" type="button">ATUALIZAR</button>
+    </div>
+    <nav id="workspaceBreadcrumbs" class="workspace-breadcrumbs" aria-label="Caminho de navegação"></nav>
+    <div id="workspaceContent" aria-live="polite"></div>
+  </main>
+  <script src="/resource_waiter.js?v=20260902-2"></script>
+  <script src="/conversation_question_card_renderer.js?v=20261004-1"></script>
+  <script src="/academic_workflow_service.js?v=20261022-previous-studies-1"></script>
+  <script src="/teacher_lesson_presentations.js?v=20261020-always-visible-1"></script>
+  <script src="/roteiro-da-aula-v2/model.js?v=20261022-etapa1"></script>
+  <script src="/roteiro-da-aula-v2/app.js?v=20261022-etapa1"></script>
+</body>
+</html>
