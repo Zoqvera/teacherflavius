@@ -1,121 +1,26 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- Google Consent Mode default -->
-<script>
-window.dataLayer = window.dataLayer || [];
-window.gtag = window.gtag || function(){dataLayer.push(arguments);};
-gtag('consent', 'default', {
-  analytics_storage: 'denied',
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  wait_for_update: 500
-});
-</script>
-<!-- End Google Consent Mode default -->
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K2NWR2NK');</script>
-<!-- End Google Tag Manager -->
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Integração Google Forms - Teacher Flávio</title>
   <meta name="robots" content="noindex,nofollow">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
-  <script src="/supabase_config.js?v=20260715-1"></script>
-    <script src="/module_loader.js?v=20260902-2"></script>
-<script src="/auth.js?v=20260730-1"></script>
-  <link rel="stylesheet" href="/professor.css?v=20260715-1">
-  <link rel="stylesheet" href="./style.css?v=20260813-1">
-  <link rel="stylesheet" href="./integracao_visual.css?v=20260901-1">
+  <title>Integração Google Forms descontinuada - Teacher Flávio</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; padding: 24px; display: grid; place-items: center; background: #07111f; color: #e5e7eb; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { width: min(100%, 600px); padding: clamp(24px, 5vw, 40px); border: 1px solid #334155; border-radius: 20px; background: #0f172a; }
+    h1 { font-size: clamp(26px, 4vw, 34px); line-height: 1.15; margin: 0 0 18px; }
+    p { color: #cbd5e1; line-height: 1.7; }
+    a { display: inline-flex; padding: 12px 18px; margin-top: 12px; border-radius: 10px; background: #a5b4fc; color: #0f172a; text-decoration: none; font-weight: 700; }
+    a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  </style>
 </head>
-<body class="auth-checking">
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2NWR2NK"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-  <main class="integration-shell">
-    <div class="top-links">
-      <a class="top-link" href="/professor.html">← ÁREA DO PROFESSOR</a>
-      <a class="top-link" href="/">HOME</a>
-    </div>
-
-    <header class="integration-header">
-      <span class="badge">TEACHER FLÁVIO</span>
-      <h1>Integração Google Forms</h1>
-      <p class="lede">Conecte a planilha de respostas de cada exercício. Depois da ativação, novas respostas serão registradas automaticamente no acompanhamento dos alunos.</p>
-      <div id="adminStatus" class="status">Verificando credenciais de professor...</div>
-    </header>
-
-    <section class="panel">
-      <div class="panel-heading">
-        <div>
-          <p class="eyebrow">NOVA INTEGRAÇÃO</p>
-          <h2>Conectar uma planilha</h2>
-        </div>
-        <span class="step-badge">1 vez por exercício</span>
-      </div>
-
-      <form id="integrationForm" class="integration-form">
-        <label>
-          <span>Exercício</span>
-          <select id="exerciseSelect" required>
-            <option value="">Carregando exercícios...</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Planilha de respostas do Google Forms</span>
-          <input id="spreadsheetUrl" type="url" inputmode="url" placeholder="https://docs.google.com/spreadsheets/d/..." required>
-          <small>Cole a URL completa da planilha de respostas vinculada ao formulário.</small>
-        </label>
-
-        <label class="check-row">
-          <input id="importExisting" type="checkbox" checked>
-          <span>
-            <strong>Importar respostas já existentes</strong>
-            <small>As respostas antigas serão processadas quando a integração for ativada.</small>
-          </span>
-        </label>
-
-        <div id="formMessage" class="form-message" aria-live="polite"></div>
-        <button id="connectButton" class="primary-button" type="submit">CONECTAR PLANILHA</button>
-      </form>
-    </section>
-
-    <section class="panel">
-      <div class="panel-heading">
-        <div>
-          <p class="eyebrow">INTEGRAÇÕES</p>
-          <h2>Planilhas cadastradas</h2>
-        </div>
-        <button id="refreshButton" class="secondary-button" type="button">ATUALIZAR</button>
-      </div>
-
-      <div id="integrationList" class="integration-list">
-        <div class="empty-state">Carregando integrações...</div>
-      </div>
-    </section>
-
-    <section class="panel info-panel">
-      <p class="eyebrow">COMO FUNCIONA</p>
-      <p>Após clicar em <strong>Conectar planilha</strong>, a integração fica como <strong>Pendente</strong>. O gerenciador do Google Apps Script verifica novas solicitações periodicamente, instala o gatilho da planilha e altera o status para <strong>Ativa</strong>. A partir daí, os novos envios do formulário são registrados automaticamente.</p>
-    </section>
+<body>
+  <main>
+    <h1>Integração Google Forms descontinuada</h1>
+    <p>O gerenciamento de planilhas e a sincronização automática de exercícios por Google Forms foram desativados.</p>
+    <p>Os históricos de conclusão já registrados permanecem preservados. Esta página não permite cadastrar ou reativar integrações.</p>
+    <a href="/professor/">VOLTAR À ÁREA DO PROFESSOR</a>
   </main>
-
-  <script src="./app.js?v=20260813-1"></script>
-  <script src="./integracao_visual.js?v=20260901-1"></script>
-    <script src="/site_privacy_analytics.js?v=20260902-1"></script>
-<script src="/site_asset_loader.js?v=20260902-1"></script>
-
-<script src="/site_runtime_config.js?v=20260903-1"></script>
-<script src="/site_page_runtime.js?v=20260903-1"></script>
-<script defer src="/site_footer.js?v=20260814-1"></script>
 </body>
 </html>
