@@ -110,4 +110,146 @@ begin
 end;
 $teacher_v2_unauthenticated$;
 
+-- Synthetic worker test. Deliberately does not call outgoing-email APIs.
+-- The outer transaction is rolled back by CI, including Auth and lesson rows.
+do $teacher_v2_synthetic_setup$
+declare
+  class_date date := ((now() at time zone 'America/Sao_Paulo')::date - 1);
+  student_id uuid;
+  membership_id uuid;
+  class_start timestamptz :=
+    ((((now() at time zone 'America/Sao_Paulo')::date - 1) + time '13:00')
+    at time zone 'America/Sao_Paulo');
+begin
+  insert into public.teacher_classes (
+    class_number, class_name, class_type, class_weekday,
+    class_start_time, first_lesson_date
+  ) values (
+    970003, 'TURMA SINTETICA V2', 'QUINTETO',
+    extract(isodow from class_date)::smallint,
+    time '13:00', class_date
+  );
+
+  insert into auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, created_at, updated_at
+  )
+  select
+    '00000000-0000-0000-0000-000000000000'::uuid,
+    ('99000000-0000-4000-8000-00000000000' || index_value)::uuid,
+    'authenticated', 'authenticated',
+    'teacher-v2-synthetic-' || index_value || '@invalid.test',
+    '', now(), now(), now()
+  from generate_series(1, 3) as index_value;
+
+  insert into public.profiles (
+    id, name, email, enrolled, archived,
+    class_type, tuition_first_due_date
+  )
+  select
+    ('99000000-0000-4000-8000-00000000000' || index_value)::uuid,
+    'ALUNO TESTE V2 ' || index_value,
+    'teacher-v2-synthetic-' || index_value || '@invalid.test',
+    true, false, 'QUINTETO', class_date
+  from generate_series(1, 3) as index_value;
+
+  insert into public.class_students (
+    class_number, user_id, first_lesson_date
+  )
+  select
+    970003,
+    ('99000000-0000-4000-8000-00000000000' || index_value)::uuid,
+    class_date
+  from generate_series(1, 3) as index_value;
+
+  -- Student 1 previously participated. No other action is required.
+  student_id := '99000000-0000-4000-8000-000000000001'::uuid;
+  select id into membership_id from public.class_students
+  where user_id = student_id and class_number = 970003;
+  insert into private.academic_lesson_occurrences (
+    occurrence_key, student_id, lesson_kind, source_entry_id,
+    class_number, class_name, starts_at,
+    attendance_status, presented_lesson_number
+  ) values (
+    private.academic_occurrence_key('regular', membership_id, class_date),
+    student_id, 'regular', membership_id,
+    970003, 'TURMA SINTETICA V2', class_start, 'present', 1
+  );
+
+  -- Student 3 cancelled. Cancellation must not be turned into absence.
+  insert into private.student_regular_lesson_cancellations (
+    student_id, class_number, lesson_date
+  ) values (
+    '99000000-0000-4000-8000-000000000003'::uuid,
+    970003, class_date
+  );
+
+  update private.academic_v2_automation_control
+  set enabled = true, enabled_from = class_start - interval '1 minute'
+  where singleton = true;
+end;
+$teacher_v2_synthetic_setup$;
+
+do $teacher_v2_worker_closure$
+declare
+  count_closed integer;
+  count_again integer;
+  class_date date := ((now() at time zone 'America/Sao_Paulo')::date - 1);
+  class_start timestamptz :=
+    ((((now() at time zone 'America/Sao_Paulo')::date - 1) + time '13:00')
+    at time zone 'America/Sao_Paulo');
+  roster jsonb;
+begin
+  select private.run_teacher_v2_auto_finalizations() into count_closed;
+  if count_closed <> 1 then
+    raise exception 'Roteiro v2: expected exactly one synthetic closure, got %', count_closed;
+  end if;
+
+  select private.run_teacher_v2_auto_finalizations() into count_again;
+  if count_again <> 0 then
+    raise exception 'Roteiro v2: repeated worker run is not idempotent';
+  end if;
+
+  select students into roster
+  from private.academic_v2_closed_session_snapshots
+  where class_number = 970003 and starts_at = class_start;
+
+  if roster is null or jsonb_array_length(roster) <> 3 then
+    raise exception 'Roteiro v2: cancelled student disappeared from snapshot';
+  end if;
+  if (select count(*)
+      from private.academic_lesson_occurrences occurrence
+      where occurrence.class_number = 970003
+        and occurrence.attendance_status = 'present') <> 1 then
+    raise exception 'Roteiro v2: existing presence must be preserved';
+  end if;
+  if (select count(*)
+      from private.academic_lesson_occurrences occurrence
+      where occurrence.class_number = 970003
+        and occurrence.attendance_status = 'absent') <> 1 then
+    raise exception 'Roteiro v2: student without participation must be absent';
+  end if;
+
+  if exists (
+    select 1 from private.academic_lesson_occurrences occurrence
+    where occurrence.student_id =
+      '99000000-0000-4000-8000-000000000003'::uuid
+      and occurrence.starts_at = class_start
+  ) then
+    raise exception 'Roteiro v2: cancelled student received attendance';
+  end if;
+
+  if (select count(*) from private.academic_v2_attendance_audit
+      where class_number = 970003 and action = 'automatic_absence') <> 1 then
+    raise exception 'Roteiro v2: absence audit was missing or duplicated';
+  end if;
+  if not exists (
+    select 1 from private.academic_class_session_finalizations
+    where class_number = 970003 and starts_at = class_start
+  ) then
+    raise exception 'Roteiro v2: finalized class not persisted';
+  end if;
+end;
+$teacher_v2_worker_closure$;
+
 select 'TEACHER_V2_DISPOSABLE_REHEARSAL_PASSED' as result;
