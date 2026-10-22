@@ -384,7 +384,9 @@
       setView("home");
       loadPlan();
     });
-    document.getElementById("workspaceReload").addEventListener("click", loadPlan);
+    document.getElementById("workspaceReload").addEventListener("click", function () {
+      loadPlan();
+    });
     document.body.classList.remove("auth-checking");
     await loadPlan();
   }
