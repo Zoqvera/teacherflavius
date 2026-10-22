@@ -7,7 +7,7 @@ Plataforma web do **Teacher Flávio** para aquisição de alunos, matrícula, au
 Produção: [teacherflavius.com](https://teacherflavius.com)  
 Acesso direto do aluno: [teacherflavius.com/acesso-aluno/](https://teacherflavius.com/acesso-aluno/)
 
-O projeto combina frontend estático em HTML, CSS e JavaScript com Supabase para autenticação, PostgreSQL, Row Level Security (RLS), RPCs, jobs agendados e Edge Functions. Integrações externas incluem Mercado Pago, Resend, Google OAuth, Google Forms/Sheets e Google Tag Manager.
+O projeto combina frontend estático em HTML, CSS e JavaScript com Supabase para autenticação, PostgreSQL, Row Level Security (RLS), RPCs, jobs agendados e Edge Functions. Integrações externas incluem Mercado Pago, Resend, Google OAuth e Google Tag Manager. A sincronização de exercícios por Google Forms/Sheets está descontinuada.
 
 ## Estado atual
 
@@ -24,7 +24,7 @@ Em 1º de outubro de 2026, a plataforma possui:
 - módulo financeiro com mensalidades, Pix/cartão de débito, primeira mensalidade disponível após definição do valor e próxima competência liberada dois dias após o pagamento anterior;
 - infraestrutura legada de assinaturas recorrentes do Mercado Pago preservada para histórico e conciliação, com criação de novas assinaturas desativada;
 - analytics consentido com GTM/GA4, eventos financeiros server-side e OpenAI Pixel para conversões comerciais;
-- sincronização de exercícios recebidos por Google Forms;
+- sincronização por Google Forms descontinuada em 21/10/2026, mantendo históricos existentes;
 - observabilidade com monitor de erros, CSP reporting, health interno, probes sintéticos e filtros estritos de ruído conhecido;
 - suíte automatizada de qualidade em JavaScript e Python, contratos especializados e amostragem estabilizada do Lighthouse;
 - backup lógico criptografado do Supabase, teste automatizado de restauração e baseline versionado para disaster recovery.
@@ -50,7 +50,7 @@ flowchart TB
   Functions --> MercadoPagoAPI["Mercado Pago\nPayments API"]
   Functions --> GA4["GA4\nserver-side consentido"]
   MercadoPagoAPI -->|"Webhook assinado"| Functions
-  Forms["Google Forms / Sheets"] --> Functions
+  Forms["Google Forms / Sheets (legado descontinuado)"] -.->|"Desativado"| Functions
 
   Actions["GitHub Actions"] --> Quality["Quality gates / contratos"]
   Actions --> Build["Build / materialização"]
@@ -97,7 +97,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | Backend server-side | Supabase Edge Functions / Deno |
 | E-mail | Resend |
 | Pagamentos | Mercado Pago Checkout Bricks, Payments API e assinaturas recorrentes |
-| Exercícios externos | Google Forms + Google Sheets + Apps Script |
+| Exercícios externos (legado descontinuado) | Google Forms + Google Sheets + Apps Script — histórico preservado |
 | Analytics | Google Tag Manager + Consent Mode + GA4 server-side + OpenAI Pixel |
 | CI/CD e operações | GitHub Actions |
 | Backup | Supabase CLI/`pg_dump`, GnuPG AES-256 e restore automatizado |
@@ -284,7 +284,7 @@ Procedimento: [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md).
 | `flashcards/` | módulo de flashcards |
 | `conversation-questions/` | perguntas de conversação e progresso |
 | `pagamento/` | checkout e componentes financeiros |
-| `integracao-google-forms/` | gestão da integração de exercícios |
+| `integracao-google-forms/` | aviso estático de integração descontinuada |
 | `supabase/functions/` | Edge Functions |
 | `supabase/migrations/` | migrations |
 | `supabase/baseline/` | baseline de reconstrução |
