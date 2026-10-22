@@ -133,7 +133,7 @@ begin
     class_number, class_name, class_type, class_weekday,
     class_start_time, first_lesson_date
   ) values (
-    970003, 'TURMA SINTETICA V2', 'QUINTETO',
+    970003, 'TURMA SINTETICA V2', 'quintet',
     extract(isodow from class_date)::smallint,
     time '13:00', class_date
   );
