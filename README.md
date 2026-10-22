@@ -7,7 +7,7 @@ Plataforma web do **Teacher Flávio** para aquisição de alunos, matrícula, au
 Produção: [teacherflavius.com](https://teacherflavius.com)  
 Acesso direto do aluno: [teacherflavius.com/acesso-aluno/](https://teacherflavius.com/acesso-aluno/)
 
-O projeto combina frontend estático em HTML, CSS e JavaScript com Supabase para autenticação, PostgreSQL, Row Level Security (RLS), RPCs, jobs agendados e Edge Functions. Integrações externas incluem Mercado Pago, Resend, Google OAuth, Google Forms/Sheets e Google Tag Manager.
+O projeto combina frontend estático em HTML, CSS e JavaScript com Supabase para autenticação, PostgreSQL, Row Level Security (RLS), RPCs, jobs agendados e Edge Functions. Integrações externas incluem Mercado Pago, Resend, Google OAuth e Google Tag Manager. A sincronização de exercícios por Google Forms/Sheets está descontinuada.
 
 ## Estado atual
 
@@ -97,7 +97,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | Backend server-side | Supabase Edge Functions / Deno |
 | E-mail | Resend |
 | Pagamentos | Mercado Pago Checkout Bricks, Payments API e assinaturas recorrentes |
-| Exercícios externos | Google Forms + Google Sheets + Apps Script |
+| Exercícios externos (legado descontinuado) | Google Forms + Google Sheets + Apps Script — histórico preservado |
 | Analytics | Google Tag Manager + Consent Mode + GA4 server-side + OpenAI Pixel |
 | CI/CD e operações | GitHub Actions |
 | Backup | Supabase CLI/`pg_dump`, GnuPG AES-256 e restore automatizado |
