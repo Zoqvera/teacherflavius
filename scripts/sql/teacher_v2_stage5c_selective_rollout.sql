@@ -60,12 +60,15 @@ $preflight$;
 \ir ../../supabase/migrations/20261022234500_fix_teacher_v2_closure_day_alias.sql
 
 -- Record only these four canonical identities with DDL in one transaction.
-insert into supabase_migrations.schema_migrations(version,name) values
- ('20261022202000','teacher_question_ratings_v2'),
- ('20261022212500','academic_v2_auto_attendance_and_closure'),
- ('20261022214500','academic_v2_private_table_rls'),
- ('20261022220000','academic_v2_shared_closure_lock'),
- ('20261022234500','fix_teacher_v2_closure_day_alias');
+-- Store each immutable migration body in the canonical statements[] ledger.
+-- PostgreSQL hashes therefore remain verifiable by the normal drift gate
+-- without special exceptions or post-hoc migration history edits.
+insert into supabase_migrations.schema_migrations(version,name,statements) values
+ ('20261022202000','teacher_question_ratings_v2', ARRAY[:'v2_sql_1']::text[]),
+ ('20261022212500','academic_v2_auto_attendance_and_closure', ARRAY[:'v2_sql_2']::text[]),
+ ('20261022214500','academic_v2_private_table_rls', ARRAY[:'v2_sql_3']::text[]),
+ ('20261022220000','academic_v2_shared_closure_lock', ARRAY[:'v2_sql_4']::text[]),
+ ('20261022234500','fix_teacher_v2_closure_day_alias', ARRAY[:'v2_sql_5']::text[]);
 
 do $postflight$
 declare
