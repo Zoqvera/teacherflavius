@@ -80,6 +80,19 @@ begin
     raise exception 'Roteiro v2: unexpected migration ledger after DDL.';
   end if;
 
+  if exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version in (
+      '20261022202000','20261022212500','20261022214500',
+      '20261022220000','20261022234500'
+    ) and (
+      statements is null or cardinality(statements) <> 1
+      or length(statements[1]) < 200
+    )
+  ) then
+    raise exception 'Roteiro v2: canonical migration statements not stored in ledger.';
+  end if;
+
   if not exists (
     select 1 from private.academic_v2_automation_control
     where singleton=true and enabled=false and enabled_from is null
