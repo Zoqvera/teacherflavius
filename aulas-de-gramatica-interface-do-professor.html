@@ -75,11 +75,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="divider"></div>
 
     <section class="panel">
-      <h2 id="formTitle">Criar nova lição de gramática</h2>
+      <h2 id="formTitle">Criar nova apresentação de gramática</h2>
       <form id="lessonForm" class="form-grid">
         <input type="hidden" id="lessonId" />
         <label>
-          Título da lição
+          Título da apresentação
           <input id="lessonTitle" type="text" placeholder="Ex.: Simple Present - Aula 1" required />
         </label>
         <label>
@@ -91,7 +91,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <input id="exerciseUrl" type="url" placeholder="Cole aqui o link dos exercícios" required />
         </label>
         <div class="button-row">
-          <button id="submitButton" class="primary-button" type="submit">SALVAR LIÇÃO</button>
+          <button id="submitButton" class="primary-button" type="submit">SALVAR APRESENTAÇÃO</button>
           <button id="cancelEditButton" class="secondary-button" type="button" style="display:none;">CANCELAR EDIÇÃO</button>
         </div>
         <div id="formFeedback" class="feedback"></div>
@@ -99,8 +99,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </section>
 
     <section class="panel">
-      <h2>Histórico de lições criadas</h2>
-      <div id="lessonsHistory" class="empty">Carregando lições...</div>
+      <h2>Histórico de apresentações criadas</h2>
+      <div id="lessonsHistory" class="empty">Carregando apresentações...</div>
     </section>
   </div>
 
@@ -149,8 +149,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       document.getElementById("lessonTitle").value = "";
       document.getElementById("videoUrl").value = "";
       document.getElementById("exerciseUrl").value = "";
-      document.getElementById("formTitle").textContent = "Criar nova lição de gramática";
-      document.getElementById("submitButton").textContent = "SALVAR LIÇÃO";
+      document.getElementById("formTitle").textContent = "Criar nova apresentação de gramática";
+      document.getElementById("submitButton").textContent = "SALVAR APRESENTAÇÃO";
       document.getElementById("cancelEditButton").style.display = "none";
       setFeedback("", "");
     }
@@ -162,7 +162,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       document.getElementById("lessonTitle").value = lesson.title || "";
       document.getElementById("videoUrl").value = lesson.video_url || "";
       document.getElementById("exerciseUrl").value = lesson.exercise_url || "";
-      document.getElementById("formTitle").textContent = "Editar lição de gramática";
+      document.getElementById("formTitle").textContent = "Editar apresentação de gramática";
       document.getElementById("submitButton").textContent = "SALVAR ALTERAÇÕES";
       document.getElementById("cancelEditButton").style.display = "inline-flex";
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -172,7 +172,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const target = document.getElementById("lessonsHistory");
       if (!grammarLessons || grammarLessons.length === 0) {
         target.className = "empty";
-        target.innerHTML = "Nenhuma lição de gramática foi criada ainda.";
+        target.innerHTML = "Nenhuma apresentação de gramática foi criada ainda.";
         return;
       }
 
@@ -236,7 +236,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         if (response.error) throw response.error;
-        setFeedback(id ? "Lição atualizada com sucesso." : "Lição criada com sucesso.", "success");
+        setFeedback(id ? "Apresentação atualizada com sucesso." : "Apresentação criada com sucesso.", "success");
         resetForm();
         await loadGrammarLessons();
       } catch (error) {
@@ -248,16 +248,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     async function deleteLesson(id) {
       const lesson = grammarLessons.find(function (item) { return item.id === id; });
-      const label = lesson ? lesson.title : "esta lição";
+      const label = lesson ? lesson.title : "esta apresentação";
       if (!confirm("Tem certeza de que deseja excluir " + label + "?")) return;
 
       const client = Auth.getClient();
       const response = await client.from("grammar_lessons").delete().eq("id", id);
       if (response.error) {
-        setFeedback("Erro ao excluir a lição.", "error");
+        setFeedback("Erro ao excluir a apresentação.", "error");
         return;
       }
-      setFeedback("Lição excluída com sucesso.", "success");
+      setFeedback("Apresentação excluída com sucesso.", "success");
       await loadGrammarLessons();
     }
 
@@ -298,7 +298,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     document.getElementById("cancelEditButton").addEventListener("click", resetForm);
     guardProfessorPage();
   </script>
-  <script src="/aulas-de-gramatica-interface-do-professor/gramatica_admin_visual.js?v=20260901-1"></script>
+  <script src="/aulas-de-gramatica-interface-do-professor/gramatica_admin_visual.js?v=20261022-apresentacoes-1"></script>
   <script src="animated_cards.js?v=20260430-4"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>

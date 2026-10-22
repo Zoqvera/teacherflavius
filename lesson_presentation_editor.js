@@ -13,7 +13,7 @@
     if (lessonNumber !== null && lessonNumber !== undefined && lessonNumber !== "") {
       const number = Number(lessonNumber);
       if (!Number.isSafeInteger(number) || number < 1) {
-        throw new Error("Identificador de lição inválido.");
+        throw new Error("Identificador de apresentação inválido.");
       }
       return Object.freeze({
         key: "lesson:" + number,
@@ -22,7 +22,7 @@
     }
 
     if (!PAGE_ID_PATTERN.test(String(pageId || ""))) {
-      throw new Error("Identificador da página de lição inválido.");
+      throw new Error("Identificador da página de apresentação inválido.");
     }
 
     const id = String(pageId).toLowerCase();
@@ -156,7 +156,7 @@
 
         if (response.error) throw response.error;
         if (!response.data) {
-          throw new Error("A apresentação mudou em outra sessão. Recarregue a lição antes de editar.");
+          throw new Error("A apresentação mudou em outra sessão. Recarregue a apresentação antes de editar.");
         }
 
         saved = response.data;
@@ -206,7 +206,7 @@
     try {
       return await create({ getClient: context.getClient, elements: elements }).load(context);
     } catch (error) {
-      console.error("Falha ao abrir editor de apresentação da lição:", error);
+      console.error("Falha ao abrir editor de apresentação da apresentação:", error);
       return false;
     }
   }

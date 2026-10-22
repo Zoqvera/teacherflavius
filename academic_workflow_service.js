@@ -127,7 +127,7 @@
 
     async function markLessonPrepared(lessonNumber) {
       const normalized = normalizeLessonNumber(lessonNumber);
-      if (!normalized) throw new Error("Lição inválida.");
+      if (!normalized) throw new Error("Apresentação inválida.");
       return unwrap(await supabase.rpc("mark_my_lesson_prepared", {
         target_lesson_number: normalized
       }));
@@ -229,7 +229,7 @@
     async function setPlannedLesson(item, classDate, lessonNumber) {
       const normalized = lessonNumber === null ? null : normalizeLessonNumber(lessonNumber);
       if (lessonNumber !== null && !normalized) {
-        throw new Error("Informe uma lição válida, de 1 a 74.");
+        throw new Error("Informe uma apresentação válida, de 1 a 74.");
       }
       return unwrap(await supabase.rpc("set_teacher_planned_lesson", {
         target_lesson_kind: item.lesson_kind,
@@ -241,7 +241,7 @@
 
     async function markLessonPresented(item, classDate) {
       const lessonNumber = normalizeLessonNumber(item.lesson_number);
-      if (!lessonNumber) throw new Error("Não há lição prevista para registrar.");
+      if (!lessonNumber) throw new Error("Não há apresentação prevista para registrar.");
       return unwrap(await supabase.rpc("mark_teacher_lesson_presented", {
         target_lesson_kind: item.lesson_kind,
         target_entry_id: item.entry_id,

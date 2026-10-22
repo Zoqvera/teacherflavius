@@ -29,7 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="supabase_config.js?v=20260428-2"></script>
     <script src="/module_loader.js?v=20260902-2"></script>
 <script src="auth.js?v=20260428-2"></script>
-  <script src="/study_lesson_service.js?v=20260918-2"></script>
+  <script src="/study_lesson_service.js?v=20261022-apresentacoes-1"></script>
   <script src="/student_preparation_flow.js?v=20261016-general-release-1"></script>
   <link rel="stylesheet" href="aula_template.css?v=20260428-2">
   <style>
@@ -117,8 +117,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="header">
       <div><span class="badge">TEACHER FLÁVIO</span></div>
       <h1>Roteiro de Estudos</h1>
-      <p class="page-description">ESSAS LIÇÕES DEVEM SER APRESENTADAS DURANTE A AULA. VOCÊ SE PREPARA EM CASA E VAI PARA A AULA E APRESENTA.</p>
-      <p class="completion-policy-note">O registro de conclusão das lições é controlado pelo professor e não pode ser alterado pelo aluno.</p>
+      <p class="page-description">ESSAS APRESENTAÇÕES DEVEM SER APRESENTADAS DURANTE A AULA. VOCÊ SE PREPARA EM CASA E VAI PARA A AULA E APRESENTA.</p>
+      <p class="completion-policy-note">O registro de conclusão das apresentações é controlado pelo professor e não pode ser alterado pelo aluno.</p>
       <div id="loginStatus" class="status">Verificando acesso...</div>
     </div>
 
@@ -247,9 +247,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     function formatLessonCardTitle(lessonNumber, linkedPage) {
       const pageTitle = linkedPage && typeof linkedPage.title === "string"
-        ? linkedPage.title.trim()
+        ? linkedPage.title.trim().replace(/LIÇÕES|LIÇÃO|Lições|Lição|lições|lição/g, function (term) {
+            return { "LIÇÕES": "APRESENTAÇÕES", "LIÇÃO": "APRESENTAÇÃO", "Lições": "Apresentações", "Lição": "Apresentação", "lições": "apresentações", "lição": "apresentação" }[term];
+          })
         : "";
-      return ("Lição " + lessonNumber + (pageTitle ? " - " + pageTitle : "")).toLocaleUpperCase("pt-BR");
+      return ("Apresentação " + lessonNumber + (pageTitle ? " - " + pageTitle : "")).toLocaleUpperCase("pt-BR");
     }
 
     function renderLessons() {
@@ -339,7 +341,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         await loadLinkedLessonPages();
       } catch (error) {
         lessonPagesLoaded = false;
-        console.warn("Não foi possível carregar as páginas de lição:", error);
+        console.warn("Não foi possível carregar as páginas de apresentação:", error);
       }
 
       if (completionLoaded && lessonPagesLoaded) {

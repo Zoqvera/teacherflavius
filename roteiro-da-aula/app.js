@@ -164,19 +164,19 @@
 
   function changePlannedLesson(item, classDate) {
     const response = window.prompt(
-      "Qual lição " + item.student_name + " apresentará nesta aula? (1 a 74)",
+      "Qual apresentação " + item.student_name + " apresentará nesta aula? (1 a 74)",
       String(item.lesson_number || 1)
     );
     if (response === null) return Promise.resolve(false);
 
     const number = Number(response.trim());
     if (!Number.isInteger(number) || number < 1 || number > 74) {
-      setStatus("Informe um número de lição de 1 a 74.", "error");
+      setStatus("Informe um número de apresentação de 1 a 74.", "error");
       return Promise.resolve(false);
     }
     return reloadAfter(
       function () { return service.setPlannedLesson(item, classDate, number); },
-      "Lição " + number + " programada para " + item.student_name +
+      "Apresentação " + number + " programada para " + item.student_name +
         ". O histórico de apresentações não foi alterado."
     );
   }
@@ -184,7 +184,7 @@
   function restoreAutomaticLesson(item, classDate) {
     const confirmed = window.confirm(
       "Restaurar a sequência automática para " + item.student_name +
-      "? Nenhuma lição apresentada será alterada."
+      "? Nenhuma apresentação apresentada será alterada."
     );
     if (!confirmed) return Promise.resolve(false);
     return reloadAfter(
@@ -206,7 +206,7 @@
     header.appendChild(meta);
 
     const pills = element("div", "academic-pills");
-    const lessonNumber = item.lesson_number ? "L" + item.lesson_number : "LIÇÕES CONCLUÍDAS";
+    const lessonNumber = item.lesson_number ? "APRESENTAÇÃO " + item.lesson_number : "APRESENTAÇÕES CONCLUÍDAS";
     pills.appendChild(pill(lessonNumber, item.lesson_status === "presented" ? "presented" : ""));
     pills.appendChild(pill(
       lessonStatus(item),
@@ -241,7 +241,7 @@
     }
 
     actions.appendChild(actionButton(
-      "ALTERAR LIÇÃO",
+      "ALTERAR APRESENTAÇÃO",
       "",
       function () { return changePlannedLesson(item, classDate); },
       item.lesson_status === "presented" ||
@@ -277,7 +277,7 @@
           function () {
             return service.markLessonPresented(item, classDate);
           },
-          "Lição apresentada e progresso atualizado."
+          "Apresentação apresentada e progresso atualizado."
         );
       },
       !item.lesson_number ||
@@ -294,7 +294,7 @@
           function () {
             return service.setAttendance(item, classDate, "absent");
           },
-          "Ausência registrada. A lição e as perguntas permanecem pendentes."
+          "Ausência registrada. A apresentação e as perguntas permanecem pendentes."
         );
       },
       item.attendance_status === "absent" || isCancelled(item)

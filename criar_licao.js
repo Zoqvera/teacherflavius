@@ -104,7 +104,7 @@
       appendRoadmapOption(
         select,
         lessonNumber,
-        "Lição " + lessonNumber + (isOccupied ? " — já vinculada" : ""),
+        "Apresentação " + lessonNumber + (isOccupied ? " — já vinculada" : ""),
         isOccupied
       );
     }
@@ -113,7 +113,7 @@
       appendRoadmapOption(
         select,
         currentLessonNumber,
-        "Lição " + currentLessonNumber + " — card criado",
+        "Apresentação " + currentLessonNumber + " — card criado",
         false
       );
     }
@@ -167,7 +167,7 @@
     const cancelButton = document.getElementById("cancelEditButton");
     if (saveButton) {
       saveButton.disabled = isBusy;
-      saveButton.textContent = isBusy ? "SALVANDO..." : (state.editingPageId ? "SALVAR ALTERAÇÕES" : "SALVAR LIÇÃO");
+      saveButton.textContent = isBusy ? "SALVANDO..." : (state.editingPageId ? "SALVAR ALTERAÇÕES" : "SALVAR APRESENTAÇÃO");
     }
     if (cancelButton) cancelButton.disabled = isBusy;
   }
@@ -175,8 +175,8 @@
   function resetForm() {
     state.editingPageId = null;
     document.getElementById("lessonForm").reset();
-    document.getElementById("lessonFormTitle").textContent = "Nova página de lição";
-    document.getElementById("saveLessonButton").textContent = "SALVAR LIÇÃO";
+    document.getElementById("lessonFormTitle").textContent = "Nova página de apresentação";
+    document.getElementById("saveLessonButton").textContent = "SALVAR APRESENTAÇÃO";
     document.getElementById("cancelEditButton").hidden = true;
     rebuildRoadmapOptions("");
     refreshCharacterCounters();
@@ -197,7 +197,7 @@
     document.getElementById("lessonPracticalExercise").value = page.practical_exercise || "";
     document.getElementById("lessonUsefulVocabulary").value = page.useful_vocabulary || "";
     rebuildRoadmapOptions(page.roadmap_lesson_number === null ? "" : page.roadmap_lesson_number);
-    document.getElementById("lessonFormTitle").textContent = "Editar página de lição";
+    document.getElementById("lessonFormTitle").textContent = "Editar página de apresentação";
     document.getElementById("saveLessonButton").textContent = "SALVAR ALTERAÇÕES";
     document.getElementById("cancelEditButton").hidden = false;
 
@@ -214,7 +214,7 @@
     const linkedLessonNumber = Number(page.roadmap_lesson_number);
     let deletionEffect = " Esta página não está conectada ao Roteiro de Estudos.";
     if (linkedLessonNumber > window.StudyLessonService.EXISTING_ROADMAP_CARD_COUNT) {
-      deletionEffect = " O card criado para esta lição também será removido do Roteiro de Estudos.";
+      deletionEffect = " O card criado para esta apresentação também será removido do Roteiro de Estudos.";
     } else if (linkedLessonNumber >= 1) {
       deletionEffect = " O card original voltará ao destino anterior quando houver PDF cadastrado.";
     }
@@ -224,11 +224,11 @@
     if (!confirmed) return;
 
     try {
-      setStatus("Excluindo página de lição...");
+      setStatus("Excluindo página de apresentação...");
       await state.service.deletePage(pageId);
       if (state.editingPageId === pageId) resetForm();
       await loadPages();
-      setStatus("Página de lição excluída.");
+      setStatus("Página de apresentação excluída.");
     } catch (error) {
       setStatus("Não foi possível excluir a página: " + (error.message || "erro desconhecido") + ".", true);
     }
@@ -250,7 +250,7 @@
     list.replaceChildren();
 
     if (!state.pages.length) {
-      setListStatus("Nenhuma página de lição foi criada ainda.");
+      setListStatus("Nenhuma página de apresentação foi criada ainda.");
       return;
     }
 
@@ -266,7 +266,7 @@
       const meta = document.createElement("p");
       meta.className = "lesson-management-meta" + (page.roadmap_lesson_number ? " is-linked" : "");
       meta.textContent = page.roadmap_lesson_number
-        ? "Conectada à Lição " + page.roadmap_lesson_number
+        ? "Conectada à Apresentação " + page.roadmap_lesson_number
         : "Sem vínculo com o Roteiro de Estudos";
 
       const actions = document.createElement("div");
@@ -303,7 +303,7 @@
     if (!form.reportValidity()) return;
 
     setFormBusy(true);
-    setStatus(state.editingPageId ? "Salvando alterações..." : "Criando página de lição...");
+    setStatus(state.editingPageId ? "Salvando alterações..." : "Criando página de apresentação...");
 
     try {
       const payload = readFormPayload();
@@ -317,13 +317,13 @@
       }
 
       const successMessage = requestedNewCard
-        ? "Página salva e Lição " + savedPage.roadmap_lesson_number + " criada no Roteiro de Estudos."
-        : (state.editingPageId ? "Página de lição atualizada." : "Página de lição criada.");
+        ? "Página salva e Apresentação " + savedPage.roadmap_lesson_number + " criada no Roteiro de Estudos."
+        : (state.editingPageId ? "Página de apresentação atualizada." : "Página de apresentação criada.");
       await loadPages();
       resetForm();
       setStatus(successMessage);
     } catch (error) {
-      setStatus("Não foi possível salvar a lição: " + (error.message || "erro desconhecido") + ".", true);
+      setStatus("Não foi possível salvar a apresentação: " + (error.message || "erro desconhecido") + ".", true);
     } finally {
       setFormBusy(false);
     }
@@ -375,10 +375,10 @@
 
       document.getElementById("lessonEditorContent").hidden = false;
       document.body.classList.remove("auth-checking");
-      setStatus("Professor autenticado. Você pode criar e conectar páginas de lição.");
+      setStatus("Professor autenticado. Você pode criar e conectar páginas de apresentação.");
     } catch (error) {
-      console.error("Falha ao inicializar o editor de lições:", error);
-      setStatus("Não foi possível confirmar as credenciais administrativas ou carregar as lições.", true);
+      console.error("Falha ao inicializar o editor de apresentações:", error);
+      setStatus("Não foi possível confirmar as credenciais administrativas ou carregar as apresentações.", true);
       document.body.classList.remove("auth-checking");
     }
   }

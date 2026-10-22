@@ -17,7 +17,7 @@
 
   function assertDependencies(dependencies) {
     if (!dependencies || typeof dependencies.getClient !== "function") {
-      throw new Error("Dependência inválida do serviço de lições: getClient.");
+      throw new Error("Dependência inválida do serviço de apresentações: getClient.");
     }
   }
 
@@ -26,7 +26,7 @@
     const maxLength = MAX_LENGTHS[fieldName];
 
     if (!text) {
-      throw new Error("Preencha todos os campos da lição.");
+      throw new Error("Preencha todos os campos da apresentação.");
     }
     if (text.length > maxLength) {
       throw new Error("O campo excede o limite de " + maxLength + " caracteres.");
@@ -63,13 +63,13 @@
   }
 
   function lessonPageUrl(pageId) {
-    if (!isValidPageId(pageId)) throw new Error("Identificador de página de lição inválido.");
+    if (!isValidPageId(pageId)) throw new Error("Identificador de página de apresentação inválido.");
     return "/licao/?id=" + encodeURIComponent(pageId);
   }
 
   function friendlyDatabaseError(error, payload) {
     if (error && error.code === "23505" && payload && payload.roadmap_lesson_number) {
-      return new Error("A Lição " + payload.roadmap_lesson_number + " já está vinculada a outra página.");
+      return new Error("A Apresentação " + payload.roadmap_lesson_number + " já está vinculada a outra página.");
     }
     return error;
   }
@@ -147,7 +147,7 @@
     }
 
     async function updatePage(pageId, payload) {
-      if (!isValidPageId(pageId)) throw new Error("Identificador de página de lição inválido.");
+      if (!isValidPageId(pageId)) throw new Error("Identificador de página de apresentação inválido.");
 
       const normalized = normalizePayload(payload);
       const response = await requireClient()
@@ -162,7 +162,7 @@
     }
 
     async function deletePage(pageId) {
-      if (!isValidPageId(pageId)) throw new Error("Identificador de página de lição inválido.");
+      if (!isValidPageId(pageId)) throw new Error("Identificador de página de apresentação inválido.");
 
       const response = await requireClient()
         .from(TABLE_NAME)

@@ -76,7 +76,7 @@
     }
 
     const count = cards.length;
-    badge.textContent = count + (count === 1 ? ' lição cadastrada' : ' lições cadastradas');
+    badge.textContent = count + (count === 1 ? ' apresentação cadastrada' : ' apresentações cadastradas');
     badge.hidden = count === 0;
   }
 
@@ -89,7 +89,7 @@
 
     cards.forEach(function (card, index) {
       const title = card.querySelector('strong');
-      const lessonName = title ? title.textContent.trim() : 'Lição ' + (index + 1);
+      const lessonName = title ? title.textContent.trim() : 'Apresentação ' + (index + 1);
 
       if (title) {
         if (!title.id) title.id = 'grammarLessonTitle' + index;
@@ -104,10 +104,10 @@
       const deleteButton = card.querySelector('[data-delete-id]');
 
       if (editButton) {
-        editButton.setAttribute('aria-label', 'Editar lição ' + lessonName);
+        editButton.setAttribute('aria-label', 'Editar apresentação ' + lessonName);
       }
       if (deleteButton) {
-        deleteButton.setAttribute('aria-label', 'Excluir lição ' + lessonName + ' permanentemente');
+        deleteButton.setAttribute('aria-label', 'Excluir apresentação ' + lessonName + ' permanentemente');
       }
     });
   }

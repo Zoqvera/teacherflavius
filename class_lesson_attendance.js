@@ -67,6 +67,12 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
+  function formatPresentationCode(value) {
+    var code = String(value || "");
+    var match = /^L([1-9]\d?)$/i.exec(code);
+    return match ? "Apresentação " + match[1] : code;
+  }
+
   function lessonOptions(selected) {
     var html = '<option value="">Selecionar</option>';
     specialLessonOptions.forEach(function (option) {
@@ -75,7 +81,7 @@
     html += '<option disabled>──────────</option>';
     for (var i = 1; i <= 74; i++) {
       var lesson = "L" + i;
-      html += '<option value="' + lesson + '"' + (selected === lesson ? ' selected' : '') + '>' + lesson + '</option>';
+      html += '<option value="' + lesson + '"' + (selected === lesson ? ' selected' : '') + '>' + formatPresentationCode(lesson) + '</option>';
     }
     return html;
   }
@@ -112,8 +118,8 @@
     var rows = (records || []).map(function (record) {
       return '<tr>' +
         '<td>' + escapeHtml(formatBrazilianDate(record.class_date)) + '</td>' +
-        '<td><span class="lesson-status-pill">' + escapeHtml(record.lesson_code || "") + '</span></td>' +
-        '<td><button class="delete-button lesson-delete-button" type="button" data-record-id="' + escapeHtml(record.id) + '" data-record-label="' + escapeHtml((record.lesson_code || "lição") + " de " + formatBrazilianDate(record.class_date)) + '">EXCLUIR</button></td>' +
+        '<td><span class="lesson-status-pill">' + escapeHtml(formatPresentationCode(record.lesson_code)) + '</span></td>' +
+        '<td><button class="delete-button lesson-delete-button" type="button" data-record-id="' + escapeHtml(record.id) + '" data-record-label="' + escapeHtml(formatPresentationCode(record.lesson_code || "apresentação") + " de " + formatBrazilianDate(record.class_date)) + '">EXCLUIR</button></td>' +
       '</tr>';
     }).join("");
 
@@ -180,7 +186,7 @@
     var recordId = String(button.dataset.recordId || "").trim();
     if (!recordId) return;
     var label = button.dataset.recordLabel || "este registro";
-    if (!window.confirm("Excluir " + label + "? Esta ação remove o registro de frequência/lição.")) return;
+    if (!window.confirm("Excluir " + label + "? Esta ação remove o registro de frequência/apresentação.")) return;
 
     button.disabled = true;
     button.textContent = "EXCLUINDO...";
@@ -224,7 +230,7 @@
 
       if (!students.length) {
         target.className = "empty";
-        target.textContent = "Adicione alunos à turma antes de registrar lições.";
+        target.textContent = "Adicione alunos à turma antes de registrar apresentações.";
         return;
       }
 
@@ -235,7 +241,7 @@
       attachActionButtons();
     } catch (error) {
       target.className = "error";
-      target.textContent = "Não foi possível carregar a tabela de frequência e lições.";
+      target.textContent = "Não foi possível carregar a tabela de frequência e apresentações.";
     }
   }
 
