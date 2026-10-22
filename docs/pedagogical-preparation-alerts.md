@@ -34,3 +34,11 @@ Remetente técnico: pedagogico@teacherflavius.com (sem acento, interoperável no
 
 ## SEO
 Não há alteração de páginas públicas, indexação, urls, sitemap, canonical ou metadados.
+
+## Ativação registrada em 22/10/2026
+- PR #860 integrada à `main`.
+- Edge Function `notify-pedagogical-preparation` publicada no Supabase de produção (versão 1, `verify_jwt=false` com autenticação própria por segredo compartilhado).
+- Migração SQL de Git `20261022170000` aplicada pela API do Supabase, que atribuiu a versão de produção `20261022161120` ao conteúdo SQL idêntico; alias com nomes e SHA256 imutáveis auditado no verificador de drift.
+- Job `pedagogical-preparation-alerts` programado a cada cinco minutos; fila protegida por RLS, sem acesso direto de `anon` e `authenticated`.
+- Por solicitação expressa do proprietário, nenhum e-mail de teste foi enviado e não houve homologação de entrega real. Resultado de entrega ao destinatário e autorização específica do endereço remetente ainda não foram comprovados.
+- Alterações SEO: nenhuma.
