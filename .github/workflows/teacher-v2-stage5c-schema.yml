@@ -51,7 +51,7 @@ jobs:
       - name: Require fresh backup, independent recovery and disposable rehearsal
         run: bash scripts/verify_teacher_v2_stage5c_evidence.sh
 
-      - name: Install only four teacher-v2 migrations in one transaction
+      - name: Install only five teacher-v2 migrations in one transaction
         run: bash scripts/apply_teacher_v2_stage5c.sh
 
       - name: Attest the server automation stayed disabled after commit
@@ -65,8 +65,8 @@ jobs:
               and to_regprocedure('private.run_teacher_v2_auto_finalizations()') is not null
               and (select count(*) = 1 from cron.job
                    where jobname = 'teacher-v2-auto-finalize')
-              and (select count(*) = 354 from supabase_migrations.schema_migrations)
-              and (select max(version) = '20261022220000'
+              and (select count(*) = 355 from supabase_migrations.schema_migrations)
+              and (select max(version) = '20261022234500'
                    from supabase_migrations.schema_migrations)
             )")"
           test "$result" = 't'
