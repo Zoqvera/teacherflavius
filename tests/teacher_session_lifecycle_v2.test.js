@@ -54,7 +54,7 @@ test("audited attendance correction requires reason and does not alter cancelled
       return { data: { ok: true, attendance_status: args.target_status }, error: null };
     }
   });
-  assert.throws(() => lifecycle.correctAttendance(student(), DATE, "absent", "too short"),
+  assert.throws(() => lifecycle.correctAttendance(student(), DATE, "absent", "curto"),
     /justificativa/i);
   assert.throws(() => lifecycle.correctAttendance(
     student({ attendance_status: "cancelled" }), DATE, "present",
