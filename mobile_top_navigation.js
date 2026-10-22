@@ -10,8 +10,7 @@
       path === "/login" + "." + "html" ||
       path === "/login/index" + "." + "html" ||
       path === "/aula-experimental" ||
-      path === "/aula-experimental/" ||
-      path === "/aula-experimental/index.html";
+      path === "/aula-experimental/";
   }
 
   function removeNavigationArtifacts() {
