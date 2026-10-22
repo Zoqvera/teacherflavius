@@ -10,7 +10,7 @@ const { stripTypeScriptTypes } = require("node:module");
 
 const root = path.resolve(__dirname, "..");
 const sql = fs.readFileSync(
-  path.join(root, "supabase/migrations/20261022230000_add_tuition_email_reminders.sql"), "utf8",
+  path.join(root, "supabase/migrations/20261022205054_add_tuition_email_reminders.sql"), "utf8",
 );
 const edge = fs.readFileSync(
   path.join(root, "supabase/functions/notify-tuition-email-reminders/index.ts"), "utf8",
