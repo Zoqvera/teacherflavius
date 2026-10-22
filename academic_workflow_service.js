@@ -119,6 +119,12 @@
       return hydrateQuestions(Array.isArray(reviews) ? reviews : []);
     }
 
+    async function getMyStudiedQuestions() {
+      const history = unwrap(await supabase.rpc("get_my_studied_questions"));
+      if (!Array.isArray(history)) throw new Error("Histórico de estudos inválido.");
+      return history;
+    }
+
     async function markLessonPrepared(lessonNumber) {
       const normalized = normalizeLessonNumber(lessonNumber);
       if (!normalized) throw new Error("Lição inválida.");
@@ -258,6 +264,7 @@
       finalizeTeacherLessonSession,
       getMyActionPlan,
       getMyReviewQuestions,
+      getMyStudiedQuestions,
       getTeacherLessonPlan,
       isActiveStudent,
       markLessonPrepared,
