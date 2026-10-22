@@ -90,20 +90,60 @@ ativação definitiva.
 
 O Roteiro da Aula atual não foi modificado e continua operativo.
 
-## Etapa 4 — frequência e encerramento automáticos
+## Etapa 4 — frequência e encerramento (implementação preparada)
 
-Preparar migração e testes de integração para:
-- Presença ao registrar apresentação, avaliação ou participação excepcional.
-- Ausência apenas ao encerrar a ocorrência sem qualquer atividade registrada.
-- Cancelamentos preservados, sem gerar ausência ou alterar créditos existentes.
-- Finalização automática em `starts_at + interval '90 minutes'`, no servidor.
-- Recuperação administrativa, reprocessamento idempotente e auditoria.
-- Histórico acessível após finalizar, sem depender da RPC atual que oculta
-  turmas finalizadas.
+- Nova migração aditiva `20261022212500_academic_v2_auto_attendance_and_closure.sql`,
+  sem substituir `get_teacher_lesson_plan`, `finalize_teacher_lesson_session`
+  ou qualquer rotina do ROTEIRO DA AULA atual.
+- Worker `private.run_teacher_v2_auto_finalizations()` calcula
+  `starts_at + interval '90 minutes'` no servidor, percorre aulas regulares
+  e reposições confirmadas, protege-se contra chamadas concorrentes e marca
+  como ausentes somente os alunos sem presença, apresentação, avaliação ou
+  participação excepcional. Registros de presença existentes são preservados.
+- Cancelamentos permanecem `cancelled` e não geram ausência ou movimentação
+  de créditos. A rotina não altera regras de mensalidade nem matrícula.
+- O encerramento utiliza a tabela existente
+  `private.academic_class_session_finalizations` e guarda um instantâneo
+  nominal em `private.academic_v2_closed_session_snapshots`.
+- Histórico consultável pela nova RPC
+  `get_teacher_v2_closed_sessions`, com permissão apenas do professor.
+  Corrigir uma frequência posteriormente atualiza o histórico consultado,
+  mantendo o instantâneo de encerramento para auditoria.
+- `mark_teacher_v2_participation` confirma presença excepcional, separada
+  de apresentações e avaliações.
+- `correct_teacher_v2_attendance` permite corrigir presença/ausência
+  com justificativa de 8 a 500 caracteres; a tabela privada
+  `academic_v2_attendance_audit` registra valores anteriores, motivo,
+  horário e administrador. A regra existente impede ausência em aulas com
+  conteúdo pedagógico registrado.
+- O agendamento `teacher-v2-auto-finalize` está preparado para executar a
+  cada minuto, mas o controle no servidor
+  `private.academic_v2_automation_control.enabled` nasce **false**.
+  Nenhuma aula é encerrada automaticamente antes da ativação expressa na
+  Etapa 5; `enabled_from` delimita as novas ocorrências, impedindo
+  processamento retroativo de aulas anteriores.
+- No cliente, `SESSION_LIFECYCLE_ENABLED = false`, assim como os gates de
+  apresentações e perguntas. A nova interface mostra turmas encerradas
+  em modo de consulta; os botões de participação/correção ficam desativados.
+  O roteiro atual segue sendo a interface operacional.
+- Verificações automatizadas cobrem o limiar de 90 minutos, cancelamentos,
+  gate inicialmente desligado, histórico, autorização, auditoria e erros.
+  **Não foram efetuadas escritas em dados reais de alunos nesta etapa.**
 
-Estas mudanças só poderão ser aplicadas depois de verificar o contrato das
-RPCs atuais e a rotina de cron: uma migração prematura alteraria os registros
-do roteiro de produção.
+### Condições obrigatórias para ativar na Etapa 5
+
+1. Aplicar migrações pendentes em ambiente de homologação e executar testes
+   de integração com sessões simuladas, incluindo cancelamentos e viradas de dia.
+2. Conferir as regras de créditos, arquivos e primeira aula, sem efeitos sobre
+   lançamentos financeiros e frequência histórica.
+3. Validar concorrência de avaliação/apresentação com fechamento e recuperação
+   após indisponibilidade do cron.
+4. Habilitar os módulos da interface e o worker do servidor na mesma janela
+   de publicação, definindo `enabled_from` para a ativação em diante.
+5. Testar a leitura de turmas antigas finalizadas manualmente, notificações
+   de erro e correções administrativas.
+
+Nenhum passo desta etapa autoriza ativar o agendamento para aulas reais.
 
 ## Etapa 5 — homologação e troca controlada
 
