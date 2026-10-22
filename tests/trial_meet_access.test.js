@@ -7,6 +7,7 @@ const entry = require("../trial_meet_access.js");
 const report = require("../trial_meet_report.js");
 
 const page = fs.readFileSync(path.join(__dirname, "..", "aula-experimental", "index.html"), "utf8");
+const pageStyles = fs.readFileSync(path.join(__dirname, "..", "aula-experimental", "styles.css"), "utf8");
 const admin = fs.readFileSync(path.join(__dirname, "..", "aulas-experimentais", "index.html"), "utf8");
 const migration = fs.readFileSync(
   path.join(__dirname, "../supabase/migrations/20261022135918_trial_meet_accesses_20261022.sql"), "utf8"
@@ -40,6 +41,18 @@ test("public page has exactly the requested fields and no marketing checkbox", (
   assert.match(page, /PARTICIPAR DA AULA/);
   assert.doesNotMatch(page, /type="checkbox"/);
   assert.match(page, /content="noindex, nofollow"/);
+});
+
+test("experimental lesson form uses readable mobile sizing", () => {
+  assert.match(page, /name="viewport" content="width=device-width, initial-scale=1"/);
+  assert.match(page, /\/aula-experimental\/styles\.css\?v=20261022-mobile-2/);
+  assert.match(pageStyles, /@media \(max-width: 1024px\)/);
+  assert.match(pageStyles, /max-width: 900px;/);
+  assert.match(pageStyles, /min-height: 100svh;/);
+  assert.match(pageStyles, /@media \(max-width: 767px\)/);
+  assert.match(pageStyles, /#trialMeetForm #visitorName/);
+  assert.match(pageStyles, /#trialMeetForm #visitorWhatsapp/);
+  assert.match(pageStyles, /min-height: 62px;/);
 });
 
 test("client redirects only after server confirms successful saving", async () => {
