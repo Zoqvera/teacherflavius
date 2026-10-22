@@ -24,14 +24,34 @@ A página atual continua sendo a única interface autorizada para registrar aula
 - Prévia somente para leitura e exclusivamente para o professor.
 - Testes de agrupamento, visibilidade dos cancelamentos e isolamento.
 
-## Etapa 2 — registro persistente de apresentações
+## Etapa 2 — registro persistente de apresentações (implementação preparada)
 
-Implementar REGISTRAR APRESENTAÇÃO usando a transação existente
-`mark_teacher_lesson_presented`, após conferir se o backend consegue
-inferir presença com segurança. Manter idempotência, prevenção de cliques
-duplicados, atualização da próxima apresentação e possibilidade de correção
-administrativa auditável. Nunca usar o texto enviado como indicador de
-apresentação concluída.
+- Conferido na função existente `mark_teacher_lesson_presented` que o banco
+  sincroniza a frequência como `present`, insere registro em
+  `class_lesson_records`, marca conclusão em `study_roadmap_completion` e
+  registra `presented_lesson_number` numa única transação.
+- `roteiro-da-aula-v2/presentation_registration.js` valida tipo da aula,
+  identificadores, apresentação planejada, situação da frequência e dia
+  civil de São Paulo antes de invocar a operação já existente.
+- Chamadas simultâneas para a mesma apresentação compartilham a mesma
+  requisição. Uma confirmação positiva é memorizada na sessão para impedir
+  um segundo envio enquanto a interface atualiza.
+- O retorno da RPC deve confirmar `ok`, `occurrence_id` e o número da
+  apresentação. Erros não são mostrados como sucesso e são recuperáveis.
+- A tela de apresentações contém o botão único acima do texto; quando
+  ativado, ele fica indisponível enquanto salva e, após confirmação,
+  mostra `APRESENTAÇÃO REGISTRADA` e presença confirmada.
+- **A liberação segue bloqueada** por
+  `PRESENTATION_REGISTRATION_ENABLED = false` até todas as etapas e testes
+  de integração terminarem. Nenhum registro desta prévia é executado em
+  produção enquanto a chave permanece desativada. O roteiro atual continua
+  sendo a interface operacional.
+- Os testes da Etapa 2 usam serviços simulados; não escreveram em
+  registros de alunos reais.
+
+**Ajustes posteriores:** correção administrativa auditável e verificação
+integrada de duplicidade/concorrência em banco após homologação, antes da
+ativação definitiva.
 
 ## Etapa 3 — avaliações de perguntas
 
