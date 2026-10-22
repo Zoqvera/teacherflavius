@@ -6,6 +6,8 @@
   // Etapa 2 preparada: manter registros indisponíveis até a liberação integral.
   const PRESENTATION_REGISTRATION_ENABLED = false;
   const QUESTION_RATINGS_ENABLED = false;
+  // Gate v2: servidor e interface continuam desativados nesta etapa.
+  const SESSION_LIFECYCLE_ENABLED = false;
   const RATINGS = Object.freeze({
     good: "BOM",
     medium: "MÉDIO",
@@ -16,6 +18,8 @@
     service: null,
     registration: null,
     questionRatings: null,
+    lifecycle: null,
+    closedSessionsAvailable: false,
     questionHistory: new Map(),
     ratingHistoryAvailable: false,
     openSections: new Map(),
@@ -123,6 +127,9 @@
   }
 
   function classDescription(group) {
+    if (group.finalized) {
+      return "AULA ENCERRADA · " + group.students.length + " aluno(s) no histórico";
+    }
     const summary = MODEL.classSummary(group);
     if (state.view === "presentations") {
       return summary.presented + "/" + summary.total + " apresentações registradas" +
@@ -147,6 +154,99 @@
       grid.appendChild(card);
     });
     container.appendChild(grid);
+  }
+
+  async function markParticipation(item, control) {
+    const date = document.getElementById("workspaceDate").value;
+    if (!SESSION_LIFECYCLE_ENABLED || state.loadedDate !== date) return;
+    control.disabled = true;
+    control.textContent = "SALVANDO...";
+    try {
+      await state.lifecycle.markParticipation(item, date);
+      item.attendance_status = "present";
+      await loadPlan("Participação registrada. Presença confirmada.");
+    } catch (error) {
+      console.error("Falha no registro de participação:", error);
+      status(error && error.message
+        ? error.message : "Não foi possível registrar a participação.", "error");
+      control.disabled = false;
+      control.textContent = "REGISTRAR PARTICIPAÇÃO";
+    }
+  }
+
+  function participationAction(item) {
+    if (!SESSION_LIFECYCLE_ENABLED) {
+      return readonlyAction("REGISTRAR PARTICIPAÇÃO");
+    }
+    const control = button("REGISTRAR PARTICIPAÇÃO", function () {
+      markParticipation(item, control);
+    }, "academic-button workspace-participation-action");
+    return control;
+  }
+
+  async function correctAttendance(item, control) {
+    const date = document.getElementById("workspaceDate").value;
+    if (!SESSION_LIFECYCLE_ENABLED || state.loadedDate !== date) return;
+    const response = window.prompt(
+      "Frequência corrigida para " + item.student_name +
+      ": digite PRESENTE ou AUSENTE."
+    );
+    if (response === null) return;
+    const target = response.trim().toLocaleUpperCase("pt-BR");
+    if (!["PRESENTE", "AUSENTE"].includes(target)) {
+      status("Informe PRESENTE ou AUSENTE.", "error");
+      return;
+    }
+    const reason = window.prompt(
+      "Justificativa obrigatória para corrigir a frequência (8 a 500 caracteres):"
+    );
+    if (reason === null) return;
+
+    control.disabled = true;
+    try {
+      await state.lifecycle.correctAttendance(
+        item, date, target === "PRESENTE" ? "present" : "absent", reason
+      );
+      await loadPlan("Frequência corrigida com justificativa registrada.");
+    } catch (error) {
+      console.error("Falha na correção da frequência:", error);
+      status(error && error.message
+        ? error.message : "Não foi possível corrigir a frequência.", "error");
+      control.disabled = false;
+    }
+  }
+
+  function closedStudent(item) {
+    const card = node("article", "academic-student-card workspace-student");
+    card.appendChild(studentHeading(item));
+    card.appendChild(muted("Registro preservado no encerramento da aula."));
+    if (!MODEL.isCancelled(item) && window.TeacherSessionLifecycle.canAdjust(
+      item, document.getElementById("workspaceDate").value
+    )) {
+      if (!SESSION_LIFECYCLE_ENABLED) {
+        card.appendChild(readonlyAction("CORRIGIR FREQUÊNCIA"));
+      } else {
+        const control = button("CORRIGIR FREQUÊNCIA", function () {
+          correctAttendance(item, control);
+        }, "academic-button workspace-correction-action");
+        card.appendChild(control);
+      }
+    }
+    return card;
+  }
+
+  function renderClosedGroup(container, group) {
+    container.appendChild(node("h2", "workspace-section-title",
+      group.className + " · " + classTime(group.startsAt)));
+    container.appendChild(node("p", "workspace-closed-status",
+      "AULA ENCERRADA AUTOMATICAMENTE OU PELO PROFESSOR"));
+    if (!group.students.length) {
+      container.appendChild(muted("Aula encerrada. Histórico nominal anterior indisponível."));
+    }
+    group.students.forEach(function (item) {
+      const student = Object.assign({}, item, { starts_at: group.startsAt });
+      container.appendChild(closedStudent(student));
+    });
   }
 
   function studentHeading(item) {
@@ -375,6 +475,9 @@
     }
     const questions = MODEL.questionsForStudent(item, state.catalog);
     const history = questionHistory(item);
+    if (!MODEL.isCancelled(item) && item.attendance_status === "scheduled") {
+      card.appendChild(participationAction(item));
+    }
     card.appendChild(questionSection(
       "PERGUNTAS ESTUDADAS PARA HOJE", questions.today, item, true,
       !MODEL.isCancelled(item), history
@@ -390,6 +493,10 @@
   }
 
   function renderClass(container, group) {
+    if (group.finalized) {
+      renderClosedGroup(container, group);
+      return;
+    }
     container.appendChild(node("h2", "workspace-section-title",
       group.className + " · " + classTime(group.startsAt)));
     container.appendChild(muted(formatSectionLabel()));
@@ -445,15 +552,22 @@
     try {
       const client = window.Auth.getClient();
       const items = await state.service.getTeacherLessonPlan(date);
-      const [catalog, bundle, questionHistory] = await Promise.all([
+      const [catalog, bundle, questionHistory, closedSessions] = await Promise.all([
         loadQuestionCatalog(client, items),
         window.TeacherLessonPresentations.loadPlan(
           items, function () { return client; }, state.teacherId
         ),
-        state.questionRatings.getHistory(date)
+        state.questionRatings.getHistory(date),
+        state.lifecycle.getClosedSessions(date)
       ]);
       if (requestId !== state.requestId) return;
-      state.groups = MODEL.groupByClass(items);
+      state.groups = MODEL.groupByClass(items).concat(
+        closedSessions.sessions
+      ).sort(function (first, second) {
+        return new Date(first.startsAt).getTime() -
+          new Date(second.startsAt).getTime();
+      });
+      state.closedSessionsAvailable = closedSessions.available;
       state.loadedDate = date;
       state.catalog = catalog;
       state.presentations = bundle ? bundle.records : new Map();
@@ -481,7 +595,8 @@
         window.TeacherLessonPresentations &&
         window.ConversationQuestionCardRenderer &&
         window.TeacherPresentationRegistration &&
-        window.TeacherQuestionRatings && MODEL);
+        window.TeacherQuestionRatings &&
+        window.TeacherSessionLifecycle && MODEL);
     }, WAIT_OPTIONS);
     if (!ready) {
       status("Recursos indisponíveis.", "error");
@@ -503,6 +618,7 @@
     state.service = window.AcademicWorkflowService.create(client);
     state.registration = window.TeacherPresentationRegistration.create(state.service);
     state.questionRatings = window.TeacherQuestionRatings.create(client);
+    state.lifecycle = window.TeacherSessionLifecycle.create(client);
     const datePicker = document.getElementById("workspaceDate");
     datePicker.value = currentDate();
     datePicker.addEventListener("change", function () {
