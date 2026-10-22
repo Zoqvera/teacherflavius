@@ -182,4 +182,74 @@ end;
 $function$;
 
 
+-- Exceptional participation must obey the same closure window.
+create or replace function public.mark_teacher_v2_participation(
+  target_lesson_kind text, target_entry_id uuid, target_date date
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  resolved record;
+  previous_status text;
+  saved_occurrence_id uuid;
+begin
+  if auth.uid() is null or not coalesce(public.is_teacher_admin(), false) then
+    raise exception 'Acesso administrativo do professor obrigatório.' using errcode = '42501';
+  end if;
+
+  perform private.assert_teacher_v2_session_open(
+    target_lesson_kind, target_entry_id, target_date
+  );
+
+  select * into resolved
+  from private.resolve_academic_lesson(target_lesson_kind, target_entry_id, target_date);
+  if resolved.student_id is null then
+    raise exception 'Aula não encontrada ou cancelada.' using errcode = 'P0002';
+  end if;
+  if now() < resolved.starts_at - interval '30 minutes' then
+    raise exception 'A aula ainda não começou.';
+  end if;
+  if exists (
+    select 1 from private.academic_class_session_finalizations closed
+    where closed.class_number = resolved.class_number
+      and closed.starts_at = resolved.starts_at
+  ) then
+    raise exception 'Aula encerrada. Utilize a correção administrativa.';
+  end if;
+
+  select attendance_status into previous_status
+  from private.academic_lesson_occurrences occurrence
+  where occurrence.occurrence_key = resolved.occurrence_key;
+
+  if previous_status = 'absent' then
+    raise exception 'Ausência registrada. Utilize a correção administrativa.';
+  end if;
+
+  saved_occurrence_id := private.sync_academic_attendance(
+    target_lesson_kind, target_entry_id, target_date, 'present'
+  );
+
+  if previous_status is distinct from 'present' then
+    insert into private.academic_v2_attendance_audit (
+      lesson_kind, entry_id, student_id, class_number, starts_at,
+      previous_status, new_status, change_reason, action, changed_by
+    ) values (
+      target_lesson_kind, target_entry_id, resolved.student_id,
+      resolved.class_number, resolved.starts_at,
+      previous_status, 'present', 'Participação excepcional registrada pelo professor.',
+      'manual_participation', auth.uid()
+    );
+  end if;
+
+  return jsonb_build_object(
+    'ok', true, 'occurrence_id', saved_occurrence_id,
+    'attendance_status', 'present'
+  );
+end;
+$function$;
+
+
 notify pgrst, 'reload schema';
