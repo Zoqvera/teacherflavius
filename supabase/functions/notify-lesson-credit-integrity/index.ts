@@ -171,7 +171,7 @@ Deno.serve(async (request: Request) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [ADMIN_EMAIL],
-        reply_to: ADMIN_EMAIL,
+        reply_to: "contato@teacherflavius.com",
         subject: SUBJECT,
         html: mail.html,
         text: mail.text,
