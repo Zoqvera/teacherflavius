@@ -342,9 +342,27 @@
     section.appendChild(node("summary", "", label + " (" + questions.length + ")"));
     const content = node("div", "workspace-question-list");
     if (!questions.length) content.appendChild(muted("Nenhuma pergunta nesta seção."));
-    questions.forEach(function (question) {
-      content.appendChild(questionCard(question, item, showRatings, history));
+    const rows = questions.map(function (question) {
+      const card = questionCard(question, item, showRatings, history);
+      content.appendChild(card);
+      return { card: card, question: question };
     });
+    if (label === "TODAS AS PERGUNTAS ESTUDADAS" && rows.length) {
+      const search = node("input", "workspace-question-search");
+      search.type = "search";
+      search.placeholder = "Buscar pergunta estudada";
+      search.setAttribute("aria-label", "Buscar entre todas as perguntas estudadas");
+      search.addEventListener("input", function () {
+        const term = search.value.trim().toLocaleLowerCase("pt-BR");
+        rows.forEach(function (row) {
+          const text = String(row.question.text || row.question.question_text || "") +
+            " " + String(row.question.translation || row.question.question_translation || "") +
+            " " + String(row.question.display_order || "");
+          row.card.hidden = !text.toLocaleLowerCase("pt-BR").includes(term);
+        });
+      });
+      section.appendChild(search);
+    }
     section.appendChild(content);
     return section;
   }
