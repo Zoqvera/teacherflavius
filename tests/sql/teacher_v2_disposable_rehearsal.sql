@@ -170,8 +170,14 @@ begin
   -- The production enrollment trigger intentionally moves a newly linked
   -- student into the future. In this isolated historical-session fixture,
   -- disable ONLY that date-assignment trigger and restore it immediately.
-  alter table public.class_students
-    disable trigger assign_first_lesson_after_membership_trigger;
+  if exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.class_students'::regclass
+      and tgname = 'assign_first_lesson_after_membership_trigger'
+  ) then
+    alter table public.class_students
+      disable trigger assign_first_lesson_after_membership_trigger;
+  end if;
 
   insert into public.class_students (
     class_number, user_id, first_lesson_date
@@ -182,8 +188,14 @@ begin
     class_date
   from generate_series(1, 3) as index_value;
 
-  alter table public.class_students
-    enable trigger assign_first_lesson_after_membership_trigger;
+  if exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.class_students'::regclass
+      and tgname = 'assign_first_lesson_after_membership_trigger'
+  ) then
+    alter table public.class_students
+      enable trigger assign_first_lesson_after_membership_trigger;
+  end if;
 
   -- Student 1 previously participated. No other action is required.
   student_id := '99000000-0000-4000-8000-000000000001'::uuid;
