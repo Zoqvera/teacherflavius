@@ -12,13 +12,17 @@ O banco de produção ainda não recebeu as migrações da etapa 3
 (`20261022202000`), da etapa 4 (`20261022212500`, `20261022214500`)
 e o ajuste de concorrência (`20261022220000`).
 
-**Importante:** não usar a ferramenta genérica `apply_migration` para
-publicar essas migrações do repositório: a versão gerada remotamente é
-diferente da versão imutável do arquivo. Isso cria divergência no histórico
-`supabase_migrations.schema_migrations`. Usar um fluxo de aplicação por
-arquivos versionados, com `supabase db push --linked`, em ambiente
-confiável e com credenciais protegidas, após revisão, backup e `--dry-run`.
-Não atualizar o ledger manualmente para mascarar divergências.
+**Importante:** não executar a ferramenta genérica `apply_migration`,
+`supabase db push`, `migration repair` ou `db reset` na produção.
+O histórico produtivo e os arquivos do repositório são divergentes.
+O procedimento aprovado em funcionalidades anteriores exigiu um workflow
+transacional **seletivo**, com verificação do histórico atual, backup
+restaurável, ensaio sintético e lançamento das versões canônicas juntamente
+com o DDL; nenhuma migração fora da lista aprovada é aplicada.
+A nova etapa necessita procedimento equivalente, revisado e autorizado
+segundo `docs/supabase-migration-ledger-cutover-runbook.md` e
+`docs/apresentacoes-licoes-etapa5b.md`. Nunca editar o ledger para
+mascarar divergências.
 
 ## 5A — Integração de segurança (preparada)
 
@@ -44,8 +48,11 @@ Não atualizar o ledger manualmente para mascarar divergências.
    duas abas concorrentes.
 6. Confirmar que falhas no worker não levam a perda de dados, e que
    a execução repetida é idempotente.
-7. Aplicar as mesmas migrações por arquivos versionados na produção,
-   ainda com `enabled=false`, e consultar novamente permissões/RLS.
+7. Executar um **workflow transacional seletivo** aprovado e
+   explicitamente confirmado, que aplique apenas as quatro versões
+   canônicas e registre cada versão no ledger na mesma transação do DDL;
+   preservar `enabled=false`. Não executar em lote as migrações históricas.
+   Consultar novamente permissões/RLS após commit.
 8. Conferir o histórico de classes finalizadas manualmente e as
    correções administrativas com justificativa.
 
