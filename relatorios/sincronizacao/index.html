@@ -85,8 +85,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <main class="reports-content">
       <div class="reports-toolbar">
         <p class="reports-note">
-          Este relatório acompanha a sincronização atual por envio: cada resposta do Google Forms é processada individualmente e registrada no Portal de Exercícios.
-          <small>O histórico do sincronizador antigo em lote foi preservado no banco, mas não entra mais nas métricas abaixo.</small>
+          Este relatório preserva os eventos históricos da integração Google Forms, descontinuada em 21/10/2026. Nenhum novo envio será processado.
+          <small>As métricas abaixo mostram apenas os registros históricos do sincronizador por evento.</small>
         </p>
         <button id="refreshButton" class="top-link" type="button" style="cursor:pointer;font-family:inherit;">ATUALIZAR</button>
       </div>
@@ -242,7 +242,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function renderReports(events) {
       const root = document.getElementById("reportDays");
       if (!events.length) {
-        root.innerHTML = '<div class="empty-panel"><strong>Nenhum evento da sincronização atual foi registrado ainda.</strong><br>Os próximos envios do Google Forms aparecerão aqui automaticamente após serem processados pelo monitor.</div>';
+        root.innerHTML = '<div class="empty-panel"><strong>Nenhum evento histórico foi encontrado.</strong><br>A sincronização foi descontinuada e não receberá novas conclusões.</div>';
         return;
       }
 
@@ -315,7 +315,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const button = document.getElementById("refreshButton");
       const status = document.getElementById("reportStatus");
       button.disabled = true;
-      status.textContent = "Carregando eventos da sincronização atual...";
+      status.textContent = "Carregando eventos históricos de sincronização...";
       try {
         const allowed = await guardTeacher();
         if (!allowed) return;
@@ -329,7 +329,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         renderReports(events);
         status.textContent = events.length
           ? `${events.length} evento(s) carregado(s). Último evento: ${formatDateTime(events[0].received_at)}.`
-          : "Monitoramento por evento ativo. Aguardando o próximo envio do Google Forms.";
+          : "Integração Google Forms descontinuada. Nenhum evento histórico encontrado.";
       } catch (error) {
         console.error("Erro ao carregar relatório de sincronização:", error);
         document.body.classList.remove("auth-checking");
