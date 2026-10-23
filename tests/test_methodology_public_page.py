@@ -62,7 +62,22 @@ class MethodologyPublicPageTests(unittest.TestCase):
         styles = STYLES.read_text(encoding="utf-8")
         self.assertNotIn('.methodology-header', styles)
         self.assertNotIn('.methodology-hero-actions', styles)
-        self.assertIn('.methodology-hero { padding: 48px 0 64px; }', styles)
+        self.assertIn('.methodology-hero { padding: 106px 0 64px; }', styles)
+
+    def test_mobile_menu_overlays_blue_hero_without_light_strip(self) -> None:
+        css = STYLES.read_text(encoding="utf-8")
+        menu_script = (ROOT / "mobile_top_navigation.js").read_text(encoding="utf-8")
+        self.assertIn('main > #tf-mobile-top-navigation {', css)
+        self.assertIn('position: absolute;', css)
+        self.assertIn('inset: 0 0 auto;', css)
+        self.assertIn('background: transparent;', css)
+        self.assertIn('padding: 106px 0 64px;', css)
+        self.assertIn('linear-gradient(135deg,#02102b 0%,#04275a 58%,#084787 100%)', css)
+        self.assertIn('document.querySelector("main")', menu_script)
+        self.assertIn('source.parentNode.insertBefore(bar, source);', menu_script)
+        self.assertIn('/metodologia-e-conteudo-programatico/style.css?v=20261023-5', self.html)
+        self.assertNotIn('class="methodology-header"', self.html)
+        self.assertNotIn('class="methodology-hero-actions"', self.html)
 
     def test_client_uses_safe_dom_insertion_and_auto_refresh(self) -> None:
         self.assertIn("loadPublicCatalog", self.javascript)
