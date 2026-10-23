@@ -32,8 +32,8 @@
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="stylesheet" href="/brand_palette.css?v=20260820-3">
-  <link rel="stylesheet" href="/metodologia-e-conteudo-programatico/style.css?v=20261023-6">
-  <script type="module" src="/metodologia-e-conteudo-programatico/app.mjs?v=20261023-2"></script>
+  <link rel="stylesheet" href="/metodologia-e-conteudo-programatico/style.css?v=20261023-7">
+  <script type="module" src="/metodologia-e-conteudo-programatico/app.mjs?v=20261023-3"></script>
   <script type="module" src="/metodologia-e-conteudo-programatico/samples_app.mjs?v=20261023-2"></script>
 </head>
 <body class="methodology-page">
@@ -100,6 +100,16 @@
             <p>O professor oferece feedback e acompanha o desenvolvimento da comunicação ao longo das atividades.</p>
           </li>
         </ol>
+      </div>
+    </section>
+
+    <section class="methodology-section methodology-catalog-section" id="conteudo-programatico" aria-label="Conteúdo programático">
+      <div class="methodology-shell">
+        <span class="methodology-section-label">Conteúdo programático</span>
+        <div id="catalogStages" class="catalog-stages" aria-busy="true"></div>
+        <p id="catalogStatus" class="catalog-status" role="status" aria-live="polite" hidden></p>
+        <button type="button" id="catalogRetry" class="catalog-retry" hidden>Tentar novamente</button>
+        <noscript><p class="catalog-empty">Ative o JavaScript para visualizar as lições.</p></noscript>
       </div>
     </section>
 
