@@ -32,3 +32,20 @@ jobs:
         run: node --test tests/public_methodology_samples_api.test.mjs tests/public_methodology_samples_ui.test.mjs
       - name: Validate page
         run: python3 -m unittest discover -s tests -p "test_methodology_samples.py"
+      - name: Verify deployed samples response
+        run: |
+          node --input-type=module <<'JS'
+          import assert from "node:assert/strict";
+          const endpoint = "https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/public-methodology-samples";
+          const response = await fetch(endpoint, { headers: { Origin: "https://teacherflavius.com" } });
+          assert.equal(response.status, 200);
+          const samples = await response.json();
+          assert.deepEqual(samples.lessons.map(item => item.number), [1, 15, 30]);
+          assert.deepEqual(samples.questions.map(item => item.number), [1, 4, 10, 17, 25, 38, 50, 62, 76, 90, 112, 145]);
+          assert.equal(samples.questions.every(item => item.examples.length === 2), true);
+          for (const question of samples.questions) {
+            assert.deepEqual(Object.keys(question).sort(), ["examples", "number", "question", "translation"]);
+            assert.equal(question.examples.every(answer => Object.keys(answer).sort().join() === "answer,note,translation"), true);
+          }
+          console.log("Validated " + samples.lessons.length + " presentations and " + samples.questions.length + " questions.");
+          JS
