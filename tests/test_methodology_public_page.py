@@ -62,7 +62,7 @@ class MethodologyPublicPageTests(unittest.TestCase):
         styles = STYLES.read_text(encoding="utf-8")
         self.assertNotIn('.methodology-header', styles)
         self.assertNotIn('.methodology-hero-actions', styles)
-        self.assertIn('.methodology-hero { padding: 48px 0 64px; }', styles)
+        self.assertIn('.methodology-hero { padding: 106px 0 64px; }', styles)
 
     def test_mobile_menu_overlays_blue_hero_without_light_strip(self) -> None:
         css = STYLES.read_text(encoding="utf-8")
