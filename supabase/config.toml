@@ -16,3 +16,7 @@ sql_paths = ["./seed.sql"]
 # The handler also requires RESEND_DELIVERY_TRACKING_ENABLED=true; OFF by default.
 [functions.resend-delivery-webhook]
 verify_jwt = false
+
+# Public read-only lesson catalog; the function exposes an explicit field allowlist.
+[functions.public-study-catalog]
+verify_jwt = false

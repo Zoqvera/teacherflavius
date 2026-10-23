@@ -1,0 +1,42 @@
+name: Public study catalog
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/public-study-catalog/**"
+      - "tests/public_study_catalog.test.js"
+      - ".github/workflows/public-study-catalog.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test public catalog behavior
+        run: node --test tests/public_study_catalog.test.js
+      - name: Validate deployed public catalog response
+        run: |
+          node --input-type=module <<'JS'
+          import assert from "node:assert/strict";
+          const endpoint = "https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/public-study-catalog";
+          const response = await fetch(endpoint, { headers: { Origin: "https://teacherflavius.com" } });
+          assert.equal(response.status, 200, "Public catalog must be reachable");
+          const body = await response.json();
+          assert.ok(Number.isInteger(body.total) && body.total > 0, "Expected published lessons");
+          assert.equal(body.lessons.length, body.total);
+          assert.equal(response.headers.get("cache-control"), "no-store, max-age=0");
+          for (const lesson of body.lessons) {
+            assert.deepEqual(Object.keys(lesson).sort(), ["number", "objective", "title"]);
+            assert.ok(Number.isInteger(lesson.number) && lesson.number > 0);
+            assert.ok(typeof lesson.title === "string" && lesson.title.length > 0);
+          }
+          console.log("Validated", body.total, "public lessons.");
+          JS
