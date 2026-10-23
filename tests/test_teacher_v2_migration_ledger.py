@@ -37,9 +37,41 @@ class TeacherV2MigrationLedgerTests(unittest.TestCase):
         self.assertIn("attest_pending_teacher_v2_migration", script)
         self.assertIn(QUESTION_BLOB_SHA, script)
         self.assertIn("version=\"$1\"", script)
-        self.assertIn("[[ \"$version\" == '20261022202000' ]]", script)
+        self.assertIn('case "$version" in', script)
+        expected_blobs = (
+            ("20261022202000", "729ac0534b63caa9762ee930e20f1e414a7ceeb0"),
+            ("20261022212500", "5d851ceec93484b4b6b6c7e2a0ce7272e4150a05"),
+            ("20261022214500", "64ef3931e4932db147378df796810687a2e58907"),
+            ("20261022220000", "0bb335f70cf3f1d77056320c1f85b19c7aafbfdf"),
+            ("20261022234500", "a01d08074176ea937c3fc8770b21d4562622102e"),
+        )
+        for version, blob in expected_blobs:
+            self.assertIn(f"{version})", script)
+            self.assertIn(f"expected_git_blob={blob}", script)
+        self.assertIn("and to_regclass('private.academic_v2_automation_control') is null", script)
         self.assertIn("get_teacher_question_rating_history_v2", script)
         self.assertIn("rate_teacher_conversation_question_v2", script)
+
+    def test_production_capacity_migrations_have_exact_sql_identity(self):
+        signatures = (
+            (
+                "20261023015816_respect_capacity_override_for_class_52.sql",
+                "33731a03e9d6e5762a684d0ad08373ebee771dc7981be2b3d6ebb8efb23a7f09",
+            ),
+            (
+                "20261023020702_honor_quintet_capacity_overrides.sql",
+                "6c81369360f4b58eea936ea4012e85f205c07927a7ca7aac5972dd2a28e5f55a",
+            ),
+        )
+        for filename, expected_sha in signatures:
+            self.assertEqual(
+                hashlib.sha256((MIGRATIONS / filename).read_text().strip().encode("utf-8")).hexdigest(),
+                expected_sha,
+            )
+        release = (ROOT / "scripts/sql/teacher_v2_stage5c_selective_rollout.sql").read_text()
+        self.assertIn("versions_count <> 352", release)
+        self.assertIn("latest_version <> '20261023020702'", release)
+        self.assertIn("schema_migrations) <> 357", release)
 
     def test_unrecognized_late_or_changed_migration_still_fails_closed(self):
         script = DRIFT_SCRIPT.read_text()

@@ -316,25 +316,59 @@ verify_manual_resend_delivery_catalog() {
 # This attests a *pending* migration, not permission to deploy it.
 attest_pending_teacher_v2_migration() {
   local version="$1"
-  [[ "$version" == '20261022202000' ]] || return 1
+  local name expected_git_blob
+  # Exact immutable pending migration identities. No unknown or modified
+  # SQL is allowed to predate the production tip during a PR.
+  case "$version" in
+    20261022202000)
+      name=teacher_question_ratings_v2
+      expected_git_blob=729ac0534b63caa9762ee930e20f1e414a7ceeb0
+      ;;
+    20261022212500)
+      name=academic_v2_auto_attendance_and_closure
+      expected_git_blob=5d851ceec93484b4b6b6c7e2a0ce7272e4150a05
+      ;;
+    20261022214500)
+      name=academic_v2_private_table_rls
+      expected_git_blob=64ef3931e4932db147378df796810687a2e58907
+      ;;
+    20261022220000)
+      name=academic_v2_shared_closure_lock
+      expected_git_blob=0bb335f70cf3f1d77056320c1f85b19c7aafbfdf
+      ;;
+    20261022234500)
+      name=fix_teacher_v2_closure_day_alias
+      expected_git_blob=a01d08074176ea937c3fc8770b21d4562622102e
+      ;;
+    *) return 1 ;;
+  esac
 
-  local file="${MIGRATIONS_DIR}/20261022202000_teacher_question_ratings_v2.sql"
-  local expected_git_blob='729ac0534b63caa9762ee930e20f1e414a7ceeb0'
+  local file="${MIGRATIONS_DIR}/${version}_${name}.sql"
   [[ -f "$file" ]] || return 1
   [[ "$(git hash-object "$file")" == "$expected_git_blob" ]] || return 1
 
+  # Verification is READ ONLY and fails closed after any partial deployment.
   local missing
   missing="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 -c "
-    select to_regprocedure(
-      'public.rate_teacher_conversation_question_v2(text,uuid,date,uuid,text)'
-    ) is null and to_regprocedure(
-      'public.get_teacher_question_rating_history_v2(date)'
-    ) is null;
+    select (
+      to_regprocedure(
+        'public.rate_teacher_conversation_question_v2(text,uuid,date,uuid,text)'
+      ) is null
+      and to_regprocedure(
+        'public.get_teacher_question_rating_history_v2(date)'
+      ) is null
+      and to_regprocedure(
+        'private.run_teacher_v2_auto_finalizations()'
+      ) is null
+      and to_regclass('private.academic_v2_automation_control') is null
+      and not exists (
+        select 1 from cron.job where jobname='teacher-v2-auto-finalize'
+      )
+    );
   ")" || return 1
 
   [[ "$missing" == 't' ]]
 }
-
 filter_local_records_from_cutoff() {
   local records_file="$1"
 

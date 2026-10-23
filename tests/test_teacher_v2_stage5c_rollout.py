@@ -12,8 +12,8 @@ def read(path: str) -> str:
 class TeacherV2Stage5CContracts(unittest.TestCase):
     def test_schema_rollout_is_selective_and_fails_on_schema_drift(self):
         sql = read("scripts/sql/teacher_v2_stage5c_selective_rollout.sql")
-        self.assertIn("versions_count <> 350", sql)
-        self.assertIn("latest_version <> '20261022205054'", sql)
+        self.assertIn("versions_count <> 352", sql)
+        self.assertIn("latest_version <> '20261023020702'", sql)
         self.assertIn("lock table supabase_migrations.schema_migrations", sql)
         self.assertIn("pg_advisory_xact_lock", sql)
         self.assertIn("schema_migrations(version,name,statements)", sql)
@@ -26,7 +26,7 @@ class TeacherV2Stage5CContracts(unittest.TestCase):
             self.assertIn(f"('{version}'", sql)
         self.assertIn("enabled=false and enabled_from is null", sql)
         self.assertIn("private.run_teacher_v2_auto_finalizations()", sql)
-        self.assertIn("count(*) from supabase_migrations.schema_migrations) <> 355", sql)
+        self.assertIn("count(*) from supabase_migrations.schema_migrations) <> 357", sql)
         self.assertIn("has_function_privilege('anon'", sql)
         self.assertIn("not c.relrowsecurity", sql)
         self.assertIn("if exists (select 1 from private.academic_v2_closed_session_snapshots)", sql)

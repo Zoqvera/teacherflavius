@@ -65,8 +65,8 @@ jobs:
               and to_regprocedure('private.run_teacher_v2_auto_finalizations()') is not null
               and (select count(*) = 1 from cron.job
                    where jobname = 'teacher-v2-auto-finalize')
-              and (select count(*) = 355 from supabase_migrations.schema_migrations)
-              and (select max(version) = '20261022234500'
+              and (select count(*) = 357 from supabase_migrations.schema_migrations)
+              and (select max(version) = '20261023020702'
                    from supabase_migrations.schema_migrations)
             )")"
           test "$result" = 't'

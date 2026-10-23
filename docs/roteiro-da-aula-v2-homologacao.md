@@ -92,6 +92,31 @@ Após todos os testes:
 5. Se qualquer verificação falhar, manter as chaves desativadas, não
    alterar o menu e não afetar a página atual.
 
+## Etapa 5D — auditoria do histórico em 23/10/2026
+
+A produção avançou de 350 para 352 versões enquanto a nova interface
+continuava desligada:
+
+- `20261023015816_respect_capacity_override_for_class_52.sql`
+- `20261023020702_honor_quintet_capacity_overrides.sql`
+
+Os conteúdos foram recuperados diretamente da tabela oficial
+`supabase_migrations.schema_migrations.statements` em modo leitura,
+com identidade, texto SQL e SHA-256, e registrados no Git como arquivos
+**já aplicados**, sem reexecução. O verificador de divergências passa a
+reconhecer somente as cinco migrações v2 **pendentes** com identidades
+imutáveis e checagem no catálogo que garante a ausência dos novos objetos.
+
+Consequentemente, a instalação seletiva do roteiro exige agora 352
+versões no início, exatamente a ponta `20261023020702`, e deverá
+resultar em 357 versões sem alterar a ponta cronológica. Qualquer nova
+migração produtiva exigirá nova conciliação antes do deploy.
+
+A restauração do backup e o ensaio manual na mesma revisão da `main`
+continuam obrigatórios. A disponibilidade de um script de instalação
+não equivale à aprovação para alterar o banco. A interface operacional
+`/roteiro-da-aula/` e todos os controles da v2 permanecem inalterados.
+
 ## Etapa 5C — implantação seletiva preparada (ainda não executada)
 
 O workflow `.github/workflows/teacher-v2-stage5c-schema.yml` é
@@ -102,15 +127,15 @@ atestada e uma execução manual do workflow
 Git**, há menos de 24 horas.
 
 O SQL `scripts/sql/teacher_v2_stage5c_selective_rollout.sql` verifica
-exatamente o histórico produtivo esperado (350 versões e ponta
-`20261022205054`), exige ausência dos objetos da versão nova, aplica
+exatamente o histórico produtivo esperado (352 versões e ponta
+`20261023020702`), exige ausência dos objetos da versão nova, aplica
 **somente cinco migrações imutáveis** e grava as respectivas versões e os conteúdos SQL completos na tabela
 `supabase_migrations.schema_migrations` em uma única transação PostgreSQL.
 Isso preserva a verificação normal do histórico de migrações, sem
 exceções de checksum nem modificações nas migrações antigas. Qualquer conflito ou falha
 de DDL cancela toda a transação.
 
-O pós-teste exige 355 versões, tabelas privadas com RLS, permissão
+O pós-teste exige 357 versões, tabelas privadas com RLS, permissão
 administrativa sem acesso anônimo, tabelas de auditoria vazias e o
 controle `enabled=false`, `enabled_from=null`. O worker pode estar
 agendado mas executa `return 0`; nenhuma aula é encerrada por ele.
