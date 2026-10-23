@@ -46,6 +46,24 @@ class MethodologyPublicPageTests(unittest.TestCase):
         self.assertNotIn('name="service_role"', self.html)
         self.assertNotIn("supabase/functions/public-study-catalog/index.ts", self.html)
 
+    def test_unwanted_header_and_hero_buttons_are_removed(self) -> None:
+        self.assertNotIn('class="methodology-header"', self.html)
+        self.assertNotIn('class="methodology-brand"', self.html)
+        self.assertNotIn('class="methodology-nav"', self.html)
+        self.assertNotIn('class="methodology-hero-actions"', self.html)
+        self.assertNotIn('href="#conteudo-programatico">Explorar as lições', self.html)
+        self.assertNotIn('href="#como-funciona">Como funciona', self.html)
+        self.assertIn('id="methodology-title"', self.html)
+        self.assertIn('id="catalogStages"', self.html)
+        self.assertIn('id="methodologySampleLessons"', self.html)
+        self.assertIn('id="methodologySampleQuestions"', self.html)
+        self.assertIn('href="/aulas-em-grupo/">Conhecer as turmas', self.html)
+        self.assertIn('class="methodology-skip"', self.html)
+        styles = STYLES.read_text(encoding="utf-8")
+        self.assertNotIn('.methodology-header', styles)
+        self.assertNotIn('.methodology-hero-actions', styles)
+        self.assertIn('.methodology-hero { padding: 48px 0 64px; }', styles)
+
     def test_client_uses_safe_dom_insertion_and_auto_refresh(self) -> None:
         self.assertIn("loadPublicCatalog", self.javascript)
         self.assertIn("replaceChildren", self.javascript)
