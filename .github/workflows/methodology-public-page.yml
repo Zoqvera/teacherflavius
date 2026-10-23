@@ -1,0 +1,48 @@
+name: Methodology public page
+
+on:
+  pull_request:
+    paths:
+      - "metodologia-e-conteudo-programatico/**"
+      - "site_page_context.js"
+      - "tests/site_page_context.test.js"
+      - "tests/public_curriculum_page.test.mjs"
+      - "tests/test_methodology_public_page.py"
+      - ".github/workflows/methodology-public-page.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  methodology-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check page JavaScript modules
+        run: |
+          node --check metodologia-e-conteudo-programatico/app.mjs
+          node --check metodologia-e-conteudo-programatico/catalog_service.mjs
+      - name: Test automatic curriculum catalog and public route
+        run: node --test tests/public_curriculum_page.test.mjs tests/site_page_context.test.js
+      - name: Test published page contract and SEO isolation
+        run: python3 -m unittest discover -s tests -p 'test_methodology_public_page.py'
+      - name: Validate deployed Supabase data contract
+        run: |
+          node --input-type=module <<'JS'
+          import assert from "node:assert/strict";
+          const url = "https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/public-study-catalog";
+          const response = await fetch(url, { headers: { Origin: "https://teacherflavius.com" } });
+          assert.equal(response.status, 200);
+          const payload = await response.json();
+          assert.equal(payload.total, payload.lessons.length);
+          assert.ok(payload.total >= 1, "Public catalog must include linked lessons");
+          for (const lesson of payload.lessons) {
+            assert.deepEqual(Object.keys(lesson).sort(), ["number", "objective", "title"]);
+          }
+          console.log("Public catalog served", payload.total, "lessons.");
+          JS

@@ -47,6 +47,8 @@ test("classifica páginas públicas sem incluir rotas do portal", function () {
   assert.equal(context.isPublicMarketingPage("/recursos/"), true);
   assert.equal(context.isPublicMarketingPage("/aulas-em-grupo/"), true);
   assert.equal(context.isPublicMarketingPage("/aulas-individuais/"), true);
+  assert.equal(context.isPublicMarketingPage("/metodologia-e-conteudo-programatico/"), true);
+  assert.equal(context.isRestrictedAreaPage("/metodologia-e-conteudo-programatico/"), false);
   assert.equal(context.isPublicMarketingPage("/area-do-estudante/"), false);
   assert.equal(context.isPublicMarketingPage("/professor/"), false);
 });
