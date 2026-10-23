@@ -15,7 +15,8 @@
     monday_18: "https://meet.google.com/hxv-giye-but",
     tuesday_10: "https://meet.google.com/vqj-ufhs-rzt",
     tuesday_15: "https://meet.google.com/ccv-yotk-iwh",
-    thursday_20: "https://meet.google.com/rma-wrwu-nry"
+    thursday_20: "https://meet.google.com/rma-wrwu-nry",
+    friday_15: "https://meet.google.com/hck-hqqk-wnt"
   });
 
   function getMeetUrl(slot) {

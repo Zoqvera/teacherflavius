@@ -15,7 +15,8 @@
     monday_18: "Segunda-feira 18h",
     tuesday_10: "Terça-feira 10h",
     tuesday_15: "Terça-feira 15h",
-    thursday_20: "Quinta-feira 20h"
+    thursday_20: "Quinta-feira 20h",
+    friday_15: "Sexta-feira 15h"
   });
 
   function escapeHtml(value) {
