@@ -23,14 +23,12 @@ class MethodologyPublicPageTests(unittest.TestCase):
         sitemap = (ROOT / "sitemap.xml").read_text(encoding="utf-8")
         self.assertNotIn("/metodologia-e-conteudo-programatico/", sitemap)
 
-    def test_page_contains_methodology_curriculum_and_responsive_styles(self) -> None:
+    def test_page_keeps_methodology_samples_and_responsive_styles(self) -> None:
         for marker in (
             'id="como-funciona"',
-            'id="conteudo-programatico"',
-            'id="catalogStages"',
-            'id="catalogStatus"',
-            'id="catalogSearch"',
             'id="catalogHeroCount"',
+            'id="methodologySampleLessons"',
+            'id="methodologySampleQuestions"',
             '/metodologia-e-conteudo-programatico/app.mjs',
             '/metodologia-e-conteudo-programatico/style.css',
         ):
@@ -54,7 +52,7 @@ class MethodologyPublicPageTests(unittest.TestCase):
         self.assertNotIn('href="#conteudo-programatico">Explorar as lições', self.html)
         self.assertNotIn('href="#como-funciona">Como funciona', self.html)
         self.assertIn('id="methodology-title"', self.html)
-        self.assertIn('id="catalogStages"', self.html)
+        self.assertNotIn('id="catalogStages"', self.html)
         self.assertIn('id="methodologySampleLessons"', self.html)
         self.assertIn('id="methodologySampleQuestions"', self.html)
         self.assertIn('href="/aulas-em-grupo/">Conhecer as turmas', self.html)
@@ -79,9 +77,35 @@ class MethodologyPublicPageTests(unittest.TestCase):
         self.assertNotIn('class="methodology-header"', self.html)
         self.assertNotIn('class="methodology-hero-actions"', self.html)
 
-    def test_client_uses_safe_dom_insertion_and_auto_refresh(self) -> None:
+    def test_requested_curriculum_area_is_entirely_removed(self) -> None:
+        for marker in (
+            'id="conteudo-programatico"',
+            'id="catalogTotalCount"',
+            'id="catalogSearch"',
+            'id="catalogStages"',
+            'id="catalogResultCount"',
+            'id="catalogStatus"',
+            'id="catalogRetry"',
+            'Um roteiro que cresce com o curso.',
+            'Pesquisar uma lição',
+            'Conteúdo programático sincronizado com o Roteiro de Estudos.',
+        ):
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, self.html)
+        self.assertIn('id="methodologySampleLessons"', self.html)
+        self.assertIn('id="methodologySampleQuestions"', self.html)
+        self.assertIn('id="catalogHeroCount"', self.html)
+        self.assertIn('loadPublicCatalog', self.javascript)
+        self.assertNotIn('renderCatalog', self.javascript)
+        self.assertNotIn('catalogSearch', self.javascript)
+        css = STYLES.read_text(encoding="utf-8")
+        self.assertNotIn('.methodology-catalog-section', css)
+        self.assertNotIn('.catalog-stages', css)
+        self.assertIn('.catalog-retry[hidden]', css)
+
+    def test_client_refreshes_only_hero_count(self) -> None:
         self.assertIn("loadPublicCatalog", self.javascript)
-        self.assertIn("replaceChildren", self.javascript)
+        self.assertNotIn("replaceChildren", self.javascript)
         self.assertIn("textContent", self.javascript)
         self.assertIn("window.setInterval(refreshIfNeeded, REFRESH_INTERVAL_MS)", self.javascript)
         self.assertNotIn(".innerHTML", self.javascript)
