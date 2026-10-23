@@ -25,8 +25,7 @@ set -euo pipefail
 psql() {
   local args=" $* "
   if [[ "$args" == *" -c "* ]]; then
-    if [[ "$args" == *"to_regclass('public.lesson_presentations')"* &&
-          "$args" == *"select case"* ]]; then
+    if [[ "$args" == *"then 'installed'"* ]]; then
       echo "$TEST_CATALOG_STATE"
     else
       echo 'RESTORED_SCHEMA_UNCHANGED'
