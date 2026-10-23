@@ -69,9 +69,10 @@ class TeacherV2MigrationLedgerTests(unittest.TestCase):
                 expected_sha,
             )
         release = (ROOT / "scripts/sql/teacher_v2_stage5c_selective_rollout.sql").read_text()
-        self.assertIn("versions_count <> 352", release)
-        self.assertIn("latest_version <> '20261023020702'", release)
-        self.assertIn("schema_migrations) <> 357", release)
+        self.assertIn("versions_count <> 353", release)
+        self.assertIn("latest_version <> '20261023150740'", release)
+        self.assertIn("schema_migrations) <> 358", release)
+        self.assertIn("2335796706ca4ff62a9902f0588d167174f5780cf82c0f5fdd5a2225b9f5fdb0", release)
 
     def test_unrecognized_late_or_changed_migration_still_fails_closed(self):
         script = DRIFT_SCRIPT.read_text()
