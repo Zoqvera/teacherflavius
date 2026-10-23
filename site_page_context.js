@@ -33,6 +33,12 @@
       path.indexOf("/landing-page") === 0;
   }
 
+  function isMethodologyPage(pathname) {
+    const path = pathname || currentPath();
+    return path === "/metodologia-e-conteudo-programatico" ||
+      path.indexOf("/metodologia-e-conteudo-programatico/") === 0;
+  }
+
   function isPublicMarketingPage(pathname) {
     const path = pathname || currentPath();
     return isHomePage(path) ||
@@ -43,6 +49,7 @@
       path === "/termos" ||
       path === "/termos/" ||
       isSalesPage(path) ||
+      isMethodologyPage(path) ||
       isGeoContentPage(path);
   }
 
