@@ -185,6 +185,49 @@ quatro checks exigidos que não receberam status. Corrigir as regras
 de proteção no GitHub, sem bypass e sem enfraquecer testes reais.
 As chaves e o worker da v2 continuam desligados até homologação completa.
 
+## Etapa 6A — homologação funcional após instalação em produção
+
+Em 23/10/2026, o workflow de instalação protegida #39993728084
+(**tentativa 2**) foi concluído com `success`, após o ensaio
+descartável #39995700731, ambos na revisão
+`324fe10d047d67c90afc73309a25095b19ed2ae5`.
+
+A verificação exclusivamente de leitura do Supabase confirmou:
+**358 migrações** e cinco novas versões canônicas, controle de encerramento
+`enabled=false` e `enabled_from=null`, tabelas privadas com RLS,
+sem leituras anônimas das RPCs administrativas, zero instantâneos de
+turmas encerradas e zero linhas de auditoria da v2.
+
+O ensaio SQL em `tests/sql/teacher_v2_disposable_rehearsal.sql`,
+executado no banco descartável do workflow
+`Validate Supabase baseline restore` dentro de `BEGIN/ROLLBACK`,
+foi ampliado para cinco perfis fictícios:
+
+- aluno 1: apresentação registrada, frequência preservada como presente;
+- aluno 2: nenhuma atividade, recebe ausência com auditoria única;
+- aluno 3: aula cancelada, permanece cancelada;
+- aluno 4: arquivado, não entra no encerramento;
+- aluno 5: vinculado à turma mas com primeira aula futura, não recebe
+  ausência na aula anterior ao início.
+
+O mesmo ensaio verifica que `enabled_from` futuro impede fechamento
+retroativo, que dois ciclos consecutivos do worker não duplicam
+encerramentos e que o retorno ao estado `enabled=false` não
+modifica os dados finalizados.
+
+**Limites desta etapa:** os testes de escrita usam somente alunos
+sintéticos e transações revertidas no banco descartável. A homologação
+de ponta a ponta dos fluxos administrativos (avaliação de perguntas,
+apresentações, reposições e correções auditadas com sessão real de
+professor), concorrência entre duas abas, acessibilidade móvel e
+reversão da navegação ainda precisam ser comprovadas antes de
+qualquer ativação.
+
+A página `/roteiro-da-aula/` permanece operacional, a prévia
+`/roteiro-da-aula-v2/` segue `noindex, nofollow`, os três flags de
+escrita continuam `false`, e o agendamento de encerramento continua
+sem efeito em produção.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual
