@@ -97,7 +97,7 @@ capture_presentation_permissions() {
     > "$BACKUP_DIR/presentation_permissions.sql"
 
   local expected_count
-  expected_count="$(awk '/^REVOKE ALL PRIVILEGES ON TABLE public\\.lesson_presentation/ {count++} END {print count+0}' \
+  expected_count="$(awk '/^REVOKE ALL PRIVILEGES ON TABLE public\.lesson_presentation/ {count++} END {print count+0}' \
     "$BACKUP_DIR/presentation_permissions.sql")"
   if [[ "$expected_count" != 3 ]]; then
     echo '::error::Production presentation ACL export did not cover all three tables.'
