@@ -81,7 +81,9 @@ function createStage(stage, position, isSearching) {
 function renderCatalog() {
   const query = nodes.search.value.trim();
   const matches = filterLessons(state.lessons, query);
-  const stages = groupLessons(matches);
+  const stages = groupLessons(state.lessons)
+    .map((stage) => ({ ...stage, lessons: filterLessons(stage.lessons, query) }))
+    .filter((stage) => stage.lessons.length > 0);
 
   nodes.clearSearch.hidden = !query;
   nodes.resultCount.textContent = query
