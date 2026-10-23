@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.3";
 
-const VALID_SLOTS = new Set(["monday_18", "tuesday_10", "tuesday_15", "thursday_20"]);
+const VALID_SLOTS = new Set(["monday_18", "tuesday_10", "tuesday_15", "thursday_20", "friday_15"]);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_BODY_BYTES = 2048;
 
