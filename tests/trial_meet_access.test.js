@@ -24,8 +24,9 @@ test("each experimental class opens its exact Google Meet address", () => {
   assert.equal(entry.getMeetUrl("tuesday_10"), "https://meet.google.com/vqj-ufhs-rzt");
   assert.equal(entry.getMeetUrl("tuesday_15"), "https://meet.google.com/ccv-yotk-iwh");
   assert.equal(entry.getMeetUrl("thursday_20"), "https://meet.google.com/rma-wrwu-nry");
+  assert.equal(entry.getMeetUrl("friday_15"), "https://meet.google.com/hck-hqqk-wnt");
   assert.equal(entry.getMeetUrl("other"), "");
-  for (const slot of ["monday_18", "tuesday_10", "tuesday_15", "thursday_20"]) {
+  for (const slot of ["monday_18", "tuesday_10", "tuesday_15", "thursday_20", "friday_15"]) {
     assert.match(page, new RegExp('value="' + slot + '"'));
   }
 });
@@ -130,6 +131,7 @@ test("administrator sees escaped contact data but not an unverified presence cla
   assert.match(html, /ACESSOU O LINK/);
   assert.match(admin, /id="trialMeetReportList"/);
   assert.match(admin, /trial_meet_report\.js/);
+  assert.match(report.renderEntries([{ visitor_name: "Ana", whatsapp_digits: "5534999991234", lesson_slot: "friday_15", accessed_at: "2026-10-23T18:00:00Z" }]), /Sexta-feira 15h/);
 });
 
 test("personal data is private and can be ingested only server-side", () => {
@@ -140,4 +142,7 @@ test("personal data is private and can be ingested only server-side", () => {
   assert.match(migration, /is_teacher_admin_mfa\(\)/);
   assert.match(endpoint, /consume_api_rate_limit/);
   assert.match(endpoint, /record_trial_meet_access/);
+  assert.match(endpoint, /"friday_15"/);
+  assert.match(page, /trial_meet_access\.js\?v=20261023-friday-15/);
+  assert.match(admin, /trial_meet_report\.js\?v=20261023-friday-15/);
 });
