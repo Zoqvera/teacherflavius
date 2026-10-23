@@ -13,6 +13,9 @@ const admin = fs.readFileSync(path.join(__dirname, "..", "aulas-experimentais", 
 const migration = fs.readFileSync(
   path.join(__dirname, "../supabase/migrations/20261022135918_trial_meet_accesses_20261022.sql"), "utf8"
 );
+const fridayMigration = fs.readFileSync(
+  path.join(__dirname, "../supabase/migrations/20261023121500_allow_friday_trial_meet_access.sql"), "utf8"
+);
 const routeLoader = fs.readFileSync(path.join(__dirname, "..", "clean_route_loader.js"), "utf8");
 const notFoundPage = fs.readFileSync(path.join(__dirname, "..", "404.html"), "utf8");
 const endpoint = fs.readFileSync(
@@ -143,6 +146,8 @@ test("personal data is private and can be ingested only server-side", () => {
   assert.match(endpoint, /consume_api_rate_limit/);
   assert.match(endpoint, /record_trial_meet_access/);
   assert.match(endpoint, /"friday_15"/);
+  assert.match(fridayMigration, /check \(lesson_slot in \([^)]+\x27friday_15\x27\)\)/);
+  assert.match(fridayMigration, /target_lesson_slot not in \([^)]+\x27friday_15\x27\)/);
   assert.match(page, /trial_meet_access\.js\?v=20261023-friday-15/);
   assert.match(admin, /trial_meet_report\.js\?v=20261023-friday-15/);
 });
