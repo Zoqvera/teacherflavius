@@ -32,8 +32,23 @@ html.tf-brand-palette body.methodology-page {
 }
 .methodology-skip:focus { top: 10px; }
 
+/* Place the shared mobile menu over the blue hero instead of reserving a light strip. */
+body.methodology-page main {
+  position: relative;
+}
+body.methodology-page main > #tf-mobile-top-navigation {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1200;
+  width: 100%;
+  margin: 0;
+  padding: 18px 20px 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
 .methodology-hero {
-  overflow: hidden; padding: 76px 0 84px; color: #fff;
+  overflow: hidden; padding: 102px 0 84px; color: #fff;
   background: radial-gradient(circle at 87% 12%,rgba(78,154,236,.30),transparent 32rem),
     linear-gradient(135deg,#02102b 0%,#04275a 58%,#084787 100%);
 }
@@ -177,7 +192,7 @@ html.tf-brand-palette body.methodology-page {
 }
 @media (max-width: 680px) {
   .methodology-shell { width: min(100% - 32px, 1140px); }
-  .methodology-hero { padding: 48px 0 64px; }
+  .methodology-hero { padding: 106px 0 64px; }
   .methodology-hero h1 { font-size: clamp(2.2rem, 10vw, 3rem); }
   .methodology-hero-panel { padding: 25px; }
   .methodology-section { padding: 60px 0; }
