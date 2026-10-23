@@ -32,19 +32,8 @@ html.tf-brand-palette body.methodology-page {
 }
 .methodology-skip:focus { top: 10px; }
 
-.methodology-header { background: #02102b; border-bottom: 1px solid rgba(255,255,255,.10); }
-.methodology-header-inner {
-  display: flex; justify-content: space-between; align-items: center; gap: 20px;
-  min-height: 78px; color: #fff;
-}
-.methodology-brand { display: inline-flex; gap: 10px; align-items: center; font-size: 1.16rem; font-weight: 900; text-decoration: none; white-space: nowrap; }
-.methodology-brand svg { color: #9bd1ff; flex-shrink: 0; }
-.methodology-nav { display: flex; gap: 28px; align-items: center; }
-.methodology-nav a { color: #dbeafe; text-decoration: none; font-weight: 700; }
-.methodology-nav a:hover { color: #fff; text-decoration: underline; text-underline-offset: 6px; }
-
 .methodology-hero {
-  overflow: hidden; padding: 88px 0 92px; color: #fff;
+  overflow: hidden; padding: 76px 0 84px; color: #fff;
   background: radial-gradient(circle at 87% 12%,rgba(78,154,236,.30),transparent 32rem),
     linear-gradient(135deg,#02102b 0%,#04275a 58%,#084787 100%);
 }
@@ -60,7 +49,6 @@ html.tf-brand-palette body.methodology-page {
   letter-spacing: -.048em; overflow-wrap: anywhere;
 }
 .methodology-hero-copy { max-width: 670px; margin: 0; color: #d4e4fb; font-size: 1.1rem; }
-.methodology-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
 .methodology-button {
   display: inline-flex; justify-content: center; align-items: center; gap: 10px;
   min-height: 52px; padding: 12px 22px; border-radius: 999px;
@@ -71,8 +59,6 @@ html.tf-brand-palette body.methodology-page {
 .methodology-button:hover { transform: translateY(-2px); }
 .methodology-button-primary { background: var(--method-green); color: #fff !important; }
 .methodology-button-primary:hover { background: #0f713d; }
-.methodology-button-secondary { border: 1px solid rgba(255,255,255,.45); color: #fff !important; background: rgba(255,255,255,.06); }
-.methodology-button-secondary:hover { background: rgba(255,255,255,.16); }
 
 .methodology-hero-panel {
   padding: 32px; border-radius: 26px; border: 1px solid rgba(255,255,255,.23);
@@ -191,10 +177,7 @@ html.tf-brand-palette body.methodology-page {
 }
 @media (max-width: 680px) {
   .methodology-shell { width: min(100% - 32px, 1140px); }
-  .methodology-header-inner { min-height: 72px; gap: 12px; }
-  .methodology-brand { font-size: .98rem; }
-  .methodology-nav { gap: 12px; font-size: .82rem; }
-  .methodology-hero { padding: 64px 0 68px; }
+  .methodology-hero { padding: 48px 0 64px; }
   .methodology-hero h1 { font-size: clamp(2.2rem, 10vw, 3rem); }
   .methodology-hero-panel { padding: 25px; }
   .methodology-section { padding: 60px 0; }
