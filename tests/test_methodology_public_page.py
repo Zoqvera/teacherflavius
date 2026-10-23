@@ -73,7 +73,7 @@ class MethodologyPublicPageTests(unittest.TestCase):
         self.assertIn('linear-gradient(135deg,#02102b 0%,#04275a 58%,#084787 100%)', css)
         self.assertIn('document.querySelector("main")', menu_script)
         self.assertIn('source.parentNode.insertBefore(bar, source);', menu_script)
-        self.assertIn('/metodologia-e-conteudo-programatico/style.css?v=20261023-5', self.html)
+        self.assertIn('/metodologia-e-conteudo-programatico/style.css?v=20261023-6', self.html)
         self.assertNotIn('class="methodology-header"', self.html)
         self.assertNotIn('class="methodology-hero-actions"', self.html)
 
