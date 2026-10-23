@@ -12,6 +12,7 @@ test("individual lessons page identifies every static marketing CTA", function (
   const expectedCtas = [
     "individual_hero_whatsapp",
     "individual_hero_details",
+    "individual_methodology_details",
     "individual_ebook",
     "individual_instagram",
     "individual_availability_whatsapp",
