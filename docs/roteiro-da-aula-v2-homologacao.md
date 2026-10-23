@@ -107,9 +107,9 @@ com identidade, texto SQL e SHA-256, e registrados no Git como arquivos
 reconhecer somente as cinco migrações v2 **pendentes** com identidades
 imutáveis e checagem no catálogo que garante a ausência dos novos objetos.
 
-Consequentemente, a instalação seletiva do roteiro exige agora 352
-versões no início, exatamente a ponta `20261023020702`, e deverá
-resultar em 357 versões sem alterar a ponta cronológica. Qualquer nova
+Naquela revisão, a instalação seletiva exigia 352 versões no início,
+exatamente a ponta `20261023020702`, e terminaria com 357 versões.
+O histórico mudou novamente em 23/10; conferir a Etapa 5E abaixo. Qualquer nova
 migração produtiva exigirá nova conciliação antes do deploy.
 
 A restauração do backup e o ensaio manual na mesma revisão da `main`
@@ -127,21 +127,21 @@ atestada e uma execução manual do workflow
 Git**, há menos de 24 horas.
 
 O SQL `scripts/sql/teacher_v2_stage5c_selective_rollout.sql` verifica
-exatamente o histórico produtivo esperado (352 versões e ponta
-`20261023020702`), exige ausência dos objetos da versão nova, aplica
+exatamente o histórico produtivo esperado (353 versões e ponta
+`20261023150740`), exige ausência dos objetos da versão nova, aplica
 **somente cinco migrações imutáveis** e grava as respectivas versões e os conteúdos SQL completos na tabela
 `supabase_migrations.schema_migrations` em uma única transação PostgreSQL.
 Isso preserva a verificação normal do histórico de migrações, sem
 exceções de checksum nem modificações nas migrações antigas. Qualquer conflito ou falha
 de DDL cancela toda a transação.
 
-O pós-teste exige 357 versões, tabelas privadas com RLS, permissão
+O pós-teste exige 358 versões, tabelas privadas com RLS, permissão
 administrativa sem acesso anônimo, tabelas de auditoria vazias e o
 controle `enabled=false`, `enabled_from=null`. O worker pode estar
 agendado mas executa `return 0`; nenhuma aula é encerrada por ele.
 Os três flags de gravação da página v2 também permanecem desativados.
 
-**Nenhum workflow manual de implantação foi iniciado nesta etapa.**
+**A execução manual 39978375351 foi iniciada em 23/10/2026 e interrompida pela guarda de homologação, antes de executar migrações.**
 Não há autorização implícita para trocar a URL ativa, habilitar os
 botões ou finalizar aulas reais. A verificação de ponta a ponta em
 navegador e a reversão operacional são condições da etapa seguinte.
@@ -155,6 +155,35 @@ Esses ajustes foram realizados exclusivamente nos testes. É obrigatório
 obter uma execução **completa e aprovada** do ensaio de presença,
 ausência, cancelamento, idempotência, auditoria e recuperação antes
 de qualquer implantação produtiva.
+
+## Etapa 5E — reconciliação da migração produtiva de 23/10/2026
+
+A migração `20261023150740_allow_friday_trial_meet_access` foi aplicada em
+produção pelo trabalho de aulas experimentais (PR #886). Ela existia no
+Supabase antes de estar integrada à `main`. Foram comparados o nome,
+a versão, os 1.512 bytes de SQL e o SHA-256
+`2335796706ca4ff62a9902f0588d167174f5780cf82c0f5fdd5a2225b9f5fdb0` do arquivo da PR #886
+com os registros oficiais do Supabase: equivalência exata.
+**Não reexecutar nem renomear essa migração.**
+
+O instalador protegido exige agora 353 versões, ponta
+`20261023150740` e o SHA-256 exato da nova migração. Após instalar
+**somente as cinco** migrações v2, o histórico deverá ter 358 versões,
+mantendo `20261023150740` como ponta cronológica.
+Nenhum dado de aluno, mensalidade, página atual ou flag de automação
+é alterado por esta conciliação.
+
+O ensaio manual `Validate Supabase baseline restore`
+#39978261074 terminou com sucesso em `757b4edf3a782de54b1ad165f4719a6795cf356f`.
+A implantação #39978375351 foi iniciada antes do resultado do ensaio:
+o gate bloqueou qualquer DDL. Uma nova revisão da `main` exige novo
+ensaio manual bem-sucedido nessa mesma revisão e backup recuperável.
+
+**Dependência para prosseguir:** integrar a PR #886 com os checks
+obrigatórios válidos. As rulesets atuais bloqueiam o merge devido a
+quatro checks exigidos que não receberam status. Corrigir as regras
+de proteção no GitHub, sem bypass e sem enfraquecer testes reais.
+As chaves e o worker da v2 continuam desligados até homologação completa.
 
 ## SEO
 
