@@ -179,14 +179,17 @@ begin
       disable trigger assign_first_lesson_after_membership_trigger;
   end if;
 
+  -- The reconstructed baseline still enforces four active enrollments
+  -- during fixture creation. Enroll four first, archive the fourth, then
+  -- link the fifth. No capacity rule is relaxed or mocked.
   insert into public.class_students (
     class_number, user_id, first_lesson_date
   )
   select
     970003,
     ('99000000-0000-4000-8000-00000000000' || index_value)::uuid,
-    case when index_value = 5 then class_date + 1 else class_date end
-  from generate_series(1, 5) as index_value;
+    class_date
+  from generate_series(1, 4) as index_value;
 
   if exists (
     select 1 from pg_trigger
@@ -211,11 +214,21 @@ begin
     970003, 'TURMA SINTETICA V2', class_start, 'present', 1
   );
 
-  -- Student 4 is archived after enrollment. The actual archive trigger
-  -- may remove their class link; either way they cannot enter the roster.
+  -- Student 4 is archived after enrollment. The archive trigger may
+  -- remove their link, freeing the same class capacity for student 5.
   update public.profiles
   set archived = true
   where id = '99000000-0000-4000-8000-000000000004'::uuid;
+
+  -- Preserve the real membership-capacity check. Student 5 takes the
+  -- released spot but their first class is deliberately deferred.
+  insert into public.class_students (
+    class_number, user_id, first_lesson_date
+  ) values (
+    970003,
+    '99000000-0000-4000-8000-000000000005'::uuid,
+    class_date + 1
+  );
 
   -- Student 5 is linked, but their first lesson is the following day.
   -- That student must not be marked absent in the previous-day class.
