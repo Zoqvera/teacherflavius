@@ -223,15 +223,53 @@ compare_recovery_state() {
 }
 
 rehearse_presentation_schema_against_restored_backup() {
-  # Restore is already verified; this transaction tests ONLY the proposed
-  # presentation DDL against the real production catalog restored locally.
-  # It never runs against production, inserts student rows or changes the
-  # persisted recovery fingerprint.
+  # The backup fingerprint was verified first. A recent production backup
+  # already contains the presentation tables and their student records.
+  # Recreating existing tables would be a false-negative restore failure.
   local rehearsal_log="$RUNNER_TEMP/lesson-presentation-stage5-rehearsal.log"
+  local presentation_state
+  presentation_state="$(psql "$LOCAL_DB_URL" -X -qAt -v ON_ERROR_STOP=1 -c "
+    select case
+      when to_regclass('public.lesson_presentations') is not null
+       and to_regclass('public.lesson_presentation_versions') is not null
+       and to_regclass('public.lesson_presentation_views') is not null then 'complete'
+      when to_regclass('public.lesson_presentations') is null
+       and to_regclass('public.lesson_presentation_versions') is null
+       and to_regclass('public.lesson_presentation_views') is null then 'absent'
+      else 'partial'
+    end;")"
+
+  if [[ "$presentation_state" == 'complete' ]]; then
+    # Revalidate persisted RLS, grants, policies and triggers with a
+    # read-only transaction. Data counts are already matched by the
+    # recovery fingerprint: never require restored student data to be empty.
+    {
+      echo 'begin transaction read only;'
+      echo "set local statement_timeout = '30s';"
+      cat "$GITHUB_WORKSPACE/tests/fixtures/lesson_presentations_stage5_restored_backup_checks.sql"
+      echo 'rollback;'
+    } | psql "$LOCAL_DB_URL" -X -qAt -v ON_ERROR_STOP=1 > "$rehearsal_log"
+
+    if ! grep -Fxq 'LESSON_PRESENTATIONS_STAGE5_BACKUP_REHEARSAL_PASSED' "$rehearsal_log"; then
+      echo '::error::Restored presentation schema checks did not finish.'
+      exit 1
+    fi
+    echo 'Persisted presentation schema: verified without executing DDL or changing data.'
+    return 0
+  fi
+
+  if [[ "$presentation_state" != 'absent' ]]; then
+    echo '::error::Restored presentation schema is partially present.'
+    exit 1
+  fi
+
+  # Older backups lack the presentation tables. Exercise both historical
+  # migrations only inside a rolled-back transaction on the disposable DB.
   {
     echo 'begin;'
     echo "set local lock_timeout = '5s';"
     echo "set local statement_timeout = '30s';"
+    echo "set local teacherflavius.recovery_expect_empty_presentation_tables = 'on';"
     cat "$GITHUB_WORKSPACE/supabase/migrations/20261017133000_lesson_presentations_stage1.sql"
     cat "$GITHUB_WORKSPACE/supabase/migrations/20261017144500_lesson_presentation_views_stage3.sql"
     cat "$GITHUB_WORKSPACE/tests/fixtures/lesson_presentations_stage5_restored_backup_checks.sql"

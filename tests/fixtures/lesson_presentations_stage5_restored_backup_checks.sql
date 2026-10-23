@@ -85,9 +85,14 @@ begin
     raise exception 'Funções internas das apresentações acessíveis pelo cliente.';
   end if;
 
-  if (select count(*) from public.lesson_presentations) <> 0
-    or (select count(*) from public.lesson_presentation_versions) <> 0
-    or (select count(*) from public.lesson_presentation_views) <> 0 then
+  -- Only newly created tables must be empty. Restored production tables
+  -- retain their legitimate records, whose counts the recovery manifest checks.
+  if current_setting('teacherflavius.recovery_expect_empty_presentation_tables', true) = 'on'
+     and (
+       (select count(*) from public.lesson_presentations) <> 0
+       or (select count(*) from public.lesson_presentation_versions) <> 0
+       or (select count(*) from public.lesson_presentation_views) <> 0
+     ) then
     raise exception 'Ensaio de DDL gerou registros inesperados.';
   end if;
 end;
