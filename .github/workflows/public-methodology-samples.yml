@@ -1,0 +1,34 @@
+name: Public methodology demonstrations
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/public-methodology-samples/**"
+      - "supabase/config.toml"
+      - "metodologia-e-conteudo-programatico/**"
+      - "tests/public_methodology_samples_*.test.mjs"
+      - "tests/test_methodology_samples.py"
+      - ".github/workflows/public-methodology-samples.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  curated-samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate code syntax
+        run: |
+          node --check supabase/functions/public-methodology-samples/samples_core.mjs
+          node --check metodologia-e-conteudo-programatico/samples_service.mjs
+          node --check metodologia-e-conteudo-programatico/samples_app.mjs
+      - name: Check sample publication and UI contracts
+        run: node --test tests/public_methodology_samples_api.test.mjs tests/public_methodology_samples_ui.test.mjs
+      - name: Validate page
+        run: python3 -m unittest discover -s tests -p "test_methodology_samples.py"
