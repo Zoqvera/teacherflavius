@@ -1,0 +1,26 @@
+name: Public methodology funnel buttons
+
+on:
+  pull_request:
+    paths:
+      - "aulas-em-grupo/index.html"
+      - "aulas-individuais/index.html"
+      - "methodology_funnel_cta.css"
+      - "metodologia-e-conteudo-programatico/index.html"
+      - "tests/test_methodology_funnel_ctas.py"
+      - ".github/workflows/methodology-funnel-links.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  methodology-funnel-links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate link placements, conversion CTAs and SEO isolation
+        run: python3 -m unittest discover -s tests -p 'test_methodology_funnel_ctas.py'
+      - name: Validate responsive CTA stylesheet exists
+        run: test -s methodology_funnel_cta.css
