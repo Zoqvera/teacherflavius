@@ -14,7 +14,7 @@ const migration = fs.readFileSync(
   path.join(__dirname, "../supabase/migrations/20261022135918_trial_meet_accesses_20261022.sql"), "utf8"
 );
 const fridayMigration = fs.readFileSync(
-  path.join(__dirname, "../supabase/migrations/20261023121500_allow_friday_trial_meet_access.sql"), "utf8"
+  path.join(__dirname, "../supabase/migrations/20261023150740_allow_friday_trial_meet_access.sql"), "utf8"
 );
 const routeLoader = fs.readFileSync(path.join(__dirname, "..", "clean_route_loader.js"), "utf8");
 const notFoundPage = fs.readFileSync(path.join(__dirname, "..", "404.html"), "utf8");
