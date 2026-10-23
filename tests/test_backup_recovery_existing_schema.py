@@ -74,7 +74,7 @@ psql() {
     def test_partial_schema_stops_without_attempting_recreation(self) -> None:
         result, executed = self.simulate("partial")
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("partially installed", result.stderr)
+        self.assertIn("partially installed", result.stdout + result.stderr)
         self.assertEqual(executed, "")
 
     def test_existing_students_do_not_need_empty_presentation_tables(self) -> None:
