@@ -14,8 +14,21 @@ begin
   select count(*), max(version) into versions_count, latest_version
   from supabase_migrations.schema_migrations;
 
-  if versions_count <> 352 or latest_version <> '20261023020702' then
+  if versions_count <> 353 or latest_version <> '20261023150740' then
     raise exception 'Roteiro v2: production migration ledger changed. Abort.';
+  end if;
+
+  -- Confirm the exact already-installed Friday-trial migration.
+  -- Its DDL is never replayed by this teacher-v2 selective rollout.
+  if not exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20261023150740'
+      and name = 'allow_friday_trial_meet_access'
+      and cardinality(statements) = 1
+      and encode(sha256(convert_to(statements[1], 'UTF8')), 'hex') =
+        '2335796706ca4ff62a9902f0588d167174f5780cf82c0f5fdd5a2225b9f5fdb0'
+  ) then
+    raise exception 'Roteiro v2: unexpected Friday-trial migration contents. Abort.';
   end if;
 
   if exists (
@@ -59,7 +72,7 @@ $preflight$;
 \ir ../../supabase/migrations/20261022220000_academic_v2_shared_closure_lock.sql
 \ir ../../supabase/migrations/20261022234500_fix_teacher_v2_closure_day_alias.sql
 
--- Record only these four canonical identities with DDL in one transaction.
+-- Record only these five canonical identities with DDL in one transaction.
 -- Store each immutable migration body in the canonical statements[] ledger.
 -- PostgreSQL hashes therefore remain verifiable by the normal drift gate
 -- without special exceptions or post-hoc migration history edits.
@@ -75,8 +88,8 @@ declare
   job_count integer;
   inactive integer;
 begin
-  if (select count(*) from supabase_migrations.schema_migrations) <> 357 or
-     (select max(version) from supabase_migrations.schema_migrations) <> '20261023020702' then
+  if (select count(*) from supabase_migrations.schema_migrations) <> 358 or
+     (select max(version) from supabase_migrations.schema_migrations) <> '20261023150740' then
     raise exception 'Roteiro v2: unexpected migration ledger after DDL.';
   end if;
 
