@@ -148,7 +148,7 @@ begin
     'authenticated', 'authenticated',
     'teacher-v2-synthetic-' || index_value || '@invalid.test',
     '', now(), now(), now()
-  from generate_series(1, 3) as index_value;
+  from generate_series(1, 5) as index_value;
 
   insert into public.profiles (
     id, name, email, enrolled, archived,
@@ -159,7 +159,7 @@ begin
     'ALUNO TESTE V2 ' || index_value,
     'teacher-v2-synthetic-' || index_value || '@invalid.test',
     true, false, 'QUINTETO', class_date
-  from generate_series(1, 3) as index_value
+  from generate_series(1, 5) as index_value
   on conflict (id) do update
   set name = excluded.name,
       enrolled = excluded.enrolled,
@@ -185,8 +185,8 @@ begin
   select
     970003,
     ('99000000-0000-4000-8000-00000000000' || index_value)::uuid,
-    class_date
-  from generate_series(1, 3) as index_value;
+    case when index_value = 5 then class_date + 1 else class_date end
+  from generate_series(1, 5) as index_value;
 
   if exists (
     select 1 from pg_trigger
@@ -211,6 +211,23 @@ begin
     970003, 'TURMA SINTETICA V2', class_start, 'present', 1
   );
 
+  -- Student 4 is archived after enrollment. The actual archive trigger
+  -- may remove their class link; either way they cannot enter the roster.
+  update public.profiles
+  set archived = true
+  where id = '99000000-0000-4000-8000-000000000004'::uuid;
+
+  -- Student 5 is linked, but their first lesson is the following day.
+  -- That student must not be marked absent in the previous-day class.
+  if not exists (
+    select 1 from public.class_students
+    where class_number = 970003
+      and user_id = '99000000-0000-4000-8000-000000000005'::uuid
+      and first_lesson_date > class_date
+  ) then
+    raise exception 'Roteiro v2: delayed first-lesson fixture is invalid';
+  end if;
+
   -- Student 3 cancelled. Cancellation must not be turned into absence.
   insert into private.student_regular_lesson_cancellations (
     student_id, class_number, lesson_date
@@ -224,6 +241,36 @@ begin
   where singleton = true;
 end;
 $teacher_v2_synthetic_setup$;
+
+-- The activation fence must exclude already-started classes, even when
+-- the worker is enabled. It must never backfill historical attendance.
+do $teacher_v2_activation_fence$
+declare
+  blocked_count integer;
+begin
+  update private.academic_v2_automation_control
+  set enabled_from = now() + interval '1 hour'
+  where singleton = true;
+
+  select private.run_teacher_v2_auto_finalizations() into blocked_count;
+  if blocked_count <> 0 then
+    raise exception 'Roteiro v2: retroactive class closure bypassed activation fence';
+  end if;
+
+  if exists (
+    select 1 from private.academic_v2_closed_session_snapshots
+    where class_number = 970003
+  ) then
+    raise exception 'Roteiro v2: activation fence created a snapshot';
+  end if;
+
+  update private.academic_v2_automation_control
+  set enabled_from =
+    ((((now() at time zone 'America/Sao_Paulo')::date - 1) + time '12:59')
+     at time zone 'America/Sao_Paulo')
+  where singleton = true;
+end;
+$teacher_v2_activation_fence$;
 
 do $teacher_v2_worker_closure$
 declare
@@ -252,6 +299,20 @@ begin
   if roster is null or jsonb_array_length(roster) <> 3 then
     raise exception 'Roteiro v2: cancelled student disappeared from snapshot';
   end if;
+  -- Full synthetic roster: 1 present, 2 absent, 3 cancelled,
+  -- 4 archived and 5 linked but not yet eligible for their first lesson.
+  if not (
+    roster @> '[{"student_id":"99000000-0000-4000-8000-000000000001","attendance_status":"present"}]'::jsonb
+    and roster @> '[{"student_id":"99000000-0000-4000-8000-000000000002","attendance_status":"absent"}]'::jsonb
+    and roster @> '[{"student_id":"99000000-0000-4000-8000-000000000003","attendance_status":"cancelled"}]'::jsonb
+  ) then
+    raise exception 'Roteiro v2: synthetic participation classifications are incorrect';
+  end if;
+  if roster::text like '%99000000-0000-4000-8000-000000000004%'
+     or roster::text like '%99000000-0000-4000-8000-000000000005%' then
+    raise exception 'Roteiro v2: archived or not-yet-started student entered the snapshot';
+  end if;
+
   if (select count(*)
       from private.academic_lesson_occurrences occurrence
       where occurrence.class_number = 970003
@@ -286,5 +347,26 @@ begin
   end if;
 end;
 $teacher_v2_worker_closure$;
+
+-- Disabling the worker after a successful session must not change
+-- historical attendance or generate duplicate snapshots.
+do $teacher_v2_disable_after_closure$
+declare
+  new_closures integer;
+begin
+  update private.academic_v2_automation_control
+  set enabled = false, enabled_from = null
+  where singleton = true;
+
+  select private.run_teacher_v2_auto_finalizations() into new_closures;
+  if new_closures <> 0 then
+    raise exception 'Roteiro v2: disabled worker processed a lesson';
+  end if;
+  if (select count(*) from private.academic_v2_closed_session_snapshots
+      where class_number = 970003) <> 1 then
+    raise exception 'Roteiro v2: disabling worker changed the closed-session snapshot';
+  end if;
+end;
+$teacher_v2_disable_after_closure$;
 
 select 'TEACHER_V2_DISPOSABLE_REHEARSAL_PASSED' as result;
