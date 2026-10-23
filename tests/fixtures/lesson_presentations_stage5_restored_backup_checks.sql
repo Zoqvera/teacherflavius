@@ -1,5 +1,6 @@
 -- Etapa 5A: verificações somente no backup restaurado em Supabase descartável.
--- Este arquivo é concatenado entre BEGIN e ROLLBACK após as migrações 1 e 3.
+-- Usado com BEGIN READ ONLY quando o backup já contém as tabelas; senão,
+-- as migrações 1 e 3 são ensaiadas entre BEGIN e ROLLBACK.
 -- Nenhum aluno, Auth ou dado financeiro é consultado.
 do $presentation_restore_rehearsal$
 declare
@@ -85,9 +86,15 @@ begin
     raise exception 'Funções internas das apresentações acessíveis pelo cliente.';
   end if;
 
-  if (select count(*) from public.lesson_presentations) <> 0
-    or (select count(*) from public.lesson_presentation_versions) <> 0
-    or (select count(*) from public.lesson_presentation_views) <> 0 then
+  -- Zero rows is required ONLY when the tables were just created in
+  -- this disposable transaction. A real restored production backup may
+  -- legitimately contain student submissions and version history.
+  if current_setting('teacherflavius.presentation_rehearsal_created', true) = 'true'
+     and (
+       (select count(*) from public.lesson_presentations) <> 0
+       or (select count(*) from public.lesson_presentation_versions) <> 0
+       or (select count(*) from public.lesson_presentation_views) <> 0
+     ) then
     raise exception 'Ensaio de DDL gerou registros inesperados.';
   end if;
 end;
