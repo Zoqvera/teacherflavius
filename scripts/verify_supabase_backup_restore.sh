@@ -111,6 +111,24 @@ verify_and_decrypt_artifact() {
     and (.cron_jobs | length == 11)
   ' "$RECOVERY_DIR/recovery_manifest.json" >/dev/null
 
+  if [ ! -s "$RECOVERY_DIR/presentation_permissions.sql" ]; then
+    echo '::error::Production presentation ACLs are missing from encrypted backup.'
+    exit 1
+  fi
+
+  # Only the exact reviewed grants for these three tables may be restored.
+  # This also ensures a locally restored anonymous grant is never accepted.
+  if ! awk '
+    /^REVOKE ALL PRIVILEGES ON TABLE public\.lesson_presentation(s|_versions|_views) FROM PUBLIC, anon, authenticated;$/ { revokes++; next }
+    /^GRANT (SELECT|INSERT, SELECT, UPDATE) ON TABLE public\.lesson_presentation(s|_versions|_views) TO authenticated;$/ { tables++; next }
+    /^GRANT INSERT \((presentation_id|revision_number|teacher_id)\) ON TABLE public\.lesson_presentation_views TO authenticated;$/ { columns++; next }
+    { invalid++ }
+    END { if (invalid || revokes != 3 || tables != 3 || columns != 3) exit 1 }
+  ' "$RECOVERY_DIR/presentation_permissions.sql"; then
+    echo '::error::Presentation ACL backup differs from reviewed production permissions.'
+    exit 1
+  fi
+
   if [ ! -s "$RECOVERY_DIR/application_triggers.sql" ]; then
     echo '::error::Application trigger definitions are absent from the backup archive.'
     exit 1
@@ -170,6 +188,15 @@ restore_logical_backup() {
     --file "$RECOVERY_DIR/history_schema.sql" \
     --file "$RECOVERY_DIR/history_data.sql" \
     --dbname "$LOCAL_DB_URL"
+}
+
+restore_presentation_permissions() {
+  # Supabase local stacks may grant anon permissions by default when
+  # recreating application tables. Reapply the EXACT grants exported from
+  # production, rather than weakening the RLS/ACL verification.
+  psql "$LOCAL_DB_URL" -X --no-password --single-transaction \
+    --set ON_ERROR_STOP=1 \
+    --file "$RECOVERY_DIR/presentation_permissions.sql"
 }
 
 restore_application_triggers() {
@@ -352,6 +379,7 @@ main() {
   start_disposable_stack
   restore_logical_backup
   restore_application_triggers
+  restore_presentation_permissions
   capture_restored_manifest_and_disable_crons
   compare_recovery_state
   rehearse_presentation_schema_against_restored_backup

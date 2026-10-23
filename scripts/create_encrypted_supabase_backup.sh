@@ -91,6 +91,20 @@ capture_application_triggers() {
     > "$BACKUP_DIR/application_triggers.sql"
 }
 
+capture_presentation_permissions() {
+  psql "$SUPABASE_DB_URL" -X -qAt --variable ON_ERROR_STOP=1 \
+    --file supabase/recovery/export_presentation_permissions.sql \
+    > "$BACKUP_DIR/presentation_permissions.sql"
+
+  local expected_count
+  expected_count="$(awk '/^REVOKE ALL PRIVILEGES ON TABLE public\.lesson_presentation/ {count++} END {print count+0}' \
+    "$BACKUP_DIR/presentation_permissions.sql")"
+  if [[ "$expected_count" != 3 ]]; then
+    echo '::error::Production presentation ACL export did not cover all three tables.'
+    exit 1
+  fi
+}
+
 capture_recovery_manifest() {
   psql "$SUPABASE_DB_URL" \
     -At \
@@ -109,7 +123,7 @@ capture_recovery_manifest() {
 
 validate_dump_set() {
   local file
-  for file in roles.sql schema.sql data.sql history_schema.sql history_data.sql application_triggers.sql recovery_manifest.json; do
+  for file in roles.sql schema.sql data.sql history_schema.sql history_data.sql application_triggers.sql presentation_permissions.sql recovery_manifest.json; do
     if [ ! -s "$BACKUP_DIR/$file" ]; then
       echo "::error::Backup file is missing or empty: $file"
       exit 1
@@ -125,6 +139,7 @@ validate_dump_set() {
       history_schema.sql \
       history_data.sql \
       application_triggers.sql \
+      presentation_permissions.sql \
       recovery_manifest.json \
       > manifest.sha256
   )
@@ -133,6 +148,7 @@ validate_dump_set() {
 Teacherflavius encrypted Supabase logical backup.
 This archive contains production database data and must remain confidential.
 application_triggers.sql contains application-owned Auth and event triggers not covered by the CLI schema dump.
+presentation_permissions.sql contains only the production ACL grants for the three presentation tables.
 recovery_manifest.json contains only technical counts/configuration used by the automated restore verifier.
 Restore instructions are versioned in BACKUP_RECOVERY.md in the repository.
 EOF
@@ -185,6 +201,7 @@ main() {
   trap cleanup_plaintext EXIT
   create_dump_set
   capture_application_triggers
+  capture_presentation_permissions
   capture_recovery_manifest
   validate_dump_set
   encrypt_backup
