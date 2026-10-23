@@ -32,8 +32,9 @@
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="stylesheet" href="/brand_palette.css?v=20260820-3">
-  <link rel="stylesheet" href="/metodologia-e-conteudo-programatico/style.css?v=20261023-1">
+  <link rel="stylesheet" href="/metodologia-e-conteudo-programatico/style.css?v=20261023-3">
   <script type="module" src="/metodologia-e-conteudo-programatico/app.mjs?v=20261023-1"></script>
+  <script type="module" src="/metodologia-e-conteudo-programatico/samples_app.mjs?v=20261023-2"></script>
 </head>
 <body class="methodology-page">
   <!-- Google Tag Manager (noscript) -->
@@ -158,13 +159,49 @@
       </div>
     </section>
 
+    <section class="methodology-section methodology-samples-section" id="exemplos-de-atividades" aria-labelledby="sampleLessonsTitle">
+      <div class="methodology-shell">
+        <div class="methodology-section-intro">
+          <span class="methodology-section-label">Conheça o material</span>
+          <h2 id="sampleLessonsTitle">Explore três apresentações de diferentes momentos do curso.</h2>
+          <p>Os exemplos abaixo são materiais pedagógicos selecionados. Abra uma apresentação para conhecer o texto-modelo em inglês, a tradução, a proposta de atividade e o vocabulário de apoio.</p>
+        </div>
+        <div id="methodologySampleLessons" class="sample-presentation-grid" aria-label="Apresentações demonstrativas"></div>
+
+        <div class="methodology-section-intro sample-conversation-intro">
+          <span class="methodology-section-label">Demonstração de conversação</span>
+          <h2 id="sampleQuestionsTitle">Pratique com perguntas reais do curso.</h2>
+          <p>Selecione uma das 12 perguntas e pense em como você responderia em inglês. Depois, revele duas respostas-modelo com tradução e orientações. Estas perguntas não estão vinculadas obrigatoriamente a uma apresentação específica.</p>
+        </div>
+        <div class="sample-question-layout" aria-labelledby="sampleQuestionsTitle">
+          <div class="sample-question-selector">
+            <h3>Escolha uma pergunta</h3>
+            <div id="methodologySampleQuestions" class="sample-question-list" role="group" aria-label="Perguntas disponíveis"></div>
+          </div>
+          <div class="sample-question-detail">
+            <div id="methodologyQuestionPosition" class="sample-question-position"></div>
+            <div id="methodologyActiveQuestion"></div>
+            <button id="methodologyRevealAnswers" class="sample-reveal-button" type="button" aria-expanded="false" aria-controls="methodologyAnswers" hidden>Mostrar exemplos de resposta</button>
+            <ol id="methodologyAnswers" class="sample-answer-list" hidden></ol>
+            <div class="sample-navigation">
+              <button id="methodologyPreviousQuestion" type="button" disabled>Anterior</button>
+              <button id="methodologyNextQuestion" type="button" disabled>Próxima</button>
+            </div>
+          </div>
+        </div>
+        <p id="methodologySamplesStatus" class="sample-loading-status" role="status" aria-live="polite">Carregando demonstrações selecionadas...</p>
+        <button id="methodologySamplesRetry" class="catalog-retry" type="button" hidden>Tentar novamente</button>
+        <noscript><p>Ative o JavaScript para visualizar as demonstrações interativas.</p></noscript>
+      </div>
+    </section>
+
     <section class="methodology-section methodology-conversation" aria-labelledby="conversationTitle">
       <div class="methodology-shell methodology-conversation-grid">
         <div>
           <span class="methodology-section-label">Prática de conversação</span>
           <h2 id="conversationTitle">Apresentar ideias é importante. Aprender a responder também.</h2>
           <p>Além das apresentações preparadas, o curso utiliza perguntas para estimular a comunicação em situações variadas. Assim, o estudante amplia suas possibilidades de interação sem depender somente de um texto escrito.</p>
-          <p>Nas demonstrações desta página, apresentaremos exemplos de apresentações e perguntas selecionadas, sem disponibilizar integralmente o material reservado aos alunos.</p>
+          <p>As demonstrações anteriores foram selecionadas especialmente para apresentar a metodologia. Os demais conteúdos integrais continuam disponíveis na área dos alunos.</p>
         </div>
         <div class="methodology-conversation-card">
           <span class="methodology-card-caption">Duas práticas complementares</span>

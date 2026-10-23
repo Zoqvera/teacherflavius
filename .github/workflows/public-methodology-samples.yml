@@ -1,0 +1,51 @@
+name: Public methodology demonstrations
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/public-methodology-samples/**"
+      - "supabase/config.toml"
+      - "metodologia-e-conteudo-programatico/**"
+      - "tests/public_methodology_samples_*.test.mjs"
+      - "tests/test_methodology_samples.py"
+      - ".github/workflows/public-methodology-samples.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  curated-samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate code syntax
+        run: |
+          node --check supabase/functions/public-methodology-samples/samples_core.mjs
+          node --check metodologia-e-conteudo-programatico/samples_service.mjs
+          node --check metodologia-e-conteudo-programatico/samples_app.mjs
+      - name: Check sample publication and UI contracts
+        run: node --test tests/public_methodology_samples_api.test.mjs tests/public_methodology_samples_ui.test.mjs
+      - name: Validate page
+        run: python3 -m unittest discover -s tests -p "test_methodology_samples.py"
+      - name: Verify deployed samples response
+        run: |
+          node --input-type=module <<'JS'
+          import assert from "node:assert/strict";
+          const endpoint = "https://wnigzpvgsbpjdxvjzugt.supabase.co/functions/v1/public-methodology-samples";
+          const response = await fetch(endpoint, { headers: { Origin: "https://teacherflavius.com" } });
+          assert.equal(response.status, 200);
+          const samples = await response.json();
+          assert.deepEqual(samples.lessons.map(item => item.number), [1, 15, 30]);
+          assert.deepEqual(samples.questions.map(item => item.number), [1, 4, 10, 17, 25, 38, 50, 62, 76, 90, 112, 145]);
+          assert.equal(samples.questions.every(item => item.examples.length === 2), true);
+          for (const question of samples.questions) {
+            assert.deepEqual(Object.keys(question).sort(), ["examples", "number", "question", "translation"]);
+            assert.equal(question.examples.every(answer => Object.keys(answer).sort().join() === "answer,note,translation"), true);
+          }
+          console.log("Validated " + samples.lessons.length + " presentations and " + samples.questions.length + " questions.");
+          JS

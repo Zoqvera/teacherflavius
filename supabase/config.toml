@@ -20,3 +20,6 @@ verify_jwt = false
 # Public read-only lesson catalog; the function exposes an explicit field allowlist.
 [functions.public-study-catalog]
 verify_jwt = false
+
+[functions.public-methodology-samples]
+verify_jwt = false
