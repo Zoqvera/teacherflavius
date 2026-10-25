@@ -412,6 +412,48 @@ Uma futura troca de link de `/roteiro-da-aula/` para
 continuem `noindex, nofollow`. Comunicar a mudança antes de
 decidir a troca; jamais incluir interfaces administrativas no sitemap.
 
+## Etapa 7C2 — registros manuais habilitados na nova interface (25/10/2026)
+
+O responsável autorizou explicitamente nesta conversa, às 15h47
+(horário de Brasília), a liberação de apresentações, avaliações de
+perguntas e registros administrativos de frequência no Roteiro v2,
+**sem** ativar o encerramento automático.
+
+A publicação habilita somente os três controles da interface v2:
+`PRESENTATION_REGISTRATION_ENABLED`,
+`QUESTION_RATINGS_ENABLED` e
+`SESSION_LIFECYCLE_ENABLED`. As RPCs existentes já exigem
+`is_teacher_admin`, validam a ocorrência e rejeitam escritas fora da
+janela da aula, cancelamentos e registros duplicados. A interface
+só considera sucesso após confirmação do servidor.
+
+**Isolamento de rollout:** a rota `/roteiro-da-aula/` e o cartão da
+área do professor continuam apontando para a versão anterior.
+A v2 é acessada diretamente em `/roteiro-da-aula-v2/`,
+sem indexação. O agendamento `teacher-v2-auto-finalize` permanece
+instalado mas bloqueado pelo controle privado
+`enabled=false`, `enabled_from=null` — não executar sua ativação
+nesta etapa. A correção auditada de frequência é acessível nas
+ocorrências encerradas, mas não há retroatividade automática.
+
+O navegador Chromium testa registros e recusas com identidades
+fictícias e respostas de RPC simuladas, sem escrever no Supabase
+produtivo. A liberação autoriza operações reais **somente quando
+o professor clicar nos controles da v2**.
+
+**Retorno imediato:** a versão antiga segue independente. Se houver
+erro, voltar à rota `/roteiro-da-aula/`, reverter o commit da liberação
+dos três controles e publicar novamente. Manter o worker desligado;
+se uma posterior etapa o tiver ligado, executar primeiro
+`scripts/sql/teacher_v2_stage7c_disable_worker.sql`. Registros já
+confirmados no banco devem permanecer preservados e auditáveis,
+sem exclusão e sem reaplicar migrações.
+
+**SEO:** nenhuma alteração em `robots`, `canonical`, sitemap ou
+links públicos. O texto visível e o cache bust de JavaScript da rota
+restrita mudam, mantendo `noindex, nofollow`. Qualquer futura troca do
+cartão de entrada exige decisão separada do responsável.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual
