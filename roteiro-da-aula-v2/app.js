@@ -3,11 +3,11 @@
 
   const WAIT_OPTIONS = Object.freeze({ maxAttempts: 30, delayMs: 120 });
   const QUESTION_BATCH_SIZE = 80;
-  // Etapa 2 preparada: manter registros indisponíveis até a liberação integral.
-  const PRESENTATION_REGISTRATION_ENABLED = false;
-  const QUESTION_RATINGS_ENABLED = false;
-  // Gate v2: servidor e interface continuam desativados nesta etapa.
-  const SESSION_LIFECYCLE_ENABLED = false;
+  // Etapa 7C2: registros administrativos liberados após homologação.
+  // O worker de encerramento permanece sob controle exclusivo no Supabase.
+  const PRESENTATION_REGISTRATION_ENABLED = true;
+  const QUESTION_RATINGS_ENABLED = true;
+  const SESSION_LIFECYCLE_ENABLED = true;
   const RATINGS = Object.freeze({
     good: "BOM",
     medium: "MÉDIO",
@@ -578,7 +578,7 @@
       })) state.selectedClass = null;
       render();
       status(successMessage || state.groups.length +
-        " turma(s) carregada(s). Registros na prévia ainda desativados." +
+        " turma(s) carregada(s). Registros disponíveis. Encerramento automático desativado." +
         (state.ratingHistoryAvailable ? "" : " Histórico de avaliações ainda não disponível."),
         "success");
     } catch (error) {
