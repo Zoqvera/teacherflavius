@@ -67,10 +67,12 @@ begin
   end if;
 
   insert into public.conversation_questions (
-    id, question_text, display_order
+    id, question_text, display_order, question_translation, answer_examples
   ) values (
     '97000000-0000-4000-8000-000000000013'::uuid,
-    'How was the synthetic class?', 999999
+    'How was the synthetic class?', 999999,
+    'Como foi a aula fictícia?',
+    '["It was helpful.", "I practiced with my teacher."]'::jsonb
   );
 
   insert into private.student_question_studies (student_id, question_id)
