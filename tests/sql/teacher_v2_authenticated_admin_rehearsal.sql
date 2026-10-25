@@ -42,6 +42,13 @@ select set_config(
 select set_config(
   'request.jwt.claim.sub', '98000000-0000-4000-8000-000000000001', true
 );
+select set_config(
+  'teacher_v2_fixture.membership',
+  (select id::text from public.class_students
+   where class_number = 970003
+     and user_id = '99000000-0000-4000-8000-000000000002'::uuid),
+  true
+);
 set local role authenticated;
 
 do $teacher_v2_authenticated_teacher$
@@ -50,7 +57,6 @@ declare
   student_membership uuid;
   result jsonb;
   history_count integer;
-  audit_count integer;
   snapshot_status text;
 begin
   if auth.uid() is distinct from '98000000-0000-4000-8000-000000000001'::uuid
@@ -58,10 +64,7 @@ begin
     raise exception 'Stage 6B did not authenticate the synthetic professor';
   end if;
 
-  select membership.id into strict student_membership
-  from public.class_students membership
-  where membership.class_number = 970003
-    and membership.user_id = '99000000-0000-4000-8000-000000000002'::uuid;
+  student_membership := current_setting('teacher_v2_fixture.membership')::uuid;
 
   select count(*) into history_count
   from public.get_teacher_v2_closed_sessions(class_date)
@@ -97,16 +100,6 @@ begin
     raise exception 'Stage 6B: repeated correction was not idempotent';
   end if;
 
-  select count(*) into audit_count
-  from private.academic_v2_attendance_audit
-  where student_id = '99000000-0000-4000-8000-000000000002'::uuid
-    and action = 'admin_correction'
-    and new_status = 'present'
-    and changed_by = auth.uid();
-  if audit_count <> 1 then
-    raise exception 'Stage 6B: correction audit is missing or duplicated';
-  end if;
-
   select student_row->>'attendance_status' into snapshot_status
   from public.get_teacher_v2_closed_sessions(class_date) closed
   cross join lateral jsonb_array_elements(closed.students) student_row
@@ -115,16 +108,6 @@ begin
         '99000000-0000-4000-8000-000000000002';
   if snapshot_status <> 'present' then
     raise exception 'Stage 6B: closed-session view did not reflect corrected attendance';
-  end if;
-
-  -- The immutable closure snapshot remains as it was at finalization.
-  if not exists (
-    select 1 from private.academic_v2_closed_session_snapshots snapshots
-    where snapshots.class_number = 970003
-      and snapshots.students @>
-        '[{"student_id":"99000000-0000-4000-8000-000000000002","attendance_status":"absent"}]'::jsonb
-  ) then
-    raise exception 'Stage 6B: closed-session audit snapshot was rewritten';
   end if;
 
   begin
@@ -153,6 +136,37 @@ begin
   end;
 end;
 $teacher_v2_authenticated_teacher$;
+
+-- Inspect private audit records only as the disposable test harness.
+-- Public browser roles must remain unable to access private tables.
+reset role;
+
+do $teacher_v2_privileged_audit_check$
+declare
+  audit_count integer;
+begin
+  select count(*) into audit_count
+  from private.academic_v2_attendance_audit
+  where student_id = '99000000-0000-4000-8000-000000000002'::uuid
+    and action = 'admin_correction'
+    and new_status = 'present'
+    and changed_by = '98000000-0000-4000-8000-000000000001'::uuid;
+  if audit_count <> 1 then
+    raise exception 'Stage 6B: correction audit is missing or duplicated';
+  end if;
+
+  if not exists (
+    select 1 from private.academic_v2_closed_session_snapshots snapshots
+    where snapshots.class_number = 970003
+      and snapshots.students @>
+        '[{"student_id":"99000000-0000-4000-8000-000000000002","attendance_status":"absent"}]'::jsonb
+  ) then
+    raise exception 'Stage 6B: closed-session audit snapshot was rewritten';
+  end if;
+end;
+$teacher_v2_privileged_audit_check$;
+
+set local role authenticated;
 
 -- An authenticated student must not be able to read or change teacher data.
 select set_config(
@@ -192,10 +206,7 @@ begin
     when sqlstate '42501' then null;
   end;
 
-  select membership.id into strict student_membership
-  from public.class_students membership
-  where membership.class_number = 970003
-    and membership.user_id = auth.uid();
+  student_membership := current_setting('teacher_v2_fixture.membership')::uuid;
 
   begin
     perform public.correct_teacher_v2_attendance(
