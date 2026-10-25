@@ -30,7 +30,6 @@ jobs:
 
       - name: Install pinned browser test runner
         run: |
-          npm ci --ignore-scripts
           npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.64.1
 
       - name: Install Chromium and OS dependencies
