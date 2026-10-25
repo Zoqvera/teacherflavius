@@ -19,10 +19,10 @@ const legacyPage = read("roteiro-da-aula-legado/index.html");
 
 test("preview stays isolated, private to search engines and linked to the active teacher page", () => {
   assert.match(page, /<meta name="robots" content="noindex, nofollow">/);
-  assert.match(page, /href="\/roteiro-da-aula\/"/);
+  assert.match(page, /href="\/roteiro-da-aula-legado\/"/);
   assert.match(page, /roteiro-da-aula-v2\/app\.js/);
   assert.match(page, /roteiro-da-aula-v2\/model\.js/);
-  assert.match(currentPage, /src="\/roteiro-da-aula\/app\.js/);
+  assert.match(currentPage, /src="\/roteiro-da-aula-v2\/app\.js/);
   assert.match(currentPage, /href="\\/roteiro-da-aula-legado\\/"/);
   assert.match(legacyPage, /src="\/roteiro-da-aula\/app\.js/);
 });
