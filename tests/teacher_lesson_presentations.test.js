@@ -9,7 +9,7 @@ const vm = require("node:vm");
 const ROOT = path.resolve(__dirname, "..");
 const source = fs.readFileSync(path.join(ROOT, "teacher_lesson_presentations.js"), "utf8");
 const app = fs.readFileSync(path.join(ROOT, "roteiro-da-aula/app.js"), "utf8");
-const page = fs.readFileSync(path.join(ROOT, "roteiro-da-aula/index.html"), "utf8");
+const page = fs.readFileSync(path.join(ROOT, "roteiro-da-aula-legado/index.html"), "utf8");
 const styles = fs.readFileSync(path.join(ROOT, "teacher_lesson_presentations.css"), "utf8");
 const migration = fs.readFileSync(
   path.join(ROOT, "supabase/migrations/20261017144500_lesson_presentation_views_stage3.sql"), "utf8"
