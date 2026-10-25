@@ -15,7 +15,7 @@ const PAGE_SOURCE = fs.readFileSync(path.join(
   ROOT, "roteiro-da-aula-v2/index.html"
 ), "utf8");
 const LEGACY_PAGE = fs.readFileSync(path.join(
-  ROOT, "roteiro-da-aula/index.html"
+  ROOT, "roteiro-da-aula-legado/index.html"
 ), "utf8");
 const ACADEMIC_SOURCE = fs.readFileSync(path.join(
   ROOT, "academic_workflow_service.js"
