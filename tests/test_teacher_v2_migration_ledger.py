@@ -84,7 +84,7 @@ class TeacherV2MigrationLedgerTests(unittest.TestCase):
         self.assertIn("Production contains migration versions that are missing", script)
         self.assertIn("Migration identity differs between production and Git", script)
 
-    def test_new_sql_is_isolated_and_worker_switch_remains_disabled(self):
+    def test_new_sql_is_isolated_and_worker_remains_server_gated(self):
         lifecycle = (
             MIGRATIONS / "20261022212500_academic_v2_auto_attendance_and_closure.sql"
         ).read_text()
@@ -99,7 +99,7 @@ class TeacherV2MigrationLedgerTests(unittest.TestCase):
             "QUESTION_RATINGS_ENABLED",
             "SESSION_LIFECYCLE_ENABLED",
         ):
-            self.assertIn(f"const {name} = false;", rollout)
+            self.assertIn(f"const {name} = true;", rollout)
 
 
 if __name__ == "__main__":
