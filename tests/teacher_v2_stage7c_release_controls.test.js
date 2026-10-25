@@ -43,13 +43,13 @@ test("rollback disables only the automation row under the common writer lock", (
   assert.doesNotMatch(rollback, /\b(?:DELETE FROM|TRUNCATE|DROP TABLE|UPDATE public\.|INSERT INTO|cron\.unschedule)\b/i);
 });
 
-test("v2 stays disabled and dashboard navigation is not silently promoted", () => {
+test("v2 manual recording enabled without promoting dashboard navigation or worker", () => {
   for (const flag of [
     "PRESENTATION_REGISTRATION_ENABLED",
     "QUESTION_RATINGS_ENABLED",
     "SESSION_LIFECYCLE_ENABLED"
   ]) {
-    assert.match(app, new RegExp("const " + flag + " = false;"));
+    assert.match(app, new RegExp("const " + flag + " = true;"));
   }
   assert.match(teacherDashboard, /href="\/roteiro-da-aula\/"/);
   assert.match(current, /src="\/roteiro-da-aula\/app\.js/);
