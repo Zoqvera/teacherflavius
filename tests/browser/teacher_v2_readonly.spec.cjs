@@ -6,7 +6,7 @@ const http = require("node:http");
 const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "../..");
-const PREVIEW_PATH = "/roteiro-da-aula-v2/";
+const PREVIEW_PATH = "/roteiro-da-aula/";
 const IGNORED_RUNTIME_SCRIPTS = new Set([
   "/supabase_config.js",
   "/module_loader.js",
@@ -230,7 +230,7 @@ async function enterFictionalClass(page, subject) {
   await page.getByRole("button", { name: /TURMA FICTÍCIA/ }).click();
 }
 
-test("authorized teacher sees enabled controls without implicit writes", async ({ page }) => {
+test("main lesson route loads the new workspace without implicit writes", async ({ page }) => {
   await openPreview(page);
   await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
   await enterFictionalClass(page, "APRESENTAÇÕES");
@@ -251,7 +251,20 @@ test("authorized teacher sees enabled controls without implicit writes", async (
   const calls = await page.evaluate(() => window.__teacherV2Calls);
   expect(calls).toEqual(["is_teacher_admin",
     "get_teacher_question_rating_history_v2", "get_teacher_v2_closed_sessions"]);
-  await expect(page.locator('a[href="/roteiro-da-aula/"]')).toBeVisible();
+  await expect(page.locator('a[href="/roteiro-da-aula-legado/"]')).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, nofollow");
+});
+
+
+test("the v2 alias remains accessible and the former interface survives separately", async ({ page }) => {
+  await openPreview(page);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await page.goto(baseUrl + "/roteiro-da-aula-v2/");
+  await expect(page.locator('script[src*="/roteiro-da-aula-v2/app.js"]')).toHaveCount(1);
+  await expect(page.locator('a[href="/roteiro-da-aula-legado/"]')).toBeVisible();
+  await page.goto(baseUrl + "/roteiro-da-aula-legado/");
+  await expect(page.locator("#teacherPlanContainer")).toHaveCount(1);
+  await expect(page.locator('script[src*="/roteiro-da-aula/app.js"]')).toHaveCount(1);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, nofollow");
 });
 
@@ -327,10 +340,10 @@ test("mobile phone has no horizontal overflow and exposes the legacy fallback", 
   expect(width.content).toBeLessThanOrEqual(width.viewport + 1);
   await expect(page.getByRole("button", { name: "BOM" }).first()).toBeEnabled();
 
-  const fallback = page.locator('a[href="/roteiro-da-aula/"]');
+  const fallback = page.locator('a[href="/roteiro-da-aula-legado/"]');
   await expect(fallback).toBeVisible();
   await fallback.click();
-  await expect(page).toHaveURL(/\/roteiro-da-aula\/$/);
+  await expect(page).toHaveURL(/\/roteiro-da-aula-legado\/$/);
 });
 
 test("date changes and transient loading failures recover without enabling writes", async ({ page }) => {
