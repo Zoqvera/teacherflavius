@@ -228,6 +228,39 @@ A página `/roteiro-da-aula/` permanece operacional, a prévia
 escrita continuam `false`, e o agendamento de encerramento continua
 sem efeito em produção.
 
+## Etapa 6B — testes de autorização e correção administrativa (25/10/2026)
+
+A homologação da etapa 6A passou em 16 workflows (PR #895, integrada).
+Esta etapa acrescenta um segundo ensaio SQL, executado **após** o
+cenário de presença/ausência/cancelamento e ainda dentro do mesmo
+`BEGIN/ROLLBACK` no banco descartável do GitHub Actions.
+
+O ensaio `teacher_v2_authenticated_admin_rehearsal.sql` cria uma
+identidade fictícia do professor, insere-a na tabela de administradores
+apenas no banco descartável e simula as reivindicações JWT e o papel
+`authenticated` usado pela Data API do Supabase.
+
+Verificações planejadas:
+- professor autenticado consulta uma turma fechada;
+- justificativa curta é recusada;
+- ausência é corrigida com registro de auditoria e responsável;
+- repetição da correção não gera nova alteração nem auditoria duplicada;
+- o histórico consultável reflete a presença corrigida, preservando
+  o instantâneo original para auditoria;
+- gravação de apresentação e avaliação após o encerramento é recusada;
+- aluno autenticado sem privilégio administrativo não consulta o
+  histórico nem altera presenças.
+
+A homologação só é considerada aprovada com CI completo; o ensaio não
+executa ações em alunos reais nem altera mensalidades, cron ou flags.
+Este recorte testa a segurança e a correção pós-encerramento, **não**
+equivale ainda à validação de apresentação e avaliação bem-sucedidas,
+reposição ou concorrência simultânea de sessões autenticadas.
+
+**Próxima etapa:** ensaiar apresentação e avaliação reais com dados
+sintéticos dentro da janela da aula, reposições e concorrência em
+conexões separadas antes de qualquer ativação.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual
