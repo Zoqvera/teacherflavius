@@ -315,7 +315,7 @@ test("server write rejection never marks attendance as present", async ({ page }
 
 test("guest is sent to login without querying the protected teacher workflow", async ({ page }) => {
   await openPreview(page, "guest");
-  await expect(page).toHaveURL(/\/login\/\?next=%2Froteiro-da-aula-v2%2F/);
+  await expect(page).toHaveURL(/\/login\/\?next=%2Froteiro-da-aula%2F/);
   const calls = await page.evaluate(() => window.__teacherV2Calls);
   expect(calls).toEqual([]);
 });
