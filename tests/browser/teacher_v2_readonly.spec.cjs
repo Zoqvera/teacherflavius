@@ -90,7 +90,9 @@ async function openPreview(page, role = "teacher") {
     const questionId = "97000000-0000-4000-8000-000000000016";
     const entryId = "97000000-0000-4000-8000-000000000017";
 
-    window.__teacherV2Calls = [];
+    window.__teacherV2Calls = JSON.parse(
+      window.sessionStorage.getItem("teacherV2Calls") || "[]"
+    );
     window.__teacherV2NetworkError = false;
     window.ResourceWaiter = {
       waitUntil: async (predicate) => Boolean(predicate())
@@ -99,6 +101,9 @@ async function openPreview(page, role = "teacher") {
     const fakeClient = {
       async rpc(name) {
         window.__teacherV2Calls.push(name);
+        window.sessionStorage.setItem(
+          "teacherV2Calls", JSON.stringify(window.__teacherV2Calls)
+        );
         if (name === "is_teacher_admin") {
           return { data: userRole === "teacher", error: null };
         }
