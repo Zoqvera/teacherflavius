@@ -261,6 +261,28 @@ reposição ou concorrência simultânea de sessões autenticadas.
 sintéticos dentro da janela da aula, reposições e concorrência em
 conexões separadas antes de qualquer ativação.
 
+## Etapa 6C — apresentação, perguntas e reposição (25/10/2026)
+
+Novo ensaio `tests/sql/teacher_v2_stage6c_live_rpcs.sql`, executado
+com uma identidade administrativa sintética e dados fictícios, após
+a homologação 6B e dentro da mesma transação `BEGIN/ROLLBACK`
+do banco descartável.
+
+Escopo do ensaio:
+- Aula regular iniciada há cerca de 15 minutos e professor autenticado;
+- registro de apresentação (lição 1) com confirmação de presença;
+- avaliação de pergunta estudada e preservação da avaliação original
+  em uma chamada repetida com nota diferente;
+- apresentação e avaliação em uma reposição confirmada;
+- pergunta inexistente recusada sem deixar presença parcial;
+- verificação isolada do log privado de avaliações, ocorrências e
+  ausência de encerramento da aula ainda em andamento.
+
+As migrações existentes, a interface atual, as flags e o worker
+continuam intactos. **O cenário de corrida entre duas conexões
+PostgreSQL distintas ainda deve ser ensaiado separadamente**
+antes da ativação. Nenhuma gravação foi feita em alunos reais.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual
