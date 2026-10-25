@@ -605,7 +605,7 @@
     }
     const session = await window.Auth.getSession();
     if (!session || !session.user) {
-      window.location.href = "/login/?next=" + encodeURIComponent("/roteiro-da-aula-v2/");
+      window.location.href = "/login/?next=" + encodeURIComponent(window.location.pathname);
       return;
     }
     const client = window.Auth.getClient();

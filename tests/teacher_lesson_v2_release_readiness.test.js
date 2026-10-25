@@ -13,6 +13,7 @@ const CLOSURE_SQL = read(
 const V2_APP = read("roteiro-da-aula-v2/app.js");
 const V2_INDEX = read("roteiro-da-aula-v2/index.html");
 const ACTIVE_INDEX = read("roteiro-da-aula/index.html");
+const LEGACY_INDEX = read("roteiro-da-aula-legado/index.html");
 const MODEL_SOURCE = read("roteiro-da-aula-v2/model.js");
 const RATING_SOURCE = read("roteiro-da-aula-v2/question_ratings.js");
 
@@ -51,10 +52,11 @@ test("v2 presentation writes never call the legacy RPC directly", () => {
   assert.match(V2_APP, /PRESENTATION_REGISTRATION_ENABLED = true/);
 });
 
-test("teacher-only preview stays restricted and ordinary operational route is unchanged", () => {
+test("teacher workspace becomes canonical while legacy rollback remains restricted", () => {
   assert.match(V2_INDEX, /<meta name="robots" content="noindex, nofollow">/);
-  assert.match(ACTIVE_INDEX, /src="\/roteiro-da-aula\/app\.js/);
-  assert.doesNotMatch(ACTIVE_INDEX, /roteiro-da-aula-v2/);
+  assert.match(ACTIVE_INDEX, /src="\/roteiro-da-aula-v2\/app\.js/);
+  assert.match(LEGACY_INDEX, /src="\/roteiro-da-aula\/app\.js/);
+  assert.match(ACTIVE_INDEX, /href="\/roteiro-da-aula-legado\/"/);
   assert.match(V2_APP, /rpc\("is_teacher_admin"\)/);
   assert.match(V2_APP, /QUESTION_RATINGS_ENABLED = true/);
   assert.match(V2_APP, /SESSION_LIFECYCLE_ENABLED = true/);

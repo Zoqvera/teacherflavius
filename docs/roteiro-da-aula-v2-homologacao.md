@@ -454,6 +454,43 @@ links públicos. O texto visível e o cache bust de JavaScript da rota
 restrita mudam, mantendo `noindex, nofollow`. Qualquer futura troca do
 cartão de entrada exige decisão separada do responsável.
 
+## Etapa 7C3 — substituição definitiva da rota do professor (25/10/2026)
+
+O responsável solicitou expressamente que o novo modelo substituísse
+definitivamente o roteiro anterior. A mudança aprovada segue estes
+contratos operacionais:
+
+- `/roteiro-da-aula/` é agora a **rota principal** e serve diretamente
+  a interface v2, com autenticação e autorização de administrador;
+- o cartão existente `ROTEIRO DA AULA` em `/professor/` mantém seu URL,
+  passando a carregar a interface nova sem salto visual de endereço;
+- `/roteiro-da-aula-v2/` fica como endereço alternativo do mesmo modelo
+  e não deve voltar a apresentar o roteiro antigo;
+- `/roteiro-da-aula-legado/` conserva a página e o JavaScript originais,
+  para contingência ou recuperação. O link **VERSÃO ANTERIOR** permanece
+  na navegação da página principal;
+- as três funcionalidades de gravação manual permanecem ativas para
+  professor autorizado. **O worker de encerramento automático continua
+  desligado** no banco. Esta publicação não altera cobranças,
+  cancelamentos, presenças nem migrações;
+- redirecionamentos à autenticação preservam o caminho solicitado tanto
+  na versão principal quanto na de contingência.
+
+**Roll back de navegação:** em caso de incidente, abrir imediatamente
+`/roteiro-da-aula-legado/`, restaurar o HTML anterior em
+`/roteiro-da-aula/index.html` usando esse arquivo e manter a automação
+desligada. Não apagar registros reais já confirmados na v2.
+
+**SEO e indexação:** a mudança afeta o conteúdo da rota administrativa
+`/roteiro-da-aula/` e inclui novas rotas privadas. Todas usam
+`noindex, nofollow`; foram incluídos `Disallow` em `robots.txt` para
+o endereço alternativo e o legado. Não acrescentar nenhuma delas ao
+sitemap. O responsável foi informado desse impacto antes da promoção.
+
+**Etapa seguinte:** verificar a publicação efetiva da versão principal,
+login administrativo, uma aula real supervisionada e preservação do
+worker desativado antes de considerar o encerramento automático.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual

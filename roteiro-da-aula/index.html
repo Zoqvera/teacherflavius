@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Roteiro da Aula - Teacher Flávio</title>
+  <title>Roteiro da Aula | Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
   <script src="/supabase_config.js?v=20260918-1"></script>
   <script src="/module_loader.js?v=20260902-2"></script>
@@ -12,40 +12,36 @@
   <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
   <link rel="stylesheet" href="/academic_workflow.css?v=20261022-previous-studies-1">
   <link rel="stylesheet" href="/conversation_question_cards.css?v=20261004-1">
-  <link rel="stylesheet" href="/teacher_lesson_presentations.css?v=20261020-always-visible-1">
+  <link rel="stylesheet" href="/roteiro-da-aula-v2/styles.css?v=20261022-etapa4">
 </head>
 <body class="auth-checking">
   <main class="academic-shell">
-    <nav class="academic-top-links" aria-label="Navegação">
+    <nav class="academic-top-links" aria-label="Navegação principal">
       <a class="academic-top-link" href="/professor/">ÁREA DO PROFESSOR</a>
-      <a class="academic-top-link" href="/turmas/">TURMAS</a>
+      <a class="academic-top-link" href="/roteiro-da-aula-legado/">VERSÃO ANTERIOR</a>
     </nav>
-
     <header class="academic-header">
-      <p class="academic-kicker">PAUTA OPERACIONAL</p>
+      <p class="academic-kicker">ROTEIRO DA AULA · ÁREA DO PROFESSOR</p>
       <h1>ROTEIRO DA AULA</h1>
-      <p class="academic-description">Apresentações previstas, histórico de perguntas estudadas, preparação para hoje e revisões programadas para cada aula.</p>
-      <p id="teacherPlanStatus" class="academic-status" role="status">Carregando roteiro...</p>
+      <p class="academic-description">Apresentações, avaliações de perguntas e frequência organizadas por turma. O encerramento automático das aulas permanece desativado. A versão anterior está disponível como contingência.</p>
+      <p id="workspaceStatus" class="academic-status" role="status">Verificando acesso...</p>
     </header>
-
     <div class="academic-toolbar">
-      <label for="teacherPlanDate" class="academic-muted">Data da aula</label>
-      <input id="teacherPlanDate" type="date">
-      <button id="reloadTeacherPlan" class="academic-button" type="button">ATUALIZAR</button>
+      <label class="academic-muted" for="workspaceDate">Data da aula</label>
+      <input type="date" id="workspaceDate">
+      <button class="academic-button" id="workspaceReload" type="button">ATUALIZAR</button>
     </div>
-
-    <div id="teacherPlanContainer"></div>
+    <nav id="workspaceBreadcrumbs" class="workspace-breadcrumbs" aria-label="Caminho de navegação"></nav>
+    <div id="workspaceContent" aria-live="polite"></div>
   </main>
-
   <script src="/resource_waiter.js?v=20260902-2"></script>
   <script src="/conversation_question_card_renderer.js?v=20261004-1"></script>
   <script src="/academic_workflow_service.js?v=20261022-previous-studies-1"></script>
   <script src="/teacher_lesson_presentations.js?v=20261020-always-visible-1"></script>
-  <script src="/roteiro-da-aula/app.js?v=20261022-previous-studies-1"></script>
-  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
-  <script src="/site_asset_loader.js?v=20260902-1"></script>
-  <script src="/site_runtime_config.js?v=20260903-1"></script>
-  <script src="/site_page_runtime.js?v=20260903-1"></script>
-  <script defer src="/site_footer.js?v=20260820-desktop-menu-1"></script>
+  <script src="/roteiro-da-aula-v2/model.js?v=20261022-etapa1"></script>
+  <script src="/roteiro-da-aula-v2/presentation_registration.js?v=20261022-etapa2"></script>
+  <script src="/roteiro-da-aula-v2/question_ratings.js?v=20261022-etapa3"></script>
+  <script src="/roteiro-da-aula-v2/session_lifecycle.js?v=20261022-etapa4"></script>
+  <script src="/roteiro-da-aula-v2/app.js?v=20261025-etapa7c2"></script>
 </body>
 </html>

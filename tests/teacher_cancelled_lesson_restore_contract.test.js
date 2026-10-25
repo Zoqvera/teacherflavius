@@ -14,7 +14,7 @@ const revokedGuard = fs.readFileSync(
 );
 const teacherApp = fs.readFileSync(path.join(root, "roteiro-da-aula/app.js"), "utf8");
 const workflow = fs.readFileSync(path.join(root, "academic_workflow_service.js"), "utf8");
-const page = fs.readFileSync(path.join(root, "roteiro-da-aula/index.html"), "utf8");
+const page = fs.readFileSync(path.join(root, "roteiro-da-aula-legado/index.html"), "utf8");
 
 test("cancelled students remain in the lesson plan with their academic activity", () => {
   assert.match(migration, /create or replace function public\.get_teacher_lesson_plan/i);

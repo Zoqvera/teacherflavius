@@ -13,6 +13,8 @@ const app = read("roteiro-da-aula-v2/app.js");
 const teacherDashboard = read("professor.html");
 const current = read("roteiro-da-aula/index.html");
 const preview = read("roteiro-da-aula-v2/index.html");
+const legacy = read("roteiro-da-aula-legado/index.html");
+const robots = read("robots.txt");
 
 test("production preflight is strictly read-only and checks exact migration ledger", () => {
   assert.match(preflight, /BEGIN READ ONLY;/);
@@ -43,7 +45,7 @@ test("rollback disables only the automation row under the common writer lock", (
   assert.doesNotMatch(rollback, /\b(?:DELETE FROM|TRUNCATE|DROP TABLE|UPDATE public\.|INSERT INTO|cron\.unschedule)\b/i);
 });
 
-test("v2 manual recording enabled without promoting dashboard navigation or worker", () => {
+test("v2 manual recording now powers canonical route with legacy and worker fallback", () => {
   for (const flag of [
     "PRESENTATION_REGISTRATION_ENABLED",
     "QUESTION_RATINGS_ENABLED",
@@ -52,7 +54,11 @@ test("v2 manual recording enabled without promoting dashboard navigation or work
     assert.match(app, new RegExp("const " + flag + " = true;"));
   }
   assert.match(teacherDashboard, /href="\/roteiro-da-aula\/"/);
-  assert.match(current, /src="\/roteiro-da-aula\/app\.js/);
-  assert.doesNotMatch(current, /roteiro-da-aula-v2/);
+  assert.match(current, /src="\/roteiro-da-aula-v2\/app\.js/);
+  assert.match(legacy, /src="\/roteiro-da-aula\/app\.js/);
+  assert.match(current, /href="\/roteiro-da-aula-legado\/"/);
+  assert.match(robots, /Disallow: \/roteiro-da-aula-legado\//);
+  assert.match(robots, /Disallow: \/roteiro-da-aula-v2\//);
+  assert.match(current, /<meta name="robots" content="noindex, nofollow">/);
   assert.match(preview, /<meta name="robots" content="noindex, nofollow">/);
 });

@@ -63,7 +63,7 @@
   }
 
   function redirectToLogin() {
-    window.location.href = "/login/?next=" + encodeURIComponent("/roteiro-da-aula/");
+    window.location.href = "/login/?next=" + encodeURIComponent(window.location.pathname);
   }
 
   function lessonStatus(item) {

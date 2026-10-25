@@ -40,6 +40,8 @@ Disallow: /planos-semanais/
 Disallow: /roteiro-de-estudos/
 Disallow: /o-que-fazer/
 Disallow: /roteiro-da-aula/
+Disallow: /roteiro-da-aula-v2/
+Disallow: /roteiro-da-aula-legado/
 Disallow: /roteiro_de_estudos.html
 Disallow: /licao/
 Disallow: /pagamento/

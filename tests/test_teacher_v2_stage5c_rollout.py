@@ -71,12 +71,13 @@ class TeacherV2Stage5CContracts(unittest.TestCase):
         self.assertNotIn("pull_request_target", workflow)
         self.assertNotIn("supabase db push", workflow)
 
-    def test_manual_records_enabled_only_in_v2_and_legacy_route_unchanged(self):
+    def test_manual_records_enabled_on_primary_and_previous_ui_preserved(self):
         app = read("roteiro-da-aula-v2/app.js")
         for gate in ("PRESENTATION_REGISTRATION_ENABLED",
                      "QUESTION_RATINGS_ENABLED", "SESSION_LIFECYCLE_ENABLED"):
             self.assertIn(f"const {gate} = true;", app)
-        self.assertIn("src=\"/roteiro-da-aula/app.js", read("roteiro-da-aula/index.html"))
+        self.assertIn("src=\"/roteiro-da-aula-v2/app.js", read("roteiro-da-aula/index.html"))
+        self.assertIn("src=\"/roteiro-da-aula/app.js", read("roteiro-da-aula-legado/index.html"))
 
 
 if __name__ == "__main__":
