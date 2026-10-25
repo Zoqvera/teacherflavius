@@ -9,7 +9,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const sql = read("supabase/migrations/20261022153922_teacher_study_history_for_plan_20261022.sql");
 const serviceSource = read("academic_workflow_service.js");
 const teacherApp = read("roteiro-da-aula/app.js");
-const teacherPage = read("roteiro-da-aula/index.html");
+const teacherPage = read("roteiro-da-aula-legado/index.html");
 const css = read("academic_workflow.css");
 
 test("history RPC is teacher-only and reads first study dates without writing them", () => {
