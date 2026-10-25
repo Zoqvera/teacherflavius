@@ -74,7 +74,7 @@ test.afterAll(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
 });
 
-async function openPreview(page, role = "teacher") {
+async function openPreview(page, role = "teacher", activeClass = false) {
   await page.route("https://cdn.jsdelivr.net/**", (route) => {
     // Supabase SDK is replaced by an isolated fake before any page script runs.
     return route.fulfill({
@@ -84,7 +84,7 @@ async function openPreview(page, role = "teacher") {
     });
   });
 
-  await page.addInitScript(({ userRole }) => {
+  await page.addInitScript(({ userRole, isActiveClass }) => {
     const teacherId = "98000000-0000-4000-8000-000000000001";
     const studentId = "99000000-0000-4000-8000-000000000006";
     const questionId = "97000000-0000-4000-8000-000000000016";
@@ -94,6 +94,10 @@ async function openPreview(page, role = "teacher") {
       window.sessionStorage.getItem("teacherV2Calls") || "[]"
     );
     window.__teacherV2NetworkError = false;
+    window.__teacherV2RejectWrites = false;
+    window.__teacherV2FixtureState = { presented: false, attendance: "scheduled" };
+    window.__teacherV2ClassStart = isActiveClass
+      ? new Date(Date.now() - 10 * 60 * 1000).toISOString() : null;
     window.ResourceWaiter = {
       waitUntil: async (predicate) => Boolean(predicate())
     };
@@ -111,7 +115,26 @@ async function openPreview(page, role = "teacher") {
             name === "get_teacher_v2_closed_sessions") {
           return { data: [], error: null };
         }
-        throw new Error("Unexpected write RPC in disabled preview: " + name);
+        if (window.__teacherV2RejectWrites) {
+          return { data: null, error: { message: "Escrita simulada rejeitada pelo servidor." } };
+        }
+        if (name === "mark_teacher_lesson_presented_v2") {
+          window.__teacherV2FixtureState.presented = true;
+          window.__teacherV2FixtureState.attendance = "present";
+          return { data: { ok: true, lesson_number: 1,
+            occurrence_id: "91000000-0000-4000-8000-000000000019" }, error: null };
+        }
+        if (name === "rate_teacher_conversation_question_v2") {
+          window.__teacherV2FixtureState.attendance = "present";
+          return { data: { ok: true, rating: "good",
+            occurrence_id: "91000000-0000-4000-8000-000000000019",
+            attendance_status: "present" }, error: null };
+        }
+        if (name === "mark_teacher_v2_participation") {
+          window.__teacherV2FixtureState.attendance = "present";
+          return { data: { ok: true, attendance_status: "present" }, error: null };
+        }
+        throw new Error("Unexpected RPC in synthetic test: " + name);
       },
       from(tableName) {
         if (tableName !== "conversation_questions") {
@@ -154,14 +177,15 @@ async function openPreview(page, role = "teacher") {
           const lesson = {
             class_number: 970007,
             class_name: "TURMA FICTÍCIA",
-            starts_at: date + "T18:00:00-03:00",
+            starts_at: window.__teacherV2ClassStart || date + "T18:00:00-03:00",
             lesson_kind: "regular",
             entry_id: entryId,
             student_id: studentId,
             student_name: "ALUNO FICTÍCIO",
             lesson_number: 1,
-            lesson_status: "planned",
-            attendance_status: "scheduled",
+            lesson_status: window.__teacherV2FixtureState.presented
+              ? "presented" : "planned",
+            attendance_status: window.__teacherV2FixtureState.attendance,
             today_questions: [{
               id: questionId,
               display_order: 1,
@@ -196,7 +220,7 @@ async function openPreview(page, role = "teacher") {
         return item;
       }
     };
-  }, { userRole: role });
+  }, { userRole: role, isActiveClass: activeClass });
 
   await page.goto(baseUrl + PREVIEW_PATH);
 }
@@ -206,17 +230,17 @@ async function enterFictionalClass(page, subject) {
   await page.getByRole("button", { name: /TURMA FICTÍCIA/ }).click();
 }
 
-test("teacher desktop navigates, searches questions, and leaves all writes disabled", async ({ page }) => {
+test("authorized teacher sees enabled controls without implicit writes", async ({ page }) => {
   await openPreview(page);
   await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
   await enterFictionalClass(page, "APRESENTAÇÕES");
   await expect(page.getByRole("heading", { name: "ALUNO FICTÍCIO" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "REGISTRAR APRESENTAÇÃO" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "REGISTRAR APRESENTAÇÃO" })).toBeEnabled();
   await expect(page.getByRole("heading", { name: "AULAS CANCELADAS" })).toBeVisible();
 
   await page.getByRole("button", { name: "INÍCIO" }).click();
   await enterFictionalClass(page, "PERGUNTAS");
-  await expect(page.getByRole("button", { name: "BOM" }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "BOM" }).first()).toBeEnabled();
   await page.getByText("TODAS AS PERGUNTAS ESTUDADAS (2)").click();
   const search = page.getByRole("searchbox", { name: "Buscar entre todas as perguntas estudadas" });
   await search.fill("How are you?");
@@ -229,6 +253,51 @@ test("teacher desktop navigates, searches questions, and leaves all writes disab
     "get_teacher_question_rating_history_v2", "get_teacher_v2_closed_sessions"]);
   await expect(page.locator('a[href="/roteiro-da-aula/"]')).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, nofollow");
+});
+
+test("teacher registers presentation only after a confirmed synthetic RPC", async ({ page }) => {
+  await openPreview(page, "teacher", true);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await enterFictionalClass(page, "APRESENTAÇÕES");
+  await page.getByRole("button", { name: "REGISTRAR APRESENTAÇÃO" }).click();
+  await expect(page.locator("#workspaceStatus")).toContainText("Presença confirmada.");
+  expect(await page.evaluate(() => window.__teacherV2Calls.filter(
+    (name) => name === "mark_teacher_lesson_presented_v2"
+  ))).toHaveLength(1);
+  await expect(page.getByText("APRESENTAÇÃO REGISTRADA")).toBeVisible();
+});
+
+test("teacher evaluates questions with a synthetic acknowledgement", async ({ page }) => {
+  await openPreview(page, "teacher", true);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await enterFictionalClass(page, "PERGUNTAS");
+  await page.getByRole("button", { name: "BOM" }).first().click();
+  await expect(page.locator("#workspaceStatus")).toContainText("Presença confirmada.");
+  expect(await page.evaluate(() => window.__teacherV2Calls.filter(
+    (name) => name === "rate_teacher_conversation_question_v2"
+  ))).toHaveLength(1);
+});
+
+test("teacher records exceptional participation only on an active class", async ({ page }) => {
+  await openPreview(page, "teacher", true);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await enterFictionalClass(page, "PERGUNTAS");
+  await page.getByRole("button", { name: "REGISTRAR PARTICIPAÇÃO" }).click();
+  await expect(page.locator("#workspaceStatus")).toContainText("Presença confirmada.");
+  expect(await page.evaluate(() => window.__teacherV2Calls.filter(
+    (name) => name === "mark_teacher_v2_participation"
+  ))).toHaveLength(1);
+});
+
+test("server write rejection never marks attendance as present", async ({ page }) => {
+  await openPreview(page, "teacher", true);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await enterFictionalClass(page, "PERGUNTAS");
+  await page.evaluate(() => { window.__teacherV2RejectWrites = true; });
+  await page.getByRole("button", { name: "BOM" }).first().click();
+  await expect(page.locator("#workspaceStatus")).toContainText("Escrita simulada rejeitada");
+  expect(await page.evaluate(() => window.__teacherV2FixtureState.attendance)).toBe("scheduled");
+  await expect(page.getByRole("button", { name: "BOM" }).first()).toBeEnabled();
 });
 
 test("guest is sent to login without querying the protected teacher workflow", async ({ page }) => {
@@ -256,7 +325,7 @@ test("mobile phone has no horizontal overflow and exposes the legacy fallback", 
     content: document.documentElement.scrollWidth
   }));
   expect(width.content).toBeLessThanOrEqual(width.viewport + 1);
-  await expect(page.getByRole("button", { name: "BOM" }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "BOM" }).first()).toBeEnabled();
 
   const fallback = page.locator('a[href="/roteiro-da-aula/"]');
   await expect(fallback).toBeVisible();
