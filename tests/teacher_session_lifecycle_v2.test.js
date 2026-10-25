@@ -152,10 +152,10 @@ test("manual participation and post-closure correction are administrative and au
   assert.match(SQL, /from private\.academic_class_session_finalizations closed/i);
 });
 
-test("v2 UI only previews closure and exceptional participation; legacy remains active", () => {
-  assert.match(APP, /SESSION_LIFECYCLE_ENABLED = false/);
-  assert.match(APP, /PRESENTATION_REGISTRATION_ENABLED = false/);
-  assert.match(APP, /QUESTION_RATINGS_ENABLED = false/);
+test("v2 supports manual attendance while automatic closure is still off and legacy remains active", () => {
+  assert.match(APP, /SESSION_LIFECYCLE_ENABLED = true/);
+  assert.match(APP, /PRESENTATION_REGISTRATION_ENABLED = true/);
+  assert.match(APP, /QUESTION_RATINGS_ENABLED = true/);
   assert.match(APP, /state\.lifecycle\.getClosedSessions\(date\)/);
   assert.match(APP, /markParticipation\(item, control\)/);
   assert.match(APP, /correctAttendance\(item, control\)/);
