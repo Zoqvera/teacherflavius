@@ -875,6 +875,10 @@ jobs:
           grep -Fq 'TEACHER_V2_STAGE6C_LIVE_RPCS_PASSED' \
             "${RUNNER_TEMP}/teacher-v2-disposable-test.log"
 
+      - name: Run stage 6D parallel PostgreSQL sessions
+        shell: bash
+        run: bash scripts/test_teacher_v2_stage6d_concurrency.sh
+
       - name: Stop disposable Supabase stack
         if: always()
         run: supabase stop --no-backup
