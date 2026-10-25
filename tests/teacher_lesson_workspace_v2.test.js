@@ -32,7 +32,7 @@ test("preview requires an authenticated teacher and does not perform lesson muta
   assert.match(app, /good: "BOM"/);
   assert.match(app, /medium: "MÉDIO"/);
   assert.match(app, /improve: "MELHORAR"/);
-  assert.match(app, /QUESTION_RATINGS_ENABLED = false/);
+  assert.match(app, /QUESTION_RATINGS_ENABLED = true/);
   assert.match(app, /control\.disabled = true/);
   assert.doesNotMatch(app, /\.setAttendance\(|\.markLessonPresented\(|\.rateQuestion\(/);
   assert.doesNotMatch(app, /\.insert\(|\.update\(|\.delete\(/);
