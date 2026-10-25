@@ -1,0 +1,42 @@
+name: Teacher v2 browser homologation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "roteiro-da-aula-v2/**"
+      - "roteiro-da-aula/**"
+      - "tests/browser/teacher_v2_readonly.spec.cjs"
+      - "academic_workflow.css"
+      - "aula_template.css"
+      - ".github/workflows/teacher-v2-browser-homologation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install pinned browser test runner
+        run: |
+          npm ci --ignore-scripts
+          npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.64.1
+
+      - name: Install Chromium and OS dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Exercise teacher preview with synthetic browser sessions
+        run: npx playwright test tests/browser/teacher_v2_readonly.spec.cjs --workers=1 --reporter=line
+        env:
+          CI: "true"
