@@ -860,6 +860,7 @@ jobs:
             cat supabase/migrations/20261022234500_fix_teacher_v2_closure_day_alias.sql
             cat tests/sql/teacher_v2_disposable_rehearsal.sql
             cat tests/sql/teacher_v2_authenticated_admin_rehearsal.sql
+            cat tests/sql/teacher_v2_stage6c_live_rpcs.sql
             echo 'ROLLBACK;'
           } | docker exec -i "$DB_CONTAINER" \
             psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
@@ -869,6 +870,9 @@ jobs:
             "${RUNNER_TEMP}/teacher-v2-disposable-test.log"
 
           grep -Fq 'TEACHER_V2_AUTH_ADMIN_REHEARSAL_PASSED' \
+            "${RUNNER_TEMP}/teacher-v2-disposable-test.log"
+
+          grep -Fq 'TEACHER_V2_STAGE6C_LIVE_RPCS_PASSED' \
             "${RUNNER_TEMP}/teacher-v2-disposable-test.log"
 
       - name: Stop disposable Supabase stack
