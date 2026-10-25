@@ -76,7 +76,8 @@ class TeacherV2Stage5CContracts(unittest.TestCase):
         for gate in ("PRESENTATION_REGISTRATION_ENABLED",
                      "QUESTION_RATINGS_ENABLED", "SESSION_LIFECYCLE_ENABLED"):
             self.assertIn(f"const {gate} = true;", app)
-        self.assertIn("src=\"/roteiro-da-aula/app.js", read("roteiro-da-aula/index.html"))
+        self.assertIn("src=\"/roteiro-da-aula-v2/app.js", read("roteiro-da-aula/index.html"))
+        self.assertIn("src=\"/roteiro-da-aula/app.js", read("roteiro-da-aula-legado/index.html"))
 
 
 if __name__ == "__main__":
