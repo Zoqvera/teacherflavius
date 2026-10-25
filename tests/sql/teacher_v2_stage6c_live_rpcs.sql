@@ -201,16 +201,15 @@ declare
   regular_entry uuid := current_setting('teacher_v2_6c.student_present_entry')::uuid;
   rejected_entry uuid := current_setting('teacher_v2_6c.student_reject_entry')::uuid;
   lesson_date date := current_setting('teacher_v2_6c.lesson_date')::date;
-  question_id uuid := '97000000-0000-4000-8000-000000000013'::uuid;
 begin
   if (select count(*) from private.conversation_question_practice_log
-      where question_id=question_id
+      where question_id='97000000-0000-4000-8000-000000000013'::uuid
         and student_id='99000000-0000-4000-8000-000000000006'::uuid) <> 1 then
     raise exception 'Stage 6C: duplicate regular evaluations';
   end if;
 
   if (select count(*) from private.conversation_question_practice_log
-      where question_id=question_id
+      where question_id='97000000-0000-4000-8000-000000000013'::uuid
         and student_id='99000000-0000-4000-8000-000000000008'::uuid) <> 1 then
     raise exception 'Stage 6C: missing makeup evaluation';
   end if;
