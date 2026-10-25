@@ -314,6 +314,44 @@ homologação de banco não substitui testes em navegador autenticado,
 acessibilidade móvel, validação supervisionada e plano de reversão
 necessários antes de ativar a v2.
 
+## Etapa 7A — homologação visual em navegador, sem escrita (25/10/2026)
+
+Adicionado ensaio em navegador Chromium com dados e identidades
+**inteiramente fictícios**, executado por
+`.github/workflows/teacher-v2-browser-homologation.yml`.
+A página real `/roteiro-da-aula-v2/` e os scripts JavaScript reais
+são carregados a partir do repositório, enquanto autenticação, respostas
+do banco e apresentações são simuladas no próprio teste.
+
+Cobertura exigida antes de promover a etapa:
+- Visitante sem sessão é encaminhado a `/login/` antes de consultar turmas;
+- Usuário autenticado sem privilégio é encaminhado a `/acesso-negado/`;
+- Professor fictício navega entre apresentações, perguntas e turmas;
+- Cancelamentos aparecem separados e os registros continuam bloqueados;
+- Busca de perguntas estudadas e troca de data funcionam;
+- Falha temporária de leitura pode ser recuperada pelo botão ATUALIZAR;
+- Em viewport móvel de 375 px não existe transbordamento horizontal;
+- O acesso ao roteiro antigo permanece explícito e funcional;
+- A prévia mantém `noindex, nofollow` e não chama RPCs de escrita.
+
+**Limitação deliberada:** o ensaio prova interatividade no Chromium,
+mas não é uma sessão real de um professor contra o Supabase operacional.
+A etapa 7B exige validação manual autenticada e somente leitura
+em dispositivos reais antes de habilitar flags, automações ou trocar
+qualquer entrada da área administrativa.
+
+### Plano de retorno para a etapa 7B
+
+O fallback permanente deverá ser a rota existente
+`/roteiro-da-aula/`, que não é modificada por esta etapa.
+Em caso de falha durante uma futura implantação, restaurar o link
+administrativo antigo, desativar imediatamente os três controles de
+escrita da interface v2 e definir
+`private.academic_v2_automation_control.enabled=false`,
+`enabled_from=null`, preservando registros auditados já existentes.
+A ativação do worker será uma operação **separada**, aprovada apenas
+após revisão do escopo e da data `enabled_from`.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual
