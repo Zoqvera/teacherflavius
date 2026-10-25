@@ -9,7 +9,7 @@ const read = (filename) => fs.readFileSync(path.join(ROOT, filename), "utf8");
 const SOURCE = read("roteiro-da-aula-v2/question_ratings.js");
 const APP = read("roteiro-da-aula-v2/app.js");
 const PAGE = read("roteiro-da-aula-v2/index.html");
-const OLD_PAGE = read("roteiro-da-aula/index.html");
+const OLD_PAGE = read("roteiro-da-aula-legado/index.html");
 const MIGRATION = read("supabase/migrations/20261022202000_teacher_question_ratings_v2.sql");
 const context = vm.createContext({ window: {} });
 vm.runInContext(SOURCE, context);
