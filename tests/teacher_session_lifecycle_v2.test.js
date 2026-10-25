@@ -9,7 +9,7 @@ const read = (relative) => fs.readFileSync(path.join(ROOT, relative), "utf8");
 const SOURCE = read("roteiro-da-aula-v2/session_lifecycle.js");
 const PAGE = read("roteiro-da-aula-v2/index.html");
 const APP = read("roteiro-da-aula-v2/app.js");
-const OLD_PAGE = read("roteiro-da-aula/index.html");
+const OLD_PAGE = read("roteiro-da-aula-legado/index.html");
 const SQL = read("supabase/migrations/20261022212500_academic_v2_auto_attendance_and_closure.sql");
 const RLS_SQL = read("supabase/migrations/20261022214500_academic_v2_private_table_rls.sql");
 
