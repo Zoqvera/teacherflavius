@@ -48,7 +48,7 @@ test("v2 presentation writes never call the legacy RPC directly", () => {
   assert.match(V2_APP, /client\.rpc\("mark_teacher_lesson_presented_v2"/);
   assert.doesNotMatch(V2_APP, /client\.rpc\("mark_teacher_lesson_presented"/);
   assert.match(SQL, /return public\.mark_teacher_lesson_presented\(/);
-  assert.match(V2_APP, /PRESENTATION_REGISTRATION_ENABLED = false/);
+  assert.match(V2_APP, /PRESENTATION_REGISTRATION_ENABLED = true/);
 });
 
 test("teacher-only preview stays restricted and ordinary operational route is unchanged", () => {
@@ -56,8 +56,8 @@ test("teacher-only preview stays restricted and ordinary operational route is un
   assert.match(ACTIVE_INDEX, /src="\/roteiro-da-aula\/app\.js/);
   assert.doesNotMatch(ACTIVE_INDEX, /roteiro-da-aula-v2/);
   assert.match(V2_APP, /rpc\("is_teacher_admin"\)/);
-  assert.match(V2_APP, /QUESTION_RATINGS_ENABLED = false/);
-  assert.match(V2_APP, /SESSION_LIFECYCLE_ENABLED = false/);
+  assert.match(V2_APP, /QUESTION_RATINGS_ENABLED = true/);
+  assert.match(V2_APP, /SESSION_LIFECYCLE_ENABLED = true/);
   assert.match(CLOSURE_SQL, /enabled boolean not null default false/);
   assert.match(CLOSURE_SQL, /candidate\.starts_at >= control\.enabled_from/);
   assert.doesNotMatch(V2_INDEX + V2_APP, /\bonline\b/i);
