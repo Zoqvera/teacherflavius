@@ -71,7 +71,7 @@ class TeacherV2Stage5CContracts(unittest.TestCase):
         self.assertNotIn("pull_request_target", workflow)
         self.assertNotIn("supabase db push", workflow)
 
-    def test_manual_records_enabled_only_in_v2_and_legacy_route_unchanged(self):
+    def test_manual_records_enabled_on_primary_and_previous_ui_preserved(self):
         app = read("roteiro-da-aula-v2/app.js")
         for gate in ("PRESENTATION_REGISTRATION_ENABLED",
                      "QUESTION_RATINGS_ENABLED", "SESSION_LIFECYCLE_ENABLED"):
