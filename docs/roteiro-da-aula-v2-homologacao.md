@@ -283,6 +283,37 @@ continuam intactos. **O cenário de corrida entre duas conexões
 PostgreSQL distintas ainda deve ser ensaiado separadamente**
 antes da ativação. Nenhuma gravação foi feita em alunos reais.
 
+## Etapa 6D — concorrência real entre conexões PostgreSQL (25/10/2026)
+
+A etapa 6C validou requisições sequenciais numa única conexão. A etapa
+6D acrescenta `scripts/test_teacher_v2_stage6d_concurrency.sh` ao workflow
+`Validate Supabase baseline restore`, com dois processos `psql`
+independentes contra um Supabase CLI **descartável**.
+
+- A primeira sessão grava uma avaliação e mantém o bloqueio transacional.
+- A segunda sessão tenta reavaliar a mesma pergunta com outra nota.
+  O teste consulta `pg_locks` e exige que ela **esteja aguardando**
+  o advisory lock, não apenas que as chamadas sejam sequenciais.
+- Enquanto a primeira sessão mantém o bloqueio, o worker habilitado
+  somente na cópia descartável precisa desistir sem fechar aulas.
+- Após os dois commits, a nota original deve continuar registrada,
+  com `already_rated=true` na segunda resposta e sem duplicação.
+- A passagem seguinte do worker deve encerrar exatamente uma aula
+  fictícia vencida, gerar uma ausência auditada e ser idempotente
+  na repetição.
+- A prova termina com o controle de encerramento desligado e
+  verificações de frequência, avaliações e snapshots.
+
+O ensaio usa identidades e turmas sintéticas. Não se conecta ao projeto
+Supabase de produção, não modifica mensalidades, alunos reais, página
+operacional, URLs ou flags de produção. O ambiente é destruído pelo
+workflow, mesmo quando um teste falha.
+
+**Critério para integração:** workflow completo aprovado. Esta
+homologação de banco não substitui testes em navegador autenticado,
+acessibilidade móvel, validação supervisionada e plano de reversão
+necessários antes de ativar a v2.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual
