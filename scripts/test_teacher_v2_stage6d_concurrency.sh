@@ -61,14 +61,16 @@ SET LOCAL application_name = 'teacher_v2_6d_writer_a';
 select set_config('request.jwt.claims',
   '{"sub":"98000000-0000-4000-8000-000000000001","email":"teacher-v2-6d-admin@invalid.test","role":"authenticated"}',true);
 select set_config('request.jwt.claim.sub','98000000-0000-4000-8000-000000000001',true);
+select set_config('teacher_v2_6d.membership',
+  (select id::text from public.class_students
+   where class_number=970006
+     and user_id='99000000-0000-4000-8000-000000000006'),true);
 SET LOCAL ROLE authenticated;
 select 'FIRST_RATING=' || (result->>'rating') || '|' ||
        (result->>'already_rated') from (
   select public.rate_teacher_conversation_question_v2(
     'regular',
-    (select id from public.class_students
-     where class_number=970006
-       and user_id='99000000-0000-4000-8000-000000000006'),
+    current_setting('teacher_v2_6d.membership')::uuid,
     ((now() at time zone 'America/Sao_Paulo') - interval '15 minutes')::date,
     '97000000-0000-4000-8000-000000000016', 'good'
   ) result
@@ -104,14 +106,16 @@ SET LOCAL application_name = 'teacher_v2_6d_writer_b';
 select set_config('request.jwt.claims',
   '{"sub":"98000000-0000-4000-8000-000000000001","email":"teacher-v2-6d-admin@invalid.test","role":"authenticated"}',true);
 select set_config('request.jwt.claim.sub','98000000-0000-4000-8000-000000000001',true);
+select set_config('teacher_v2_6d.membership',
+  (select id::text from public.class_students
+   where class_number=970006
+     and user_id='99000000-0000-4000-8000-000000000006'),true);
 SET LOCAL ROLE authenticated;
 select 'SECOND_RATING=' || (result->>'rating') || '|' ||
        (result->>'already_rated') from (
   select public.rate_teacher_conversation_question_v2(
     'regular',
-    (select id from public.class_students
-     where class_number=970006
-       and user_id='99000000-0000-4000-8000-000000000006'),
+    current_setting('teacher_v2_6d.membership')::uuid,
     ((now() at time zone 'America/Sao_Paulo') - interval '15 minutes')::date,
     '97000000-0000-4000-8000-000000000016', 'improve'
   ) result
