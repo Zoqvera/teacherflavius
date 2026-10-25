@@ -395,6 +395,10 @@ uma linha. Não apaga registros de frequência, histórico ou auditoria.
    trocar o link da área do professor para a v2. O roteiro legado
    deverá continuar acessível independentemente da navegação.
 
+**Preflight produtivo:** aprovado em 25/10/2026, às 15h26
+(America/Sao_Paulo), com resultado
+`TEACHER_V2_STAGE7C_READ_ONLY_PREFLIGHT_PASSED`.
+
 **Situação da etapa 7C1:** preparação e ensaio das proteções, sem
 implantação funcional. O agendamento e os três controles JavaScript
 continuam desligados; nenhuma operação foi realizada em estudantes,
