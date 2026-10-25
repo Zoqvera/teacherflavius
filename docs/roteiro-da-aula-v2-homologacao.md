@@ -352,6 +352,62 @@ escrita da interface v2 e definir
 A ativação do worker será uma operação **separada**, aprovada apenas
 após revisão do escopo e da data `enabled_from`.
 
+## Etapa 7B — homologação administrativa real (25/10/2026)
+
+O responsável confirmou no atendimento de 25/10/2026 às 15h20
+(horário de Brasília) que revisou a prévia autenticada da v2 e
+considerou a visualização e a navegação corretas.
+Esse aceite é **humano**: não constitui evidência de gravações reais
+de frequência, avaliação ou apresentações e não autoriza, por si só,
+ativar o agendador automático. A interface antiga permanece oficial.
+
+## Etapa 7C1 — preparação da ativação controlada (25/10/2026)
+
+O arquivo `scripts/sql/teacher_v2_stage7c_readonly_preflight.sql`
+faz uma auditoria **somente leitura** antes de qualquer alteração:
+exige 358 migrações, os cinco identificadores originais da v2, RPCs,
+RLS, concessões seguras, um cron revisado e controle de automação
+ainda desligado. Qualquer desvio interrompe o procedimento.
+
+O arquivo `scripts/sql/teacher_v2_stage7c_disable_worker.sql`
+é o retorno de emergência da automação. Utiliza o mesmo bloqueio
+transacional que as escritas e o worker, altera somente o controle
+para `enabled=false`, `enabled_from=null` e confirma exatamente
+uma linha. Não apaga registros de frequência, histórico ou auditoria.
+
+### Sequência obrigatória antes da publicação
+
+1. Confirmar CI integral aprovado, revisão `main` publicada,
+   backup recuperável recente e a execução do preflight read-only
+   exatamente sobre o estado produtivo que será alterado.
+2. Liberar gravações da interface v2 **em alteração separada e
+   revisada**, mantendo a rota atual como fallback. Exigir verificação
+   autenticada de uma aula futura supervisionada; não criar presenças
+   nem notas fictícias em contas reais.
+3. Só então considerar a ativação do worker, em operação específica,
+   com `enabled_from` **posterior ao momento da autorização**;
+   esse marco impede encerramentos retroativos. Confirmar a data/
+   horário adotados, a janela de 90 minutos e os primeiros resultados.
+4. Validar frequência e auditoria após a primeira aula elegível.
+   Qualquer anomalia exige desativar imediatamente o worker e voltar
+   ao roteiro legado, preservando todos os registros existentes.
+5. Somente após aceite explícito da mudança de entrada administrativa,
+   trocar o link da área do professor para a v2. O roteiro legado
+   deverá continuar acessível independentemente da navegação.
+
+**Situação da etapa 7C1:** preparação e ensaio das proteções, sem
+implantação funcional. O agendamento e os três controles JavaScript
+continuam desligados; nenhuma operação foi realizada em estudantes,
+cancelamentos, créditos ou cobranças.
+
+### Impacto potencial no SEO
+
+Esta etapa não muda sitemap, canonical, `robots`, links nem URLs.
+Uma futura troca de link de `/roteiro-da-aula/` para
+`/roteiro-da-aula-v2/` altera a navegação interna, embora ambas
+continuem `noindex, nofollow`. Comunicar a mudança antes de
+decidir a troca; jamais incluir interfaces administrativas no sitemap.
+
 ## SEO
 
 Ambas as rotas administrativas usam `noindex, nofollow`. Uma eventual
