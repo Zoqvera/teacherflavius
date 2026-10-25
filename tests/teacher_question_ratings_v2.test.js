@@ -176,8 +176,8 @@ test("SQL provides teacher-only additive RPCs and preserves historic per-lesson 
   assert.doesNotMatch(MIGRATION, /(?:delete|truncate)\s+(?:from\s+)?private\.conversation_question_practice_log/i);
 });
 
-test("new ratings stay disabled and existing teacher route remains untouched", () => {
-  assert.match(APP, /const QUESTION_RATINGS_ENABLED = false/);
+test("v2 teacher ratings enabled while existing route remains untouched", () => {
+  assert.match(APP, /const QUESTION_RATINGS_ENABLED = true/);
   assert.match(APP, /state\.questionRatings\.rate\(/);
   assert.match(APP, /rateQuestion\(item, question, rating, control\)/);
   assert.match(APP, /"TODAS AS PERGUNTAS ESTUDADAS"/);
