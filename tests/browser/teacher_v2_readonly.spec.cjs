@@ -217,7 +217,7 @@ test("teacher desktop navigates, searches questions, and leaves all writes disab
   await page.getByRole("button", { name: "INÍCIO" }).click();
   await enterFictionalClass(page, "PERGUNTAS");
   await expect(page.getByRole("button", { name: "BOM" }).first()).toBeDisabled();
-  await page.getByText(/TODAS AS PERGUNTAS ESTUDADAS \(/).click();
+  await page.getByText("TODAS AS PERGUNTAS ESTUDADAS (2)").click();
   const search = page.getByRole("searchbox", { name: "Buscar entre todas as perguntas estudadas" });
   await search.fill("How are you?");
   await expect(page.locator(".workspace-question:not([hidden]) .conversation-card").filter({
