@@ -34,6 +34,13 @@
     if (description) description.hidden = true;
   }
 
+  function showLegacy() {
+    const legacy = document.getElementById("legacyActionPlan");
+    const description = document.getElementById("legacyActionPlanDescription");
+    if (legacy) legacy.hidden = false;
+    if (description) description.hidden = false;
+  }
+
   async function loadWelcome() {
     try {
       const plan = await service.getMyActionPlan();
@@ -372,14 +379,16 @@
       return;
     }
 
-    document.body.classList.remove("auth-checking");
-
     if (isNewFlowEnabled() && !isSecondPartPage()) {
       showWelcome();
+      document.body.classList.remove("auth-checking");
       trackPreparation("preparation_welcome_view");
       await loadWelcome();
       return;
     }
+
+    if (!isSecondPartPage()) showLegacy();
+    document.body.classList.remove("auth-checking");
 
     if (isSecondPartPage()) {
       initializeQuestionStudiedDialog();
