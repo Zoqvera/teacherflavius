@@ -27,6 +27,13 @@ test("the new preparation journey is disabled by default until separately activa
   assert.match(styles, /#legacyActionPlan\[hidden\][\s\S]*display: none !important/);
 });
 
+test("the original plan is hidden during authentication and eligibility checks", () => {
+  assert.match(landing, /<p id="legacyActionPlanDescription"[^>]* hidden>/);
+  assert.match(landing, /<div id="legacyActionPlan"[^>]* hidden>/);
+  assert.match(landingApp, /function showLegacy\(\)/);
+  assert.match(landingApp, /if \(!isSecondPartPage\(\)\) showLegacy\(\)/);
+});
+
 test("welcome respects the exact copy and next-lesson resolution", () => {
   assert.match(landing, /Sua aula é composta de duas partes:/);
   assert.match(landing, /<li>Apresentação<\/li>/);

@@ -85,12 +85,27 @@ async function runStudentScenario({
   planError = null,
   reviewError = null,
   markError = null,
-  activeStudent = true
+  activeStudent = true,
+  holdEligibility = false
 } = {}) {
   const document = makeDocument([
     "studentPreparationWelcome",
-    "startConversationFallback"
+    "startConversationFallback",
+    "legacyActionPlan",
+    "legacyActionPlanDescription"
   ]);
+  let releaseEligibility;
+  const eligibilityGate = holdEligibility
+    ? new Promise((resolve) => { releaseEligibility = resolve; })
+    : null;
+  const preparationFlow = { enabled: holdEligibility ? false : enabled };
+  if (eligibilityGate) {
+    preparationFlow.resolveEligibility = async function () {
+      await eligibilityGate;
+      preparationFlow.enabled = enabled;
+      return enabled;
+    };
+  }
   const calls = { plans: 0, reviews: 0, studied: [], replaced: [] };
   const service = {
     async isActiveStudent() {
@@ -120,7 +135,7 @@ async function runStudentScenario({
   };
   const window = {
     location,
-    StudentPreparationFlow: { enabled },
+    StudentPreparationFlow: preparationFlow,
     SUPABASE_CONFIG: {},
     Auth: {
       isConfigured: () => true,
@@ -144,7 +159,7 @@ async function runStudentScenario({
   }, { filename: "o-que-fazer/app.js" });
   await flush();
 
-  return { window, document, calls, service, node: (id) => document.getElementById(id) };
+  return { window, document, calls, service, releaseEligibility, node: (id) => document.getElementById(id) };
 }
 
 function question(id, marked = false, worked = false, displayOrder = null) {
@@ -157,6 +172,25 @@ function question(id, marked = false, worked = false, displayOrder = null) {
     studied: false
   };
 }
+
+test("legacy content never flashes while eligibility is pending", async () => {
+  for (const enabled of [true, false]) {
+    const state = await runStudentScenario({
+      enabled,
+      holdEligibility: true,
+      plan: { lesson: { number: 9, has_material: true }, questions: [] }
+    });
+    assert.equal(state.node("legacyActionPlan").hidden, true);
+    assert.equal(state.node("legacyActionPlanDescription").hidden, true);
+    assert.equal(state.node("studentPreparationWelcome").hidden, true);
+
+    state.releaseEligibility();
+    await flush();
+    assert.equal(state.node("legacyActionPlan").hidden, enabled);
+    assert.equal(state.node("legacyActionPlanDescription").hidden, enabled);
+    assert.equal(state.node("studentPreparationWelcome").hidden, !enabled);
+  }
+});
 
 test("disabled rollout preserves the original O QUE FAZER experience", async () => {
   const state = await runStudentScenario({
