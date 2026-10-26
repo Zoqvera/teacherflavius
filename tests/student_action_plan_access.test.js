@@ -76,6 +76,6 @@ test("student pages load the updated versioned scripts without changing indexing
     assert.match(page, /academic_workflow_service\.js\?v=20261022-apresentacoes-1/);
     assert.match(page, /<meta name="robots" content="noindex[, ]+nofollow">/);
   }
-  assert.match(actionPlanPage, /o-que-fazer\/app\.js\?v=20261022-apresentacoes-1/);
+  assert.match(actionPlanPage, /o-que-fazer\/app\.js\?v=20261026-no-legacy-flash-1/);
   assert.match(lessonPage, /licao\.js\?v=20261022-apresentacoes-1/);
 });
