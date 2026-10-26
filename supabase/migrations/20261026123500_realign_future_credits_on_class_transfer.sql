@@ -33,7 +33,7 @@ BEGIN
     class.class_weekday,
     class.class_start_time,
     class.class_name,
-    pg_catalog.greatest(
+    greatest(
       membership.first_lesson_date,
       class.first_lesson_date
     ),
@@ -51,7 +51,7 @@ BEGIN
   JOIN public.profiles student
     ON student.id = membership.user_id
    AND student.enrolled = true
-   AND pg_catalog.coalesce(student.archived, false) = false
+   AND coalesce(student.archived, false) = false
   WHERE membership.user_id = target_student_id
     AND membership.class_number = target_class_number;
 
@@ -60,7 +60,7 @@ BEGIN
     RETURN 0;
   END IF;
 
-  first_candidate_day := pg_catalog.greatest(
+  first_candidate_day := greatest(
     (pg_catalog.now() AT TIME ZONE 'America/Sao_Paulo')::date,
     target_first_lesson
   );
@@ -129,7 +129,7 @@ BEGIN
         (first_candidate_day + 365)::timestamp,
         INTERVAL '1 day'
       ) AS lesson_day
-      WHERE pg_catalog.extract(isodow FROM lesson_day)::integer = target_weekday
+      WHERE extract(isodow FROM lesson_day)::integer = target_weekday
     ) scheduled
     WHERE scheduled.starts_at > pg_catalog.now()
       AND (
