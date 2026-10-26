@@ -578,7 +578,7 @@
       })) state.selectedClass = null;
       render();
       status(successMessage || state.groups.length +
-        " turma(s) carregada(s). Registros disponíveis. Encerramento automático desativado." +
+        " turma(s) carregada(s). Registros disponíveis." +
         (state.ratingHistoryAvailable ? "" : " Histórico de avaliações ainda não disponível."),
         "success");
     } catch (error) {
