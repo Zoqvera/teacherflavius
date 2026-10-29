@@ -134,7 +134,7 @@ test("an incomplete server acknowledgement is never treated as success", async (
 });
 
 test("presentation records enabled exclusively in v2 and the existing route is unchanged", () => {
-  assert.match(PAGE_SOURCE, /presentation_registration\.js\?v=20261022-etapa2/);
+  assert.match(PAGE_SOURCE, /presentation_registration\.js\?v=20261029-cancel-1/);
   assert.match(APP_SOURCE, /PRESENTATION_REGISTRATION_ENABLED = true/);
   assert.match(APP_SOURCE, /state\.registration\.register\(item, classDate\)/);
   assert.match(APP_SOURCE, /item\.lesson_status = "presented"/);
