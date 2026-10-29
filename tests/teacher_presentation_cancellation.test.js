@@ -35,10 +35,10 @@ const classDate = "2026-10-29";
 
 test("cancel button appears in active and closed presentations", () => {
   assert.match(APP, /CANCELAR APRESENTAÇÃO/);
-  assert.match(APP, /card\.appendChild\(presentationCancellationAction\(item\)\)/);
+  assert.match(APP, /actions\.appendChild\(presentationCancellationAction\(item\)\)/);
   assert.match(APP, /cancel_teacher_lesson_presentation_v2/);
   assert.match(ACTIVE_INDEX, /presentation_cancellation\.js/);
-  assert.match(ACTIVE_INDEX, /app\.js\?v=20261029-cancel-1/);
+  assert.match(ACTIVE_INDEX, /app\.js\?v=20261029-inline-actions-1/);
   assert.doesNotMatch(APP, /\bonline\b/i);
 });
 
