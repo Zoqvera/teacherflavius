@@ -74,7 +74,7 @@ jobs:
           test -f _android_site/licao/index.html
           test -f _android_site/roteiro-da-aula/index.html
           test -f _android_site/roteiro-da-aula-legado/index.html
-          grep -Fq '/roteiro-da-aula-v2/app.js?v=20261029-cancel-1' _android_site/roteiro-da-aula/index.html
+          grep -Fq '/roteiro-da-aula-v2/app.js?v=20261029-inline-actions-1' _android_site/roteiro-da-aula/index.html
           grep -Fq 'href="/roteiro-da-aula-legado/index.html"' _android_site/roteiro-da-aula/index.html
           grep -Fq '/roteiro-da-aula/app.js?v=20261022-previous-studies-1' _android_site/roteiro-da-aula-legado/index.html
           grep -Fq 'lesson_presentation_editor.js?v=20261022-apresentacoes-1' _android_site/licao/index.html
