@@ -143,6 +143,7 @@
     if (status === "available") return { label: "CRÉDITO DISPONÍVEL", className: "available" };
     if (status === "used") return { label: "REPOSIÇÃO CONFIRMADA", className: "used" };
     if (status === "predicted") return { label: "AULA PREVISTA", className: "predicted" };
+    if (status === "cancelled_pending") return { label: "AULA PREVISTA CANCELADA", className: "cancelled-pending" };
     if (status === "confirmed") return { label: "CONFIRMADA", className: "" };
     if (status === "forfeited") return { label: "CANCELADA SEM CRÉDITO", className: "forfeited" };
     return { label: "CONFIRMADA", className: "" };
@@ -233,6 +234,9 @@
         : "";
 
       const actions = [];
+      if (canCancel && credit.status === "predicted") {
+        actions.push('<button class="secondary-button forecast-cancel-button" type="button" data-class-number="' + Number(credit.class_number) + '" data-starts-at="' + escapeHtml(credit.starts_at) + '" data-credit-eligible="' + (cancellationStillEarnsCredit(credit.cancellation_deadline) ? "true" : "false") + '">CANCELAR ESTA AULA</button>');
+      }
       if (canCancel && credit.status === "scheduled") {
         actions.push('<button class="secondary-button regular-cancel-button" type="button" data-cancellation-kind="regular" data-credit-id="' + escapeHtml(credit.credit_id) + '" data-credit-eligible="' + (earnsCredit ? "true" : "false") + '">CANCELAR ESTA AULA</button>');
       }
@@ -254,12 +258,14 @@
         }
       }
 
-      const isPredicted = credit.status === "predicted";
-      const guidance = isPredicted
-        ? '<p class="forecast-helper">Previsão de calendário, sujeita à confirmação do pagamento.</p>'
-        : credit.status === "confirmed"
-          ? '<p class="forecast-helper">Aula quitada, ainda sem ação disponível neste cartão.</p>'
-          : "";
+      const isPredicted = credit.status === "predicted" || credit.status === "cancelled_pending";
+      const guidance = credit.status === "predicted"
+        ? '<p class="forecast-helper">Aula ainda não paga. Você pode cancelar antecipadamente, mas nenhum crédito será gerado antes do pagamento.</p>'
+        : credit.status === "cancelled_pending"
+          ? '<p class="forecast-helper">Cancelamento antecipado registrado. Não existe crédito de reposição até o pagamento da mensalidade correspondente.</p>'
+          : credit.status === "confirmed"
+            ? '<p class="forecast-helper">Aula quitada, ainda sem ação disponível neste cartão.</p>'
+            : "";
 
       return '<article class="lesson-card' + (isPredicted ? ' forecast-lesson' : '') + '">' +
         '<div class="lesson-topline">' +
@@ -292,7 +298,7 @@
 
     return prepaid.concat(predicted)
       .filter(function (lesson) {
-        if (lesson.status !== "confirmed" && lesson.status !== "predicted") return false;
+        if (!["confirmed", "predicted", "cancelled_pending"].includes(lesson.status)) return false;
         const startsAt = new Date(lesson.starts_at);
         return !Number.isNaN(startsAt.getTime()) && startsAt.getTime() > Date.now();
       })
@@ -307,7 +313,7 @@
     }
 
     const hasPredicted = getStudentAgendaLessons().some(function (lesson) {
-      return lesson.status === "predicted";
+      return lesson.status === "predicted" || lesson.status === "cancelled_pending";
     });
     if (!hasPredicted) return "";
 
@@ -638,6 +644,30 @@
     }
   }
 
+  async function cancelUnpaidForecastLesson(button) {
+    const mayEarnReplacement = button.dataset.creditEligible === "true";
+    const message = mayEarnReplacement
+      ? "Cancelar esta aula prevista? Nenhum crédito será liberado agora. Se a mensalidade correspondente for paga, esta aula poderá gerar reposição."
+      : "Cancelar esta aula prevista? O prazo de 12 horas para reposição terminou. Nenhum crédito será gerado, mesmo após eventual pagamento.";
+    if (!window.confirm(message)) return;
+
+    setButtonBusy(button, "CANCELANDO...");
+    setPageMessage("", "");
+
+    try {
+      await rpc("cancel_my_unpaid_lesson", {
+        target_class_number: Number(button.dataset.classNumber),
+        target_starts_at: button.dataset.startsAt
+      });
+      await refreshAfterAction(
+        "Cancelamento antecipado registrado. Nenhum crédito foi liberado; sua mensalidade continua devida."
+      );
+    } catch (error) {
+      setPageMessage(error.message || "Não foi possível cancelar esta aula prevista.", "error");
+      restoreButton(button);
+    }
+  }
+
   async function cancelUnpaidEnrollment(button) {
     const className = button.dataset.className || "esta turma";
     const confirmed = window.confirm("Cancelar sua matrícula em " + className + "? Você perderá sua vaga fixa nessa turma. Esta ação não cancela apenas uma aula. Deseja continuar?");
@@ -655,6 +685,9 @@
   }
 
   function attachActionHandlers() {
+    document.querySelectorAll(".forecast-cancel-button").forEach(function (button) {
+      button.addEventListener("click", function () { cancelUnpaidForecastLesson(button); });
+    });
     document.querySelectorAll(".regular-cancel-button").forEach(function (button) {
       button.addEventListener("click", function () { cancelRegularLesson(button); });
     });
