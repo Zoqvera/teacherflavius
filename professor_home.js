@@ -155,6 +155,12 @@ function ensureProfessorDashboardCard(config) {
 
 function ensureDynamicProfessorCards() {
   ensureProfessorDashboardCard({
+    id: "reservas-de-turmas",
+    href: "/reservas-de-turmas/",
+    label: "RESERVAS DE TURMAS",
+    beforeId: "reservas-de-vagas"
+  });
+  ensureProfessorDashboardCard({
     id: "reservas-de-vagas",
     href: "/reservas-de-vagas/",
     label: "RESERVAS DE VAGAS",

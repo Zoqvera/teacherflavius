@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Escolha sua turma | Teacher Flávio</title>
+  <link rel="stylesheet" href="/escolher-turma/styles.css?v=20261029-1">
+  <script src="/supabase_config.js?v=20260715-1"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="page-header">
+      <a class="brand" href="/">TEACHER FLÁVIO</a>
+      <h1>Escolha sua turma</h1>
+      <p>Consulte as vagas atualizadas automaticamente e reserve um lugar por 15 minutos após sua aula experimental.</p>
+    </header>
+    <p id="message" role="status" aria-live="polite" class="message" hidden></p>
+    <section id="reservationPanel" class="panel" hidden aria-labelledby="reservationTitle">
+      <h2 id="reservationTitle">Sua reserva temporária</h2>
+      <p id="reservedClass"></p>
+      <p>Tempo restante para concluir a matrícula com o professor:</p>
+      <p id="countdown" class="countdown" role="timer">15:00</p>
+      <p>Esta reserva não é uma matrícula nem um pagamento. Avise o professor pelo WhatsApp para finalizar sua inscrição antes do prazo.</p>
+      <button id="copyProof" class="primary" type="button">COPIAR COMPROVANTE</button>
+      <button id="cancelHold" class="secondary" type="button">LIBERAR VAGA</button>
+    </section>
+    <section id="vacancyPanel" class="panel" aria-labelledby="vacancyTitle">
+      <div class="heading-row">
+        <h2 id="vacancyTitle">Turmas disponíveis</h2>
+        <button id="refresh" class="secondary" type="button">ATUALIZAR VAGAS</button>
+      </div>
+      <p id="summary" aria-live="polite">Consultando disponibilidade...</p>
+      <div id="classList" class="class-list"></div>
+    </section>
+    <section id="formPanel" class="panel" aria-labelledby="formTitle" hidden>
+      <h2 id="formTitle">Reservar turma</h2>
+      <p id="chosenClass"></p>
+      <form id="leadForm">
+        <label for="studentName">Seu nome</label>
+        <input type="text" id="studentName" maxlength="120" autocomplete="name" required>
+        <label for="studentPhone">WhatsApp com DDD usado na aula experimental</label>
+        <input type="tel" id="studentPhone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="(34) 99999-9999" required>
+        <p class="hint">Para proteger as vagas, só aceitamos reservas de números registrados na aula experimental. Cada número pode manter uma reserva vigente por vez.</p>
+        <div class="actions">
+          <button type="submit" class="primary" id="submitLead">RESERVAR POR 15 MINUTOS</button>
+          <button id="closeForm" type="button" class="secondary">VOLTAR</button>
+        </div>
+      </form>
+    </section>
+    <footer><p>As vagas podem mudar durante a consulta. A confirmação ocorre apenas quando o servidor aceita a reserva. Se não houver vagas, você poderá entrar na lista de espera.</p></footer>
+  </main>
+  <script src="/escolher-turma/app.js?v=20261029-1"></script>
+</body>
+</html>

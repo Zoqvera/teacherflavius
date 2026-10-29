@@ -1,0 +1,21 @@
+:root{font-family:Arial,Helvetica,sans-serif;color:#15233d;background:#f4f7fb;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0;line-height:1.55}
+.shell{width:min(100%,880px);margin:0 auto;padding:24px 18px 48px}
+.brand{display:inline-block;text-decoration:none;color:#175c9a;letter-spacing:.08em;font-weight:800}
+.page-header{padding:28px 0 20px}.page-header h1{font-size:clamp(1.8rem,6vw,2.8rem);margin:12px 0}
+.page-header p{color:#465776;max-width:650px}.panel{background:#fff;border:1px solid #d7e1ed;border-radius:18px;padding:24px;margin:20px 0;box-shadow:0 10px 28px rgba(14,38,72,.05)}
+[hidden]{display:none!important}.heading-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+h2{font-size:1.3rem;margin:0 0 12px}.heading-row h2{margin:0}.class-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:20px}
+.class-card{border:1px solid #d7e1ed;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.class-card h3{margin:0;font-size:1.06rem}.class-time{color:#465776;margin:0}.seats{font-weight:700;color:#14683a}
+.seats.low{color:#a43123}.seats.soldout{color:#6b7280}.class-card button{margin-top:auto}
+button{font:inherit;font-weight:700;cursor:pointer;border-radius:10px;padding:11px 14px;min-height:44px}
+button:disabled{opacity:.55;cursor:not-allowed}.primary{background:#135d9f;color:#fff;border:1px solid #135d9f}
+.primary:hover:not(:disabled){background:#0a457a}.secondary{background:white;color:#135d9f;border:1px solid #90afcc}
+button:focus-visible,input:focus-visible{outline:3px solid #357cdb;outline-offset:2px}
+label{display:block;font-weight:700;margin:16px 0 7px}input{width:100%;padding:12px;border:1px solid #8193a7;border-radius:9px;font:inherit;font-size:1rem}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.hint,footer{font-size:.9rem;color:#526079}
+.countdown{font-size:2.4rem;font-weight:800;font-variant-numeric:tabular-nums;color:#154e86;margin:0 0 12px}
+.message{padding:14px;border-radius:10px;background:#ebf5ff;border:1px solid #aed0ed}
+.message.error{background:#fff2f0;border-color:#ebb8b0;color:#9f261e}.empty{padding:22px;background:#f5f7fa;border-radius:12px;color:#465776}
+@media(max-width:500px){.panel{padding:18px}.heading-row button{width:100%}.actions button{width:100%}}
