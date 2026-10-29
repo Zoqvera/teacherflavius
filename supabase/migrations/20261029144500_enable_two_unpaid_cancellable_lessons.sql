@@ -234,7 +234,7 @@ begin
     'next_payment_due_date', next_payment_due_date
   );
 end;
-$function$
+$function$;
 
 REVOKE ALL ON FUNCTION public.get_my_lesson_forecast() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_my_lesson_forecast() TO authenticated, service_role;
