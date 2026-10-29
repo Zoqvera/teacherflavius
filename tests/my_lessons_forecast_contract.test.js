@@ -181,3 +181,65 @@ test("the forecast RPC is read-only, identity-scoped, and honors start dates", (
   assert.match(migration, /revoke all on function public\.get_my_lesson_forecast\(\) from public, anon/i);
   assert.doesNotMatch(migration, /insert into private\.lesson_credits|update private\.lesson_credits|delete from private\.lesson_credits/i);
 });
+
+
+test("two unpaid preview dates allow cancellation without paid lesson access", async () => {
+  const future = [5, 6].map((day) => ({
+    ...makeLesson("predicted", day),
+    can_cancel: true,
+    cancellation_deadline: futureDate(day - 1)
+  }));
+  const page = await renderStudentPage({
+    forecast: {
+      prepaid_lessons: [],
+      predicted_lessons: future,
+      next_payment_due_date: "2026-11-05"
+    }
+  });
+
+  assert.equal((page.html.match(/AULA PREVISTA/g) || []).length, 2);
+  assert.equal((page.html.match(/class="secondary-button forecast-cancel-button"/g) || []).length, 2);
+  const previewCards = page.html.match(/<article class="lesson-card forecast-lesson"[\s\S]*?<\/article>/g) || [];
+  assert.equal(previewCards.length, 2);
+  previewCards.forEach((card) => {
+    assert.match(card, /CANCELAR ESTA AULA/);
+    assert.doesNotMatch(card, /ACESSAR AULA|MARCAR REPOSIÇÃO|regular-cancel-button|data-credit-id/);
+  });
+});
+
+test("advance-cancelled unpaid preview remains visible but is no longer actionable", async () => {
+  const preview = [
+    { ...makeLesson("cancelled_pending", 5), can_cancel: false },
+    { ...makeLesson("predicted", 6), can_cancel: true, cancellation_deadline: futureDate(5) }
+  ];
+  const page = await renderStudentPage({
+    paid: false,
+    forecast: {
+      prepaid_lessons: [],
+      predicted_lessons: preview,
+      next_payment_due_date: "2026-11-05"
+    }
+  });
+
+  assert.equal((page.html.match(/AULA PREVISTA CANCELADA/g) || []).length, 1);
+  assert.equal((page.html.match(/forecast-cancel-button/g) || []).length, 1);
+  assert.match(page.html, /Cancelamento antecipado registrado/);
+  assert.match(page.html, /Próximo vencimento: 05\/11\/2026/);
+});
+
+test("new forecast migration separates unpaid cancellations from paid contract credits", () => {
+  const changes = fs.readFileSync(
+    path.join(root, "supabase/migrations/20261029144500_enable_two_unpaid_cancellable_lessons.sql"),
+    "utf8"
+  );
+  assert.match(changes, /preview_limit := 2/i);
+  assert.match(changes, /last_paid_lesson_date \+ 1/i);
+  assert.match(changes, /student_regular_lesson_cancellations/i);
+  assert.match(changes, /CREATE TABLE IF NOT EXISTS private\.unpaid_lesson_cancellations/i);
+  assert.match(changes, /private\.lesson_cancellation_grants_credit/i);
+  assert.match(changes, /public\.cancel_my_unpaid_lesson/i);
+  assert.match(changes, /pg_catalog\.pg_advisory_xact_lock/i);
+  assert.match(changes, /tuition\.payment_date IS NOT NULL/i);
+  assert.match(changes, /THEN 'available'[\s\S]*ELSE 'forfeited'/i);
+  assert.doesNotMatch(changes, /INSERT INTO private\.lesson_credits/i);
+});
