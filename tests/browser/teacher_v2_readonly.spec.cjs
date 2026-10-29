@@ -74,7 +74,7 @@ test.afterAll(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
 });
 
-async function openPreview(page, role = "teacher", activeClass = false) {
+async function openPreview(page, role = "teacher", activeClass = false, withPresentation = false) {
   await page.route("https://cdn.jsdelivr.net/**", (route) => {
     // Supabase SDK is replaced by an isolated fake before any page script runs.
     return route.fulfill({
@@ -84,7 +84,7 @@ async function openPreview(page, role = "teacher", activeClass = false) {
     });
   });
 
-  await page.addInitScript(({ userRole, isActiveClass }) => {
+  await page.addInitScript(({ userRole, isActiveClass, includePresentation }) => {
     const teacherId = "98000000-0000-4000-8000-000000000001";
     const studentId = "99000000-0000-4000-8000-000000000006";
     const questionId = "97000000-0000-4000-8000-000000000016";
@@ -209,8 +209,13 @@ async function openPreview(page, role = "teacher", activeClass = false) {
       })
     };
     window.TeacherLessonPresentations = {
-      rosterKey: () => null,
-      loadPlan: async () => ({ records: new Map() })
+      rosterKey: (id, number) => id + "|lesson:" + number,
+      loadPlan: async () => ({
+        records: includePresentation ? new Map([[
+          studentId + "|lesson:1",
+          { body: "Hello,\nmy name is a student.", revision_number: 2 }
+        ]]) : new Map()
+      })
     };
     window.ConversationQuestionCardRenderer = {
       create(question) {
@@ -220,7 +225,7 @@ async function openPreview(page, role = "teacher", activeClass = false) {
         return item;
       }
     };
-  }, { userRole: role, isActiveClass: activeClass });
+  }, { userRole: role, isActiveClass: activeClass, includePresentation: withPresentation });
 
   await page.goto(baseUrl + PREVIEW_PATH);
 }
@@ -230,12 +235,56 @@ async function enterFictionalClass(page, subject) {
   await page.getByRole("button", { name: /TURMA FICTÍCIA/ }).click();
 }
 
+test("submitted presentation copies its full text without changing attendance", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        async writeText(text) { window.__copiedPresentation = text; }
+      }
+    });
+  });
+  await openPreview(page, "teacher", false, true);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await enterFictionalClass(page, "APRESENTAÇÕES");
+
+  const copy = page.getByRole("button", { name: "COPIAR APRESENTAÇÃO" });
+  await expect(copy).toHaveCount(1);
+  await copy.click();
+  await expect(page.getByRole("status").filter({ hasText: "Apresentação copiada." })).toBeVisible();
+  expect(await page.evaluate(() => window.__copiedPresentation)).toBe(
+    "Hello,\nmy name is a student."
+  );
+  expect(await page.evaluate(() => window.__teacherV2Calls.filter(
+    (name) => name === "mark_teacher_lesson_presented_v2"
+  ))).toHaveLength(0);
+});
+
+test("clipboard failure is reported and the button remains available", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { async writeText() { throw new Error("Permission denied"); } }
+    });
+  });
+  await openPreview(page, "teacher", false, true);
+  await enterFictionalClass(page, "APRESENTAÇÕES");
+
+  const copy = page.getByRole("button", { name: "COPIAR APRESENTAÇÃO" });
+  await copy.click();
+  await expect(page.getByRole("status").filter({
+    hasText: "Não foi possível copiar."
+  })).toBeVisible();
+  await expect(copy).toBeEnabled();
+});
+
 test("main lesson route loads the new workspace without implicit writes", async ({ page }) => {
   await openPreview(page);
   await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
   await enterFictionalClass(page, "APRESENTAÇÕES");
   await expect(page.getByRole("heading", { name: "ALUNO FICTÍCIO" })).toBeVisible();
   await expect(page.getByRole("button", { name: "REGISTRAR APRESENTAÇÃO" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "COPIAR APRESENTAÇÃO" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "AULAS CANCELADAS" })).toBeVisible();
 
   await page.getByRole("button", { name: "INÍCIO" }).click();

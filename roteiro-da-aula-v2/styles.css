@@ -107,6 +107,25 @@
   line-height: 1.7;
 }
 
+.workspace-presentation-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 14px;
+}
+
+.workspace-copy-action:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.workspace-copy-feedback {
+  color: var(--academic-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .workspace-question-section {
   margin: 14px 0;
   border: 1px solid var(--academic-border);

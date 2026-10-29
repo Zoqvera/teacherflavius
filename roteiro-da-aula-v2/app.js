@@ -291,9 +291,41 @@
       card.appendChild(muted("APRESENTAÇÃO NÃO ENVIADA"));
     } else {
       card.appendChild(node("p", "workspace-presentation-text", presentation.body));
+      card.appendChild(presentationCopyAction(presentation));
       card.appendChild(muted("Versão " + presentation.revision_number));
     }
     return card;
+  }
+
+  async function copyPresentationText(text) {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+      throw new Error("Área de transferência indisponível neste navegador.");
+    }
+    await navigator.clipboard.writeText(text);
+  }
+
+  function presentationCopyAction(presentation) {
+    const container = node("div", "workspace-presentation-copy");
+    const feedback = node("span", "workspace-copy-feedback");
+    feedback.setAttribute("role", "status");
+
+    const control = button("COPIAR APRESENTAÇÃO", async function () {
+      control.disabled = true;
+      feedback.textContent = "";
+      try {
+        await copyPresentationText(presentation.body);
+        feedback.textContent = "Apresentação copiada.";
+      } catch (error) {
+        console.error("Não foi possível copiar a apresentação:", error);
+        feedback.textContent = "Não foi possível copiar. Selecione o texto e copie manualmente.";
+      } finally {
+        control.disabled = false;
+      }
+    }, "academic-button workspace-copy-action");
+
+    container.appendChild(control);
+    container.appendChild(feedback);
+    return container;
   }
 
   async function registerPresentation(item, control) {
