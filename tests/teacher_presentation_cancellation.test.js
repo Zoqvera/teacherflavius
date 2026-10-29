@@ -6,7 +6,7 @@ const vm = require("node:vm");
 
 const ROOT = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(ROOT, file), "utf8");
-const MIGRATION = read("supabase/migrations/20261029193000_cancel_teacher_presentation_v2.sql");
+const MIGRATION = read("supabase/migrations/20261029220440_cancel_teacher_presentation_v2.sql");
 const ACTIVE_INDEX = read("roteiro-da-aula/index.html");
 const APP = read("roteiro-da-aula-v2/app.js");
 const CANCELLATION = read("roteiro-da-aula-v2/presentation_cancellation.js");
