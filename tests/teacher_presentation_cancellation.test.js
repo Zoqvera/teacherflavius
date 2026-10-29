@@ -61,9 +61,9 @@ test("cancellation requires date, explicit attendance and reason", async () => {
       };
     }
   });
-  await assert.rejects(client.cancel(student, classDate, "absent", "short"));
-  await assert.rejects(client.cancel(student, "2026-10-30", "absent", "Erro de registro."));
-  await assert.rejects(client.cancel(student, classDate, "scheduled", "Erro de registro."));
+  assert.throws(() => client.cancel(student, classDate, "absent", "short"));
+  assert.throws(() => client.cancel(student, "2026-10-30", "absent", "Erro de registro."));
+  assert.throws(() => client.cancel(student, classDate, "scheduled", "Erro de registro."));
   assert.equal(calls, 0);
   const result = await client.cancel(student, classDate, "absent", "Erro de registro.");
   assert.equal(result.attendance_status, "absent");
