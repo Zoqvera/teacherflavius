@@ -229,7 +229,7 @@ test("advance-cancelled unpaid preview remains visible but is no longer actionab
 
 test("new forecast migration separates unpaid cancellations from paid contract credits", () => {
   const changes = fs.readFileSync(
-    path.join(root, "supabase/migrations/20261029144500_enable_two_unpaid_cancellable_lessons.sql"),
+    path.join(root, "supabase/migrations/20261029144549_enable_two_unpaid_cancellable_lessons.sql"),
     "utf8"
   );
   assert.match(changes, /preview_limit := 2/i);
