@@ -7,7 +7,7 @@ function source(name) {
   return fs.readFileSync(path.join(__dirname, "..", name), "utf8");
 }
 
-const migration = source("supabase/migrations/20261029230000_public_class_seat_holds.sql");
+const migration = source("supabase/migrations/20261029224119_public_class_seat_holds.sql");
 const publicHtml = source("escolher-turma/index.html");
 const publicApp = source("escolher-turma/app.js");
 const adminHtml = source("reservas-de-turmas/index.html");
