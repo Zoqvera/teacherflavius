@@ -284,6 +284,7 @@ test("main lesson route loads the new workspace without implicit writes", async 
   await enterFictionalClass(page, "APRESENTAÇÕES");
   await expect(page.getByRole("heading", { name: "ALUNO FICTÍCIO" })).toBeVisible();
   await expect(page.getByRole("button", { name: "REGISTRAR APRESENTAÇÃO" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "COPIAR APRESENTAÇÃO" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "AULAS CANCELADAS" })).toBeVisible();
 
   await page.getByRole("button", { name: "INÍCIO" }).click();
