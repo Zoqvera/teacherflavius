@@ -239,6 +239,9 @@ test("new forecast migration separates unpaid cancellations from paid contract c
   assert.match(changes, /private\.lesson_cancellation_grants_credit/i);
   assert.match(changes, /public\.cancel_my_unpaid_lesson/i);
   assert.match(changes, /pg_catalog\.pg_advisory_xact_lock/i);
+  assert.match(changes, /REVOKE ALL ON TABLE private\.unpaid_lesson_cancellations FROM PUBLIC, anon, authenticated/i);
+  assert.match(changes, /THEN 'cancelled_pending'/i);
+  assert.match(changes, /'credit_granted', false/i);
   assert.match(changes, /tuition\.payment_date IS NOT NULL/i);
   assert.match(changes, /THEN 'available'[\s\S]*ELSE 'forfeited'/i);
   assert.doesNotMatch(changes, /INSERT INTO private\.lesson_credits/i);
