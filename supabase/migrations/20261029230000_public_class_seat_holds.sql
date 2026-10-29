@@ -63,7 +63,7 @@ create function private.is_recent_trial_phone(target_phone text)
 returns boolean language sql stable security definer set search_path='' as $$
   select exists (
     select 1 from private.trial_lesson_appointments trial
-    where trial.whatsapp_digits=target_phone
+    where trial.whatsapp_digits='55'||target_phone
       and trial.status in ('scheduled','completed')
       and trial.starts_at >= now() - interval '45 days'
   );
