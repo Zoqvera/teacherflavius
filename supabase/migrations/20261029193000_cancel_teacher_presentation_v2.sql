@@ -24,7 +24,9 @@ begin
   end if;
   if target_lesson_kind not in ('regular', 'makeup')
      or target_entry_id is null or target_date is null
+     or target_lesson_number is null
      or target_lesson_number not between 1 and 74
+     or target_attendance_status is null
      or target_attendance_status not in ('present', 'absent')
      or char_length(normalized_reason) not between 8 and 500 then
     raise exception 'Informe uma apresentação, frequência e justificativa válidas (8 a 500 caracteres).'
