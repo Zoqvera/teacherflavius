@@ -17,6 +17,7 @@
   const state = {
     service: null,
     registration: null,
+    cancellation: null,
     questionRatings: null,
     lifecycle: null,
     closedSessionsAvailable: false,
@@ -220,6 +221,9 @@
     const card = node("article", "academic-student-card workspace-student");
     card.appendChild(studentHeading(item));
     card.appendChild(muted("Registro preservado no encerramento da aula."));
+    if (window.TeacherPresentationCancellation.canCancel(item)) {
+      card.appendChild(presentationCancellationAction(item));
+    }
     if (!MODEL.isCancelled(item) && window.TeacherSessionLifecycle.canAdjust(
       item, document.getElementById("workspaceDate").value
     )) {
@@ -282,6 +286,7 @@
     const presentation = presentationFor(item);
     if (item.lesson_status === "presented") {
       card.appendChild(node("span", "academic-pill presented", "APRESENTAÇÃO REGISTRADA"));
+      card.appendChild(presentationCancellationAction(item));
     } else if (window.TeacherPresentationRegistration.canRegister(item)) {
       card.appendChild(presentationAction(item));
     } else if (item.lesson_number) {
@@ -295,6 +300,62 @@
       card.appendChild(muted("Versão " + presentation.revision_number));
     }
     return card;
+  }
+
+
+  async function cancelPresentation(item, control) {
+    const classDate = document.getElementById("workspaceDate").value;
+    if (!PRESENTATION_REGISTRATION_ENABLED || state.loadedDate !== classDate ||
+        !window.TeacherPresentationCancellation.canCancel(item)) {
+      status("Atualize o roteiro antes de cancelar a apresentação.", "error");
+      return;
+    }
+    if (!window.confirm("Cancelar a apresentação " + item.lesson_number +
+        " de " + item.student_name + "? O progresso dessa apresentação será revertido.")) {
+      return;
+    }
+
+    const attendanceInput = window.prompt(
+      "Após o cancelamento, qual foi a frequência do aluno? Digite PRESENTE ou AUSENTE.",
+      item.attendance_status === "absent" ? "AUSENTE" : "PRESENTE"
+    );
+    if (attendanceInput === null) return;
+    const normalizedAttendance = attendanceInput.trim().toLocaleUpperCase("pt-BR");
+    const statuses = { PRESENTE: "present", AUSENTE: "absent" };
+    const attendance = statuses[normalizedAttendance];
+    if (!attendance) {
+      status("Informe PRESENTE ou AUSENTE. Nenhuma alteração foi feita.", "error");
+      return;
+    }
+
+    const reason = window.prompt(
+      "Justificativa do cancelamento (8 a 500 caracteres):",
+      "Apresentação registrada por engano."
+    );
+    if (reason === null) return;
+
+    control.disabled = true;
+    control.textContent = "CANCELANDO...";
+    try {
+      await state.cancellation.cancel(item, classDate, attendance, reason);
+      state.registration.invalidate(item, classDate);
+      await loadPlan("Apresentação " + item.lesson_number +
+        " cancelada para " + item.student_name +
+        ". Frequência: " + (attendance === "absent" ? "AUSENTE." : "PRESENTE."));
+    } catch (error) {
+      console.error("Falha ao cancelar apresentação:", error);
+      status(error && error.message ? error.message :
+        "Não foi possível cancelar a apresentação.", "error");
+      control.disabled = false;
+      control.textContent = "CANCELAR APRESENTAÇÃO";
+    }
+  }
+
+  function presentationCancellationAction(item) {
+    const control = button("CANCELAR APRESENTAÇÃO", function () {
+      cancelPresentation(item, control);
+    }, "academic-button danger workspace-cancel-presentation");
+    return control;
   }
 
   async function copyPresentationText(text) {
@@ -627,6 +688,7 @@
         window.TeacherLessonPresentations &&
         window.ConversationQuestionCardRenderer &&
         window.TeacherPresentationRegistration &&
+        window.TeacherPresentationCancellation &&
         window.TeacherQuestionRatings &&
         window.TeacherSessionLifecycle && MODEL);
     }, WAIT_OPTIONS);
@@ -655,6 +717,20 @@
           target_entry_id: item.entry_id,
           target_date: date,
           target_lesson_number: item.lesson_number
+        });
+        if (response.error) throw response.error;
+        return response.data;
+      }
+    });
+    state.cancellation = window.TeacherPresentationCancellation.create({
+      cancelPresentation: async function (item, date, attendanceStatus, reason) {
+        const response = await client.rpc("cancel_teacher_lesson_presentation_v2", {
+          target_lesson_kind: item.lesson_kind,
+          target_entry_id: item.entry_id,
+          target_date: date,
+          target_lesson_number: item.lesson_number,
+          target_attendance_status: attendanceStatus,
+          target_reason: reason
         });
         if (response.error) throw response.error;
         return response.data;
