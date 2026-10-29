@@ -84,7 +84,11 @@
       return work;
     }
 
-    return Object.freeze({ register: register });
+    function invalidate(item, classDate) {
+      confirmed.delete(registrationKey(item, classDate));
+    }
+
+    return Object.freeze({ register: register, invalidate: invalidate });
   }
 
   root.TeacherPresentationRegistration = Object.freeze({
