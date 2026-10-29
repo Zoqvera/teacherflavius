@@ -9,6 +9,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), "utf8");
 const MIGRATION = read("supabase/migrations/20261029220440_cancel_teacher_presentation_v2.sql");
 const ACTIVE_INDEX = read("roteiro-da-aula/index.html");
 const APP = read("roteiro-da-aula-v2/app.js");
+const STYLES = read("roteiro-da-aula-v2/styles.css");
 const CANCELLATION = read("roteiro-da-aula-v2/presentation_cancellation.js");
 const REGISTRATION = read("roteiro-da-aula-v2/presentation_registration.js");
 
@@ -39,6 +40,16 @@ test("cancel button appears in active and closed presentations", () => {
   assert.match(ACTIVE_INDEX, /presentation_cancellation\.js/);
   assert.match(ACTIVE_INDEX, /app\.js\?v=20261029-cancel-1/);
   assert.doesNotMatch(APP, /\bonline\b/i);
+});
+
+test("presentation controls share a row and cancellation follows a confirmed presentation", () => {
+  assert.match(APP, /const actions = presentationActions\(item, presentation\)/);
+  assert.match(APP, /if \(isPresented\) \{\s*actions\.appendChild\(registeredPresentationAction\(\)\)/);
+  assert.match(APP, /actions\.appendChild\(presentationCopyAction\(presentation\)\)/);
+  assert.match(APP, /if \(isPresented && window\.TeacherPresentationCancellation\.canCancel\(item\)\)/);
+  assert.match(APP, /control\.disabled = true;\s*control\.title = "Apresentação já registrada\."/);
+  assert.match(STYLES, /\.workspace-presentation-actions \{[\s\S]*?grid-auto-flow: column/);
+  assert.match(STYLES, /\.workspace-presentation-actions \.academic-button \{/);
 });
 
 test("only valid, already presented lessons can be cancelled", () => {
