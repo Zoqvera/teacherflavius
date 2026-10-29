@@ -329,6 +329,44 @@ test("teacher registers presentation only after a confirmed synthetic RPC", asyn
   await expect(page.getByText("APRESENTAÇÃO REGISTRADA")).toBeVisible();
 });
 
+test("presentation actions stay side by side and cancellation appears after registration", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openPreview(page, "teacher", true, true);
+  await enterFictionalClass(page, "APRESENTAÇÕES");
+
+  const student = page.locator(".workspace-student").filter({
+    has: page.getByRole("heading", { name: "ALUNO FICTÍCIO" })
+  });
+  const actions = student.locator(".workspace-presentation-actions");
+  await expect(actions.locator("button")).toHaveCount(2);
+  await expect(actions.getByRole("button", { name: "REGISTRAR APRESENTAÇÃO" })).toBeEnabled();
+  await expect(actions.getByRole("button", { name: "COPIAR APRESENTAÇÃO" })).toBeVisible();
+  await expect(actions.getByRole("button", { name: "CANCELAR APRESENTAÇÃO" })).toHaveCount(0);
+
+  await actions.getByRole("button", { name: "REGISTRAR APRESENTAÇÃO" }).click();
+  await expect(page.locator("#workspaceStatus")).toContainText("Presença confirmada.");
+  await expect(actions.locator("button")).toHaveCount(3);
+  await expect(actions.getByRole("button", { name: "REGISTRAR APRESENTAÇÃO" })).toBeDisabled();
+  await expect(actions.getByRole("button", { name: "CANCELAR APRESENTAÇÃO" })).toBeEnabled();
+
+  const bounds = await actions.locator("button").evaluateAll((buttons) =>
+    buttons.map((item) => {
+      const rect = item.getBoundingClientRect();
+      return { top: rect.top, left: rect.left, right: rect.right };
+    })
+  );
+  expect(bounds[1].left).toBeGreaterThan(bounds[0].left);
+  expect(bounds[2].left).toBeGreaterThan(bounds[1].left);
+  expect(Math.max(...bounds.map((rect) => rect.top)) -
+    Math.min(...bounds.map((rect) => rect.top))).toBeLessThanOrEqual(2);
+
+  const width = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth
+  }));
+  expect(width.content).toBeLessThanOrEqual(width.viewport + 1);
+});
+
 test("teacher evaluates questions with a synthetic acknowledgement", async ({ page }) => {
   await openPreview(page, "teacher", true);
   await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");

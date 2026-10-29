@@ -286,20 +286,52 @@
     const presentation = presentationFor(item);
     if (item.lesson_status === "presented") {
       card.appendChild(node("span", "academic-pill presented", "APRESENTAÇÃO REGISTRADA"));
-      card.appendChild(presentationCancellationAction(item));
-    } else if (window.TeacherPresentationRegistration.canRegister(item)) {
-      card.appendChild(presentationAction(item));
+    }
+
+    const actions = presentationActions(item, presentation);
+    if (actions) {
+      card.appendChild(actions);
     } else if (item.lesson_number) {
       card.appendChild(muted("Registro indisponível para esta ocorrência."));
     }
+
     if (!presentation) {
       card.appendChild(muted("APRESENTAÇÃO NÃO ENVIADA"));
     } else {
       card.appendChild(node("p", "workspace-presentation-text", presentation.body));
-      card.appendChild(presentationCopyAction(presentation));
       card.appendChild(muted("Versão " + presentation.revision_number));
     }
     return card;
+  }
+
+  function registeredPresentationAction() {
+    const control = node("button", "academic-button primary workspace-save-action",
+      "REGISTRAR APRESENTAÇÃO");
+    control.type = "button";
+    control.disabled = true;
+    control.title = "Apresentação já registrada.";
+    return control;
+  }
+
+  function presentationActions(item, presentation) {
+    const actions = node("div", "workspace-presentation-actions");
+    const isPresented = item.lesson_status === "presented";
+
+    if (isPresented) {
+      actions.appendChild(registeredPresentationAction());
+    } else if (window.TeacherPresentationRegistration.canRegister(item)) {
+      actions.appendChild(presentationAction(item));
+    }
+
+    if (presentation) {
+      actions.appendChild(presentationCopyAction(presentation));
+    }
+
+    if (isPresented && window.TeacherPresentationCancellation.canCancel(item)) {
+      actions.appendChild(presentationCancellationAction(item));
+    }
+
+    return actions.childElementCount ? actions : null;
   }
 
 
