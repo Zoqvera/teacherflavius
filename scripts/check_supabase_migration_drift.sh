@@ -514,6 +514,23 @@ VERIFIED_MIGRATION_ALIASES
     fi
   fi
 
+  # The manual-Pix settlement was applied with an equivalent SQL body.
+  # Git differs only in comments and blank lines. Both normalized SHA256
+  # identities are pinned; any other discrepancy remains a hard failure.
+  local manual_pix_line expected_manual_pix
+  manual_pix_line="$(awk -F $'\t' '$1 == "20261029144657" {print}' "${mismatch_file}")"
+  printf -v expected_manual_pix '%s\t%s\t%s\t%s\t%s' \
+    '20261029144657' 'record_manual_pix_refund_settlement' \
+    'record_manual_pix_refund_settlement' \
+    '70df76659e1d4180a78030a2ff58c49305de2cf5eae6cff6872dfda0453da6ad' \
+    '9ba9f11f9123d34f2a4406bba75fe56cafc76d4493806ed43c7498581b856a12'
+  if [[ "${manual_pix_line}" == "${expected_manual_pix}" ]]; then
+    awk -F $'\t' '$1 != "20261029144657"' "${mismatch_file}" \
+      > "${TEMP_DIR}/remaining_manual_pix_identity_mismatch"
+    mv "${TEMP_DIR}/remaining_manual_pix_identity_mismatch" "${mismatch_file}"
+    echo "::notice::Manual Pix migration has two exact, comment-only SHA256 identities. All other drift remains enforced."
+  fi
+
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"

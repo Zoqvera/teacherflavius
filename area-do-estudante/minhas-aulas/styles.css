@@ -400,7 +400,7 @@ body.late-cancellation-modal-open {
   }
 }
 
-/* Billing-cycle forecast is informational; it never exposes lesson actions. */
+/* Unpaid lesson previews permit cancellation but never grant paid access. */
 .lesson-card.forecast-lesson {
   border-style: dashed;
   border-color: rgba(250, 204, 21, 0.36);
@@ -411,6 +411,17 @@ body.late-cancellation-modal-open {
   color: #fde68a;
   border-color: rgba(250, 204, 21, 0.5);
   background: rgba(245, 158, 11, 0.12);
+}
+
+.status-pill.cancelled-pending {
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.lesson-card.forecast-lesson:has(.cancelled-pending) {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(30, 41, 59, 0.25);
 }
 
 .forecast-payment-note {
