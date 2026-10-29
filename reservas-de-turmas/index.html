@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Reservas de turmas | Área do Professor</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260715-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/escolher-turma/styles.css?v=20261029-1">
+</head>
+<body class="auth-checking">
+  <main class="shell">
+    <header class="page-header">
+      <a class="brand" href="/professor/">ÁREA DO PROFESSOR</a>
+      <h1>Reservas de turmas</h1>
+      <p>Vagas temporariamente bloqueadas e interessados em lista de espera. Reservas promocionais continuam em uma página separada.</p>
+      <button type="button" id="copyLink" class="primary">COPIAR LINK DE MATRÍCULA</button>
+      <button type="button" id="reload" class="secondary">ATUALIZAR</button>
+    </header>
+    <p id="status" class="message" role="status" aria-live="polite">Verificando acesso...</p>
+    <section id="content" hidden>
+      <section class="panel" aria-labelledby="holdsTitle">
+        <h2 id="holdsTitle">Reservas temporárias</h2>
+        <p>Quando a matrícula for vinculada à turma no sistema, a reserva correspondente será concluída automaticamente, desde que o WhatsApp do aluno seja o mesmo.</p>
+        <div id="holds"></div>
+      </section>
+      <section class="panel" aria-labelledby="waitlistTitle">
+        <h2 id="waitlistTitle">Lista de espera</h2>
+        <p>Quando surgir vaga, entre em contato com o interessado. A lista não bloqueia vagas.</p>
+        <div id="waitlist"></div>
+      </section>
+    </section>
+  </main>
+  <script src="/reservas-de-turmas/app.js?v=20261029-1"></script>
+</body>
+</html>
