@@ -115,6 +115,6 @@ test("workflow keeps issue-write access isolated from pull-request checks", () =
   assert.match(alertJob, /github\.event_name == 'workflow_dispatch'/);
   assert.match(alertJob, /github\.ref == 'refs\/heads\/main'/);
   assert.match(alertJob, /issues: write/);
-  assert.match(alertJob, /actions\/github-script@v8/);
+  assert.match(alertJob, /actions\/github-script@v9/);
   assert.match(alertJob, /needs\.suspended-portal\.outputs\.production_audit_outcome/);
 });
