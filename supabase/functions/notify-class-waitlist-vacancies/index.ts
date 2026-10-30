@@ -140,7 +140,7 @@ async function send(
         "Content-Type": "application/json",
         "Idempotency-Key": "class-waitlist-" + notification.notification_id,
       },
-      body: JSON.stringify({ from: SENDER, to: [RECIPIENT], reply_to: RECIPIENT, ...message }),
+      body: JSON.stringify({ from: SENDER, to: [RECIPIENT], reply_to: "contato@teacherflavius.com", ...message }),
     });
   } catch {
     await finish(supabase, notification.notification_id, "failed", undefined, "resend_connection");
