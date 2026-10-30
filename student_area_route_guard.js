@@ -16,7 +16,10 @@
       await Auth.requireAuth();
     } catch (error) {
       console.error("Não foi possível validar o acesso à Área do Estudante:", error);
-      window.location.replace("/acesso-negado/");
+      const next = window.location.pathname + window.location.search;
+      window.location.replace(
+        "/acesso-negado/?reason=verification&next=" + encodeURIComponent(next)
+      );
     }
   }
 
