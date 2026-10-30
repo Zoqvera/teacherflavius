@@ -50,7 +50,7 @@ test("only increases in available spots create queue events with protected conta
 test("email worker is authenticated and sends contact links only to teacher", () => {
   assert.match(edge, /RECIPIENT = "contato@teacherflavius\.com"/);
   assert.match(edge, /"Idempotency-Key": "class-waitlist-" \+ notification\.notification_id/);
-  assert.match(edge, /https:\/\/wa\.me\/55/);
+  assert.match(edge, /href="https:\/\/wa\.me\/' \+ number/);
   assert.match(edge, /x-webhook-secret/);
   assert.match(edge, /equalSecrets/);
   assert.match(edge, /claim_class_waitlist_vacancy_emails_internal/);
