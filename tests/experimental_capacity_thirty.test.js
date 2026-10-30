@@ -21,7 +21,7 @@ test("editing or converting an experimental class preserves the 30-place default
 });
 
 test("teacher interfaces display 30 experimental places", () => {
-  assert.match(read("turmas.js"), /classItem\.class_type === "experimental" \? 30 : 8/);
+  assert.match(read("turmas.js"), /if \(classType === "experimental"\) return 30/);
   assert.match(read("turmas\/turmas_visual.js"), /experimental"\)\) return Number\(card\.dataset\.capacity\) \|\| 30/);
   assert.match(read("docs\/sql_class_type_retirement.md"), /30 participantes por sessão/);
 });

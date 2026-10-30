@@ -42,6 +42,17 @@ function timeLabel(value) {
   return m === 0 ? h + "h" : h + "h" + String(m).padStart(2,"0");
 }
 
+function getDefaultCapacityForType(classType) {
+  if (classType === "individual") return 1;
+  if (classType === "experimental") return 30;
+  return 8;
+}
+
+function parseClassCapacity(value) {
+  const capacity = Number(value);
+  return Number.isInteger(capacity) && capacity >= 1 && capacity <= 50 ? capacity : null;
+}
+
 function sortClassesAlphabetically(classes) {
   return classes.slice().sort(function (a,b) {
     return getClassDisplayName(a).localeCompare(getClassDisplayName(b), "pt-BR", { sensitivity:"base", numeric:true });
@@ -73,11 +84,12 @@ function renderClassCard(classItem) {
   const classNumber = classItem.class_number;
   const className = classItem.class_name || ("Turma " + classNumber);
   const studentCount = Number(classItem.student_count || 0);
+  const capacity = Number(classItem.capacity_override || getDefaultCapacityForType(classItem.class_type));
   const typeMeta = getClassTypeMeta(classItem.class_type);
   const timeValue = classItem.class_start_time ? String(classItem.class_start_time).slice(0,5) : "";
   const scheduleText = classItem.class_weekday && classItem.class_start_time ? weekdayLabel(classItem.class_weekday) + ", " + timeLabel(classItem.class_start_time) : "Horário semanal não definido";
 
-  return '<div class="class-card" data-class-number="' + escapeHtml(classNumber) + '" data-capacity="' + escapeHtml(classItem.capacity_override || (classItem.class_type === "experimental" ? 30 : 8)) + '">' +
+  return '<div class="class-card" data-class-number="' + escapeHtml(classNumber) + '" data-capacity="' + escapeHtml(capacity) + '">' +
     '<div class="class-card-title"><span><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-6h6v6"/></svg></span>' + escapeHtml(className) + '</span><span class="class-type-badge ' + typeMeta.css + '">' + typeMeta.label + '</span></div>' +
     '<p class="class-meta">Alunos inscritos: ' + studentCount + ' · ' + escapeHtml(scheduleText) + '</p>' +
     '<div class="config-editor">' +
@@ -87,9 +99,10 @@ function renderClassCard(classItem) {
         '<div class="class-name-status" data-class-name-status="' + escapeHtml(classNumber) + '" role="status" aria-live="polite"></div>' +
       '</div>' +
       '<label>Etiqueta da turma<select class="class-config-select" data-class-type-select="' + escapeHtml(classNumber) + '"><option value=""' + (!classItem.class_type ? ' selected' : '') + '>Selecione</option><option value="quintet"' + (classItem.class_type === 'quintet' ? ' selected' : '') + '>QUINTETO</option><option value="individual"' + (classItem.class_type === 'individual' ? ' selected' : '') + '>INDIVIDUAL</option><option value="experimental"' + (classItem.class_type === 'experimental' ? ' selected' : '') + '>EXPERIMENTAL</option></select></label>' +
+      '<label>Capacidade máxima<input class="class-config-time" data-class-capacity-input="' + escapeHtml(classNumber) + '" type="number" min="1" max="50" step="1" value="' + escapeHtml(capacity) + '"></label>' +
       '<label>Dia semanal<select class="class-config-select" data-class-weekday-select="' + escapeHtml(classNumber) + '">' + weekdayOptions(classItem.class_weekday) + '</select></label>' +
       '<label>Horário<input class="class-config-time" data-class-time-input="' + escapeHtml(classNumber) + '" type="time" value="' + escapeHtml(timeValue) + '"></label>' +
-      '<div class="schedule-help">O nome pode ser salvo separadamente. Tipo, dia e horário são salvos pelo botão de configuração. O horário da turma é usado na organização das aulas.</div>' +
+      '<div class="schedule-help">O nome pode ser salvo separadamente. Tipo, capacidade, dia e horário são salvos pelo botão de configuração. O horário da turma é usado na organização das aulas.</div>' +
       '<button class="config-save-button full" type="button" data-save-class-config="' + escapeHtml(classNumber) + '">SALVAR CONFIGURAÇÃO</button>' +
     '</div>' +
     '<div class="class-actions"><a class="open-class-button" href="' + (classItem.class_type === "experimental" ? "/aulas-experimentais/" : "turma.html?id=" + encodeURIComponent(classNumber)) + '">ABRIR TURMA</a><button class="remove-class-button" type="button" data-class-number="' + escapeHtml(classNumber) + '" data-class-name="' + escapeHtml(className) + '">EXCLUIR TURMA</button></div>' +
@@ -126,14 +139,21 @@ async function createClass(event) {
   const typeSelect = document.getElementById("classType");
   const weekdaySelect = document.getElementById("classWeekday");
   const timeInput = document.getElementById("classStartTime");
+  const capacityInput = document.getElementById("classCapacity");
   const className = nameInput.value.trim();
   const classType = typeSelect.value;
+  const capacity = parseClassCapacity(capacityInput.value);
   const weekday = weekdaySelect.value ? Number(weekdaySelect.value) : null;
   const startTime = timeInput.value || null;
 
   if (!classType) {
     message.className = "error";
     message.textContent = "Selecione INDIVIDUAL, QUINTETO ou EXPERIMENTAL.";
+    return;
+  }
+  if (capacity === null || (classType === "individual" && capacity !== 1)) {
+    message.className = "error";
+    message.textContent = "Informe uma capacidade válida (1 a 50 alunos; INDIVIDUAL exige 1).";
     return;
   }
   if ((weekday && !startTime) || (!weekday && startTime)) {
@@ -147,7 +167,7 @@ async function createClass(event) {
 
   try {
     const client = Auth.getClient();
-    const response = await client.rpc("create_teacher_class_with_type", { target_class_name:className || null, target_class_type:classType });
+    const response = await client.rpc("create_teacher_class_with_capacity", { target_class_name:className || null, target_class_type:classType, target_capacity:capacity });
     if (response.error) throw response.error;
     const classNumber = response.data && response.data.class_number ? Number(response.data.class_number) : null;
     if (classNumber && weekday && startTime) {
@@ -156,6 +176,7 @@ async function createClass(event) {
     }
     nameInput.value = "";
     typeSelect.value = "";
+    capacityInput.value = String(getDefaultCapacityForType("quintet"));
     weekdaySelect.value = "";
     timeInput.value = "";
     message.className = "empty";
@@ -215,25 +236,28 @@ async function saveClassConfig(classNumber, button) {
   const typeSelect = document.querySelector('[data-class-type-select="' + CSS.escape(String(classNumber)) + '"]');
   const weekdaySelect = document.querySelector('[data-class-weekday-select="' + CSS.escape(String(classNumber)) + '"]');
   const timeInput = document.querySelector('[data-class-time-input="' + CSS.escape(String(classNumber)) + '"]');
+  const capacityInput = document.querySelector('[data-class-capacity-input="' + CSS.escape(String(classNumber)) + '"]');
   const classType = typeSelect ? typeSelect.value : "";
+  const capacity = parseClassCapacity(capacityInput ? capacityInput.value : "");
   const weekday = weekdaySelect && weekdaySelect.value ? Number(weekdaySelect.value) : null;
   const startTime = timeInput && timeInput.value ? timeInput.value : null;
 
   if (!classType) { alert("Selecione INDIVIDUAL, QUINTETO ou EXPERIMENTAL antes de salvar."); return; }
+  if (capacity === null || (classType === "individual" && capacity !== 1)) { alert("Informe uma capacidade válida de 1 a 50 alunos. INDIVIDUAL exige 1."); return; }
   if ((weekday && !startTime) || (!weekday && startTime)) { alert("Informe o dia e o horário juntos, ou deixe ambos vazios."); return; }
 
   button.disabled = true;
   button.textContent = "SALVANDO...";
   try {
     const client = Auth.getClient();
-    const typeResponse = await client.rpc("set_teacher_class_type", { target_class_number:Number(classNumber), target_class_type:classType });
-    if (typeResponse.error) throw typeResponse.error;
-    const updateResponse = await client.from("teacher_classes").update({
-      class_weekday: weekday,
-      class_start_time: startTime,
-      updated_at: new Date().toISOString()
-    }).eq("class_number", Number(classNumber));
-    if (updateResponse.error) throw updateResponse.error;
+    const response = await client.rpc("save_teacher_class_configuration", {
+      target_class_number: Number(classNumber),
+      target_class_type: classType,
+      target_capacity: capacity,
+      target_weekday: weekday,
+      target_start_time: startTime
+    });
+    if (response.error) throw response.error;
     await renderClasses();
   } catch (error) {
     alert("Não foi possível salvar a configuração: " + (error.message || "erro desconhecido") + ".");
@@ -273,6 +297,12 @@ function attachClassButtons() {
       if (button && !button.disabled) saveClassName(input.dataset.classNameInput, button);
     });
   });
+  document.querySelectorAll("[data-class-type-select]").forEach(function (select) {
+    select.addEventListener("change", function () {
+      const capacityInput = document.querySelector('[data-class-capacity-input="' + CSS.escape(String(select.dataset.classTypeSelect)) + '"]');
+      if (capacityInput) capacityInput.value = String(getDefaultCapacityForType(select.value));
+    });
+  });
   document.querySelectorAll("[data-save-class-config]").forEach(function (button) {
     button.addEventListener("click", function () { saveClassConfig(button.dataset.saveClassConfig, button); });
   });
@@ -298,4 +328,11 @@ async function guardPage() {
 
 const createClassForm = document.getElementById("createClassForm");
 if (createClassForm) createClassForm.addEventListener("submit", createClass);
+const newClassType = document.getElementById("classType");
+if (newClassType) {
+  newClassType.addEventListener("change", function () {
+    const capacityInput = document.getElementById("classCapacity");
+    if (capacityInput) capacityInput.value = String(getDefaultCapacityForType(newClassType.value));
+  });
+}
 guardPage();

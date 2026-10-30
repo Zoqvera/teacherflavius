@@ -52,16 +52,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <form id="createClassForm" class="form-grid">
         <label class="full" for="className">Nome da turma<input id="className" type="text" placeholder="Ex.: Turma A1 - Terça" /></label>
         <label for="classType">Tipo da turma<select id="classType" required><option value="">Selecione</option><option value="individual">INDIVIDUAL</option><option value="quintet">QUINTETO</option><option value="experimental">EXPERIMENTAL</option></select></label>
+        <label for="classCapacity">Capacidade máxima<input id="classCapacity" type="number" min="1" max="50" step="1" value="8" required /></label>
         <label for="classWeekday">Dia semanal<select id="classWeekday"><option value="">Não definir agora</option><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="7">Domingo</option></select></label>
         <label for="classStartTime">Horário<input id="classStartTime" type="time" /></label>
-        <div class="schedule-help">Dia e horário definem a programação semanal da turma.</div>
+        <div class="schedule-help">QUINTETO é a classificação da turma; a capacidade pode variar de 1 a 50 alunos. Dia e horário definem a programação semanal.</div>
         <button class="delete-button full" type="submit" style="border-color:rgba(129,140,248,.45);background:rgba(129,140,248,.10);color:#c4b5fd;">CRIAR TURMA</button>
         <div id="classMessage" class="empty full" style="margin-top:4px;"></div>
       </form>
     </div>
     <div id="classesGrid" class="menu-grid"></div>
   </div>
-  <script src="/turmas.js?v=20261009-capacity30-1"></script>
+  <script src="/turmas.js?v=20261030-flexible-1"></script>
   <script src="animated_cards.js?v=20261009-capacity30-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>
