@@ -71,7 +71,7 @@ test("promotional-price reservations remain separate from class-seat holds", () 
   assert.doesNotMatch(migration, /update public\.student_billing_settings/i);
 });
 
-const optionalPhoneMigration = source("supabase/migrations/20261030005000_optional_whatsapp_class_seats.sql");
+const optionalPhoneMigration = source("supabase/migrations/20261030004428_optional_whatsapp_class_seats.sql");
 
 test("phone field is optional, with a persisted browser key and explicit student association", () => {
   assert.match(publicHtml.replace(/placeholder="\(34\) 99999-9999"/, ""), /WhatsApp com DDD \(opcional\)/);
