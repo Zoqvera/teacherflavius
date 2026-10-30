@@ -19,3 +19,4 @@ label{display:block;font-weight:700;margin:16px 0 7px}input{width:100%;padding:1
 .message{padding:14px;border-radius:10px;background:#ebf5ff;border:1px solid #aed0ed}
 .message.error{background:#fff2f0;border-color:#ebb8b0;color:#9f261e}.empty{padding:22px;background:#f5f7fa;border-radius:12px;color:#465776}
 @media(max-width:500px){.panel{padding:18px}.heading-row button{width:100%}.actions button{width:100%}}
+.student-selector{max-width:100%;min-width:220px;padding:11px;border:1px solid #8193a7;border-radius:9px;font:inherit;background:#fff;color:#15233d}.actions a.secondary{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700;border-radius:10px;padding:11px 14px;min-height:44px}.student-selector:focus-visible{outline:3px solid #357cdb;outline-offset:2px}
