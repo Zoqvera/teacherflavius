@@ -92,7 +92,7 @@ test("teacher bypass can be disabled for student-only routes", async function ()
   assert.equal(loaded.location.replacedWith, "/acesso-negado/");
 });
 
-test("student resource guard fails closed when profile verification errors", async function () {
+test("student resource guard fails closed with recoverable verification errors", async function () {
   const loaded = loadGuard("/atividade/");
   const service = loaded.module.create(guardOptions({
     ensureProfileForUser: async function () {
@@ -103,5 +103,8 @@ test("student resource guard fails closed when profile verification errors", asy
   const user = await service.requireAuth();
 
   assert.equal(user, null);
-  assert.equal(loaded.location.replacedWith, "/acesso-negado/");
+  assert.equal(
+    loaded.location.replacedWith,
+    "/acesso-negado/?reason=verification&next=%2Fatividade%2F"
+  );
 });
