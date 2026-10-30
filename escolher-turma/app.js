@@ -2,6 +2,37 @@
   "use strict";
 
   const STORAGE_KEY = "teacherflavius_class_seat_hold_v1";
+  const CLIENT_KEY_STORAGE_KEY = "teacherflavius_class_seat_browser_key_v1";
+  let cachedClientKey = null;
+
+  function getClientKey() {
+    if (cachedClientKey) return cachedClientKey;
+    try {
+      const storedKey = localStorage.getItem(CLIENT_KEY_STORAGE_KEY);
+      if (/^[0-9a-f]{64}$/.test(storedKey || "")) {
+        cachedClientKey = storedKey;
+        return storedKey;
+      }
+    } catch (_error) {
+      // The reservation remains available when browser storage is blocked.
+    }
+
+    if (!window.crypto || typeof window.crypto.getRandomValues !== "function") {
+      throw new Error("Este navegador não oferece a segurança necessária para criar uma reserva.");
+    }
+
+    const bytes = window.crypto.getRandomValues(new Uint8Array(32));
+    cachedClientKey = Array.from(bytes, function (byte) {
+      return byte.toString(16).padStart(2, "0");
+    }).join("");
+
+    try {
+      localStorage.setItem(CLIENT_KEY_STORAGE_KEY, cachedClientKey);
+    } catch (_error) {
+      // Keep the generated key for the current page session.
+    }
+    return cachedClientKey;
+  }
   const REFRESH_INTERVAL_MS = 10000;
   const weekdays = Object.freeze({
     1: "Segunda-feira", 2: "Terça-feira", 3: "Quarta-feira",
@@ -212,16 +243,18 @@
     if (!selectedClass) return;
     const name = document.getElementById("studentName").value.trim();
     const whatsapp = document.getElementById("studentPhone").value.trim();
-    if (!name || !whatsapp) return;
+    if (!name) return;
 
     elements.submitLead.disabled = true;
     setMessage("");
     try {
+      const clientKey = getClientKey();
       if (formMode === "reserve") {
         const hold = await callRpc("create_public_class_seat_hold", {
           target_class_number: selectedClass.class_number,
           target_name: name,
-          target_whatsapp: whatsapp
+          target_whatsapp: whatsapp,
+          target_client_key: clientKey
         });
         saveHold(hold);
         showHold(hold);
@@ -233,7 +266,7 @@
           target_whatsapp: whatsapp
         });
         elements.formPanel.hidden = true;
-        setMessage("Seu interesse foi registrado na lista de espera. O professor poderá entrar em contato quando houver vaga.");
+        setMessage(whatsapp ? "Interesse registrado na lista de espera. O professor poderá entrar em contato quando houver vaga." : "Interesse registrado. Informe seu nome e a turma ao professor pelo WhatsApp para receber o retorno.");
       }
       elements.leadForm.reset();
       await refreshVacancies();
