@@ -40,6 +40,7 @@
   });
   const elements = {
     message: document.getElementById("message"),
+    planSummary: document.getElementById("planSummary"),
     reservationPanel: document.getElementById("reservationPanel"),
     vacancyPanel: document.getElementById("vacancyPanel"),
     formPanel: document.getElementById("formPanel"),
@@ -58,6 +59,7 @@
   let formMode = "reserve";
   let currentHold = null;
   let loading = false;
+  let enrollmentPlan = null;
 
   function classDescription(row) {
     const parts = String(row.class_start_time || "").split(":");
@@ -95,6 +97,24 @@
     return result;
   }
 
+  async function loadEnrollmentPlan() {
+    try {
+      const plan = await callRpc("get_public_class_seat_enrollment_plan");
+      if (!plan || plan.class_mode !== "group" || !(Number(plan.monthly_fee) > 0)) {
+        throw new Error("O plano de matrícula não está disponível no momento.");
+      }
+      enrollmentPlan = plan;
+      const amount = Number(plan.monthly_fee).toLocaleString("pt-BR", {
+        style: "currency", currency: "BRL"
+      });
+      elements.planSummary.textContent = "Plano de aulas em grupo: " + amount +
+        " por mês, " + plan.classes_per_month + " aulas mensais. A primeira mensalidade vence no dia da matrícula.";
+    } catch (error) {
+      enrollmentPlan = null;
+      elements.planSummary.textContent = error.message || "Não foi possível consultar o plano.";
+    }
+  }
+
   function createClassCard(row) {
     const card = document.createElement("article");
     card.className = "class-card";
@@ -115,6 +135,10 @@
     button.addEventListener("click", function () {
       if (currentHold) {
         setMessage("Você já tem uma reserva. Libere-a antes de escolher outra turma.", true);
+        return;
+      }
+      if (spots > 0 && !enrollmentPlan) {
+        setMessage("O plano está indisponível. Atualize a página antes de reservar.", true);
         return;
       }
       selectedClass = row;
@@ -214,7 +238,7 @@
       clearHold();
       elements.reservationPanel.hidden = true;
       setMessage(result.status === "claimed"
-        ? "Sua vaga foi vinculada à matrícula pelo professor."
+        ? "Sua matrícula nesta turma foi confirmada."
         : "A reserva não está mais ativa. Consulte novamente as vagas.", result.status !== "claimed");
       refreshVacancies();
     } catch (_error) {
@@ -256,14 +280,15 @@
           target_whatsapp: whatsapp,
           target_client_key: clientKey
         });
-        saveHold(hold);
-        showHold(hold);
-        setMessage("Reserva temporária registrada. Conclua a matrícula com o professor antes do prazo.");
+        saveHold(Object.assign({}, hold, { applicant_name: name, class_weekday: selectedClass.class_weekday }));
+        showHold(Object.assign({}, hold, { applicant_name: name, class_weekday: selectedClass.class_weekday }));
+        setMessage("Vaga reservada. Clique em CONTINUAR PARA MATRÍCULA e finalize seu cadastro antes do prazo.");
       } else {
         await callRpc("join_public_class_seat_waitlist", {
           target_class_number: selectedClass.class_number,
           target_name: name,
-          target_whatsapp: whatsapp
+          target_whatsapp: whatsapp,
+          target_client_key: clientKey
         });
         elements.formPanel.hidden = true;
         setMessage(whatsapp ? "Interesse registrado na lista de espera. O professor poderá entrar em contato quando houver vaga." : "Interesse registrado. Informe seu nome e a turma ao professor pelo WhatsApp para receber o retorno.");
@@ -300,7 +325,7 @@
     const message = "Reserva temporária Teacher Flávio\nTurma: " +
       currentHold.class_number + "\nCódigo: " + currentHold.reservation_id +
       "\nVálida até: " + new Date(currentHold.expires_at).toLocaleString("pt-BR") +
-      "\nEncaminhar ao professor para concluir a matrícula.";
+      "\nConclua sua matrícula em https://teacherflavius.com/complete-cadastro/";
     try {
       await navigator.clipboard.writeText(message);
       setMessage("Comprovante copiado. Envie-o ao professor no WhatsApp.");
@@ -322,6 +347,7 @@
       refreshHoldStatus();
     }
   });
+  loadEnrollmentPlan();
   refreshVacancies().then(restoreHold);
   setInterval(function () {
     updateCountdown();
