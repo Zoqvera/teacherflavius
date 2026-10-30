@@ -180,11 +180,11 @@ const optionalEnrollmentPhoneMigration = source(
 
 test("reserved-seat enrollment accepts a missing WhatsApp without relaxing legacy enrollment", () => {
   assert.match(enrollmentHtml, /whatsappInput\.required = !hasSeat/);
-  assert.match(enrollmentHtml, /WhatsApp \\(opcional\\)/);
-  assert.match(optionalEnrollmentPhoneMigration, /length\\(phone_digits\\)<>0 and length\\(phone_digits\\) not between 10 and 13/);
-  assert.match(optionalEnrollmentPhoneMigration, /hold\\.status = 'active'/);
-  assert.match(optionalEnrollmentPhoneMigration, /hold\\.expires_at > now\\(\\)/);
-  assert.match(optionalEnrollmentPhoneMigration, /current_setting\\('teacherflavius\\.reserved_seat_completion', true\\) = hold\\.id::text/);
-  assert.match(optionalEnrollmentPhoneMigration, /whatsapp=nullif\\(btrim\\(target_whatsapp\\),''\\)/);
+  assert.match(enrollmentHtml, /WhatsApp \(opcional\)/);
+  assert.match(optionalEnrollmentPhoneMigration, /length\(phone_digits\)<>0 and length\(phone_digits\) not between 10 and 13/);
+  assert.match(optionalEnrollmentPhoneMigration, /hold\.status = 'active'/);
+  assert.match(optionalEnrollmentPhoneMigration, /hold\.expires_at > now\(\)/);
+  assert.match(optionalEnrollmentPhoneMigration, /current_setting\('teacherflavius\.reserved_seat_completion', true\) = hold\.id::text/);
+  assert.match(optionalEnrollmentPhoneMigration, /whatsapp=nullif\(btrim\(target_whatsapp\),''\)/);
   assert.match(optionalEnrollmentPhoneMigration, /raise exception 'Informe um WhatsApp válido para concluir a matrícula\.'/);
 });
