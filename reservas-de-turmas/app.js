@@ -3,6 +3,7 @@
 
   const PUBLIC_LINK = "https://teacherflavius.com/escolher-turma/";
   const POLL_MS = 15000;
+  let eligibleStudents = [];
   const status = document.getElementById("status");
   const content = document.getElementById("content");
 
@@ -52,15 +53,51 @@
   function leadCard(lead, kind) {
     const item = element("article", "class-card");
     const heading = element("h3", "", lead.applicant_name);
-    const details = element("p", "", classLabel(lead.class_number) + " · " + lead.whatsapp);
+    const details = element("p", "", classLabel(lead.class_number) + " · " + (lead.whatsapp || "WhatsApp não informado"));
     const meta = element("p", "class-time", kind === "hold"
       ? reservationLabel(lead)
       : "Aguardando abertura de vaga");
     const actions = element("div", "actions");
     const openStudents = element("a", "secondary", "LOCALIZAR ALUNO");
     openStudents.href = "/perfil-dos-alunos/";
-    const contact = phoneLink(lead.whatsapp);
-    actions.append(openStudents, contact);
+    actions.append(openStudents);
+    if (lead.whatsapp) actions.append(phoneLink(lead.whatsapp));
+
+    if (kind === "hold" && lead.status === "active"
+      && Date.parse(lead.expires_at) > Date.now() && !lead.student_id) {
+      const select = element("select", "student-selector");
+      select.setAttribute("aria-label", "Selecione aluno para associar à reserva");
+      const placeholder = element("option", "", "Selecione aluno matriculado");
+      placeholder.value = "";
+      select.append(placeholder);
+      eligibleStudents.forEach(function (student) {
+        const option = element("option", "", student.name);
+        option.value = student.user_id;
+        select.append(option);
+      });
+      const associate = element("button", "secondary", "ASSOCIAR AO ALUNO");
+      associate.type = "button";
+      associate.addEventListener("click", async function () {
+        if (!select.value) {
+          showStatus("Selecione primeiro o aluno que realizará a matrícula.", true);
+          return;
+        }
+        associate.disabled = true;
+        try {
+          const result = await window.Auth.getClient().rpc("assign_teacher_class_seat_hold", {
+            target_hold_id: lead.id,
+            target_student_id: select.value
+          });
+          if (result.error) throw result.error;
+          await reload();
+          showStatus("Reserva associada. Agora vincule o aluno à turma no cadastro, registrando a origem e a data da primeira aula.");
+        } catch (error) {
+          showStatus(error.message || "Não foi possível associar a reserva.", true);
+          associate.disabled = false;
+        }
+      });
+      actions.append(select, associate);
+    }
     if ((kind === "hold" && lead.status === "active" && Date.parse(lead.expires_at) > Date.now())
       || kind === "waitlist") {
       const action = element("button", "secondary", kind === "hold" ? "LIBERAR VAGA" : "MARCAR RESOLVIDO");
@@ -77,6 +114,9 @@
       });
       actions.append(action);
     }
+    if (kind === "hold" && lead.student_id && lead.status === "active") {
+      item.append(element("p", "class-time", "Aluno associado. Conclua o vínculo no cadastro da turma."));
+    }
     item.append(heading, details, meta, actions);
     return item;
   }
@@ -91,6 +131,20 @@
     const list = element("div", "class-list");
     leads.forEach(function (lead) { list.append(leadCard(lead, kind)); });
     container.append(list);
+  }
+
+  async function loadEligibleStudents() {
+    const result = await window.Auth.getClient().rpc("get_teacher_students");
+    if (result.error) throw result.error;
+    eligibleStudents = (Array.isArray(result.data) ? result.data : [])
+      .filter(function (student) {
+        return student.enrolled === true &&
+          /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(student.user_id || ""));
+      })
+      .map(function (student) {
+        return { user_id: student.user_id, name: student.name || "Sem nome" };
+      })
+      .sort(function (a, b) { return a.name.localeCompare(b.name, "pt-BR"); });
   }
 
   async function reload() {
@@ -132,6 +186,7 @@
       }
       const role = await window.Auth.getClient().rpc("is_teacher_admin");
       if (role.error || role.data !== true) throw new Error("Área exclusiva do professor.");
+      await loadEligibleStudents();
       await reload();
       showStatus("");
       setInterval(function () {
