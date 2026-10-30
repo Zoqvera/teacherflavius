@@ -47,6 +47,8 @@ declare
   link private.enrollment_invite_links%rowtype;
   existing private.student_enrollment_access%rowtype;
   provider text;
+  course public.teacher_classes%rowtype;
+  earliest_first_date date;
 begin
   if requester is null then
     raise exception 'Entre com sua conta Google para concluir a matrícula.' using errcode='42501';
@@ -131,9 +133,23 @@ begin
   update private.class_seat_holds set student_id=requester,updated_at=now()
   where id=hold.id;
 
+  select * into course from public.teacher_classes
+  where class_number=hold.class_number and is_active and class_type='quintet';
+  earliest_first_date:=timezone('America/Sao_Paulo',now())::date;
+  earliest_first_date:=earliest_first_date
+    + ((course.class_weekday::integer-extract(isodow from earliest_first_date)::integer+7)%7);
+  if earliest_first_date=timezone('America/Sao_Paulo',now())::date then
+    earliest_first_date:=earliest_first_date+7;
+  end if;
+  if course.first_lesson_date is not null and earliest_first_date<course.first_lesson_date then
+    earliest_first_date:=course.first_lesson_date
+      + ((course.class_weekday::integer-extract(isodow from course.first_lesson_date)::integer+7)%7);
+  end if;
+
   return jsonb_build_object(
     'ok',true,'class_number',hold.class_number,
-    'expires_at',hold.expires_at,'monthly_fee',link.monthly_fee,
+    'expires_at',hold.expires_at,'earliest_first_lesson_date',earliest_first_date,
+    'monthly_fee',link.monthly_fee,
     'classes_per_month',link.classes_per_month
   );
 end;
