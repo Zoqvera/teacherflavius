@@ -1,6 +1,5 @@
--- Allow WhatsApp to be omitted only during a valid reserved-seat enrollment.
--- Legacy enrollment continues to require a valid WhatsApp.
-
+-- Allow the optional WhatsApp promised by reserved-seat self-enrollment.
+-- Access-code enrollment retains its previous mandatory-phone validation.
 CREATE OR REPLACE FUNCTION public.activate_completed_google_student_profile()
  RETURNS trigger
  LANGUAGE plpgsql
