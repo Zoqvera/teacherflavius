@@ -83,6 +83,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button id="enrollmentAccessButton" type="submit">VALIDAR CÓDIGO</button>
       </form>
 
+      <section id="reservedSeatError" class="form-section" hidden>
+        <h2>Não foi possível recuperar a reserva</h2>
+        <p id="reservedSeatErrorMessage" role="alert"></p>
+        <a href="/escolher-turma/">VOLTAR E ESCOLHER UMA TURMA</a>
+      </section>
+
       <form id="completeProfileForm" hidden>
         <section id="enrollmentPlanSummary" class="form-section enrollment-plan-summary" aria-label="Plano de matrícula" hidden></section>
         <section id="reservedSeatSection" class="form-section" aria-label="Turma reservada" hidden>
@@ -247,9 +253,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         reservedSeat = Object.assign({}, saved, response.data);
         return refreshOnboardingState();
       } catch (error) {
-        document.getElementById("enrollmentAccessMessage").textContent =
+        const alert = document.getElementById("reservedSeatError");
+        document.getElementById("reservedSeatErrorMessage").textContent =
           (error.message || "A reserva expirou.") +
           " Volte à página de turmas para escolher um horário disponível.";
+        alert.hidden = false;
         return state;
       }
     }
@@ -430,6 +438,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       await applyAuthorizedPlan(state);
       configureFormForState(state);
       configureReservedSeat(state);
+      if (!document.getElementById("reservedSeatError").hidden) {
+        document.getElementById("enrollmentAccessForm").hidden = true;
+        document.getElementById("completeProfileForm").hidden = true;
+      }
     }
 
     document.getElementById("cpf").addEventListener("input", function () { this.value = formatCpf(this.value); });
