@@ -440,6 +440,24 @@ Deno.serve(async (request: Request) => {
     return jsonResponse(request, { error: "Mensalidade não encontrada para esta conta." }, 404);
   }
 
+  // Null means ordinary tuition. A reserved-seat invoice requires an
+  // active 10-minute checkout; neither refreshed pages nor replayed requests extend it.
+  const { data: reservedSeatPolicy, error: reservedSeatPolicyError } = await supabaseAdmin.rpc(
+    "is_reserved_seat_checkout_allowed",
+    { target_student_id: user.id, target_tuition_id: tuitionId },
+  );
+  if (reservedSeatPolicyError ||
+      (reservedSeatPolicy !== null && typeof reservedSeatPolicy !== "boolean")) {
+    console.error("Unable to verify reserved-seat checkout", reservedSeatPolicyError?.message);
+    return jsonResponse(request, { error: "Não foi possível validar o prazo da vaga." }, 503);
+  }
+  if (reservedSeatPolicy === false) {
+    return jsonResponse(request, {
+      error: "O prazo de dez minutos da vaga terminou ou o pagamento ainda não foi aberto.",
+      code: "reserved_seat_checkout_expired",
+    }, 409);
+  }
+
   if (tuition.payment_date) {
     return jsonResponse(request, { error: "Esta mensalidade já está paga.", code: "already_paid" }, 409);
   }
@@ -537,7 +555,7 @@ Deno.serve(async (request: Request) => {
       code: "payment_window_unavailable",
     }, 503);
   }
-  if (windowClosed) {
+  if (windowClosed && reservedSeatPolicy !== true) {
     return jsonResponse(request, {
       error: "O prazo para iniciar o primeiro pagamento terminou às 23h59 (horário de Brasília) do dia da matrícula. Entre em contato com o professor para regularizar sua matrícula. Pagamentos iniciados dentro do prazo continuam em verificação.",
       code: "first_payment_deadline_expired",
