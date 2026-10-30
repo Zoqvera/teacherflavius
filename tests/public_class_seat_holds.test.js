@@ -74,13 +74,13 @@ test("promotional-price reservations remain separate from class-seat holds", () 
 const optionalPhoneMigration = source("supabase/migrations/20261030004428_optional_whatsapp_class_seats.sql");
 
 test("WhatsApp is required without requiring the trial's number", () => {
-  assert.match(publicHtml, /WhatsApp com DDD \\(obrigatório\\)/);
+  assert.match(publicHtml, /WhatsApp com DDD \(obrigatório\)/);
   assert.match(publicHtml, /id="studentPhone"[^>]* required/);
   assert.match(publicApp, /function isValidWhatsapp/);
-  assert.match(publicApp, /if \\(!name \\|\\| !isValidWhatsapp\\(whatsapp\\)\\)/);
+  assert.match(publicApp, /if \(!name \|\| !isValidWhatsapp\(whatsapp\)\)/);
   assert.match(publicApp, /target_client_key: clientKey/);
   assert.match(publicApp, /Nenhuma vaga foi reservada/);
-  assert.match(optionalPhoneMigration, /alter table private\\.class_seat_holds alter column whatsapp drop not null/);
+  assert.match(optionalPhoneMigration, /alter table private\.class_seat_holds alter column whatsapp drop not null/);
 });
 
 test("legacy three-argument RPCs stay intact for open browser tabs", () => {
