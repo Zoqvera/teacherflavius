@@ -42,9 +42,9 @@
       <form id="leadForm">
         <label for="studentName">Seu nome</label>
         <input type="text" id="studentName" maxlength="120" autocomplete="name" required>
-        <label for="studentPhone">WhatsApp com DDD (opcional)</label>
-        <input type="tel" id="studentPhone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="(34) 99999-9999">
-        <p class="hint">O celular é opcional nesta etapa. Na matrícula, você informará os dados cadastrais exigidos, incluindo o WhatsApp.</p>
+        <label for="studentPhone">WhatsApp com DDD (obrigatório)</label>
+        <input type="tel" id="studentPhone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="(34) 99999-9999" required>
+        <p class="hint">Informe um WhatsApp com DDD para reservar ou entrar na lista de espera. Ele pode ser diferente do número usado para agendar a aula experimental. Entrar na lista de espera não reserva vaga.</p>
         <div class="actions">
           <button type="submit" class="primary" id="submitLead">RESERVAR POR 15 MINUTOS</button>
           <button id="closeForm" type="button" class="secondary">VOLTAR</button>
@@ -53,6 +53,6 @@
     </section>
     <footer><p>Reservar não equivale a concluir a matrícula. A confirmação depende da finalização do cadastro enquanto a reserva estiver válida. Se não houver vagas, você poderá entrar na lista de espera.</p></footer>
   </main>
-  <script src="/escolher-turma/app.js?v=20261030-2"></script>
+  <script src="/escolher-turma/app.js?v=20261030-3"></script>
 </body>
 </html>
