@@ -338,7 +338,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         personalDataDescription.textContent = "Todos os campos abaixo são obrigatórios para concluir a matrícula.";
       }
 
-      configureReservedSeat(state);
       updateSubmitButton(state);
     }
 
@@ -430,6 +429,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       window.StudentAcquisition.setup("acquisitionSource", "acquisitionDetail", recorded.source, recorded.detail);
       await applyAuthorizedPlan(state);
       configureFormForState(state);
+      configureReservedSeat(state);
     }
 
     document.getElementById("cpf").addEventListener("input", function () { this.value = formatCpf(this.value); });
