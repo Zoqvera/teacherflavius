@@ -42,6 +42,29 @@
       window.location.replace(accessDeniedPath);
     }
 
+    function isConnectionFailure(error) {
+      if (!error) return false;
+
+      const status = error.status;
+      if (typeof status === "number" && (status === 0 || status >= 500)) {
+        return true;
+      }
+
+      const description = [error.name, error.message, error.details]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return /failed to fetch|fetch failed|load failed|network ?error|network request failed|connection refused|econnreset|etimedout|timeout|offline|authretryablefetcherror/.test(description);
+    }
+
+    function redirectToVerificationFailure(error) {
+      const reason = isConnectionFailure(error) ? "connection" : "verification";
+      window.location.replace(
+        accessDeniedPath + "?reason=" + reason + "&next=" + encodeURIComponent(getCurrentPath())
+      );
+    }
+
     function isActiveStudent(profile) {
       return !!profile &&
         profile.profile_completed === true &&
@@ -71,7 +94,15 @@
         return null;
       }
 
-      const session = await getSession();
+      let session;
+      try {
+        session = await getSession();
+      } catch (error) {
+        console.error("Não foi possível consultar a sessão:", error);
+        redirectToVerificationFailure(error);
+        return null;
+      }
+
       if (!session) {
         redirectToLogin();
         return null;
@@ -99,7 +130,7 @@
       } catch (error) {
         console.error("Não foi possível verificar o cadastro do usuário:", error);
         if (requiresActiveStudent) {
-          redirectToAccessDenied();
+          redirectToVerificationFailure(error);
           return null;
         }
       }

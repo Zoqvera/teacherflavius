@@ -19,14 +19,14 @@
     authSessionService: Object.freeze({
       globalName: "AuthSessionService",
       selector: 'script[src^="/auth_session_service.js"]',
-      src: "/auth_session_service.js?v=20260912-1",
+      src: "/auth_session_service.js?v=20261030-1",
       missingMessage: "O serviço de sessão não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de sessão."
     }),
     authGuardService: Object.freeze({
       globalName: "AuthGuardService",
       selector: 'script[src^="/auth_guard_service.js"]',
-      src: "/auth_guard_service.js?v=20260909-1",
+      src: "/auth_guard_service.js?v=20261030-1",
       missingMessage: "O serviço de guarda de autenticação não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de guarda de autenticação."
     }),

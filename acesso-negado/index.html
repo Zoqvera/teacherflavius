@@ -26,6 +26,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Acesso não autorizado - Teacher Flávio</title>
+  <script defer src="/access_error_page.js?v=20261030-1"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -84,10 +85,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <main>
     <span class="badge">TEACHER FLÁVIO</span>
-    <h1>Acesso não autorizado</h1>
-    <p>Este recurso está disponível apenas para alunos com matrícula ativa e para o professor. Se sua matrícula acabou de ser ativada, entre novamente.</p>
+    <h1 id="access-status-title">Acesso não autorizado</h1>
+    <p id="access-status-message">Este recurso está disponível apenas para alunos com matrícula ativa e para o professor. Se sua matrícula acabou de ser ativada, entre novamente.</p>
     <div class="actions">
-      <a class="primary" href="/login/">ENTRAR NOVAMENTE</a>
+      <a class="primary" id="access-status-primary" href="/login/">ENTRAR NOVAMENTE</a>
       <a class="secondary" href="/">VOLTAR AO INÍCIO</a>
     </div>
   </main>

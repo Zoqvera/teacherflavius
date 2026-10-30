@@ -156,6 +156,7 @@
       const client = deps.getClient();
       if (!client) return null;
       const response = await client.auth.getSession();
+      if (response && response.error) throw response.error;
       return response && response.data ? response.data.session : null;
     }
 
