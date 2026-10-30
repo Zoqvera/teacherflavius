@@ -124,3 +124,53 @@ test("keeps profile page available to authenticated inactive accounts", async fu
   assert.equal(user.id, "user-1");
   assert.equal(loaded.location.replacedWith, "");
 });
+
+test("routes network failures during session lookup to retryable connection screen", async function () {
+  const loaded = loadService("/area-do-estudante/");
+  const service = loaded.module.create(createOptions({
+    getSession: async function () { throw new TypeError("Load failed"); }
+  }));
+
+  assert.equal(await service.requireAuth(), null);
+  assert.equal(
+    loaded.location.replacedWith,
+    "/acesso-negado/?reason=connection&next=%2Farea-do-estudante%2F"
+  );
+});
+
+test("routes network failures during profile lookup to connection screen", async function () {
+  const loaded = loadService("/atividade/");
+  const service = loaded.module.create(createOptions({
+    ensureProfileForUser: async function () { throw new TypeError("Failed to fetch"); }
+  }));
+
+  assert.equal(await service.requireAuth(), null);
+  assert.equal(
+    loaded.location.replacedWith,
+    "/acesso-negado/?reason=connection&next=%2Fatividade%2F"
+  );
+});
+
+test("routes Supabase service outages to connection screen", async function () {
+  const loaded = loadService("/atividade/");
+  const service = loaded.module.create(createOptions({
+    ensureProfileForUser: async function () {
+      const error = new Error("Service Unavailable");
+      error.status = 503;
+      throw error;
+    }
+  }));
+
+  assert.equal(await service.requireAuth(), null);
+  assert.match(loaded.location.replacedWith, /reason=connection/);
+});
+
+test("does not present unknown verification failures as authorization denial", async function () {
+  const loaded = loadService("/atividade/");
+  const service = loaded.module.create(createOptions({
+    ensureProfileForUser: async function () { throw new Error("Unexpected backend response"); }
+  }));
+
+  assert.equal(await service.requireAuth(), null);
+  assert.match(loaded.location.replacedWith, /reason=verification/);
+});
