@@ -30,8 +30,9 @@
 
   function renderError() {
     const params = new URLSearchParams(window.location.search);
-    const message = ERROR_MESSAGES[params.get("reason")];
-    if (!message) return;
+    const reason = params.get("reason");
+    if (!Object.prototype.hasOwnProperty.call(ERROR_MESSAGES, reason)) return;
+    const message = ERROR_MESSAGES[reason];
 
     const heading = document.getElementById("access-status-title");
     const description = document.getElementById("access-status-message");
