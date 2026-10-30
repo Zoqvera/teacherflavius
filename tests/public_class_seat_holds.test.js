@@ -107,3 +107,69 @@ test("phone-less waiting-list requests explain how to follow up", () => {
   assert.match(publicApp, /Informe seu nome e a turma ao professor pelo WhatsApp/);
   assert.match(optionalPhoneMigration, /on conflict \(class_number,normalized_phone\) do update/);
 });
+
+const selfEnrollmentMigration = source("supabase/migrations/20261030011157_reserved_seat_self_enrollment.sql");
+const enrollmentHtml = source("complete-cadastro.html");
+
+test("reserved seat exposes transparent monthly fee from an existing teacher plan", () => {
+  assert.match(selfEnrollmentMigration, /create table private\.class_seat_enrollment_settings/);
+  assert.match(selfEnrollmentMigration, /link\.monthly_fee=50 and link\.classes_per_month=4/);
+  assert.match(selfEnrollmentMigration, /create function public\.get_public_class_seat_enrollment_plan/);
+  assert.match(selfEnrollmentMigration, /where settings\.singleton and link\.active and link\.class_mode='group'/);
+  assert.match(publicApp, /get_public_class_seat_enrollment_plan/);
+  assert.match(publicApp, /enrollmentPlan/);
+  assert.match(publicHtml, /id="planSummary"/);
+});
+
+test("public reservation advances to Google onboarding without exposing its capability token", () => {
+  assert.match(publicHtml, /href="\/complete-cadastro\/"/);
+  assert.match(publicHtml, /CONTINUAR PARA MATRÍCULA/);
+  assert.match(publicApp, /saveHold\(Object\.assign/);
+  assert.match(enrollmentHtml, /CLASS_SEAT_STORAGE_KEY = "teacherflavius_class_seat_hold_v1"/);
+  assert.match(enrollmentHtml, /authorize_my_reserved_seat_enrollment/);
+  assert.match(enrollmentHtml, /complete_my_reserved_seat_enrollment/);
+  assert.doesNotMatch(publicHtml, /reserva=[0-9a-f]+/i);
+});
+
+test("first lesson and acquisition origin are mandatory in self-service enrollment", () => {
+  assert.match(enrollmentHtml, /Em que dia será sua primeira aula/);
+  assert.match(enrollmentHtml, /target_first_lesson_date: firstLessonDate/);
+  assert.match(enrollmentHtml, /target_source: answer\.source/);
+  assert.match(selfEnrollmentMigration, /perform public\.set_my_student_acquisition/);
+  assert.match(selfEnrollmentMigration, /extract\(isodow from target_first_lesson_date\)/);
+  assert.match(selfEnrollmentMigration, /first_lesson_date\)\s*values\(hold\.class_number,requester,target_first_lesson_date\)/);
+});
+
+test("completion is atomic, authorized and does not bypass the billing workflow", () => {
+  assert.match(selfEnrollmentMigration, /if hold\.status<>'active' or hold\.expires_at<=now\(\)/);
+  assert.match(selfEnrollmentMigration, /hold\.student_id is distinct from requester/);
+  assert.match(selfEnrollmentMigration, /perform pg_catalog\.pg_advisory_xact_lock\(73008,hold\.class_number\)/);
+  assert.match(selfEnrollmentMigration, /perform public\.set_my_enrollment_class_mode\('group'\)/);
+  assert.match(selfEnrollmentMigration, /perform public\.set_my_enrollment_billing_terms\(\)/);
+  assert.match(selfEnrollmentMigration, /profile_completed=true/);
+  assert.match(selfEnrollmentMigration, /insert into public\.class_students/);
+  assert.match(selfEnrollmentMigration, /grant execute on function public\.complete_my_reserved_seat_enrollment/);
+  assert.doesNotMatch(selfEnrollmentMigration, /grant execute on function public\.complete_my_reserved_seat_enrollment[\s\S]*?to anon/);
+  assert.match(enrollmentHtml, /clearReservedSeat\(\);\s*window\.location\.replace\(getPostEnrollmentPath\(\)\)/);
+});
+
+test("the original enrollment access-code path remains available", () => {
+  assert.match(enrollmentHtml, /authorize_my_enrollment/);
+  assert.match(enrollmentHtml, /state = await applyInvitation\(state\)/);
+  assert.match(enrollmentHtml, /state = await applyReservedSeat\(state\)/);
+  assert.match(enrollmentHtml, /await Auth\.completeProfile/);
+  assert.match(enrollmentHtml, /set_my_student_acquisition/);
+});
+
+const seatActivationGuard = source("supabase/migrations/20261030011708_guard_reserved_seat_activation.sql");
+
+test("an enrollment authorized by a reservation cannot fall back to ordinary signup", () => {
+  assert.match(seatActivationGuard, /add column reserved_seat_hold_id uuid/);
+  assert.match(seatActivationGuard, /create trigger zz_guard_reserved_seat_profile_activation/);
+  assert.match(seatActivationGuard, /current_setting\('teacherflavius\.reserved_seat_completion',true\)/);
+  assert.match(seatActivationGuard, /h\.status='active' and h\.expires_at>now\(\)/);
+  assert.match(seatActivationGuard, /reserved_seat_hold_id=hold\.id/);
+  assert.match(seatActivationGuard, /pg_catalog\.set_config\('teacherflavius\.reserved_seat_completion'/);
+  assert.match(enrollmentHtml, /id="reservedSeatError"/);
+  assert.match(enrollmentHtml, /VOLTAR E ESCOLHER UMA TURMA/);
+});

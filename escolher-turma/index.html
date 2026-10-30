@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Escolha sua turma | Teacher Flávio</title>
-  <link rel="stylesheet" href="/escolher-turma/styles.css?v=20261029-1">
+  <link rel="stylesheet" href="/escolher-turma/styles.css?v=20261030-2">
   <script src="/supabase_config.js?v=20260715-1"></script>
 </head>
 <body>
@@ -14,15 +14,17 @@
     <header class="page-header">
       <a class="brand" href="/">TEACHER FLÁVIO</a>
       <h1>Escolha sua turma</h1>
-      <p>Consulte as vagas atualizadas automaticamente e reserve um lugar por 15 minutos após sua aula experimental.</p>
+      <p>Escolha seu horário, reserve a vaga por 15 minutos e conclua a matrícula com sua conta Google.</p>
     </header>
     <p id="message" role="status" aria-live="polite" class="message" hidden></p>
+    <p id="planSummary" class="hint" aria-live="polite">Consultando as condições da matrícula...</p>
     <section id="reservationPanel" class="panel" hidden aria-labelledby="reservationTitle">
       <h2 id="reservationTitle">Sua reserva temporária</h2>
       <p id="reservedClass"></p>
-      <p>Tempo restante para concluir a matrícula com o professor:</p>
+      <p>Tempo restante para concluir sua matrícula:</p>
       <p id="countdown" class="countdown" role="timer">15:00</p>
-      <p>Esta reserva não é uma matrícula nem um pagamento. Avise o professor pelo WhatsApp para finalizar sua inscrição antes do prazo.</p>
+      <p>Sua vaga está reservada temporariamente. Entre com Google, informe seus dados e escolha a data da primeira aula para concluir a matrícula. Depois você será encaminhado ao pagamento da primeira mensalidade.</p>
+      <a id="continueEnrollment" class="primary action-link" href="/complete-cadastro/">CONTINUAR PARA MATRÍCULA</a>
       <button id="copyProof" class="primary" type="button">COPIAR COMPROVANTE</button>
       <button id="cancelHold" class="secondary" type="button">LIBERAR VAGA</button>
     </section>
@@ -42,15 +44,15 @@
         <input type="text" id="studentName" maxlength="120" autocomplete="name" required>
         <label for="studentPhone">WhatsApp com DDD (opcional)</label>
         <input type="tel" id="studentPhone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="(34) 99999-9999">
-        <p class="hint">O celular não é obrigatório. Por segurança, cada navegador pode manter uma reserva por vez. Após reservar, envie o comprovante ao professor pelo WhatsApp.</p>
+        <p class="hint">O celular é opcional nesta etapa. Na matrícula, você informará os dados cadastrais exigidos, incluindo o WhatsApp.</p>
         <div class="actions">
           <button type="submit" class="primary" id="submitLead">RESERVAR POR 15 MINUTOS</button>
           <button id="closeForm" type="button" class="secondary">VOLTAR</button>
         </div>
       </form>
     </section>
-    <footer><p>As vagas podem mudar durante a consulta. A confirmação ocorre apenas quando o servidor aceita a reserva. Se não houver vagas, você poderá entrar na lista de espera.</p></footer>
+    <footer><p>Reservar não equivale a concluir a matrícula. A confirmação depende da finalização do cadastro enquanto a reserva estiver válida. Se não houver vagas, você poderá entrar na lista de espera.</p></footer>
   </main>
-  <script src="/escolher-turma/app.js?v=20261030-1"></script>
+  <script src="/escolher-turma/app.js?v=20261030-2"></script>
 </body>
 </html>
