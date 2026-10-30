@@ -200,3 +200,30 @@ test("updates password through authenticated Supabase user", async function () {
   assert.equal(calls.length, 1);
   assert.equal(calls[0].password, "new-password-123");
 });
+
+test("preserves session lookup errors instead of treating outages as logout", async function () {
+  const failure = new Error("Load failed");
+  const client = {
+    auth: {
+      getSession: async function () {
+        return { data: { session: null }, error: failure };
+      }
+    }
+  };
+  const service = loadService().create(createDependencies(client));
+
+  await assert.rejects(service.getSession(), /Load failed/);
+});
+
+test("returns null for an actual missing session", async function () {
+  const client = {
+    auth: {
+      getSession: async function () {
+        return { data: { session: null }, error: null };
+      }
+    }
+  };
+  const service = loadService().create(createDependencies(client));
+
+  assert.equal(await service.getSession(), null);
+});
