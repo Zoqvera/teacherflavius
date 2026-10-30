@@ -262,12 +262,22 @@
     }
   }
 
+  function isValidWhatsapp(value) {
+    const digits = String(value || "").replace(/\D/g, "");
+    const national = digits.startsWith("55") && (digits.length === 12 || digits.length === 13)
+      ? digits.slice(2) : digits;
+    return national.length === 10 || national.length === 11;
+  }
+
   async function submitLead(event) {
     event.preventDefault();
     if (!selectedClass) return;
     const name = document.getElementById("studentName").value.trim();
     const whatsapp = document.getElementById("studentPhone").value.trim();
-    if (!name) return;
+    if (!name || !isValidWhatsapp(whatsapp)) {
+      setMessage("Informe seu nome e um WhatsApp com DDD válido. O número não precisa ser o mesmo da aula experimental.", true);
+      return;
+    }
 
     elements.submitLead.disabled = true;
     setMessage("");
@@ -291,7 +301,7 @@
           target_client_key: clientKey
         });
         elements.formPanel.hidden = true;
-        setMessage(whatsapp ? "Interesse registrado na lista de espera. O professor poderá entrar em contato quando houver vaga." : "Interesse registrado. Informe seu nome e a turma ao professor pelo WhatsApp para receber o retorno.");
+        setMessage("Você entrou na lista de espera. Nenhuma vaga foi reservada; o professor receberá seu contato quando uma vaga surgir neste horário.");
       }
       elements.leadForm.reset();
       await refreshVacancies();
