@@ -269,15 +269,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       section.hidden = !hasSeat;
       dateInput.required = hasSeat;
       const whatsappInput = document.getElementById("whatsapp");
-      whatsappInput.required = !hasSeat;
+      whatsappInput.required = true;
       document.querySelector('label[for="whatsapp"]').textContent =
-        hasSeat ? "WhatsApp (opcional)" : "WhatsApp";
+        "WhatsApp (obrigatório)";
       if (!hasSeat) return;
 
       document.getElementById("personalDataDescription").textContent =
-        "O WhatsApp é opcional. Os demais dados cadastrais são obrigatórios.";
+        "Todos os dados cadastrais, incluindo o WhatsApp com DDD, são obrigatórios. O número pode ser diferente do usado na aula experimental.";
       document.getElementById("onboardingAccountNote").textContent =
-        "Você não precisa criar uma senha. O WhatsApp é opcional. " +
+        "Você não precisa criar uma senha. Informe um WhatsApp com DDD válido. " +
         "A primeira mensalidade vence no dia da matrícula e o pagamento deve ser iniciado até 23h59 (horário de Brasília).";
 
       const date = reservedSeat.earliest_first_lesson_date;

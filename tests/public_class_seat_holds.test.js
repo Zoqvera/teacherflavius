@@ -73,17 +73,14 @@ test("promotional-price reservations remain separate from class-seat holds", () 
 
 const optionalPhoneMigration = source("supabase/migrations/20261030004428_optional_whatsapp_class_seats.sql");
 
-test("phone field is optional, with a persisted browser key and explicit student association", () => {
-  assert.match(publicHtml.replace(/placeholder="\(34\) 99999-9999"/, ""), /WhatsApp com DDD \(opcional\)/);
-  assert.doesNotMatch(publicHtml, /id="studentPhone"[^>]*\srequired/);
-  assert.match(publicApp, /CLIENT_KEY_STORAGE_KEY/);
-  assert.match(publicApp, /getClientKey\(\)/);
+test("WhatsApp is required without requiring the trial's number", () => {
+  assert.match(publicHtml, /WhatsApp com DDD \(obrigatório\)/);
+  assert.match(publicHtml, /id="studentPhone"[^>]* required/);
+  assert.match(publicApp, /function isValidWhatsapp/);
+  assert.match(publicApp, /if \(!name \|\| !isValidWhatsapp\(whatsapp\)\)/);
   assert.match(publicApp, /target_client_key: clientKey/);
-  assert.doesNotMatch(publicApp, /if \(!name \|\| !whatsapp\) return/);
+  assert.match(publicApp, /Nenhuma vaga foi reservada/);
   assert.match(optionalPhoneMigration, /alter table private\.class_seat_holds alter column whatsapp drop not null/);
-  assert.match(optionalPhoneMigration, /alter table private\.class_seat_waitlist alter column whatsapp drop not null/);
-  assert.match(optionalPhoneMigration, /'device:' \|\| encode\(extensions\.digest\(target_client_key,'sha256'\),'hex'\)/);
-  assert.match(optionalPhoneMigration, /status='active' and h\.expires_at>now\(\)/);
 });
 
 test("legacy three-argument RPCs stay intact for open browser tabs", () => {
@@ -103,10 +100,7 @@ test("the teacher can associate holds without bypassing enrollment rules", () =>
   assert.match(adminApp, /if \(lead\.whatsapp\) actions\.append\(phoneLink\(lead\.whatsapp\)\)/);
 });
 
-test("phone-less waiting-list requests explain how to follow up", () => {
-  assert.match(publicApp, /Informe seu nome e a turma ao professor pelo WhatsApp/);
-  assert.match(optionalPhoneMigration, /on conflict \(class_number,normalized_phone\) do update/);
-});
+
 
 const selfEnrollmentMigration = source("supabase/migrations/20261030011157_reserved_seat_self_enrollment.sql");
 const enrollmentHtml = source("complete-cadastro.html");
@@ -178,9 +172,9 @@ const optionalEnrollmentPhoneMigration = source(
   "supabase/migrations/20261030012238_optional_whatsapp_reserved_seat_enrollment.sql"
 );
 
-test("reserved-seat enrollment accepts a missing WhatsApp without relaxing legacy enrollment", () => {
-  assert.match(enrollmentHtml, /whatsappInput\.required = !hasSeat/);
-  assert.match(enrollmentHtml, /WhatsApp \(opcional\)/);
+test("original migration is superseded by required WhatsApp for reserved seats", () => {
+  assert.match(enrollmentHtml, /whatsappInput\.required = true/);
+  assert.match(enrollmentHtml, /WhatsApp \(obrigatório\)/);
   assert.match(optionalEnrollmentPhoneMigration, /length\(phone_digits\)<>0 and length\(phone_digits\) not between 10 and 13/);
   assert.match(optionalEnrollmentPhoneMigration, /hold\.status = 'active'/);
   assert.match(optionalEnrollmentPhoneMigration, /hold\.expires_at > now\(\)/);
