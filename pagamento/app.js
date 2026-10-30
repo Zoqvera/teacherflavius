@@ -2,6 +2,61 @@ let paymentSession = null;
 let pendingTuitions = [];
 let selectedTuition = null;
 let firstPaymentWindow = { tuition_id: null, closed: false };
+let reservedSeatCheckout = null;
+let reservedSeatTimer = null;
+
+function stopReservedSeatTimer() {
+  if (reservedSeatTimer !== null) window.clearInterval(reservedSeatTimer);
+  reservedSeatTimer = null;
+}
+
+function showReservedSeatCheckoutTimer() {
+  if (!reservedSeatCheckout || reservedSeatCheckout.state !== "awaiting_payment") return;
+  const remainingMs = Date.parse(reservedSeatCheckout.expires_at) - Date.now();
+  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const clock = document.getElementById("reservedSeatCheckoutCountdown");
+  clock.textContent = String(Math.floor(seconds / 60)).padStart(2, "0") + ":" +
+    String(seconds % 60).padStart(2, "0");
+
+  if (seconds === 0) {
+    stopReservedSeatTimer();
+    stopPaymentPolling();
+    destroyBricks();
+    document.getElementById("paymentWorkspace").hidden = true;
+    document.getElementById("reservedSeatCheckoutNotice").hidden = true;
+    setPageMessage(
+      "O prazo de 10 minutos terminou. Caso seu pagamento ainda não tenha sido confirmado, a vaga será liberada automaticamente. Se já pagou, solicite a verificação antes de tentar outra matrícula.",
+      "warning"
+    );
+  }
+}
+
+async function openReservedSeatCheckout() {
+  const response = await Auth.getClient().rpc("start_my_reserved_seat_checkout");
+  if (response.error) throw response.error;
+  const policy = response.data || {};
+  if (!policy.applicable) return true;
+  reservedSeatCheckout = policy;
+  if (policy.state === "expired" || policy.state === "late_payment") {
+    setPageMessage(
+      "O prazo para garantir esta vaga terminou. A vaga será liberada automaticamente. Se você efetuou o Pix, entre em contato para conferirmos o pagamento.",
+      "warning"
+    );
+    return false;
+  }
+  if (policy.state === "confirmed") return true;
+  if (policy.state !== "awaiting_payment" || !Date.parse(policy.expires_at)) {
+    throw new Error("Não foi possível iniciar o prazo da vaga. Atualize a página.");
+  }
+  document.getElementById("reservedSeatCheckoutNotice").hidden = false;
+  showReservedSeatCheckoutTimer();
+  if (reservedSeatCheckout && Date.parse(policy.expires_at) > Date.now()) {
+    reservedSeatTimer = window.setInterval(showReservedSeatCheckoutTimer, 1000);
+    return true;
+  }
+  return false;
+}
+
 let mercadoPago = null;
 let bricksBuilder = null;
 let paymentBrickController = null;
@@ -378,6 +433,11 @@ async function refreshAfterPayment(paidTuitionId) {
   });
 
   if (!stillPending) {
+    if (reservedSeatCheckout && String(reservedSeatCheckout.tuition_id) === String(paidTuitionId)) {
+      stopReservedSeatTimer();
+      reservedSeatCheckout = null;
+      document.getElementById("reservedSeatCheckoutNotice").hidden = true;
+    }
     clearPaymentAttemptKey(paidTuitionId);
     if (window.TuitionHistory) await window.TuitionHistory.refreshIfOpen();
     if (!pendingTuitions.length) {
@@ -442,6 +502,7 @@ async function initializePage() {
 
   try {
     await loadPendingTuitions();
+    if (!(await openReservedSeatCheckout())) return;
     await loadFirstPaymentWindow();
     if (pendingTuitions.some(function (tuition) { return !!tuition.provider_payment_id; })) {
       try {
@@ -500,6 +561,7 @@ document.getElementById("retryPaymentButton").addEventListener("click", function
 });
 
 window.addEventListener("beforeunload", function () {
+  stopReservedSeatTimer();
   stopPaymentPolling();
   destroyBricks();
 });
