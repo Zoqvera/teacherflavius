@@ -160,3 +160,16 @@ test("the original enrollment access-code path remains available", () => {
   assert.match(enrollmentHtml, /await Auth\.completeProfile/);
   assert.match(enrollmentHtml, /set_my_student_acquisition/);
 });
+
+const seatActivationGuard = source("supabase/migrations/20261030011708_guard_reserved_seat_activation.sql");
+
+test("an enrollment authorized by a reservation cannot fall back to ordinary signup", () => {
+  assert.match(seatActivationGuard, /add column reserved_seat_hold_id uuid/);
+  assert.match(seatActivationGuard, /create trigger zz_guard_reserved_seat_profile_activation/);
+  assert.match(seatActivationGuard, /current_setting\('teacherflavius\.reserved_seat_completion',true\)/);
+  assert.match(seatActivationGuard, /h\.status='active' and h\.expires_at>now\(\)/);
+  assert.match(seatActivationGuard, /reserved_seat_hold_id=hold\.id/);
+  assert.match(seatActivationGuard, /pg_catalog\.set_config\('teacherflavius\.reserved_seat_completion'/);
+  assert.match(enrollmentHtml, /id="reservedSeatError"/);
+  assert.match(enrollmentHtml, /VOLTAR E ESCOLHER UMA TURMA/);
+});
