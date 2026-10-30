@@ -63,6 +63,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </header>
 
     <p id="paymentPageMessage" class="payment-message" role="status" aria-live="polite">Verificando sua conta...</p>
+    <section id="reservedSeatCheckoutNotice" class="payment-message" aria-live="polite" hidden>
+      Sua vaga ficará reservada por <strong id="reservedSeatCheckoutCountdown">10:00</strong> após abrir esta página. O pagamento precisa ser confirmado dentro do prazo.
+    </section>
 
     <section id="paymentWorkspace" class="payment-workspace" hidden>
       <aside class="tuition-panel" aria-labelledby="tuitionListTitle">
@@ -130,7 +133,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <script src="/pagamento/payment_idempotency.js?v=20260909-1"></script>
   <script src="/pagamento/tuition_history.js?v=20261008-1"></script>
-  <script src="/pagamento/app.js?v=20261021-revert-1"></script>
+  <script src="/pagamento/app.js?v=20261030-reserved-seat-1"></script>
   <script>
     (function(){
       const button=document.getElementById('verifyPaymentButton');
