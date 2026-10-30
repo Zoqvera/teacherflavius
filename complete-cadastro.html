@@ -85,6 +85,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <form id="completeProfileForm" hidden>
         <section id="enrollmentPlanSummary" class="form-section enrollment-plan-summary" aria-label="Plano de matrícula" hidden></section>
+        <section id="reservedSeatSection" class="form-section" aria-label="Turma reservada" hidden>
+          <div class="section-heading">
+            <h2>Sua turma reservada</h2>
+            <p id="reservedSeatSummary"></p>
+            <p>A reserva dura 15 minutos. Conclua a matrícula antes do vencimento; se expirar, escolha novamente a turma.</p>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label" for="reservedFirstLessonDate">Em que dia será sua primeira aula?</label>
+              <input id="reservedFirstLessonDate" type="date" />
+              <div class="field-note">Escolha uma data futura no dia da semana desta turma.</div>
+            </div>
+          </div>
+        </section>
         <section class="form-section" aria-labelledby="personalDataTitle">
           <div class="section-heading">
             <h2 id="personalDataTitle">Dados do estudante</h2>
@@ -200,6 +214,66 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const EXISTING_PROFILE_MODE = "existing_student_profile_completion";
     let currentOnboardingState = null;
     let authorizedInviteMode = null;
+    let reservedSeat = null;
+    const CLASS_SEAT_STORAGE_KEY = "teacherflavius_class_seat_hold_v1";
+
+    function readReservedSeat() {
+      try {
+        const seat = JSON.parse(sessionStorage.getItem(CLASS_SEAT_STORAGE_KEY) || "null");
+        return seat && /^[0-9a-f]{64}$/.test(seat.token || "") ? seat : null;
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function clearReservedSeat() {
+      reservedSeat = null;
+      try { sessionStorage.removeItem(CLASS_SEAT_STORAGE_KEY); }
+      catch (_error) { /* Browser storage may be disabled. */ }
+    }
+
+    async function applyReservedSeat(state) {
+      const saved = readReservedSeat();
+      if (!saved || state.mode !== NEW_ENROLLMENT_MODE) return state;
+
+      try {
+        const response = await Auth.getClient().rpc("authorize_my_reserved_seat_enrollment", {
+          target_token: saved.token
+        });
+        if (response.error) throw response.error;
+        if (!response.data || response.data.ok !== true) {
+          throw new Error("A reserva não pôde ser vinculada a esta conta.");
+        }
+        reservedSeat = Object.assign({}, saved, response.data);
+        return refreshOnboardingState();
+      } catch (error) {
+        document.getElementById("enrollmentAccessMessage").textContent =
+          (error.message || "A reserva expirou.") +
+          " Volte à página de turmas para escolher um horário disponível.";
+        return state;
+      }
+    }
+
+    function configureReservedSeat(state) {
+      const section = document.getElementById("reservedSeatSection");
+      const dateInput = document.getElementById("reservedFirstLessonDate");
+      const hasSeat = Boolean(reservedSeat && state.mode === NEW_ENROLLMENT_MODE);
+      section.hidden = !hasSeat;
+      dateInput.required = hasSeat;
+      if (!hasSeat) return;
+
+      const date = reservedSeat.earliest_first_lesson_date;
+      if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        dateInput.min = date;
+        if (!dateInput.value || dateInput.value < date) dateInput.value = date;
+      }
+
+      document.getElementById("reservedSeatSummary").textContent =
+        "Turma " + reservedSeat.class_number +
+        " · vaga reservada até " +
+        new Date(reservedSeat.expires_at).toLocaleString("pt-BR") + ".";
+    }
+
 
     function getOnboardingStateService() {
       if (!window.EnrollmentOnboardingState) {
@@ -217,7 +291,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const button = document.getElementById("submitButton");
       button.textContent = state && state.mode === EXISTING_PROFILE_MODE
         ? "SALVAR DADOS E ACESSAR"
-        : "CONCLUIR MATRÍCULA E PAGAR";
+        : reservedSeat && state && state.mode === NEW_ENROLLMENT_MODE
+          ? "CONFIRMAR TURMA E IR AO PAGAMENTO"
+          : "CONCLUIR MATRÍCULA E PAGAR";
     }
 
     function configureFormForState(state) {
@@ -262,6 +338,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         personalDataDescription.textContent = "Todos os campos abaixo são obrigatórios para concluir a matrícula.";
       }
 
+      configureReservedSeat(state);
       updateSubmitButton(state);
     }
 
@@ -328,6 +405,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const profile = await Auth.ensureProfileForUser(user);
       let state = await refreshOnboardingState();
       state = await applyInvitation(state);
+      state = await applyReservedSeat(state);
 
       if (state.mode === "complete") {
         window.location.replace(getNextPath());
@@ -415,6 +493,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
+        if (reservedSeat && state.mode === NEW_ENROLLMENT_MODE) {
+          const firstLessonDate = document.getElementById("reservedFirstLessonDate").value;
+          const dateInput = document.getElementById("reservedFirstLessonDate");
+          if (!firstLessonDate || (dateInput.min && firstLessonDate < dateInput.min)) {
+            throw new Error("Selecione a data válida da sua primeira aula.");
+          }
+          const answer = window.StudentAcquisition.read(
+            "acquisitionSource", "acquisitionDetail", true
+          );
+          const response = await Auth.getClient().rpc(
+            "complete_my_reserved_seat_enrollment", {
+              target_token: reservedSeat.token,
+              target_name: document.getElementById("name").value.trim(),
+              target_birth_date: birthDate,
+              target_cpf: document.getElementById("cpf").value.trim(),
+              target_whatsapp: document.getElementById("whatsapp").value.trim(),
+              target_first_lesson_date: firstLessonDate,
+              target_source: answer.source,
+              target_detail: answer.detail,
+              target_technical: window.StudentAcquisition.technicalAttribution()
+            }
+          );
+          if (response.error) throw response.error;
+          if (!response.data || response.data.ok !== true) {
+            throw new Error("A vaga não foi confirmada. Tente novamente.");
+          }
+          clearReservedSeat();
+          window.location.replace(getPostEnrollmentPath());
+          return;
+        }
+
         const user = await Auth.getUser();
         if (!user) throw new Error("Sua sessão expirou. Entre novamente com Google.");
 
