@@ -80,3 +80,50 @@ A suíte npm run test:node descobre o novo teste automaticamente.
 
 Não há alterações de frontend, SEO, indexação, banco, RLS ou cobranças nesta etapa.
 Nenhum aluno real foi matriculado, transferido, arquivado ou desarquivado.
+
+
+## Etapa 3 — Adaptador de consultas autenticadas ao Supabase
+
+O arquivo agents/academic_secretary_supabase.js expõe a fábrica
+createAcademicSecretarySupabaseService(client). O cliente Supabase recebido
+deve representar o professor autenticado; não há credenciais embutidas,
+service_role, consultas administrativas sem autenticação nem gravações.
+
+Consultas implementadas:
+
+- auth.getUser() verifica a sessão do usuário.
+- rpc(is_teacher_admin) confere autorização administrativa no banco.
+- profiles consulta somente id e archived, com RLS.
+- class_students consulta apenas class_number dos vínculos do aluno, com RLS.
+- teacher_classes consulta class_number, class_type e is_active, com RLS.
+- rpc(get_public_class_seat_availability) retorna vagas de turmas quinteto
+  incluindo convites e reservas temporárias ativas, conforme função do banco.
+
+Esta primeira integração de vagas aceita somente turmas regulares com
+class_type quintet e disponibilidade publicada. Individual e experimental
+ficam bloqueadas até haver cálculo completo e igualmente confiável.
+Consultas ao aluno, arquivamento e desarquivamento podem ser planejados
+sem alteração de dados, desde que autorizados.
+
+O adaptador é um módulo CommonJS, não é ainda endpoint publicado,
+nem está integrado à interface do site. O código usa os contratos reais
+da aplicação; os testes automatizados trabalham com respostas simuladas.
+Ainda será preciso homologar a sessão autenticada ponta a ponta.
+
+Os planos retornados têm readOnly=true, mesmo quando status indica
+ready_for_review. A disponibilidade é momentânea: toda gravação futura
+exigirá nova verificação transacional do banco.
+
+### Testes de segurança
+
+- node --test tests/academic_secretary_supabase.test.js
+- npm run test:node inclui automaticamente este conjunto.
+- Erros de sessão, autorização, RLS, consulta, capacidade ou inconsistência
+  resultam em bloqueio ou erro explícito.
+- O módulo não lê nem devolve CPF, WhatsApp ou e-mail de aluno.
+- Nenhuma nova credencial, tabela, política RLS ou mudança SEO foi criada.
+
+### Próxima etapa
+
+Integrar em runtime protegido, homologar o acesso com sessão administrativa
+real e só depois projetar operações de escrita transacionais auditáveis.
