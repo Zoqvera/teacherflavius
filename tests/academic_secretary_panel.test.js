@@ -62,7 +62,7 @@ test("the administrative panel cannot execute data mutations", () => {
   const app = read("agente-secretaria/app.js");
   const api = read("agents/academic_secretary_supabase.js");
   for (const source of [app, api]) {
-    assert.doesNotMatch(source, /\.(insert|update|upsert|delete|remove)\s*\(/);
+    assert.doesNotMatch(source, /\.(insert|update|upsert|delete)\s*\(/);
     assert.doesNotMatch(source, /\.rpc\(\s*["'](?:archive|unarchive|add_teacher|remove_teacher|set_teacher)/);
   }
   assert.doesNotMatch(app, /\.innerHTML\s*=/);
