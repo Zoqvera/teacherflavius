@@ -127,3 +127,52 @@ exigirá nova verificação transacional do banco.
 
 Integrar em runtime protegido, homologar o acesso com sessão administrativa
 real e só depois projetar operações de escrita transacionais auditáveis.
+
+
+## Etapa 4 — Painel supervisionado na Área do Professor
+
+Rota administrativa: /agente-secretaria/
+
+Acessível pelo novo card AGENTE DE SECRETARIA na Área do Professor.
+A página fica oculta até a verificação de sessão pelo Auth.requireAuth
+e a conferência de administrador pelo Auth.isTeacherAdmin. As consultas
+revalidam a autorização administrativa no Supabase.
+
+Operações apresentadas:
+
+1. Buscar um aluno por parte do nome, com RLS e limite de 20 resultados.
+2. Consultar os vínculos e o estado de arquivamento do aluno.
+3. Preparar vínculo novo (origem declarada e primeira aula obrigatórias).
+4. Preparar transferência sem repetir origem nem primeira aula.
+5. Preparar arquivamento ou desarquivamento.
+6. Exibir impedimentos, campos faltantes e passos planejados.
+
+Os arquivos do planejador e do adaptador têm compatibilidade com CommonJS
+(Node e testes) e com os globais de navegador usados exclusivamente na página.
+A interface usa as funções já existentes no Supabase com a sessão autenticada
+do professor, sem adicionar credenciais nem endpoints privilegiados.
+
+### Segurança e limites da ativação
+
+- O painel não apresenta botão de execução. Todas as prévias são readOnly.
+- Não existe função de gravação no código novo. Turmas e cobranças não são alteradas.
+- A busca retorna apenas identificação acadêmica mínima (id, nome, estado).
+- Páginas abertas sem autorização não mostram o espaço de consulta.
+- Nenhuma sessão do professor foi automatizada externamente nesta etapa.
+  Após a publicação, a homologação completa requer acessar a página
+  autenticado como professor e tentar os cenários permitidos e negados.
+- Turmas individuais e experimentais não passam por planejamento de vagas
+  nesta versão: a RPC de vagas cobre grupos regulares quinteto.
+
+### SEO
+
+A rota administrativa nova tem a meta diretiva noindex,nofollow, como outras
+páginas privadas da plataforma. Não houve alteração do robots.txt, sitemap
+nem do conteúdo de páginas públicas. Essa é uma decisão de indexação
+específica para a nova rota administrativa.
+
+### Próxima etapa
+
+Homologar a experiência de acesso em produção, testar as consultas com
+sessão administrativa real e então projetar operações de alteração
+transacionais, com verificação de autorização e auditoria.
