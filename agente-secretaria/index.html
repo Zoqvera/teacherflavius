@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Secretaria Acadêmica — Área do Professor</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260715-1"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/agente-secretaria/styles.css?v=20261102-1">
+</head>
+<body class="auth-checking">
+  <main class="shell">
+    <nav class="back"><a href="/professor/">Área do Professor</a><a href="/perfil-dos-alunos/">Gestão de alunos</a></nav>
+    <header class="intro">
+      <div class="eyebrow">GESTÃO ACADÊMICA · MODO SUPERVISIONADO</div>
+      <h1>Agente de Secretaria Acadêmica</h1>
+      <p>Consulte alunos e prepare operações para revisão. Nenhuma alteração será realizada nesta página.</p>
+    </header>
+    <p id="pageStatus" class="status" role="status" aria-live="polite">Verificando credenciais administrativas...</p>
+    <section id="workspace" hidden aria-label="Simulação de operações">
+      <section class="panel" aria-labelledby="searchTitle">
+        <h2 id="searchTitle">1. Identificar aluno</h2>
+        <form id="searchForm">
+          <label for="studentSearch">Buscar pelo nome</label>
+          <div class="inline-fields">
+            <input id="studentSearch" type="search" minlength="2" maxlength="80" autocomplete="off" placeholder="Digite pelo menos 2 caracteres" required>
+            <button type="submit" id="searchButton">Buscar</button>
+          </div>
+        </form>
+        <label for="studentResults">Aluno encontrado</label>
+        <select id="studentResults" disabled required><option value="">Realize uma busca</option></select>
+        <p id="studentSummary" class="hint">Selecione um aluno para conferir os vínculos atuais.</p>
+      </section>
+      <section class="panel" aria-labelledby="planTitle">
+        <h2 id="planTitle">2. Planejar operação</h2>
+        <form id="planForm">
+          <label for="action">Operação</label>
+          <select id="action">
+            <option value="inspect_student">Consultar vínculos</option>
+            <option value="new_link">Novo vínculo em turma</option>
+            <option value="transfer">Transferir de turma</option>
+            <option value="archive">Arquivar aluno</option>
+            <option value="unarchive">Desarquivar aluno</option>
+          </select>
+          <div id="classFields" hidden>
+            <label for="classNumber">Turma de destino</label>
+            <select id="classNumber"><option value="">Selecione a turma</option></select>
+          </div>
+          <div id="transferFields" hidden>
+            <label for="fromClassNumber">Turma de origem</label>
+            <select id="fromClassNumber"><option value="">Selecione o vínculo a substituir</option></select>
+          </div>
+          <fieldset id="newLinkFields" hidden>
+            <legend>Informações obrigatórias para novo vínculo</legend>
+            <label for="source">Como conheceu as aulas?</label>
+            <select id="source">
+              <option value="">Selecione a origem</option>
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="google">Google</option>
+              <option value="chatgpt">ChatGPT</option>
+              <option value="referral">Indicação</option>
+              <option value="getninjas">GetNinjas</option>
+              <option value="other">Outras fontes</option>
+              <option value="unknown">Não me lembro</option>
+            </select>
+            <div id="sourceDetailField" hidden>
+              <label for="sourceDetail">Qual outra fonte?</label>
+              <input id="sourceDetail" maxlength="120" type="text" autocomplete="off">
+            </div>
+            <label for="firstLessonDate">Data da primeira aula</label>
+            <input id="firstLessonDate" type="date">
+          </fieldset>
+          <button id="previewButton" type="submit" disabled>Gerar prévia (sem executar)</button>
+        </form>
+      </section>
+      <section id="planResult" class="panel" aria-labelledby="resultTitle" hidden>
+        <h2 id="resultTitle">3. Resultado da análise</h2>
+        <p id="resultStatus" class="result-status"></p>
+        <h3>Informações pendentes ou impedimentos</h3>
+        <ul id="resultIssues"></ul>
+        <h3>Etapas que serão necessárias</h3>
+        <ol id="resultSteps"></ol>
+        <p class="read-only">Prévia somente leitura: nenhum registro foi atualizado.</p>
+      </section>
+    </section>
+  </main>
+  <script defer src="/agents/academic_secretary.js?v=20261102-1"></script>
+  <script defer src="/agents/academic_secretary_supabase.js?v=20261102-1"></script>
+  <script defer src="/agente-secretaria/app.js?v=20261102-1"></script>
+</body>
+</html>

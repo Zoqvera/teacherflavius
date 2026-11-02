@@ -1,3 +1,4 @@
+(function (browser) {
 "use strict";
 
 /**
@@ -208,4 +209,7 @@ function createAcademicSecretaryAgent(dependencies) {
   return Object.freeze({ plan });
 }
 
-module.exports = Object.freeze({ ACTIONS, createAcademicSecretaryAgent });
+const academicSecretaryApi = Object.freeze({ ACTIONS, createAcademicSecretaryAgent });
+if (typeof module !== "undefined" && module.exports) module.exports = academicSecretaryApi;
+if (browser) browser.TeacherAcademicSecretaryAgent = academicSecretaryApi;
+})(typeof window !== "undefined" ? window : null);

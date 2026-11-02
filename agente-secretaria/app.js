@@ -1,0 +1,289 @@
+(function () {
+  "use strict";
+
+  const selectors = Object.freeze({
+    status: "pageStatus",
+    workspace: "workspace",
+    searchForm: "searchForm",
+    searchButton: "searchButton",
+    search: "studentSearch",
+    students: "studentResults",
+    studentSummary: "studentSummary",
+    planForm: "planForm",
+    action: "action",
+    classFields: "classFields",
+    classNumber: "classNumber",
+    transferFields: "transferFields",
+    fromClassNumber: "fromClassNumber",
+    newLinkFields: "newLinkFields",
+    source: "source",
+    sourceDetailField: "sourceDetailField",
+    sourceDetail: "sourceDetail",
+    firstLessonDate: "firstLessonDate",
+    preview: "previewButton",
+    result: "planResult",
+    resultStatus: "resultStatus",
+    issues: "resultIssues",
+    steps: "resultSteps"
+  });
+
+  function elements() {
+    return Object.fromEntries(Object.entries(selectors).map(function ([key, id]) {
+      return [key, document.getElementById(id)];
+    }));
+  }
+
+  function setStatus(ui, message, isError) {
+    ui.status.textContent = message;
+    ui.status.classList.toggle("error", Boolean(isError));
+  }
+
+  function option(label, value) {
+    const item = document.createElement("option");
+    item.value = value;
+    item.textContent = label;
+    return item;
+  }
+
+  function replaceOptions(target, placeholder, items) {
+    target.replaceChildren(option(placeholder, ""), ...items);
+    target.value = "";
+  }
+
+  function showFields(ui) {
+    const action = ui.action.value;
+    const isLink = action === "new_link";
+    const isTransfer = action === "transfer";
+    ui.classFields.hidden = !(isLink || isTransfer);
+    ui.transferFields.hidden = !isTransfer;
+    ui.newLinkFields.hidden = !isLink;
+    ui.sourceDetailField.hidden = !isLink || ui.source.value !== "other";
+    ui.sourceDetail.required = isLink && ui.source.value === "other";
+    ui.firstLessonDate.required = isLink;
+    ui.source.required = isLink;
+    ui.classNumber.required = isLink || isTransfer;
+    ui.fromClassNumber.required = isTransfer;
+    ui.result.hidden = true;
+  }
+
+  function renderPlan(ui, plan) {
+    const labels = {
+      blocked: "Operação bloqueada por uma regra de segurança.",
+      needs_input: "Faltam informações antes da operação.",
+      ready_for_review: "Plano pronto para revisão. Nenhuma operação foi executada."
+    };
+    const required = {
+      source: "Informe a origem do novo aluno.",
+      sourceDetail: "Descreva a outra origem.",
+      firstLessonDate: "Informe a data da primeira aula.",
+      fromClassNumber: "Informe a turma de origem."
+    };
+    const problems = plan.blockers.concat(plan.missingFields.map(function (name) {
+      return required[name] || "Informação obrigatória: " + name;
+    }));
+    ui.resultStatus.textContent = labels[plan.status] || "Situação desconhecida.";
+    ui.issues.replaceChildren(...problems.map(function (item) {
+      const li = document.createElement("li");
+      li.textContent = item;
+      return li;
+    }));
+    if (!problems.length) {
+      const li = document.createElement("li");
+      li.textContent = "Nenhuma pendência identificada nesta prévia.";
+      ui.issues.appendChild(li);
+    }
+    ui.steps.replaceChildren(...plan.steps.map(function (step) {
+      const li = document.createElement("li");
+      li.textContent = step;
+      return li;
+    }));
+    ui.result.hidden = false;
+  }
+
+  function formRequest(ui) {
+    const request = {
+      action: ui.action.value,
+      studentId: ui.students.value
+    };
+    if (ui.classFields.hidden === false) {
+      request.classNumber = Number(ui.classNumber.value);
+    }
+    if (request.action === "transfer") {
+      request.fromClassNumber = Number(ui.fromClassNumber.value);
+    }
+    if (request.action === "new_link") {
+      request.source = ui.source.value;
+      request.firstLessonDate = ui.firstLessonDate.value;
+      if (request.source === "other") request.sourceDetail = ui.sourceDetail.value.trim();
+    }
+    return request;
+  }
+
+  function normalizeQuery(value) {
+    const term = String(value || "").trim().slice(0, 80);
+    if (term.length < 2) throw new Error("Informe pelo menos dois caracteres do nome.");
+    // Escape wildcards to avoid treating names as arbitrary LIKE expressions.
+    return term.replace(/[\\%_]/g, "\\$&");
+  }
+
+  async function searchStudents(ui, client) {
+    const pattern = normalizeQuery(ui.search.value);
+    ui.students.disabled = true;
+    ui.preview.disabled = true;
+    ui.studentSummary.textContent = "Consultando alunos...";
+    ui.result.hidden = true;
+
+    const permission = await client.rpc("is_teacher_admin");
+    if (permission.error || permission.data !== true) {
+      throw new Error("Acesso administrativo não autorizado.");
+    }
+
+    const response = await client.from("profiles")
+      .select("id,name,archived,enrolled")
+      .ilike("name", "%" + pattern + "%")
+      .order("name", { ascending: true })
+      .limit(20);
+
+    if (response.error || !Array.isArray(response.data)) {
+      throw new Error("Não foi possível consultar a lista de alunos.");
+    }
+    const available = response.data.filter(function (student) {
+      return student && typeof student.id === "string" &&
+        (student.enrolled === true || student.archived === true);
+    });
+    replaceOptions(ui.students, "Selecione um aluno", available.map(function (student) {
+      const description = student.archived === true ? " (arquivado)" : "";
+      return option(String(student.name || "Aluno") + description, student.id);
+    }));
+    ui.students.disabled = available.length === 0;
+    ui.studentSummary.textContent = available.length
+      ? "Selecione um dos " + available.length + " resultados. Se necessário, refine o nome."
+      : "Nenhum aluno ativo ou arquivado encontrado.";
+  }
+
+  async function selectStudent(ui, service) {
+    ui.result.hidden = true;
+    ui.preview.disabled = !ui.students.value;
+    replaceOptions(ui.fromClassNumber, "Selecione o vínculo a substituir", []);
+    if (!ui.students.value) {
+      ui.studentSummary.textContent = "Selecione um aluno.";
+      return;
+    }
+
+    const currentStudentId = ui.students.value;
+    const plan = await service.plan({
+      action: "inspect_student",
+      studentId: currentStudentId
+    });
+    if (currentStudentId !== ui.students.value) return;
+    if (!plan.snapshot) throw new Error("Não foi possível conferir os vínculos do aluno.");
+
+    const classNumbers = plan.snapshot.classNumbers;
+    replaceOptions(ui.fromClassNumber, "Selecione o vínculo a substituir",
+      classNumbers.map(function (number) {
+        return option("Turma " + number, String(number));
+      }));
+    const archived = plan.snapshot.archived ? "Arquivado" : "Ativo";
+    const assignment = classNumbers.length ? classNumbers.join(", ") : "nenhuma";
+    ui.studentSummary.textContent = archived + " · Vínculos atuais: " + assignment + ".";
+  }
+
+  async function loadClasses(ui, client) {
+    const response = await client.rpc("get_teacher_classes_with_type");
+    if (response.error || !Array.isArray(response.data)) {
+      throw new Error("Não foi possível listar as turmas.");
+    }
+    const groups = response.data.filter(function (group) {
+      return group && group.is_active === true && group.class_type === "quintet" &&
+        Number.isInteger(group.class_number);
+    });
+    groups.sort(function (a, b) {
+      return a.class_number - b.class_number;
+    });
+    replaceOptions(ui.classNumber, "Selecione a turma", groups.map(function (group) {
+      return option(group.class_name || "Turma " + group.class_number,
+        String(group.class_number));
+    }));
+  }
+
+  async function initialize() {
+    const ui = elements();
+    ui.workspace.hidden = true;
+    ui.preview.disabled = true;
+
+    try {
+      if (!window.Auth || !window.TeacherAcademicSecretarySupabase) {
+        throw new Error("Não foi possível inicializar os módulos acadêmicos.");
+      }
+
+      const user = await window.Auth.requireAuth({ skipProfileCheck: true });
+      if (!user) return;
+      if (!(await window.Auth.isTeacherAdmin())) {
+        throw new Error("Esta página é exclusiva do professor administrador.");
+      }
+
+      const client = window.Auth.getClient();
+      if (!client) throw new Error("Cliente Supabase não configurado.");
+      const service = window.TeacherAcademicSecretarySupabase
+        .createAcademicSecretarySupabaseService(client);
+      await loadClasses(ui, client);
+
+      ui.searchForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        ui.searchButton.disabled = true;
+        try {
+          await searchStudents(ui, client);
+          setStatus(ui, "Busca concluída. Selecione um aluno.", false);
+        } catch (error) {
+          ui.students.disabled = true;
+          ui.preview.disabled = true;
+          setStatus(ui, error.message || "Erro ao consultar alunos.", true);
+        } finally {
+          ui.searchButton.disabled = false;
+        }
+      });
+
+      ui.students.addEventListener("change", async function () {
+        ui.preview.disabled = true;
+        try {
+          await selectStudent(ui, service);
+          ui.preview.disabled = !ui.students.value;
+        } catch (error) {
+          ui.preview.disabled = true;
+          setStatus(ui, error.message || "Não foi possível consultar o aluno.", true);
+        }
+      });
+
+      ui.action.addEventListener("change", function () { showFields(ui); });
+      ui.source.addEventListener("change", function () { showFields(ui); });
+      ui.planForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        ui.preview.disabled = true;
+        ui.result.hidden = true;
+        try {
+          const plan = await service.plan(formRequest(ui));
+          renderPlan(ui, plan);
+          setStatus(ui, "Prévia concluída. Nenhum dado foi modificado.", false);
+        } catch (error) {
+          setStatus(ui, error.message || "Não foi possível gerar a prévia.", true);
+        } finally {
+          ui.preview.disabled = !ui.students.value;
+        }
+      });
+
+      showFields(ui);
+      ui.workspace.hidden = false;
+      document.body.classList.remove("auth-checking");
+      setStatus(ui, "Acesso administrativo autorizado. Modo somente leitura.", false);
+    } catch (error) {
+      ui.workspace.hidden = true;
+      setStatus(ui, error.message || "Não foi possível verificar o acesso.", true);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize, { once: true });
+  } else {
+    initialize();
+  }
+})();

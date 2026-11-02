@@ -1,6 +1,11 @@
+(function (browser) {
 "use strict";
 
-const { createAcademicSecretaryAgent } = require("./academic_secretary");
+const plannerModule = typeof module !== "undefined" && module.exports
+  ? require("./academic_secretary")
+  : browser && browser.TeacherAcademicSecretaryAgent;
+if (!plannerModule) throw new Error("O planejador acadêmico não foi carregado.");
+const { createAcademicSecretaryAgent } = plannerModule;
 
 const CLASS_TYPE_GROUP = "quintet";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -127,7 +132,10 @@ function createAcademicSecretarySupabaseService(client) {
   return createAcademicSecretaryAgent(createSupabaseAcademicReaders(client));
 }
 
-module.exports = Object.freeze({
+const academicSecretarySupabaseApi = Object.freeze({
   createSupabaseAcademicReaders,
   createAcademicSecretarySupabaseService
 });
+if (typeof module !== "undefined" && module.exports) module.exports = academicSecretarySupabaseApi;
+if (browser) browser.TeacherAcademicSecretarySupabase = academicSecretarySupabaseApi;
+})(typeof window !== "undefined" ? window : null);
