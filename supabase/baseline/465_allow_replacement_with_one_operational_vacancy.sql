@@ -1,5 +1,5 @@
--- A replacement is eligible whenever at least one operational seat remains.
--- Keep the existing signature to preserve the listing and booking RPC contracts.
+-- Allow replacement bookings whenever the target occurrence has a real free seat.
+-- Keep the two-argument signature for existing option and booking RPCs.
 create or replace function private.is_replacement_occurrence_eligible(
   available_spots integer,
   cancellation_spots_available integer
