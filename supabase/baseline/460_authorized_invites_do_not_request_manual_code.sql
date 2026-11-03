@@ -66,4 +66,4 @@ begin
       or (flow_mode = 'new_enrollment' and access_authorized)
   );
 end;
-$function$
+$function$;
