@@ -1,6 +1,3 @@
--- A validated enrollment invitation or reserved seat unlocks the onboarding form.
--- Keep the legacy boolean accurate without weakening server-side authorization.
--- No plan amount, class mode, enrollment completion or RLS policy is changed.
 CREATE OR REPLACE FUNCTION public.get_my_enrollment_onboarding_state()
  RETURNS jsonb
  LANGUAGE plpgsql
