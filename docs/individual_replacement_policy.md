@@ -13,9 +13,9 @@ informada pelo navegador.
   permanece válida, inclusive créditos manuais concedidos pelo professor.
 - **Vagas**: INDIVIDUAL permite agendamento somente se a sessão tiver uma
   vaga real, inclusive a vaga liberada pelo cancelamento do aluno regular.
-  QUINTETO mantém a condição de pelo menos quatro vagas ou uma vaga
-  liberada por cancelamento. Os dois formatos mantêm a regra de não
-  reagendar na turma atual nem no dia de aulas regulares do aluno.
+  QUINTETO permite reposição com pelo menos uma vaga real disponível,
+  incluindo vagas liberadas por cancelamento. Os dois formatos mantêm a regra
+  de não reagendar na turma atual nem no dia de aulas regulares do aluno.
 
 Os horários disponíveis respeitam a agenda configurada na turma e exigem
 link de aula válido; aulas sem link não são publicadas como opção. A confirmação
