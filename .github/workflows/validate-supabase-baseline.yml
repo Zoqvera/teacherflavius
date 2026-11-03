@@ -193,7 +193,8 @@ jobs:
             supabase/baseline/440_late_payment_settlement_gateway.sql \
             supabase/baseline/445_deactivate_late_payment_policy.sql \
             supabase/baseline/450_sync_next_tuition_after_billing_change.sql \
-            supabase/baseline/455_add_standard_100_four_lesson_plan.sql
+            supabase/baseline/455_add_standard_100_four_lesson_plan.sql \
+            supabase/baseline/460_authorized_invites_do_not_request_manual_code.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \

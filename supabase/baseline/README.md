@@ -94,7 +94,7 @@ Use a fresh Supabase project with the same PostgreSQL major version and standard
 76. Apply `377_manual_replacement_credits_all_students.sql` (restores the previously omitted 20261009201830 modality helper before reproducing migration 20261013113046).
 77. Apply `380_same_day_first_tuition_payment.sql`.
 78. Apply `385_expand_quintet_classes_8_and_17_to_nine.sql` (preserves the 8-place default with 9-place exceptions for class numbers 47 and 52).
-79. After the remaining catalog overlays (390 through 450) from the baseline CI restore order, apply `455_add_standard_100_four_lesson_plan.sql` to register R$ 100,00 / 4 aulas without changing R$ 100,00 / 8 aulas.
+79. After the remaining catalog overlays (390 through 450) from the baseline CI restore order, apply `455_add_standard_100_four_lesson_plan.sql` to register R$ 100,00 / 4 aulas without changing R$ 100,00 / 8 aulas. Apply `460_authorized_invites_do_not_request_manual_code.sql` last, ensuring validated invitation links never report an additional access-code requirement.
 80. Provision the Vault secret `teacherflavius_enrollment_access_code` out-of-band as the private JSON map from enrollment codes to `monthly_fee` and `classes_per_month`. Never commit its value.
 81. Provision the Vault secret `teacherflavius_notification_webhook_secret` out-of-band. Never commit its value. The Web Push cron secret is generated inside Vault by overlay 195.
 82. Restore the existing Web Push VAPID key pair out-of-band when subscriptions must survive a disaster recovery. If no pair is restored, the Push sender can generate a new pair and students must re-enable notifications.

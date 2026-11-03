@@ -24,7 +24,7 @@ test("new students choose a class instead of typing an access code", function ()
   assert.doesNotMatch(page, /enrollmentAccessForm|enrollmentAccessCode|type="password"/);
   assert.doesNotMatch(page, /rpc\("authorize_my_enrollment"/);
   assert.match(page, /function requiresClassSelection\(state\)/);
-  assert.match(page, /state\.mode === NEW_ENROLLMENT_MODE && !state\.formUnlocked && !reservedSeat/);
+  assert.match(page, /state\.mode === NEW_ENROLLMENT_MODE &&\s*!state\.formUnlocked && !reservedSeat && !readInvitationToken\(\)/);
   assert.match(page, /window\.location\.replace\(CLASS_SELECTION_PATH\)/);
   assert.match(page, /authorize_my_reserved_seat_enrollment/);
   assert.match(page, /authorize_my_enrollment_link/);
