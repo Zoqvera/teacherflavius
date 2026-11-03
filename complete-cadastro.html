@@ -199,8 +199,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const NEW_ENROLLMENT_MODE = "new_enrollment";
     const EXISTING_PROFILE_MODE = "existing_student_profile_completion";
 
+    function readInvitationToken() {
+      return window.EnrollmentInviteClient.readInviteToken(window.location.search);
+    }
+
     function requiresClassSelection(state) {
-      return state.mode === NEW_ENROLLMENT_MODE && !state.formUnlocked && !reservedSeat;
+      return state.mode === NEW_ENROLLMENT_MODE &&
+        !state.formUnlocked && !reservedSeat && !readInvitationToken();
     }
 
     function showEnrollmentError(message) {
@@ -229,6 +234,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     async function applyReservedSeat(state) {
+      // A shareable invitation must not be blocked by a previously saved seat hold.
+      if (readInvitationToken()) return state;
       const saved = readReservedSeat();
       if (!saved || state.mode !== NEW_ENROLLMENT_MODE) return state;
 
@@ -380,7 +387,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     async function applyInvitation(state) {
-      const token = window.EnrollmentInviteClient.readInviteToken(window.location.search);
+      const token = readInvitationToken();
       if (!token || state.mode !== NEW_ENROLLMENT_MODE) return state;
 
       try {
@@ -398,6 +405,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         );
         return state;
       }
+    }
+
+    function explainAuthorizedInvitation(state) {
+      if (state.mode !== NEW_ENROLLMENT_MODE ||
+          !state.formUnlocked || !readInvitationToken()) return;
+
+      document.getElementById("onboardingIntro").textContent =
+        "Convite confirmado. Não é necessário informar código de matrícula. " +
+        "Preencha seus dados para concluir sua matrícula e seguir para o pagamento.";
     }
 
     async function initialize() {
@@ -439,6 +455,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       window.StudentAcquisition.setup("acquisitionSource", "acquisitionDetail", recorded.source, recorded.detail);
       await applyAuthorizedPlan(state);
       configureFormForState(state);
+      explainAuthorizedInvitation(state);
       configureReservedSeat(state);
       if (!document.getElementById("reservedSeatError").hidden) {
         document.getElementById("completeProfileForm").hidden = true;
