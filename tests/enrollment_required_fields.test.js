@@ -14,8 +14,7 @@ const migration = read(
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 
 test("every personal enrollment identity field is required", function () {
-  assert.match(page, /id="enrollmentAccessCode"[^>]*required/);
-  assert.doesNotMatch(page, /id="enrollmentAccessForm"[^>]*novalidate/);
+  assert.doesNotMatch(page, /enrollmentAccessCode|enrollmentAccessForm/);
   assert.match(page, /id="name"[^>]*required/);
   assert.match(page, /id="email"[^>]*required/);
   assert.match(page, /id="birthDate"[^>]*required/);
