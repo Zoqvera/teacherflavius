@@ -19,12 +19,15 @@ const currentBaseline = read(
 );
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 
-test("new enrollment fails closed until backend state confirms access authorization", function () {
-  assert.match(page, /id="enrollmentAccessForm"/);
+test("new students choose a class instead of typing an access code", function () {
   assert.match(page, /id="completeProfileForm" hidden/);
-  assert.match(page, /type="password"/);
-  assert.match(page, /rpc\("authorize_my_enrollment"/);
-  assert.match(page, /EnrollmentOnboardingState/);
+  assert.doesNotMatch(page, /enrollmentAccessForm|enrollmentAccessCode|type="password"/);
+  assert.doesNotMatch(page, /rpc\("authorize_my_enrollment"/);
+  assert.match(page, /function requiresClassSelection\(state\)/);
+  assert.match(page, /state\.mode === NEW_ENROLLMENT_MODE && !state\.formUnlocked && !reservedSeat/);
+  assert.match(page, /window\.location\.replace\(CLASS_SELECTION_PATH\)/);
+  assert.match(page, /authorize_my_reserved_seat_enrollment/);
+  assert.match(page, /authorize_my_enrollment_link/);
   assert.match(onboardingState, /rpc\("get_my_enrollment_onboarding_state"\)/);
   assert.match(page, /if \(!state\.formUnlocked\)/);
 });

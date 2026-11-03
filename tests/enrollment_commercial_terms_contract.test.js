@@ -27,15 +27,14 @@ const paymentAvailability = read(
   "supabase/baseline/95_unlock_next_tuition_two_days_after_payment.sql"
 );
 
-test("new enrollment form does not let the student choose commercial terms", function () {
+test("new enrollment form uses a server-authorized plan without typed access codes", function () {
   assert.doesNotMatch(page, /id="classesPerMonth"/);
   assert.doesNotMatch(page, /id="monthlyFee"/);
   assert.doesNotMatch(page, /parseMonthlyFee/);
   assert.doesNotMatch(page, /target_monthly_fee:/);
-  assert.match(
-    page,
-    /código é validado com segurança e define automaticamente o valor da mensalidade e a quantidade de aulas mensais/i
-  );
+  assert.match(page, /get_my_authorized_enrollment_plan/);
+  assert.match(page, /complete_my_reserved_seat_enrollment/);
+  assert.doesNotMatch(page, /enrollmentAccessCode/);
 });
 
 test("enrollment saves authorized billing terms without a due-day choice", function () {

@@ -147,10 +147,12 @@ test("completion is atomic, authorized and does not bypass the billing workflow"
   assert.match(enrollmentHtml, /clearReservedSeat\(\);\s*window\.location\.replace\(getPostEnrollmentPath\(\)\)/);
 });
 
-test("the original enrollment access-code path remains available", () => {
-  assert.match(enrollmentHtml, /authorize_my_enrollment/);
+test("students enter through reserved seats or invitations without a typed code", () => {
+  assert.doesNotMatch(enrollmentHtml, /rpc\("authorize_my_enrollment"/);
   assert.match(enrollmentHtml, /state = await applyInvitation\(state\)/);
   assert.match(enrollmentHtml, /state = await applyReservedSeat\(state\)/);
+  assert.match(enrollmentHtml, /requiresClassSelection\(state\)/);
+  assert.match(enrollmentHtml, /CLASS_SELECTION_PATH/);
   assert.match(enrollmentHtml, /await Auth\.completeProfile/);
   assert.match(enrollmentHtml, /set_my_student_acquisition/);
 });

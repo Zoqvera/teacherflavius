@@ -51,11 +51,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p id="onboardingIntro" class="intro">Preencha seus dados para concluir a matrícula. Ao finalizar, sua primeira mensalidade ficará disponível e você será encaminhado diretamente para o pagamento.</p>
       </header>
 
-      <div class="onboarding-progress" aria-label="Etapas de acesso">
-        <div class="progress-step is-done" data-progress-step="google"><strong aria-hidden="true">✓</strong><span>Conta Google</span></div>
-        <div class="progress-step is-current" data-progress-step="code"><strong aria-hidden="true">2</strong><span>Código de acesso à matrícula</span></div>
-        <div class="progress-step" data-progress-step="data"><strong aria-hidden="true">3</strong><span>Dados essenciais</span></div>
-        <div class="progress-step" data-progress-step="access"><strong aria-hidden="true">4</strong><span>Acesso liberado</span></div>
+      <div class="onboarding-progress" aria-label="Etapas da matrícula">
+        <div class="progress-step is-done" data-progress-step="google"><strong aria-hidden="true">1</strong><span>Conta Google</span></div>
+        <div class="progress-step is-current" data-progress-step="data"><strong aria-hidden="true">2</strong><span>Dados essenciais</span></div>
+        <div class="progress-step" data-progress-step="access"><strong aria-hidden="true">3</strong><span>Acesso liberado</span></div>
       </div>
 
       <div class="account-note">
@@ -63,28 +62,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span id="onboardingAccountNote">Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. O vencimento da primeira mensalidade será definido automaticamente para o dia em que você concluir a matrícula. Você será encaminhado ao pagamento, que deve ser iniciado até 23h59 desse dia (horário de Brasília).</span>
       </div>
 
-      <form id="enrollmentAccessForm">
-        <section class="form-section" aria-labelledby="enrollmentAccessTitle">
-          <div class="section-heading">
-            <h2 id="enrollmentAccessTitle">Código de acesso à matrícula</h2>
-            <p>Informe o código de acesso recebido do professor pelo WhatsApp para liberar o preenchimento da matrícula.</p>
-          </div>
-
-          <div class="form-grid">
-            <div class="field full">
-              <label class="field-label" for="enrollmentAccessCode">Código</label>
-              <input id="enrollmentAccessCode" type="password" autocomplete="off" maxlength="64" required />
-              <div class="field-note">O código é validado com segurança e define automaticamente o valor da mensalidade e a quantidade de aulas mensais.</div>
-            </div>
-          </div>
-        </section>
-
-        <div id="enrollmentAccessMessage" class="message" role="alert" aria-live="polite"></div>
-        <button id="enrollmentAccessButton" type="submit">VALIDAR CÓDIGO</button>
-      </form>
-
       <section id="reservedSeatError" class="form-section" hidden>
-        <h2>Não foi possível recuperar a reserva</h2>
+        <h2>Não foi possível continuar a matrícula</h2>
         <p id="reservedSeatErrorMessage" role="alert"></p>
         <a href="/escolher-turma/">VOLTAR E ESCOLHER UMA TURMA</a>
       </section>
@@ -206,6 +185,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     const FIRST_TUITION_PAYMENT_PATH = "/pagamento/";
+    const CLASS_SELECTION_PATH = "/escolher-turma/";
 
     function getNextPath() {
       const params = new URLSearchParams(window.location.search);
@@ -218,6 +198,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     const NEW_ENROLLMENT_MODE = "new_enrollment";
     const EXISTING_PROFILE_MODE = "existing_student_profile_completion";
+
+    function requiresClassSelection(state) {
+      return state.mode === NEW_ENROLLMENT_MODE && !state.formUnlocked && !reservedSeat;
+    }
+
+    function showEnrollmentError(message) {
+      const alert = document.getElementById("reservedSeatError");
+      document.getElementById("reservedSeatErrorMessage").textContent = message;
+      alert.hidden = false;
+    }
     let currentOnboardingState = null;
     let authorizedInviteMode = null;
     let reservedSeat = null;
@@ -315,11 +305,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     function configureFormForState(state) {
-      const accessForm = document.getElementById("enrollmentAccessForm");
       const profileForm = document.getElementById("completeProfileForm");
       const classModeField = document.getElementById("classModeField");
       const classMode = document.getElementById("classMode");
-      const codeStep = document.querySelector('[data-progress-step="code"]');
       const dataStep = document.querySelector('[data-progress-step="data"]');
       const accessStep = document.querySelector('[data-progress-step="access"]');
       const intro = document.getElementById("onboardingIntro");
@@ -327,11 +315,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const personalDataDescription = document.getElementById("personalDataDescription");
       const existingProfile = state.mode === EXISTING_PROFILE_MODE;
 
-      codeStep.hidden = !state.requiresAccessCode;
-      accessForm.hidden = !state.requiresAccessCode || state.formUnlocked;
       profileForm.hidden = !state.formUnlocked;
       // An invitation already defines the modality on the server: no extra question.
-      // Legacy access codes retain their selection until those enrollments are retired.
+      // Server-authorized invitation links define the mode without additional input.
       classModeField.hidden = !state.requiresClassMode || !!authorizedInviteMode;
       classMode.required = state.requiresClassMode && !authorizedInviteMode;
       classMode.disabled = state.requiresClassMode && !!authorizedInviteMode;
@@ -340,11 +326,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
       document.getElementById("acquisitionSource").required = !existingProfile;
 
-      codeStep.classList.toggle("is-current", state.requiresAccessCode && !state.formUnlocked);
-      codeStep.classList.toggle("is-done", state.requiresAccessCode && state.formUnlocked);
       dataStep.classList.toggle("is-current", state.formUnlocked);
-      dataStep.querySelector("strong").textContent = existingProfile ? "2" : "3";
-      accessStep.querySelector("strong").textContent = existingProfile ? "3" : "4";
+      dataStep.querySelector("strong").textContent = "2";
+      accessStep.querySelector("strong").textContent = "3";
 
       if (existingProfile) {
         intro.textContent = "Complete seus dados cadastrais para liberar seu acesso. Seu plano e suas condições financeiras já registradas serão preservados.";
@@ -409,8 +393,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
         return refreshOnboardingState();
       } catch (error) {
-        document.getElementById("enrollmentAccessMessage").textContent =
-          error.message || "Não foi possível validar o link. Solicite um novo ao professor.";
+        showEnrollmentError(
+          error.message || "Não foi possível validar o link. Escolha uma turma disponível."
+        );
         return state;
       }
     }
@@ -426,6 +411,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       if (state.mode === "complete") {
         window.location.replace(getNextPath());
+        return;
+      }
+
+      // New enrollments must use a seat reservation or an authorized invitation.
+      // Never present a password or manually entered access code.
+      if (requiresClassSelection(state)) {
+        window.location.replace(CLASS_SELECTION_PATH);
         return;
       }
 
@@ -449,48 +441,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       configureFormForState(state);
       configureReservedSeat(state);
       if (!document.getElementById("reservedSeatError").hidden) {
-        document.getElementById("enrollmentAccessForm").hidden = true;
         document.getElementById("completeProfileForm").hidden = true;
       }
     }
 
     document.getElementById("cpf").addEventListener("input", function () { this.value = formatCpf(this.value); });
     document.getElementById("birthDate").addEventListener("input", function () { this.value = formatBirthDateInput(this.value); });
-
-    document.getElementById("enrollmentAccessForm").addEventListener("submit", async function (event) {
-      event.preventDefault();
-      const message = document.getElementById("enrollmentAccessMessage");
-      const button = document.getElementById("enrollmentAccessButton");
-      const codeInput = document.getElementById("enrollmentAccessCode");
-
-      message.textContent = "";
-      button.disabled = true;
-      button.textContent = "VALIDANDO...";
-
-      try {
-        const response = await Auth.getClient().rpc("authorize_my_enrollment", {
-          target_access_code: codeInput.value
-        });
-        if (response.error) throw response.error;
-
-        const result = response.data || {};
-        if (result.ok !== true) {
-          throw new Error(result.error || "Não foi possível validar o código de matrícula.");
-        }
-
-        codeInput.value = "";
-        const state = await refreshOnboardingState();
-        await applyAuthorizedPlan(state);
-        configureFormForState(state);
-        document.getElementById("name").focus();
-      } catch (error) {
-        message.textContent = error.message || "Não foi possível validar o código de matrícula.";
-        codeInput.select();
-      } finally {
-        button.disabled = false;
-        button.textContent = "VALIDAR CÓDIGO";
-      }
-    });
 
     document.getElementById("completeProfileForm").addEventListener("submit", async function (event) {
       event.preventDefault();
@@ -511,7 +467,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         if (!state.formUnlocked) {
-          throw new Error("Valide o código de matrícula antes de continuar.");
+          throw new Error("Escolha uma turma disponível ou utilize um link de matrícula válido.");
         }
 
         const birthDate = parseBirthDate(document.getElementById("birthDate").value);
@@ -617,8 +573,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     });
 
     initialize().catch(function (error) {
-      document.getElementById("enrollmentAccessMessage").textContent =
-        error.message || "Não foi possível carregar sua matrícula.";
+      showEnrollmentError(error.message || "Não foi possível carregar sua matrícula.");
     });
   </script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
