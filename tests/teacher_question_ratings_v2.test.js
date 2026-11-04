@@ -11,6 +11,9 @@ const APP = read("roteiro-da-aula-v2/app.js");
 const PAGE = read("roteiro-da-aula-v2/index.html");
 const OLD_PAGE = read("roteiro-da-aula-legado/index.html");
 const MIGRATION = read("supabase/migrations/20261022202000_teacher_question_ratings_v2.sql");
+const PREVIOUS_STUDIES_RATING_MIGRATION = read(
+  "supabase/migrations/20261104135559_allow_rating_previous_class_studies.sql"
+);
 const context = vm.createContext({ window: {} });
 vm.runInContext(SOURCE, context);
 const ratings = context.window.TeacherQuestionRatings;
@@ -196,6 +199,19 @@ test("SQL provides teacher-only additive RPCs and preserves historic per-lesson 
   assert.match(MIGRATION, /revoke all on function public\.get_teacher_question_rating_history_v2\(date\)[\s\S]*from public, anon/i);
   assert.doesNotMatch(MIGRATION, /create or replace function public\.rate_teacher_conversation_question\s*\(/i);
   assert.doesNotMatch(MIGRATION, /(?:delete|truncate)\s+(?:from\s+)?private\.conversation_question_practice_log/i);
+});
+
+test("backend explicitly permits previous-class questions without weakening other eligibility checks", () => {
+  const sql = PREVIOUS_STUDIES_RATING_MIGRATION;
+  assert.match(sql, /public\.get_teacher_previous_class_studies\(target_date\)/);
+  assert.match(sql, /previous\.entry_id = target_entry_id/);
+  assert.match(sql, /previous\.student_id = resolved\.student_id/);
+  assert.match(sql, /previous\.class_number = resolved\.class_number/);
+  assert.match(sql, /question\.value ->> 'id' = target_question_id::text/);
+  assert.match(sql, /not is_new_question and not is_due_review and not is_previous_class_question/);
+  assert.match(sql, /public\.is_teacher_admin\(\)/);
+  assert.match(sql, /private\.academic_lesson_occurrences/);
+  assert.match(sql, /on conflict \(occurrence_id, question_id\)/);
 });
 
 test("v2 teacher ratings enabled while existing route remains untouched", () => {
