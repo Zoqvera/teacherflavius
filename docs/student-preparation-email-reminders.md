@@ -27,7 +27,7 @@ um e-mail de `pedagogico@teacherflavius.com`. O envio administrativo existente,
   ou entrega na caixa de entrada.
 
 ## Componentes
-- Migration: `supabase/migrations/20261104040000_student_preparation_email_reminders.sql`.
+- Migration: `supabase/migrations/20261104032714_student_preparation_email_reminders.sql`.
 - RPC restrita a `service_role`: `student_preparation_email_context_internal`.
 - Edge Function: `notify-student-preparation`; webhook autenticado pelo
   segredo compartilhado já utilizado nas notificações administrativas.
