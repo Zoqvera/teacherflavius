@@ -5,54 +5,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>Escolha sua turma | Teacher Flávio</title>
+  <title>Reserva de turmas desativada | Teacher Flávio</title>
   <link rel="stylesheet" href="/escolher-turma/styles.css?v=20261030-2">
-  <script src="/supabase_config.js?v=20260715-1"></script>
 </head>
 <body>
   <main class="shell">
     <header class="page-header">
       <a class="brand" href="/">TEACHER FLÁVIO</a>
-      <h1>Escolha sua turma</h1>
-      <p>Escolha seu horário, reserve a vaga por 15 minutos e conclua a matrícula com sua conta Google.</p>
+      <h1>Reserva de turmas desativada</h1>
+      <p>O sistema de reserva temporária de vagas não está mais disponível.</p>
     </header>
-    <p id="message" role="status" aria-live="polite" class="message" hidden></p>
-    <p id="planSummary" class="hint" aria-live="polite">Consultando as condições da matrícula...</p>
-    <section id="reservationPanel" class="panel" hidden aria-labelledby="reservationTitle">
-      <h2 id="reservationTitle">Sua reserva temporária</h2>
-      <p id="reservedClass"></p>
-      <p>Tempo restante para concluir sua matrícula:</p>
-      <p id="countdown" class="countdown" role="timer">15:00</p>
-      <p>Sua vaga está reservada temporariamente. Entre com Google, informe seus dados e escolha a data da primeira aula para concluir a matrícula. Depois você será encaminhado ao pagamento da primeira mensalidade.</p>
-      <a id="continueEnrollment" class="primary action-link" href="/complete-cadastro/">CONTINUAR PARA MATRÍCULA</a>
-      <button id="copyProof" class="primary" type="button">COPIAR COMPROVANTE</button>
-      <button id="cancelHold" class="secondary" type="button">LIBERAR VAGA</button>
+    <section class="panel" aria-labelledby="nextStepsTitle">
+      <h2 id="nextStepsTitle">Como consultar os horários e fazer sua matrícula?</h2>
+      <p>Entre em contato com o professor para conhecer as turmas disponíveis e receber seu convite de matrícula.</p>
+      <p>Nenhuma vaga pode ser reservada por esta página.</p>
+      <a class="primary action-link" href="/">VOLTAR AO SITE</a>
     </section>
-    <section id="vacancyPanel" class="panel" aria-labelledby="vacancyTitle">
-      <div class="heading-row">
-        <h2 id="vacancyTitle">Turmas disponíveis</h2>
-        <button id="refresh" class="secondary" type="button">ATUALIZAR VAGAS</button>
-      </div>
-      <p id="summary" aria-live="polite">Consultando disponibilidade...</p>
-      <div id="classList" class="class-list"></div>
-    </section>
-    <section id="formPanel" class="panel" aria-labelledby="formTitle" hidden>
-      <h2 id="formTitle">Reservar turma</h2>
-      <p id="chosenClass"></p>
-      <form id="leadForm">
-        <label for="studentName">Seu nome</label>
-        <input type="text" id="studentName" maxlength="120" autocomplete="name" required>
-        <label for="studentPhone">WhatsApp com DDD (obrigatório)</label>
-        <input type="tel" id="studentPhone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="(34) 99999-9999" required>
-        <p class="hint">Informe um WhatsApp com DDD para reservar ou entrar na lista de espera. Ele pode ser diferente do número usado para agendar a aula experimental. Entrar na lista de espera não reserva vaga.</p>
-        <div class="actions">
-          <button type="submit" class="primary" id="submitLead">RESERVAR POR 15 MINUTOS</button>
-          <button id="closeForm" type="button" class="secondary">VOLTAR</button>
-        </div>
-      </form>
-    </section>
-    <footer><p>Reservar não equivale a concluir a matrícula. A confirmação depende da finalização do cadastro enquanto a reserva estiver válida. Se não houver vagas, você poderá entrar na lista de espera.</p></footer>
   </main>
-  <script src="/escolher-turma/app.js?v=20261030-3"></script>
 </body>
 </html>
