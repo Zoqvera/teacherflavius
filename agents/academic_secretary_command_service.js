@@ -115,7 +115,15 @@
       if (parsed.source) request.source = parsed.source;
       if (parsed.firstLessonDate) request.firstLessonDate = parsed.firstLessonDate;
 
-      const plan = await academicPlanner.plan(request);
+      let plan = await academicPlanner.plan(request);
+      // The previous class is inferred only for one unambiguous existing link.
+      if (parsed.action === commandsModule.ACTIONS.TRANSFER && !request.fromClassNumber &&
+          plan.snapshot && Array.isArray(plan.snapshot.classNumbers) &&
+          plan.snapshot.classNumbers.length === 1 &&
+          plan.snapshot.classNumbers[0] !== request.classNumber) {
+        request.fromClassNumber = plan.snapshot.classNumbers[0];
+        plan = await academicPlanner.plan(request);
+      }
       return Object.freeze({ status: "plan", student: Object.freeze({ id: student.id, name: student.name }),
         request: Object.freeze(request), plan });
     }
