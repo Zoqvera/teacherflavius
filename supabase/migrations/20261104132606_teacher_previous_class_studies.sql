@@ -1,10 +1,17 @@
--- Teacher-only, read-only history of questions studied for the preceding class session.
-CREATE OR REPLACE FUNCTION public.get_teacher_previous_class_studies(target_date date DEFAULT NULL::date)
- RETURNS TABLE(entry_id uuid, student_id uuid, class_number integer, previous_starts_at timestamp with time zone, questions jsonb)
- LANGUAGE plpgsql
- STABLE SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+-- Read-only, teacher-restricted view of questions marked as studied for the preceding class occurrence.
+create or replace function public.get_teacher_previous_class_studies(target_date date default null)
+returns table (
+  entry_id uuid,
+  student_id uuid,
+  class_number integer,
+  previous_starts_at timestamp with time zone,
+  questions jsonb
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $function$
 declare
   effective_date date := coalesce(target_date, (now() at time zone 'America/Sao_Paulo')::date);
 begin
@@ -86,7 +93,7 @@ begin
   from study_cycles cycle
   order by cycle.class_number, cycle.student_id;
 end;
-$function$
+$function$;
 
 revoke all on function public.get_teacher_previous_class_studies(date) from public, anon, authenticated;
 grant execute on function public.get_teacher_previous_class_studies(date) to authenticated, service_role;
