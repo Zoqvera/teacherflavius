@@ -127,7 +127,7 @@ test("previous class questions use restricted history and do not change ratings"
   assert.match(migration, /study\.studied_at < cycle\.previous_starts_at/);
   assert.match(app, /client\.rpc\("get_teacher_previous_class_studies"/);
   assert.match(app, /PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR/);
-  assert.match(app, /previous\.questions, item, true, false, history/);
+  assert.match(app, /previous\.questions, item, true, !MODEL\.isCancelled\(item\), history/);
   assert.match(currentPage, /20261104-previous-grading-1/);
   assert.match(page, /20261104-previous-grading-1/);
 });
