@@ -3,6 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const { createHash } = require("node:crypto");
 const path = require("node:path");
 
 const MIGRATIONS = Object.freeze([
@@ -12,6 +13,15 @@ const MIGRATIONS = Object.freeze([
   "20261104013141_harden_private_rls_group_3_nov_2026.sql",
   "20261104013215_remove_browser_execute_grants_from_private_routines.sql",
 ]);
+
+
+const EXPECTED_MIGRATION_SHA256 = Object.freeze({
+  "20261104013111_secure_private_billing_plan_rls.sql": "679cbd483d1bd1b0a80062bf21b4dbac9f2eed63ac6e2187db46ccf894f7ade9",
+  "20261104013135_harden_private_rls_group_1_nov_2026.sql": "0a8104d60366a142854ae7e4b7398d7ff75ada96daf252d1556c0d2f7b8bd74a",
+  "20261104013138_harden_private_rls_group_2_nov_2026.sql": "46484d5154301c9a8f3f7e9487ca165ba753d7f3008d7a9eeabaed4c81640322",
+  "20261104013141_harden_private_rls_group_3_nov_2026.sql": "886c94285a5bc621b1594db8755fce2810016e47d64890fe2afc72a618a306a1",
+  "20261104013215_remove_browser_execute_grants_from_private_routines.sql": "63159485bd9f37db4007ea9b31f93a53cd7b7845cedbb9281ebabbdfed981ad2"
+});
 
 const EXPECTED_TABLES = new Set([
   "academic_class_session_finalizations",
@@ -90,4 +100,15 @@ test("the hardening grants no new browser access", () => {
     ),
     "Hardening must not introduce a policy, a GRANT, or a data mutation"
   );
+});
+
+test("migration SQL bytes match immutable production ledger hashes", () => {
+  for (const fileName of MIGRATIONS) {
+    const filePath = path.join(
+      __dirname, "..", "supabase", "migrations", fileName
+    );
+    const sql = fs.readFileSync(filePath, "utf8");
+    const digest = createHash("sha256").update(sql).digest("hex");
+    assert.equal(digest, EXPECTED_MIGRATION_SHA256[fileName], fileName);
+  }
 });
