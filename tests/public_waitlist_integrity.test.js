@@ -62,3 +62,15 @@ test("public form keeps the four-argument RPC and separate reservation flow", ()
   assert.match(app, /target_client_key: clientKey/);
   assert.match(app, /callRpc\("create_public_class_seat_hold"/);
 });
+
+
+test("financial authorization documentation does not incorrectly promise mandatory MFA", () => {
+  const document = fs.readFileSync(
+    path.join(__dirname, "..", "docs", "payment_access_security.md"),
+    "utf8"
+  );
+
+  assert.match(document, /MFA não é obrigatório/);
+  assert.match(document, /não exige AAL2/);
+  assert.doesNotMatch(document, /também validam MFA/);
+});
