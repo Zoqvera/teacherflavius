@@ -1,0 +1,34 @@
+name: Teacher MFA enrollment contracts
+
+on:
+  pull_request:
+    paths:
+      - "teacher_mfa_setup.js"
+      - "auth_infrastructure.js"
+      - "tests/teacher_mfa_setup.test.js"
+      - ".github/workflows/teacher-mfa-enrollment.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "teacher_mfa_setup.js"
+      - "auth_infrastructure.js"
+      - "tests/teacher_mfa_setup.test.js"
+      - ".github/workflows/teacher-mfa-enrollment.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  teacher-mfa-enrollment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        run: node --check teacher_mfa_setup.js
+      - name: Verify TOTP enrollment safety
+        run: node --test tests/teacher_mfa_setup.test.js
