@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const migration = fs.readFileSync(
-  path.join(root, "supabase/migrations/20261104040000_student_preparation_email_reminders.sql"),
+  path.join(root, "supabase/migrations/20261104032714_student_preparation_email_reminders.sql"),
   "utf8",
 );
 const sender = fs.readFileSync(
