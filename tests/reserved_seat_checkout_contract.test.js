@@ -21,13 +21,14 @@ test("only reserved-seat first tuitions acquire a conditional payment window", (
   assert.match(migration, /create trigger zzz_track_reserved_seat_payment_window/);
 });
 
-test("opening checkout starts a persistent server time limit of exactly ten minutes", () => {
-  assert.match(migration, /entered_at=now\(\),expires_at=now\(\)\+interval '10 minutes'/);
-  assert.match(migration, /if w\.state='awaiting_checkout'/);
-  assert.match(migration, /for update/);
-  assert.match(paymentApp, /start_my_reserved_seat_checkout/);
-  assert.match(paymentApp, /reservedSeatCheckout\.expires_at/);
-  assert.match(paymentPage, /id="reservedSeatCheckoutCountdown"/);
+test("retired reserved-seat RPC must not block ordinary monthly tuition checkout", () => {
+  const retired = source("supabase/migrations/20261104024633_disable_class_seat_reservations.sql");
+
+  assert.match(retired, /revoke execute on function public\.start_my_reserved_seat_checkout\(\)/);
+  assert.doesNotMatch(paymentApp, /start_my_reserved_seat_checkout|openReservedSeatCheckout|reservedSeatCheckout|reservedSeatTimer/);
+  assert.doesNotMatch(paymentPage, /reservedSeatCheckoutNotice|reservedSeatCheckoutCountdown/);
+  assert.match(paymentApp, /await loadPendingTuitions\(\);\s*await loadFirstPaymentWindow\(\);/);
+  assert.match(paymentApp, /await invokePaymentFunction\(\{ action: "config" \}\)/);
 });
 
 test("expired first payments release the student and pause billing without deleting receipts", () => {

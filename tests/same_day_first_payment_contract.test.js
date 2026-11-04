@@ -77,7 +77,8 @@ test("checkout explains administrative recovery without disabling verification",
   assert.match(checkout, /VERIFICAR PAGAMENTO NOVAMENTE/);
   assert.match(checkoutMarkup, /id="verifyPaymentButton"/);
   assert.match(checkoutMarkup, /noindex, nofollow/);
-  assert.match(checkoutMarkup, /\/pagamento\/app\.js\?v=20261030-reserved-seat-1/);
+  assert.match(checkoutMarkup, /\/pagamento\/app\.js\?v=\d{8}-[a-z0-9-]+/);
+  assert.doesNotMatch(checkout, /start_my_reserved_seat_checkout/);
 });
 
 test("month-end recurring due day keeps its original day with a short-month clamp", () => {
