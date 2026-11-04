@@ -1,0 +1,29 @@
+name: Public waitlist integrity contracts
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261104022500_prevent_unauthenticated_waitlist_rewrites.sql"
+      - "tests/public_waitlist_integrity.test.js"
+      - ".github/workflows/public-waitlist-integrity.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261104022500_prevent_unauthenticated_waitlist_rewrites.sql"
+      - "tests/public_waitlist_integrity.test.js"
+      - ".github/workflows/public-waitlist-integrity.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  public-waitlist-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check waitlist integrity contracts
+        run: node --test tests/public_waitlist_integrity.test.js
