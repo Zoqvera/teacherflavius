@@ -78,8 +78,12 @@ test("new link requests contain origin and first lesson, transfers do not", () =
   assert.match(app, /ui\.transferFields\.hidden = !isTransfer/);
 });
 
-test("new page does not claim payment processing or activate student operations", () => {
+test("only explicitly confirmed archival is exposed; other actions remain previews", () => {
   const html = read("agente-secretaria/index.html");
-  assert.match(html, /Nenhuma alteração será realizada nesta página/);
+  assert.match(html, /O arquivamento só é executado após sua confirmação expressa/);
+  assert.match(html, /id="archiveConsent"/);
+  assert.match(html, /id="archiveExecute" type="button" disabled/);
+  assert.match(html, /academic_secretary_archive_executor\.js/);
+  assert.match(html, /A geração da prévia não altera registros/);
   assert.doesNotMatch(html, /Pagamento confirmado|Crédito concedido|Matrícula realizada/);
 });
