@@ -62,3 +62,16 @@ pode ser revertido para as tabelas correspondentes usando
 `ALTER TABLE private.<tabela> DISABLE ROW LEVEL SECURITY`. Não alterar
 privilégios públicos sem revisão. Priorizar diagnóstico do fluxo afetado
 antes de qualquer reversão; não executar rollback preventivo.
+
+## Exceção de identidade documental (auditada)
+A migração já incorporada `20261104013111` contém duas linhas de
+comentário no Git ausentes da instrução SQL efetivamente aplicada. A regra de
+imutabilidade impede reescrever o arquivo histórico. O verificador de drift
+aceita **somente** a dupla de hashes SHA256 conhecida:
+
+- Produção: `679cbd483d1bd1b0a80062bf21b4dbac9f2eed63ac6e2187db46ccf894f7ade9`
+- Git: `ab71e00aac45b4fec4a6c1276b220c17c7c220e7fc8b8295f1b3362f89aab92f`
+
+Além da comparação exata de versão, nomes e hashes, a atestação SQL somente
+leitura valida as 25 tabelas, o RLS de todo o esquema privado e a ausência de
+permissões de navegador. Qualquer outro desvio continua falhando o CI.
