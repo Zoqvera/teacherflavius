@@ -209,3 +209,30 @@ test("browser exports are available with no credentials and no mutation APIs", (
     assert.doesNotMatch(source, /\.(insert|update|upsert|delete)\s*\(/);
   }
 });
+
+
+test("inactive visitors are not selected as academic students", async () => {
+  const { service, planRequests } = fixture({
+    students: [{ id: FIRST_ID, name: "Bianka Brito", archived: false, enrolled: false }]
+  });
+  const result = await service.process("arquive Bianka Brito");
+  assert.equal(result.status, "not_found");
+  assert.deepEqual(planRequests, []);
+});
+
+test("command interface remains within teacher-protected administrative page", () => {
+  const root = path.join(__dirname, "..");
+  const html = fs.readFileSync(path.join(root, "agente-secretaria/index.html"), "utf8");
+  const panel = fs.readFileSync(path.join(root, "agente-secretaria/app.js"), "utf8");
+  assert.match(html, /<meta name="robots" content="noindex,nofollow">/);
+  assert.match(html, /id="commandForm"/);
+  assert.match(html, /id="commandStudentChoice"/);
+  assert.match(html, /academic_secretary_commands\.js/);
+  assert.match(html, /academic_secretary_command_service\.js/);
+  assert.match(panel, /createAcademicCommandService\(client, readers, service\)/);
+  assert.match(panel, /result\.status === "ambiguous"/);
+  assert.match(panel, /ui\.planForm\.requestSubmit\(\)/);
+  assert.match(panel, /ui\.firstLessonDate\.value = result\.request\.firstLessonDate \|\| ""/);
+  assert.match(panel, /ui\.source\.value = result\.request\.source \|\| ""/);
+  assert.doesNotMatch(panel, /\.rpc\("unarchive_teacher_student"/);
+});
