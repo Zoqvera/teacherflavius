@@ -74,3 +74,38 @@ test("studied-history section combines prior questions with today's questions", 
   assert.equal(questions.review.length, 1);
   assert.equal(model.normalizeNumbers([2, 1, 2, 0, -1]).join(","), "1,2");
 });
+
+test("previous class studies keep their actual date and exact question cards", () => {
+  const records = [
+    { entry_id: "membership-1", previous_starts_at: "2026-10-28T13:00:00Z",
+      questions: [{ id: "q-11", display_order: 11, text: "Do you have children?" }] },
+    { entry_id: "membership-2", previous_starts_at: "2026-10-28T13:00:00Z",
+      questions: [] },
+    { entry_id: null, questions: [{ id: "q-1" }] }
+  ];
+  const indexed = model.indexPreviousStudies(records);
+  assert.equal(indexed.size, 2);
+  assert.equal(indexed.get("regular|membership-1").questions[0].display_order, 11);
+  assert.equal(indexed.get("regular|membership-2").questions.length, 0);
+  assert.equal(indexed.get("regular|membership-1").previousStartsAt,
+    "2026-10-28T13:00:00Z");
+  assert.equal(model.previousStudyKey({
+    lesson_kind: "regular", entry_id: "membership-1"
+  }), "regular|membership-1");
+});
+
+test("previous class questions use restricted history and do not change ratings", () => {
+  const migration = read(
+    "supabase/migrations/20261104132606_teacher_previous_class_studies.sql"
+  );
+  assert.match(migration, /public\.get_teacher_previous_class_studies/);
+  assert.match(migration, /auth\.uid\(\) is null/);
+  assert.match(migration, /public\.is_teacher_admin\(\)/);
+  assert.match(migration, /revoke all on function[\s\S]*from public, anon, authenticated/i);
+  assert.match(migration, /study\.studied_at < cycle\.previous_starts_at/);
+  assert.match(app, /client\.rpc\("get_teacher_previous_class_studies"/);
+  assert.match(app, /PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR/);
+  assert.match(app, /previous\.questions, item, true, false, history/);
+  assert.match(currentPage, /20261104-previous-class-1/);
+  assert.match(page, /20261104-previous-class-1/);
+});
