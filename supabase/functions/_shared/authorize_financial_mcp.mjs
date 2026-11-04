@@ -8,7 +8,7 @@ export async function authorizeFinancialMcp(client, allowedClientId) {
 
   const { data, error } = await client.auth.getClaims();
   const claims = data?.claims;
-  if (error || !claims || claims.role !== "authenticated" ||
+  if (error || !claims || claims.role !== "teacher_payment_agent" ||
       typeof claims.sub !== "string" || !claims.sub ||
       claims.client_id !== allowedClientId) {
     throw new Error("Acesso não autorizado.");
