@@ -1,0 +1,29 @@
+name: Public seat request budgets
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261104024500_throttle_public_class_seat_submission_attempts.sql"
+      - "tests/public_seat_request_budgets.test.js"
+      - ".github/workflows/public-seat-request-budgets.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261104024500_throttle_public_class_seat_submission_attempts.sql"
+      - "tests/public_seat_request_budgets.test.js"
+      - ".github/workflows/public-seat-request-budgets.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  public-seat-request-budgets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate seat submission budget contracts
+        run: node --test tests/public_seat_request_budgets.test.js
