@@ -134,7 +134,7 @@ begin
     'expires_at',expiry,'class_number',target_class_number
   );
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.create_public_class_seat_hold(target_class_number integer, target_name text, target_whatsapp text)
  RETURNS jsonb
@@ -198,7 +198,7 @@ begin
   return jsonb_build_object('reservation_id',hold_id,'token',secret,'expires_at',expiry,
     'class_number',target_class_number);
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.join_public_class_seat_waitlist(target_class_number integer, target_name text, target_whatsapp text, target_client_key text)
  RETURNS boolean
@@ -231,7 +231,7 @@ begin
   on conflict (class_number, normalized_phone) do nothing;
   return true;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.join_public_class_seat_waitlist(target_class_number integer, target_name text, target_whatsapp text)
  RETURNS boolean
@@ -255,4 +255,4 @@ begin
   on conflict (class_number, normalized_phone) do nothing;
   return true;
 end;
-$function$
+$function$;
