@@ -14,7 +14,8 @@
     scheduled: "AGENDADA",
     completed: "CONCLUÍDA",
     cancelled: "CANCELADA",
-    no_show: "NÃO COMPARECEU"
+    no_show: "NÃO COMPARECEU",
+    historical_unknown: "RESULTADO HISTÓRICO DESCONHECIDO"
   });
 
   function toText(value) {
