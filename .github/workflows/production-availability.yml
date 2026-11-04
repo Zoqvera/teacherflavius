@@ -8,6 +8,8 @@ on:
       - "recursos/como-escolher-curso-de-ingles-online/index.html"
       - "scripts/build_static_site.py"
       - "scripts/check_health_endpoint.py"
+      - "scripts/check_static_assets.py"
+      - "tests/test_check_static_assets.py"
       - "scripts/postprocess_production.py"
       - ".github/workflows/production-availability.yml"
   push:
@@ -17,6 +19,8 @@ on:
       - "recursos/como-escolher-curso-de-ingles-online/index.html"
       - "scripts/build_static_site.py"
       - "scripts/check_health_endpoint.py"
+      - "scripts/check_static_assets.py"
+      - "tests/test_check_static_assets.py"
       - "scripts/postprocess_production.py"
       - ".github/workflows/production-availability.yml"
   schedule:
@@ -55,6 +59,11 @@ jobs:
           print("Generated health endpoint is valid:", generated_health["commit"][:12])
           PY
 
+      - name: Verify critical static asset contracts and build
+        run: |
+          python3 -m unittest discover -s tests -p "test_check_static_assets.py" -v
+          python3 scripts/check_static_assets.py --local-root _site
+
       - name: Resolve production DNS
         if: github.event_name != 'pull_request'
         run: |
@@ -78,6 +87,10 @@ jobs:
             https://teacherflavius.com/health.json \
             --attempts 18 \
             --delay 5
+
+      - name: Check critical public JavaScript and CSS resources
+        if: github.event_name != 'pull_request'
+        run: python3 scripts/check_static_assets.py --attempts 3 --delay 2
 
       - name: Check published resource freshness
         if: github.event_name != 'pull_request'
