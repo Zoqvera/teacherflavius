@@ -176,3 +176,63 @@ específica para a nova rota administrativa.
 Homologar a experiência de acesso em produção, testar as consultas com
 sessão administrativa real e então projetar operações de alteração
 transacionais, com verificação de autorização e auditoria.
+
+
+## Etapa 5 — Arquivamento supervisionado, primeira operação real
+
+Após a homologação de consultas e prévias, a ação **archive** foi habilitada
+na rota `/agente-secretaria/` exclusivamente por confirmação do professor.
+
+Fluxo:
+
+1. Seleção de aluno e prévia do arquivamento no serviço acadêmico.
+2. Exibição do impacto: desvinculação de todas as turmas e suspensão das
+   próximas mensalidades configuradas, preservando histórico.
+3. Confirmação por checkbox e segunda confirmação nativa explícita.
+4. Novo teste de autorização e conferência dos vínculos atuais versus os
+   registrados na prévia. Mudanças bloqueiam a execução.
+5. Leitura das configurações de cobrança. Erros de consulta bloqueiam.
+6. **Uma única RPC existente**, `archive_teacher_student`, é executada.
+   A função e o gatilho `private.apply_archived_student_invariants` realizam
+   arquivamento, remoção de vínculos e desativação de cobrança mensal dentro
+   da transação PostgreSQL. Não há sequência de escritas pelo navegador.
+7. Nova consulta do estado, dos vínculos e da cobrança; a interface só
+   confirma sucesso após verificação das três pós-condições.
+8. Se houver erro de rede ou de pós-condição, a interface não informa sucesso
+   e pede inspeção antes de tentar novamente.
+
+Código de execução: `agents/academic_secretary_archive_executor.js`.
+O executor suporta **somente** a ação `archive`. Não permite transferir,
+matricular ou desarquivar. A interface não tem outros botões de escrita.
+Todos os controles dependem de sessão autenticada e da verificação
+`public.is_teacher_admin()` no banco; nenhuma credencial administrativa foi
+incluída no código.
+
+**Desarquivamento bloqueado nesta fase:** a função existente
+`unarchive_teacher_student` retira `archived`, mas não contém garantia
+transacional de reativar as configurações de cobrança mensal. O gatilho
+de arquivamento desativa `student_billing_settings.active`.
+Portanto, permitir o desarquivamento pelo agente antes de corrigir esse
+fluxo violaria a regra de retomada da cobrança.
+
+**Limitação de concorrência:** a conferência da prévia ocorre antes da
+RPC e não é um mecanismo de travamento entre essas duas etapas. A RPC
+existente e seu gatilho fornecem atomicidade ao arquivamento em si,
+mas alterações concorrentes nos vínculos devem ser acompanhadas por
+auditoria e pela verificação posterior. Uma futura RPC de orquestração
+poderá fazer conferência e mutação na mesma transação.
+
+Validação automatizada:
+`node --test tests/academic_secretary_archive_executor.test.js`;
+além dos contratos preexistentes e da suíte geral do repositório.
+
+Impacto de SEO: a página administrativa continua com a diretiva
+`noindex,nofollow`. Não foram alterados robots.txt, sitemap ou o
+conteúdo público. Nenhum dado real de aluno foi alterado na implantação.
+
+### Próxima etapa
+
+Corrigir e homologar a reativação segura de mensalidades no desarquivamento,
+preservando isenções permanentes, históricos e estados de cobrança
+individuais; depois desenvolver transferências e novos vínculos com
+transações e remapeamento dos créditos.
