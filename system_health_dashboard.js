@@ -157,6 +157,8 @@
       '<article class="health-card"><span>Issues ativos</span><strong>' + escapeHtml(health.issueCount) + '</strong></article>',
       '<article class="health-card"><span>Erros · 15 min</span><strong>' + escapeHtml(formatMetric(metrics.application_errors_15m)) + '</strong></article>',
       '<article class="health-card"><span>HTTP 5xx · 15 min</span><strong>' + escapeHtml(formatMetric(metrics.http_5xx_15m)) + '</strong></article>',
+      '<article class="health-card"><span>Recursos acionáveis · 15 min</span><strong>' + escapeHtml(formatMetric(metrics.resource_errors_15m)) + '</strong></article>',
+      '<article class="health-card"><span>Pixel OpenAI · 15 min</span><strong>' + escapeHtml(formatMetric(metrics.optional_openai_pixel_errors_15m)) + '</strong></article>',
       '<article class="health-card"><span>CSP acionável · 15 min</span><strong>' + escapeHtml(formatMetric(metrics.csp_actionable_15m)) + '</strong></article>',
       '<article class="health-card"><span>Último health check</span><strong class="health-card-date">' + escapeHtml(formatDateTime(health.completedAt)) + '</strong></article>'
     ].join("");
