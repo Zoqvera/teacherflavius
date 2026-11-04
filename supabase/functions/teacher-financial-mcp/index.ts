@@ -4,6 +4,7 @@ import { pipeline } from "npm:@supabase/middleware@1.0.0";
 import { withOAuthProtectedResource, withSupabase } from "npm:@supabase/server@1.6.0";
 import { z } from "npm:zod@4.3.6";
 import { recordAuthenticatedTuitionPayment } from "../_shared/record_authenticated_tuition_payment.mjs";
+import { authorizeFinancialMcp } from "../_shared/authorize_financial_mcp.mjs";
 
 // Fail closed until the OAuth token is proven to have payment-only privileges.
 // The ordinary teacher token can authorize other database functions directly.
@@ -29,6 +30,7 @@ Deno.serve(pipeline(
         _meta: { securitySchemes: [{ type: "oauth2", scopes: ["openid"] }] },
       }, async (payment) => {
         try {
+          await authorizeFinancialMcp(supabase, Deno.env.get("TEACHER_FINANCIAL_OAUTH_CLIENT_ID"));
           const result = await recordAuthenticatedTuitionPayment(supabase, payment);
           return { content: [{ type: "text" as const, text: JSON.stringify(result) }] };
         } catch {
