@@ -156,12 +156,6 @@ function ensureProfessorDashboardCard(config) {
 
 function ensureDynamicProfessorCards() {
   ensureProfessorDashboardCard({
-    id: "agente-secretaria",
-    href: "/agente-secretaria/",
-    label: "AGENTE DE SECRETARIA",
-    beforeId: "alunos"
-  });
-  ensureProfessorDashboardCard({
     id: "reservas-de-vagas",
     href: "/reservas-de-vagas/",
     label: "RESERVAS DE VAGAS",
