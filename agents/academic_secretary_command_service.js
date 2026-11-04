@@ -30,7 +30,7 @@
   function validateCandidate(candidate) {
     return candidate && typeof candidate.id === "string" && UUID_PATTERN.test(candidate.id) &&
       typeof candidate.name === "string" && candidate.name.trim().length >= 2 &&
-      typeof candidate.archived === "boolean";
+      typeof candidate.archived === "boolean" && typeof candidate.enrolled === "boolean";
   }
 
   function createAcademicCommandService(client, readers, academicPlanner) {
@@ -44,14 +44,14 @@
 
     async function findStudentCandidates(name) {
       const data = readResponse(await client.from("profiles")
-        .select("id,name,archived")
+        .select("id,name,archived,enrolled")
         .ilike("name", "%" + escapedIlikeTerm(name) + "%")
         .order("name", { ascending: true })
         .limit(MAX_CANDIDATES + 1), "identificação do aluno");
       if (!Array.isArray(data) || data.some(item => !validateCandidate(item))) {
         throw new Error("Identificação dos alunos indisponível ou inconsistente.");
       }
-      return data;
+      return data.filter(student => student.enrolled === true || student.archived === true);
     }
 
     async function availableClasses() {
