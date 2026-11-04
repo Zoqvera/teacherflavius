@@ -33,7 +33,8 @@ test("new enrollment form uses a server-authorized plan without typed access cod
   assert.doesNotMatch(page, /parseMonthlyFee/);
   assert.doesNotMatch(page, /target_monthly_fee:/);
   assert.match(page, /get_my_authorized_enrollment_plan/);
-  assert.match(page, /complete_my_reserved_seat_enrollment/);
+  assert.match(page, /authorize_my_enrollment_link/);
+  assert.doesNotMatch(page, /complete_my_reserved_seat_enrollment/);
   assert.doesNotMatch(page, /enrollmentAccessCode/);
 });
 

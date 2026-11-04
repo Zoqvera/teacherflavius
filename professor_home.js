@@ -10,7 +10,8 @@ const RETIRED_PROFESSOR_CARD_IDS = Object.freeze([
   "radar-de-alunos",
   "criar-exercicio",
   "integracao-google-forms",
-  "alunos-do-dia"
+  "alunos-do-dia",
+  "reservas-de-turmas"
 ]);
 
 function removeRetiredProfessorCards() {
@@ -159,12 +160,6 @@ function ensureDynamicProfessorCards() {
     href: "/agente-secretaria/",
     label: "AGENTE DE SECRETARIA",
     beforeId: "alunos"
-  });
-  ensureProfessorDashboardCard({
-    id: "reservas-de-turmas",
-    href: "/reservas-de-turmas/",
-    label: "RESERVAS DE TURMAS",
-    beforeId: "reservas-de-vagas"
   });
   ensureProfessorDashboardCard({
     id: "reservas-de-vagas",

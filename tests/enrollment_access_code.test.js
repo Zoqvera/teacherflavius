@@ -19,14 +19,14 @@ const currentBaseline = read(
 );
 const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 
-test("new students choose a class instead of typing an access code", function () {
+test("new enrollments require a teacher invitation, without the discontinued chooser", function () {
   assert.match(page, /id="completeProfileForm" hidden/);
   assert.doesNotMatch(page, /enrollmentAccessForm|enrollmentAccessCode|type="password"/);
   assert.doesNotMatch(page, /rpc\("authorize_my_enrollment"/);
-  assert.match(page, /function requiresClassSelection\(state\)/);
-  assert.match(page, /state\.mode === NEW_ENROLLMENT_MODE &&\s*!state\.formUnlocked && !reservedSeat && !readInvitationToken\(\)/);
-  assert.match(page, /window\.location\.replace\(CLASS_SELECTION_PATH\)/);
-  assert.match(page, /authorize_my_reserved_seat_enrollment/);
+  assert.match(page, /function requiresEnrollmentInvitation\(state\)/);
+  assert.match(page, /!state\.formUnlocked && !readInvitationToken\(\)/);
+  assert.match(page, /Solicite ao professor um link de convite/);
+  assert.doesNotMatch(page, /CLASS_SELECTION_PATH|authorize_my_reserved_seat_enrollment/);
   assert.match(page, /authorize_my_enrollment_link/);
   assert.match(onboardingState, /rpc\("get_my_enrollment_onboarding_state"\)/);
   assert.match(page, /if \(!state\.formUnlocked\)/);
