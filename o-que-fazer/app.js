@@ -186,7 +186,7 @@
         "error"
       );
       button.disabled = false;
-      button.textContent = "ESTUDEI A PERGUNTA";
+      button.textContent = "REGISTRAR ESTUDO";
     }
   }
 
@@ -221,7 +221,7 @@
       ? "PERGUNTA ESTUDADA"
       : (question.worked
         ? "PERGUNTA JÁ TRABALHADA"
-        : (isReview ? "PERGUNTA PARA REVISAR" : "ESTUDEI A PERGUNTA"));
+        : (isReview ? "PERGUNTA PARA REVISAR" : "REGISTRAR ESTUDO"));
     button.addEventListener("click", function () {
       handleQuestionStudied(question, button);
     });
