@@ -191,9 +191,12 @@ function createAcademicSecretaryAgent(dependencies) {
 
     const student = normalizeStudent(await dependencies.getStudentSnapshot(request.studentId), request.studentId);
     const result = createPlan(request.action, request.studentId);
+    result.snapshot = Object.freeze({
+      archived: student.archived,
+      classNumbers: Object.freeze([...student.classNumbers])
+    });
     if (request.action === ACTIONS.INSPECT_STUDENT) {
       result.steps = ["Consulta concluída sem qualquer alteração."];
-      result.snapshot = Object.freeze({ archived: student.archived, classNumbers: [...student.classNumbers] });
       return finalizePlan(result);
     }
     if (request.action === ACTIONS.ARCHIVE) planArchive(result, student);
