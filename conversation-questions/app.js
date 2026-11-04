@@ -277,7 +277,7 @@
     if (progress.worked || progress.studied) {
       return { label: "PERGUNTA JÁ TRABALHADA", disabled: true };
     }
-    return { label: "ESTUDEI A PERGUNTA", disabled: false };
+    return { label: "REGISTRAR ESTUDO", disabled: false };
   }
 
   async function markStudentQuestionStudied(questionId, button) {
@@ -303,7 +303,7 @@
     } catch (error) {
       console.error("Falha ao registrar a pergunta estudada:", error);
       button.disabled = false;
-      button.textContent = "ESTUDEI A PERGUNTA";
+      button.textContent = "REGISTRAR ESTUDO";
       showStatus(
         error && error.message ? error.message : "Não foi possível registrar a pergunta.",
         "error"
