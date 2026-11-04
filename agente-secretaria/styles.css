@@ -43,3 +43,6 @@ textarea:focus-visible{outline:3px solid #78abca;outline-offset:2px}
 #commandChoices{margin-top:18px}
 #commandContinue{margin-top:12px}
 #commandStatus.error{color:#8b1b1b}
+
+#commandClassChoices{margin-top:18px}
+#commandClassContinue{margin-top:12px}
