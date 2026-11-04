@@ -236,3 +236,57 @@ Corrigir e homologar a reativação segura de mensalidades no desarquivamento,
 preservando isenções permanentes, históricos e estados de cobrança
 individuais; depois desenvolver transferências e novos vínculos com
 transações e remapeamento dos créditos.
+
+
+## Etapa 7 — comandos administrativos supervisionados
+
+Foi criado um interpretador **determinístico** de comandos em português,
+sem credenciais, chamadas a modelos de linguagem ou autonomia irrestrita.
+Ele aceita um conjunto documentado de intenções:
+
+- Consultar turmas de um aluno pelo nome.
+- Verificar vagas de uma turma numerada e listar turmas de grupo com vagas.
+- Preparar novo vínculo com número de turma, origem e primeira aula.
+- Preparar transferência por número de turma. Se houver exatamente um vínculo
+  anterior, a origem pode ser inferida; com múltiplos vínculos é solicitada.
+- Preparar prévias de arquivamento e desarquivamento.
+
+Os módulos são
+`agents/academic_secretary_commands.js` (interpretação sem efeitos colaterais)
+e `agents/academic_secretary_command_service.js` (consultas autenticadas).
+A busca no Supabase utiliza a sessão do professor, autorização por
+`is_teacher_admin`, políticas RLS, limite de resultados e proibição de
+selecionar automaticamente identidades ambíguas. Para nomes iguais, o professor
+seleciona explicitamente o cadastro; o serviço verifica novamente a escolha.
+Turmas são identificadas por número, sem inferir uma turma arbitrária
+a partir de horários potencialmente coincidentes.
+
+A página `/agente-secretaria/` ganhou entrada de comando e resultado textual.
+Comandos sobre alunos preenchem o formulário de prévia existente. Origem e
+primeira aula permanecem obrigatórias para novo vínculo e valores não são
+herdados silenciosamente de comandos anteriores. Transferências não pedem esses
+dados. A funcionalidade de arquivamento continua exigindo o fluxo de
+confirmação explícita e sua RPC oficial; o interpretador sozinho jamais chama
+uma RPC de escrita. Desarquivamento, novas matrículas e transferências
+continuam sem execução automática pelo agente.
+
+**Limite do reconhecimento:** a linguagem natural aceita segue um vocabulário
+restrito de comandos e a identificação da turma por número. Frases fora
+do catálogo são recusadas com mensagem explícita; esta entrega não configura
+um agente generativo ou uma integração de ferramentas diretamente ao ChatGPT.
+Próximas iterações podem incluir reconhecimento supervisionado de horários,
+sinônimos e uma interface conversacional mais flexível.
+
+**Testes:** `tests/academic_secretary_commands.test.js`; a suíte geral Node,
+os verificadores de sintaxe e o ESLint também incluem os novos arquivos.
+
+**SEO:** apenas a área administrativa já marcada `noindex,nofollow`
+foi alterada. Não houve mudanças em páginas públicas, sitemap,
+robots.txt ou conteúdo de aquisição.
+
+### Próxima etapa
+
+Homologar o reconhecimento e a seleção de alunos em produção com sessão
+administrativa real. Depois implementar as operações transacionais de
+transferência e vínculo com a origem registrada, primeira aula e créditos
+corretamente remapeados, sob aprovação.
