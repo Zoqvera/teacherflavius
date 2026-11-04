@@ -387,6 +387,26 @@ test("presentation actions stay side by side and cancellation appears after regi
   expect(width.content).toBeLessThanOrEqual(width.viewport + 1);
 });
 
+test("teacher can evaluate questions studied for the preceding class", async ({ page }) => {
+  await openPreview(page, "teacher", true);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await enterFictionalClass(page, "PERGUNTAS");
+
+  const previousQuestion = page.locator(".workspace-question").filter({
+    hasText: "Where are you from?"
+  });
+  await expect(previousQuestion.getByRole("button", { name: "BOM" })).toBeEnabled();
+  await expect(previousQuestion.getByRole("button", { name: "MÉDIO" })).toBeEnabled();
+  await expect(previousQuestion.getByRole("button", { name: "MELHORAR" })).toBeEnabled();
+
+  await previousQuestion.getByRole("button", { name: "MÉDIO" }).click();
+  await expect(page.locator("#workspaceStatus")).toContainText("Pergunta avaliada como MÉDIO");
+  const writes = await page.evaluate(() => window.__teacherV2Calls.filter(
+    (name) => name === "rate_teacher_conversation_question_v2"
+  ));
+  expect(writes).toHaveLength(1);
+});
+
 test("teacher evaluates questions with a synthetic acknowledgement", async ({ page }) => {
   await openPreview(page, "teacher", true);
   await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
