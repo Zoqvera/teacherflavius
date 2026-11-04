@@ -23,7 +23,8 @@ test("excludes only the known optional SDK from actionable resource bursts", () 
   assert.match(patch, /coalesce\(e\.source, ''\) <> 'https:\/\/bzrcdn\.openai\.com\/sdk\/oaiq\.min\.js'/);
   assert.match(patch, /resource_top_fingerprint_count/);
   assert.match(patch, /old_top_filter/);
-  assert.match(patch, /<> 2 THEN/);
+  assert.match(patch, /old_resource_predicate_grouped/);
+  assert.match(patch, /<> 1 THEN/);
   assert.match(patch, /Health function changed: stop and review/);
   assert.match(dashboard, /metrics\.resource_errors_15m/);
 });
