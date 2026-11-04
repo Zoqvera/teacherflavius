@@ -5,8 +5,11 @@ import { withOAuthProtectedResource, withSupabase } from "npm:@supabase/server@1
 import { z } from "npm:zod@4.3.6";
 import { recordAuthenticatedTuitionPayment } from "../_shared/record_authenticated_tuition_payment.mjs";
 
-// This endpoint is not deployable until OAuth, consent and integration tests
-// are configured. The database RPC independently authorizes the teacher.
+// Fail closed until the OAuth token is proven to have payment-only privileges.
+// The ordinary teacher token can authorize other database functions directly.
+throw new Error("Integração financeira desativada: autorização limitada ainda não validada.");
+
+// The database RPC independently authorizes the teacher.
 Deno.serve(pipeline(
   [withOAuthProtectedResource(), withSupabase({ auth: "user" })],
   async (request, { supabase }) => {
