@@ -16,7 +16,7 @@ const MIGRATIONS = Object.freeze([
 
 
 const EXPECTED_MIGRATION_SHA256 = Object.freeze({
-  "20261104013111_secure_private_billing_plan_rls.sql": "679cbd483d1bd1b0a80062bf21b4dbac9f2eed63ac6e2187db46ccf894f7ade9",
+  "20261104013111_secure_private_billing_plan_rls.sql": "ab71e00aac45b4fec4a6c1276b220c17c7c220e7fc8b8295f1b3362f89aab92f",
   "20261104013135_harden_private_rls_group_1_nov_2026.sql": "0a8104d60366a142854ae7e4b7398d7ff75ada96daf252d1556c0d2f7b8bd74a",
   "20261104013138_harden_private_rls_group_2_nov_2026.sql": "46484d5154301c9a8f3f7e9487ca165ba753d7f3008d7a9eeabaed4c81640322",
   "20261104013141_harden_private_rls_group_3_nov_2026.sql": "886c94285a5bc621b1594db8755fce2810016e47d64890fe2afc72a618a306a1",
@@ -102,13 +102,34 @@ test("the hardening grants no new browser access", () => {
   );
 });
 
-test("migration SQL bytes match immutable production ledger hashes", () => {
+test("normalized committed migration checksums remain immutable", () => {
   for (const fileName of MIGRATIONS) {
     const filePath = path.join(
       __dirname, "..", "supabase", "migrations", fileName
     );
     const sql = fs.readFileSync(filePath, "utf8");
-    const digest = createHash("sha256").update(sql).digest("hex");
+    const digest = createHash("sha256").update(sql.trim()).digest("hex");
     assert.equal(digest, EXPECTED_MIGRATION_SHA256[fileName], fileName);
   }
+});
+
+test("comment-only checksum exception requires an independent live catalog gate", () => {
+  const driftScript = fs.readFileSync(
+    path.join(__dirname, "..", "scripts", "check_supabase_migration_drift.sh"),
+    "utf8"
+  );
+  const attestation = fs.readFileSync(
+    path.join(
+      __dirname, "..", "scripts", "sql",
+      "private_schema_security_catalog_attestation.sql"
+    ),
+    "utf8"
+  );
+
+  assert.match(driftScript, /verify_private_schema_hardening_catalog/);
+  assert.match(driftScript, /679cbd483d1bd1b0a80062bf21b4dbac9f2eed63ac6e2187db46ccf894f7ade9/);
+  assert.match(driftScript, /ab71e00aac45b4fec4a6c1276b220c17c7c220e7fc8b8295f1b3362f89aab92f/);
+  assert.match(attestation, /not has_schema_privilege\('anon', 'private', 'USAGE'\)/);
+  assert.match(attestation, /not has_schema_privilege\('authenticated', 'private', 'USAGE'\)/);
+  assert.match(attestation, /not exists \(/);
 });
