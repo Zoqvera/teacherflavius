@@ -94,6 +94,28 @@ test("previous class studies keep their actual date and exact question cards", (
   }), "regular|membership-1");
 });
 
+test("previous class questions remain eligible for the current class's rating controls", () => {
+  const current = [{
+    lesson_kind: "regular",
+    entry_id: "membership-1",
+    today_questions: [],
+    review_questions: []
+  }];
+  const histories = model.indexPreviousStudies([{
+    entry_id: "membership-1",
+    previous_starts_at: "2026-10-28T13:00:00Z",
+    questions: [{ id: "prior-q", display_order: 11 }]
+  }]);
+  const result = model.withPreviousClassQuestions(current, histories);
+  assert.equal(result[0].previous_class_questions[0].id, "prior-q");
+  assert.equal(current[0].previous_class_questions, undefined);
+  assert.equal(model.withPreviousClassQuestions(current, new Map())[0]
+    .previous_class_questions.length, 0);
+  assert.match(app,
+    /previous\.questions, item, true, !MODEL\.isCancelled\(item\), history/);
+  assert.match(app, /MODEL\.withPreviousClassQuestions\(items, previousStudies\)/);
+});
+
 test("previous class questions use restricted history and do not change ratings", () => {
   const migration = read(
     "supabase/migrations/20261104132606_teacher_previous_class_studies.sql"
@@ -106,6 +128,6 @@ test("previous class questions use restricted history and do not change ratings"
   assert.match(app, /client\.rpc\("get_teacher_previous_class_studies"/);
   assert.match(app, /PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR/);
   assert.match(app, /previous\.questions, item, true, false, history/);
-  assert.match(currentPage, /20261104-previous-class-1/);
-  assert.match(page, /20261104-previous-class-1/);
+  assert.match(currentPage, /20261104-previous-grading-1/);
+  assert.match(page, /20261104-previous-grading-1/);
 });
