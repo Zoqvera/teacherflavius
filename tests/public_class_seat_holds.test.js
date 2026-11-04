@@ -91,10 +91,9 @@ test("normal enrollment uses invitations rather than the discontinued chooser", 
   assert.doesNotMatch(onboarding, /CLASS_SELECTION_PATH/);
 });
 
-test("public read-only availability remains available for the academic secretary", () => {
+test("public read-only availability remains available without the retired reservations feature", () => {
   assert.match(initial, /create function public\.get_public_class_seat_availability/);
   assert.doesNotMatch(retired, /revoke execute on function public\.get_public_class_seat_availability/);
-  assert.match(source("agents/academic_secretary_supabase.js"), /get_public_class_seat_availability/);
 });
 
 test("legacy scripts are no longer loaded by retired pages", () => {
