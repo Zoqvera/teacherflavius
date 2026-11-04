@@ -65,7 +65,9 @@
     } else {
       if (!Number.isSafeInteger(request.fromClassNumber) ||
           !previousClasses.includes(request.fromClassNumber) ||
-          request.fromClassNumber === request.classNumber) {
+          request.fromClassNumber === request.classNumber ||
+          request.source != null || request.sourceDetail != null ||
+          request.firstLessonDate != null) {
         throw new Error("Turma de origem inválida para transferência.");
       }
       args.target_from_class_number = request.fromClassNumber;
