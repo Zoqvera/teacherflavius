@@ -308,6 +308,14 @@ verify_manual_resend_delivery_catalog() {
   [[ "${result}" == 't' ]]
 }
 
+# Inspect catalog only; never repair production migration history.
+verify_private_schema_hardening_catalog() {
+  local result
+  result="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+    --file "${ROOT_DIR}/scripts/sql/private_schema_security_catalog_attestation.sql")"
+  [[ "${result}" == 't' ]]
+}
+
 # This one teacher-v2 migration was committed while the deployment ledger
 # still ended before 20:20, but remains unapplied after a separate tuition
 # change advanced the production tip. Do not renumber an immutable migration.
@@ -529,6 +537,28 @@ VERIFIED_MIGRATION_ALIASES
       > "${TEMP_DIR}/remaining_manual_pix_identity_mismatch"
     mv "${TEMP_DIR}/remaining_manual_pix_identity_mismatch" "${mismatch_file}"
     echo "::notice::Manual Pix migration has two exact, comment-only SHA256 identities. All other drift remains enforced."
+  fi
+
+  # The immutable Git migration contains two comments absent from the
+  # applied SQL. This precise identity is accepted only while live RLS and
+  # private EXECUTE privileges pass the independent read-only attestation.
+  local private_rls_line expected_private_rls_line
+  private_rls_line="$(awk -F $'\t' '$1 == "20261104013111" {print}' "${mismatch_file}")"
+  printf -v expected_private_rls_line '%s\t%s\t%s\t%s\t%s' \
+    '20261104013111' 'secure_private_billing_plan_rls' \
+    'secure_private_billing_plan_rls' \
+    '679cbd483d1bd1b0a80062bf21b4dbac9f2eed63ac6e2187db46ccf894f7ade9' \
+    'ab71e00aac45b4fec4a6c1276b220c17c7c220e7fc8b8295f1b3362f89aab92f'
+  if [[ "${private_rls_line}" == "${expected_private_rls_line}" ]]; then
+    if verify_private_schema_hardening_catalog; then
+      awk -F $'\t' '$1 != "20261104013111"' "${mismatch_file}" \
+        > "${TEMP_DIR}/remaining_private_rls_identity_mismatch"
+      mv "${TEMP_DIR}/remaining_private_rls_identity_mismatch" "${mismatch_file}"
+      echo "::notice::Private RLS migration pinned by SHA256 and live catalog; all other drift remains enforced."
+    else
+      echo "::error::Private RLS catalog attestation failed."
+      exit 1
+    fi
   fi
 
   if [[ -s "${remote_only_file}" ]]; then
