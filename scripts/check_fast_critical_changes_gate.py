@@ -26,6 +26,13 @@ RETIRED_HOMEWORK_MIGRATIONS = {
     "supabase/migrations/20261016165000_homeworks_writing_age_verifications.sql": "41c560bd0f833422cbc43e8ee0eadea6199495c7",
 }
 
+# The security budget migration was committed but never deployed. Reservations
+# were disabled immediately afterwards; permit only this exact blob retirement.
+RETIRED_UNAPPLIED_SECURITY_MIGRATIONS = {
+    "supabase/migrations/20261104024500_throttle_public_class_seat_submission_attempts.sql":
+        "7a9529253a7c8359d036ef72b8efc40cabd71097",
+}
+
 AUTH_PATTERNS = (
     "auth*.js", "google_auth_*.js", "professor_mfa_*.js",
     "account_security_ui.js", "password_recovery_login.js", "login.html",
@@ -131,7 +138,10 @@ def ensure_historical_migrations_unchanged(base: str, head: str) -> None:
         status, _, path = row.partition("\t")
         if status == "A":
             continue
-        expected_blob = RETIRED_HOMEWORK_MIGRATIONS.get(path)
+        expected_blob = (
+            RETIRED_HOMEWORK_MIGRATIONS.get(path)
+            or RETIRED_UNAPPLIED_SECURITY_MIGRATIONS.get(path)
+        )
         if status == "D" and expected_blob:
             original_blob = subprocess.run(
                 ["git", "rev-parse", f"{base}:{path}"],

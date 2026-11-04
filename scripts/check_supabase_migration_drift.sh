@@ -233,6 +233,26 @@ validate_historical_immutability() {
     fi
   done < <(retired_migration_records)
 
+  # A different, later migration shut down class-seat reservations before the
+  # proposed budget migration ever ran. Permit deletion of ONLY the pinned
+  # unapplied 20261104024500 blob, and require live ledger absence.
+  if grep -qx '20261104024500' "$missing_file"; then
+    local discarded_record remote_entry_count
+    discarded_record="$(awk -F $'\t' '$1 == "20261104024500" { print $1 "|" $2 "|" $3 }' "$base_unique_records_file")"
+    if [[ "$discarded_record" == '20261104024500|throttle_public_class_seat_submission_attempts|7a9529253a7c8359d036ef72b8efc40cabd71097' ]]; then
+      remote_entry_count="$(psql "$SUPABASE_DB_URL" -AtX -v ON_ERROR_STOP=1 \
+        -c "select count(*) from supabase_migrations.schema_migrations where version='20261104024500'")"
+      if [[ "$remote_entry_count" == '0' ]]; then
+        grep -vx '20261104024500' "$missing_file" > "$TEMP_DIR/remaining_retired_migrations" || true
+        mv "$TEMP_DIR/remaining_retired_migrations" "$missing_file"
+        echo "::notice::Pinned unused class-seat rate-limit migration retired; no live ledger row exists."
+      else
+        echo "::error::Cannot retire an already deployed security migration."
+        exit 1
+      fi
+    fi
+  fi
+
   if [[ ! -s "${missing_file}" && ! -s "${mismatch_file}" ]]; then
     return 0
   fi
