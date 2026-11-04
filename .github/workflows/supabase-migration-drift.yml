@@ -52,3 +52,13 @@ jobs:
       - name: Compare production migration history with Git
         shell: bash
         run: bash scripts/check_supabase_migration_drift.sh
+
+      - name: Verify public read-only RPCs and review consent
+        shell: bash
+        run: |
+          verified="$(psql "$SUPABASE_DB_URL" -AtX -v ON_ERROR_STOP=1 \
+            --file scripts/sql/public_readonly_rpc_security_attestation.sql)"
+          if [[ "$verified" != 't' ]]; then
+            echo "::error::Public read-only RPC security attestation failed."
+            exit 1
+          fi
