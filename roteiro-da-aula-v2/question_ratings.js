@@ -38,7 +38,8 @@
   }
 
   function studiedForClass(item, questionId) {
-    return ["today_questions", "review_questions"].some(function (section) {
+    return ["today_questions", "review_questions", "previous_class_questions"]
+      .some(function (section) {
       return Array.isArray(item[section]) && item[section].some(function (question) {
         return String(question.id).toLowerCase() === questionId;
       });

@@ -11,6 +11,9 @@ const APP = read("roteiro-da-aula-v2/app.js");
 const PAGE = read("roteiro-da-aula-v2/index.html");
 const OLD_PAGE = read("roteiro-da-aula-legado/index.html");
 const MIGRATION = read("supabase/migrations/20261022202000_teacher_question_ratings_v2.sql");
+const PREVIOUS_STUDIES_RATING_MIGRATION = read(
+  "supabase/migrations/20261104135559_allow_rating_previous_class_studies.sql"
+);
 const context = vm.createContext({ window: {} });
 vm.runInContext(SOURCE, context);
 const ratings = context.window.TeacherQuestionRatings;
@@ -66,6 +69,28 @@ test("a review question is eligible and previously rated questions remain in his
   assert.equal(ratings.ratingLabel("medium"), "MÉDIO");
   assert.equal(ratings.latestRating(previous, QUESTION_ID).rating, "medium");
   assert.equal(ratings.currentRating(previous, QUESTION_ID), null);
+});
+
+test("previous class questions are rateable today but not again in the same occurrence", () => {
+  const prior = student({
+    today_questions: [],
+    review_questions: [],
+    previous_class_questions: [{ id: QUESTION_ID }]
+  });
+  assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, []), true);
+  assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, [{
+    question_id: QUESTION_ID, rating: "medium", is_current: false
+  }]), true);
+  assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, [{
+    question_id: QUESTION_ID, rating: "good", is_current: true
+  }]), false);
+  assert.equal(ratings.canRate(
+    student({ today_questions: [], review_questions: [] }), DATE, QUESTION_ID, []
+  ), false);
+  assert.equal(ratings.canRate(prior, DATE, STUDENT_ID, []), false);
+  assert.equal(ratings.canRate(
+    student({ ...prior, attendance_status: "cancelled" }), DATE, QUESTION_ID, []
+  ), false);
 });
 
 test("successful evaluation calls v2 RPC and requires confirmed attendance", async () => {
@@ -176,6 +201,19 @@ test("SQL provides teacher-only additive RPCs and preserves historic per-lesson 
   assert.doesNotMatch(MIGRATION, /(?:delete|truncate)\s+(?:from\s+)?private\.conversation_question_practice_log/i);
 });
 
+test("backend explicitly permits previous-class questions without weakening other eligibility checks", () => {
+  const sql = PREVIOUS_STUDIES_RATING_MIGRATION;
+  assert.match(sql, /public\.get_teacher_previous_class_studies\(target_date\)/);
+  assert.match(sql, /previous\.entry_id = target_entry_id/);
+  assert.match(sql, /previous\.student_id = resolved\.student_id/);
+  assert.match(sql, /previous\.class_number = resolved\.class_number/);
+  assert.match(sql, /question\.value ->> 'id' = target_question_id::text/);
+  assert.match(sql, /not is_new_question and not is_due_review and not is_previous_class_question/);
+  assert.match(sql, /public\.is_teacher_admin\(\)/);
+  assert.match(sql, /private\.academic_lesson_occurrences/);
+  assert.match(sql, /on conflict \(occurrence_id, question_id\)/);
+});
+
 test("v2 teacher ratings enabled while existing route remains untouched", () => {
   assert.match(APP, /const QUESTION_RATINGS_ENABLED = true/);
   assert.match(APP, /state\.questionRatings\.rate\(/);
@@ -183,7 +221,7 @@ test("v2 teacher ratings enabled while existing route remains untouched", () => 
   assert.match(APP, /"TODAS AS PERGUNTAS ESTUDADAS"/);
   assert.match(APP, /"PERGUNTAS A SEREM REVISADAS"/);
   assert.match(APP, /"PERGUNTAS ESTUDADAS PARA HOJE"/);
-  assert.match(PAGE, /question_ratings\.js\?v=20261022-etapa3/);
+  assert.match(PAGE, /question_ratings\.js\?v=20261104-previous-grading-1/);
   assert.match(PAGE, /<meta name="robots" content="noindex, nofollow">/);
   assert.match(OLD_PAGE, /src="\/roteiro-da-aula\/app\.js/);
   assert.doesNotMatch(OLD_PAGE, /roteiro-da-aula-v2/);
