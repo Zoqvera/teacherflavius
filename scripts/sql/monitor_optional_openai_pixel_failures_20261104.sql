@@ -22,11 +22,13 @@ $fragment$;
     and coalesce(e.source, '') <> 'https://bzrcdn.openai.com/sdk/oaiq.min.js';
 $fragment$;
   old_resource_predicate_grouped text := $fragment$
-      and coalesce(e.source, '') not like 'https://static.cloudflareinsights.com/beacon.min.js/%';
+      and coalesce(e.source, '') not like 'https://static.cloudflareinsights.com/beacon.min.js/%'
+      and nullif(e.fingerprint, '') is not null
 $fragment$;
   new_resource_predicate_grouped text := $fragment$
       and coalesce(e.source, '') not like 'https://static.cloudflareinsights.com/beacon.min.js/%'
-      and coalesce(e.source, '') <> 'https://bzrcdn.openai.com/sdk/oaiq.min.js';
+      and coalesce(e.source, '') <> 'https://bzrcdn.openai.com/sdk/oaiq.min.js'
+      and nullif(e.fingerprint, '') is not null
 $fragment$;
   old_resource_query text := $fragment$
   select count(*) into resource_errors_15m
