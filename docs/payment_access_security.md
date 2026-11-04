@@ -25,7 +25,9 @@ O `service_role` mantém os privilégios necessários para Edge Functions e roti
 
 ## RPCs do navegador
 
-As RPCs de negócio que precisam ser chamadas pelo navegador permanecem disponíveis somente para `authenticated`. Elas fazem a autorização dentro do banco usando `auth.uid()`, `is_teacher_admin_mfa()` ou wrappers MFA já existentes. Entre elas estão consultas do próprio aluno, configuração do vencimento e operações administrativas de mensalidade.
+As RPCs de negócio que precisam ser chamadas pelo navegador permanecem disponíveis somente para `authenticated`. Elas verificam identidade e autorização dentro do banco usando `auth.uid()`, `is_teacher_admin()`, o alias histórico `is_teacher_admin_mfa()` ou outros controles específicos. Entre elas estão consultas do próprio aluno, configuração do vencimento e operações administrativas de mensalidade.
+
+**Política administrativa atual (04/11/2026): MFA não é obrigatório.** Apesar do nome, a função `is_teacher_admin_mfa()` foi explicitamente alterada em 02/10/2026 para delegar a `is_teacher_admin()` e **não exige AAL2**. Isso não deve ser descrito como segundo fator verificado. O acesso administrativo exige uma sessão autenticada e inclusão efetiva na lista de professores administradores. A decisão do proprietário é não reativar a obrigatoriedade de MFA.
 
 Nenhuma RPC financeira é executável por `anon`.
 
@@ -38,7 +40,7 @@ Quatro superfícies financeiras permanecem sem `verify_jwt` porque não são end
 - `reconcile-mercado-pago-chargebacks`: usa a mesma autenticação assinada da reconciliação.
 - `notify-payment-alert`: valida o segredo próprio do webhook antes de ler ou alterar alertas.
 
-As funções administrativas acionadas pelo navegador exigem JWT e, quando manipulam informações financeiras sensíveis, também validam MFA. A reconciliação manual preserva o autosserviço do aluno por `student_id`, mas só habilita o escopo administrativo amplo quando `is_teacher_admin_mfa()` retorna verdadeiro.
+As funções administrativas acionadas pelo navegador exigem JWT e verificações de identidade e autorização específicas do endpoint. A reconciliação manual preserva o autosserviço do aluno por `student_id`, mas só habilita o escopo administrativo amplo quando o alias `is_teacher_admin_mfa()` retorna verdadeiro. **Esse alias não comprova MFA e não impõe AAL2**; os demais controles próprios de cada Edge Function continuam aplicáveis.
 
 ## Segredos
 
