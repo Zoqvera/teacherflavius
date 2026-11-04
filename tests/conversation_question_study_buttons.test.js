@@ -134,7 +134,7 @@ test("student catalog shows available, studied and worked questions distinctly",
     ]
   });
   assert.equal(state.cards().length, 3);
-  assert.equal(state.button(0).textContent, "ESTUDEI A PERGUNTA");
+  assert.equal(state.button(0).textContent, "REGISTRAR ESTUDO");
   assert.equal(state.button(0).disabled, false);
   assert.equal(state.button(1).textContent, "PERGUNTA ESTUDADA");
   assert.equal(state.button(1).disabled, true);
@@ -156,7 +156,7 @@ test("successful student click persists and disables the corresponding catalog c
   assert.deepEqual(state.studied, ["q1"]);
   assert.equal(state.button(0).textContent, "PERGUNTA ESTUDADA");
   assert.equal(state.button(0).disabled, true);
-  assert.equal(state.button(1).textContent, "ESTUDEI A PERGUNTA");
+  assert.equal(state.button(1).textContent, "REGISTRAR ESTUDO");
   assert.match(state.node("conversationStatus").textContent, /Pergunta marcada como estudada/);
 });
 
@@ -170,7 +170,7 @@ test("failed save restores the button without indicating successful registration
   state.button(0).handlers.click();
   await flush();
   assert.equal(state.button(0).disabled, false);
-  assert.equal(state.button(0).textContent, "ESTUDEI A PERGUNTA");
+  assert.equal(state.button(0).textContent, "REGISTRAR ESTUDO");
   assert.deepEqual(state.studied, []);
   assert.match(state.node("conversationStatus").textContent, /Synthetic write failure/);
 });
