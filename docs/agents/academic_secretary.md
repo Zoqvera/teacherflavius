@@ -290,3 +290,84 @@ Homologar o reconhecimento e a seleção de alunos em produção com sessão
 administrativa real. Depois implementar as operações transacionais de
 transferência e vínculo com a origem registrada, primeira aula e créditos
 corretamente remapeados, sob aprovação.
+
+
+## Etapa 8 — horários e contrato de operações transacionais
+
+### Comandos por dia e horário
+
+O interpretador agora reconhece:
+
+- `Vagas na turma de quinta-feira às 18h?`
+- `Vincule Ana à turma de quinta às 18h`
+- `Transfira Ana para a turma de terça-feira às 20h`
+
+Os dias da semana são normalizados para a escala ISO (segunda=1, domingo=7),
+a mesma utilizada por `public.teacher_classes.class_weekday`. Horários
+são convertidos para `HH:MM:SS`, permitindo a busca por
+`class_start_time`. A consulta filtra apenas turmas de grupo
+`class_type='quintet'` ativas e requer autenticação administrativa.
+
+Se nenhum registro corresponder, o comando é rejeitado. Se houver várias
+turmas ativas com o mesmo horário, a interface exige escolha explícita
+do número da turma, revalidada na consulta seguinte. Não escolhe
+arbitrariamente com base na ordem do banco nem transforma turmas
+individuais ou experimentais em turma de grupo.
+
+### Preparação de vínculo e transferência
+
+`agents/academic_secretary_transaction_plan.js` prepara os argumentos
+imutáveis da futura RPC `execute_teacher_academic_change`, exigindo
+prévia sem pendências, origem e primeira aula nos vínculos novos,
+identificação do vínculo de origem nas transferências e um retrato
+exato dos vínculos atuais. **Esse módulo não executa RPCs**.
+
+O contrato SQL está em
+`docs/agents/academic_class_change_transaction_PROPOSAL.sql`.
+**É somente uma proposta, não uma migração ativa.**
+Prevê uma única transação PostgreSQL por comando confirmado,
+autorização administrativa no servidor, trava de aluno e de vaga,
+checagem de reservas, validação de `first_lesson_date`, registro da
+origem e preservação de seu histórico, transferência sem reabrir
+informações de aquisição e auditoria de autoria.
+
+A transferência proposta remove o vínculo anterior e inclui o novo
+dentro de uma única transação. Os gatilhos atuais de
+`class_students` tratam a sincronização dos créditos futuros
+contratuais elegíveis, preservando créditos já utilizados,
+cancelados, reservados ou revogados. O contrato exige que não
+restem créditos futuros elegíveis sem classe vinculada; um erro
+causa rollback integral.
+
+### Restrições antes de execução real
+
+1. Homologar SQL no banco isolado e rodar testes de concorrência
+   com turmas lotadas e vagas reservadas.
+2. Validar os gatilhos e a remarcação de créditos com dados
+   sintéticos: zero, um e dois vínculos, aulas consumidas,
+   reposições, cancelamentos, estornos e isenções.
+3. Aplicar a migração validada de maneira rastreável e verificar
+   seu efeito sobre RLS, permissões e relatórios de vagas.
+4. Somente então disponibilizar o botão de confirmação de
+   matrícula/transferência, com revalidação no banco e
+   auditoria de pós-condições.
+5. Não criar terceiro vínculo, não substituir uma turma sem a
+   decisão do professor e nunca solicitar origem ou data da
+   primeira aula ao transferir.
+
+**Nenhum dado real foi modificado por esta etapa.** O painel mantém
+o arquivamento supervisionado já existente e as prévias das
+demais operações. O reconhecedor é determinístico e não representa
+integração direta ao ChatGPT.
+
+### SEO
+
+Alterações limitadas à página privada `/agente-secretaria/`,
+que permanece `noindex,nofollow`; não foram modificados
+conteúdo público, sitemap ou robots.txt.
+
+### Próxima etapa — Etapa 9
+
+Homologar o contrato em banco isolado e ativar execução
+transacional supervisionada após testes de concorrência, créditos
+e auditoria financeira.
