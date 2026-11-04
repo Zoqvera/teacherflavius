@@ -72,7 +72,7 @@ function fixture(overrides = {}) {
   const calls = [];
   const state = {
     authorized: true,
-    students: [{ id: FIRST_ID, name: "Bianka Brito", archived: false }],
+    students: [{ id: FIRST_ID, name: "Bianka Brito", archived: false, enrolled: true }],
     availableClasses: [{ class_number: 25, available_spots: 2, sold_out: false }],
     membership: [14],
     ...overrides
@@ -82,7 +82,7 @@ function fixture(overrides = {}) {
       calls.push("from." + name);
       assert.equal(name, "profiles");
       return {
-        select(fields) { assert.equal(fields, "id,name,archived"); return this; },
+        select(fields) { assert.equal(fields, "id,name,archived,enrolled"); return this; },
         ilike(key, value) {
           assert.equal(key, "name");
           assert.ok(value.startsWith("%") && value.endsWith("%"));
@@ -151,8 +151,8 @@ test("matching student returns a preview, never a mutation", async () => {
 
 test("student ambiguity requires explicit matching identity", async () => {
   const { service, planRequests } = fixture({ students: [
-    { id: FIRST_ID, name: "Ana Maria", archived: false },
-    { id: SECOND_ID, name: "Ana Clara", archived: true }
+    { id: FIRST_ID, name: "Ana Maria", archived: false, enrolled: true },
+    { id: SECOND_ID, name: "Ana Clara", archived: true, enrolled: true }
   ] });
   const ambiguous = await service.process("arquive Ana");
   assert.equal(ambiguous.status, "ambiguous");
@@ -169,7 +169,7 @@ test("too many results and no matches never select a student", async () => {
   assert.equal((await none.process("arquive Ana")).status, "not_found");
   const many = Array.from({ length: 11 }, (_, i) => ({
     id: String(i + 1).padStart(8, "0") + "-1111-4111-8111-111111111111",
-    name: "Ana " + i, archived: false
+    name: "Ana " + i, archived: false, enrolled: true
   }));
   const { service: multiple } = fixture({ students: many });
   assert.equal((await multiple.process("arquive Ana")).status, "too_many");
