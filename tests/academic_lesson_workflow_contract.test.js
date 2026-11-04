@@ -85,7 +85,7 @@ test("student sees the complete Conversation Questions catalog and studies each 
   assert.match(studentPage, /Conversation Questions que você ainda não marcou como estudadas/i);
   assert.match(studentApp, /markQuestionStudied\(question\.id\)/);
   assert.match(studentApp, /question\.worked/);
-  assert.match(studentApp, /ESTUDEI A PERGUNTA/);
+  assert.match(studentApp, /REGISTRAR ESTUDO/);
   assert.match(studentApp, /PERGUNTA ESTUDADA/);
   assert.match(studentApp, /PERGUNTA JÁ TRABALHADA/);
   assert.doesNotMatch(studentPage, /id="questionsStudiedButton"/);
