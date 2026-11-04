@@ -64,11 +64,8 @@ test("other source requires an explicit detail", () => {
   });
   assert.equal(buildAcademicChangeTransaction(plan, request).arguments.target_source_detail,
     "Matrícula por evento");
-  awaitFalse();
-  function awaitFalse() {
-    const bad = fixture("new_link", { plan: { canonicalSource: "other" } });
-    assert.throws(() => buildAcademicChangeTransaction(bad.plan, bad.request), /Detalhe/);
-  }
+  const bad = fixture("new_link", { plan: { canonicalSource: "other" } });
+  assert.throws(() => buildAcademicChangeTransaction(bad.plan, bad.request), /Detalhe/);
 });
 
 test("rejected or incomplete plans never prepare a transactional write", () => {
