@@ -11,6 +11,9 @@
     commandChoices: "commandChoices",
     commandStudentChoice: "commandStudentChoice",
     commandContinue: "commandContinue",
+    commandClassChoices: "commandClassChoices",
+    commandClassChoice: "commandClassChoice",
+    commandClassContinue: "commandClassContinue",
     commandResults: "commandResults",
     searchForm: "searchForm",
     searchButton: "searchButton",
@@ -72,6 +75,12 @@
     ui.commandChoices.hidden = true;
     ui.commandStudentChoice.replaceChildren(option("Selecione o aluno", ""));
     ui.commandContinue.disabled = true;
+  }
+
+  function clearClassChoices(ui) {
+    ui.commandClassChoices.hidden = true;
+    ui.commandClassChoice.replaceChildren(option("Selecione a turma correta", ""));
+    ui.commandClassContinue.disabled = true;
   }
 
   function renderCommandRead(ui, result) {
@@ -294,6 +303,7 @@
       const commandService = window.TeacherAcademicCommandService
         .createAcademicCommandService(client, readers, service);
       let pendingCommandText = null;
+      let pendingClassNumber = null;
       await loadClasses(ui, client);
 
       async function prefillCommand(result) {
@@ -341,24 +351,47 @@
         setCommandStatus(ui, "Prévia enviada para revisão no formulário. Nada foi executado automaticamente.", false);
       }
 
-      async function processCommand(text, chosenStudentId) {
+      async function processCommand(text, chosenStudentId, chosenClassNumber) {
         ui.commandButton.disabled = true;
         ui.commandContinue.disabled = true;
+        ui.commandClassContinue.disabled = true;
         ui.commandResults.hidden = true;
         archiveReview = null;
         clearArchiveReview(ui);
         try {
-          const result = await commandService.process(text, chosenStudentId);
+          const result = await commandService.process(text, chosenStudentId, chosenClassNumber);
           if (text !== ui.commandText.value.trim()) {
             throw new Error("O texto foi alterado. Interprete novamente o comando.");
           }
           if (result.status === "unsupported") {
             clearCommandChoices(ui);
+            clearClassChoices(ui);
             setCommandStatus(ui, result.message, true);
+            return;
+          }
+          if (result.status === "class_not_found" || result.status === "too_many_classes") {
+            clearCommandChoices(ui);
+            clearClassChoices(ui);
+            setCommandStatus(ui, result.status === "class_not_found"
+              ? "Nenhuma turma de grupo ativa corresponde a esse dia e horário."
+              : "Há muitas turmas com o mesmo horário. Informe o número da turma.", true);
+            return;
+          }
+          if (result.status === "class_ambiguous") {
+            pendingCommandText = text;
+            pendingClassNumber = null;
+            clearCommandChoices(ui);
+            ui.commandClassChoice.replaceChildren(option("Selecione a turma correta", ""),
+              ...result.candidates.map(function (entry) {
+                return option(entry.className + " · turma " + entry.classNumber, String(entry.classNumber));
+              }));
+            ui.commandClassChoices.hidden = false;
+            setCommandStatus(ui, "Há mais de uma turma nesse horário. Selecione a turma correta.", false);
             return;
           }
           if (result.status === "not_found" || result.status === "too_many") {
             clearCommandChoices(ui);
+            clearClassChoices(ui);
             setCommandStatus(ui, result.status === "not_found"
               ? "Aluno não encontrado. Confira o nome completo."
               : "Muitos alunos encontrados. Informe um nome mais específico.", true);
@@ -366,6 +399,7 @@
           }
           if (result.status === "ambiguous") {
             pendingCommandText = text;
+            clearClassChoices(ui);
             ui.commandStudentChoice.replaceChildren(option("Selecione o aluno", ""),
               ...result.candidates.map(function (person) {
                 return option(person.name + (person.archived ? " (arquivado)" : "") +
@@ -376,7 +410,9 @@
             return;
           }
           pendingCommandText = null;
+          pendingClassNumber = null;
           clearCommandChoices(ui);
+          clearClassChoices(ui);
           if (result.status === "plan") {
             await prefillCommand(result);
             return;
@@ -389,22 +425,30 @@
           throw new Error("Resultado de comando inesperado.");
         } catch (error) {
           clearCommandChoices(ui);
+          clearClassChoices(ui);
+          pendingCommandText = null;
+          pendingClassNumber = null;
           setCommandStatus(ui, error.message || "Não foi possível interpretar o comando.", true);
         } finally {
           ui.commandButton.disabled = false;
           ui.commandContinue.disabled = !pendingCommandText || !ui.commandStudentChoice.value;
+          ui.commandClassContinue.disabled = !pendingCommandText || !ui.commandClassChoice.value;
         }
       }
 
       ui.commandForm.addEventListener("submit", function (event) {
         event.preventDefault();
         pendingCommandText = null;
+        pendingClassNumber = null;
         clearCommandChoices(ui);
-        processCommand(ui.commandText.value.trim(), null);
+        clearClassChoices(ui);
+        processCommand(ui.commandText.value.trim(), null, null);
       });
       ui.commandText.addEventListener("input", function () {
         pendingCommandText = null;
+        pendingClassNumber = null;
         clearCommandChoices(ui);
+        clearClassChoices(ui);
         ui.commandResults.hidden = true;
       });
       ui.commandStudentChoice.addEventListener("change", function () {
@@ -412,7 +456,15 @@
       });
       ui.commandContinue.addEventListener("click", function () {
         if (!pendingCommandText || !ui.commandStudentChoice.value) return;
-        processCommand(pendingCommandText, ui.commandStudentChoice.value);
+        processCommand(pendingCommandText, ui.commandStudentChoice.value, pendingClassNumber);
+      });
+      ui.commandClassChoice.addEventListener("change", function () {
+        ui.commandClassContinue.disabled = !pendingCommandText || !ui.commandClassChoice.value;
+      });
+      ui.commandClassContinue.addEventListener("click", function () {
+        if (!pendingCommandText || !ui.commandClassChoice.value) return;
+        pendingClassNumber = Number(ui.commandClassChoice.value);
+        processCommand(pendingCommandText, null, pendingClassNumber);
       });
 
       ui.searchForm.addEventListener("submit", async function (event) {
