@@ -1,0 +1,30 @@
+name: Private schema security contracts
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261104*.sql"
+      - "tests/private_schema_security_hardening.test.js"
+      - ".github/workflows/private-schema-security-hardening.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/20261104*.sql"
+      - "tests/private_schema_security_hardening.test.js"
+      - ".github/workflows/private-schema-security-hardening.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  private-schema-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify security migrations
+        run: node --test tests/private_schema_security_hardening.test.js
