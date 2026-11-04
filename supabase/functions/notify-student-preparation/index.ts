@@ -1,7 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
 
 const FROM = "Acompanhamento Pedagógico <pedagogico@teacherflavius.com>";
-const REPLY_TO = "contato@teacherflavius.com";
 const SUBJECT = "Sua próxima aula de inglês está chegando!";
 const TIME_ZONE = "America/Sao_Paulo";
 const STUDY_TARGET = 5;
@@ -110,8 +109,8 @@ function buildMessage(context: Context, startsAt: string): {
   if (context.missing_questions) {
     const completed = Math.max(0, Math.min(STUDY_TARGET, context.studied_questions));
     tasks.push(
-      "Perguntas de conversação: estude pelo menos 5 perguntas. Você estudou " +
-      completed + " desde a última aula; faltam " + (STUDY_TARGET - completed) + ".",
+      "Perguntas de conversação: estude pelo menos 5 perguntas. Você já marcou " +
+      completed + " como estudadas; faltam " + (STUDY_TARGET - completed) + ".",
     );
   }
 
@@ -256,7 +255,7 @@ Deno.serve(async (request: Request) => {
         },
         body: JSON.stringify({
           from: FROM,
-          reply_to: REPLY_TO,
+          reply_to: "contato@teacherflavius.com",
           to: [student.student_email],
           subject: SUBJECT,
           text: content.text,
