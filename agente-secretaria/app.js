@@ -326,8 +326,10 @@
           }
           ui.fromClassNumber.value = origin;
         }
-        if (result.request.source) ui.source.value = result.request.source;
-        if (result.request.firstLessonDate) ui.firstLessonDate.value = result.request.firstLessonDate;
+        // Reset prior form inputs: a missing date or origin must never inherit older values.
+        ui.source.value = result.request.source || "";
+        ui.sourceDetail.value = "";
+        ui.firstLessonDate.value = result.request.firstLessonDate || "";
         showFields(ui);
 
         if (result.plan.status === "needs_input" || result.plan.status === "blocked") {
