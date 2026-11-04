@@ -23,12 +23,14 @@ test("invitation authorizes enrollment without manually entering a code", () => 
   assert.match(page, /const token = readInvitationToken\(\)/);
   assert.match(page, /authorize_my_enrollment_link/);
   assert.match(page, /Convite confirmado\. Não é necessário informar código de matrícula/);
-  assert.match(page, /if \(readInvitationToken\(\)\) return state/);
+  assert.match(page, /function requiresEnrollmentInvitation\(state\)/);
+  assert.doesNotMatch(page, /authorize_my_reserved_seat_enrollment/);
 });
 
-test("new enrollments retain invite context and never fall back to a manual code", () => {
-  assert.match(page, /!state\.formUnlocked && !reservedSeat && !readInvitationToken\(\)/);
-  assert.match(page, /window\.location\.replace\(CLASS_SELECTION_PATH\)/);
+test("new enrollments retain invite context without the retired class chooser", () => {
+  assert.match(page, /!state\.formUnlocked && !readInvitationToken\(\)/);
+  assert.match(page, /showEnrollmentError\(/);
+  assert.doesNotMatch(page, /CLASS_SELECTION_PATH/);
   assert.match(source("enrollment_invite_client.js"), /get\("convite"\)/);
   assert.match(source("auth_guard_service.js"), /window\.location\.pathname \+ window\.location\.search/);
   assert.match(source("login.html"), /destination\.startsWith\("\/complete-cadastro\/\?"\)/);
