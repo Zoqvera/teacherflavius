@@ -2,13 +2,13 @@
 
 ## Objetivo
 Enviar automaticamente **somente aos alunos com pendências**, na véspera da aula regular,
-um e-mail de \`pedagogico@teacherflavius.com\`. O envio administrativo existente,
-\`notify-pedagogical-preparation\`, permanece independente.
+um e-mail de `pedagogico@teacherflavius.com`. O envio administrativo existente,
+`notify-pedagogical-preparation`, permanece independente.
 
 ## Regras
 - Verificação a cada 5 minutos, com geração de lembretes **a partir das 18h de Brasília,
   exclusivamente para aulas do dia seguinte**. O agendamento usa a data local
-  \`America/Sao_Paulo\`; uma entrada por aluno/turma/aula.
+  `America/Sao_Paulo`; uma entrada por aluno/turma/aula.
 - Apenas matrícula ativa, aluno não arquivado, vínculo vigente e turma ativa;
   respeitar datas da primeira aula, calendário da turma e cancelamentos não restaurados.
 - Apresentação pendente se a próxima lição acadêmica não tem texto não vazio.
@@ -23,28 +23,28 @@ um e-mail de \`pedagogico@teacherflavius.com\`. O envio administrativo existente
   válido não entram na fila.
 - Não enviar duas vezes para a mesma aula: chave única na fila, claim condicional
   e chave de idempotência fixa no Resend.
-- \`sent\` significa aceitação pela API de envio, não comprovação de leitura
+- `sent` significa aceitação pela API de envio, não comprovação de leitura
   ou entrega na caixa de entrada.
 
 ## Componentes
-- Migration: \`supabase/migrations/20261104040000_student_preparation_email_reminders.sql\`.
-- RPC restrita a \`service_role\`: \`student_preparation_email_context_internal\`.
-- Edge Function: \`notify-student-preparation\`; webhook autenticado pelo
+- Migration: `supabase/migrations/20261104040000_student_preparation_email_reminders.sql`.
+- RPC restrita a `service_role`: `student_preparation_email_context_internal`.
+- Edge Function: `notify-student-preparation`; webhook autenticado pelo
   segredo compartilhado já utilizado nas notificações administrativas.
-- Outbox sob RLS: \`student_preparation_email_reminders\`. Nunca armazena
+- Outbox sob RLS: `student_preparation_email_reminders`. Nunca armazena
   contato, texto da lição ou conteúdo das perguntas.
-- \`student_preparation_email_settings.enabled\` inicia **false** e é o
+- `student_preparation_email_settings.enabled` inicia **false** e é o
   interruptor central para pausar ou liberar os envios.
-- Job \`student-preparation-email-reminders\`, com execução a cada cinco minutos
+- Job `student-preparation-email-reminders`, com execução a cada cinco minutos
   e bloqueio de envio antes das 18h. Não modifica o job de alertas do professor.
 
 ## Plano de verificação
-1. Validar SQL com \`BEGIN ... ROLLBACK\` e testes de contrato.
+1. Validar SQL com `BEGIN ... ROLLBACK` e testes de contrato.
 2. Conferir casos de apresentação/poucas perguntas/ambas/completo.
 3. Conferir aula cancelada, turma transferida, matrícula futura e arquivamento.
 4. Publicar função e verificar configuração do Resend, domínio remetente e
    segredo de invocação (sem enviar e-mail real para terceiros em homologação).
-5. Habilitar \`enabled=true\` somente após aprovação técnica.
+5. Habilitar `enabled=true` somente após aprovação técnica.
 
 ## SEO
 Nenhuma alteração em páginas públicas, URLs, sitemap, metadados ou indexação.
