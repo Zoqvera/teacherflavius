@@ -24,7 +24,12 @@
     result: "planResult",
     resultStatus: "resultStatus",
     issues: "resultIssues",
-    steps: "resultSteps"
+    steps: "resultSteps",
+    archiveConfirmation: "archiveConfirmation",
+    archiveConsent: "archiveConsent",
+    archiveExecute: "archiveExecute",
+    archiveDetails: "archiveDetails",
+    archiveStatus: "archiveStatus"
   });
 
   function elements() {
@@ -50,7 +55,15 @@
     target.value = "";
   }
 
+  function clearArchiveReview(ui) {
+    ui.archiveConfirmation.hidden = true;
+    ui.archiveConsent.checked = false;
+    ui.archiveExecute.disabled = true;
+    ui.archiveStatus.textContent = "";
+  }
+
   function showFields(ui) {
+    clearArchiveReview(ui);
     const action = ui.action.value;
     const isLink = action === "new_link";
     const isTransfer = action === "transfer";
@@ -132,6 +145,7 @@
     ui.preview.disabled = true;
     ui.studentSummary.textContent = "Consultando alunos...";
     ui.result.hidden = true;
+    clearArchiveReview(ui);
 
     const permission = await client.rpc("is_teacher_admin");
     if (permission.error || permission.data !== true) {
@@ -162,6 +176,7 @@
   }
 
   async function selectStudent(ui, service) {
+    clearArchiveReview(ui);
     ui.result.hidden = true;
     ui.preview.disabled = !ui.students.value;
     replaceOptions(ui.fromClassNumber, "Selecione o vínculo a substituir", []);
@@ -212,7 +227,8 @@
     ui.preview.disabled = true;
 
     try {
-      if (!window.Auth || !window.TeacherAcademicSecretarySupabase) {
+      if (!window.Auth || !window.TeacherAcademicSecretarySupabase ||
+          !window.TeacherAcademicArchiveExecutor) {
         throw new Error("Não foi possível inicializar os módulos acadêmicos.");
       }
 
@@ -224,12 +240,19 @@
 
       const client = window.Auth.getClient();
       if (!client) throw new Error("Cliente Supabase não configurado.");
+      const readers = window.TeacherAcademicSecretarySupabase
+        .createSupabaseAcademicReaders(client);
       const service = window.TeacherAcademicSecretarySupabase
         .createAcademicSecretarySupabaseService(client);
+      const archiveExecutor = window.TeacherAcademicArchiveExecutor
+        .createSupervisedArchiveExecutor(client, readers);
+      let archiveReview = null;
       await loadClasses(ui, client);
 
       ui.searchForm.addEventListener("submit", async function (event) {
         event.preventDefault();
+        archiveReview = null;
+        clearArchiveReview(ui);
         ui.searchButton.disabled = true;
         try {
           await searchStudents(ui, client);
@@ -244,6 +267,8 @@
       });
 
       ui.students.addEventListener("change", async function () {
+        archiveReview = null;
+        clearArchiveReview(ui);
         ui.preview.disabled = true;
         try {
           await selectStudent(ui, service);
@@ -254,19 +279,97 @@
         }
       });
 
-      ui.action.addEventListener("change", function () { showFields(ui); });
-      ui.source.addEventListener("change", function () { showFields(ui); });
+      ui.action.addEventListener("change", function () {
+        archiveReview = null;
+        showFields(ui);
+      });
+      ui.source.addEventListener("change", function () {
+        archiveReview = null;
+        showFields(ui);
+      });
+      ui.planForm.addEventListener("change", function () {
+        archiveReview = null;
+        clearArchiveReview(ui);
+      });
       ui.planForm.addEventListener("submit", async function (event) {
         event.preventDefault();
+        archiveReview = null;
+        clearArchiveReview(ui);
         ui.preview.disabled = true;
         ui.result.hidden = true;
+        const request = formRequest(ui);
         try {
-          const plan = await service.plan(formRequest(ui));
+          const plan = await service.plan(request);
+          if (request.studentId !== ui.students.value || request.action !== ui.action.value) {
+            throw new Error("A seleção foi alterada. Gere outra prévia.");
+          }
           renderPlan(ui, plan);
+          if (plan.action === "archive" && plan.status === "ready_for_review" &&
+              plan.snapshot && plan.snapshot.archived === false) {
+            archiveReview = Object.freeze({
+              action: "archive",
+              studentId: plan.studentId,
+              expectedClassNumbers: [...plan.snapshot.classNumbers]
+            });
+            const name = ui.students.selectedOptions[0].textContent;
+            ui.archiveDetails.textContent = "Aluno: " + name +
+              ". O arquivamento desvinculará todas as turmas e interromperá as novas cobranças mensais configuradas. O histórico será preservado.";
+            ui.archiveConfirmation.hidden = false;
+          }
           setStatus(ui, "Prévia concluída. Nenhum dado foi modificado.", false);
         } catch (error) {
           setStatus(ui, error.message || "Não foi possível gerar a prévia.", true);
         } finally {
+          ui.preview.disabled = !ui.students.value;
+        }
+      });
+
+      ui.archiveConsent.addEventListener("change", function () {
+        ui.archiveExecute.disabled = !archiveReview || !ui.archiveConsent.checked;
+      });
+
+      ui.archiveExecute.addEventListener("click", async function () {
+        if (!archiveReview || !ui.archiveConsent.checked ||
+            ui.action.value !== "archive" || ui.students.value !== archiveReview.studentId) {
+          return;
+        }
+        const selectedName = ui.students.selectedOptions[0].textContent;
+        if (!window.confirm("Confirma o ARQUIVAMENTO de " + selectedName +
+          "? O aluno será desvinculado de todas as turmas e as próximas cobranças serão suspensas.")) {
+          return;
+        }
+
+        const request = { ...archiveReview, confirmed: true };
+        archiveReview = null;
+        clearArchiveReview(ui);
+        ui.preview.disabled = true;
+        ui.searchButton.disabled = true;
+        ui.students.disabled = true;
+        ui.action.disabled = true;
+        try {
+          const outcome = await archiveExecutor.executeArchive(request);
+          ui.result.hidden = false;
+          ui.resultStatus.textContent = "Arquivamento verificado. Aluno sem vínculos; mensalidades futuras suspensas.";
+          ui.issues.replaceChildren();
+          ui.steps.replaceChildren();
+          setStatus(ui, "Arquivamento confirmado e verificado no Supabase.", false);
+          try {
+            await selectStudent(ui, service);
+            ui.result.hidden = false;
+          } catch (refreshError) {
+            ui.studentSummary.textContent = "Arquivamento confirmado; atualize a página para consultar o novo estado.";
+          }
+          if (outcome.status !== "verified") {
+            throw new Error("O resultado da operação não foi confirmado.");
+          }
+        } catch (error) {
+          ui.result.hidden = true;
+          setStatus(ui, "A operação não pôde ser confirmada. " +
+            (error.message || "Verifique o cadastro antes de tentar novamente."), true);
+        } finally {
+          ui.action.disabled = false;
+          ui.students.disabled = false;
+          ui.searchButton.disabled = false;
           ui.preview.disabled = !ui.students.value;
         }
       });
