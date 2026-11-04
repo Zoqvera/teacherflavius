@@ -1,4 +1,6 @@
 -- Reminders for students who still need to prepare for the next regular lesson.
+-- Read-only access to restoration receipts is needed for sender revalidation.
+grant select on private.student_regular_lesson_restorations to service_role;
 -- Independent from the existing professor-only pedagogical alerts.
 create table if not exists public.student_preparation_email_settings (
   id boolean primary key default true check (id),
