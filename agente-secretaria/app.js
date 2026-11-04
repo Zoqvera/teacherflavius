@@ -4,6 +4,17 @@
   const selectors = Object.freeze({
     status: "pageStatus",
     workspace: "workspace",
+    commandForm: "commandForm",
+    commandText: "commandText",
+    commandButton: "commandButton",
+    commandStatus: "commandStatus",
+    commandChoices: "commandChoices",
+    commandStudentChoice: "commandStudentChoice",
+    commandContinue: "commandContinue",
+    commandClassChoices: "commandClassChoices",
+    commandClassChoice: "commandClassChoice",
+    commandClassContinue: "commandClassContinue",
+    commandResults: "commandResults",
     searchForm: "searchForm",
     searchButton: "searchButton",
     search: "studentSearch",
@@ -53,6 +64,47 @@
   function replaceOptions(target, placeholder, items) {
     target.replaceChildren(option(placeholder, ""), ...items);
     target.value = "";
+  }
+
+  function setCommandStatus(ui, message, isError) {
+    ui.commandStatus.textContent = message;
+    ui.commandStatus.classList.toggle("error", Boolean(isError));
+  }
+
+  function clearCommandChoices(ui) {
+    ui.commandChoices.hidden = true;
+    ui.commandStudentChoice.replaceChildren(option("Selecione o aluno", ""));
+    ui.commandContinue.disabled = true;
+  }
+
+  function clearClassChoices(ui) {
+    ui.commandClassChoices.hidden = true;
+    ui.commandClassChoice.replaceChildren(option("Selecione a turma correta", ""));
+    ui.commandClassContinue.disabled = true;
+  }
+
+  function renderCommandRead(ui, result) {
+    ui.commandResults.replaceChildren();
+    const line = document.createElement("p");
+    if (result.status === "class_read") {
+      line.textContent = "Turma " + result.classNumber + ": " +
+        result.availableSeats + (result.availableSeats === 1 ? " vaga disponível." : " vagas disponíveis.");
+      ui.commandResults.appendChild(line);
+    } else if (result.status === "classes_read") {
+      line.textContent = result.classes.length
+        ? "Turmas de grupo com vagas registradas neste momento:"
+        : "Nenhuma turma de grupo possui vagas disponíveis.";
+      ui.commandResults.appendChild(line);
+      const list = document.createElement("ul");
+      result.classes.forEach(function (entry) {
+        const item = document.createElement("li");
+        item.textContent = "Turma " + entry.number + ": " + entry.availableSeats +
+          (entry.availableSeats === 1 ? " vaga." : " vagas.");
+        list.appendChild(item);
+      });
+      ui.commandResults.appendChild(list);
+    }
+    ui.commandResults.hidden = false;
   }
 
   function clearArchiveReview(ui) {
@@ -228,7 +280,8 @@
 
     try {
       if (!window.Auth || !window.TeacherAcademicSecretarySupabase ||
-          !window.TeacherAcademicArchiveExecutor) {
+          !window.TeacherAcademicArchiveExecutor || !window.TeacherAcademicCommandService ||
+          !window.TeacherAcademicCommands) {
         throw new Error("Não foi possível inicializar os módulos acadêmicos.");
       }
 
@@ -247,7 +300,172 @@
       const archiveExecutor = window.TeacherAcademicArchiveExecutor
         .createSupervisedArchiveExecutor(client, readers);
       let archiveReview = null;
+      const commandService = window.TeacherAcademicCommandService
+        .createAcademicCommandService(client, readers, service);
+      let pendingCommandText = null;
+      let pendingClassNumber = null;
       await loadClasses(ui, client);
+
+      async function prefillCommand(result) {
+        // Select through the same authenticated UI used for manual operations.
+        ui.search.value = result.student.name;
+        await searchStudents(ui, client);
+        const exists = Array.from(ui.students.options).some(function (entry) {
+          return entry.value === result.student.id;
+        });
+        if (!exists) throw new Error("O aluno deixou de estar disponível na busca. Atualize e tente novamente.");
+        ui.students.value = result.student.id;
+        await selectStudent(ui, service);
+        if (ui.students.value !== result.student.id) {
+          throw new Error("A seleção do aluno mudou. Refaça a operação.");
+        }
+
+        ui.action.value = result.request.action;
+        showFields(ui);
+        if (result.request.classNumber) {
+          const destination = String(result.request.classNumber);
+          if (!Array.from(ui.classNumber.options).some(item => item.value === destination)) {
+            throw new Error("A turma de destino não aparece na lista administrativa.");
+          }
+          ui.classNumber.value = destination;
+        }
+        if (result.request.fromClassNumber) {
+          const origin = String(result.request.fromClassNumber);
+          if (!Array.from(ui.fromClassNumber.options).some(item => item.value === origin)) {
+            throw new Error("A turma de origem não está vinculada ao aluno.");
+          }
+          ui.fromClassNumber.value = origin;
+        }
+        // Reset prior form inputs: a missing date or origin must never inherit older values.
+        ui.source.value = result.request.source || "";
+        ui.sourceDetail.value = "";
+        ui.firstLessonDate.value = result.request.firstLessonDate || "";
+        showFields(ui);
+
+        if (result.plan.status === "needs_input" || result.plan.status === "blocked") {
+          renderPlan(ui, result.plan);
+          setCommandStatus(ui, "A prévia foi preenchida. Verifique os campos obrigatórios ou os impedimentos abaixo.", false);
+          return;
+        }
+        ui.planForm.requestSubmit();
+        setCommandStatus(ui, "Prévia enviada para revisão no formulário. Nada foi executado automaticamente.", false);
+      }
+
+      async function processCommand(text, chosenStudentId, chosenClassNumber) {
+        ui.commandButton.disabled = true;
+        ui.commandContinue.disabled = true;
+        ui.commandClassContinue.disabled = true;
+        ui.commandResults.hidden = true;
+        archiveReview = null;
+        clearArchiveReview(ui);
+        try {
+          const result = await commandService.process(text, chosenStudentId, chosenClassNumber);
+          if (text !== ui.commandText.value.trim()) {
+            throw new Error("O texto foi alterado. Interprete novamente o comando.");
+          }
+          if (result.status === "unsupported") {
+            clearCommandChoices(ui);
+            clearClassChoices(ui);
+            setCommandStatus(ui, result.message, true);
+            return;
+          }
+          if (result.status === "class_not_found" || result.status === "too_many_classes") {
+            clearCommandChoices(ui);
+            clearClassChoices(ui);
+            setCommandStatus(ui, result.status === "class_not_found"
+              ? "Nenhuma turma de grupo ativa corresponde a esse dia e horário."
+              : "Há muitas turmas com o mesmo horário. Informe o número da turma.", true);
+            return;
+          }
+          if (result.status === "class_ambiguous") {
+            pendingCommandText = text;
+            pendingClassNumber = null;
+            clearCommandChoices(ui);
+            ui.commandClassChoice.replaceChildren(option("Selecione a turma correta", ""),
+              ...result.candidates.map(function (entry) {
+                return option(entry.className + " · turma " + entry.classNumber, String(entry.classNumber));
+              }));
+            ui.commandClassChoices.hidden = false;
+            setCommandStatus(ui, "Há mais de uma turma nesse horário. Selecione a turma correta.", false);
+            return;
+          }
+          if (result.status === "not_found" || result.status === "too_many") {
+            clearCommandChoices(ui);
+            clearClassChoices(ui);
+            setCommandStatus(ui, result.status === "not_found"
+              ? "Aluno não encontrado. Confira o nome completo."
+              : "Muitos alunos encontrados. Informe um nome mais específico.", true);
+            return;
+          }
+          if (result.status === "ambiguous") {
+            pendingCommandText = text;
+            clearClassChoices(ui);
+            ui.commandStudentChoice.replaceChildren(option("Selecione o aluno", ""),
+              ...result.candidates.map(function (person) {
+                return option(person.name + (person.archived ? " (arquivado)" : "") +
+                  " · cadastro " + person.id.slice(-6), person.id);
+              }));
+            ui.commandChoices.hidden = false;
+            setCommandStatus(ui, "Há mais de um aluno correspondente. Escolha explicitamente o cadastro correto.", false);
+            return;
+          }
+          pendingCommandText = null;
+          pendingClassNumber = null;
+          clearCommandChoices(ui);
+          clearClassChoices(ui);
+          if (result.status === "plan") {
+            await prefillCommand(result);
+            return;
+          }
+          if (result.status === "class_read" || result.status === "classes_read") {
+            renderCommandRead(ui, result);
+            setCommandStatus(ui, "Consulta concluída. As vagas podem mudar até a matrícula efetiva.", false);
+            return;
+          }
+          throw new Error("Resultado de comando inesperado.");
+        } catch (error) {
+          clearCommandChoices(ui);
+          clearClassChoices(ui);
+          pendingCommandText = null;
+          pendingClassNumber = null;
+          setCommandStatus(ui, error.message || "Não foi possível interpretar o comando.", true);
+        } finally {
+          ui.commandButton.disabled = false;
+          ui.commandContinue.disabled = !pendingCommandText || !ui.commandStudentChoice.value;
+          ui.commandClassContinue.disabled = !pendingCommandText || !ui.commandClassChoice.value;
+        }
+      }
+
+      ui.commandForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        pendingCommandText = null;
+        pendingClassNumber = null;
+        clearCommandChoices(ui);
+        clearClassChoices(ui);
+        processCommand(ui.commandText.value.trim(), null, null);
+      });
+      ui.commandText.addEventListener("input", function () {
+        pendingCommandText = null;
+        pendingClassNumber = null;
+        clearCommandChoices(ui);
+        clearClassChoices(ui);
+        ui.commandResults.hidden = true;
+      });
+      ui.commandStudentChoice.addEventListener("change", function () {
+        ui.commandContinue.disabled = !pendingCommandText || !ui.commandStudentChoice.value;
+      });
+      ui.commandContinue.addEventListener("click", function () {
+        if (!pendingCommandText || !ui.commandStudentChoice.value) return;
+        processCommand(pendingCommandText, ui.commandStudentChoice.value, pendingClassNumber);
+      });
+      ui.commandClassChoice.addEventListener("change", function () {
+        ui.commandClassContinue.disabled = !pendingCommandText || !ui.commandClassChoice.value;
+      });
+      ui.commandClassContinue.addEventListener("click", function () {
+        if (!pendingCommandText || !ui.commandClassChoice.value) return;
+        pendingClassNumber = Number(ui.commandClassChoice.value);
+        processCommand(pendingCommandText, null, pendingClassNumber);
+      });
 
       ui.searchForm.addEventListener("submit", async function (event) {
         event.preventDefault();
