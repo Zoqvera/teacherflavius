@@ -122,6 +122,79 @@
     return Object.freeze({ status: "unsupported", message });
   }
 
+
+  const SCHEDULE_DAY = "(?<weekday>segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado|domingo)(?:-feira)?";
+  const SCHEDULE_TIME = "(?<hour>[01]?\\d|2[0-3])(?:h(?<hminute>[0-5]\\d)?|:(?<colonminute>[0-5]\\d))";
+  const SCHEDULE_REFERENCE = "(?:turma\\s+)?(?:de\\s+|da\\s+)?" + SCHEDULE_DAY +
+    "\\s+(?:[aà]s\\s+)?" + SCHEDULE_TIME;
+
+  const SCHEDULE_GRAMMAR = Object.freeze([
+    {
+      action: ACTIONS.INSPECT_CLASS,
+      regex: new RegExp("^(?:quantas\\s+)?vagas\\s+(?:(?:h[aá]|tem|dispon[ií]veis)\\s+)?(?:na|da|para\\s+a)\\s+" +
+        SCHEDULE_REFERENCE + "\\s*\\??$", "iu")
+    },
+    {
+      action: ACTIONS.INSPECT_CLASS,
+      regex: new RegExp("^" + SCHEDULE_REFERENCE +
+        "\\s+(?:tem\\s+)?(?:quantas\\s+)?vagas(?:\\s+dispon[ií]veis)?\\s*\\??$", "iu")
+    },
+    {
+      action: ACTIONS.NEW_LINK,
+      regex: new RegExp("^(?:vincule|vincular|matricule|matricular)\\s+(?:o\\s+aluno\\s+|a\\s+aluna\\s+|o\\s+|a\\s+)?" +
+        "(?<name>.+?)\\s+(?:à|a|na|em|para\\s+a)\\s+" + SCHEDULE_REFERENCE +
+        "(?<tail>.*)$", "iu")
+    },
+    {
+      action: ACTIONS.TRANSFER,
+      regex: new RegExp("^(?:transfira|transferir|mova)\\s+(?:o\\s+aluno\\s+|a\\s+aluna\\s+|o\\s+|a\\s+)?" +
+        "(?<name>.+?)\\s+para\\s+(?:a\\s+)?" + SCHEDULE_REFERENCE + "\\s*[.!]?$", "iu")
+    }
+  ]);
+
+  const WEEKDAY_NUMBER = Object.freeze({
+    segunda: 1, terca: 2, quarta: 3, quinta: 4,
+    sexta: 5, sabado: 6, domingo: 7
+  });
+
+  function classScheduleFromGroups(groups) {
+    const weekdayToken = groups.weekday.toLowerCase().normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    const classWeekday = WEEKDAY_NUMBER[weekdayToken];
+    const minute = groups.hminute || groups.colonminute || "00";
+    const hour = Number(groups.hour);
+    if (!classWeekday || !Number.isInteger(hour) || hour > 23) return null;
+    return Object.freeze({
+      classWeekday,
+      classStartTime: String(hour).padStart(2, "0") + ":" + minute + ":00"
+    });
+  }
+
+  function parseScheduledCommand(command) {
+    for (const entry of SCHEDULE_GRAMMAR) {
+      const match = entry.regex.exec(command);
+      if (!match) continue;
+      const groups = match.groups || {};
+      const classSchedule = classScheduleFromGroups(groups);
+      if (!classSchedule) return unsupported("Dia ou horário de turma inválido.");
+      const result = { status: "recognized", action: entry.action, classSchedule };
+      if (entry.action === ACTIONS.NEW_LINK || entry.action === ACTIONS.TRANSFER) {
+        const studentName = canonicalName(groups.name);
+        if (!studentName) return unsupported("Nome do aluno não identificado.");
+        result.studentName = studentName;
+      }
+      if (entry.action === ACTIONS.NEW_LINK) {
+        const supplement = parseLinkSupplement(groups.tail);
+        if (supplement.unsupportedSupplement || supplement.invalidDate) {
+          return unsupported("Informações complementares inválidas. Revise a origem e a primeira aula.");
+        }
+        Object.assign(result, supplement);
+      }
+      return Object.freeze(result);
+    }
+    return null;
+  }
+
   function parseAcademicCommand(input) {
     if (typeof input !== "string" || !input.trim() || input.length > 300) {
       return unsupported("Informe um comando entre 1 e 300 caracteres.");
@@ -165,7 +238,8 @@
         return Object.freeze(result);
       }
     }
-    return unsupported("Comando não reconhecido. Consulte um aluno, indique uma turma por número ou peça uma prévia.");
+    return parseScheduledCommand(command) ||
+      unsupported("Comando não reconhecido. Consulte um aluno ou indique uma turma por número, dia e horário.");
   }
 
   const api = Object.freeze({ ACTIONS, parseAcademicCommand });
