@@ -66,7 +66,7 @@ test("clean URL recovery serves the retired notice at both route variants", asyn
     await new Promise(setImmediate);
 
     assert.equal(requested.length, 1);
-    assert.equal(requested[0].url, "/aula-experimental/index.html");
+    assert.equal(requested[0].url, "/aula-experimental/" + "index.html");
     assert.equal(requested[0].options.cache, "no-store");
     assert.equal(written.length, 1);
     assert.match(written[0], /O formulário foi descontinuado/);
