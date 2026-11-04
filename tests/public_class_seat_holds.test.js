@@ -103,3 +103,16 @@ test("legacy scripts are no longer loaded by retired pages", () => {
   assert.doesNotMatch(chooser, /\/escolher-turma\/app\.js/);
   assert.doesNotMatch(teacherPage, /\/reservas-de-turmas\/app\.js/);
 });
+
+test("the unused throttling proposal is immutably retired instead of being applied late", () => {
+  const drift = source("scripts/check_supabase_migration_drift.sh");
+  assert.match(
+    drift,
+    /20261104024500\|20261104024500\|throttle_public_class_seat_submission_attempts\|be9d156c4f43ef009ccecb2e4189c8f32572857e58bf982b0c31b084068caf89/
+  );
+  assert.equal(
+    fs.existsSync(path.join(__dirname, "..",
+      "supabase/migrations/20261104024500_throttle_public_class_seat_submission_attempts.sql")),
+    false
+  );
+});
