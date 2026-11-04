@@ -38,7 +38,8 @@
     {
       action: ACTIONS.TRANSFER,
       expressions: [
-        /^(?:transfira|transferir|mova)\s+(?:o\s+aluno\s+|a\s+aluna\s+|o\s+|a\s+)?(?<name>.+?)\s+(?:da|de)\s+turma\s+(?<from>\d+)\s+para\s+(?:a\s+)?turma\s+(?<to>\d+)\s*[.!]?$/iu
+        /^(?:transfira|transferir|mova)\s+(?:o\s+aluno\s+|a\s+aluna\s+|o\s+|a\s+)?(?<name>.+?)\s+(?:da|de)\s+turma\s+(?<from>\d+)\s+para\s+(?:a\s+)?turma\s+(?<to>\d+)\s*[.!]?$/iu,
+        /^(?:transfira|transferir|mova)\s+(?:o\s+aluno\s+|a\s+aluna\s+|o\s+|a\s+)?(?<name>.+?)\s+para\s+(?:a\s+)?turma\s+(?<to>\d+)\s*[.!]?$/iu
       ]
     },
     {
@@ -126,7 +127,7 @@
       return unsupported("Informe um comando entre 1 e 300 caracteres.");
     }
     const command = input.trim().replace(/\s+/g, " ")
-      .replace(/^(?:por\s+favor\s*[,;]?\s*|quero\s+que\s+voc[eê]\s+|preciso\s+que\s+voc[eê]\s+)/iu, "");
+      .replace(/^(?:por\s+favor\s*[,;]?\s*|quero\s+que\s+voc[eê]\s+|quero\s+(?=(?:vincular|matricular|transferir|arquivar|desarquivar)\b)|preciso\s+que\s+voc[eê]\s+)/iu, "");
     for (const entry of GRAMMAR) {
       for (const expression of entry.expressions) {
         const match = expression.exec(command);
@@ -148,7 +149,7 @@
           result.classNumber = positiveClassNumber(fields.to);
           if (!result.classNumber) return unsupported("Número de turma inválido.");
         }
-        if (entry.action === ACTIONS.TRANSFER) {
+        if (entry.action === ACTIONS.TRANSFER && fields.from) {
           result.fromClassNumber = positiveClassNumber(fields.from);
           if (!result.fromClassNumber || result.fromClassNumber === result.classNumber) {
             return unsupported("As turmas de origem e destino devem ser diferentes.");
