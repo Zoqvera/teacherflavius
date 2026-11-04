@@ -68,6 +68,28 @@ test("a review question is eligible and previously rated questions remain in his
   assert.equal(ratings.currentRating(previous, QUESTION_ID), null);
 });
 
+test("previous class questions are rateable today but not again in the same occurrence", () => {
+  const prior = student({
+    today_questions: [],
+    review_questions: [],
+    previous_class_questions: [{ id: QUESTION_ID }]
+  });
+  assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, []), true);
+  assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, [{
+    question_id: QUESTION_ID, rating: "medium", is_current: false
+  }]), true);
+  assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, [{
+    question_id: QUESTION_ID, rating: "good", is_current: true
+  }]), false);
+  assert.equal(ratings.canRate(
+    student({ today_questions: [], review_questions: [] }), DATE, QUESTION_ID, []
+  ), false);
+  assert.equal(ratings.canRate(prior, DATE, STUDENT_ID, []), false);
+  assert.equal(ratings.canRate(
+    student({ ...prior, attendance_status: "cancelled" }), DATE, QUESTION_ID, []
+  ), false);
+});
+
 test("successful evaluation calls v2 RPC and requires confirmed attendance", async () => {
   const calls = [];
   const service = ratings.create({
@@ -183,7 +205,7 @@ test("v2 teacher ratings enabled while existing route remains untouched", () => 
   assert.match(APP, /"TODAS AS PERGUNTAS ESTUDADAS"/);
   assert.match(APP, /"PERGUNTAS A SEREM REVISADAS"/);
   assert.match(APP, /"PERGUNTAS ESTUDADAS PARA HOJE"/);
-  assert.match(PAGE, /question_ratings\.js\?v=20261022-etapa3/);
+  assert.match(PAGE, /question_ratings\.js\?v=20261104-previous-grading-1/);
   assert.match(PAGE, /<meta name="robots" content="noindex, nofollow">/);
   assert.match(OLD_PAGE, /src="\/roteiro-da-aula\/app\.js/);
   assert.doesNotMatch(OLD_PAGE, /roteiro-da-aula-v2/);
