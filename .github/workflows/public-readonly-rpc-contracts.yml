@@ -1,0 +1,29 @@
+name: Public read-only RPC contracts
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - "scripts/sql/public_readonly_rpc_security_attestation.sql"
+      - "tests/public_readonly_rpc_security.test.js"
+      - "student_reviews_public.js"
+      - "home_vacancies.js"
+      - "course_vacancies.js"
+      - ".github/workflows/public-readonly-rpc-contracts.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  public-readonly-rpc-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check public read-only RPC contracts
+        run: node --test tests/public_readonly_rpc_security.test.js
