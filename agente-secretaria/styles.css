@@ -28,3 +28,10 @@ legend{font-weight:700;padding:0 8px}
 ul,ol{padding-left:25px}
 li{margin:7px 0;overflow-wrap:anywhere}
 @media(max-width:580px){.inline-fields{grid-template-columns:1fr}.panel{padding:18px}.shell{padding:20px 12px 40px}}
+
+.archive-confirmation{margin-top:18px;padding:18px;border:1px solid #ad6464;border-radius:10px;background:#fff7f6}
+.archive-confirmation h3{color:#772e2e;margin-top:0}
+.archive-confirmation .consent{display:flex;gap:12px;align-items:flex-start;font-weight:600;margin:18px 0}
+.archive-confirmation .consent input{flex:0 0 auto;width:20px;height:20px;min-height:20px;margin:3px 0}
+.archive-confirmation button{background:#8e2929}
+.archive-confirmation [role="status"]{font-weight:600}
