@@ -69,8 +69,8 @@ test("no extra access, account verification or billing changes introduced", () =
   assert.match(client, /target_client_key: clientKey/);
 });
 
-test("all stored function definitions terminate as separately executable SQL statements", () => {
+test("all function definitions terminate as separate SQL statements", () => {
   const sql = readFile(MIGRATION);
-  assert.equal((sql.match(/\\$function\\$;/g) || []).length, 5);
-  assert.doesNotMatch(sql, /\\$function\\$\\s*\\n\\s*CREATE OR REPLACE FUNCTION/);
+  assert.equal((sql.match(/\$function\$;/g) || []).length, 5);
+  assert.doesNotMatch(sql, /\$function\$\s*\n\s*CREATE OR REPLACE FUNCTION/);
 });
