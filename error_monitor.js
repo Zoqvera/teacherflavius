@@ -69,6 +69,30 @@
     }
   }
 
+  function getResourceHttpStatus(target) {
+    const rawUrl = target && (target.src || target.href);
+    const timing = window.performance;
+
+    if (!rawUrl || !timing || typeof timing.getEntriesByName !== "function") {
+      return null;
+    }
+
+    try {
+      const resourceUrl = new URL(String(rawUrl), window.location.href);
+      if (resourceUrl.origin !== window.location.origin) return null;
+
+      const entries = timing.getEntriesByName(resourceUrl.href, "resource");
+      const latest = entries && entries.length ? entries[entries.length - 1] : null;
+      const status = latest && latest.responseStatus;
+
+      return Number.isInteger(status) && status >= 100 && status <= 599
+        ? status
+        : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
   function shouldMonitor(url) {
     if (!url) return false;
     if (url.href.indexOf(ENDPOINT) === 0) return false;
@@ -159,11 +183,16 @@
     const target = event.target;
     if (target && target !== window) {
       if (isIgnoredResource(target)) return;
+      const httpStatus = getResourceHttpStatus(target);
       capture({
         event_type: "resource",
         message: "Falha ao carregar recurso " + String(target.tagName || "desconhecido").toLowerCase(),
         source: target.src || target.href || window.location.href,
-        metadata: { resource_tag: String(target.tagName || "unknown").toLowerCase() }
+        http_status: httpStatus,
+        metadata: {
+          resource_tag: String(target.tagName || "unknown").toLowerCase(),
+          phase: httpStatus === null ? "resource_load_error" : "resource_http_status"
+        }
       });
     }
   }, true);
