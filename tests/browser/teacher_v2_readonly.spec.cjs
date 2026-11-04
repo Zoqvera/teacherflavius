@@ -115,6 +115,21 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
             name === "get_teacher_v2_closed_sessions") {
           return { data: [], error: null };
         }
+        if (name === "get_teacher_previous_class_studies") {
+          return {
+            data: [{
+              entry_id: entryId,
+              previous_starts_at: "2026-10-21T18:00:00-03:00",
+              questions: [{
+                id: "97000000-0000-4000-8000-000000000020",
+                display_order: 3,
+                text: "Where are you from?",
+                translation: "De onde você é?"
+              }]
+            }],
+            error: null
+          };
+        }
         if (window.__teacherV2RejectWrites) {
           return { data: null, error: { message: "Escrita simulada rejeitada pelo servidor." } };
         }
@@ -290,6 +305,10 @@ test("main lesson route loads the new workspace without implicit writes", async 
   await page.getByRole("button", { name: "INÍCIO" }).click();
   await enterFictionalClass(page, "PERGUNTAS");
   await expect(page.getByRole("button", { name: "BOM" }).first()).toBeEnabled();
+  await expect(page.getByText(
+    "PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR · 21/10/2026 (1)"
+  )).toBeVisible();
+  await expect(page.getByText("Where are you from?")).toBeVisible();
   await page.getByText("TODAS AS PERGUNTAS ESTUDADAS (2)").click();
   const search = page.getByRole("searchbox", { name: "Buscar entre todas as perguntas estudadas" });
   await search.fill("How are you?");
@@ -299,7 +318,8 @@ test("main lesson route loads the new workspace without implicit writes", async 
 
   const calls = await page.evaluate(() => window.__teacherV2Calls);
   expect(calls).toEqual(["is_teacher_admin",
-    "get_teacher_question_rating_history_v2", "get_teacher_v2_closed_sessions"]);
+    "get_teacher_question_rating_history_v2", "get_teacher_v2_closed_sessions",
+    "get_teacher_previous_class_studies"]);
   await expect(page.locator('a[href="/roteiro-da-aula-legado/"]')).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, nofollow");
 });
