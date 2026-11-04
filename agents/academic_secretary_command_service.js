@@ -77,13 +77,61 @@
         .map(entry => Object.freeze(entry)));
     }
 
-    async function process(text, selectedStudentId) {
+    async function resolveSchedule(schedule, selectedClassNumber) {
+      const data = readResponse(await client.from("teacher_classes")
+        .select("class_number,class_name,class_weekday,class_start_time,class_type,is_active")
+        .eq("class_weekday", schedule.classWeekday)
+        .eq("class_start_time", schedule.classStartTime)
+        .eq("class_type", "quintet")
+        .eq("is_active", true)
+        .order("class_number", { ascending: true })
+        .limit(11), "identificação da turma por horário");
+      if (!Array.isArray(data) || data.some(item =>
+        !item || !Number.isSafeInteger(item.class_number) || item.class_number < 1 ||
+        item.class_weekday !== schedule.classWeekday ||
+        item.class_start_time !== schedule.classStartTime ||
+        item.class_type !== "quintet" || item.is_active !== true)) {
+        throw new Error("Dados do horário acadêmico inconsistentes.");
+      }
+      if (data.length > 10) {
+        return Object.freeze({ status: "too_many_classes" });
+      }
+      if (data.length === 0) {
+        return Object.freeze({ status: "class_not_found", classSchedule: schedule });
+      }
+      if (new Set(data.map(item => item.class_number)).size !== data.length) {
+        throw new Error("Há turmas repetidas na consulta do horário.");
+      }
+      if (selectedClassNumber != null &&
+          !data.some(item => item.class_number === selectedClassNumber)) {
+        throw new Error("Turma escolhida não corresponde mais ao horário. Consulte novamente.");
+      }
+      if (data.length > 1 && selectedClassNumber == null) {
+        return Object.freeze({
+          status: "class_ambiguous",
+          classSchedule: schedule,
+          candidates: Object.freeze(data.map(item => Object.freeze({
+            classNumber: item.class_number,
+            className: item.class_name || "Turma " + item.class_number
+          })))
+        });
+      }
+      return (data.find(item => item.class_number === selectedClassNumber) || data[0]).class_number;
+    }
+
+    async function process(text, selectedStudentId, selectedClassNumber) {
       const parsed = commandsModule.parseAcademicCommand(text);
       if (parsed.status !== "recognized") return parsed;
       await authorize();
-
+      const classReference = parsed.classSchedule
+        ? await resolveSchedule(parsed.classSchedule, selectedClassNumber)
+        : parsed.classNumber;
+      if (classReference && typeof classReference === "object") return classReference;
+      if (selectedClassNumber != null && !parsed.classSchedule) {
+        throw new Error("A seleção de turma não corresponde a este comando.");
+      }
       if (parsed.action === commandsModule.ACTIONS.INSPECT_CLASS) {
-        const classroom = await readers.getClassSnapshot(parsed.classNumber);
+        const classroom = await readers.getClassSnapshot(classReference);
         return Object.freeze({ status: "class_read", action: parsed.action, classNumber: classroom.number,
           availableSeats: classroom.availableSeats });
       }
@@ -110,7 +158,7 @@
       }
       const student = matches.find(person => person.id === selectedStudentId) || matches[0];
       const request = { action: parsed.action, studentId: student.id };
-      if (parsed.classNumber) request.classNumber = parsed.classNumber;
+      if (Number.isInteger(classReference)) request.classNumber = classReference;
       if (parsed.fromClassNumber) request.fromClassNumber = parsed.fromClassNumber;
       if (parsed.source) request.source = parsed.source;
       if (parsed.firstLessonDate) request.firstLessonDate = parsed.firstLessonDate;
