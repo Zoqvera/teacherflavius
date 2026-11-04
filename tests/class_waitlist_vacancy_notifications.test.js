@@ -10,6 +10,7 @@ const requiredPhone = read("supabase/migrations/20261030021426_require_whatsapp_
 const monitor = read("supabase/migrations/20261030021534_class_waitlist_vacancy_email_monitor.sql");
 const schedule = read("supabase/migrations/20261030021650_schedule_class_waitlist_vacancy_notifications.sql");
 const retired = read("supabase/migrations/20261104024633_disable_class_seat_reservations.sql");
+const discontinued = read("supabase/migrations/20261104031644_discontinue_class_waitlist_vacancy_emails.sql");
 const edge = read("supabase/functions/notify-class-waitlist-vacancies/index.ts");
 const chooseMarkup = read("escolher-turma/index.html");
 const onboarding = read("complete-cadastro.html");
@@ -47,15 +48,17 @@ test("historical availability increases only enqueued protected contacts", () =>
   assert.match(monitor, /revoke all on private\.class_waitlist_vacancy_emails from public,anon,authenticated/);
 });
 
-test("historical email worker authenticated its callbacks and contacted only the teacher", () => {
-  assert.match(edge, /RECIPIENT = "contato@teacherflavius\.com"/);
-  assert.match(edge, /"Idempotency-Key": "class-waitlist-" \+ notification\.notification_id/);
-  assert.match(edge, /href="https:\/\/wa\.me\/' \+ number/);
-  assert.match(edge, /x-webhook-secret/);
-  assert.match(edge, /equalSecrets/);
-  assert.match(edge, /claim_class_waitlist_vacancy_emails_internal/);
-  assert.match(monitor, /grant execute on function public\.claim_class_waitlist_vacancy_emails_internal\(integer\)\s+to service_role/);
-  assert.match(monitor, /grant execute on function public\.finish_class_waitlist_vacancy_email_internal\(uuid,text,text,text\)\s+to service_role/);
+test("retired email endpoint rejects requests without sending messages", () => {
+  assert.match(edge, /status: 410/);
+  assert.match(edge, /Class waitlist vacancy emails are discontinued/);
+  assert.doesNotMatch(edge, /fetch\(|createClient|RESEND_API_KEY|claim_class_waitlist_vacancy_emails_internal/);
+});
+
+test("discontinuation disables the legacy cron and queue permissions", () => {
+  assert.match(discontinued, /cron\.unschedule\('class-waitlist-vacancy-email-every-minute'\)/);
+  assert.match(discontinued, /REVOKE EXECUTE ON FUNCTION public\.claim_class_waitlist_vacancy_emails_internal\(integer\)/);
+  assert.match(discontinued, /REVOKE EXECUTE ON FUNCTION public\.finish_class_waitlist_vacancy_email_internal\(uuid,text,text,text\)/);
+  assert.doesNotMatch(discontinued, /DELETE FROM|TRUNCATE|DROP TABLE/i);
 });
 
 test("the previously scheduled minute-by-minute monitor is now unscheduled", () => {

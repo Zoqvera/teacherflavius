@@ -4,23 +4,29 @@
   background: #f2f6fc;
   font-synthesis: none;
 }
+
 * { box-sizing: border-box; }
-body { min-width: 280px; min-height: 100vh; margin: 0; }
+
+body { min-width: 280px; margin: 0; }
+
 .page-shell {
   min-height: 100vh;
+  min-height: 100svh;
   display: grid;
   place-items: center;
   padding: 24px 14px;
   background: radial-gradient(circle at 80% 10%, #d8e8ff 0, transparent 38%), #f2f6fc;
 }
+
 .entry-card {
-  width: min(100%, 520px);
+  width: min(100%, 580px);
   padding: clamp(24px, 6vw, 42px);
   border: 1px solid #dae4f1;
   border-radius: 22px;
   background: #fff;
   box-shadow: 0 16px 45px #09254915;
 }
+
 .brand {
   margin-bottom: 12px;
   color: #1764a8;
@@ -28,122 +34,48 @@ body { min-width: 280px; min-height: 100vh; margin: 0; }
   font-weight: 800;
   letter-spacing: 0.15em;
 }
-h1 { margin: 0; color: #071c39; font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.16; }
-.intro { margin: 12px 0 26px; color: #52627a; line-height: 1.5; }
-.field { margin-bottom: 20px; }
-.field label, legend { display: block; margin-bottom: 8px; color: #182e4c; font-size: 0.95rem; font-weight: 700; }
-.field input {
+
+h1 {
+  margin: 0;
+  color: #071c39;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  line-height: 1.16;
+}
+
+.intro, .details { color: #52627a; line-height: 1.6; }
+.intro { margin: 16px 0 10px; font-weight: 600; }
+.details { margin: 0 0 28px; }
+
+.contact-link {
   display: block;
-  width: 100%;
-  min-height: 50px;
-  padding: 12px 14px;
-  border: 1px solid #adbed3;
-  border-radius: 10px;
-  font: inherit;
-  color: #14233b;
-  background: #fff;
-}
-.field input::placeholder { color: #6b7d94; }
-.field input:focus-visible, .lesson-option:focus-within, button:focus-visible, a:focus-visible {
-  outline: 3px solid #86b8f2;
-  outline-offset: 3px;
-}
-.lesson-options { margin: 3px 0 26px; padding: 0; border: 0; }
-.lesson-options legend { margin-bottom: 12px; }
-.lesson-option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-  min-height: 49px;
-  padding: 10px 12px;
-  border: 1px solid #d9e2ef;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.lesson-option:has(input:checked) { border-color: #276eb2; background: #edf5ff; }
-.lesson-option input { width: 18px; height: 18px; margin: 0; accent-color: #145ea5; }
-.lesson-option span { line-height: 1.35; }
-.submit-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 54px;
-  padding: 14px;
-  border: 0;
+  padding: 16px;
   border-radius: 11px;
   background: #1166b0;
-  color: white;
-  font: inherit;
+  color: #fff;
   font-weight: 800;
-  letter-spacing: 0.02em;
-  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
 }
-.submit-button:hover:not(:disabled) { background: #0c528f; }
-.submit-button:disabled { opacity: 0.65; cursor: wait; }
-.form-error { padding: 11px 12px; border-radius: 9px; color: #a01e29; background: #fff0f0; line-height: 1.4; }
-.privacy-note { margin: 18px 0 0; color: #596b83; font-size: 0.79rem; line-height: 1.55; }
-.privacy-note a { color: #105b9b; }
-.honeypot { display: none !important; }
 
-/* Fill the available width on phones and narrow viewports. Some Android
-   browsers request a ~980px desktop viewport even on a small screen. */
-@media (max-width: 1024px) {
-  .page-shell {
-    min-height: 100vh;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: clamp(20px, 3vw, 36px) clamp(12px, 2vw, 24px) 36px;
-  }
+.contact-link:hover { background: #0c528f; }
 
-  .entry-card {
-    width: 100%;
-    max-width: 900px;
-    padding: clamp(24px, 4vw, 40px);
-  }
+.home-link {
+  display: block;
+  margin-top: 18px;
+  color: #105b9b;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
-  .brand { font-size: 0.875rem; }
-  h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); }
-  .intro { font-size: 1rem; line-height: 1.5; }
-  .field label, .lesson-options legend { font-size: 1rem; }
-  .field input { min-height: 58px; }
-  .lesson-option { min-height: 56px; font-size: 1rem; }
-  .lesson-option input {
-    width: 22px;
-    height: 22px;
-    flex: 0 0 22px;
-  }
-  .submit-button { min-height: 62px; font-size: 1.04rem; }
-  .privacy-note { font-size: 0.875rem; }
+a:focus-visible {
+  outline: 3px solid #86b8f2;
+  outline-offset: 3px;
 }
 
 @media (max-width: 767px) {
   :root { font-size: 17px; }
-  .page-shell { padding: 18px 12px 28px; }
+  .page-shell { align-items: start; padding: 18px 12px 28px; }
   .entry-card { padding: 24px 20px; border-radius: 18px; }
-  .brand { font-size: 0.8rem; }
-  h1 { font-size: clamp(1.65rem, 6.2vw, 2rem); }
-  .lesson-option { padding: 12px; }
-  .submit-button { font-size: 1rem; }
 }
-
-/* Android 'Desktop site' can retain touch interaction with a 980px layout. */
-@media (min-width: 768px) and (max-width: 1024px) {
-  :root { font-size: 20px; }
-  #trialMeetForm #visitorName,
-  #trialMeetForm #visitorWhatsapp {
-    font-size: 20px !important;
-  }
-}
-
-@media (max-width: 359px) {
-  .entry-card { padding: 22px 16px; }
-  h1 { font-size: 1.55rem; }
-}
-
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
