@@ -22,6 +22,7 @@
     lifecycle: null,
     closedSessionsAvailable: false,
     questionHistory: new Map(),
+    previousStudies: new Map(),
     ratingHistoryAvailable: false,
     openSections: new Map(),
     loadedDate: null,
@@ -63,6 +64,13 @@
     return new Intl.DateTimeFormat("pt-BR", {
       timeZone: "America/Sao_Paulo",
       hour: "2-digit", minute: "2-digit"
+    }).format(new Date(startsAt));
+  }
+
+  function classDate(startsAt) {
+    return new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      day: "2-digit", month: "2-digit", year: "numeric"
     }).format(new Date(startsAt));
   }
 
@@ -607,6 +615,14 @@
       "PERGUNTAS ESTUDADAS PARA HOJE", questions.today, item, true,
       !MODEL.isCancelled(item), history
     ));
+    const previous = state.previousStudies.get(MODEL.previousStudyKey(item));
+    if (previous && previous.previousStartsAt) {
+      card.appendChild(questionSection(
+        "PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR · " +
+          classDate(previous.previousStartsAt),
+        previous.questions, item, true, false, history
+      ));
+    }
     card.appendChild(questionSection(
       "PERGUNTAS A SEREM REVISADAS", questions.review, item, false,
       !MODEL.isCancelled(item), history
@@ -670,6 +686,17 @@
     return catalog;
   }
 
+  async function loadPreviousClassStudies(client, date) {
+    const result = await client.rpc("get_teacher_previous_class_studies", {
+      target_date: date
+    });
+    if (result.error) throw result.error;
+    if (!Array.isArray(result.data)) {
+      throw new Error("Histórico da aula anterior inválido.");
+    }
+    return MODEL.indexPreviousStudies(result.data);
+  }
+
   async function loadPlan(successMessage) {
     const requestId = ++state.requestId;
     const date = document.getElementById("workspaceDate").value;
@@ -677,13 +704,14 @@
     try {
       const client = window.Auth.getClient();
       const items = await state.service.getTeacherLessonPlan(date);
-      const [catalog, bundle, questionHistory, closedSessions] = await Promise.all([
+      const [catalog, bundle, questionHistory, closedSessions, previousStudies] = await Promise.all([
         loadQuestionCatalog(client, items),
         window.TeacherLessonPresentations.loadPlan(
           items, function () { return client; }, state.teacherId
         ),
         state.questionRatings.getHistory(date),
-        state.lifecycle.getClosedSessions(date)
+        state.lifecycle.getClosedSessions(date),
+        loadPreviousClassStudies(client, date)
       ]);
       if (requestId !== state.requestId) return;
       state.groups = MODEL.groupByClass(items).concat(
@@ -698,6 +726,7 @@
       state.presentations = bundle ? bundle.records : new Map();
       state.ratingHistoryAvailable = questionHistory.available;
       state.questionHistory = questionHistory.byOccurrence;
+      state.previousStudies = previousStudies;
       if (state.selectedClass && !state.groups.some(function (group) {
         return group.key === state.selectedClass;
       })) state.selectedClass = null;
