@@ -18,6 +18,7 @@
     passwordRecoveryJs: "/password_recovery_login.js?v=20260912-1",
     studentAreaGuardJs: "/student_area_route_guard.js?v=20261030-1",
     accountSecurityJs: "/account_security_ui.js?v=20260912-1",
+    teacherMfaJs: "/teacher_mfa_setup.js?v=20261104-1",
     infrastructureCss: "/auth_infrastructure.css?v=20260902-1"
   });
 
@@ -131,6 +132,7 @@
 
     runWhenDomReady(function () {
       appendScriptOnce('script[src^="/account_security_ui.js"]', ASSETS.accountSecurityJs);
+      appendScriptOnce('script[src^="/teacher_mfa_setup.js"]', ASSETS.teacherMfaJs);
     });
   }
 
