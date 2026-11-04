@@ -17,7 +17,7 @@
     <header class="intro">
       <div class="eyebrow">GESTÃO ACADÊMICA · MODO SUPERVISIONADO</div>
       <h1>Agente de Secretaria Acadêmica</h1>
-      <p>Consulte alunos e prepare operações para revisão. Nenhuma alteração será realizada nesta página.</p>
+      <p>Consulte alunos e prepare operações. O arquivamento só é executado após sua confirmação expressa; as demais operações permanecem em prévia.</p>
     </header>
     <p id="pageStatus" class="status" role="status" aria-live="polite">Verificando credenciais administrativas...</p>
     <section id="workspace" hidden aria-label="Simulação de operações">
@@ -84,12 +84,20 @@
         <ul id="resultIssues"></ul>
         <h3>Etapas que serão necessárias</h3>
         <ol id="resultSteps"></ol>
-        <p class="read-only">Prévia somente leitura: nenhum registro foi atualizado.</p>
+        <p class="read-only">A geração da prévia não altera registros.</p>
+        <section id="archiveConfirmation" class="archive-confirmation" aria-labelledby="archiveConfirmTitle" hidden>
+          <h3 id="archiveConfirmTitle">Arquivamento supervisionado</h3>
+          <p id="archiveDetails">O aluno será desvinculado de todas as turmas e a cobrança mensal configurada será pausada.</p>
+          <label class="consent" for="archiveConsent"><input type="checkbox" id="archiveConsent"> Confirmo que revisei o aluno e autorizo o arquivamento.</label>
+          <button id="archiveExecute" type="button" disabled>Confirmar arquivamento</button>
+          <p id="archiveStatus" role="status" aria-live="polite"></p>
+        </section>
       </section>
     </section>
   </main>
-  <script defer src="/agents/academic_secretary.js?v=20261102-1"></script>
+  <script defer src="/agents/academic_secretary.js?v=20261104-1"></script>
   <script defer src="/agents/academic_secretary_supabase.js?v=20261102-1"></script>
-  <script defer src="/agente-secretaria/app.js?v=20261102-1"></script>
+  <script defer src="/agents/academic_secretary_archive_executor.js?v=20261104-1"></script>
+  <script defer src="/agente-secretaria/app.js?v=20261104-1"></script>
 </body>
 </html>
