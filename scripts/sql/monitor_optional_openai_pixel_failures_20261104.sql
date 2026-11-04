@@ -21,6 +21,13 @@ $fragment$;
     and coalesce(e.source, '') not like 'https://static.cloudflareinsights.com/beacon.min.js/%'
     and coalesce(e.source, '') <> 'https://bzrcdn.openai.com/sdk/oaiq.min.js';
 $fragment$;
+  old_resource_predicate_grouped text := $fragment$
+      and coalesce(e.source, '') not like 'https://static.cloudflareinsights.com/beacon.min.js/%';
+$fragment$;
+  new_resource_predicate_grouped text := $fragment$
+      and coalesce(e.source, '') not like 'https://static.cloudflareinsights.com/beacon.min.js/%'
+      and coalesce(e.source, '') <> 'https://bzrcdn.openai.com/sdk/oaiq.min.js';
+$fragment$;
   old_resource_query text := $fragment$
   select count(*) into resource_errors_15m
 $fragment$;
@@ -68,18 +75,22 @@ BEGIN
      OR position(old_top_filter in current_definition) = 0
      OR position(old_metrics in current_definition) = 0
      OR (length(current_definition) - length(replace(current_definition, old_resource_predicate, '')))
-        / length(old_resource_predicate) <> 2 THEN
+        / length(old_resource_predicate) <> 1
+     OR (length(current_definition) - length(replace(current_definition, old_resource_predicate_grouped, '')))
+        / length(old_resource_predicate_grouped) <> 1 THEN
     RAISE EXCEPTION 'Health function changed: stop and review before applying patch';
   END IF;
 
   updated_definition := replace(current_definition, old_declaration, new_declaration);
   updated_definition := replace(updated_definition, old_resource_predicate, new_resource_predicate);
+  updated_definition := replace(updated_definition, old_resource_predicate_grouped, new_resource_predicate_grouped);
   updated_definition := replace(updated_definition, old_resource_query, new_resource_query);
   updated_definition := replace(updated_definition, old_top_filter, new_top_filter);
   updated_definition := replace(updated_definition, old_metrics, new_metrics);
 
   IF position('optional_openai_pixel_errors_15m' in updated_definition) = 0
      OR position(new_resource_predicate in updated_definition) = 0
+     OR position(new_resource_predicate_grouped in updated_definition) = 0
      OR position(new_top_filter in updated_definition) = 0 THEN
     RAISE EXCEPTION 'Incomplete optional pixel resource monitoring patch';
   END IF;
