@@ -53,6 +53,7 @@ test("validates that class appointments use the class weekday", function () {
 test("labels statuses and separates upcoming appointments", function () {
   assert.equal(scheduler.statusLabel("scheduled"), "AGENDADA");
   assert.equal(scheduler.statusLabel("completed"), "CONCLUÍDA");
+  assert.equal(scheduler.statusLabel("historical_unknown"), "RESULTADO HISTÓRICO DESCONHECIDO");
   assert.equal(
     scheduler.isUpcoming({ status: "scheduled", starts_at: "2030-01-01T12:00:00Z" }, Date.parse("2029-01-01T00:00:00Z")),
     true
