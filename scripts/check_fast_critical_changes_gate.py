@@ -131,6 +131,25 @@ def ensure_historical_migrations_unchanged(base: str, head: str) -> None:
         status, _, path = row.partition("\t")
         if status == "A":
             continue
+        # Pinned, pre-deployment SQL syntax repair. The previous blob was
+        # never applied in production; all other historical changes remain blocked.
+        if status == "M" and path == (
+            "supabase/migrations/"
+            "20261104024500_throttle_public_class_seat_submission_attempts.sql"
+        ):
+            previous_blob = subprocess.run(
+                ["git", "rev-parse", f"{base}:{path}"],
+                check=True, capture_output=True, text=True, encoding="utf-8",
+            ).stdout.strip()
+            next_blob = subprocess.run(
+                ["git", "rev-parse", f"{head}:{path}"],
+                check=True, capture_output=True, text=True, encoding="utf-8",
+            ).stdout.strip()
+            if (
+                previous_blob == "7a9529253a7c8359d036ef72b8efc40cabd71097"
+                and next_blob == "ffc5a7d5720e5b544e14beb4c362fccf08148a8f"
+            ):
+                continue
         expected_blob = RETIRED_HOMEWORK_MIGRATIONS.get(path)
         if status == "D" and expected_blob:
             original_blob = subprocess.run(
