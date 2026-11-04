@@ -27,6 +27,17 @@
     return studies;
   }
 
+  function withPreviousClassQuestions(items, studiesByEntry) {
+    const histories = studiesByEntry instanceof Map ? studiesByEntry : new Map();
+    return (Array.isArray(items) ? items : []).map(function (item) {
+      const previous = histories.get(previousStudyKey(item));
+      return Object.assign({}, item, {
+        previous_class_questions: previous && Array.isArray(previous.questions)
+          ? previous.questions : []
+      });
+    });
+  }
+
   function groupByClass(items) {
     const groups = new Map();
     (Array.isArray(items) ? items : []).forEach(function (item) {
@@ -113,7 +124,8 @@
     isCancelled: isCancelled,
     normalizeNumbers: normalizeNumbers,
     questionsForStudent: questionsForStudent,
-    studiedNumbers: studiedNumbers
+    studiedNumbers: studiedNumbers,
+    withPreviousClassQuestions: withPreviousClassQuestions
   });
   root.TeacherWorkspaceModel = api;
 })(typeof window !== "undefined" ? window : globalThis);

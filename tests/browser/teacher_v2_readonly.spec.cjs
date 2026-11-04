@@ -95,7 +95,7 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
     );
     window.__teacherV2NetworkError = false;
     window.__teacherV2RejectWrites = false;
-    window.__teacherV2FixtureState = { presented: false, attendance: "scheduled" };
+    window.__teacherV2FixtureState = { presented: false, attendance: "scheduled", ratings: [] };
     window.__teacherV2ClassStart = isActiveClass
       ? new Date(Date.now() - 10 * 60 * 1000).toISOString() : null;
     window.ResourceWaiter = {
@@ -103,7 +103,7 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
     };
 
     const fakeClient = {
-      async rpc(name) {
+      async rpc(name, params) {
         window.__teacherV2Calls.push(name);
         window.sessionStorage.setItem(
           "teacherV2Calls", JSON.stringify(window.__teacherV2Calls)
@@ -111,8 +111,19 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
         if (name === "is_teacher_admin") {
           return { data: userRole === "teacher", error: null };
         }
-        if (name === "get_teacher_question_rating_history_v2" ||
-            name === "get_teacher_v2_closed_sessions") {
+        if (name === "get_teacher_question_rating_history_v2") {
+          const ratings = window.__teacherV2FixtureState.ratings;
+          return {
+            data: ratings.length ? [{
+              student_id: studentId,
+              starts_at: window.__teacherV2ClassStart ||
+                params.target_date + "T18:00:00-03:00",
+              evaluations: ratings.slice()
+            }] : [],
+            error: null
+          };
+        }
+        if (name === "get_teacher_v2_closed_sessions") {
           return { data: [], error: null };
         }
         if (name === "get_teacher_previous_class_studies") {
@@ -141,7 +152,13 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
         }
         if (name === "rate_teacher_conversation_question_v2") {
           window.__teacherV2FixtureState.attendance = "present";
-          return { data: { ok: true, rating: "good",
+          window.__teacherV2FixtureState.ratings.push({
+            question_id: params.target_question_id,
+            rating: params.target_rating,
+            is_current: true,
+            practiced_at: new Date().toISOString()
+          });
+          return { data: { ok: true, rating: params.target_rating,
             occurrence_id: "91000000-0000-4000-8000-000000000019",
             attendance_status: "present" }, error: null };
         }
@@ -385,6 +402,28 @@ test("presentation actions stay side by side and cancellation appears after regi
     content: document.documentElement.scrollWidth
   }));
   expect(width.content).toBeLessThanOrEqual(width.viewport + 1);
+});
+
+test("teacher can evaluate questions studied for the preceding class", async ({ page }) => {
+  await openPreview(page, "teacher", true);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await enterFictionalClass(page, "PERGUNTAS");
+
+  const previousQuestion = page.locator(".workspace-question").filter({
+    hasText: "Where are you from?"
+  });
+  await expect(previousQuestion.getByRole("button", { name: "BOM" })).toBeEnabled();
+  await expect(previousQuestion.getByRole("button", { name: "MÉDIO" })).toBeEnabled();
+  await expect(previousQuestion.getByRole("button", { name: "MELHORAR" })).toBeEnabled();
+
+  await previousQuestion.getByRole("button", { name: "MÉDIO" }).click();
+  await expect(page.locator("#workspaceStatus")).toContainText("Pergunta avaliada como MÉDIO");
+  await expect(previousQuestion.getByText("AVALIADA NESTA AULA: MÉDIO")).toBeVisible();
+  await expect(previousQuestion.getByRole("button", { name: "MÉDIO" })).toHaveCount(0);
+  const writes = await page.evaluate(() => window.__teacherV2Calls.filter(
+    (name) => name === "rate_teacher_conversation_question_v2"
+  ));
+  expect(writes).toHaveLength(1);
 });
 
 test("teacher evaluates questions with a synthetic acknowledgement", async ({ page }) => {

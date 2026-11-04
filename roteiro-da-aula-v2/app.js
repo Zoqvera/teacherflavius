@@ -620,7 +620,7 @@
       card.appendChild(questionSection(
         "PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR · " +
           classDate(previous.previousStartsAt),
-        previous.questions, item, true, false, history
+        previous.questions, item, true, !MODEL.isCancelled(item), history
       ));
     }
     card.appendChild(questionSection(
@@ -714,7 +714,8 @@
         loadPreviousClassStudies(client, date)
       ]);
       if (requestId !== state.requestId) return;
-      state.groups = MODEL.groupByClass(items).concat(
+      const ratedItems = MODEL.withPreviousClassQuestions(items, previousStudies);
+      state.groups = MODEL.groupByClass(ratedItems).concat(
         closedSessions.sessions
       ).sort(function (first, second) {
         return new Date(first.startsAt).getTime() -
