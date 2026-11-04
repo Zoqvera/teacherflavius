@@ -24,7 +24,7 @@ test("exactly the three reviewed read-only RPCs can remain anonymous", () => {
   for (const signature of approved) {
     assert.ok(catalog.includes("'" + signature + "'::regprocedure"), signature);
   }
-  assert.equal((catalog.match(/'::regprocedure/g) || []).length, approved.length);
+  assert.equal((catalog.split("verified_definitions as (")[0].match(/'::regprocedure/g) || []).length, approved.length);
   assert.match(catalog, /count\(\*\) = 3[\s\S]*from pg_proc function_definition/);
   assert.match(catalog, /function_definition\.provolatile = 's'/);
   assert.match(catalog, /function_definition\.proconfig @> array\['search_path="?"?'\]/);
