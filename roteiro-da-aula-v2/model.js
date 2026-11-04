@@ -11,6 +11,22 @@
     return String(item.class_number) + "|" + String(item.starts_at);
   }
 
+  function previousStudyKey(item) {
+    return String(item.lesson_kind || "regular") + "|" + String(item.entry_id);
+  }
+
+  function indexPreviousStudies(records) {
+    const studies = new Map();
+    (Array.isArray(records) ? records : []).forEach(function (record) {
+      if (!record || !record.entry_id) return;
+      studies.set(previousStudyKey(record), {
+        previousStartsAt: record.previous_starts_at || null,
+        questions: Array.isArray(record.questions) ? record.questions : []
+      });
+    });
+    return studies;
+  }
+
   function groupByClass(items) {
     const groups = new Map();
     (Array.isArray(items) ? items : []).forEach(function (item) {
@@ -92,6 +108,8 @@
     classKey: classKey,
     classSummary: classSummary,
     groupByClass: groupByClass,
+    indexPreviousStudies: indexPreviousStudies,
+    previousStudyKey: previousStudyKey,
     isCancelled: isCancelled,
     normalizeNumbers: normalizeNumbers,
     questionsForStudent: questionsForStudent,
