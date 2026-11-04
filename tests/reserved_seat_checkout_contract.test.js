@@ -24,11 +24,11 @@ test("only reserved-seat first tuitions acquire a conditional payment window", (
 test("retired reserved-seat RPC must not block ordinary monthly tuition checkout", () => {
   const retired = source("supabase/migrations/20261104024633_disable_class_seat_reservations.sql");
 
-  assert.match(retired, /revoke execute on function public\\.start_my_reserved_seat_checkout\\(\\)/);
+  assert.match(retired, /revoke execute on function public\.start_my_reserved_seat_checkout\(\)/);
   assert.doesNotMatch(paymentApp, /start_my_reserved_seat_checkout|openReservedSeatCheckout|reservedSeatCheckout|reservedSeatTimer/);
   assert.doesNotMatch(paymentPage, /reservedSeatCheckoutNotice|reservedSeatCheckoutCountdown/);
-  assert.match(paymentApp, /await loadPendingTuitions\\(\\);\\s*await loadFirstPaymentWindow\\(\\);/);
-  assert.match(paymentApp, /await invokePaymentFunction\\(\\{ action: "config" \\}\\)/);
+  assert.match(paymentApp, /await loadPendingTuitions\(\);\s*await loadFirstPaymentWindow\(\);/);
+  assert.match(paymentApp, /await invokePaymentFunction\(\{ action: "config" \}\)/);
 });
 
 test("expired first payments release the student and pause billing without deleting receipts", () => {
