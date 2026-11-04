@@ -40,7 +40,7 @@ test("backend classifies incomplete existing students separately from new enroll
 test("browser reads enrollment behavior only from the backend state RPC", function () {
   assert.match(stateService, /rpc\("get_my_enrollment_onboarding_state"\)/);
   assert.match(page, /EnrollmentOnboardingState/);
-  assert.match(page, /requiresClassSelection/);
+  assert.match(page, /requiresEnrollmentInvitation/);
   assert.match(page, /state\.requiresClassMode/);
   assert.doesNotMatch(page, /state\.requiresTuitionDueDate/);
   assert.match(page, /state\.requiresCommercialSetup/);
