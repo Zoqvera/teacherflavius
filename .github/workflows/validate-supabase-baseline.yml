@@ -42,6 +42,7 @@ jobs:
           node --test tests/course_vacancy_visibility_contract.test.js
           node --test tests/tuition_after_enrollment_contract.test.js
           node --test tests/lesson_credits_contract.test.js
+          node --test tests/student_cancellation_seven_day_policy_contract.test.js
           node --test tests/replacement_one_available_seat_contract.test.js
           node --test tests/regular_cancellation_delivery_e2e_mock.test.js
           node --test tests/teacher_makeup_notification_contract.test.js
@@ -196,7 +197,8 @@ jobs:
             supabase/baseline/450_sync_next_tuition_after_billing_change.sql \
             supabase/baseline/455_add_standard_100_four_lesson_plan.sql \
             supabase/baseline/460_authorized_invites_do_not_request_manual_code.sql \
-            supabase/baseline/465_allow_replacement_with_one_operational_vacancy.sql
+            supabase/baseline/465_allow_replacement_with_one_operational_vacancy.sql \
+            supabase/baseline/470_limit_student_cancellations_to_seven_days.sql
           do
             echo "Applying $file"
             docker exec -i "$DB_CONTAINER" \
