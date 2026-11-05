@@ -1,0 +1,83 @@
+name: Payment agent isolated database checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261104224605_create_payment_agent_role.sql"
+      - "supabase/migrations/20261104225129_payment_agent_token_hook.sql"
+      - "tests/sql/payment_agent_role_privileges.sql"
+      - "tests/sql/payment_agent_token_hook.sql"
+      - "tests/sql/payment_agent_fixture_acl_overlay.sql"
+      - "tests/sql/payment_agent_fixture_rpc_overlay.sql"
+      - "tests/sql/payment_agent_fixture_course_state_overlay.sql"
+      - "tests/sql/payment_agent_canonical_flow.sql"
+      - "tests/sql/payment_agent_enrolled_credits.sql"
+      - ".github/workflows/payment-agent-isolated.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  database-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: latest
+      - name: Prepare a disposable Supabase project
+        shell: bash
+        run: |
+          set -euo pipefail
+          fixture="${RUNNER_TEMP}/teacher-payment-agent"
+          mkdir -p "${fixture}"
+          (cd "${fixture}" && supabase init --force)
+          python3 -m scripts.prepare_supabase_cli_replay \
+            --repo-root "${GITHUB_WORKSPACE}" --staging-root "${fixture}"
+          python3 -m scripts.audit_supabase_isolated_chain \
+            --repository-root "${GITHUB_WORKSPACE}" --staging-root "${fixture}" \
+            --report-json "${fixture}/artifacts/chain-audit.json"
+          jq -e '.status == "LOCAL_CHAIN_VALIDATED" and .production_ledger_modified == false' \
+            "${fixture}/artifacts/chain-audit.json"
+      - name: Start the synthetic fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${RUNNER_TEMP}/teacher-payment-agent"
+          supabase start
+      - name: Verify role and token-hook migrations against the reconstructed schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          db="$(docker ps --format '{{.Names}}' | grep '^supabase_db_teacherflavius-local-fixture$')"
+          test -n "${db}"
+          for sql in \
+            tests/sql/payment_agent_fixture_acl_overlay.sql \
+            supabase/migrations/20261104224605_create_payment_agent_role.sql \
+            supabase/migrations/20261104225129_payment_agent_token_hook.sql \
+            tests/sql/payment_agent_role_privileges.sql \
+            tests/sql/payment_agent_token_hook.sql \
+            tests/sql/payment_agent_fixture_rpc_overlay.sql \
+            tests/sql/payment_agent_fixture_course_state_overlay.sql \
+            tests/sql/payment_agent_canonical_flow.sql \
+            tests/sql/payment_agent_enrolled_credits.sql; do
+            if [ "${sql}" = "tests/sql/payment_agent_token_hook.sql" ] || [ "${sql}" = "tests/sql/payment_agent_canonical_flow.sql" ] || [ "${sql}" = "tests/sql/payment_agent_enrolled_credits.sql" ]; then
+              # The hook test SET ROLEs to supabase_auth_admin. The local
+              # postgres account is intentionally not allowed to assume it.
+              docker exec -i "${db}" psql -X -U supabase_admin -d postgres -v ON_ERROR_STOP=1 < "${sql}"
+            else
+              docker exec -i "${db}" psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 < "${sql}"
+            fi
+          done
+      - name: Stop the disposable stack
+        if: always()
+        shell: bash
+        run: |
+          fixture="${RUNNER_TEMP}/teacher-payment-agent"
+          if [ -f "${fixture}/supabase/config.toml" ]; then
+            cd "${fixture}"
+            supabase stop --no-backup || true
+          fi
