@@ -19,7 +19,7 @@
     authSessionService: Object.freeze({
       globalName: "AuthSessionService",
       selector: 'script[src^="/auth_session_service.js"]',
-      src: "/auth_session_service.js?v=20261030-1",
+      src: "/auth_session_service.js?v=20261105-session-recovery-1",
       missingMessage: "O serviço de sessão não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de sessão."
     }),
@@ -201,6 +201,11 @@
     return service.getSession();
   }
 
+  async function getVerifiedSession() {
+    const service = await getAuthSessionService();
+    return service.getVerifiedSession();
+  }
+
   async function getUser() {
     const service = await getAuthSessionService();
     return service.getUser();
@@ -367,6 +372,7 @@
     generateEnrollmentCode: generateEnrollmentCode,
     isPasswordAccessAllowedUser: isPasswordAccessAllowedUser,
     getSession: getSession,
+    getVerifiedSession: getVerifiedSession,
     getUser: getUser,
     isTeacherAdmin: isTeacherAdmin,
     ensureProfileForUser: ensureProfileForUser,

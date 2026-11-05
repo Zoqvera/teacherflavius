@@ -227,3 +227,86 @@ test("returns null for an actual missing session", async function () {
 
   assert.equal(await service.getSession(), null);
 });
+
+test("verifies current session against the Auth server without refreshing valid tokens", async function () {
+  const session = { user: { id: "student-1" } };
+  let refreshed = 0;
+  const client = { auth: {
+    getSession: async () => ({ data: { session }, error: null }),
+    getUser: async () => ({ data: { user: { id: "student-1" } }, error: null }),
+    refreshSession: async () => { refreshed += 1; throw new Error("Unexpected refresh"); }
+  } };
+  const service = loadService().create(createDependencies(client));
+  assert.equal(await service.getVerifiedSession(), session);
+  assert.equal(refreshed, 0);
+});
+
+test("refreshes a token once when the Auth server reports an expired JWT", async function () {
+  const previousSession = { user: { id: "student-1" } };
+  const newSession = { user: { id: "student-1" }, access_token: "renewed" };
+  let checks = 0;
+  let refreshes = 0;
+  const client = { auth: {
+    getSession: async () => ({ data: { session: previousSession }, error: null }),
+    getUser: async () => {
+      checks += 1;
+      return checks === 1
+        ? { data: { user: null }, error: { code: "bad_jwt", status: 403, message: "token is expired" } }
+        : { data: { user: { id: "student-1" } }, error: null };
+    },
+    refreshSession: async () => {
+      refreshes += 1;
+      return { data: { session: newSession }, error: null };
+    }
+  } };
+  const service = loadService().create(createDependencies(client));
+  assert.equal(await service.getVerifiedSession(), newSession);
+  assert.equal(checks, 2);
+  assert.equal(refreshes, 1);
+});
+
+test("requires a new login when an expired access token cannot be refreshed", async function () {
+  const session = { user: { id: "student-1" } };
+  let refreshes = 0;
+  const client = { auth: {
+    getSession: async () => ({ data: { session }, error: null }),
+    getUser: async () => ({
+      data: { user: null },
+      error: { code: "bad_jwt", status: 403, message: "token is expired" }
+    }),
+    refreshSession: async () => {
+      refreshes += 1;
+      return { data: null, error: { code: "refresh_token_not_found", status: 400, message: "Invalid refresh token" } };
+    }
+  } };
+  const service = loadService().create(createDependencies(client));
+  assert.equal(await service.getVerifiedSession(), null);
+  assert.equal(refreshes, 1);
+});
+
+test("does not convert a temporary network problem into a logout", async function () {
+  const session = { user: { id: "student-1" } };
+  let refreshes = 0;
+  const client = { auth: {
+    getSession: async () => ({ data: { session }, error: null }),
+    getUser: async () => ({
+      data: { user: null },
+      error: Object.assign(new Error("Network unavailable"), { status: 503 })
+    }),
+    refreshSession: async () => { refreshes += 1; return { data: null, error: null }; }
+  } };
+  const service = loadService().create(createDependencies(client));
+  await assert.rejects(service.getVerifiedSession(), /Network unavailable/);
+  assert.equal(refreshes, 0);
+});
+
+test("never trusts a session with a different user from the Auth server", async function () {
+  const session = { user: { id: "student-1" } };
+  const client = { auth: {
+    getSession: async () => ({ data: { session }, error: null }),
+    getUser: async () => ({ data: { user: { id: "another-student" } }, error: null })
+  } };
+  const service = loadService().create(createDependencies(client));
+  assert.equal(await service.getVerifiedSession(), null);
+});
+

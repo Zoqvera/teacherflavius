@@ -54,6 +54,7 @@ async function renderStudentPage({ paid = true, forecast, forecastFails = false,
   const auth = {
     isConfigured: () => true,
     getSession: async () => ({ user: { id: "test-student", email: "student@example.test" } }),
+    getVerifiedSession: async () => ({ user: { id: "test-student", email: "student@example.test" } }),
     getClient: () => ({
       rpc: async (name) => {
         rpcCalls.push(name);

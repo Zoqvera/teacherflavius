@@ -160,6 +160,57 @@
       return response && response.data ? response.data.session : null;
     }
 
+    function isExpiredAccessToken(error) {
+      if (!error) return false;
+      const message = String(error.message || "").toLowerCase();
+      const code = String(error.code || "").toLowerCase();
+      return (code === "bad_jwt" || error.status === 401 || error.status === 403)
+        && /token is expired|jwt expired|expired jwt/.test(message);
+    }
+
+    function isAuthRejection(error) {
+      if (!error) return false;
+      const code = String(error.code || "").toLowerCase();
+      return error.status === 400 || error.status === 401 || error.status === 403
+        || ["refresh_token_not_found", "invalid_refresh_token", "session_not_found"].includes(code);
+    }
+
+    // Validate against the Auth server: a device with an incorrect clock can
+    // consider an already-expired JWT valid, despite automatic token refresh.
+    async function getVerifiedSession() {
+      const session = await getSession();
+      if (!session || !session.user || !session.user.id) return null;
+
+      const client = deps.requireClient();
+      const verification = await client.auth.getUser();
+      if (!verification.error) {
+        return verification.data && verification.data.user
+          && verification.data.user.id === session.user.id ? session : null;
+      }
+      if (!isExpiredAccessToken(verification.error)) {
+        if (isAuthRejection(verification.error)) return null;
+        throw verification.error;
+      }
+
+      // Refresh at most once. Never retry indefinitely or bypass verification.
+      const refreshed = await client.auth.refreshSession();
+      if (refreshed.error) {
+        if (isAuthRejection(refreshed.error)) return null;
+        throw refreshed.error;
+      }
+      const renewedSession = refreshed.data && refreshed.data.session;
+      if (!renewedSession || !renewedSession.user || !renewedSession.user.id) return null;
+
+      const renewedVerification = await client.auth.getUser();
+      if (renewedVerification.error) {
+        if (isAuthRejection(renewedVerification.error)) return null;
+        throw renewedVerification.error;
+      }
+      return renewedVerification.data && renewedVerification.data.user
+        && renewedVerification.data.user.id === renewedSession.user.id
+        ? renewedSession : null;
+    }
+
     async function getUser() {
       const client = deps.getClient();
       if (!client) return null;
@@ -297,6 +348,7 @@
 
     return Object.freeze({
       getSession: getSession,
+      getVerifiedSession: getVerifiedSession,
       getUser: getUser,
       signIn: signIn,
       requestPasswordReset: requestPasswordReset,

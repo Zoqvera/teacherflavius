@@ -121,3 +121,112 @@ test("records HTTP 200 even when the browser rejected the resource", () => {
   assert.equal(reports[0].http_status, 200);
   assert.equal(reports[0].metadata.phase, "resource_http_status");
 });
+
+function createAuthMonitorHarness(clock, storage) {
+  const reports = [];
+  const windowRef = {
+    location: {
+      href: "https://teacherflavius.com/area-do-estudante/minhas-aulas/",
+      origin: "https://teacherflavius.com",
+      pathname: "/area-do-estudante/minhas-aulas/"
+    },
+    sessionStorage: storage,
+    navigator: { onLine: true },
+    performance: { now: () => 0 },
+    fetch: async (_url, options) => {
+      reports.push(JSON.parse(options.body));
+      return { status: 204 };
+    },
+    addEventListener: () => {}
+  };
+  const documentRef = {
+    currentScript: { dataset: {} },
+    readyState: "loading",
+    addEventListener: () => {}
+  };
+  class ClockDate extends Date {
+    static now() { return clock.now; }
+  }
+  vm.runInNewContext(monitorSource, {
+    window: windowRef,
+    document: documentRef,
+    navigator: windowRef.navigator,
+    performance: windowRef.performance,
+    URL,
+    Error,
+    ErrorEvent: class ErrorEvent {},
+    Date: ClockDate,
+    Map,
+    MutationObserver: class MutationObserver {},
+    console
+  });
+  return { reports, capture: windowRef.TeacherFlaviusErrorMonitor.capture };
+}
+
+function createTabStorage() {
+  const entries = new Map();
+  return {
+    getItem: (key) => entries.has(key) ? entries.get(key) : null,
+    setItem: (key, value) => entries.set(key, String(value))
+  };
+}
+
+const expiredJwtEvent = {
+  event_type: "auth",
+  error_code: "bad_jwt",
+  http_status: 403,
+  message: "token has invalid claims: token is expired",
+  source: "https://wnigzpvgsbpjdxvjzugt.supabase.co/auth/v1/user"
+};
+
+test("deduplicates a single tab's repeated expired JWTs for fifteen minutes, including reloads", () => {
+  const clock = { now: 1000000 };
+  const storage = createTabStorage();
+  const initial = createAuthMonitorHarness(clock, storage);
+  initial.capture(expiredJwtEvent);
+  clock.now += 60 * 1000;
+  initial.capture(expiredJwtEvent);
+  assert.equal(initial.reports.length, 1);
+
+  const reloaded = createAuthMonitorHarness(clock, storage);
+  reloaded.capture(expiredJwtEvent);
+  assert.equal(reloaded.reports.length, 0);
+
+  clock.now += 15 * 60 * 1000;
+  reloaded.capture(expiredJwtEvent);
+  assert.equal(reloaded.reports.length, 1);
+});
+
+test("preserves reports from different tabs and unrelated authentication errors", () => {
+  const clock = { now: 1000000 };
+  const first = createAuthMonitorHarness(clock, createTabStorage());
+  const second = createAuthMonitorHarness(clock, createTabStorage());
+  first.capture(expiredJwtEvent);
+  second.capture(expiredJwtEvent);
+  assert.equal(first.reports.length, 1);
+  assert.equal(second.reports.length, 1);
+
+  clock.now += 31 * 1000;
+  const otherError = {
+    event_type: "auth",
+    error_code: "invalid_credentials",
+    http_status: 400,
+    message: "Invalid login credentials",
+    source: "https://wnigzpvgsbpjdxvjzugt.supabase.co/auth/v1/token"
+  };
+  first.capture(otherError);
+  clock.now += 31 * 1000;
+  first.capture(otherError);
+  assert.equal(first.reports.length, 3);
+});
+
+test("the student lesson page verifies identity and gives a recovery path", () => {
+  const page = fs.readFileSync(
+    path.join(__dirname, "..", "area-do-estudante/minhas-aulas/app.js"), "utf8"
+  );
+  assert.match(page, /Auth\.getVerifiedSession\(\)/);
+  assert.match(page, /data e hora automáticas/);
+  assert.match(page, /TENTAR NOVAMENTE/);
+  assert.match(page, /ENTRAR NOVAMENTE/);
+});
+

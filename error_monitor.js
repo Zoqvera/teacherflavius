@@ -10,6 +10,9 @@
   const script = document.currentScript;
   const pageStatus = script && script.dataset ? script.dataset.pageStatus : "";
   const recent = new Map();
+  const EXPIRED_JWT_DEDUPE_MS = 15 * 60 * 1000;
+  const DEFAULT_DEDUPE_MS = 30 * 1000;
+  const EXPIRED_JWT_STORAGE_PREFIX = "teacherFlavius.auth.expiredJwtReport.v1:";
   let minuteStartedAt = Date.now();
   let sentThisMinute = 0;
 
@@ -110,15 +113,52 @@
     return true;
   }
 
+  function isExpiredJwtRejection(payload) {
+    if (payload.event_type !== "auth" || payload.error_code !== "bad_jwt"
+      || payload.http_status !== 403 || !/token is expired|jwt expired/i.test(payload.message)) {
+      return false;
+    }
+    try {
+      return new URL(payload.source).pathname === "/auth/v1/user";
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  function wasReportedInThisTab(storageKey, now) {
+    try {
+      const storage = window.sessionStorage;
+      if (!storage) return false;
+      const previous = Number(storage.getItem(storageKey));
+      if (previous > 0 && now >= previous && now - previous < EXPIRED_JWT_DEDUPE_MS) {
+        return true;
+      }
+      storage.setItem(storageKey, String(now));
+    } catch (_error) {
+      // Storage may be disabled. In-memory deduplication still applies.
+    }
+    return false;
+  }
+
   function dedupeAllowed(payload) {
     const now = Date.now();
-    const key = [payload.event_type, payload.message, payload.source, payload.http_status, payload.error_code].join("|");
-    const previous = recent.get(key) || 0;
-    if (now - previous < 30000) return false;
+    const key = [payload.event_type, payload.message, payload.source, payload.path,
+      payload.http_status, payload.error_code].join("|");
+    const isExpiredJwt = isExpiredJwtRejection(payload);
+    const windowMs = isExpiredJwt ? EXPIRED_JWT_DEDUPE_MS : DEFAULT_DEDUPE_MS;
+    const previous = recent.get(key);
+    if (typeof previous === "number" && now >= previous && now - previous < windowMs) {
+      return false;
+    }
+    if (isExpiredJwt && wasReportedInThisTab(EXPIRED_JWT_STORAGE_PREFIX + payload.path, now)) {
+      return false;
+    }
     recent.set(key, now);
     if (recent.size > 100) {
       for (const [candidate, timestamp] of recent) {
-        if (now - timestamp > 120000) recent.delete(candidate);
+        if (now < timestamp || now - timestamp > EXPIRED_JWT_DEDUPE_MS) {
+          recent.delete(candidate);
+        }
       }
     }
     return true;
@@ -144,7 +184,7 @@
   function capture(payload) {
     if (!nativeFetch || !payload) return;
     const normalized = normalize(payload);
-    if (!rateAllowed() || !dedupeAllowed(normalized)) return;
+    if (!dedupeAllowed(normalized) || !rateAllowed()) return;
     try {
       void nativeFetch(ENDPOINT, {
         method: "POST",
