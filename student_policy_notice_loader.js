@@ -2,7 +2,7 @@
   "use strict";
 
   const SCRIPT_ID = "teacher-flavius-policy-notice-script";
-  const SCRIPT_SRC = "/student_policy_notice.js?v=20261005-1";
+  const SCRIPT_SRC = "/student_policy_notice.js?v=20261105-v2";
   const SUPABASE_AUTH_STORAGE_KEY = "sb-wnigzpvgsbpjdxvjzugt-auth-token";
   let scheduled = false;
 
