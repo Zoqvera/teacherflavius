@@ -45,3 +45,15 @@ test("existing 12-hour credit rule and no-cancellation messaging remain consiste
   assert.doesNotMatch(bookingEmail, /Você pode cancelar esta reposição até o início da aula/);
   assert.match(workflow, /470_limit_student_cancellations_to_seven_days\.sql/);
 });
+
+test("updated cancellation rules require a new versioned policy acknowledgement", () => {
+  for (const sql of [migration, baseline]) {
+    assert.match(sql, /current_policy_version constant text := '2026-11-05-v2'/i);
+    assert.match(sql, /create or replace function public\.get_my_required_student_policy_notice/i);
+    assert.match(sql, /create or replace function public\.accept_my_student_policy_notice/i);
+  }
+  const loader = read("student_policy_notice_loader.js");
+  const footer = read("site_footer_core.js");
+  assert.match(loader, /student_policy_notice\.js\?v=20261105-v2/);
+  assert.match(footer, /student_policy_notice_loader\.js\?v=20261105-v2/);
+});
