@@ -1,22 +1,54 @@
 (function () {
   "use strict";
 
+  const MAX_LOCAL_RETRIES = 1;
+  const RETRY_DELAY_MS = 600;
+  const pendingScripts = new Map();
+
+  function isLocalAsset(url) {
+    return typeof url === "string" && url.startsWith("/") && !url.startsWith("//");
+  }
+
   function loadScript(id, src, callback) {
-    const existing = document.getElementById(id);
-    if (existing) {
+    const pending = pendingScripts.get(id);
+    if (pending) {
+      if (callback) pending.callbacks.push(callback);
+      return;
+    }
+
+    if (document.getElementById(id)) {
       if (callback) callback();
       return;
     }
 
-    const script = document.createElement("script");
-    script.id = id;
-    script.src = src;
-    script.async = false;
-    if (callback) {
-      script.onload = callback;
-      script.onerror = callback;
+    const callbacks = callback ? [callback] : [];
+    let retries = 0;
+    pendingScripts.set(id, { callbacks: callbacks });
+
+    function finish() {
+      pendingScripts.delete(id);
+      callbacks.forEach(function (notify) { notify(); });
     }
-    document.head.appendChild(script);
+
+    function attempt() {
+      const script = document.createElement("script");
+      script.id = id;
+      script.src = src;
+      script.async = false;
+      script.onload = finish;
+      script.onerror = function () {
+        script.remove();
+        if (isLocalAsset(src) && retries < MAX_LOCAL_RETRIES) {
+          retries += 1;
+          window.setTimeout(attempt, RETRY_DELAY_MS);
+          return;
+        }
+        finish();
+      };
+      document.head.appendChild(script);
+    }
+
+    attempt();
   }
 
   function loadScriptAsset(asset, callback) {
@@ -26,11 +58,23 @@
   function loadStylesheet(id, href) {
     if (document.getElementById(id)) return;
 
-    const stylesheet = document.createElement("link");
-    stylesheet.id = id;
-    stylesheet.rel = "stylesheet";
-    stylesheet.href = href;
-    document.head.appendChild(stylesheet);
+    let retries = 0;
+    function attempt() {
+      const stylesheet = document.createElement("link");
+      stylesheet.id = id;
+      stylesheet.rel = "stylesheet";
+      stylesheet.href = href;
+      stylesheet.onerror = function () {
+        stylesheet.remove();
+        if (isLocalAsset(href) && retries < MAX_LOCAL_RETRIES) {
+          retries += 1;
+          window.setTimeout(attempt, RETRY_DELAY_MS);
+        }
+      };
+      document.head.appendChild(stylesheet);
+    }
+
+    attempt();
   }
 
   function loadStylesheetAsset(asset) {
