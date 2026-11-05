@@ -676,6 +676,20 @@
     });
   }
 
+  function showSessionProblem(message, needsNewLogin) {
+    const status = document.getElementById("loginStatus");
+    if (status) status.textContent = "Não foi possível validar sua sessão.";
+    const content = document.getElementById("myClassesContent");
+    const target = needsNewLogin ? LOGIN_PATH : "/area-do-estudante/minhas-aulas/";
+    const label = needsNewLogin ? "ENTRAR NOVAMENTE" : "TENTAR NOVAMENTE";
+    if (content) {
+      content.innerHTML = '<section class="surface-card empty-state"><a href="'
+        + escapeHtml(target) + '">' + label + '</a></section>';
+    }
+    setPageMessage(message, "error");
+    document.body.classList.remove("auth-checking");
+  }
+
   async function initialize() {
     initializeLateCancellationModal();
     const loginStatus = document.getElementById("loginStatus");
@@ -686,9 +700,29 @@
       return;
     }
 
-    const session = await Auth.getSession();
+    let session;
+    try {
+      const existingSession = await Auth.getSession();
+      if (!existingSession || !existingSession.user) {
+        window.location.href = LOGIN_PATH;
+        return;
+      }
+      session = await Auth.getVerifiedSession();
+    } catch (error) {
+      console.warn("Não foi possível validar a sessão do estudante:", error);
+      showSessionProblem(
+        "Não foi possível verificar sua sessão agora. Confira a conexão e tente novamente.",
+        false
+      );
+      return;
+    }
+
     if (!session || !session.user) {
-      window.location.href = LOGIN_PATH;
+      showSessionProblem(
+        "Sua sessão expirou ou não pôde ser renovada. Entre novamente. "
+          + "Se o problema persistir, ative data e hora automáticas no dispositivo.",
+        true
+      );
       return;
     }
 
