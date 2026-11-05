@@ -54,6 +54,6 @@ test("updated cancellation rules require a new versioned policy acknowledgement"
   }
   const loader = read("student_policy_notice_loader.js");
   const footer = read("site_footer_core.js");
-  assert.match(loader, /student_policy_notice\.js\?v=20261105-v2/);
-  assert.match(footer, /student_policy_notice_loader\.js\?v=20261105-v2/);
+  assert.match(loader, /student_policy_notice\.js\?v=20261105-policy-dialog-priority-1/);
+  assert.match(footer, /student_policy_notice_loader\.js\?v=20261105-policy-dialog-priority-1/);
 });
