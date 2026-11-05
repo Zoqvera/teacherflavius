@@ -55,9 +55,9 @@ test("enrollment sends both student confirmation and existing administrative not
 });
 
 test("replacement email matches canonical cancellation rule", function () {
-  assert.match(makeup, /Você pode cancelar esta reposição até o início da aula/);
-  assert.match(makeup, /Com pelo menos 12 \(doze\) horas de antecedência/);
-  assert.match(makeup, /a vaga será liberada, mas o crédito não será devolvido/);
+  assert.match(makeup, /Reposições confirmadas não podem ser canceladas pelo aluno/);
+  assert.match(makeup, /o crédito utilizado não será devolvido/);
+  assert.doesNotMatch(makeup, /Você pode cancelar esta reposição até o início da aula/);
   assert.doesNotMatch(makeup, /cancelar esse agendamento até 12 \(doze\) horas antes/);
 });
 
