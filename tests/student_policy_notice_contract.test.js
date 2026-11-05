@@ -26,16 +26,18 @@ const workflow = read(".github/workflows/validate-supabase-baseline.yml");
 
 test("renders the exact mandatory cancellation and makeup notice", function () {
   assert.match(renderer, /Atualização sobre cancelamento e reposição de aulas\./);
-  assert.match(renderer, /CENCELAMENTO DE UMA AULA/);
+  assert.match(renderer, /CANCELAMENTO DE UMA AULA/);
   assert.match(renderer, /REPOSIÇÃO/);
   assert.match(renderer, /pelo menos 12 horas de antecedência/);
+  assert.match(renderer, /nos 7 dias anteriores ao seu início/);
+  assert.match(renderer, /não pode ser cancelada pelo aluno/);
   assert.match(renderer, /não haverá reembolso do valor e nem direito à reposição/);
   assert.match(renderer, /solicite no whatsapp o link um dia depois da aula/);
   assert.match(renderer, /Portanto, evite cancelar aulas!/);
   assert.match(renderer, /MINHAS AULAS/);
   assert.match(renderer, /Teacher Flávio/);
   assert.match(renderer, /heading\("h2", "Atualização sobre cancelamento e reposição de aulas\."\)/);
-  assert.match(renderer, /heading\("h3", "CENCELAMENTO DE UMA AULA"\)/);
+  assert.match(renderer, /heading\("h3", "CANCELAMENTO DE UMA AULA"\)/);
   assert.match(renderer, /heading\("h3", "REPOSIÇÃO"\)/);
 });
 

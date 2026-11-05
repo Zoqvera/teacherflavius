@@ -160,7 +160,8 @@ test("the same paid class cannot appear twice as both credit and prepaid forecas
   });
   assert.equal((page.html.match(/>CONFIRMADA<\/span>/g) || []).length, 1);
   assert.equal((page.html.match(/AULA PREVISTA/g) || []).length, 0);
-  assert.equal((page.html.match(/regular-cancel-button/g) || []).length, 1);
+  assert.equal((page.html.match(/regular-cancel-button/g) || []).length, 0);
+  assert.match(page.html, /O cancelamento ficará disponível a partir de/);
 });
 
 test("a forecast service failure does not hide confirmed lesson cards", async () => {

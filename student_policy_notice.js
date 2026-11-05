@@ -52,7 +52,7 @@
     }),
     Object.freeze({
       selector: 'script[src^="/student_policy_notice_renderer.js"]',
-      src: "/student_policy_notice_renderer.js?v=20261005-1",
+      src: "/student_policy_notice_renderer.js?v=20261105-seven-day-cancellation-1",
       ready: function () { return !!window.StudentPolicyNoticeRenderer; }
     })
   ]);

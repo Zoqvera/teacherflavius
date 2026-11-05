@@ -134,12 +134,15 @@
     ));
     box.appendChild(paragraph("Novas regras:"));
 
-    box.appendChild(heading("h3", "CENCELAMENTO DE UMA AULA"));
+    box.appendChild(heading("h3", "CANCELAMENTO DE UMA AULA"));
     box.appendChild(paragraph(
-      "Os alunos têm direito de cancelar uma aula e marcar reposição. Mas para ter o direito à reposição é preciso cancelar com pelo menos 12 horas de antecedência, pois o professor precisa planejar para colocar outro aluno na vaga."
+      "Uma aula regular só pode ser cancelada nos 7 dias anteriores ao seu início. Com mais de 7 dias de antecedência, o cancelamento ainda não estará disponível. Depois de iniciada, a aula também não pode ser cancelada."
     ));
     box.appendChild(paragraph(
-      "Caso não seja possível cancelar com 12 horas de antecedência, a aula será considerada como dada e não haverá reembolso do valor e nem direito à reposição. Mas o aluno vai poder assistir a versão gravada da aula."
+      "Para receber um crédito de reposição, o cancelamento da aula regular precisa ocorrer com pelo menos 12 horas de antecedência."
+    ));
+    box.appendChild(paragraph(
+      "Com menos de 12 horas, o aluno ainda pode cancelar a aula regular, mas não haverá reembolso do valor e nem direito à reposição. A versão gravada da aula poderá ser solicitada."
     ));
     box.appendChild(paragraph(
       "Para assistir à aula gravada solicite no whatsapp o link um dia depois da aula."
@@ -147,14 +150,14 @@
 
     box.appendChild(heading("h3", "REPOSIÇÃO"));
     box.appendChild(paragraph(
-      "As reposições só podem ser feitas se o aluno cancelar uma aula com no mínimo 12 horas de antecedência."
+      "Uma aula de reposição já agendada não pode ser cancelada pelo aluno. O crédito utilizado na reserva não será devolvido."
     ));
     box.appendChild(paragraph(
-      "Havendo cancelado a aula dentro desse período, o aluno acessa o site ou o aplicativo e visualiza os dias e horários disponíveis para reposição. Se não houver nenhum horário de reposição em que o aluno possa participar, o professor não se responsabiliza, já que o horário escolhido inicialmente estava reservado para o aluno."
+      "As reposições só podem ser marcadas com créditos elegíveis, gerados pelo cancelamento de aulas regulares com pelo menos 12 horas de antecedência. Se não houver horário compatível, o professor não se responsabiliza, pois o horário original estava reservado ao aluno."
     ));
     box.appendChild(paragraph("Portanto, evite cancelar aulas!"));
     box.appendChild(paragraph(
-      "Para cancelar ou marcar uma reposição de aula basta clicar no botão MINHAS AULAS, no site ou no aplicativo."
+      "Para cancelar uma aula regular ou marcar uma reposição, clique em MINHAS AULAS, no site ou no aplicativo."
     ));
 
     const thanks = document.createElement("p");

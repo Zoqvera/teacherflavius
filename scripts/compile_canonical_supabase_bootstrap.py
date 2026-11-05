@@ -16,7 +16,7 @@ from pathlib import Path
 WORKFLOW = ".github/workflows/validate-supabase-baseline.yml"
 BASELINE_PREFIX = "supabase/baseline/"
 EXPECTED_FIRST = "supabase/baseline/10_public_schema.sql"
-EXPECTED_LAST = "supabase/baseline/465_allow_replacement_with_one_operational_vacancy.sql"
+EXPECTED_LAST = "supabase/baseline/470_limit_student_cancellations_to_seven_days.sql"
 
 # Active runtime guard. A comment saying "disposable" is not a safe check.
 # Reject an existing application schema *before* executing any of the

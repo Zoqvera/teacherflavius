@@ -11,18 +11,20 @@ A antiga interface estudantil `/reposicoes/` foi aposentada. A rota permanece ap
 
 ## Regra canônica de cancelamento
 
-A mesma regra vale para aula regular e reposição:
+Para alunos, a política distingue aulas regulares de reposições:
 
-- o aluno pode cancelar até o início da aula;
-- cancelamento com pelo menos 12 horas de antecedência libera a vaga e gera ou devolve um crédito elegível;
-- cancelamento com menos de 12 horas libera a vaga, mas não gera nem devolve crédito;
-- após o início da aula, o cancelamento pelo aluno é bloqueado.
+- Aulas regulares: cancelamento somente a partir de 7 dias (168 horas) antes do início e até o início da aula.
+- Com mais de 7 dias de antecedência, o cancelamento ainda não está disponível.
+- Com pelo menos 12 horas de antecedência, o cancelamento gera crédito elegível para reposição.
+- Com menos de 12 horas, o cancelamento regular libera a vaga, mas não gera crédito.
+- Reposições confirmadas não podem ser canceladas pelos alunos, independentemente da antecedência.
+- As operações administrativas do professor são separadas e permanecem disponíveis.
 
-Essa política é aplicada no backend pelas funções canônicas de créditos. A interface não deve criar regras paralelas.
+As validações são feitas nas RPCs do Supabase, independentemente das restrições de interface.
 
 ## Reservas legadas
 
-Reservas futuras que existiam antes da aposentadoria da página antiga são importadas para o sistema de créditos como créditos já utilizados. Isso preserva o agendamento e permite que o aluno cancele em **Minhas Aulas** usando a mesma regra canônica.
+Reservas futuras que existiam antes da aposentadoria da página antiga são importadas para o sistema de créditos como créditos já utilizados. Isso preserva o agendamento, mas impede que o aluno cancele a reposição em **Minhas Aulas**.
 
 As RPCs estudantis legadas ficam sem permissão de execução para `public`, `anon` e `authenticated`:
 
@@ -65,7 +67,7 @@ a data, o horário de início e término e o link da aula.
 
 ## Notificações de cancelamento de aulas regulares e reposições
 
-O cancelamento de **aula regular** cria, após a atualização confirmada do crédito, dois
+O cancelamento de **aula regular**, disponível apenas nos 7 dias anteriores ao seu início, cria, após a atualização confirmada do crédito, dois
 registros independentes em `public.regular_lesson_cancellation_email_notifications`,
 um para o aluno e outro para `contato@teacherflavius.com`. A Edge Function
 `notify-regular-lesson-cancellation` envia cada e-mail pelo remetente
@@ -73,11 +75,9 @@ um para o aluno e outro para `contato@teacherflavius.com`. A Edge Function
 no Supabase Auth para localizar o aluno. A fila usa RLS, acesso de serviço
 e chave de deduplicação por crédito, momento do cancelamento e destinatário.
 
-O aviso informa turma, data, horário e o resultado do crédito. A política de
-cancelamento (até o início; concessão de crédito apenas com antecedência mínima
-de 12 horas) permanece definida exclusivamente nas funções canônicas do banco.
+O aviso informa turma, data, horário e o resultado do crédito. O limite de 7 dias para cancelamento regular e a antecedência mínima de 12 horas para receber crédito são impostos pelas funções canônicas do banco.
 
-O **cancelamento de reposição** continua gerando o aviso estudantil `cancellation`.
+O **cancelamento administrativo de uma reposição** pode continuar gerando o aviso estudantil `cancellation`; o aluno não pode iniciar esse cancelamento.
 Um gatilho adicional insere `teacher_cancellation`, enviado separadamente ao professor
 pela função existente `notify-makeup-booking`. O e-mail orienta a remover manualmente
 o evento do calendário quando tiver sido salvo. Não há exclusão automática de eventos.
@@ -94,9 +94,7 @@ um botão **Adicionar ao Google Agenda** exclusivamente quando o aluno está
 classificado em `profiles.class_type = 'INDIVIDUAL'` (comparação sem distinção
 de caixa e com remoção de espaços). Avisos de alunos `QUINTETO` não incluem
 o botão nem links de convite; classificações ausentes ou desconhecidas não
-habilitam a ação. A inclusão exige sempre clicar e salvar manualmente no Google Agenda. O e-mail do aluno informa
-que cancelamentos podem ocorrer até o início da aula, mas que o crédito
-só é devolvido com antecedência mínima de 12 horas. Ao cancelar uma
+habilitam a ação. A inclusão exige sempre clicar e salvar manualmente no Google Agenda. O e-mail de confirmação informa que uma reposição agendada não pode ser cancelada pelo aluno. Ao cancelar uma
 reposição, o aluno é orientado a remover qualquer evento salvo manualmente.
 Não há integração
 OAuth com o Google Agenda e alterações/cancelamentos posteriores de
@@ -145,9 +143,9 @@ sem realizar envios reais.
 1. Na área do professor, abra **AGENDA DE REPOSIÇÕES** e publique um horário futuro válido.
 2. Use um aluno que possua crédito elegível e abra **MINHAS AULAS**.
 3. Marque uma reposição e confirme que ela aparece entre as próximas aulas.
-4. Cancele uma reposição com pelo menos 12 horas de antecedência e confirme a devolução do crédito.
-5. Teste uma reposição dentro da janela de 12 horas e confirme que o cancelamento continua disponível, mas sem devolução de crédito.
-6. Confirme que a vaga é liberada e que o e-mail de cancelamento é enfileirado.
+4. Confirme que a reposição agendada não apresenta ação de cancelamento.
+5. Confirme que `authenticated` não pode executar `cancel_my_lesson_replacement`.
+6. Para uma aula regular, confirme: com 8 dias, não pode cancelar; no limite de 7 dias, pode; com pelo menos 12 horas, gera crédito; com menos de 12 horas, não gera crédito.
 7. Confirme que os avisos ao professor contêm nome do aluno, data e horário. Para `INDIVIDUAL`, verifique a presença do botão **Adicionar ao Google Agenda** e a necessidade de confirmar o salvamento; para `QUINTETO`, verifique que o aviso não tem botão, convite nem anexo `.ics`.
 8. Confirme que `/reposicoes/` redireciona para `/area-do-estudante/minhas-aulas/`.
 
