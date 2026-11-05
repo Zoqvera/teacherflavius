@@ -8,6 +8,7 @@ on:
       - "supabase/migrations/20261104225129_payment_agent_token_hook.sql"
       - "tests/sql/payment_agent_role_privileges.sql"
       - "tests/sql/payment_agent_token_hook.sql"
+      - "tests/sql/payment_agent_fixture_acl_overlay.sql"
       - ".github/workflows/payment-agent-isolated.yml"
   workflow_dispatch:
 
@@ -50,6 +51,7 @@ jobs:
           db="$(docker ps --format '{{.Names}}' | grep '^supabase_db_teacherflavius-local-fixture$')"
           test -n "${db}"
           for sql in \
+            tests/sql/payment_agent_fixture_acl_overlay.sql \
             supabase/migrations/20261104224605_create_payment_agent_role.sql \
             supabase/migrations/20261104225129_payment_agent_token_hook.sql \
             tests/sql/payment_agent_role_privileges.sql \
