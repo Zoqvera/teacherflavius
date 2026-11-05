@@ -11,7 +11,7 @@
     animatedCardsCss: "/animated_cards.css?v=20260429-6",
     animatedCardsJs: "/animated_cards.js?v=20260902-3",
     accessTrackerJs: "/student_access_tracker.js?v=20260730-2",
-    policyNoticeLoaderJs: "/student_policy_notice_loader.js?v=20261105-v2",
+    policyNoticeLoaderJs: "/student_policy_notice_loader.js?v=20261105-policy-dialog-priority-1",
     googleAuthCss: "/google_auth_ui.css?v=20260902-1",
     googleAuthJs: "/google_auth_ui.js?v=20260902-1",
     passwordRecoveryCss: "/password_recovery_login.css?v=20260909-1",
