@@ -12,6 +12,9 @@ begin
   end if;
 end;
 $$;
+alter table public.monthly_tuition
+  add column amount_override numeric check (amount_override is null or amount_override > 0),
+  add column amount_override_reason text check (amount_override_reason is null or char_length(amount_override_reason) <= 500);
 create table public.student_course_states (
   student_id uuid primary key references public.profiles(id) on delete cascade,
   course_status text not null check (course_status in ('active','awaiting_class','paused')),
