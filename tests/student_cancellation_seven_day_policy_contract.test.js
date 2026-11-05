@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
-const migration = read("supabase/migrations/20261105134000_limit_student_cancellations_to_seven_days.sql");
+const migration = read("supabase/migrations/20261105135301_limit_student_cancellations_to_seven_days.sql");
 const baseline = read("supabase/baseline/470_limit_student_cancellations_to_seven_days.sql");
 const app = read("area-do-estudante/minhas-aulas/app.js");
 const bookingEmail = read("supabase/functions/notify-makeup-booking/index.ts");
