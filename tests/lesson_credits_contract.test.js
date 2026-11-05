@@ -142,28 +142,26 @@ test("lesson-plan changes resynchronize already-settled tuition", function () {
   }
 });
 
-test("Minhas Aulas explains late cancellation without credit and keeps the cancel action available", function () {
+test("Minhas Aulas preserves late regular cancellation but not makeup cancellation", function () {
   assert.match(app, /CANCELADA SEM CRÉDITO/);
   assert.match(app, /Você ainda pode cancelar e liberar a vaga/);
   assert.match(app, /data-credit-eligible/);
   assert.match(app, /data-cancellation-kind="regular"/);
-  assert.match(app, /data-cancellation-kind="replacement"/);
+  assert.doesNotMatch(app, /replacement-cancel-button|CANCELAR REPOSIÇÃO/);
+  assert.match(app, /Reposições confirmadas não podem ser canceladas pelo aluno/);
   assert.match(app, /A vaga foi liberada, sem geração de crédito/);
-  assert.match(app, /o crédito usado nesta reposição não será devolvido/);
-  assert.match(app, /if \(!expectsCredit\)[\s\S]*openLateCancellationModal\(button\)/);
-  assert.match(app, /button\.dataset\.cancellationKind === "replacement"/);
+  assert.match(app, /openLateCancellationModal\(button\)/);
 });
 
-test("late cancellation requires the requested popup confirmation before the RPC", function () {
+test("late regular cancellation requires confirmation before calling the RPC", function () {
   assert.match(page, /id="lateCancellationModal"/);
-  assert.match(page, /O cancelamento das aulas a menos de 12 horas da aula é permitido, mas o valor da aula não será reembolsado e o aluno não vai poder repor a aula\./);
-  assert.match(page, /Mas não se preocupe, você pode assistir a aula gravada, basta solicitar à Júlia no whatsapp do teacher\. A solicitação do link da aula gravada deve ser feita no dia posterior à aula\./);
+  assert.match(page, /O cancelamento das aulas a menos de 12 horas da aula é permitido/);
   assert.match(page, /id="lateCancellationConfirm"[^>]*>CANCELAR ESTA AULA<\/button>/);
   assert.match(app, /pendingLateCancellationButton/);
   assert.match(app, /confirmLateCancellation/);
   assert.match(app, /rpc\("cancel_my_regular_lesson"/);
-  assert.match(app, /rpc\("cancel_my_lesson_replacement"/);
-  assert.match(app, /performLessonCancellation\(triggerButton\)/);
+  assert.doesNotMatch(app, /rpc\("cancel_my_lesson_replacement"/);
+  assert.match(app, /performRegularLessonCancellation\(triggerButton\)/);
 });
 
 test("Minhas Aulas renders only future scheduled or replacement lesson cards", function () {
