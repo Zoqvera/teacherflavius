@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DASHBOARD = ROOT / "area_do_estudante.html"
 CSS = ROOT / "student_review_invitation.css"
 SCRIPT = ROOT / "student_review_invitation.js"
+POLICY_RENDERER = ROOT / "student_policy_notice_renderer.js"
 MODAL_PATTERN = re.compile(
     r'<dialog id="studentReviewInvitation"[\s\S]*?</dialog>'
 )
@@ -31,6 +32,8 @@ SCENARIOS = (
     ("professor", 390, 844),
     ("snoozed", 390, 844),
     ("dismiss", 390, 844),
+    ("policy-interrupt", 390, 844),
+    ("policy-first", 390, 844),
 )
 
 FIXTURE_SCRIPT = r"""
@@ -91,7 +94,12 @@ FIXTURE_SCRIPT = r"""
   };
 
   const dialog = document.getElementById("studentReviewInvitation");
-  const shouldShow = ["eligible", "dismiss"].includes(scenario);
+  if (scenario === "policy-first") {
+    window.StudentPolicyNoticeRenderer.show(async function () {
+      window.StudentPolicyNoticeRenderer.dismiss();
+    });
+  }
+  const shouldShow = ["eligible", "dismiss", "policy-interrupt"].includes(scenario);
   const expectedCalls = ["recent", "archived", "professor"].includes(scenario) ? 0 : 1;
 
   function report(ok, message) {
@@ -140,6 +148,19 @@ FIXTURE_SCRIPT = r"""
       }
     }
 
+    if (scenario === "policy-interrupt") {
+      window.StudentPolicyNoticeRenderer.show(async function () {
+        window.StudentPolicyNoticeRenderer.dismiss();
+      });
+      await new Promise(resolve => setTimeout(resolve, 50));
+      if (dialog.open ||
+          !document.getElementById("tf-required-student-policy-modal") ||
+          trackedEvents.includes("dismissed") || storageEntries.has(key)) {
+        report(false, "Mandatory notice must suspend the optional dialog without snoozing");
+        return;
+      }
+    }
+
     report(true, "Production modal and eligibility logic passed");
   }).catch((error) => {
     report(false, String(error));
@@ -170,6 +191,7 @@ def build_fixture(destination: Path) -> None:
         '</head><body>'
         + match.group(0)
         + f'<script src="{SCRIPT.as_uri()}"></script>'
+        + f'<script src="{POLICY_RENDERER.as_uri()}"></script>'
         + "<script>"
         + FIXTURE_SCRIPT
         + "</script></body></html>"

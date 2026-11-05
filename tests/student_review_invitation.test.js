@@ -160,6 +160,39 @@ test("premature, archived, non-enrolled and professor sessions never display the
   assert.equal(professor.reviewCalls, 0);
 });
 
+test("mandatory policy notice interrupts the invitation without a voluntary dismissal", async () => {
+  const fixture = createHarness(ACTIVE_PROFILE, { review: null });
+  const listeners = new Map();
+  fixture.dialog.ownerDocument = {
+    documentElement: { classList: { contains: () => false } },
+    getElementById: () => null,
+    addEventListener: (name, handler) => listeners.set(name, handler),
+    removeEventListener: (name) => listeners.delete(name)
+  };
+
+  assert.equal(await invitation.initialize(options(fixture)), true);
+  const suspend = listeners.get("teacherflavius:student-policy-notice-opening");
+  assert.equal(typeof suspend, "function");
+  suspend();
+
+  assert.equal(fixture.dialog.open, false);
+  assert.deepEqual(fixture.trackedEvents, ["shown"]);
+  assert.equal(fixture.storage.getItem("teacherflavius:student-review-invitation:student-123"), null);
+  assert.equal(listeners.size, 0);
+});
+
+test("a visible required policy notice prevents a competing invitation", async () => {
+  const fixture = createHarness(ACTIVE_PROFILE, { review: null });
+  fixture.dialog.ownerDocument = {
+    documentElement: { classList: { contains: () => true } },
+    getElementById: () => null
+  };
+
+  assert.equal(await invitation.initialize(options(fixture)), false);
+  assert.equal(fixture.dialog.open, false);
+  assert.deepEqual(fixture.trackedEvents, []);
+});
+
 test("the dashboard uses the same modal for the browser and installed PWA", () => {
   const html = read("area_do_estudante.html");
   const dashboard = read("area_do_estudante.js");
@@ -167,7 +200,7 @@ test("the dashboard uses the same modal for the browser and installed PWA", () =
 
   assert.match(html, /id="studentReviewInvitation"/);
   assert.match(html, /href="\/avaliar-aulas\/">AVALIAR AGORA<\/a>/);
-  assert.match(html, /student_review_invitation\.js\?v=20261015-invitation-retry-1/);
+  assert.match(html, /student_review_invitation\.js\?v=20261105-policy-dialog-priority-1/);
   assert.match(html, /student_review_invitation\.css\?v=20261015-1/);
   assert.match(dashboard, /await initializeReviewInvitation\(\)/);
   assert.match(dashboard, /isProfessor: isProfessorSession\(\)/);

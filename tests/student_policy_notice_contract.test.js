@@ -59,6 +59,13 @@ test("locks background navigation until acceptance succeeds", function () {
   assert.match(orchestrator, /StudentPolicyNoticeRenderer\.dismiss\(\)/);
 });
 
+test("the required notice suspends optional dialogs before applying inert", function () {
+  assert.ok(renderer.includes("document.dispatchEvent(new Event(POLICY_OPENING_EVENT))"));
+  assert.ok(renderer.includes("if (dialog && dialog.open) dialog.close()"));
+  assert.ok(renderer.indexOf("suspendOptionalDialogs();") <
+    renderer.lastIndexOf("lockBackground(modal);"));
+});
+
 test("loads on authenticated site pages and the PWA student area", function () {
   assert.match(authInfrastructure, /student_policy_notice_loader\.js/);
   assert.match(footerCore, /student_policy_notice_loader\.js/);

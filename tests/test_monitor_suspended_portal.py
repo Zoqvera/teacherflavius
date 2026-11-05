@@ -21,7 +21,7 @@ def valid_pages() -> dict[str, str]:
     pages = {path: "" for path in PUBLISHED_PATHS}
     for path in LEGACY_PAGES:
         pages[path] = "<main><h1>" + SUSPENSION_MESSAGE + "</h1></main>"
-    pages["/area-do-estudante/"] = 'sourcePage + "?v=20261015-invitation-retry-1" { cache: \'no-store\' }'
+    pages["/area-do-estudante/"] = 'sourcePage + "?v=20261105-policy-dialog-priority-1" { cache: \'no-store\' }'
     pages["/area_do_estudante.html"] = (
         '<a href="/flashcards/">Flashcards</a>'
         '<script src="/area_do_estudante.js?v=20261016-retire-week-1"></script>'
