@@ -121,6 +121,22 @@ test("students who already responded do not see the dialog", async () => {
   assert.equal(calls.length, 1);
 });
 
+test("the mandatory policy notice prevents optional acquisition surveys from opening", async () => {
+  const { client } = makeClient();
+  const dom = makeDom();
+  const getElementById = dom.documentRef.getElementById;
+  dom.documentRef.getElementById = (id) => id === "tf-required-student-policy-modal"
+    ? {}
+    : getElementById(id);
+
+  assert.equal(await prompt.initialize({
+    client, studentId: "student-1", documentRef: dom.documentRef,
+    acquisitionService: dom.service
+  }), false);
+  assert.equal(dom.dialog.opened, false);
+  assert.equal(dom.service.setupCount, 0);
+});
+
 test("the teacher does not see the survey", async () => {
   const { client, calls } = makeClient();
   const dom = makeDom();
