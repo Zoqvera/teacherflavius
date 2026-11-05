@@ -2,6 +2,9 @@
   "use strict";
 
   const INVITATION_ID = "studentReviewInvitation";
+  const POLICY_NOTICE_ID = "tf-required-student-policy-modal";
+  const POLICY_LOCK_CLASS = "tf-required-student-policy-locked";
+  const POLICY_OPENING_EVENT = "teacherflavius:student-policy-notice-opening";
   const SNOOZE_KEY_PREFIX = "teacherflavius:student-review-invitation:";
   const SNOOZE_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
   const PENDING_EVENT_PREFIX = "teacherflavius:student-review-invitation-pending:";
@@ -151,9 +154,30 @@
     }
   }
 
+  function isRequiredPolicyNoticeActive(dialog) {
+    const documentRef = dialog.ownerDocument || (root && root.document);
+    if (!documentRef) return false;
+
+    const page = documentRef.documentElement;
+    return Boolean(documentRef.getElementById(POLICY_NOTICE_ID) ||
+      (page && page.classList.contains(POLICY_LOCK_CLASS)));
+  }
+
   function attachInvitationHandlers(dialog, studentId, storage, client) {
     const dismissButton = dialog.querySelector("[data-review-invitation-close]");
     const reviewLink = dialog.querySelector("[data-review-invitation-link]");
+    const documentRef = dialog.ownerDocument || (root && root.document);
+    let interruptedByRequiredNotice = false;
+
+    function suspendForRequiredNotice() {
+      if (!dialog.open) return;
+      interruptedByRequiredNotice = true;
+      dialog.close();
+    }
+
+    if (documentRef) {
+      documentRef.addEventListener(POLICY_OPENING_EVENT, suspendForRequiredNotice);
+    }
 
     if (dismissButton) {
       dismissButton.addEventListener("click", function () {
@@ -175,7 +199,7 @@
         event.preventDefault();
         // Give the RPC a short opportunity to finish before navigation.
         await Promise.race([
-          recordInvitationEvent(client, "clicked"),
+          recordInvitationEvent(client, "clicked", studentId, storage),
           new Promise(function (resolve) { root.setTimeout(resolve, 650); })
         ]);
         root.location.assign(reviewLink.href);
@@ -183,6 +207,11 @@
     }
 
     dialog.addEventListener("close", function () {
+      if (documentRef) {
+        documentRef.removeEventListener(POLICY_OPENING_EVENT, suspendForRequiredNotice);
+      }
+      if (interruptedByRequiredNotice) return;
+
       recordDismissal(storage, studentId);
       void recordInvitationEvent(client, "dismissed", studentId, storage);
     }, { once: true });
@@ -242,6 +271,7 @@
       void retryPendingEvents(client, studentId, storage, now.getTime());
 
       if (isSnoozed(storage, studentId, now.getTime())) return false;
+      if (isRequiredPolicyNoticeActive(dialog)) return false;
 
       attachInvitationHandlers(dialog, studentId, storage, client);
       if (!dialog.open) {
