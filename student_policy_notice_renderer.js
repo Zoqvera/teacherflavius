@@ -4,6 +4,7 @@
   const MODAL_ID = "tf-required-student-policy-modal";
   const STYLE_ID = "tf-required-student-policy-styles";
   const LOCK_CLASS = "tf-required-student-policy-locked";
+  const POLICY_OPENING_EVENT = "teacherflavius:student-policy-notice-opening";
   let inertSnapshot = [];
   let previousBodyOverflow = "";
   let previousHtmlOverflow = "";
@@ -191,11 +192,20 @@
     return modal;
   }
 
+  function suspendOptionalDialogs() {
+    document.dispatchEvent(new Event(POLICY_OPENING_EVENT));
+    ["studentReviewInvitation", "studentAcquisitionPrompt"].forEach(function (id) {
+      const dialog = document.getElementById(id);
+      if (dialog && dialog.open) dialog.close();
+    });
+  }
+
   function show(onAccept) {
     if (document.getElementById(MODAL_ID)) return;
     installStyles();
 
     const modal = buildModal(onAccept);
+    suspendOptionalDialogs();
     document.body.appendChild(modal);
     lockBackground(modal);
 
