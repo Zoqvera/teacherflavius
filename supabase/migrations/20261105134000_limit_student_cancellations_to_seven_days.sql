@@ -103,7 +103,7 @@ begin
     'credit_granted', credit_granted
   );
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.cancel_my_unpaid_lesson(target_class_number integer, target_starts_at timestamp with time zone)
@@ -198,7 +198,7 @@ BEGIN
     'eligible_after_payment', grants_replacement
   );
 END;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.get_my_lesson_credits()
@@ -280,7 +280,7 @@ begin
     credit.reference_month asc,
     credit.credit_number asc;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.get_my_lesson_forecast()
@@ -504,5 +504,5 @@ begin
     'next_payment_due_date', next_payment_due_date
   );
 end;
-$function$
+$function$;
 
