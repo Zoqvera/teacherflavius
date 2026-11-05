@@ -20,6 +20,8 @@ grant execute on function public.record_tuition_payment(uuid, date, numeric, tex
 -- Refuse deployment if inherited PUBLIC privileges make the role broader
 -- than expected. Trigger functions cannot be called as ordinary RPCs.
 do $$
+declare
+  unexpected_functions text;
 begin
   if pg_has_role('teacher_payment_agent', 'authenticated', 'member')
     or pg_has_role('teacher_payment_agent', 'anon', 'member') then
@@ -38,16 +40,18 @@ begin
     raise exception 'Payment agent has unexpected table privileges';
   end if;
 
-  if exists (
-    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  select string_agg(p.oid::regprocedure::text, ', ' order by p.oid::regprocedure::text)
+    into unexpected_functions
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and p.prorettype <> 'pg_catalog.trigger'::regtype
       and has_function_privilege('teacher_payment_agent', p.oid, 'EXECUTE')
       and p.oid not in (
         'public.is_teacher_admin()'::regprocedure,
         'public.record_tuition_payment(uuid,date,numeric,text,text)'::regprocedure
       )
-  ) then
-    raise exception 'Payment agent has unexpected public function privileges';
+  ;
+  if unexpected_functions is not null then
+    raise exception 'Payment agent has unexpected public function privileges: %', unexpected_functions;
   end if;
 end;
 $$;
