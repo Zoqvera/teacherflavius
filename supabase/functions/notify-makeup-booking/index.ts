@@ -490,7 +490,7 @@ Deno.serve(async (request: Request) => {
     textBody = [
       `Olá, ${studentName}!`,
       "",
-      "Sua aula de reposição está agendada. Você pode cancelar esta reposição até o início da aula. Com pelo menos 12 (doze) horas de antecedência, o crédito utilizado será devolvido. Se cancelar depois desse prazo, a vaga será liberada, mas o crédito não será devolvido. Se não cancelar nem comparecer, a aula será considerada realizada.",
+      "Sua aula de reposição está agendada. Reposições confirmadas não podem ser canceladas pelo aluno e o crédito utilizado não será devolvido. Se não comparecer, a aula será considerada realizada.",
       "",
       `Turma: ${className}`,
       `Data: ${classDate}`,
@@ -506,7 +506,7 @@ Deno.serve(async (request: Request) => {
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033;max-width:620px;margin:0 auto">
         <h1 style="font-size:22px;margin-bottom:18px">Reposição de aula confirmada</h1>
         <p>Olá, <strong>${escapeHtml(studentName)}</strong>!</p>
-        <p>Sua aula de reposição está agendada. Você pode cancelar esta reposição até o início da aula. Com pelo menos 12 (doze) horas de antecedência, o crédito utilizado será devolvido. Se cancelar depois desse prazo, a vaga será liberada, mas o crédito não será devolvido. Se não cancelar nem comparecer, a aula será considerada realizada.</p>
+        <p>Sua aula de reposição está agendada. Reposições confirmadas não podem ser canceladas pelo aluno e o crédito utilizado não será devolvido. Se não comparecer, a aula será considerada realizada.</p>
         <table style="border-collapse:collapse;width:100%;margin:18px 0">
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Turma</td><td>${escapeHtml(className)}</td></tr>
           <tr><td style="padding:7px 12px 7px 0;font-weight:bold">Data</td><td>${escapeHtml(classDate)}</td></tr>
