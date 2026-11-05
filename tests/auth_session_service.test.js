@@ -291,7 +291,7 @@ test("does not convert a temporary network problem into a logout", async functio
     getSession: async () => ({ data: { session }, error: null }),
     getUser: async () => ({
       data: { user: null },
-      error: { status: 503, message: "Network unavailable" }
+      error: Object.assign(new Error("Network unavailable"), { status: 503 })
     }),
     refreshSession: async () => { refreshes += 1; return { data: null, error: null }; }
   } };
