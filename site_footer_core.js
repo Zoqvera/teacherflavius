@@ -6,7 +6,7 @@
   const PAYMENT_NOTICE_LOADER_SCRIPT_ID = "teacher-flavius-payment-notice-loader-script";
   const PAYMENT_NOTICE_LOADER_SCRIPT_SRC = "/student_payment_notice_loader.js?v=20260925-auth-runtime-1";
   const POLICY_NOTICE_LOADER_SCRIPT_ID = "teacher-flavius-policy-notice-loader-script";
-  const POLICY_NOTICE_LOADER_SCRIPT_SRC = "/student_policy_notice_loader.js?v=20261105-v2";
+  const POLICY_NOTICE_LOADER_SCRIPT_SRC = "/student_policy_notice_loader.js?v=20261105-policy-dialog-priority-1";
 
   function rendererIsReady() {
     return !!window.SiteFooterRenderer;
