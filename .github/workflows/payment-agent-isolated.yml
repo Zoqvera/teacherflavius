@@ -10,6 +10,7 @@ on:
       - "tests/sql/payment_agent_token_hook.sql"
       - "tests/sql/payment_agent_fixture_acl_overlay.sql"
       - "tests/sql/payment_agent_fixture_rpc_overlay.sql"
+      - "tests/sql/payment_agent_fixture_course_state_overlay.sql"
       - "tests/sql/payment_agent_canonical_flow.sql"
       - "tests/sql/payment_agent_enrolled_credits.sql"
       - ".github/workflows/payment-agent-isolated.yml"
@@ -60,6 +61,7 @@ jobs:
             tests/sql/payment_agent_role_privileges.sql \
             tests/sql/payment_agent_token_hook.sql \
             tests/sql/payment_agent_fixture_rpc_overlay.sql \
+            tests/sql/payment_agent_fixture_course_state_overlay.sql \
             tests/sql/payment_agent_canonical_flow.sql \
             tests/sql/payment_agent_enrolled_credits.sql; do
             if [ "${sql}" = "tests/sql/payment_agent_token_hook.sql" ] || [ "${sql}" = "tests/sql/payment_agent_canonical_flow.sql" ] || [ "${sql}" = "tests/sql/payment_agent_enrolled_credits.sql" ]; then
