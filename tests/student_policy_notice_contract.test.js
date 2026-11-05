@@ -60,8 +60,8 @@ test("locks background navigation until acceptance succeeds", function () {
 });
 
 test("the required notice suspends optional dialogs before applying inert", function () {
-  assert.match(renderer, /document\\.dispatchEvent\\(new Event\\(POLICY_OPENING_EVENT\\)\\)/);
-  assert.match(renderer, /if \\(dialog && dialog\\.open\\) dialog\\.close\\(\\)/);
+  assert.ok(renderer.includes("document.dispatchEvent(new Event(POLICY_OPENING_EVENT))"));
+  assert.ok(renderer.includes("if (dialog && dialog.open) dialog.close()"));
   assert.ok(renderer.indexOf("suspendOptionalDialogs();") <
     renderer.lastIndexOf("lockBackground(modal);"));
 });
