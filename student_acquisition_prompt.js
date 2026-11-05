@@ -9,6 +9,8 @@
   const SUBMIT_ID = "studentAcquisitionPromptSubmit";
   const CLOSE_ID = "studentAcquisitionPromptClose";
   const SAVED_ID = "studentAcquisitionSaved";
+  const POLICY_NOTICE_ID = "tf-required-student-policy-modal";
+  const POLICY_LOCK_CLASS = "tf-required-student-policy-locked";
 
   function shouldShowPrompt(profileResponse, acquisitionResponse) {
     if (profileResponse.error) throw profileResponse.error;
@@ -78,6 +80,12 @@
     });
   }
 
+  function isRequiredPolicyNoticeActive(documentRef) {
+    const page = documentRef.documentElement;
+    return Boolean(documentRef.getElementById(POLICY_NOTICE_ID) ||
+      (page && page.classList.contains(POLICY_LOCK_CLASS)));
+  }
+
   async function initialize(options) {
     const settings = options || {};
     const documentRef = settings.documentRef || (root && root.document);
@@ -99,8 +107,9 @@
       ]);
       if (!shouldShowPrompt(responses[0], responses[1])) return false;
 
-      // A pesquisa não deve disputar foco com outro diálogo aberto.
-      if (documentRef.querySelector("dialog[open]")) return false;
+      // Pesquisas opcionais não podem cobrir o comunicado obrigatório.
+      if (documentRef.querySelector("dialog[open]") ||
+          isRequiredPolicyNoticeActive(documentRef)) return false;
 
       acquisitionService.setup(SOURCE_ID, DETAIL_ID);
       registerHandlers({ dialog, documentRef, client, acquisitionService });
