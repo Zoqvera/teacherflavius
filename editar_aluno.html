@@ -100,6 +100,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <p id="studentAcquisitionProvenance" class="availability-help"></p>
 
+        <section aria-labelledby="bookingModeTitle">
+          <h2 id="bookingModeTitle">Modalidade de vínculo</h2>
+          <label for="studentBookingMode">Como o aluno reserva suas aulas?</label>
+          <select id="studentBookingMode"><option value="FIXO">FIXO — turma permanente</option><option value="FLEXIVEL">FLEXIVEL — uma reserva por semana</option></select>
+          <p>FLEXIVEL exige cadastro sem turma fixa e sem aulas futuras fixas pendentes de ajuste. A alteração não descarta aulas pagas.</p>
+          <button type="button" id="saveBookingMode" class="delete-button">SALVAR MODALIDADE</button>
+          <p id="bookingModeStatus" role="status" aria-live="polite"></p>
+        </section>
         <div class="availability-block">
           <h2>Disponibilidade para aulas</h2>
           <p class="availability-help">Marque os dias e horários disponíveis do aluno.</p>
@@ -114,7 +122,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </form>
     </div>
   </div>
-  <script src="editar_aluno.js?v=20261012-origin-1"></script>
+  <script src="editar_aluno.js?v=20261106-flexible-1"></script>
   <script src="animated_cards.js?v=20260429-1"></script>
     <script src="/site_privacy_analytics.js?v=20260902-1"></script>
 <script src="/site_asset_loader.js?v=20260902-1"></script>

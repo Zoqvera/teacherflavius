@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
+import { flexibleBookingEmail } from "../_shared/flexible_booking_email.mjs";
 import { recordResendAcceptance } from "../_shared/resend_delivery_core.mjs";
 
 type NotificationRecord = {
@@ -166,12 +167,13 @@ function makeIcsAttachment(
   endsAt: string,
   meetingUrl: string,
   createdAt: string,
+  isFlexible = false,
 ): { filename: string; content: string; content_type: string } {
   const uid = `reposicao-${studentId}-${classNumber}-${formatCalendarInstant(startsAt)}@teacherflavius.com`;
-  const title = `Reposição de inglês — ${className}`;
+  const title = isFlexible ? `Aula FLEXIVEL — ${className}` : `Reposição de inglês — ${className}`;
   const description = [
     `Turma: ${className}`,
-    "Reposição agendada pelo TeacherFlavius.",
+    isFlexible ? "Reserva FLEXIVEL definitiva." : "Reposição agendada pelo TeacherFlavius.",
     `Link da aula: ${meetingUrl}`,
   ].join("\n");
   const content = foldIcsLines([
@@ -279,7 +281,7 @@ Deno.serve(async (request: Request) => {
 
   const { data: booking, error: bookingError } = await supabase
     .from("makeup_class_bookings")
-    .select("id, slot_id, student_id, class_number, student_name, student_email, class_name, meeting_url, status")
+    .select("id, slot_id, student_id, class_number, student_name, student_email, class_name, meeting_url, status, booking_kind")
     .eq("id", notification.booking_id)
     .single();
 
@@ -296,6 +298,7 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Booking not found" }, 404);
   }
 
+  const isFlexible = booking.booking_kind === "flexible";
   const notificationType = String(notification.notification_type ?? "");
   const isTeacherCancellation = notificationType === TEACHER_CANCELLATION_TYPE;
   const isCancellation = notificationType === "cancellation" || isTeacherCancellation;
@@ -372,8 +375,45 @@ Deno.serve(async (request: Request) => {
   let subject: string;
   let textBody: string;
   let htmlBody: string;
+  let fromEmail = MAKEUP_FROM_EMAIL;
 
-  if (isTeacherCancellation) {
+  if (isFlexible && !isTeacherNotice && !isCancellation) {
+    const { data: resources, error: resourcesError } = await supabase
+      .from("class_resources")
+      .select("video_lesson_url, lesson_material_url, recorded_lessons_url")
+      .eq("class_number", booking.class_number)
+      .single();
+    if (resourcesError || !resources) {
+      await failNotification("Flexible class resources unavailable");
+      return jsonResponse({ error: "Class resources unavailable" }, 422);
+    }
+    const calendarUrl = new URL(makeGoogleCalendarUrl(studentName, className,
+      slot.starts_at, slot.ends_at, safeHttpUrl(resources.video_lesson_url), "student"));
+    calendarUrl.searchParams.set("text", `Aula FLEXIVEL — ${className}`);
+    calendarUrl.searchParams.set("details", "Reserva FLEXIVEL definitiva. Consulte os links atualizados em MINHAS AULAS.");
+    try {
+      const email = flexibleBookingEmail({ studentName, className, classDate, schedule,
+        meetingUrl: safeHttpUrl(resources.video_lesson_url),
+        materialUrl: safeHttpUrl(resources.lesson_material_url),
+        recordingsUrl: safeHttpUrl(resources.recorded_lessons_url),
+        calendarUrl: calendarUrl.toString() });
+      fromEmail = email.from;
+      subject = email.subject;
+      textBody = email.text;
+      htmlBody = email.html;
+    } catch {
+      await failNotification("Flexible reservation links are incomplete");
+      return jsonResponse({ error: "Reservation links unavailable" }, 422);
+    }
+  } else if (isFlexible && isCancellation) {
+    subject = `Reserva FLEXIVEL cancelada — ${classDate}, ${startTime}`;
+    textBody = [`A reserva FLEXIVEL de ${studentName} foi cancelada pela administração.`,
+      `Turma: ${className}`, `Data: ${classDate}`, `Horário de Brasília: ${schedule}`,
+      "Consulte os créditos e as vagas disponíveis em MINHAS AULAS.",
+      "Se você adicionou esta aula ao calendário, remova o evento manualmente."].join("\n\n");
+    htmlBody = `<div style="font-family:Arial,sans-serif;line-height:1.6"><h1>Reserva FLEXIVEL cancelada</h1>
+      <p>${escapeHtml(textBody).replace(/\n/g, "<br>")}</p></div>`;
+  } else if (isTeacherCancellation) {
     subject = `Reposição cancelada: ${studentName} — ${classDate}, ${startTime}`;
     textBody = [
       `O aluno ${studentName} cancelou uma reposição.`,
@@ -531,7 +571,7 @@ Deno.serve(async (request: Request) => {
       "Idempotency-Key": `makeup-${notificationType}-${notification.id}`,
     },
     body: JSON.stringify({
-      from: MAKEUP_FROM_EMAIL,
+      from: fromEmail,
       reply_to: "contato@teacherflavius.com",
       to: [recipientEmail],
       subject,
@@ -546,6 +586,7 @@ Deno.serve(async (request: Request) => {
           slot.ends_at,
           meetingUrl!,
           notification.created_at,
+          isFlexible,
         )],
       } : {}),
     }),

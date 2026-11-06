@@ -34,6 +34,7 @@ function createNotificationFixture(options = {}) {
     class_name: "Turma de teste",
     meeting_url: "https://meet.google.com/test-lesson",
     status: options.bookingStatus || "confirmed",
+    booking_kind: options.bookingKind || "replacement",
   };
   const slot = { id: booking.slot_id, starts_at: FIXTURE_START, ends_at: FIXTURE_END };
   const profile = options.noProfile ? null : {
@@ -46,6 +47,9 @@ function createNotificationFixture(options = {}) {
     makeup_class_bookings: booking,
     makeup_class_slots: slot,
     profiles: profile,
+    class_resources: { class_number: booking.class_number,
+      video_lesson_url: booking.meeting_url, lesson_material_url: "https://docs.google.com/test",
+      recorded_lessons_url: "https://drive.google.com/test" },
   };
 
   class Query {
@@ -127,12 +131,18 @@ function createNotificationFixture(options = {}) {
   );
   assert.ok(strippedImport.length < typescript.length, "strip only the known external SDK import");
   const withoutDeliveryImport = strippedImport.replace(
-    /^import \{ recordResendAcceptance \} from "[^"]+";\r?\n/,
+    /^import \{ recordResendAcceptance \} from "[^"]+";\r?\n/m,
     "",
   );
-  const script = stripTypeScriptTypes(withoutDeliveryImport);
+  const withoutFlexibleImport = withoutDeliveryImport.replace(
+    /^import \{ flexibleBookingEmail \} from "[^"]+";\r?\n/m, "");
+  const emailSource = fs.readFileSync(path.join(__dirname,
+    "../supabase/functions/_shared/flexible_booking_email.mjs"), "utf8").replace("export function", "function");
+  const emailFactory = vm.runInNewContext(emailSource + "; flexibleBookingEmail");
+  const script = stripTypeScriptTypes(withoutFlexibleImport);
   vm.runInNewContext(script, {
     Deno: deno,
+    flexibleBookingEmail: emailFactory,
     createClient: () => supabase,
     fetch: fakeFetch,
     crypto: require("node:crypto").webcrypto,
@@ -382,4 +392,16 @@ test("student calendar template does not include the student's name in event tit
   assert.doesNotMatch(url.searchParams.get("text"), /Aluno de Teste/);
   assert.equal(url.searchParams.get("stz"), "America/Sao_Paulo");
   assert.equal(message.attachments.length, 1, "The student's own ICS remains available");
+});
+
+test("FLEXIVEL confirmation sends all class resources from reservas and a correctly labeled calendar", async () => {
+  const fixture = createNotificationFixture({ notificationType: "booking_confirmation", bookingKind: "flexible" });
+  const response = await fixture.request();
+  assert.equal(response.status, 200);
+  const message = fixture.sent[0].message;
+  assert.equal(message.from, "Teacher Flávio <reservas@teacherflavius.com>");
+  assert.match(message.text, /https:\/\/docs.google.com\/test/);
+  assert.match(message.text, /https:\/\/drive.google.com\/test/);
+  assert.match(message.text, /não permite cancelamento/);
+  assert.match(Buffer.from(message.attachments[0].content,"base64").toString(), /SUMMARY:Aula FLEXIVEL/);
 });

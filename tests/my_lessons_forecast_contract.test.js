@@ -34,6 +34,7 @@ async function renderStudentPage({ paid = true, forecast, forecastFails = false,
   };
   const rpcCalls = [];
   const data = {
+    get_my_flexible_lessons: null,
     get_my_lessons_overview: {
       is_paid: paid,
       has_paid_before: true,
