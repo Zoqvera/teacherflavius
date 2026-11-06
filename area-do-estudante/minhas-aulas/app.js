@@ -6,6 +6,7 @@
   const LOGIN_PATH = "/login/?next=" + encodeURIComponent("/area-do-estudante/minhas-aulas/");
 
   let overview = null;
+  let flexibleState = null;
   let lessonCredits = [];
   let lessonForecast = null;
   let forecastLoadFailed = false;
@@ -96,6 +97,8 @@
   }
 
   async function loadPageState() {
+    flexibleState = await rpc("get_my_flexible_lessons");
+    if (flexibleState) return;
     overview = await rpc("get_my_lessons_overview");
     // Paid future lessons remain accessible even when a new invoice is pending.
     lessonCredits = overview
@@ -462,9 +465,90 @@
 
   function renderPage() {
     const content = document.getElementById("myClassesContent");
-    if (!content || !overview) return;
+    if (!content) return;
+    if (flexibleState) {
+      renderFlexiblePage(content);
+      return;
+    }
+    if (!overview) return;
     content.innerHTML = overview.is_paid ? renderPaidState() : renderUnpaidState();
     attachActionHandlers();
+  }
+
+  function flexibleResourceLink(label, url) {
+    if (!/^https:\/\//i.test(String(url || ""))) return "";
+    return '<a class="link-button" target="_blank" rel="noopener noreferrer" href="'
+      + escapeHtml(url) + '">' + escapeHtml(label) + '</a>';
+  }
+
+  function renderFlexibleBooking(booking) {
+    const links = flexibleResourceLink("GOOGLE MEET", booking.meeting_url)
+      + flexibleResourceLink("MATERIAL DIDÁTICO", booking.material_url)
+      + flexibleResourceLink("AULAS GRAVADAS", booking.recorded_lessons_url);
+    const emailStatus = booking.email_status === "sent"
+      ? "Confirmação enviada por e-mail."
+      : "O envio da confirmação por e-mail está pendente. Os links já estão disponíveis aqui.";
+    return '<article class="lesson-card"><h3>' + escapeHtml(booking.class_name) + '</h3>'
+      + '<p class="lesson-meta">' + escapeHtml(formatDateTime(booking.starts_at)) + ' · Brasília</p>'
+      + '<p>Reserva definitiva. Não permite cancelamento ou alteração. Faltas não geram reposição.</p>'
+      + '<div class="action-row">' + links + '</div><p>' + emailStatus + '</p></article>';
+  }
+
+  function renderFlexibleOption(option) {
+    const label = option.can_book ? "RESERVAR ESTA AULA" : "RESERVA INDISPONÍVEL";
+    return '<article class="replacement-card"><h3>' + escapeHtml(option.class_name) + '</h3>'
+      + '<p class="replacement-meta">' + escapeHtml(formatDateTime(option.starts_at)) + ' · Brasília</p>'
+      + '<p>' + Number(option.available_spots) + ' vaga(s) disponível(is)</p>'
+      + '<button type="button" class="action-button flexible-book-button" data-class-number="'
+      + Number(option.class_number) + '" data-starts-at="' + escapeHtml(option.starts_at) + '"'
+      + (option.can_book ? "" : " disabled") + '>' + label + '</button></article>';
+  }
+
+  function renderFlexiblePage(content) {
+    const bookings = flexibleState.bookings || [];
+    const options = flexibleState.options || [];
+    content.innerHTML = '<section class="surface-card"><h2>Modalidade FLEXIVEL</h2>'
+      + '<p>Reserve uma aula por semana, de segunda-feira a domingo, no horário de Brasília. '
+      + 'Você pode escolher entre as vagas dos próximos 14 dias, até uma hora antes do início.</p>'
+      + '<p>A reserva utiliza um crédito de aula da mensalidade paga que cobre a data escolhida. '
+      + 'Reservas indisponíveis indicam que você já tem uma aula naquela semana ou não possui crédito válido para a data.</p>'
+      + '<p>Após confirmar, você não poderá cancelar ou alterar a reserva. Faltas não geram reposição.</p></section>'
+      + '<section class="surface-card"><h2>Minhas reservas</h2><div class="lesson-list">'
+      + (bookings.length ? bookings.map(renderFlexibleBooking).join("") : '<p>Nenhuma aula reservada.</p>')
+      + '</div></section><section class="surface-card"><h2>Escolher uma aula</h2><div class="replacement-list">'
+      + (options.length ? options.map(renderFlexibleOption).join("") : '<p>Nenhuma vaga disponível nos próximos 14 dias. Consulte novamente mais tarde.</p>')
+      + '</div></section>';
+    content.querySelectorAll(".flexible-book-button").forEach(function (button) {
+      button.addEventListener("click", function () { bookFlexibleLesson(button); });
+    });
+  }
+
+  async function bookFlexibleLesson(button) {
+    const option = (flexibleState.options || []).find(function (item) {
+      return Number(item.class_number) === Number(button.dataset.classNumber)
+        && item.starts_at === button.dataset.startsAt;
+    });
+    if (!option || !option.can_book || button.disabled) return;
+    const confirmed = window.confirm(option.class_name + " — " + formatDateTime(option.starts_at)
+      + " (Brasília). Confira sua escolha: após confirmar, você não poderá cancelar ou alterar esta reserva. "
+      + "A ausência consome o crédito e não gera reposição. Confirmar?");
+    if (!confirmed) return;
+    setButtonBusy(button, "RESERVANDO...");
+    try {
+      await rpc("book_my_flexible_lesson", {
+        target_class_number: Number(option.class_number),
+        target_starts_at: option.starts_at
+      });
+    } catch (error) {
+      setPageMessage(error.message || "Não foi possível reservar esta aula.", "error");
+      restoreButton(button);
+      return;
+    }
+    try {
+      await refreshAfterAction("Reserva confirmada. Os links estão em Minhas reservas e a confirmação será enviada por e-mail.");
+    } catch {
+      setPageMessage("Reserva confirmada. Atualize a página para consultar seus links.", "success");
+    }
   }
 
   function setButtonBusy(button, busyText) {

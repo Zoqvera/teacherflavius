@@ -21,7 +21,8 @@ test("enrollment and replacement use dedicated sender addresses", function () {
 
   assert.match(makeup, /Teacher Flávio <contato@teacherflavius\.com>/);
   assert.doesNotMatch(makeup, /Deno\.env\.get\("ENROLLMENT_FROM_EMAIL"\)/);
-  assert.match(makeup, /from: MAKEUP_FROM_EMAIL/);
+  assert.match(makeup, /let fromEmail = MAKEUP_FROM_EMAIL/);
+  assert.match(makeup, /from: fromEmail/);
 });
 
 test("financial operational emails use dedicated sender and Workspace reply-to", function () {

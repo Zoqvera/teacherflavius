@@ -190,6 +190,11 @@ async function guardPage() {
     if (!currentStudent) throw new Error("Aluno não encontrado.");
     currentStudent.acquisition = origins.get(String(currentStudentId)) || null;
     fillForm(currentStudent);
+    const bookingMode = await Auth.getClient().rpc("get_teacher_student_booking_mode", {
+      target_student_id: currentStudentId
+    });
+    if (bookingMode.error) throw bookingMode.error;
+    document.getElementById("studentBookingMode").value = bookingMode.data || "FIXO";
     status.textContent = "Professor autenticado: " + currentProfessorSession.user.email + ". Editando: " + (currentStudent.name || currentStudent.email || "aluno") + ".";
     document.body.classList.remove("auth-checking");
   } catch (error) {
@@ -202,3 +207,24 @@ document.getElementById("studentCpf").addEventListener("input", function () { th
 document.getElementById("editStudentForm").addEventListener("submit", saveStudent);
 
 guardPage();
+
+async function saveBookingMode() {
+  const button = document.getElementById("saveBookingMode");
+  const status = document.getElementById("bookingModeStatus");
+  const mode = document.getElementById("studentBookingMode").value;
+  if (!currentStudentId || !currentStudent) return;
+  if (!window.confirm("Alterar a modalidade deste aluno para " + mode + "?")) return;
+  button.disabled = true;
+  try {
+    const response = await Auth.getClient().rpc("set_teacher_student_booking_mode", {
+      target_student_id: currentStudentId, target_mode: mode
+    });
+    if (response.error) throw response.error;
+    status.textContent = "Modalidade " + mode + " salva.";
+  } catch (error) {
+    status.textContent = error.message || "Não foi possível alterar a modalidade.";
+  } finally {
+    button.disabled = false;
+  }
+}
+document.getElementById("saveBookingMode").addEventListener("click", saveBookingMode);

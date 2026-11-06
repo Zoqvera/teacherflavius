@@ -36,7 +36,7 @@ test("all teacher emails are free from automatic ICS attachments", () => {
 });
 
 test("teacher cancellation calendar removal instruction is individual-only", () => {
-  const begin = source.indexOf("  if (isTeacherCancellation) {");
+  const begin = source.indexOf("  } else if (isTeacherCancellation) {");
   const end = source.indexOf("  } else if (isTeacherBooking) {", begin);
   assert.ok(begin >= 0 && end > begin);
   const section = source.slice(begin, end);
