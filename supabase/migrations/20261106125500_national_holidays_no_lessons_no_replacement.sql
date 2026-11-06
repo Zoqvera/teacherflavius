@@ -1071,6 +1071,11 @@ FOR EACH ROW EXECUTE FUNCTION private.enforce_national_holiday_no_academic_occur
 COMMENT ON FUNCTION private.is_national_holiday(date) IS 'Feriados nacionais brasileiros: nove datas fixas e Paixão de Cristo. Não inclui pontos facultativos ou feriados estaduais e municipais; rever alterações legais anualmente.';
 COMMENT ON FUNCTION public.get_national_holidays(integer) IS 'Lista exclusivamente feriados nacionais brasileiros para um ano, sem pontos facultativos.';
 
+-- Calendar RPC is read-only but intentionally available only to signed-in users.
+-- Keep the anonymous SECURITY DEFINER allow-list unchanged.
+REVOKE EXECUTE ON FUNCTION public.get_national_holidays(integer) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_national_holidays(integer) TO authenticated, service_role;
+
 -- Keep private-schema functions inaccessible to anon and authenticated roles.
 REVOKE EXECUTE ON FUNCTION private.national_holiday_name(date) FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION private.is_national_holiday(date) FROM PUBLIC, anon, authenticated;
