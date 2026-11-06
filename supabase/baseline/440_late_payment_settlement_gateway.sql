@@ -207,7 +207,15 @@ begin
   into tuition_row
   from public.monthly_tuition tuition
   where tuition.id = attempt_row.tuition_id
-    and tuition.student_id = attempt_row.student_id
+    and (
+      tuition.student_id = attempt_row.student_id
+      or (
+        tuition.student_id is null
+        and attempt_row.student_id is null
+        and attempt_row.subject_ref is not null
+        and tuition.subject_ref = attempt_row.subject_ref
+      )
+    )
   for update;
 
   if not found then
