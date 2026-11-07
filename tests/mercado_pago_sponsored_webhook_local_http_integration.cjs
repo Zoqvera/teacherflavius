@@ -81,9 +81,18 @@ async function main() {
   assert.equal(replay.status, 200, JSON.stringify(replay.body));
   assert.equal(replay.body.delivery_count, 2);
 
-  const tampered = await deliver(event, event.raw.replace(
-    '"payment.updated"', '"payment.created"'
-  ));
+  // Mercado Pago's HMAC signs the payment ID, request ID and timestamp,
+  // not the JSON body. Test an invalid signature, not a changed action.
+  const invalidSignature = {
+    ...event,
+    headers: {
+      ...event.headers,
+      "x-signature": event.headers["x-signature"].replace(
+        /v1=[a-f0-9]{64}/, "v1=" + "0".repeat(64)
+      )
+    }
+  };
+  const tampered = await deliver(invalidSignature);
   assert.equal(tampered.status, 401, JSON.stringify(tampered.body));
 
   const forbiddenLive = signPayload({
