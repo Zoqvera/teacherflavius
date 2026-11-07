@@ -84,7 +84,7 @@ insert into public.tuition_payment_attempts (
   'a7100000-0000-4000-8000-000000000004',
   'a7100000-0000-4000-8000-000000000001',
   'a7100000-0000-4000-8000-000000000001',
-  'ci-synthetic-sponsorship-approved-001',
+  'a7100000-0000-4000-8000-000000000007',
   100, 'created','mercado_pago'
 );
 set local session_replication_role = origin;
