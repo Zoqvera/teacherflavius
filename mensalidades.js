@@ -1,5 +1,6 @@
 let currentAdminSession = null;
 let monthlyTuition = [];
+let financialResponsibilityLinks = [];
 let selectedTuitionId = null;
 
 const paymentMethodLabels = {
@@ -73,6 +74,43 @@ function dateToInputValue(date) {
 function currentMonthValue() {
   const now = new Date();
   return now.getFullYear() + "-" + padNumber(now.getMonth() + 1);
+}
+
+function getTuitionFinancialResponsibility(item) {
+  const month = String(item.reference_month || "").slice(0, 10);
+  return financialResponsibilityLinks.filter(function (link) {
+    return link.responsibility_state !== "cancelled" &&
+      String(link.first_reference_month || "").slice(0, 10) <= month &&
+      (!link.first_uncovered_month ||
+        month < String(link.first_uncovered_month).slice(0, 10)) &&
+      (String(link.payer_student_id) === String(item.student_id) ||
+        String(link.beneficiary_student_id) === String(item.student_id));
+  });
+}
+
+function getTuitionPayerLabel(item) {
+  const link = getTuitionFinancialResponsibility(item).find(function (candidate) {
+    return String(candidate.beneficiary_student_id) === String(item.student_id);
+  });
+  return link ? (link.payer_name || "Responsável financeiro") : "";
+}
+
+function getFinancialContextLabel(item) {
+  const links = getTuitionFinancialResponsibility(item);
+  const payer = getTuitionPayerLabel(item);
+  if (payer) return "Cobrança sob responsabilidade de " + payer;
+  const beneficiaries = links.filter(function (link) {
+    return String(link.payer_student_id) === String(item.student_id);
+  }).map(function (link) {
+    return link.beneficiary_name || "Aluno";
+  });
+  return beneficiaries.length
+    ? "Pagante também por: " + beneficiaries.join(", ")
+    : "";
+}
+
+function hasConsolidatedFinancialResponsibility(item) {
+  return getTuitionFinancialResponsibility(item).length > 0;
 }
 
 function getSelectedReferenceMonth() {
@@ -168,15 +206,22 @@ async function loadSelectedMonth(options) {
 
   try {
     if (shouldGenerate) await generateSelectedMonth();
-    const response = await Auth.getClient().rpc("get_teacher_monthly_tuition", {
-      target_reference_month: getSelectedReferenceMonth()
-    });
+    const client = Auth.getClient();
+    const [response, linksResponse] = await Promise.all([
+      client.rpc("get_teacher_monthly_tuition", {
+        target_reference_month: getSelectedReferenceMonth()
+      }),
+      client.rpc("get_teacher_financial_responsibilities")
+    ]);
     if (response.error) throw response.error;
+    if (linksResponse.error) throw linksResponse.error;
     monthlyTuition = response.data || [];
+    financialResponsibilityLinks = linksResponse.data || [];
     renderDashboard();
     setPageMessage("", "");
   } catch (error) {
     monthlyTuition = [];
+    financialResponsibilityLinks = [];
     renderDashboard();
     setPageMessage(
       "Não foi possível carregar as mensalidades: " + (error.message || "erro desconhecido") +
@@ -321,7 +366,8 @@ function getFilteredTuition() {
   const status = document.getElementById("statusFilter").value;
 
   return monthlyTuition.filter(function (item) {
-    const searchable = (String(item.student_name || "") + " " + String(item.student_email || ""))
+    const searchable = (String(item.student_name || "") + " " +
+      String(item.student_email || "") + " " + getFinancialContextLabel(item))
       .toLocaleLowerCase("pt-BR");
     const matchesSearch = !search || searchable.includes(search);
     const matchesStatus = status === "all" || item.payment_status === status;
@@ -341,6 +387,9 @@ function getPaymentDescription(item) {
 }
 
 function getTuitionActions(item) {
+  if (hasConsolidatedFinancialResponsibility(item)) {
+    return '<span title="O pagamento e o estorno devem considerar todos os pacotes da cobrança consolidada.">GERENCIAR COBRANÇA CONSOLIDADA</span>';
+  }
   const tuitionId = escapeHtml(item.tuition_id);
   if (item.payment_status === "paid") {
     return '<button class="table-action danger" type="button" data-action="reverse" data-tuition-id="' + tuitionId + '">ESTORNAR</button>';
@@ -373,7 +422,11 @@ function renderTuitionTable() {
     const tuitionActions = getTuitionActions(item);
 
     return '<tr>' +
-      '<td><strong>' + escapeHtml(item.student_name || "Aluno") + '</strong><small>' + escapeHtml(item.student_email || "") + '</small></td>' +
+      '<td><strong>' + escapeHtml(item.student_name || "Aluno") + '</strong><small>' +
+         escapeHtml(item.student_email || "") + '</small>' +
+         (getFinancialContextLabel(item)
+           ? '<small>' + escapeHtml(getFinancialContextLabel(item)) + '</small>'
+           : '') + '</td>' +
       '<td>' + escapeHtml(formatReferenceMonth(item.reference_month)) + '</td>' +
       '<td>' + escapeHtml(formatDate(item.due_date)) + '</td>' +
       '<td>' + escapeHtml(formatCurrency(item.amount_due)) + '</td>' +
@@ -409,6 +462,10 @@ function closeModal(id) {
 function openPaymentModal(tuitionId) {
   const item = monthlyTuition.find(function (tuition) { return String(tuition.tuition_id) === String(tuitionId); });
   if (!item) return;
+  if (hasConsolidatedFinancialResponsibility(item)) {
+    setPageMessage("Esta mensalidade faz parte de uma cobrança consolidada. Não registre apenas um dos pacotes.", "error");
+    return;
+  }
 
   selectedTuitionId = item.tuition_id;
   document.getElementById("paymentStudentName").textContent = item.student_name || "Aluno";
@@ -455,6 +512,11 @@ async function registerPayment(event) {
 }
 
 async function exemptTuition(tuitionId) {
+  const item = monthlyTuition.find(function (tuition) { return String(tuition.tuition_id) === String(tuitionId); });
+  if (item && hasConsolidatedFinancialResponsibility(item)) {
+    setPageMessage("A isenção individual não é permitida durante a responsabilidade financeira.", "error");
+    return;
+  }
   const reason = window.prompt("Motivo da isenção (opcional). Clique em Cancelar para desistir:", "");
   if (reason === null) return;
   if (!window.confirm("Confirma a isenção desta mensalidade? O valor não será contabilizado como recebimento.")) return;
@@ -474,6 +536,11 @@ async function exemptTuition(tuitionId) {
 }
 
 async function removeTuitionExemption(tuitionId) {
+  const item = monthlyTuition.find(function (tuition) { return String(tuition.tuition_id) === String(tuitionId); });
+  if (item && hasConsolidatedFinancialResponsibility(item)) {
+    setPageMessage("A alteração desta mensalidade exige conciliação da cobrança consolidada.", "error");
+    return;
+  }
   const reason = window.prompt("Motivo da remoção da isenção (opcional). Clique em Cancelar para desistir:", "");
   if (reason === null) return;
   if (!window.confirm("Confirma a remoção da isenção? A mensalidade voltará a ficar em aberto.")) return;
@@ -493,6 +560,11 @@ async function removeTuitionExemption(tuitionId) {
 }
 
 async function reversePayment(tuitionId) {
+  const item = monthlyTuition.find(function (tuition) { return String(tuition.tuition_id) === String(tuitionId); });
+  if (item && hasConsolidatedFinancialResponsibility(item)) {
+    setPageMessage("Estorne a transação consolidada inteira na gestão do Mercado Pago, não apenas um pacote.", "error");
+    return;
+  }
   const reason = window.prompt("Motivo do estorno (opcional). Clique em Cancelar para desistir:", "");
   if (reason === null) return;
   if (!window.confirm("Confirma o estorno deste pagamento? A mensalidade voltará a ficar em aberto.")) return;
@@ -562,6 +634,8 @@ function exportCurrentView() {
     return {
       "Aluno": item.student_name || "",
       "E-mail": item.student_email || "",
+      "Responsabilidade financeira": getFinancialContextLabel(item),
+      "Pagante responsável": getTuitionPayerLabel(item) || item.student_name || "",
       "Mês de referência": formatReferenceMonth(item.reference_month),
       "Vencimento": formatDate(item.due_date),
       "Valor devido": Number(item.amount_due || 0),
@@ -576,8 +650,9 @@ function exportCurrentView() {
   const worksheet = XLSX.utils.json_to_sheet(data);
   worksheet["!autofilter"] = { ref: worksheet["!ref"] };
   worksheet["!cols"] = [
-    { wch: 28 }, { wch: 30 }, { wch: 20 }, { wch: 14 }, { wch: 15 },
-    { wch: 20 }, { wch: 15 }, { wch: 22 }, { wch: 14 }, { wch: 36 }
+    { wch: 28 }, { wch: 30 }, { wch: 48 }, { wch: 28 },
+    { wch: 20 }, { wch: 14 }, { wch: 15 }, { wch: 20 },
+    { wch: 15 }, { wch: 22 }, { wch: 14 }, { wch: 36 }
   ];
 
   const workbook = XLSX.utils.book_new();

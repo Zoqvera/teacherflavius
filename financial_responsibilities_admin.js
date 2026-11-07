@@ -114,10 +114,15 @@
         return item.beneficiary_student_id;
       }));
       const payerSelect = document.getElementById("financialResponsibilityPayer");
+      const beneficiaryBilling = (billing.data || []).find(function (row) {
+        return String(row.student_id) === selectedBeneficiary.id;
+      });
+      const beneficiaryDueDay = Number(beneficiaryBilling && beneficiaryBilling.due_day);
       const candidates = (billing.data || []).filter(function (row) {
         return row.student_id !== selectedBeneficiary.id &&
           row.billing_active === true &&
           Number(row.monthly_fee) > 0 &&
+          Number(row.due_day) === beneficiaryDueDay &&
           !activeCovered.has(row.student_id);
       }).sort(function (a, b) {
         return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
@@ -137,7 +142,9 @@
           " (desde " + active.first_reference_month + ").";
         setMessage("Para interromper a cobrança pelo responsável, escolha a primeira competência a voltar para o beneficiário.");
       } else {
-        setMessage("O aluno mantém o plano de aulas atual. A cobrança passará ao responsável financeiro escolhido.");
+        setMessage(candidates.length
+          ? "O responsável escolhido deve ter o mesmo dia de vencimento do beneficiário. Ambos mantêm seus planos individuais."
+          : "Não há alunos com o mesmo dia de vencimento e cobrança ativa. Ajuste os vencimentos antes de criar o vínculo.", !candidates.length);
       }
     } catch (error) {
       document.getElementById("financialResponsibilityAssignment").hidden = true;

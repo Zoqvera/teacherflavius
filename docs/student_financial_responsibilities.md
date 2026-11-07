@@ -107,3 +107,59 @@ cobertas continuam a ter os valores contratuais e não recebem o marcador
 `is_exempt`.
 
 Nenhuma alteração de SEO foi introduzida.
+
+## Etapa 4 — Auditoria operacional e reconciliação (07/11/2026)
+
+### Regras corrigidas
+
+1. Ao arquivar o pagante **ou** o beneficiário, o vínculo financeiro é
+   encerrado no mesmo comando do banco. Se a competência atual já está
+   paga ou possui pagamento em processamento, a responsabilidade fica
+   preservada até o mês seguinte para não romper a conciliação.
+   Arquivamento continua removendo vínculos de turma e pausando cobranças
+   do aluno arquivado pelas regras preexistentes.
+2. Ao desarquivar um aluno com plano mensal válido, o sistema retoma
+   a cobrança a partir do próximo vencimento elegível, sem recriar
+   matrículas em turmas. Uma isenção permanente não é sobrescrita.
+3. Vínculos novos exigem o mesmo dia de vencimento entre pagante e
+   beneficiário e não podem ser encerrados retroativamente em
+   competências já pagas.
+4. Uma transação de R$ 100 com dois pacotes de R$ 50 agora aparece
+   com R$ 100 como valor integral no fluxo administrativo de reembolso.
+   O pedido é validado contra todas as mensalidades cobertas; o estorno
+   sempre é total, não uma reversão isolada de R$ 50.
+5. Gatilhos impedem quitação/isencão/estorno isolado de uma mensalidade
+   pertencente a um grupo. Uma verificação diferida exige que todos os
+   pacotes de uma tentativa consolidada estejam pagos ou não pagos ao
+   fim da mesma transação do banco.
+6. O painel administrativo de mensalidades identifica o aluno
+   responsável e exporta essa atribuição para o Excel. Operações
+   manuais individuais em competências consolidadas ficam bloqueadas
+   na interface.
+7. A automação de inadimplência das 7h passou a distinguir o aluno
+   beneficiário do responsável pelo pagamento, somando o saldo por
+   pagante e indicando pagamentos ainda pendentes de conciliação.
+
+### Validações realizadas
+
+- Auditoria somente-leitura em
+  `tests/sql/financial_responsibility_operational_attestation.sql`;
+  todos os campos de segurança, gatilhos e funções esperados
+  retornaram verdadeiro.
+- Nenhum registro de responsabilidade financeira e nenhuma reserva
+  consolidada foi criado durante a auditoria.
+- Os testes de contrato estão em
+  `tests/financial_responsibility_operational_audit_contract.test.js`.
+
+### Limites de homologação
+
+A auditoria de estrutura e as verificações de contrato **não são
+equivalentes a um teste transacional com um pagamento sandbox real**.
+Para declarar a funcionalidade totalmente homologada, ainda é preciso
+executar com identidades de teste isoladas: dois pacotes de R$ 50,
+mesmo vencimento, cobrança Pix/cartão de R$ 100, webhook aprovado
+duplicado, verificação de quatro créditos por aluno, estorno total,
+reprocessamento idempotente e arquivamento em cobrança pendente.
+Não criar pagamentos de teste utilizando contas de estudantes reais.
+
+A alteração não altera SEO.
