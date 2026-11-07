@@ -119,6 +119,10 @@ begin
 end;
 $trial$;
 
+-- Force the deferred transactional group invariant now, before rollback.
+set constraints all immediate;
+set constraints all deferred;
+
 do $trial$
 declare
   paid_count integer;
@@ -211,6 +215,10 @@ begin
   end if;
 end;
 $trial$;
+
+-- A refund must not leave one settled invoice behind at transaction end.
+set constraints all immediate;
+set constraints all deferred;
 
 do $trial$
 declare repeat_refund jsonb;
