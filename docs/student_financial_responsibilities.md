@@ -63,3 +63,47 @@ A função atual `process_mercado_pago_payment` permanece inalterada.
 **Etapa seguinte:** integrar criação de pagamento, reconciliação/webhook,
 relatórios e UI administrativa. Testar em sandbox primeiro, inclusive
 idempotência, atraso, disputa, estorno e alteração de responsável.
+
+## Etapa 3 — Checkout e painel administrativo (2026-11-07)
+
+O checkout dos alunos passou a consultar o valor consolidado no servidor
+(`get_financial_responsibility_payment_quote_internal`), e a tentativa de
+pagamento mantém um único identificador de transação do Mercado Pago.
+
+O gateway `process_mercado_pago_payment` continua atendendo normalmente
+as mensalidades individuais, mas encaminha cobranças consolidadas para
+`process_financial_responsibility_payment`. O contrato de idempotência e
+a conciliação por webhook são mantidos. Na baixa, a mensalidade do pagante
+guarda o ID exclusivo do provedor; as mensalidades dos beneficiários são
+quitadas com suas próprias quantias e eventos de auditoria ligados à
+tentativa principal.
+
+`get_my_pending_tuitions` não mostra mensalidades cobertas na conta
+do beneficiário, e um trigger impede tentativas de pagamento individuais
+para essas competências. A área administrativa mostra o pagante e permite
+registrar e encerrar vínculos, mantendo os planos de aula separados.
+
+As assinaturas recorrentes ativas são incompatíveis com essa modalidade
+até que seja construída uma estratégia de assinatura consolidada.
+O sistema bloqueia o vínculo quando há assinatura ativa e impede ativar
+uma assinatura conflitante após o vínculo.
+
+### Validação operacional antes do primeiro vínculo real
+
+- Verificar publicação do frontend e da Edge Function
+  `create-mercado-pago-payment`, incluindo a configuração JWT atual.
+- Em um ambiente de homologação, simular pagamento de R$ 100 com duas
+  mensalidades de R$ 50, retomada por webhook duplicado e estorno total.
+- Conferir primeira mensalidade, competências com dias de vencimento
+  diferentes, pagamentos pendentes e cobrança recorrente.
+- Adaptar os relatórios de inadimplência para identificar explicitamente
+  o responsável pela dívida, sem contar duas dívidas independentes
+  contra dois pagantes diferentes.
+- Avaliar arquivamento do pagante e do beneficiário e atualização de
+  alertas e comunicação financeira.
+
+**Não confundir pagamento por terceiro com isenção:** as mensalidades
+cobertas continuam a ter os valores contratuais e não recebem o marcador
+`is_exempt`.
+
+Nenhuma alteração de SEO foi introduzida.
