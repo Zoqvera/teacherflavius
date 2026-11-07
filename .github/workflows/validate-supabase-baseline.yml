@@ -902,6 +902,9 @@ jobs:
               add column if not exists last_reconciled_at timestamptz,
               add column if not exists reconciliation_failure_count integer not null default 0,
               add column if not exists last_reconciliation_error text;'
+            echo 'alter table public.monthly_tuition
+              add column if not exists amount_override numeric,
+              add column if not exists amount_override_reason text;'
             # The old baseline predates the refund-request table. Replay the
             # original production migrations in the disposable transaction.
             cat supabase/migrations/20260909213850_add_safe_mercado_pago_refunds.sql
