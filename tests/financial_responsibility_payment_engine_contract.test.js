@@ -17,7 +17,7 @@ test("a sponsored checkout quotes each independent tuition at its own amount", (
 
 test("beneficiary cannot pay a covered month under their own login", () => {
   assert.match(sql, /Esta mensalidade é paga pelo responsável financeiro/);
-  assert.match(sql, /target_payer_id = target_payer_id/);
+  assert.match(sql, /beneficiary_student_id = target_payer_id/);
 });
 
 test("snapshot is immutable and confirms exact total before provider call", () => {
