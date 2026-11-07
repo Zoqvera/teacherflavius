@@ -41,3 +41,25 @@ implantada e validada.
    Só disponibilizar a edição administrativa depois dos testes integrados.
 
 A implantação atual não altera SEO nem páginas públicas.
+
+## Etapa 2 — Motor financeiro isolado (2026-11-07)
+
+A implementação adiciona a tabela privada
+`financial_responsibility_payment_items` e três primitivas de servidor:
+`private.quote_financial_responsibility_payment`,
+`public.reserve_financial_responsibility_payment` e
+`public.process_financial_responsibility_payment`.
+
+A cotação soma as mensalidades individuais de uma mesma competência;
+a reserva armazena um rateio imutável vinculado à tentativa de pagamento;
+a liquidação e o estorno validam e alteram todas as mensalidades de uma só
+vez, preservando o histórico por aluno.
+
+**Estado:** os componentes foram aplicados ao Supabase, mas ainda não estão
+conectados ao checkout, aos webhooks ou à interface. Isso é intencional para
+impedir uma cobrança de R$ 100 sem liquidação completa das duas obrigações.
+A função atual `process_mercado_pago_payment` permanece inalterada.
+
+**Etapa seguinte:** integrar criação de pagamento, reconciliação/webhook,
+relatórios e UI administrativa. Testar em sandbox primeiro, inclusive
+idempotência, atraso, disputa, estorno e alteração de responsável.
