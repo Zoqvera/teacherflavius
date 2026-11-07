@@ -186,8 +186,7 @@ begin
     )
   order by availability.effective_due_date asc, tuition.reference_month asc;
 end;
-$function$
-
+$function$;
 
 -- Gateway: retain ordinary payment behavior and route sponsored payments.
 CREATE OR REPLACE FUNCTION public.process_mercado_pago_payment(target_attempt_id uuid, target_provider_payment_id text, target_status text, target_status_detail text, target_amount numeric, target_payment_method text, target_live_mode boolean, target_provider_created_at timestamp with time zone, target_provider_updated_at timestamp with time zone, target_approved_at timestamp with time zone)
@@ -504,5 +503,4 @@ begin
     'duplicate_payment_detected', duplicate_payment_detected
   );
 end;
-$function$
-
+$function$;
