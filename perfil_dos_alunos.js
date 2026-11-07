@@ -977,6 +977,12 @@ function renderProfileCard(student) {
       '">ALTERAR SITUAÇÃO</button>'
     : '';
 
+  const financialButton = userId && !preEnrolled && !isWeekly && studentBillingLoaded
+    ? '<button class="delete-button financial-responsibility-button" type="button" data-student-id="' +
+      escapeHtml(userId) + '" data-student-name="' + escapeHtml(studentName) +
+      '">RESPONSÁVEL FINANCEIRO</button>'
+    : '';
+
   const billingButton = isWeekly
     ? '<a class="delete-button" href="/cobrancas-semanais/" style="display:inline-flex;justify-content:center;text-decoration:none;">VER COBRANÇAS SEMANAIS</a>'
     : userId && !preEnrolled && studentBillingLoaded
@@ -1010,12 +1016,15 @@ function renderProfileCard(student) {
     '<p><b>Status da pré-matrícula:</b> ' + escapeHtml(student.pre_enrollment_status || (preEnrolled ? "pending" : "completed")) + '</p>' +
     '<p><b>Criado em:</b> ' + escapeHtml(formatCreatedAt(student.created_at)) + '</p>' +
     '<div class="student-billing-row"><b>Plano de cobrança</b><span class="billing-category ' + billingClass + '">' + escapeHtml(billingLabel) + '</span></div>' +
+    (window.FinancialResponsibilitiesAdmin
+      ? window.FinancialResponsibilitiesAdmin.renderSummary(userId) : '') +
     '<div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">' +
       '<p><b>Disponibilidade para aulas:</b></p>' + formatAvailability(student) +
     '</div>' +
     '<div class="student-actions">' +
       '<button class="delete-button assign-class-button" type="button" data-ref-id="' + escapeHtml(refId) + '" data-ref-type="' + escapeHtml(refType) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">ADICIONAR TURMA</button>' +
       billingButton +
+      financialButton +
       courseStateButton +
       editButton +
       deleteButton +
@@ -1151,7 +1160,13 @@ async function guardPage() {
   const originResult = await Auth.getClient().rpc("get_teacher_student_acquisitions");
   if (originResult.error) throw originResult.error;
   studentAcquisitionMap = new Map((originResult.data || []).map(entry => [String(entry.student_id), entry]));
-  await Promise.all([loadStudentClassMap(), refreshStudentBillingMap(), refreshStudentCourseStates()]);
+  await Promise.all([
+    loadStudentClassMap(),
+    refreshStudentBillingMap(),
+    refreshStudentCourseStates(),
+    window.FinancialResponsibilitiesAdmin
+      ? window.FinancialResponsibilitiesAdmin.load() : Promise.resolve([])
+  ]);
   await renderStudentProfiles();
 }
 
