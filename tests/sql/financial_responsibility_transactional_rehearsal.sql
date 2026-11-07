@@ -73,6 +73,9 @@ begin
 end;
 $trial$;
 
+-- The provider-creation gate is separately covered by existing gateway tests.
+-- The isolated scenario injects the provider attempt with notifications disabled.
+set local session_replication_role = replica;
 insert into public.tuition_payment_attempts (
   id, tuition_id, student_id, subject_ref,
   idempotency_key, amount, status, provider
@@ -84,6 +87,7 @@ insert into public.tuition_payment_attempts (
   'ci-synthetic-sponsorship-approved-001',
   100, 'created','mercado_pago'
 );
+set local session_replication_role = origin;
 
 do $trial$
 declare
