@@ -1165,7 +1165,11 @@ async function guardPage() {
     refreshStudentBillingMap(),
     refreshStudentCourseStates(),
     window.FinancialResponsibilitiesAdmin
-      ? window.FinancialResponsibilitiesAdmin.load() : Promise.resolve([])
+      ? window.FinancialResponsibilitiesAdmin.load().catch(function (error) {
+          console.warn("Não foi possível consultar responsáveis financeiros:", error);
+          return [];
+        })
+      : Promise.resolve([])
   ]);
   await renderStudentProfiles();
 }
