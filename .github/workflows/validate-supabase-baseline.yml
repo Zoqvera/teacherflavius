@@ -884,6 +884,35 @@ jobs:
         shell: bash
         run: bash scripts/test_teacher_v2_stage6d_concurrency.sh
 
+      - name: Rehearse sponsored tuition settlement and refunds in disposable PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # Database contains no production student data, auth keys or payments.
+          # All schema additions and synthetic transactions are rolled back.
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20261107143000_student_financial_responsibilities.sql
+            cat supabase/migrations/20261107144500_financial_responsibility_payment_engine.sql
+            cat supabase/migrations/20261107151000_financial_responsibility_checkout_routing.sql
+            cat supabase/migrations/20261107152000_financial_responsibility_unique_provider_settlement.sql
+            cat supabase/migrations/20261107160000_financial_responsibility_integrity_audit.sql
+            cat supabase/migrations/20261107162000_resume_billing_after_unarchive.sql
+            cat supabase/migrations/20261107162500_unarchive_due_date_alignment.sql
+            cat supabase/migrations/20261107164000_financial_refund_full_transaction_amount.sql
+            cat supabase/migrations/20261107165000_sponsored_settlement_atomicity_guard.sql
+            cat tests/sql/financial_responsibility_transactional_rehearsal.sql
+            echo 'ROLLBACK;'
+          } | docker exec -i "$DB_CONTAINER" \
+            psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            | tee "${RUNNER_TEMP}/sponsorship-transactional-rehearsal.log"
+
+          grep -Fq 'SPONSORSHIP_SYNTHETIC_TRANSACTIONAL_REHEARSAL_PASSED' \
+            "${RUNNER_TEMP}/sponsorship-transactional-rehearsal.log"
+
       - name: Stop disposable Supabase stack
         if: always()
         run: supabase stop --no-backup
