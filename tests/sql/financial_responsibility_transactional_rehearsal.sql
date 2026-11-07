@@ -4,6 +4,17 @@
 set local session_replication_role = replica;
 
 -- Suppress application notification triggers only during fixture insertion.
+-- Contractual lesson credits reference auth.users, so create only local
+-- synthetic identities with reserved, non-routable addresses.
+insert into auth.users (id,instance_id,aud,role,email,created_at,updated_at)
+values
+  ('a7100000-0000-4000-8000-000000000001',
+   '00000000-0000-0000-0000-000000000000',
+   'authenticated','authenticated','ci-payer@example.invalid',now(),now()),
+  ('a7100000-0000-4000-8000-000000000002',
+   '00000000-0000-0000-0000-000000000000',
+   'authenticated','authenticated','ci-beneficiary@example.invalid',now(),now());
+
 insert into public.profiles (
   id, name, enrolled, archived, enrolled_at, tuition_first_due_date,
   first_payment_same_day_required
