@@ -895,6 +895,15 @@ jobs:
           # All schema additions and synthetic transactions are rolled back.
           {
             echo 'BEGIN;'
+            # The September reconciliation hardening migration added columns
+            # absent from the historical baseline snapshot. The settlement
+            # function requires their exact production types.
+            cat <<'SQL_COMPAT'
+            alter table public.tuition_payment_attempts
+              add column if not exists last_reconciled_at timestamptz,
+              add column if not exists reconciliation_failure_count integer not null default 0,
+              add column if not exists last_reconciliation_error text;
+            SQL_COMPAT
             # The old baseline predates the refund-request table. Replay the
             # original production migrations in the disposable transaction.
             cat supabase/migrations/20260909213850_add_safe_mercado_pago_refunds.sql
