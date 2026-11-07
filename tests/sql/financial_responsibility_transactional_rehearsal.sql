@@ -1,6 +1,12 @@
 -- Disposable Supabase CI only. DO NOT run against production.
 -- All fixture rows are synthetic, all external calls are forbidden by design.
 -- Surround this test with BEGIN/ROLLBACK after restoring the baseline.
+-- The historical reconstruction predates the next-invoice generator's latest
+-- dependencies. That separately tested generator is not part of this atomic
+-- payment/credit/refund rehearsal and remains unchanged in production.
+alter table public.monthly_tuition
+  disable trigger monthly_tuition_prepare_next_after_payment;
+
 set local session_replication_role = replica;
 
 -- Suppress application notification triggers only during fixture insertion.
