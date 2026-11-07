@@ -927,6 +927,82 @@ jobs:
           grep -Fq 'SPONSORSHIP_SYNTHETIC_TRANSACTIONAL_REHEARSAL_PASSED' \
             "${RUNNER_TEMP}/sponsorship-transactional-rehearsal.log"
 
+      - name: Validate R$100 sandbox webhook through local signed HTTP
+        if: >-
+          github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository
+          && github.event.pull_request.head.ref == 'feature/financial-responsibility-stage6-sandbox-20261107'
+        shell: bash
+        env:
+          MERCADO_PAGO_TEST_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_TEST_ACCESS_TOKEN }}
+          MERCADO_PAGO_TEST_PAYMENT_ID: "1328670874"
+          MERCADO_PAGO_TEST_WEBHOOK_SECRET: "ci-only-hmac-key-for-disposable-sponsorship-test-20261107"
+        run: |
+          set -euo pipefail
+          test -n "${MERCADO_PAGO_TEST_ACCESS_TOKEN:-}" || {
+            echo "::error::Missing Mercado Pago sandbox credential"
+            exit 1
+          }
+
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$DB_CONTAINER"
+
+          # Only the disposable Supabase CLI database receives the evidence.
+          docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < supabase/migrations/20260911162633_add_mercado_pago_sandbox_webhook_log.sql
+
+          umask 077
+          ENV_FILE="$(mktemp /tmp/mercado-pago-sponsorship.XXXXXXXX.env)"
+          printf 'MERCADO_PAGO_TEST_ACCESS_TOKEN=%s\nMERCADO_PAGO_TEST_WEBHOOK_SECRET=%s\n' \
+            "$MERCADO_PAGO_TEST_ACCESS_TOKEN" "$MERCADO_PAGO_TEST_WEBHOOK_SECRET" > "$ENV_FILE"
+          supabase functions serve mercado-pago-sandbox-webhook --no-verify-jwt \
+            --env-file "$ENV_FILE" > /tmp/mercado-pago-sponsorship-webhook.log 2>&1 &
+          EDGE_PID=$!
+          trap 'kill "$EDGE_PID" 2>/dev/null || true; rm -f "$ENV_FILE"' EXIT
+
+          if ! node tests/mercado_pago_sponsored_webhook_local_http_integration.cjs; then
+            grep -E 'error|Error|failed' /tmp/mercado-pago-sponsorship-webhook.log \
+              | sed -E 's/(Bearer |Token )[A-Za-z0-9_.-]+/REDACTED/g' \
+              | tail -n 12 || true
+            exit 1
+          fi
+
+          docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -v payment_id="$MERCADO_PAGO_TEST_PAYMENT_ID" <<'SQL'
+          do $sponsorship$
+          declare
+            verified_event record;
+          begin
+            select * into verified_event
+            from public.mercado_pago_sandbox_webhook_events evidence
+            where evidence.provider_payment_id = :'payment_id';
+            if not found then
+              raise exception 'Sandbox provider notification was not persisted';
+            end if;
+            if (select count(*) from public.mercado_pago_sandbox_webhook_events
+                where provider_payment_id=:'payment_id') <> 1
+               or verified_event.delivery_count <> 2
+               or verified_event.transaction_amount <> 100
+               or verified_event.provider_status <> 'approved'
+               or verified_event.live_mode is distinct from false
+               or verified_event.signature_valid is distinct from true
+            then
+              raise exception 'Webhook sandbox amount, signature, replay or live-mode mismatch';
+            end if;
+            if exists (
+              select 1 from public.monthly_tuition
+              where student_id in (
+                'a7100000-0000-4000-8000-000000000001'::uuid,
+                'a7100000-0000-4000-8000-000000000002'::uuid
+              )
+            ) then
+              raise exception 'Sandbox webhook unexpectedly affected financial invoices';
+            end if;
+          end;
+          $sponsorship$;
+          SQL
+          echo 'SPONSORSHIP_SANDBOX_WEBHOOK_DATABASE_ATTESTED'
+
       - name: Stop disposable Supabase stack
         if: always()
         run: supabase stop --no-backup
