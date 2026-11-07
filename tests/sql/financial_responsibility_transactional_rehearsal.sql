@@ -20,9 +20,9 @@ insert into public.student_billing_settings (
   active, classes_per_month, billing_plan_id
 ) values
   ('a7100000-0000-4000-8000-000000000001', 50, 11,
-    date_trunc('month',now())::date, true, 4, 'standard_50_4'),
+    date_trunc('month',now())::date, true, 4, (select id from private.billing_plans where code='standard_50_4')),
   ('a7100000-0000-4000-8000-000000000002', 50, 11,
-    date_trunc('month',now())::date, true, 4, 'standard_50_4');
+    date_trunc('month',now())::date, true, 4, (select id from private.billing_plans where code='standard_50_4'));
 
 insert into private.student_financial_responsibilities (
   id, payer_student_id, beneficiary_student_id, first_reference_month, state
