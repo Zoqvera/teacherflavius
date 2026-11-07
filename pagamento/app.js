@@ -393,7 +393,7 @@ async function selectTuition(tuitionId) {
   else await renderPaymentBrick();
 }
 
-function showAllPaid(message) {
+function showAllPaid(message, isCovered) {
   stopPaymentPolling();
   if (selectedTuition) clearPaymentAttemptKey(selectedTuition.tuition_id);
   destroyBricks();
@@ -402,7 +402,9 @@ function showAllPaid(message) {
   document.getElementById("paymentSuccessDescription").textContent = message || "Não há nenhuma mensalidade pendente nesta conta.";
   const globalBanner = document.getElementById("tf-tuition-payment-banner");
   if (globalBanner) globalBanner.remove();
-  setPageMessage("Pagamento confirmado e mensalidade atualizada.", "success");
+  setPageMessage(isCovered
+    ? "O pagamento das mensalidades está a cargo do responsável financeiro."
+    : "Pagamento confirmado e mensalidade atualizada.", "success");
 }
 
 async function refreshAfterPayment(paidTuitionId) {
@@ -493,7 +495,7 @@ async function initializePage() {
       showAllPaid(coverage
         ? "Suas mensalidades são cobertas pelo responsável financeiro " +
           (coverage.payer_name || "indicado pelo professor") + ". Você não precisa efetuar um pagamento separado."
-        : undefined);
+        : undefined, Boolean(coverage));
       if (isNativeCapacitorApp()) {
         setPageMessage("Suas mensalidades estão em dia.", "success");
       }
