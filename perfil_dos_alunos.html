@@ -480,6 +480,47 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
+  <style>#financialResponsibilityModal [hidden] { display: none !important; }</style>
+  <div id="financialResponsibilityModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="financialResponsibilityTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="financialResponsibilityTitle">Responsável financeiro</h2>
+          <p id="financialResponsibilityStudentName" class="modal-help"></p>
+        </div>
+        <button id="closeFinancialResponsibilityButton" class="modal-close" type="button" aria-label="Fechar janela">×</button>
+      </div>
+
+      <form id="financialResponsibilityAssignment">
+        <label class="modal-help" for="financialResponsibilityPayer">Aluno responsável pelo pagamento</label>
+        <select id="financialResponsibilityPayer" class="class-select" required>
+          <option value="">Selecione o aluno que pagará as duas mensalidades</option>
+        </select>
+        <label class="modal-help" for="financialResponsibilityStartMonth">Primeiro mês de cobertura (primeiro dia)</label>
+        <input id="financialResponsibilityStartMonth" class="class-select" type="date" required>
+        <p class="billing-modal-note">Os dois alunos mantêm seus próprios pacotes e créditos. O responsável pagará uma cobrança consolidada, sem isenção da mensalidade do beneficiário.</p>
+        <div class="modal-actions">
+          <button id="saveFinancialResponsibilityButton" class="modal-save-button" type="submit">VINCULAR RESPONSÁVEL</button>
+        </div>
+      </form>
+
+      <form id="financialResponsibilityTermination" hidden>
+        <p id="financialResponsibilityCurrentPayer" class="modal-help"></p>
+        <label for="financialResponsibilityEndMonth" class="modal-help">Primeiro mês sem cobertura (primeiro dia)</label>
+        <input id="financialResponsibilityEndMonth" class="class-select" type="date" required>
+        <p class="billing-modal-note">Ao encerrar a responsabilidade, as mensalidades seguintes voltam a ser cobradas diretamente do beneficiário. Competências anteriores não são modificadas.</p>
+        <div class="modal-actions">
+          <button id="endFinancialResponsibilityButton" class="modal-save-button" type="submit">ENCERRAR RESPONSABILIDADE</button>
+        </div>
+      </form>
+
+      <div id="financialResponsibilityMessage" class="empty" role="status" aria-live="polite"></div>
+      <div class="modal-actions">
+        <button id="cancelFinancialResponsibilityButton" class="modal-cancel-button" type="button">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
   <div id="studentCourseStateModal" class="modal-backdrop" aria-hidden="true">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="studentCourseStateTitle">
       <div class="modal-header">
@@ -515,7 +556,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
-  <script src="perfil_dos_alunos.js?v=20261012-origin-1"></script>
+  <script src="perfil_dos_alunos.js?v=20261107-financial-1"></script>
+  <script src="/financial_responsibilities_admin.js?v=20261107-1"></script>
   <script src="/perfil_dos_alunos_vencimento.js?v=20261006-unified-first-due-1"></script>
   <script src="perfil_dos_alunos_archive.js?v=20260807-archive-1"></script>
   <script src="perfil_dos_alunos_licoes.js?v=20261022-apresentacoes-1"></script>

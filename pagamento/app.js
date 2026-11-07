@@ -168,12 +168,41 @@ async function invokePaymentFunction(payload) {
 }
 
 async function loadPendingTuitions() {
-  const response = await Auth.getClient().rpc("get_my_pending_tuitions");
+  const client = Auth.getClient();
+  const response = await client.rpc("get_my_pending_tuitions");
   if (response.error) throw response.error;
-  pendingTuitions = (response.data || []).slice().sort(function (first, second) {
+
+  // Quote every payable invoice on the server. A sponsored total cannot be
+  // calculated or overridden by the browser.
+  const quotations = await Promise.all((response.data || []).map(async function (tuition) {
+    const quotation = await client.rpc("get_my_financial_responsibility_quote", {
+      target_tuition_id: tuition.tuition_id
+    });
+    if (quotation.error || !quotation.data) {
+      throw new Error("Não foi possível consultar todos os pacotes desta cobrança. " +
+        (quotation.error ? quotation.error.message : "Tente novamente."));
+    }
+    const total = Number(quotation.data.total);
+    if (!Number.isFinite(total) || total <= 0) {
+      throw new Error("O valor da cobrança consolidada é inválido.");
+    }
+    return Object.assign({}, tuition, {
+      checkout_total: total,
+      sponsored_payment: quotation.data.sponsored === true,
+      covered_items: Array.isArray(quotation.data.items) ? quotation.data.items : []
+    });
+  }));
+
+  pendingTuitions = quotations.sort(function (first, second) {
     return String(first.due_date || "").localeCompare(String(second.due_date || ""));
   });
   return pendingTuitions;
+}
+
+async function getMyFinancialCoverage() {
+  const response = await Auth.getClient().rpc("get_my_financial_responsibility_coverage");
+  if (response.error) throw response.error;
+  return response.data || null;
 }
 
 async function loadFirstPaymentWindow() {
@@ -222,7 +251,7 @@ function renderTuitionList() {
         ? "Pagamento pendente"
         : (overdue ? "Vencida" : "Em aberto");
     return '<button class="tuition-card' + (selected ? ' selected' : '') + '" type="button" data-tuition-id="' + escapeHtml(tuition.tuition_id) + '">' +
-      '<span class="tuition-card__top"><strong>' + escapeHtml(formatReferenceMonth(tuition.reference_month)) + '</strong><span class="tuition-card__amount">' + escapeHtml(formatCurrency(tuition.amount_due)) + '</span></span>' +
+      '<span class="tuition-card__top"><strong>' + escapeHtml(formatReferenceMonth(tuition.reference_month)) + '</strong><span class="tuition-card__amount">' + escapeHtml(formatCurrency(tuition.checkout_total)) + '</span></span>' +
       '<span class="tuition-card__bottom"><span>Vencimento: ' + escapeHtml(formatDate(tuition.due_date)) + '</span><span class="tuition-card__status' + (overdue ? ' overdue' : '') + '">' + statusLabel + '</span></span>' +
     '</button>';
   }).join("");
@@ -248,8 +277,16 @@ function updateCheckoutHeading() {
     description.textContent = "Selecione uma cobrança para carregar as opções de pagamento.";
     return;
   }
-  title.textContent = formatReferenceMonth(selectedTuition.reference_month) + " · " + formatCurrency(selectedTuition.amount_due);
-  description.textContent = "Vencimento em " + formatDate(selectedTuition.due_date) + ". Escolha Pix ou cartão de débito abaixo.";
+  title.textContent = formatReferenceMonth(selectedTuition.reference_month) + " · " +
+    formatCurrency(selectedTuition.checkout_total);
+  const items = selectedTuition.covered_items || [];
+  const itemDescriptions = items.map(function (item) {
+    const label = item.role === "payer" ? "Seu pacote" : (item.student_name || "Aluno beneficiário");
+    return label + ": " + formatCurrency(item.amount);
+  });
+  description.textContent = "Vencimento em " + formatDate(selectedTuition.due_date) + ". " +
+    (selectedTuition.sponsored_payment ? itemDescriptions.join(" + ") + ". " : "") +
+    "Escolha Pix ou cartão de débito abaixo.";
 }
 
 async function renderPaymentBrick() {
@@ -262,7 +299,7 @@ async function renderPaymentBrick() {
 
   const settings = {
     initialization: {
-      amount: Number(selectedTuition.amount_due),
+      amount: Number(selectedTuition.checkout_total),
       payer: {
         email: paymentSession.user.email || ""
       }
@@ -356,7 +393,7 @@ async function selectTuition(tuitionId) {
   else await renderPaymentBrick();
 }
 
-function showAllPaid(message) {
+function showAllPaid(message, isCovered) {
   stopPaymentPolling();
   if (selectedTuition) clearPaymentAttemptKey(selectedTuition.tuition_id);
   destroyBricks();
@@ -365,7 +402,9 @@ function showAllPaid(message) {
   document.getElementById("paymentSuccessDescription").textContent = message || "Não há nenhuma mensalidade pendente nesta conta.";
   const globalBanner = document.getElementById("tf-tuition-payment-banner");
   if (globalBanner) globalBanner.remove();
-  setPageMessage("Pagamento confirmado e mensalidade atualizada.", "success");
+  setPageMessage(isCovered
+    ? "O pagamento das mensalidades está a cargo do responsável financeiro."
+    : "Pagamento confirmado e mensalidade atualizada.", "success");
 }
 
 async function refreshAfterPayment(paidTuitionId) {
@@ -452,7 +491,11 @@ async function initializePage() {
       }
     }
     if (!pendingTuitions.length) {
-      showAllPaid();
+      const coverage = await getMyFinancialCoverage();
+      showAllPaid(coverage
+        ? "Suas mensalidades são cobertas pelo responsável financeiro " +
+          (coverage.payer_name || "indicado pelo professor") + ". Você não precisa efetuar um pagamento separado."
+        : undefined, Boolean(coverage));
       if (isNativeCapacitorApp()) {
         setPageMessage("Suas mensalidades estão em dia.", "success");
       }

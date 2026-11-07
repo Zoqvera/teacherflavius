@@ -474,9 +474,30 @@ Deno.serve(async (request: Request) => {
     return jsonResponse(request, { error: "O valor da mensalidade é inválido." }, 422);
   }
 
+  // The service derives the entire invoice total, including covered students.
+  // The browser can never supply a replacement amount or beneficiary ID.
+  const { data: financialQuote, error: financialQuoteError } = await supabaseAdmin.rpc(
+    "get_financial_responsibility_payment_quote_internal",
+    { target_payer_id: user.id, target_tuition_id: tuitionId },
+  );
+  if (financialQuoteError || !financialQuote) {
+    console.error("Unable to quote financial responsibility", financialQuoteError?.message);
+    return jsonResponse(request, {
+      error: "A cobrança está indisponível. Verifique a situação das mensalidades com o professor.",
+      code: "financial_quote_unavailable",
+    }, 409);
+  }
+
+  const sponsoredPayment = financialQuote.sponsored === true;
+  const chargeAmount = Number(financialQuote.total);
+  if (!Number.isFinite(chargeAmount) || chargeAmount <= 0 ||
+      (!sponsoredPayment && chargeAmount !== amount)) {
+    return jsonResponse(request, { error: "O valor total da cobrança é inconsistente." }, 409);
+  }
+
   const { data: sameAttempt, error: sameAttemptError } = await supabaseAdmin
     .from("tuition_payment_attempts")
-    .select("id, tuition_id, student_id, provider_payment_id, status, created_at")
+    .select("id, tuition_id, student_id, amount, provider_payment_id, status, created_at")
     .eq("idempotency_key", idempotencyKey)
     .maybeSingle();
 
@@ -485,8 +506,12 @@ Deno.serve(async (request: Request) => {
     return jsonResponse(request, { error: "Não foi possível iniciar o pagamento." }, 500);
   }
 
-  if (sameAttempt && (sameAttempt.tuition_id !== tuitionId || sameAttempt.student_id !== user.id)) {
-    return jsonResponse(request, { error: "Chave de pagamento inválida." }, 409);
+  if (sameAttempt && (
+    sameAttempt.tuition_id !== tuitionId ||
+    sameAttempt.student_id !== user.id ||
+    Number(sameAttempt.amount) !== chargeAmount
+  )) {
+    return jsonResponse(request, { error: "Chave de pagamento inválida ou valor alterado." }, 409);
   }
 
   if (sameAttempt?.provider_payment_id) {
@@ -570,7 +595,7 @@ Deno.serve(async (request: Request) => {
         tuition_id: tuitionId,
         student_id: user.id,
         idempotency_key: idempotencyKey,
-        amount,
+        amount: chargeAmount,
         status: "created",
       })
       .select("id, tuition_id, student_id, provider_payment_id, status, created_at")
@@ -668,14 +693,17 @@ Deno.serve(async (request: Request) => {
   }
 
   const mercadoPagoPayload: JsonRecord = {
-    transaction_amount: amount,
-    description: `Mensalidade Teacher Flávio — ${formatReferenceMonth(tuition.reference_month)}`,
+    transaction_amount: chargeAmount,
+    description: sponsoredPayment
+      ? `Mensalidades Teacher Flávio — ${formatReferenceMonth(tuition.reference_month)}`
+      : `Mensalidade Teacher Flávio — ${formatReferenceMonth(tuition.reference_month)}`,
     external_reference: attempt.id,
     payment_method_id: isPix ? "pix" : paymentMethodId,
     payer: payerPayload,
     metadata: {
       tuition_id: tuitionId,
       payment_attempt_id: attempt.id,
+      financial_responsibility: sponsoredPayment,
     },
   };
 
@@ -689,6 +717,24 @@ Deno.serve(async (request: Request) => {
     mercadoPagoPayload.token = tokenizedCard;
     mercadoPagoPayload.installments = installments;
     if (Number.isFinite(issuerId) && issuerId > 0) mercadoPagoPayload.issuer_id = issuerId;
+  }
+
+  if (sponsoredPayment) {
+    const { data: reservation, error: reservationError } = await supabaseAdmin.rpc(
+      "reserve_financial_responsibility_payment",
+      { target_attempt_id: attempt.id, target_payer_student_id: user.id },
+    );
+    if (reservationError || reservation?.sponsored !== true ||
+        Number(reservation.total) !== chargeAmount) {
+      console.error("Unable to reserve sponsored invoices", reservationError?.message);
+      await supabaseAdmin.from("tuition_payment_attempts")
+        .update({ status: "rejected", status_detail: "financial_reservation_failed" })
+        .eq("id", attempt.id);
+      return jsonResponse(request, {
+        error: "Não foi possível reservar todas as mensalidades desta cobrança.",
+        code: "financial_reservation_failed",
+      }, 409);
+    }
   }
 
   const mercadoPagoResponse = await fetch("https://api.mercadopago.com/v1/payments", {
