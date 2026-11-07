@@ -968,19 +968,19 @@ jobs:
           fi
 
           docker exec -i "$DB_CONTAINER" psql -X -U postgres -d postgres \
-            -v ON_ERROR_STOP=1 -v payment_id="$MERCADO_PAGO_TEST_PAYMENT_ID" <<'SQL'
+            -v ON_ERROR_STOP=1 <<'SQL'
           do $sponsorship$
           declare
             verified_event record;
           begin
             select * into verified_event
             from public.mercado_pago_sandbox_webhook_events evidence
-            where evidence.provider_payment_id = :'payment_id';
+            where evidence.provider_payment_id = '1328670874';
             if not found then
               raise exception 'Sandbox provider notification was not persisted';
             end if;
             if (select count(*) from public.mercado_pago_sandbox_webhook_events
-                where provider_payment_id=:'payment_id') <> 1
+                where provider_payment_id='1328670874') <> 1
                or verified_event.delivery_count <> 2
                or verified_event.transaction_amount <> 100
                or verified_event.provider_status <> 'approved'
