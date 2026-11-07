@@ -190,10 +190,16 @@ begin
     insert into private.financial_responsibility_payment_items
       (attempt_id, tuition_id, allocated_amount)
     values (target_attempt_id, target_id, item_amount)
-    on conflict (attempt_id, tuition_id) do update
-    set allocated_amount = excluded.allocated_amount
-    where private.financial_responsibility_payment_items.allocated_amount = excluded.allocated_amount
-      and private.financial_responsibility_payment_items.reversed_at is null;
+    on conflict (attempt_id, tuition_id) do nothing;
+    if not exists (
+      select 1 from private.financial_responsibility_payment_items existing
+      where existing.attempt_id = target_attempt_id
+        and existing.tuition_id = target_id
+        and existing.allocated_amount = item_amount
+        and existing.reversed_at is null
+    ) then
+      raise exception 'O rateio anterior não corresponde à cobrança imutável.';
+    end if;
     allocated_count := allocated_count + 1;
   end loop;
 
@@ -257,6 +263,14 @@ begin
 
   if item_count < 2 then
     raise exception 'Tentativa não possui rateio financeiro consolidado.';
+  end if;
+
+  if normalized_status = 'approved'
+     and (attempt_row.reversed_at is not null or exists (
+       select 1 from private.financial_responsibility_payment_items item
+       where item.attempt_id = target_attempt_id and item.reversed_at is not null
+     )) then
+    raise exception 'Um pagamento já estornado não pode ser reaplicado automaticamente.';
   end if;
 
   if round(target_amount, 2) is distinct from round(attempt_row.amount, 2)
