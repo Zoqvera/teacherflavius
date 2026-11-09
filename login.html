@@ -288,7 +288,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           const destination = safeNext();
           // Preserve the invitation through the Google OAuth callback.
           if (destination === "/complete-cadastro/" ||
-              destination.startsWith("/complete-cadastro/?")) {
+              destination.startsWith("/complete-cadastro/?") ||
+              destination === "/matricula80/" ||
+              destination.startsWith("/matricula80/?")) {
             window.location.replace(destination);
           } else {
             window.location.replace("/complete-cadastro/?next=" + encodeURIComponent(destination));
