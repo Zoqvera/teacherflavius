@@ -26,7 +26,7 @@
     authGuardService: Object.freeze({
       globalName: "AuthGuardService",
       selector: 'script[src^="/auth_guard_service.js"]',
-      src: "/auth_guard_service.js?v=20261030-1",
+      src: "/auth_guard_service.js?v=20261109-matricula80-gate-1",
       missingMessage: "O serviço de guarda de autenticação não foi inicializado.",
       loadErrorMessage: "Não foi possível carregar o serviço de guarda de autenticação."
     }),
