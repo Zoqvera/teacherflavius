@@ -72,6 +72,19 @@
         profile.archived !== true;
     }
 
+    async function isPromotionFirstPaymentPending(profile) {
+      if (profile.first_payment_same_day_required !== true ||
+          !profile.enrolled_at ||
+          String(profile.enrolled_at) < "2026-11-09") return false;
+
+      const client = typeof settings.getClient === "function" ? settings.getClient() : null;
+      if (!client) throw new Error("Não foi possível verificar o pagamento da matrícula.");
+
+      const response = await client.rpc("get_my_matricula80_payment_gate");
+      if (response.error) throw response.error;
+      return !!response.data && response.data.payment_required === true;
+    }
+
     async function teacherHasAccess(guardOptions) {
       if (guardOptions.allowTeacher === false || typeof isTeacherAdmin !== "function") {
         return false;
@@ -125,6 +138,10 @@
 
         if (requiresActiveStudent && !isActiveStudent(profile)) {
           redirectToAccessDenied();
+          return null;
+        }
+        if (requiresActiveStudent && await isPromotionFirstPaymentPending(profile)) {
+          window.location.replace("/pagamento/?matricula80=1");
           return null;
         }
       } catch (error) {
