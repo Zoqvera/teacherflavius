@@ -70,7 +70,9 @@
   }
 
   function formatWhatsapp(value) {
-    const digits = onlyDigits(value).slice(0, 11);
+    let digits = onlyDigits(value);
+    if (digits.startsWith("55") && digits.length > 11) digits = digits.slice(2);
+    digits = digits.slice(0, 11);
     if (digits.length < 3) return digits;
     const ddd = "(" + digits.slice(0, 2) + ") ";
     if (digits.length <= 6) return ddd + digits.slice(2);
