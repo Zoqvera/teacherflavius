@@ -258,6 +258,7 @@
           isConfigured: isConfigured,
           showConfigWarning: showConfigWarning,
           getSession: getSession,
+          getClient: getClient,
           ensureProfileForUser: ensureProfileForUser,
           isTeacherAdmin: isTeacherAdmin,
           normalizeNextPath: navigation.normalizeNextPath,
