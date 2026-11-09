@@ -397,6 +397,13 @@ attest_pending_teacher_v2_migration() {
 
   [[ "$missing" == 't' ]]
 }
+# Previously committed, unchanged migrations can remain pending after a
+# newer independent migration advances production. Verify against protected base.
+attest_unchanged_base_pending_migration() {
+  local version="$1"
+  [[ -n "${MIGRATION_BASE_REF}" && -s "${TEMP_DIR}/base_records" ]] || return 1
+  grep -Eq "^${version}[[:space:]]" "${TEMP_DIR}/base_records"
+}
 filter_local_records_from_cutoff() {
   local records_file="$1"
 
@@ -581,6 +588,29 @@ VERIFIED_MIGRATION_ALIASES
     fi
   fi
 
+  # An immutable SQL snapshot had formatting-only differences when applied.
+  # Accept only its pinned Git/production digests and live catalog evidence.
+  local anuncio80_line expected_anuncio80_line
+  anuncio80_line="$(awk -F $'\t' '$1 == "20261109155035" {print}' "${mismatch_file}")"
+  printf -v expected_anuncio80_line '%s\t%s\t%s\t%s\t%s' \
+    '20261109155035' 'add_anuncio80_acquisition_origin' \
+    'add_anuncio80_acquisition_origin' \
+    'aee245574b1fe633f02f82de53369ca4c7fcfd86f0c2eeb25453f4c68351d593' \
+    '328c4b9f8a316632128b5017eaf14ef7a05caa3ca9dafede9f0276e5e841779e'
+  if [[ "${anuncio80_line}" == "${expected_anuncio80_line}" ]]; then
+    local anuncio80_attested
+    anuncio80_attested="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+      --file "${ROOT_DIR}/scripts/sql/anuncio80_acquisition_catalog_attestation.sql")"
+    if [[ "${anuncio80_attested}" == "t" ]]; then
+      awk -F $'\t' '$1 != "20261109155035"' "${mismatch_file}" \
+        > "${TEMP_DIR}/remaining_anuncio80_identity_mismatch"
+      mv "${TEMP_DIR}/remaining_anuncio80_identity_mismatch" "${mismatch_file}"
+      echo "::notice::Pinned anúncio80 SHA256 pair and live catalog attested; other drift remains enforced."
+    else
+      echo "::error::Production anúncio80 schema differs from the pinned contract."
+      exit 1
+    fi
+  fi
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"
@@ -605,6 +635,8 @@ VERIFIED_MIGRATION_ALIASES
           echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
         elif attest_pending_teacher_v2_migration "${new_version}"; then
           echo "::notice::Immutable teacher-v2 migration ${new_version} is attested pending and absent from production; isolated replay is required before activation."
+        elif attest_unchanged_base_pending_migration "${new_version}"; then
+          echo "::notice::Immutable migration ${new_version} existed on the base branch, is unchanged, and remains unapplied after the production tip advanced."
         else
           echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}, unless an exact immutable pending version is independently attested."
           drift_found=true

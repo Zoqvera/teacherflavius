@@ -740,3 +740,53 @@ test("manual Resend migration permits only the exact pinned SQL and attested cat
     assert.equal(rejected.status, 1, rejected.stdout + "\n" + rejected.stderr);
   }
 });
+
+test("pre-existing immutable pending migration remains allowed when production tip advances", () => {
+  const pendingSql = "select 1;\n";
+  const productionSql = "select 3;\n";
+  const fixture = createGitHistoryFixture({
+    filename: "20261007060001_pending.sql",
+    content: pendingSql,
+  });
+
+  try {
+    fs.writeFileSync(
+      path.join(fixture.migrationsDir, "20261007060003_production.sql"),
+      productionSql,
+    );
+    for (const args of [
+      ["add", "supabase/migrations"],
+      ["commit", "-qm", "add deployed tip"],
+    ]) {
+      const result = spawnSync("git", args, { cwd: fixture.root, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    }
+    const baseRef = spawnSync("git", ["rev-parse", "HEAD"], {
+      cwd: fixture.root, encoding: "utf8",
+    }).stdout.trim();
+    const options = {
+      migrationsDir: fixture.migrationsDir,
+      gitRoot: fixture.root,
+      baseRef,
+      allowPrNew: true,
+      remoteRows: [{
+        version: "20261007060003",
+        name: "production",
+        checksum: canonicalChecksum(productionSql),
+      }],
+    };
+    const existing = runDriftScript(options);
+    assert.equal(existing.status, 0, existing.stdout + existing.stderr);
+    assert.match(existing.stdout, /existed on the base branch, is unchanged/i);
+
+    fs.writeFileSync(
+      path.join(fixture.migrationsDir, "20261007060002_unapproved.sql"),
+      "select 2;\n",
+    );
+    const newBackdated = runDriftScript(options);
+    assert.equal(newBackdated.status, 1);
+    assert.match(newBackdated.stdout, /must be newer than the current production tip/i);
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
