@@ -3,6 +3,7 @@
 
   const SOURCES = Object.freeze([
     { value: "instagram", label: "Instagram" },
+    { value: "anúncio80", label: "Anúncio de R$ 80 (Instagram)" },
     { value: "chatgpt", label: "ChatGPT" },
     { value: "google", label: "Google" },
     { value: "referral", label: "Indicação de amigo ou familiar" },
