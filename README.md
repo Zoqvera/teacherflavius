@@ -20,7 +20,7 @@ Em 1º de outubro de 2026, a plataforma possui:
 - módulos acadêmicos de alunos, turmas, frequência, lições, exercícios, flashcards, roteiro de estudos, Conversation Questions e reposições;
 - páginas de lição gerenciáveis no Roteiro de Estudos, com cards dinâmicos, numeração editorial, tradução e fallback para PDFs;
 - turmas `INDIVIDUAL` e `QUINTETO`, overrides de capacidade e vínculo simultâneo de cada aluno com até duas turmas compatíveis;
-- oferta pública de aulas em grupo padronizada em R$ 50,00 por mês e até cinco alunos;
+- oferta pública de aulas em grupo padronizada em R$ 80,00 por mês e até cinco alunos;
 - módulo financeiro com mensalidades, Pix/cartão de débito, primeira mensalidade disponível após definição do valor e próxima competência liberada dois dias após o pagamento anterior;
 - infraestrutura legada de assinaturas recorrentes do Mercado Pago preservada para histórico e conciliação, com criação de novas assinaturas desativada;
 - analytics consentido com GTM/GA4, eventos financeiros server-side e OpenAI Pixel para conversões comerciais;
