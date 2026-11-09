@@ -590,6 +590,196 @@ VERIFIED_MIGRATION_ALIASES
     fi
   fi
 
+  # Supabase applied the exact intended statement sequence for anúncio80,
+  # but Git already committed the historical migration with different
+  # formatting/comments. Pin BOTH immutable digests and independently attest
+  # the live read-only catalog. Every other mismatch remains fatal.
+  local anuncio80_line expected_anuncio80_line
+  anuncio80_line="$(awk -F 
+    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
+    sed 's/^/  - /' "${remote_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${local_only_file}" ]]; then
+    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
+      # PRs may propose append-only migrations; they must not already be in
+      # production. Published versions remain strictly protected above.
+      local production_tip
+      production_tip="$(tail -n 1 "${remote_versions_file}")"
+      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+        echo "::error::Production migration history is empty or malformed."
+        drift_found=true
+      fi
+      while IFS= read -r new_version; do
+        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+          echo "::error::Production migration tip is malformed."
+          drift_found=true
+        elif [[ "${new_version}" > "${production_tip}" ]]; then
+          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
+        elif attest_pending_teacher_v2_migration "${new_version}"; then
+          echo "::notice::Immutable teacher-v2 migration ${new_version} is attested pending and absent from production; isolated replay is required before activation."
+        elif attest_unchanged_base_pending_migration "${new_version}"; then
+          echo "::notice::Immutable migration ${new_version} existed on the base branch, is unchanged, and remains unapplied after the production tip advanced."
+        else
+          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}, unless an exact immutable pending version is independently attested."
+          drift_found=true
+        fi
+      done < "${local_only_file}"
+    else
+      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+      sed 's/^/  - /' "${local_only_file}"
+      drift_found=true
+    fi
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Migration identity differs between production and Git:"
+    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
+      echo "  - ${version}"
+      if [[ "${remote_name}" != "${local_name}" ]]; then
+        echo "    production name: ${remote_name}"
+        echo "    Git name:        ${local_name}"
+      fi
+      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
+        echo "    production sha256: ${remote_checksum}"
+        echo "    Git sha256:        ${local_checksum}"
+      fi
+    done < "${mismatch_file}"
+    drift_found=true
+  fi
+
+  if [[ "${drift_found}" == true ]]; then
+    exit 1
+  fi
+}
+
+main() {
+  require_configuration
+
+  TEMP_DIR="$(mktemp -d)"
+  trap cleanup EXIT
+
+  local local_records_file="${TEMP_DIR}/local_records"
+  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
+  local remote_records_file="${TEMP_DIR}/remote_records"
+
+  collect_local_records > "${local_records_file}"
+  validate_unique_local_versions "${local_records_file}"
+  validate_historical_immutability "${local_records_file}"
+
+  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
+  collect_remote_records > "${remote_records_file}"
+
+  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
+
+  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
+}
+
+main "$@"
+\\t' '$1 == "20261109155035" { print }' "${mismatch_file}")"
+  printf -v expected_anuncio80_line '%s\\t%s\\t%s\\t%s\\t%s' \\
+    '20261109155035' 'add_anuncio80_acquisition_origin' \\
+    'add_anuncio80_acquisition_origin' \\
+    'aee245574b1fe633f02f82de53369ca4c7fcfd86f0c2eeb25453f4c68351d593' \\
+    '328c4b9f8a316632128b5017eaf14ef7a05caa3ca9dafede9f0276e5e841779e'
+  if [[ "${anuncio80_line}" == "${expected_anuncio80_line}" ]]; then
+    local anuncio80_attested
+    anuncio80_attested="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \\
+      --file "${ROOT_DIR}/scripts/sql/anuncio80_acquisition_catalog_attestation.sql")"
+    if [[ "${anuncio80_attested}" == 't' ]]; then
+      awk -F 
+    echo "::error::Production contains migration versions that are missing from supabase/migrations:"
+    sed 's/^/  - /' "${remote_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${local_only_file}" ]]; then
+    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
+      # PRs may propose append-only migrations; they must not already be in
+      # production. Published versions remain strictly protected above.
+      local production_tip
+      production_tip="$(tail -n 1 "${remote_versions_file}")"
+      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+        echo "::error::Production migration history is empty or malformed."
+        drift_found=true
+      fi
+      while IFS= read -r new_version; do
+        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+          echo "::error::Production migration tip is malformed."
+          drift_found=true
+        elif [[ "${new_version}" > "${production_tip}" ]]; then
+          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
+        elif attest_pending_teacher_v2_migration "${new_version}"; then
+          echo "::notice::Immutable teacher-v2 migration ${new_version} is attested pending and absent from production; isolated replay is required before activation."
+        elif attest_unchanged_base_pending_migration "${new_version}"; then
+          echo "::notice::Immutable migration ${new_version} existed on the base branch, is unchanged, and remains unapplied after the production tip advanced."
+        else
+          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}, unless an exact immutable pending version is independently attested."
+          drift_found=true
+        fi
+      done < "${local_only_file}"
+    else
+      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+      sed 's/^/  - /' "${local_only_file}"
+      drift_found=true
+    fi
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Migration identity differs between production and Git:"
+    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
+      echo "  - ${version}"
+      if [[ "${remote_name}" != "${local_name}" ]]; then
+        echo "    production name: ${remote_name}"
+        echo "    Git name:        ${local_name}"
+      fi
+      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
+        echo "    production sha256: ${remote_checksum}"
+        echo "    Git sha256:        ${local_checksum}"
+      fi
+    done < "${mismatch_file}"
+    drift_found=true
+  fi
+
+  if [[ "${drift_found}" == true ]]; then
+    exit 1
+  fi
+}
+
+main() {
+  require_configuration
+
+  TEMP_DIR="$(mktemp -d)"
+  trap cleanup EXIT
+
+  local local_records_file="${TEMP_DIR}/local_records"
+  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
+  local remote_records_file="${TEMP_DIR}/remote_records"
+
+  collect_local_records > "${local_records_file}"
+  validate_unique_local_versions "${local_records_file}"
+  validate_historical_immutability "${local_records_file}"
+
+  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
+  collect_remote_records > "${remote_records_file}"
+
+  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
+
+  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
+}
+
+main "$@"
+\\t' '$1 != "20261109155035"' "${mismatch_file}" \\
+        > "${TEMP_DIR}/remaining_anuncio80_identity_mismatch"
+      mv "${TEMP_DIR}/remaining_anuncio80_identity_mismatch" "${mismatch_file}"
+      echo "::notice::Immutable anúncio80 migration SHA256 pair verified against read-only production catalog."
+    else
+      echo "::error::The applied anúncio80 schema does not match the pinned database contract."
+      exit 1
+    fi
+  fi
+
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"
