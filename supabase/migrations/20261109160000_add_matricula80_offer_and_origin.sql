@@ -28,7 +28,7 @@ as $function$
 declare
   requester_id uuid := auth.uid();
   promotion private.enrollment_invite_links%rowtype;
-  authorization jsonb;
+  authorization_result jsonb;
   authorized_link_id uuid;
 begin
   if requester_id is null then
@@ -48,9 +48,9 @@ begin
   end if;
 
   -- Reaproveita as validações existentes: Google, aluno novo, bloqueios e vínculo único.
-  authorization := public.authorize_my_enrollment_link(promotion.token);
-  if coalesce((authorization ->> 'ok')::boolean, false) is not true then
-    return authorization;
+  authorization_result := public.authorize_my_enrollment_link(promotion.token);
+  if coalesce((authorization_result ->> 'ok')::boolean, false) is not true then
+    return authorization_result;
   end if;
 
   select access.invite_link_id
