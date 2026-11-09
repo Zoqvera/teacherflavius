@@ -1,12 +1,12 @@
--- New acquisition origin for the R$ 80 Instagram campaign.
--- Preserve existing sources and all pre-existing student attribution.
+-- Add a dedicated acquisition origin for the Instagram R$80 / five-student campaign.
+-- This migration has already been applied to production as version 20261109155035.
+-- Never relabel students from older campaigns without independently verified attribution.
 
 alter table private.student_acquisition
   drop constraint if exists student_origin_allowed;
 alter table private.student_acquisition
   add constraint student_origin_allowed check (
-    declared_source is null or
-    declared_source in (
+    declared_source is null or declared_source in (
       'instagram', 'chatgpt', 'google', 'referral', 'facebook',
       'getninjas', 'other', 'unknown', 'anúncio80'
     )
@@ -16,8 +16,7 @@ alter table private.promotion_reservations
   drop constraint if exists promotion_origin_allowed;
 alter table private.promotion_reservations
   add constraint promotion_origin_allowed check (
-    declared_source is null or
-    declared_source in (
+    declared_source is null or declared_source in (
       'instagram', 'chatgpt', 'google', 'referral', 'facebook',
       'getninjas', 'other', 'unknown', 'anúncio80'
     )
@@ -27,8 +26,7 @@ alter table private.trial_lesson_appointments
   drop constraint if exists trial_origin_allowed;
 alter table private.trial_lesson_appointments
   add constraint trial_origin_allowed check (
-    declared_source is null or
-    declared_source in (
+    declared_source is null or declared_source in (
       'instagram', 'chatgpt', 'google', 'referral', 'facebook',
       'getninjas', 'other', 'unknown', 'anúncio80'
     )
@@ -90,8 +88,7 @@ begin
 end;
 $$;
 
--- Assertions verify the canonical value, existing sources, and validation.
-do $
+do $$
 begin
   if private.canonical_acquisition_source('anúncio80', null) <> 'anúncio80'
     or private.canonical_acquisition_source('Anuncio80', null) <> 'anúncio80'
