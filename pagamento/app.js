@@ -305,10 +305,9 @@ async function renderPaymentBrick() {
       }
     },
     customization: {
-      paymentMethods: {
-        bankTransfer: "all",
-        debitCard: "all"
-      },
+      paymentMethods: new URLSearchParams(window.location.search).get("matricula80") === "1"
+        ? { bankTransfer: "all" }
+        : { bankTransfer: "all", debitCard: "all" },
       visual: {
         style: { theme: "dark" }
       }
@@ -529,7 +528,16 @@ async function initializePage() {
 
     renderTuitionList();
     updateCheckoutHeading();
-    setPageMessage("Escolha Pix ou cartão de débito para pagar a mensalidade selecionada.", "");
+    const matricula80Checkout = new URLSearchParams(window.location.search).get("matricula80") === "1";
+    if (matricula80Checkout) {
+      document.querySelector(".payment-hero h1").textContent = "Pagamento da matrícula por Pix";
+    }
+    setPageMessage(
+      matricula80Checkout
+        ? "Conclua o pagamento de R$ 80 com Pix pelo Mercado Pago."
+        : "Escolha Pix ou cartão de débito para pagar a mensalidade selecionada.",
+      ""
+    );
     if (isClosedFirstTuition(selectedTuition)) await showFirstPaymentClosed();
     else await renderPaymentBrick();
   } catch (error) {
