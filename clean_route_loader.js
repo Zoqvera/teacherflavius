@@ -53,7 +53,7 @@
     return html
       .replace(
         /<script src="\/?auth\.js\?v=[^"]+"><\/script>/,
-        '<script src="/auth.js?v=20261003-profile-1"></script>\n  <script src="/student_profile_optional.js?v=20261003-profile-1"></script>'
+        '<script src="/auth.js?v=20261003-profile-1"></script>\n  <script src="/student_profile_optional.js?v=20261110-profile-permissions-1"></script>'
       )
       .replace(
         '<label for="pixKey">Chave PIX</label>',

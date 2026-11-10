@@ -15,7 +15,7 @@
     }),
     Object.freeze({
       selector: 'script[src*="student_data_utils.js"]',
-      src: "/student_data_utils.js?v=20261008-titlecase-2",
+      src: "/student_data_utils.js?v=20261110-profile-permissions-1",
       isReady: function () { return !!window.StudentDataUtils; }
     }),
     Object.freeze({

@@ -17,7 +17,7 @@ AUTH_DEPENDENCIES = (
         validation_message="Dependencies must load before auth.js in: {path} (Auth navigation service)",
     ),
     ScriptDependencySpec(
-        dependency_src="/student_data_utils.js?v=20261008-titlecase-2",
+        dependency_src="/student_data_utils.js?v=20261110-profile-permissions-1",
         dependency_filename="student_data_utils.js",
         target_filename="auth.js",
         validation_message="Dependencies must load before auth.js in: {path} (Student data utilities)",
