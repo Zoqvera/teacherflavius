@@ -8,13 +8,13 @@ O arquivo `hosting/_headers` registra a política de monitoramento; ele não é,
 
 ## Etapa 1 aplicada: proteções compatíveis
 
-Inserido no início de `<head>`, antes de qualquer `<script>`, o seguinte elemento em onze telas sem eventos inline no HTML:
+Inserido no início de `<head>`, antes de qualquer `<script>`, o seguinte elemento em dez telas sem eventos inline no HTML:
 
 ```html
 <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; script-src-attr 'none'">
 ```
 
-Em quatro páginas com histórico de eventos inline e carregadores de conteúdo, aplica-se apenas:
+Em seis páginas com histórico de eventos inline ou carregadores de conteúdo, incluindo o documento real `perfil_dos_alunos.html` usado pela tela administrativa, aplica-se apenas:
 
 ```html
 <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
@@ -30,7 +30,7 @@ Esta etapa **não** implementa ainda `script-src` restritivo: scripts inline `<s
 
 ## Compatibilidade
 
-Foi verificado que as onze páginas com `script-src-attr 'none'` não contêm atributos HTML explícitos de evento como `onclick`, `onload` ou `onsubmit`. As quatro páginas legadas mantêm eventos existentes. O teste automático `tests/csp_enforced_meta_contract.test.js` verifica a política, o posicionamento antes dos scripts, os atributos HTML e a preservação da política de monitoramento.
+Foi verificado que as dez páginas com `script-src-attr 'none'` não contêm atributos HTML explícitos de evento como `onclick`, `onload` ou `onsubmit`. As seis páginas legadas mantêm eventos existentes. O teste automático `tests/csp_enforced_meta_contract.test.js` verifica a política, o posicionamento antes dos scripts, os atributos HTML e a preservação da política de monitoramento.
 
 O registro de eventos em JavaScript por `addEventListener` e pela atribuição de propriedades em objetos não é afetado por `script-src-attr`.
 
