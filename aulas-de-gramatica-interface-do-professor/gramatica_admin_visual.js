@@ -96,9 +96,7 @@
         card.setAttribute('aria-labelledby', title.id);
       }
 
-      const paragraphs = card.querySelectorAll('p');
-      enhanceResourceParagraph(paragraphs[0], 'Abrir vídeo de ' + lessonName);
-      enhanceResourceParagraph(paragraphs[1], 'Abrir exercícios de ' + lessonName);
+      enhanceResourceParagraph(card.querySelector('p'), 'Abrir vídeo de ' + lessonName);
 
       const editButton = card.querySelector('[data-edit-id]');
       const deleteButton = card.querySelector('[data-delete-id]');
