@@ -132,7 +132,7 @@ O navegador usa somente configuração pública. `service_role`, senhas de banco
 | `/flashcards/` | decks, prática e repetição espaçada |
 | `/area-do-estudante/minhas-aulas/` | aulas contratadas, cancelamentos, créditos e reposições |
 | `/pagamento/` | pagamento de mensalidades |
-| `/aulas-de-gramatica.html` | aulas e exercícios de gramática |
+| `/aulas-de-gramatica.html` | aulas de gramática em vídeo |
 
 ### Professor / administração
 
