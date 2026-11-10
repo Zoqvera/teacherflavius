@@ -124,6 +124,12 @@ jobs:
       - name: Verify enforced CSP meta policies on critical routes
         run: node --test tests/csp_enforced_meta_contract.test.js
 
+      - name: Verify strict CSP and tracking hashes in publisher
+        run: python3 -m unittest discover -s tests -p 'test_google_tag_manager_html.py' -v
+
+      - name: Verify CSP in real Chromium without production access
+        run: python3 scripts/csp_script_pilot_browser_check.py
+
       - name: Verify live HTTP redirects to HTTPS
         shell: bash
         run: |
