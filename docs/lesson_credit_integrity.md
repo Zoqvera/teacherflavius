@@ -31,6 +31,35 @@ histórico `available`). Os indicadores são calculados para o fuso
 semanais, de vagas e horários; portanto, saldo válido não equivale a
 reserva garantida.
 
+## Elegibilidade dos créditos de turmas fixas e individuais
+
+Para alunos não Flexíveis, o fim do ciclo de pagamento não cancela por si só
+um direito de reposição. A auditoria considera a regra autoritativa
+`private.is_student_replacement_credit_eligible`, o estado `available`,
+a ausência de revogação e o critério financeiro do agendamento:
+mensalidade paga ou isenta para créditos contratuais e autorização
+independente de pagamento para créditos manuais.
+
+Créditos com período de origem encerrado são classificados de forma não destrutiva:
+
+- `fixed_historical_replacement_eligible`: direito de reposição
+  atualmente preservado, ainda que a mensalidade original tenha encerrado
+  sua cobertura; estado efetivo **Reposição preservada**.
+- `fixed_historical_without_replacement`: crédito histórico sem
+  elegibilidade atual para reposição; estado efetivo **Sem reposição**.
+  Isso não equivale a perda definitiva do direito por prazo, e a situação
+  pode mudar se o cadastro ou a modalidade forem regularizados.
+- `fixed_replacement_usable`: créditos em `available` que passam nas
+  regras de elegibilidade e pagamento, incluindo os oriundos de ciclos
+  anteriores. Vagas, horários e outros requisitos ainda são verificados
+  no momento da reserva.
+
+Os três indicadores abrangem tanto QUINTETO quanto INDIVIDUAL. Nenhuma
+linha da tabela de créditos é alterada pela auditoria, e os estados
+históricos podem continuar como `available`. A classificação ocorre
+na consulta, respeitando `America/Sao_Paulo` e sem alterar as regras
+já existentes das reservas.
+
 ## Auditoria periódica
 
 O monitor `private.run_operational_data_quality_check(boolean)` agora utiliza
@@ -48,6 +77,8 @@ health check operacional. A auditoria separa:
 | `active_excess` | Contratual ativo acima do plano atual e sem justificativa documentada | Revisão (warning) |
 | `approved_historical_exception` | Crédito contratual pago de competência anterior, preservado por decisão expressa do professor | Histórico justificado (informativo) |
 | `expired_flexible_available` | Crédito FLEXÍVEL vencido com estado histórico `available` | Histórico não utilizável (informativo) |
+| `fixed_historical_replacement_eligible` | Direito de reposição válido de período financeiro encerrado | Preservado (informativo) |
+| `fixed_historical_without_replacement` | Registro antigo ainda disponível no histórico, mas atualmente sem elegibilidade para reposição | Revisão (informativo) |
 
 As exceções aprovadas ficam em `private.lesson_credit_plan_exceptions`, com
 referência ao crédito, justificativa administrativa e data de aprovação. A
