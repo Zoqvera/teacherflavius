@@ -14,7 +14,8 @@
     revoked_attended_original_class: "Revogação justificada: compareceu à aula originalmente cancelada",
     active_unpaid: "Crédito ativo sem mensalidade quitada — intervenção necessária",
     active_excess: "Crédito ativo acima do plano atual — revisar direitos anteriores",
-    approved_historical_exception: "Crédito histórico preservado por decisão expressa do professor"
+    approved_historical_exception: "Crédito histórico preservado por decisão expressa do professor",
+    expired_flexible_available: "Crédito FLEXÍVEL vencido: saldo histórico sem direito a agendamento"
   });
 
   function escapeHtml(value) {
@@ -89,11 +90,14 @@
       summaryMetric("Revogações justificadas: presença na aula original", summary.revoked_attended_original_class),
       summaryMetric("Exigem revisão", reviews),
       summaryMetric("Créditos históricos justificados", summary.approved_historical_exception),
+      summaryMetric("Créditos FLEXÍVEL utilizáveis hoje", summary.flexible_usable_today),
+      summaryMetric("Créditos FLEXÍVEL vencidos no estado histórico disponível", summary.expired_flexible_available),
       summaryMetric("Inconsistências críticas", risks)
     ].join("");
 
     content.innerHTML =
       '<p class="credit-audit-explanation">A data de revogação prevalece sobre o estado histórico do crédito. ' +
+      'Créditos FLEXÍVEL fora da vigência não entram no saldo utilizável, mesmo que o estado histórico seja available. ' +
       'Créditos acima do plano atual exigem análise contratual; presenças confirmadas após cancelamento justificam revogações documentadas, sem criar reposições extras.</p>' +
       '<div class="credit-audit-summary">' + metrics + '</div>' +
       '<details class="credit-audit-details"><summary>Consultar créditos auditados (' +
