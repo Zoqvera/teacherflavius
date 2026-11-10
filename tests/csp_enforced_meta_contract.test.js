@@ -56,7 +56,7 @@ function assertEnforcedMeta(relativePath, expectedDirectives) {
     assert.match(meta[1], /https:\/\/www\.googletagmanager\.com/);
     assert.match(meta[1], /https:\/\/static\.cloudflareinsights\.com/);
     assert.match(meta[1], /https:\/\/connect\.facebook\.net/);
-    assert.equal((meta[1].match(/'sha256-[A-Za-z0-9+/=]+'/g) || []).length, 2);
+    assert.equal((meta[1].match(/'sha256-[A-Za-z0-9+\/=]+'/g) || []).length, 2);
   } else {
     assert.equal(meta[1], expectedDirectives, `${relativePath}: policy must match audited directives`);
   }
