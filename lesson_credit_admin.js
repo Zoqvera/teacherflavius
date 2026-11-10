@@ -15,7 +15,9 @@
     active_unpaid: "Crédito ativo sem mensalidade quitada — intervenção necessária",
     active_excess: "Crédito ativo acima do plano atual — revisar direitos anteriores",
     approved_historical_exception: "Crédito histórico preservado por decisão expressa do professor",
-    expired_flexible_available: "Crédito FLEXÍVEL vencido: saldo histórico sem direito a agendamento"
+    expired_flexible_available: "Crédito FLEXÍVEL vencido: saldo histórico sem direito a agendamento",
+    fixed_historical_replacement_eligible: "Reposição histórica legítima: mensalidade de origem encerrada, direito preservado",
+    fixed_historical_without_replacement: "Crédito histórico sem elegibilidade atual para reposição — conferir situação"
   });
 
   function escapeHtml(value) {
@@ -57,7 +59,8 @@
     const critical = ["revoked_confirmed_booking", "active_unpaid"].includes(credit.classification);
     const justified = [
       "approved_historical_exception",
-      "revoked_attended_original_class"
+      "revoked_attended_original_class",
+      "fixed_historical_replacement_eligible"
     ].includes(credit.classification);
     const statusClass = critical ? "danger" : (justified ? "success" : (revoked ? "danger" : "warning"));
 
@@ -92,12 +95,17 @@
       summaryMetric("Créditos históricos justificados", summary.approved_historical_exception),
       summaryMetric("Créditos FLEXÍVEL utilizáveis hoje", summary.flexible_usable_today),
       summaryMetric("Créditos FLEXÍVEL vencidos no estado histórico disponível", summary.expired_flexible_available),
+      summaryMetric("Créditos FIXOS elegíveis para reposição", summary.fixed_replacement_usable),
+      summaryMetric("Reposições históricas preservadas", summary.fixed_historical_replacement_eligible),
+      summaryMetric("Créditos históricos sem elegibilidade de reposição", summary.fixed_historical_without_replacement),
       summaryMetric("Inconsistências críticas", risks)
     ].join("");
 
     content.innerHTML =
       '<p class="credit-audit-explanation">A data de revogação prevalece sobre o estado histórico do crédito. ' +
       'Créditos FLEXÍVEL fora da vigência não entram no saldo utilizável, mesmo que o estado histórico seja available. ' +
+      'Para turmas fixas e individuais, a cobertura financeira encerrada não extingue automaticamente o direito de reposição. ' +
+      'A auditoria usa a regra efetiva de elegibilidade, preserva créditos legítimos e destaca históricos sem elegibilidade atual. ' +
       'Créditos acima do plano atual exigem análise contratual; presenças confirmadas após cancelamento justificam revogações documentadas, sem criar reposições extras.</p>' +
       '<div class="credit-audit-summary">' + metrics + '</div>' +
       '<details class="credit-audit-details"><summary>Consultar créditos auditados (' +
