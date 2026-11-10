@@ -639,6 +639,30 @@ VERIFIED_MIGRATION_ALIASES
       exit 1
     fi
   fi
+  # The original Git migration differs only in comments from the applied
+  # SQL. Keep both histories immutable and attest the exact digests and catalog.
+  local first_tuition_line expected_first_tuition_line
+  first_tuition_line="$(awk -F $'\t' '$1 == "20261110142911" {print}' "${mismatch_file}")"
+  printf -v expected_first_tuition_line '%s\t%s\t%s\t%s\t%s' \
+    '20261110142911' 'fix_first_tuition_trigger_on_google_enrollment' \
+    'fix_first_tuition_trigger_on_google_enrollment' \
+    '1db76ec704da5295963dc4bb4bb71e77926da336732735d213968a69b58880e1' \
+    '6c4ca9bad7fd5a17ad6b8ac2d97795604b9656e4d4d6b0ccec03e7316df5f6b7'
+  if [[ "${first_tuition_line}" == "${expected_first_tuition_line}" ]]; then
+    local first_tuition_catalog_result
+    first_tuition_catalog_result="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+      --file "${ROOT_DIR}/scripts/sql/first_tuition_trigger_catalog_attestation.sql")" || exit 1
+    if [[ "${first_tuition_catalog_result}" == 't' ]]; then
+      grep -v '^20261110142911[[:space:]]' "${mismatch_file}" \
+        > "${TEMP_DIR}/first_tuition_identity_remainder" || true
+      mv "${TEMP_DIR}/first_tuition_identity_remainder" "${mismatch_file}"
+      echo "::notice::Pinned first-tuition migration and live trigger catalog verified."
+    else
+      echo "::error::First-tuition live trigger does not match the approved catalog."
+      exit 1
+    fi
+  fi
+
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"
