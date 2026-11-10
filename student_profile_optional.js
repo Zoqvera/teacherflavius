@@ -71,8 +71,7 @@
       whatsapp: cleanWhatsapp,
       pix_key: pixKey,
       availability: availability,
-      enrollment_code: current && current.enrollment_code || "",
-      enrolled: current && current.enrolled === true,
+      // Enrollment state and code are controlled by the server.
       profile_completed: true
     }, availabilityColumns(availability));
 
@@ -86,8 +85,8 @@
         whatsapp: cleanWhatsapp,
         pix_key: pixKey,
         availability: availability,
-        enrollment_code: payload.enrollment_code,
-        enrolled: payload.enrolled,
+        enrollment_code: current && current.enrollment_code || "",
+        enrolled: current && current.enrolled === true,
         profile_completed: true
       }
     });
