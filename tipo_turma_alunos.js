@@ -112,12 +112,10 @@
       status.textContent = "Salvando...";
 
       try {
-        const response = await client
-          .from("profiles")
-          .update({ class_type: nextValue })
-          .eq("id", studentId)
-          .select("id, class_type")
-          .single();
+        const response = await client.rpc("set_teacher_student_profile_class_type", {
+          target_student_id: studentId,
+          target_class_type: nextValue
+        });
 
         if (response.error) throw response.error;
 
