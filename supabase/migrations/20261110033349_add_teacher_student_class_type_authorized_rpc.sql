@@ -1,5 +1,3 @@
--- Additive compatibility stage: introduce an admin-only RPC before restricting
--- column-level UPDATE grants on public.profiles.
 create or replace function public.set_teacher_student_profile_class_type(
   target_student_id uuid,
   target_class_type text
