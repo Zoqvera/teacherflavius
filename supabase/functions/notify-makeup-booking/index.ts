@@ -453,7 +453,9 @@ Deno.serve(async (request: Request) => {
         meetingUrl,
       )
       : null;
-    subject = `Nova reposição: ${studentName} — ${classDate}, ${startTime}`;
+    subject = isFlexible
+      ? "Aula marcada aluno flexível"
+      : `Nova reposição: ${studentName} — ${classDate}, ${startTime}`;
     textBody = [
       "Um aluno agendou uma reposição.",
       "",
