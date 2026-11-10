@@ -1,6 +1,5 @@
--- Créditos concedidos pelo professor também podem financiar reservas FLEXIVEL.
--- Preserva os limites do ciclo financeiro, o bloqueio de créditos revogados
--- e a prioridade do crédito contratual quando ambos são elegíveis.
+-- Permite usar concessões manuais nas reservas de aulas FLEXIVEL.
+-- Mantém a vigência do ciclo, a revogação e a preferência por créditos contratuais.
 create or replace function private.flexible_credit_for_date(
   target_student_id uuid,
   target_date date
