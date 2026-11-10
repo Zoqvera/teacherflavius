@@ -639,6 +639,112 @@ VERIFIED_MIGRATION_ALIASES
       exit 1
     fi
   fi
+  # The original Git migration has different comments from the SQL that
+  # Supabase applied. Keep both histories immutable; accept only their exact
+  # digests, and independently attest the live trigger and function.
+  local first_tuition_line expected_first_tuition_line
+  first_tuition_line="$(awk -F 
+    sed 's/^/  - /' "${remote_only_file}"
+    drift_found=true
+  fi
+
+  if [[ -s "${local_only_file}" ]]; then
+    if [[ "${MIGRATION_PR_ALLOW_NEW}" == "true" ]]; then
+      # PRs may propose append-only migrations; they must not already be in
+      # production. Published versions remain strictly protected above.
+      local production_tip
+      production_tip="$(tail -n 1 "${remote_versions_file}")"
+      if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+        echo "::error::Production migration history is empty or malformed."
+        drift_found=true
+      fi
+      while IFS= read -r new_version; do
+        if [[ ! "${production_tip}" =~ ^[0-9]{14}$ ]]; then
+          echo "::error::Production migration tip is malformed."
+          drift_found=true
+        elif [[ "${new_version}" > "${production_tip}" ]]; then
+          echo "::notice::Proposed, unapplied PR migration ${new_version}; verify in isolated preview before merge."
+        elif attest_pending_teacher_v2_migration "${new_version}"; then
+          echo "::notice::Immutable teacher-v2 migration ${new_version} is attested pending and absent from production; isolated replay is required before activation."
+        elif attest_unrecorded_active_november_migration "${new_version}"; then
+          echo "::notice::Immutable November migration ${new_version}: catalog and Git identity verified; ledger remains unchanged."
+        else
+          echo "::error::New migration ${new_version} must be newer than the current production tip ${production_tip}, unless an exact immutable pending version is independently attested."
+          drift_found=true
+        fi
+      done < "${local_only_file}"
+    else
+      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+      sed 's/^/  - /' "${local_only_file}"
+      drift_found=true
+    fi
+  fi
+
+  if [[ -s "${mismatch_file}" ]]; then
+    echo "::error::Migration identity differs between production and Git:"
+    while IFS=$'\t' read -r version remote_name local_name remote_checksum local_checksum; do
+      echo "  - ${version}"
+      if [[ "${remote_name}" != "${local_name}" ]]; then
+        echo "    production name: ${remote_name}"
+        echo "    Git name:        ${local_name}"
+      fi
+      if [[ ( "${version}" == "${MIGRATION_CHECKSUM_CUTOFF}" || "${version}" > "${MIGRATION_CHECKSUM_CUTOFF}" ) && "${remote_checksum}" != "${local_checksum}" ]]; then
+        echo "    production sha256: ${remote_checksum}"
+        echo "    Git sha256:        ${local_checksum}"
+      fi
+    done < "${mismatch_file}"
+    drift_found=true
+  fi
+
+  if [[ "${drift_found}" == true ]]; then
+    exit 1
+  fi
+}
+
+main() {
+  require_configuration
+
+  TEMP_DIR="$(mktemp -d)"
+  trap cleanup EXIT
+
+  local local_records_file="${TEMP_DIR}/local_records"
+  local local_cutoff_records_file="${TEMP_DIR}/local_cutoff_records"
+  local remote_records_file="${TEMP_DIR}/remote_records"
+
+  collect_local_records > "${local_records_file}"
+  validate_unique_local_versions "${local_records_file}"
+  validate_historical_immutability "${local_records_file}"
+
+  filter_local_records_from_cutoff "${local_records_file}" > "${local_cutoff_records_file}"
+  collect_remote_records > "${remote_records_file}"
+
+  compare_production_identity "${local_cutoff_records_file}" "${remote_records_file}"
+
+  echo "Supabase migration IDs are globally unique and committed history is immutable. Existing production identities match the repository; PR-only new versions, when allowed, require isolated testing."
+}
+
+main "$@"
+\t' '$1 == "20261110142911" {print}' "${mismatch_file}")"
+  printf -v expected_first_tuition_line '%s\t%s\t%s\t%s\t%s' \
+    '20261110142911' 'fix_first_tuition_trigger_on_google_enrollment' \
+    'fix_first_tuition_trigger_on_google_enrollment' \
+    '1db76ec704da5295963dc4bb4bb71e77926da336732735d213968a69b58880e1' \
+    '6c4ca9bad7fd5a17ad6b8ac2d97795604b9656e4d4d6b0ccec03e7316df5f6b7'
+  if [[ "${first_tuition_line}" == "${expected_first_tuition_line}" ]]; then
+    local first_tuition_catalog_result
+    first_tuition_catalog_result="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+      --file "${ROOT_DIR}/scripts/sql/first_tuition_trigger_catalog_attestation.sql")" || exit 1
+    if [[ "${first_tuition_catalog_result}" == 't' ]]; then
+      grep -v '^20261110142911[[:space:]]' "${mismatch_file}" \
+        > "${TEMP_DIR}/first_tuition_identity_remainder" || true
+      mv "${TEMP_DIR}/first_tuition_identity_remainder" "${mismatch_file}"
+      echo "::notice::Pinned first-tuition SQL variant and live trigger catalog verified."
+    else
+      echo "::error::First-tuition live trigger does not match the approved catalog."
+      exit 1
+    fi
+  fi
+
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"
