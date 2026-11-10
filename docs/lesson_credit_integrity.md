@@ -13,6 +13,24 @@ pois isso destruiria a distinção entre revogação contratual e perda por praz
 As RPCs estudantis `get_my_lesson_credits`, `get_my_lessons_overview` e
 `book_my_lesson_replacement` ignoram ou bloqueiam os créditos revogados.
 
+## Disponibilidade operacional dos créditos FLEXÍVEL
+
+A auditoria do professor distingue o estado histórico `available` da disponibilidade
+real para agendar aulas. Para alunos com a modalidade FLEXÍVEL habilitada,
+os créditos cuja cobertura já terminou recebem o estado efetivo **Vencido**.
+Os créditos futuros aparecem como **Ainda não vigente** e os contratuais
+sem quitação como **Pagamento pendente**. Isso não altera os registros
+históricos, os pagamentos, as reservas nem as políticas de reposição.
+
+O painel administrativo apresenta dois indicadores separados:
+`flexible_usable_today` (créditos utilizáveis nesta data, considerando
+cobertura, situação financeira e ausência de reserva) e
+`expired_flexible_available` (créditos vencidos que ainda têm estado
+histórico `available`). Os indicadores são calculados para o fuso
+`America/Sao_Paulo`. O agendamento continua submetido às demais regras
+semanais, de vagas e horários; portanto, saldo válido não equivale a
+reserva garantida.
+
 ## Auditoria periódica
 
 O monitor `private.run_operational_data_quality_check(boolean)` agora utiliza
@@ -29,6 +47,7 @@ health check operacional. A auditoria separa:
 | `active_unpaid` | Contratual não revogado, porém mensalidade não quitada | Crítico |
 | `active_excess` | Contratual ativo acima do plano atual e sem justificativa documentada | Revisão (warning) |
 | `approved_historical_exception` | Crédito contratual pago de competência anterior, preservado por decisão expressa do professor | Histórico justificado (informativo) |
+| `expired_flexible_available` | Crédito FLEXÍVEL vencido com estado histórico `available` | Histórico não utilizável (informativo) |
 
 As exceções aprovadas ficam em `private.lesson_credit_plan_exceptions`, com
 referência ao crédito, justificativa administrativa e data de aprovação. A
