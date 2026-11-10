@@ -1,6 +1,6 @@
--- The enrollment activation BEFORE UPDATE hook sets enrolled = true when
--- the original UPDATE targets profile_completed. Column-specific triggers
--- cannot detect that implicit transition.
+-- A BEFORE UPDATE hook may set enrolled=true even when the UPDATE
+-- statement targets only profile_completed. UPDATE OF enrolled misses it.
+-- Inspect the actual OLD/NEW transition for every profile update instead.
 drop trigger if exists ensure_first_tuition_after_profile_enrollment
   on public.profiles;
 
