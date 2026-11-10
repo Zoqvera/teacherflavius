@@ -55,7 +55,7 @@ class GoogleTagManagerHtmlTests(unittest.TestCase):
         materialized, _ = inject_gtm(original, relative)
 
         policy_meta = re.search(
-            r'<meta\\s+http-equiv="Content-Security-Policy"\\s+content="([^"]+)"',
+            r'<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"',
             materialized,
         )
         self.assertIsNotNone(policy_meta)
@@ -65,7 +65,7 @@ class GoogleTagManagerHtmlTests(unittest.TestCase):
         self.assertNotIn("'unsafe-eval'", policy)
 
         script_blocks = re.findall(
-            r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>",
+            r"<script(?:\s[^>]*)?>([\s\S]*?)</script>",
             GTM_HEAD_SNIPPET,
         )
         self.assertEqual(len(script_blocks), 2)
