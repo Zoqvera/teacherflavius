@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 PILOT = ROOT / "matricula80" / "index.html"
 
 CSP_META_PATTERN = re.compile(
-    r'<meta\\s+http-equiv="Content-Security-Policy"\\s+content="([^"]+)"',
+    r'<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"',
     re.IGNORECASE,
 )
-SCRIPT_PATTERN = re.compile(r"<script>([\\s\\S]*?)</script>")
+SCRIPT_PATTERN = re.compile(r"<script>([\s\S]*?)</script>")
 
 
 def find_browser() -> str:
