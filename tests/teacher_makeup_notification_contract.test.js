@@ -34,8 +34,8 @@ test("teacher notice is sent from the usual account to a separate configured rec
 });
 
 test("teacher subject identifies flexible reservations without changing makeup notifications", function () {
-  assert.match(notifier, /const isFlexible = booking\\.booking_kind === "flexible"/);
-  assert.match(notifier, /subject = isFlexible\\s*\\? "Aula marcada aluno flexível"\\s*:\\s*\\`Nova reposição: \\$\\{studentName\\} — \\$\\{classDate\\}, \\$\\{startTime\\}\\`;/);
+  assert.match(notifier, /const isFlexible = booking\.booking_kind === "flexible"/);
+  assert.match(notifier, /subject = isFlexible\s*\? "Aula marcada aluno flexível"\s*:\s*\x60Nova reposição: \$\{studentName\} — \$\{classDate\}, \$\{startTime\}\x60;/);
 });
 
 test("calendar action contains correct instants, timezone and meeting link", function () {
