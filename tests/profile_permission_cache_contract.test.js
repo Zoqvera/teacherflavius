@@ -46,14 +46,14 @@ test("student profile payloads omit server-controlled enrollment fields", () => 
     .split("}, availabilityColumns")[0];
 
   for (const payload of [corePayload, optionalPayload]) {
-    assert.doesNotMatch(payload, /\\benrolled\\s*:/);
-    assert.doesNotMatch(payload, /\\benrollment_code\\s*:/);
+    assert.doesNotMatch(payload, /\benrolled\s*:/);
+    assert.doesNotMatch(payload, /\benrollment_code\s*:/);
   }
 });
 
 test("teacher class classification uses an authorized server operation", () => {
   const teacherClient = read("tipo_turma_alunos.js");
 
-  assert.match(teacherClient, /\\.rpc\\("set_teacher_student_profile_class_type"/);
-  assert.doesNotMatch(teacherClient, /\\.update\\(\\{ class_type:/);
+  assert.match(teacherClient, /\.rpc\("set_teacher_student_profile_class_type"/);
+  assert.doesNotMatch(teacherClient, /\.update\(\{ class_type:/);
 });
