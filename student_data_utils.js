@@ -102,8 +102,7 @@
       whatsapp: input.whatsapp,
       pix_key: input.pixKey,
       availability: input.availability,
-      enrollment_code: options.enrollmentCode || "",
-      enrolled: options.enrolled === true,
+      // Administrative enrollment values are managed by authenticated RPCs.
       profile_completed: true
     }, availabilityToProfileColumns(input.availability));
   }
