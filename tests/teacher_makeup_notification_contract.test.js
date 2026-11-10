@@ -33,6 +33,11 @@ test("teacher notice is sent from the usual account to a separate configured rec
   assert.match(notifier, /makeup-\$\{notificationType\}-\$\{notification\.id\}/);
 });
 
+test("teacher subject identifies flexible reservations without changing makeup notifications", function () {
+  assert.match(notifier, /const isFlexible = booking\.booking_kind === "flexible"/);
+  assert.match(notifier, /subject = isFlexible\s*\? "Aula marcada aluno flexível"\s*:\s*\x60Nova reposição: \$\{studentName\} — \$\{classDate\}, \$\{startTime\}\x60;/);
+});
+
 test("calendar action contains correct instants, timezone and meeting link", function () {
   assert.match(notifier, /calendar\.google\.com\/calendar\/r\/eventedit/);
   assert.match(notifier, /formatCalendarInstant\(startsAt\)/);
