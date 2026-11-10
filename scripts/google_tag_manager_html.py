@@ -10,7 +10,7 @@ HEAD_OPEN_RE = re.compile(r"<head(?:\s[^>]*)?>", re.IGNORECASE)
 BODY_OPEN_RE = re.compile(r"<body(?:\s[^>]*)?>", re.IGNORECASE)
 HTML_OPEN_RE = re.compile(r"<html(?:\s[^>]*)?>", re.IGNORECASE)
 CSP_META_RE = re.compile(
-    r"<meta\\s+http-equiv=[\\\"']Content-Security-Policy[\\\"'][^>]*>",
+    r'<meta\s+http-equiv="Content-Security-Policy"[^>]*>',
     re.IGNORECASE,
 )
 
