@@ -17,11 +17,12 @@ const STRICT_EVENT_HANDLER_PAGES = Object.freeze([
   "area_do_estudante.html",
   "mensalidades.html",
   "turmas.html",
-  "perfil-dos-alunos/index.html",
   "cadastro.html"
 ]);
 
 const LEGACY_EVENT_HANDLER_PAGES = Object.freeze([
+  "perfil-dos-alunos/index.html",
+  "perfil_dos_alunos.html",
   "perfil.html",
   "perfil/index.html",
   "turma.html",
