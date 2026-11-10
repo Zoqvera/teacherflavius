@@ -601,6 +601,47 @@ VERIFIED_MIGRATION_ALIASES
     echo "::notice::Manual Pix migration has two exact, comment-only SHA256 identities. All other drift remains enforced."
   fi
 
+  # The original FLEXIVEL manual-credit migration was already applied with
+  # equivalent SQL and different comments. Keep both immutable histories:
+  # require exact Git and ledger digests plus the live function/ACL digest.
+  local manual_flexible_line expected_manual_flexible_line
+  manual_flexible_line="$(awk -F $'\t' '$1 == "20261110173354" {print}' "${mismatch_file}")"
+  printf -v expected_manual_flexible_line '%s\t%s\t%s\t%s\t%s' \
+    '20261110173354' 'allow_manual_flexible_credits' \
+    'allow_manual_flexible_credits' \
+    'ad39e802f6aedc716616da25ee85aa8a39ad7c8fe84bf3f883dc3ecdba4712c7' \
+    'b1fc15d10909ec46aa7429a186db7cef2534feee7aea3b8462871f36610b9e5f'
+  if [[ "${manual_flexible_line}" == "${expected_manual_flexible_line}" ]]; then
+    local manual_flexible_catalog_valid
+    manual_flexible_catalog_valid="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 -c "
+      select coalesce(
+        encode(
+          extensions.digest(
+            pg_get_functiondef('private.flexible_credit_for_date(uuid,date)'::regprocedure),
+            'sha256'
+          ),
+          'hex'
+        ) = 'b255b4675bcd44d1a3663c5b1eb836179827d9f067d238fc674dfab765fe1bf7'
+        and not has_function_privilege(
+          'anon', 'private.flexible_credit_for_date(uuid,date)', 'EXECUTE'
+        )
+        and not has_function_privilege(
+          'authenticated', 'private.flexible_credit_for_date(uuid,date)', 'EXECUTE'
+        ),
+        false
+      );")" || exit 1
+
+    if [[ "${manual_flexible_catalog_valid}" == 't' ]]; then
+      awk -F $'\t' '$1 != "20261110173354"' "${mismatch_file}" \
+        > "${TEMP_DIR}/remaining_manual_flexible_identity_mismatch"
+      mv "${TEMP_DIR}/remaining_manual_flexible_identity_mismatch" "${mismatch_file}"
+      echo "::notice::Pinned manual FLEXIVEL credit migration and live function/ACL verified; all other drift remains enforced."
+    else
+      echo "::error::Manual FLEXIVEL credit migration catalog attestation failed."
+      exit 1
+    fi
+  fi
+
   # The immutable Git migration contains two comments absent from the
   # applied SQL. This precise identity is accepted only while live RLS and
   # private EXECUTE privileges pass the independent read-only attestation.
