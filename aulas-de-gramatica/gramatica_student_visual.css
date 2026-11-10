@@ -180,39 +180,12 @@ html.tf-brand-palette .video-frame iframe {
   border: 0;
 }
 
-html.tf-brand-palette .exercise-link,
 html.tf-brand-palette .completion-button {
   min-height: 44px;
   border-radius: 12px;
   font: 700 12px/1.2 'Montserrat', sans-serif;
   letter-spacing: .04em;
   transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, color 140ms ease, opacity 140ms ease;
-}
-
-html.tf-brand-palette .exercise-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 11px 14px;
-  border: 1px solid rgba(96, 165, 250, 0.42);
-  background: rgba(37, 99, 235, 0.14);
-  color: #dbeafe;
-  text-decoration: none;
-}
-
-html.tf-brand-palette .exercise-link:hover {
-  transform: translateY(-1px);
-  border-color: rgba(96, 165, 250, 0.72);
-  background: rgba(37, 99, 235, 0.22);
-  color: #eff6ff;
-}
-
-html.tf-brand-palette .exercise-link svg {
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
 }
 
 html.tf-brand-palette .completion-row {
@@ -290,7 +263,6 @@ html.tf-brand-palette .error {
   color: #fca5a5;
 }
 
-html.tf-brand-palette .exercise-link:focus-visible,
 html.tf-brand-palette .completion-button:focus-visible {
   outline: 3px solid rgba(96, 165, 250, 0.45);
   outline-offset: 3px;
@@ -341,7 +313,6 @@ html.tf-brand-palette .completion-button:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   html.tf-brand-palette .grammar-card,
-  html.tf-brand-palette .exercise-link,
   html.tf-brand-palette .completion-button,
   html.tf-brand-palette .grammar-progress-fill {
     transition: none;
