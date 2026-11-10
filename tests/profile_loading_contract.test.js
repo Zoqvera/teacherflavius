@@ -96,8 +96,8 @@ test("clean profile route refreshes auth assets without depending on exact white
     true
   );
   assert.equal(loader.includes("/auth.js?v=20261003-profile-1"), true);
-  assert.equal(loader.includes("/student_profile_optional.js?v=20261003-profile-1"), true);
-  assert.equal(wrapper.includes("/clean_route_loader.js?v=20261003-profile-1"), true);
+  assert.equal(loader.includes("/student_profile_optional.js?v=20261110-profile-permissions-1"), true);
+  assert.equal(wrapper.includes("/clean_route_loader.js?v=20261110-profile-permissions-1"), true);
 });
 
 test("profile page replaces indefinite loading with authenticated fallback and error state", function () {
