@@ -84,11 +84,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </label>
         <label>
           Link do vídeo
-          <input id="videoUrl" type="url" placeholder="Cole aqui o link do YouTube, Google Drive ou outro vídeo" required />
-        </label>
-        <label>
-          Link dos exercícios
-          <input id="exerciseUrl" type="url" placeholder="Cole aqui o link dos exercícios" required />
+          <input id="videoUrl" type="url" placeholder="Cole o link do vídeo do canal Teacher Flávio no YouTube" required />
         </label>
         <div class="button-row">
           <button id="submitButton" class="primary-button" type="submit">SALVAR APRESENTAÇÃO</button>
@@ -148,7 +144,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       document.getElementById("lessonId").value = "";
       document.getElementById("lessonTitle").value = "";
       document.getElementById("videoUrl").value = "";
-      document.getElementById("exerciseUrl").value = "";
       document.getElementById("formTitle").textContent = "Criar nova apresentação de gramática";
       document.getElementById("submitButton").textContent = "SALVAR APRESENTAÇÃO";
       document.getElementById("cancelEditButton").style.display = "none";
@@ -161,7 +156,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       document.getElementById("lessonId").value = lesson.id;
       document.getElementById("lessonTitle").value = lesson.title || "";
       document.getElementById("videoUrl").value = lesson.video_url || "";
-      document.getElementById("exerciseUrl").value = lesson.exercise_url || "";
       document.getElementById("formTitle").textContent = "Editar apresentação de gramática";
       document.getElementById("submitButton").textContent = "SALVAR ALTERAÇÕES";
       document.getElementById("cancelEditButton").style.display = "inline-flex";
@@ -181,7 +175,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return '<article class="lesson-admin-card">' +
           '<strong>' + escapeHtml(lesson.title) + '</strong>' +
           '<p><b>Vídeo:</b> ' + escapeHtml(lesson.video_url) + '</p>' +
-          '<p><b>Exercícios:</b> ' + escapeHtml(lesson.exercise_url) + '</p>' +
           '<div class="card-actions">' +
             '<button class="edit-button" type="button" data-edit-id="' + lesson.id + '">EDITAR</button>' +
             '<button class="delete-button" type="button" data-delete-id="' + lesson.id + '">EXCLUIR</button>' +
@@ -202,7 +195,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const client = Auth.getClient();
       const response = await client
         .from("grammar_lessons")
-        .select("id,title,video_url,exercise_url,created_at")
+        .select("id,title,video_url,created_at")
         .order("created_at", { ascending: false });
 
       if (response.error) throw response.error;
@@ -216,7 +209,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const id = document.getElementById("lessonId").value;
       const title = document.getElementById("lessonTitle").value.trim();
       const videoUrl = document.getElementById("videoUrl").value.trim();
-      const exerciseUrl = document.getElementById("exerciseUrl").value.trim();
       const submitButton = document.getElementById("submitButton");
 
       submitButton.disabled = true;
@@ -227,12 +219,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (id) {
           response = await client
             .from("grammar_lessons")
-            .update({ title: title, video_url: videoUrl, exercise_url: exerciseUrl, updated_at: new Date().toISOString() })
+            .update({ title: title, video_url: videoUrl, updated_at: new Date().toISOString() })
             .eq("id", id);
         } else {
           response = await client
             .from("grammar_lessons")
-            .insert({ title: title, video_url: videoUrl, exercise_url: exerciseUrl, created_by: currentProfessorSession.user.id });
+            .insert({ title: title, video_url: videoUrl, created_by: currentProfessorSession.user.id });
         }
 
         if (response.error) throw response.error;

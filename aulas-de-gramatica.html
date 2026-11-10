@@ -40,8 +40,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .grammar-card h2 { color: #f1f5f9; font-size: 20px; margin-bottom: 14px; line-height: 1.3; }
     .video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: rgba(0,0,0,0.35); border: 1px solid rgba(129,140,248,0.35); margin-bottom: 14px; }
     .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-    .exercise-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid rgba(129,140,248,0.45); background: rgba(129,140,248,0.10); color: #c4b5fd; border-radius: 12px; padding: 11px 15px; font-family: Georgia, serif; font-size: 13px; font-weight: bold; letter-spacing: 0.4px; text-decoration: none; }
-    .exercise-link:hover { background: rgba(129,140,248,0.18); border-color: rgba(129,140,248,0.75); }
     .completion-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
     .completion-button { display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid rgba(129,140,248,0.45); background: rgba(129,140,248,0.10); color: #c4b5fd; border-radius: 12px; padding: 10px 14px; font-family: Georgia, serif; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.4px; min-width: 150px; }
     .grammar-card.done .completion-button { border-color: rgba(110,231,183,0.45); background: rgba(110,231,183,0.10); color: #6ee7b7; }
@@ -143,12 +141,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const isDone = completedGrammarLessons.get(lesson.id) === true;
         const title = escapeHtml(lesson.title);
         const embedUrl = escapeHtml(getEmbedUrl(lesson.video_url));
-        const exerciseUrl = escapeHtml(lesson.exercise_url);
         const safeId = escapeHtml(lesson.id);
         return '<article class="grammar-card ' + (isDone ? 'done' : '') + '" data-lesson-id="' + safeId + '">' +
           '<h2>' + title + '</h2>' +
           '<div class="video-frame"><iframe src="' + embedUrl + '" title="' + title + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>' +
-          '<a class="exercise-link" href="' + exerciseUrl + '" target="_blank" rel="noopener noreferrer">📝 ABRIR EXERCÍCIOS</a>' +
           '<div class="completion-row">' +
             '<button type="button" class="completion-button" data-lesson-id="' + safeId + '">' + (isDone ? 'MARCAR COMO NÃO FEITO' : 'MARCAR COMO FEITO') + '</button>' +
             '<span class="completion-status ' + (isDone ? 'saved' : '') + '" id="status-' + safeId + '">' + (isDone ? 'Feito' : 'Não feito') + '</span>' +
@@ -182,7 +178,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const client = Auth.getClient();
       const response = await client
         .from("grammar_lessons")
-        .select("id,title,video_url,exercise_url,created_at")
+        .select("id,title,video_url,created_at")
         .order("created_at", { ascending: false });
 
       if (response.error) throw response.error;

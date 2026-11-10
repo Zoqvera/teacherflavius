@@ -1,0 +1,2 @@
+alter table public.grammar_lessons alter column exercise_url drop not null;
+comment on column public.grammar_lessons.exercise_url is 'Campo legado mantido para compatibilidade; novas aulas utilizam apenas titulo e video.';
