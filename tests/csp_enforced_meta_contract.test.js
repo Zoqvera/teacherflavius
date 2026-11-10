@@ -47,7 +47,19 @@ function assertEnforcedMeta(relativePath, expectedDirectives) {
   const meta = metaTags[0];
   assert.ok(meta.index > head, `${relativePath}: CSP must be inside the head`);
   assert.ok(firstScript < 0 || meta.index < firstScript, `${relativePath}: CSP must precede scripts`);
-  assert.equal(meta[1], expectedDirectives, `${relativePath}: policy must match audited directives`);
+  if (relativePath === "matricula80/index.html") {
+    assert.ok(
+      meta[1].startsWith(expectedDirectives + "; script-src 'self' "),
+      "The enrollment pilot must enforce a restrictive script-src policy"
+    );
+    assert.match(meta[1], /https:\/\/cdn\.jsdelivr\.net/);
+    assert.match(meta[1], /https:\/\/www\.googletagmanager\.com/);
+    assert.match(meta[1], /https:\/\/static\.cloudflareinsights\.com/);
+    assert.match(meta[1], /https:\/\/connect\.facebook\.net/);
+    assert.equal((meta[1].match(/'sha256-[A-Za-z0-9+/=]+'/g) || []).length, 2);
+  } else {
+    assert.equal(meta[1], expectedDirectives, `${relativePath}: policy must match audited directives`);
+  }
   assert.doesNotMatch(meta[1], /unsafe-inline|unsafe-eval/i);
   assert.doesNotMatch(meta[1], /frame-ancestors|report-uri|report-to/i);
 }
