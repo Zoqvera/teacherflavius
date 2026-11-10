@@ -47,15 +47,6 @@
 
       card.setAttribute('aria-label', title + (done ? ', concluída' : ', não concluída'));
 
-      const exercise = card.querySelector('.exercise-link');
-      if (exercise) {
-        if (exercise.dataset.visualEnhanced !== 'true') {
-          exercise.dataset.visualEnhanced = 'true';
-          exercise.innerHTML = iconBook() + '<span>ABRIR EXERCÍCIOS</span>';
-        }
-        exercise.setAttribute('aria-label', 'Abrir exercícios de ' + title + ' em nova aba');
-      }
-
       const button = card.querySelector('.completion-button');
       if (button) {
         button.setAttribute('aria-label', (done ? 'Marcar como não feita: ' : 'Marcar como feita: ') + title);
