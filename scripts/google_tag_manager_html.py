@@ -9,6 +9,10 @@ GTM_CONTAINER_ID = "GTM-K2NWR2NK"
 HEAD_OPEN_RE = re.compile(r"<head(?:\s[^>]*)?>", re.IGNORECASE)
 BODY_OPEN_RE = re.compile(r"<body(?:\s[^>]*)?>", re.IGNORECASE)
 HTML_OPEN_RE = re.compile(r"<html(?:\s[^>]*)?>", re.IGNORECASE)
+CSP_META_RE = re.compile(
+    r'<meta\s+http-equiv="Content-Security-Policy"[^>]*>',
+    re.IGNORECASE,
+)
 
 CONSENT_MODE_MARKER = "<!-- Google Consent Mode default -->"
 GTM_HEAD_MARKER = "<!-- Google Tag Manager -->"
@@ -51,6 +55,25 @@ def insert_after_opening_tag(html: str, tag_re: re.Pattern[str], snippet: str) -
     return f"{html[:match.end()]}\n{snippet}\n{html[match.end():]}"
 
 
+
+def insert_gtm_after_csp(html: str, snippet: str) -> str:
+    """Apply any blocking CSP before initializing Google tracking scripts."""
+    head = HEAD_OPEN_RE.search(html)
+    if not head:
+        return html
+
+    head_end = html.lower().find("</head>", head.end())
+    if head_end < 0:
+        return insert_after_opening_tag(html, HEAD_OPEN_RE, snippet)
+
+    csp_meta = CSP_META_RE.search(html, head.end(), head_end)
+    if not csp_meta:
+        return insert_after_opening_tag(html, HEAD_OPEN_RE, snippet)
+
+    position = csp_meta.end()
+    return f"{html[:position]}\n{snippet}\n{html[position:]}"
+
+
 def insert_before_marker(html: str, marker: str, snippet: str) -> str:
     marker_position = html.find(marker)
     if marker_position < 0:
@@ -79,7 +102,7 @@ def inject_gtm(html: str, relative: Path) -> tuple[str, bool]:
     if not HEAD_OPEN_RE.search(html) or not BODY_OPEN_RE.search(html):
         raise SystemExit(f"HTML document missing <head> or <body>: {relative.as_posix()}")
 
-    transformed = insert_after_opening_tag(html, HEAD_OPEN_RE, GTM_HEAD_SNIPPET)
+    transformed = insert_gtm_after_csp(html, GTM_HEAD_SNIPPET)
     transformed = insert_after_opening_tag(transformed, BODY_OPEN_RE, GTM_BODY_SNIPPET)
     return transformed, True
 
@@ -102,6 +125,9 @@ def validate_gtm(html: str, relative: Path) -> None:
 
     consent_position = html.find(CONSENT_MODE_MARKER)
     gtm_head_position = html.find(GTM_HEAD_MARKER)
+    csp_meta = CSP_META_RE.search(html, head.end(), body.start())
+    if csp_meta and consent_position < csp_meta.end():
+        raise SystemExit(f"Google Consent Mode precedes enforcing CSP in {relative.as_posix()}")
     if consent_position < head.end():
         raise SystemExit(f"Google Consent Mode snippet is outside <head> in {relative.as_posix()}")
     if consent_position > gtm_head_position:
