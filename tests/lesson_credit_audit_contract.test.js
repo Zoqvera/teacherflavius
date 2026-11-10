@@ -11,6 +11,9 @@ const migration = fs.readFileSync(path.join(
 const balanceMigration = fs.readFileSync(path.join(
   root, "supabase/migrations/20261110194000_correct_flexible_credit_audit_balance.sql"
 ), "utf8");
+const historicalFixedMigration = fs.readFileSync(path.join(
+  root, "supabase/migrations/20261110200900_classify_fixed_historical_replacement_credits.sql"
+), "utf8");
 const adminScript = fs.readFileSync(path.join(root, "lesson_credit_admin.js"), "utf8");
 const adminPage = fs.readFileSync(path.join(root, "reposicoes_admin.html"), "utf8");
 
@@ -58,6 +61,22 @@ test("flexible audit reports usable balance without changing historical credit r
   assert.match(adminScript, /Créditos FLEXÍVEL vencidos/);
 });
 
+test("fixed historical credits keep legitimate replacement rights without ledger updates", () => {
+  assert.match(historicalFixedMigration, /private\.is_student_replacement_credit_eligible/i);
+  assert.match(historicalFixedMigration, /coverage\.ends_at <= today\.local_date/i);
+  assert.match(historicalFixedMigration, /credit\.credit_origin = 'manual_grant'/i);
+  assert.match(historicalFixedMigration, /tuition\.payment_date is not null/i);
+  assert.match(historicalFixedMigration, /fixed_historical_replacement_eligible/i);
+  assert.match(historicalFixedMigration, /fixed_historical_without_replacement/i);
+  assert.match(historicalFixedMigration, /fixed_replacement_usable/i);
+  assert.match(historicalFixedMigration, /'Reposição preservada'/i);
+  assert.match(historicalFixedMigration, /'Sem reposição'/i);
+  assert.doesNotMatch(historicalFixedMigration, /update\s+private\.lesson_credits/i);
+  assert.doesNotMatch(historicalFixedMigration, /delete\s+from\s+private\.lesson_credits/i);
+  assert.match(adminScript, /Reposições históricas preservadas/);
+  assert.match(adminScript, /Créditos históricos sem elegibilidade de reposição/);
+});
+
 test("administrative page loads credit audit without changing indexed metadata", () => {
   assert.match(adminPage, /id="lessonCreditAudit"/);
   assert.match(adminPage, /lesson_credit_admin\.js/);
@@ -90,7 +109,10 @@ test("teacher audit escapes student names and effective states in rendered marku
                 revoked_total: 1, revoked_unpaid: 1, revoked_excess: 0,
                 revoked_review: 0, active_excess: 0,
                 active_unpaid: 0, revoked_confirmed_booking: 0,
-                flexible_usable_today: 28, expired_flexible_available: 1
+                flexible_usable_today: 28, expired_flexible_available: 1,
+                fixed_historical_replacement_eligible: 25,
+                fixed_historical_without_replacement: 37,
+                fixed_replacement_usable: 108
               },
               credits: [{
                 student_name: "<img src=x onerror=alert(1)>",
@@ -108,6 +130,22 @@ test("teacher audit escapes student names and effective states in rendered marku
                 effective_status: "Vencido",
                 revoked_at: null,
                 classification: "expired_flexible_available"
+              }, {
+                student_name: "Aluna com reposição",
+                reference_month: "2026-08-01",
+                credit_number: 1,
+                original_status: "available",
+                effective_status: "Reposição preservada",
+                revoked_at: null,
+                classification: "fixed_historical_replacement_eligible"
+              }, {
+                student_name: "Aluno sem reposição",
+                reference_month: "2026-08-01",
+                credit_number: 2,
+                original_status: "available",
+                effective_status: "Sem reposição",
+                revoked_at: null,
+                classification: "fixed_historical_without_replacement"
               }]
             }
           }
@@ -143,4 +181,8 @@ test("teacher audit escapes student names and effective states in rendered marku
   assert.match(html, /Vencido/);
   assert.match(html, /Créditos FLEXÍVEL utilizáveis hoje/);
   assert.match(html, /Créditos FLEXÍVEL vencidos/);
+  assert.match(html, /Reposições históricas preservadas/);
+  assert.match(html, /Créditos históricos sem elegibilidade de reposição/);
+  assert.match(html, /Reposição preservada/);
+  assert.match(html, /Sem reposição/);
 });
