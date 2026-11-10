@@ -17,8 +17,12 @@ continuam definitivas e visíveis enquanto o aluno usar a modalidade FLEXIVEL.
 - Janela de 14 datas, com antecedência mínima de uma hora.
 - Vagas permanentes e vagas explicitamente liberadas por cancelamento compartilham
   o mesmo estoque com reposições. Reservas usam a mesma linha da turma como lock.
-- Reservas exigem crédito contratual livre, não revogado, de uma mensalidade paga
-  ou isenta que cubra a data da aula. Não utiliza créditos de reposição ou manuais.
+- Reservas aceitam créditos contratuais livres de mensalidades pagas ou isentas
+  e créditos concedidos manualmente pelo professor (`manual_grant`), mesmo que a
+  mensalidade associada ainda não esteja quitada. Todos precisam estar disponíveis,
+  não revogados, sem reserva anterior e dentro da vigência do ciclo da mensalidade.
+  Créditos contratuais têm prioridade sobre manuais dentro do mesmo ciclo;
+  créditos de reposição não são elegíveis.
 - O crédito é consumido na transação da reserva; índice único e lock por aluno
   impedem reservas duplicadas na semana e cliques concorrentes.
 - O aluno não pode cancelar, alterar ou excluir reservas, inclusive por RPCs legadas.
