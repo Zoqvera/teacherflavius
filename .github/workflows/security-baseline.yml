@@ -121,6 +121,9 @@ jobs:
             exit 1
           fi
 
+      - name: Verify enforced CSP meta policies on critical routes
+        run: node --test tests/csp_enforced_meta_contract.test.js
+
       - name: Verify live HTTP redirects to HTTPS
         shell: bash
         run: |
