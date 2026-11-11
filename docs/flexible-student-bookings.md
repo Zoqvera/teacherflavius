@@ -25,8 +25,13 @@ continuam definitivas e visíveis enquanto o aluno usar a modalidade FLEXIVEL.
   créditos de reposição não são elegíveis.
 - O crédito é consumido na transação da reserva; índice único e lock por aluno
   impedem reservas duplicadas na semana e cliques concorrentes.
-- O aluno não pode cancelar, alterar ou excluir reservas, inclusive por RPCs legadas.
-  Falta não devolve crédito. Professor pode cancelar; crédito válido volta ao saldo.
+- O aluno pode cancelar uma reserva confirmada até o início da aula em MINHAS AULAS.
+  Com antecedência mínima de 12 horas, o crédito de aula utilizado retorna ao saldo
+  FLEXIVEL, dentro da vigência original da mensalidade. O cancelamento tardio libera
+  a vaga, mas consome definitivamente o crédito; faltas também não devolvem crédito.
+  Reservas não podem ser editadas ou excluídas. A operação tem validação de
+  propriedade, limite temporal e idempotência no banco; RPCs legadas continuam
+  inacessíveis para o aluno. O professor pode cancelar e devolver um crédito válido.
 - FLEXIVEL não pode adquirir turma permanente sem mudança administrativa para FIXO.
 - Turmas regulares individuais e quintetos são elegíveis. Aulas experimentais têm
   fluxo próprio. Exigem Meet, material e gravações com HTTPS configurados.
@@ -40,7 +45,7 @@ continuam definitivas e visíveis enquanto o aluno usar a modalidade FLEXIVEL.
 A fila transacional existente processa as confirmações, com retry limitado e chave
 idempotente. O aluno recebe de `reservas@teacherflavius.com`, com resposta para
 `contato@teacherflavius.com`, os três links, data e horário de Brasília, aviso de
-reserva definitiva e calendário. Links são consultados novamente no envio e em
+regra de cancelamento (12 horas) e calendário. Links são consultados novamente no envio e em
 MINHAS AULAS. A pasta de gravações concede o acesso configurado pelo professor.
 Alterar links depois do envio atualiza a página, mas não dispara aviso automático
 nesta versão. Não é enviada mensagem externa durante testes SQL: rollback cancela
@@ -49,8 +54,8 @@ as requisições pg_net pendentes.
 ## Validação
 
 `tests/sql/flexible_booking_homologation.sql` testa a reserva e fila, limite semanal,
-bloqueio das rotas antigas, autorização administrativa e devolução por cancelamento
-do professor. Executa somente com rollback. Testes Node cobrem interface e envio
+bloqueio das rotas antigas, autorização administrativa, devolução por cancelamento
+do aluno e do professor. Executa somente com rollback. Testes Node cobrem interface e envio
 simulado completo do e-mail; não comprovam entrega real na caixa postal.
 
 Não altera conteúdo público, sitemap, robots ou configurações de SEO.
