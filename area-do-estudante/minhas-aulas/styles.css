@@ -455,3 +455,144 @@ body.late-cancellation-modal-open {
   outline: 2px solid #fef3c7;
   outline-offset: 3px;
 }
+
+/* Booking confirmation is shown after a successful replacement reservation. */
+body.replacement-confirmation-open {
+  overflow: hidden;
+}
+
+.replacement-confirmation-modal[hidden] {
+  display: none;
+}
+
+.replacement-confirmation-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70010;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(2, 10, 30, 0.88);
+  backdrop-filter: blur(8px);
+}
+
+.replacement-confirmation-dialog {
+  position: relative;
+  width: min(100%, 520px);
+  max-height: calc(100dvh - 36px);
+  overflow: auto;
+  padding: 30px;
+  border: 1px solid rgba(52, 211, 153, 0.38);
+  border-radius: 22px;
+  background: linear-gradient(150deg, #071a3a, #0b244f);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+  color: #dbeafe;
+}
+
+.replacement-confirmation-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 18px;
+  color: #6ee7b7;
+}
+
+.replacement-confirmation-dialog h2 {
+  margin: 0 40px 12px 0;
+  color: #f8fafc;
+  font-family: var(--tf-font-display);
+  font-size: clamp(22px, 5vw, 28px);
+}
+
+.replacement-confirmation-message {
+  margin: 0 0 18px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.replacement-confirmation-recipient {
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(52, 211, 153, 0.24);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(16, 185, 129, 0.10);
+}
+
+.replacement-confirmation-recipient span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a7f3d0;
+}
+
+.replacement-confirmation-recipient strong {
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  color: #f8fafc;
+}
+
+.replacement-confirmation-help {
+  margin: 16px 0 20px;
+  color: #b6c6dc;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.replacement-confirmation-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.4);
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.replacement-confirmation-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.replacement-confirmation-done {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: rgba(16, 185, 129, 0.24);
+  color: #ecfdf5;
+  font-family: var(--tf-font-display);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.replacement-confirmation-close:focus-visible,
+.replacement-confirmation-done:focus-visible {
+  outline: 3px solid rgba(191, 219, 254, 0.78);
+  outline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .replacement-confirmation-modal {
+    padding: 10px;
+  }
+
+  .replacement-confirmation-dialog {
+    max-height: calc(100dvh - 20px);
+    border-radius: 18px;
+    padding: 24px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .replacement-confirmation-modal {
+    backdrop-filter: none;
+  }
+}
