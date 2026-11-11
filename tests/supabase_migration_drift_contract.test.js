@@ -816,24 +816,31 @@ test("teacher-planned lesson alias fails closed on modified SQL, mismatched iden
 test("main accepts only immutable, independently attested November ledger omissions", () => {
   const filename = "20261106125500_national_holidays_no_lessons_no_replacement.sql";
   const sql = read("supabase/migrations/" + filename);
+  const existingFile = "20261007060003_existing.sql";
+  const existingSql = "select 1;\\n";
+  const migrations = { [existingFile]: existingSql, [filename]: sql };
+  const remoteRows = [{
+    version: "20261007060003",
+    name: "existing",
+    checksum: canonicalChecksum(existingSql),
+  }];
+
   const approved = runDriftCheck({
-    migrations: { [filename]: sql },
+    migrations,
+    remoteRows,
     mockNovemberCatalog: true,
   });
-  assert.equal(approved.status, 0, approved.stdout + "\n" + approved.stderr);
+  assert.equal(approved.status, 0, approved.stdout + "\\n" + approved.stderr);
   assert.match(approved.stdout, /pinned Git blob and live catalog attested on main/i);
 
   for (const overrides of [
     { mockNovemberCatalog: false },
     { mockNovemberCatalog: true, mockNovemberLedgerCount: "1" },
-    { mockNovemberCatalog: true, migrations: { [filename]: sql + "\nselect 999;\n" } },
-    { mockNovemberCatalog: true, migrations: { [filename]: sql, "20261111195555_unverified.sql": "select 1;\n" } },
+    { mockNovemberCatalog: true, migrations: { ...migrations, [filename]: sql + "\\nselect 999;\\n" } },
+    { mockNovemberCatalog: true, migrations: { ...migrations, "20261111195555_unverified.sql": "select 1;\\n" } },
   ]) {
-    const rejected = runDriftCheck({
-      migrations: { [filename]: sql },
-      ...overrides,
-    });
-    assert.equal(rejected.status, 1, rejected.stdout + "\n" + rejected.stderr);
+    const rejected = runDriftCheck({ migrations, remoteRows, ...overrides });
+    assert.equal(rejected.status, 1, rejected.stdout + "\\n" + rejected.stderr);
     assert.match(rejected.stdout, /missing from production migration history/i);
   }
 });
