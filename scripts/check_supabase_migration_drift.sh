@@ -336,6 +336,15 @@ verify_private_schema_hardening_catalog() {
   [[ "${result}" == 't' ]]
 }
 
+# Verify that the deployed teacher-planned lesson fix matches the canonical
+# function body and its original private execution restrictions.
+verify_teacher_planned_lesson_catalog() {
+  local result
+  result="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+    --file "${ROOT_DIR}/scripts/sql/teacher_planned_lesson_catalog_attestation.sql")" || return 1
+  [[ "${result}" == 't' ]]
+}
+
 # This one teacher-v2 migration was committed while the deployment ledger
 # still ended before 20:20, but remains unapplied after a separate tuition
 # change advanced the production tip. Do not renumber an immutable migration.
@@ -490,6 +499,15 @@ compare_production_identity() {
     printf -v expected_remote '%s\t%s\t%s' "$alias_remote_version" "${alias_remote_name:-$alias_name}" "${alias_remote_sha:-$alias_sha}"
 
     if [[ "$local_identity" == "$expected_git" && "$remote_identity" == "$expected_remote" ]]; then
+      # This alias is comment-equivalent but has a different production SQL
+      # digest. Require a second, independent proof of the deployed behavior.
+      if [[ "$alias_git_version" == '20261111015000' ]]; then
+        if ! verify_teacher_planned_lesson_catalog; then
+          echo "::error::Teacher-planned lesson catalog or privileges do not match the pinned migration alias."
+          exit 1
+        fi
+      fi
+
       grep -vx "$alias_git_version" "$local_only_file" > "$TEMP_DIR/alias_remaining_local" || true
       grep -vx "$alias_remote_version" "$remote_only_file" > "$TEMP_DIR/alias_remaining_remote" || true
       mv "$TEMP_DIR/alias_remaining_local" "$local_only_file"
@@ -516,6 +534,7 @@ compare_production_identity() {
 20261110194000|20261110194300|correct_flexible_credit_audit_balance|716d5d400c84835f953fd34b2b930fa0a0a5f48985e75153f470fa1e441c194e
 20261110200900|20261110195444|classify_fixed_historical_replacement_credits|a47764c0736c78fd377ea6fd8c4b5032ef57d6a1fec1b143a0e03201e71489fc
 20261111152400|20261111152717|fix_enrollment_notification_implicit_activation|d35ef2347a5450bbd829939e602ecb2de56bb7bc322d9bdb37012e7400096dc6
+20261111015000|20261111015223|respect_upcoming_planned_lesson_in_student_preparation|2df3dd9bf54f2d890abec4d758a63556ba48a01642356c1f7546eeacfd54589d|respect_upcoming_teacher_planned_lesson_in_student_preparation|24dd9f59c042585493225ce410e601bce4aa53feeedc676d20ac79deca5b6d9c
 VERIFIED_MIGRATION_ALIASES
 
   # Historical remote rows remain attested by both name and normalized digest.
