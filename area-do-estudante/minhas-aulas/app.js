@@ -485,17 +485,42 @@
       + escapeHtml(url) + '">' + escapeHtml(label) + '</a>';
   }
 
+  function canCancelFlexibleBooking(booking) {
+    const lessonStartsAt = new Date(booking.starts_at).getTime();
+    return booking.can_cancel === true
+      && Number.isFinite(lessonStartsAt)
+      && lessonStartsAt > Date.now();
+  }
+
+  function flexibleCancellationReturnsCredit(booking) {
+    return booking.credit_if_cancelled === true
+      && cancellationStillEarnsCredit(booking.credit_deadline);
+  }
+
   function renderFlexibleBooking(booking) {
     const links = flexibleResourceLink("GOOGLE MEET", booking.meeting_url)
       + flexibleResourceLink("MATERIAL DIDÁTICO", booking.material_url)
       + flexibleResourceLink("AULAS GRAVADAS", booking.recorded_lessons_url);
+    const canCancel = canCancelFlexibleBooking(booking);
+    const returnsCredit = canCancel && flexibleCancellationReturnsCredit(booking);
+    const deadline = booking.credit_deadline ? formatDateTime(booking.credit_deadline) : "";
+    const cancellationNotice = !canCancel
+      ? "O prazo para cancelar esta reserva terminou."
+      : returnsCredit
+        ? "Cancele até " + deadline + " (Brasília) para recuperar seu crédito de aula."
+        : "Você ainda pode cancelar antes do início, mas sem devolução do crédito.";
+    const cancellationButton = canCancel
+      ? '<button type="button" class="secondary-button flexible-cancel-button" data-booking-id="'
+        + escapeHtml(booking.booking_id) + '">CANCELAR RESERVA</button>'
+      : "";
     const emailStatus = booking.email_status === "sent"
       ? "Confirmação enviada por e-mail."
       : "O envio da confirmação por e-mail está pendente. Os links já estão disponíveis aqui.";
     return '<article class="lesson-card"><h3>' + escapeHtml(booking.class_name) + '</h3>'
       + '<p class="lesson-meta">' + escapeHtml(formatDateTime(booking.starts_at)) + ' · Brasília</p>'
-      + '<p>Reserva definitiva. Não permite cancelamento ou alteração. Faltas não geram reposição.</p>'
-      + '<div class="action-row">' + links + '</div><p>' + emailStatus + '</p></article>';
+      + '<p>' + escapeHtml(cancellationNotice) + ' Faltas não geram reposição.</p>'
+      + '<div class="action-row">' + links + cancellationButton + '</div><p>'
+      + emailStatus + '</p></article>';
   }
 
   function renderFlexibleOption(option) {
@@ -516,7 +541,9 @@
       + 'Você pode escolher entre as vagas dos próximos 14 dias, até uma hora antes do início.</p>'
       + '<p>A reserva utiliza um crédito de aula da mensalidade paga que cobre a data escolhida. '
       + 'Reservas indisponíveis indicam que você já tem uma aula naquela semana ou não possui crédito válido para a data.</p>'
-      + '<p>Após confirmar, você não poderá cancelar ou alterar a reserva. Faltas não geram reposição.</p></section>'
+      + '<p>Você pode cancelar até o início da aula. Com pelo menos 12 horas de antecedência, '
+      + 'o crédito utilizado volta ao saldo, respeitando a validade da mensalidade. '
+      + 'Cancelamentos tardios e faltas não devolvem crédito.</p></section>'
       + '<section class="surface-card"><h2>Minhas reservas</h2><div class="lesson-list">'
       + (bookings.length ? bookings.map(renderFlexibleBooking).join("") : '<p>Nenhuma aula reservada.</p>')
       + '</div></section><section class="surface-card"><h2>Escolher uma aula</h2><div class="replacement-list">'
@@ -524,6 +551,9 @@
       + '</div></section>';
     content.querySelectorAll(".flexible-book-button").forEach(function (button) {
       button.addEventListener("click", function () { bookFlexibleLesson(button); });
+    });
+    content.querySelectorAll(".flexible-cancel-button").forEach(function (button) {
+      button.addEventListener("click", function () { cancelFlexibleLesson(button); });
     });
   }
 
@@ -534,8 +564,9 @@
     });
     if (!option || !option.can_book || button.disabled) return;
     const confirmed = window.confirm(option.class_name + " — " + formatDateTime(option.starts_at)
-      + " (Brasília). Confira sua escolha: após confirmar, você não poderá cancelar ou alterar esta reserva. "
-      + "A ausência consome o crédito e não gera reposição. Confirmar?");
+      + " (Brasília). Você poderá cancelar até o início da aula. "
+      + "Com pelo menos 12 horas de antecedência, o crédito volta ao saldo dentro do ciclo vigente. "
+      + "Cancelamentos tardios e faltas não devolvem crédito. Confirmar?");
     if (!confirmed) return;
     setButtonBusy(button, "RESERVANDO...");
     try {
@@ -552,6 +583,35 @@
       await refreshAfterAction("Reserva confirmada. Os links estão em Minhas reservas e a confirmação será enviada por e-mail.");
     } catch {
       setPageMessage("Reserva confirmada. Atualize a página para consultar seus links.", "success");
+    }
+  }
+
+  async function cancelFlexibleLesson(button) {
+    const booking = (flexibleState.bookings || []).find(function (item) {
+      return item.booking_id === button.dataset.bookingId;
+    });
+    if (!booking || !canCancelFlexibleBooking(booking) || button.disabled) return;
+
+    const creditNotice = flexibleCancellationReturnsCredit(booking)
+      ? "O crédito será devolvido ao saldo FLEXÍVEL, dentro da validade da mensalidade."
+      : "O cancelamento não devolverá o crédito, pois o prazo de 12 horas terminou.";
+    if (!window.confirm("Cancelar a reserva em " + booking.class_name + " — "
+      + formatDateTime(booking.starts_at) + " (Brasília)? " + creditNotice)) return;
+
+    setButtonBusy(button, "CANCELANDO...");
+    try {
+      const result = await rpc("cancel_my_flexible_lesson", {
+        target_booking_id: booking.booking_id
+      });
+      const message = result.already_cancelled
+        ? "Esta reserva já estava cancelada."
+        : result.credit_granted
+          ? "Reserva cancelada. A vaga foi liberada e o crédito voltou ao seu saldo FLEXÍVEL."
+          : "Reserva cancelada. A vaga foi liberada, sem devolução de crédito.";
+      await refreshAfterAction(message);
+    } catch (error) {
+      setPageMessage(error.message || "Não foi possível cancelar esta reserva.", "error");
+      restoreButton(button);
     }
   }
 

@@ -173,7 +173,7 @@ function makeIcsAttachment(
   const title = isFlexible ? `Aula FLEXIVEL — ${className}` : `Reposição de inglês — ${className}`;
   const description = [
     `Turma: ${className}`,
-    isFlexible ? "Reserva FLEXIVEL definitiva." : "Reposição agendada pelo TeacherFlavius.",
+    isFlexible ? "Reserva FLEXIVEL: cancelamento permitido até o início da aula; crédito apenas com 12 horas de antecedência." : "Reposição agendada pelo TeacherFlavius.",
     `Link da aula: ${meetingUrl}`,
   ].join("\n");
   const content = foldIcsLines([
@@ -407,8 +407,13 @@ Deno.serve(async (request: Request) => {
     }
   } else if (isFlexible && isCancellation) {
     subject = `Reserva FLEXIVEL cancelada — ${classDate}, ${startTime}`;
-    textBody = [`A reserva FLEXIVEL de ${studentName} foi cancelada pela administração.`,
+    const creditPolicy = isTeacherCancellation
+      ? "O crédito válido foi devolvido ao saldo FLEXÍVEL."
+      : "Cancelamentos feitos com pelo menos 12 horas de antecedência devolvem o crédito "
+        + "dentro da validade da mensalidade. Cancelamentos tardios não devolvem crédito.";
+    textBody = [`A reserva FLEXIVEL de ${studentName} foi cancelada.`,
       `Turma: ${className}`, `Data: ${classDate}`, `Horário de Brasília: ${schedule}`,
+      creditPolicy,
       "Consulte os créditos e as vagas disponíveis em MINHAS AULAS.",
       "Se você adicionou esta aula ao calendário, remova o evento manualmente."].join("\n\n");
     htmlBody = `<div style="font-family:Arial,sans-serif;line-height:1.6"><h1>Reserva FLEXIVEL cancelada</h1>
