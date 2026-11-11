@@ -402,6 +402,6 @@ test("FLEXIVEL confirmation sends all class resources from reservas and a correc
   assert.equal(message.from, "Teacher Flávio <reservas@teacherflavius.com>");
   assert.match(message.text, /https:\/\/docs.google.com\/test/);
   assert.match(message.text, /https:\/\/drive.google.com\/test/);
-  assert.match(message.text, /não permite cancelamento/);
+  assert.match(message.text, /pelo menos 12 horas de antecedência/);
   assert.match(Buffer.from(message.attachments[0].content,"base64").toString(), /SUMMARY:Aula FLEXIVEL/);
 });
