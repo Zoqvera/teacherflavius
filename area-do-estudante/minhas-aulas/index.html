@@ -31,7 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20261105-session-recovery-1"></script>
   <link rel="stylesheet" href="/aula_template.css?v=20260430-3">
-  <link rel="stylesheet" href="/area-do-estudante/minhas-aulas/styles.css?v=20261020-lesson-forecast-1">
+  <link rel="stylesheet" href="/area-do-estudante/minhas-aulas/styles.css?v=20261111-replacement-confirmation-1">
 </head>
 <body class="auth-checking">
 <!-- Google Tag Manager (noscript) -->
@@ -89,8 +89,42 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </section>
   </div>
 
+  <div id="replacementConfirmationModal" class="replacement-confirmation-modal" hidden>
+    <section
+      class="replacement-confirmation-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="replacementConfirmationTitle"
+      aria-describedby="replacementConfirmationMessage"
+    >
+      <button id="replacementConfirmationClose" class="replacement-confirmation-close" type="button" aria-label="Fechar confirmação">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 6 18 18M18 6 6 18"></path>
+        </svg>
+      </button>
+
+      <svg class="replacement-confirmation-icon" viewBox="0 0 48 48" aria-hidden="true" fill="none">
+        <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="2"></circle>
+        <path d="m14 24 7 7 14-15" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+
+      <h2 id="replacementConfirmationTitle">Reposição agendada</h2>
+      <p id="replacementConfirmationMessage" class="replacement-confirmation-message" role="status" aria-live="polite">
+        Verificando o envio do link da aula.
+      </p>
+      <div class="replacement-confirmation-recipient">
+        <span>E-mail de destino</span>
+        <strong id="replacementConfirmationEmail">Consultando e-mail de destino...</strong>
+      </div>
+      <p class="replacement-confirmation-help">
+        Confira também a pasta de spam. O link da aula fica disponível em Minhas Aulas.
+      </p>
+      <button id="replacementConfirmationDone" class="replacement-confirmation-done" type="button">ENTENDI</button>
+    </section>
+  </div>
+
   <script src="/area-do-estudante/minhas-aulas/calendar.js?v=20261015-ics-1"></script>
-  <script src="/area-do-estudante/minhas-aulas/app.js?v=20261106-flexible-1"></script>
+  <script src="/area-do-estudante/minhas-aulas/app.js?v=20261111-replacement-confirmation-1"></script>
   <script src="/animated_cards.js?v=20260430-3"></script>
   <script id="teacher-flavius-mobile-top-navigation" defer src="/mobile_top_navigation.js?v=20261008-private-menu-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
