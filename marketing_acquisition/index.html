@@ -115,6 +115,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p class="muted">O funil usa como coorte os cliques de WhatsApp ocorridos dentro do período selecionado. Matrículas e receita ficam atribuídas à origem desse clique.</p>
       </section>
 
+      <section class="panel" aria-labelledby="campaigns-title">
+        <h2 id="campaigns-title">Campanhas</h2>
+        <p class="muted">O investimento usa o período importado da Meta. Os recebimentos somam cobranças mensais e semanais pagas desde a matrícula.</p>
+        <p id="campaignStatus" class="muted" role="status">Carregando campanhas...</p>
+        <div id="campaignSummary" class="table-wrap" hidden>
+          <table aria-label="Desempenho acumulado das campanhas">
+            <thead><tr><th>Campanha</th><th>Investimento</th><th>Conversas</th><th>Custo por conversa</th><th>Vinculados</th><th>Ativos</th><th>Pagantes</th><th>Custo por pagante</th><th>Recebido</th></tr></thead>
+            <tbody id="campaignSummaryBody"></tbody>
+          </table>
+        </div>
+        <div id="campaignDetails" class="panel" hidden>
+          <label for="campaignFilter">Consultar campanha</label>
+          <select id="campaignFilter"></select>
+          <p id="campaignDetailsStatus" class="muted" role="status"></p>
+          <div id="campaignStudents" hidden>
+            <h3>Alunos vinculados</h3>
+            <div class="table-wrap">
+              <table aria-label="Alunos vinculados à campanha">
+                <thead><tr><th>Aluno</th><th>Matrícula</th><th>Situação</th></tr></thead>
+                <tbody id="campaignStudentsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="campaignDays" hidden>
+            <h3>Desempenho diário</h3>
+            <div class="table-wrap">
+              <table aria-label="Desempenho diário da campanha">
+                <thead><tr><th>Data</th><th>Investimento</th><th>Impressões</th><th>Cliques</th><th>Conversas</th></tr></thead>
+                <tbody id="campaignDaysBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="panel" aria-labelledby="declared-sources-title">
         <h2 id="declared-sources-title">Como os alunos conheceram as aulas</h2>
         <p class="muted">Origem informada na matrícula ou pelo professor, separada da origem técnica dos acessos. O período considera a data de matrícula; a receita é o total de mensalidades pagas pelos alunos dessa coorte.</p>
@@ -216,7 +251,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </main>
   </div>
 
-  <script src="/marketing_acquisition.js?v=20261012-origin-1"></script>
+  <script src="/marketing_acquisition.js?v=20261111-campaigns-1"></script>
   <script src="/marketing_tracking_control.js?v=20260904-1"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
