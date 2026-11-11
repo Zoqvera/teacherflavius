@@ -11,7 +11,7 @@ const APP_PATH = path.join(ROOT, "area-do-estudante/minhas-aulas/app.js");
 const HTML_PATH = path.join(ROOT, "area-do-estudante/minhas-aulas/index.html");
 const SQL_PATH = path.join(
   ROOT,
-  "supabase/migrations/20261111012000_student_replacement_email_confirmation_status.sql"
+  "supabase/migrations/20261111011941_student_replacement_email_confirmation_status.sql"
 );
 
 function createElement() {
