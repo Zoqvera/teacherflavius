@@ -56,3 +56,65 @@ test("FLEXIVEL page displays vacancies, resources and eligible cancellation with
   assert.match(content.innerHTML, /recuperar seu crédito de aula/);
   assert.doesNotMatch(content.innerHTML, /regular-cancel-button|replacement-book-button|enrollment-cancel-button/);
 });
+
+test("FLEXIVEL cancellation calls its owned-booking RPC and reports restored credit", async () => {
+  const bookingId = "test-booking-123";
+  const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const deadline = new Date(Date.parse(startsAt) - 12 * 60 * 60 * 1000).toISOString();
+  const booking = { booking_id: bookingId, class_name: "Turma 1", starts_at: startsAt,
+    credit_deadline: deadline, can_cancel: true, credit_if_cancelled: true };
+  const state = { booking_mode: "FLEXIVEL", options: [], bookings: [booking] };
+  const requestLog = [];
+  const button = { dataset: { bookingId }, disabled: false, textContent: "CANCELAR RESERVA",
+    addEventListener(_event, handler) { this.click = handler; } };
+  const content = { innerHTML: "",
+    querySelectorAll(selector) { return selector === ".flexible-cancel-button" ? [button] : []; } };
+  const elements = { myClassesContent: content, loginStatus: {}, pageMessage: {} };
+  const auth = {
+    isConfigured: () => true,
+    getSession: async () => ({ user: { id: "student-123" } }),
+    getVerifiedSession: async () => ({ user: { id: "student-123" } }),
+    getClient: () => ({ rpc: async (name, args) => {
+      requestLog.push({ name, args });
+      return { data: name === "cancel_my_flexible_lesson"
+        ? { ok: true, credit_granted: true } : state };
+    } }),
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(root,"area-do-estudante/minhas-aulas/app.js"),"utf8"), {
+    Auth: auth,
+    window: { Auth: auth, SUPABASE_CONFIG: {}, setTimeout, confirm: () => true },
+    document: { getElementById: id => elements[id] || null,
+      body: { classList: { remove() {} } } }, console,
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(typeof button.click, "function");
+  button.click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(requestLog[1].name, "cancel_my_flexible_lesson");
+  assert.equal(requestLog[1].args.target_booking_id, bookingId);
+  assert.match(elements.pageMessage.textContent, /crédito voltou ao seu saldo FLEXÍVEL/);
+});
+
+test("FLEXIVEL late cancellation informs that no credit will be returned", async () => {
+  const startsAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+  const deadline = new Date(Date.parse(startsAt) - 12 * 60 * 60 * 1000).toISOString();
+  const content = { innerHTML: "", querySelectorAll: () => [] };
+  const auth = { isConfigured: () => true,
+    getSession: async () => ({ user: { id: "student" } }),
+    getVerifiedSession: async () => ({ user: { id: "student" } }),
+    getClient: () => ({ rpc: async () => ({ data: {
+      booking_mode: "FLEXIVEL", options: [], bookings: [{
+        booking_id: "late-booking", class_name: "Turma 8", starts_at: startsAt,
+        credit_deadline: deadline, can_cancel: true, credit_if_cancelled: false
+      }]
+    } }) })
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(root,"area-do-estudante/minhas-aulas/app.js"),"utf8"), {
+    Auth: auth, window: { Auth: auth, SUPABASE_CONFIG: {}, setTimeout },
+    document: { getElementById: id => id === "myClassesContent" ? content : {},
+      body: { classList: { remove() {} } } }, console,
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.match(content.innerHTML, /CANCELAR RESERVA/);
+  assert.match(content.innerHTML, /sem devolução do crédito/);
+});
