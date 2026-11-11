@@ -50,3 +50,21 @@ test("enrollment notifications preserve portal-only scope and duplicate protecti
     /execute function public\.queue_enrollment_email_notification\(\)/gi
   );
 });
+
+test("production migration version alias is pinned to the exact SQL digest", () => {
+  const { createHash } = require("node:crypto");
+  const sqlDigest = createHash("sha256")
+    .update(migration.trim())
+    .digest("hex");
+  const expectedDigest = "d35ef2347a5450bbd829939e602ecb2de56bb7bc322d9bdb37012e7400096dc6";
+  assert.equal(sqlDigest, expectedDigest);
+  const driftScript = fs.readFileSync(
+    path.join(__dirname, "..", "scripts/check_supabase_migration_drift.sh"),
+    "utf8"
+  );
+  assert.ok(
+    driftScript.includes(
+      `20261111152400|20261111152717|fix_enrollment_notification_implicit_activation|${expectedDigest}`
+    )
+  );
+});
