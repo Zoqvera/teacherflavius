@@ -139,20 +139,58 @@ function renderBookingRow(booking) {
   '</div>';
 }
 
-function renderAdminSlot(slot, bookings) {
+
+function renderCapacitySummary(slot, occupancy, active) {
+  const confirmed = Number(slot.confirmed_bookings || 0);
+  if (!active) {
+    return '<div class="card-meta"><span class="status-pill">' +
+      confirmed + ' reposições confirmadas (histórico)</span></div>';
+  }
+
+  if (!occupancy) {
+    return '<p class="error">Não foi possível calcular a lotação deste horário.</p>';
+  }
+
+  const regular = Number(occupancy.regular_students || 0);
+  const holds = Number(occupancy.seat_holds || 0);
+  const cancellations = Number(occupancy.cancelled_regular_students || 0);
+  const replacements = Number(occupancy.confirmed_bookings || 0);
+  const participants = Number(occupancy.expected_participants || 0);
+  const capacity = Number(occupancy.operational_capacity || 0);
+  const available = Number(occupancy.available_spots || 0);
+  const excess = Number(occupancy.over_capacity || 0);
+  const cancellationDetails = cancellations ? ' · ' + cancellations + ' cancelamentos registrados' : '';
+  const holdDetails = holds ? ' · ' + holds + ' reservas de vaga' : '';
+  const regularDetails = occupancy.is_regular_occurrence
+    ? regular + ' alunos regulares' + cancellationDetails + holdDetails
+    : 'Horário extraordinário (sem presença regular presumida)';
+
+  return '<div class="card-meta"><span class="status-pill">' +
+    available + (available === 1 ? ' vaga disponível' : ' vagas disponíveis') +
+    '</span></div>' +
+    '<p><strong>Ocupação prevista:</strong> ' + participants + ' de ' + capacity +
+    ' lugares. ' + regularDetails + ' · ' + replacements +
+    ' reposições confirmadas.</p>' +
+    (excess > 0
+      ? '<p class="error"><strong>Lotação excedida em ' + excess +
+        ' participante(s).</strong> Verifique a reserva existente; não há novas vagas.</p>'
+      : '');
+}
+
+function renderAdminSlot(slot, bookings, occupancy) {
   const isPast = new Date(slot.ends_at).getTime() < Date.now();
   const active = slot.is_active && !isPast;
   const statusLabel = !slot.is_active ? "Cancelado" : (isPast ? "Encerrado" : "Publicado");
   const statusClass = active ? "success" : (!slot.is_active ? "danger" : "");
   const slotBookings = bookings.filter(function (booking) { return booking.slot_id === slot.id; });
-  const confirmedCount = Number(slot.confirmed_bookings || 0);
+  const capacitySummary = renderCapacitySummary(slot, occupancy, active);
 
   return '<article class="slot-card' + (active ? '' : ' is-inactive') + '">' +
     '<div class="card-heading"><div><h3>' + escapeHtml(formatDate(slot.starts_at)) + '</h3>' +
     '<div class="card-time">' + escapeHtml(formatTime(slot.starts_at)) + ' às ' + escapeHtml(formatTime(slot.ends_at)) + '</div></div>' +
     '<span class="status-pill ' + statusClass + '">' + escapeHtml(statusLabel) + '</span></div>' +
     '<p><strong>Turma:</strong> ' + escapeHtml(slot.class_name || (slot.class_number ? ("Turma " + slot.class_number) : "Não definida")) + '</p>' +
-    '<div class="card-meta"><span class="status-pill">' + confirmedCount + ' de ' + Number(slot.capacity) + ' vagas reservadas</span></div>' +
+    capacitySummary +
     (slot.notes ? '<p>' + escapeHtml(slot.notes) + '</p>' : '') +
     (isHttpUrl(slot.meeting_url) ? '<a class="link-button" href="' + escapeHtml(slot.meeting_url) + '" target="_blank" rel="noopener noreferrer">ABRIR LINK DA TURMA</a>' : '') +
     (active ? '<button class="danger-button cancel-slot-button" type="button" data-slot-id="' + escapeHtml(slot.id) + '">CANCELAR HORÁRIO</button>' : '') +
@@ -166,15 +204,22 @@ async function loadAdminSchedule() {
   const client = Auth.getClient();
   const results = await Promise.all([
     client.rpc("get_teacher_makeup_slots"),
-    client.rpc("get_teacher_makeup_bookings")
+    client.rpc("get_teacher_makeup_bookings"),
+    client.rpc("get_teacher_makeup_slot_occupancy")
   ]);
   if (results[0].error) throw results[0].error;
   if (results[1].error) throw results[1].error;
+  if (results[2].error) throw results[2].error;
 
   const slots = results[0].data || [];
   const bookings = results[1].data || [];
+  const occupancyBySlot = new Map((results[2].data || []).map(function (item) {
+    return [String(item.slot_id), item];
+  }));
   container.innerHTML = slots.length
-    ? slots.map(function (slot) { return renderAdminSlot(slot, bookings); }).join("")
+    ? slots.map(function (slot) {
+      return renderAdminSlot(slot, bookings, occupancyBySlot.get(String(slot.id)));
+    }).join("")
     : '<p class="empty">Nenhum horário de reposição foi publicado.</p>';
 
   document.querySelectorAll(".cancel-slot-button").forEach(function (button) {
