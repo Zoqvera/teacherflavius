@@ -29,6 +29,7 @@ function runDriftScript({
   allowPrNew = false,
   mockPresentationCatalog = false,
   mockResendCatalog = false,
+  mockTeacherPlannedCatalog = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-drift-"),
@@ -53,6 +54,10 @@ if [[ "$*" == *"lesson_presentations_catalog_attestation.sql"* ]]; then
 fi
 if [[ "$*" == *"resend_delivery_catalog_attestation.sql"* ]]; then
   echo "${mockResendCatalog ? "t" : "f"}"
+  exit 0
+fi
+if [[ "$*" == *"teacher_planned_lesson_catalog_attestation.sql"* ]]; then
+  echo "${mockTeacherPlannedCatalog ? "t" : "f"}"
   exit 0
 fi
 cat <<'REMOTE_ROWS'
@@ -89,6 +94,7 @@ function runDriftCheck({
   allowPrNew = false,
   mockPresentationCatalog = false,
   mockResendCatalog = false,
+  mockTeacherPlannedCatalog = false,
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-files-"),
@@ -106,6 +112,7 @@ function runDriftCheck({
       allowPrNew,
       mockPresentationCatalog,
       mockResendCatalog,
+      mockTeacherPlannedCatalog,
     });
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -738,5 +745,55 @@ test("manual Resend migration permits only the exact pinned SQL and attested cat
   ]) {
     const rejected = runDriftCheck(scenario);
     assert.equal(rejected.status, 1, rejected.stdout + "\n" + rejected.stderr);
+  }
+});
+
+
+test("teacher-planned lesson alias is pinned to both SQL bodies and a matching live catalog", () => {
+  const filename = "20261111015000_respect_upcoming_planned_lesson_in_student_preparation.sql";
+  const localSql = read("supabase/migrations/" + filename);
+  const localDigest = "2df3dd9bf54f2d890abec4d758a63556ba48a01642356c1f7546eeacfd54589d";
+  const remoteDigest = "24dd9f59c042585493225ce410e601bce4aa53feeedc676d20ac79deca5b6d9c";
+  const remoteIdentity = {
+    version: "20261111015223",
+    name: "respect_upcoming_teacher_planned_lesson_in_student_preparation",
+    checksum: remoteDigest,
+  };
+
+  assert.equal(canonicalChecksum(localSql), localDigest);
+  assert.match(driftScript, /20261111015000\|20261111015223\|respect_upcoming_planned_lesson_in_student_preparation\|2df3dd9b[0-9a-f]+\|respect_upcoming_teacher_planned_lesson_in_student_preparation\|24dd9f59[0-9a-f]+/);
+  assert.match(driftScript, /if ! verify_teacher_planned_lesson_catalog; then/);
+  const catalogQuery = read("scripts/sql/teacher_planned_lesson_catalog_attestation.sql");
+  assert.match(catalogQuery, /private\.academic_next_lesson_number\(uuid\)/);
+  assert.match(catalogQuery, /has_function_privilege/i);
+  assert.match(catalogQuery, /7d4d6e90bc3a235507e04327ca1bcce88acf336b7b2cc05d995c8402427229c3/);
+
+  const migrated = runDriftCheck({
+    migrations: { [filename]: localSql },
+    remoteRows: [remoteIdentity],
+    mockTeacherPlannedCatalog: true,
+  });
+  assert.equal(migrated.status, 0, migrated.stdout + migrated.stderr);
+});
+
+test("teacher-planned lesson alias fails closed on modified SQL, mismatched identity or ACL audit", () => {
+  const filename = "20261111015000_respect_upcoming_planned_lesson_in_student_preparation.sql";
+  const localSql = read("supabase/migrations/" + filename);
+  const original = {
+    version: "20261111015223",
+    name: "respect_upcoming_teacher_planned_lesson_in_student_preparation",
+    checksum: "24dd9f59c042585493225ce410e601bce4aa53feeedc676d20ac79deca5b6d9c",
+  };
+  const scenarios = [
+    { migrations: { [filename]: localSql }, remoteRows: [original], mockTeacherPlannedCatalog: false },
+    { migrations: { [filename]: localSql + "\nselect 999;\n" }, remoteRows: [original], mockTeacherPlannedCatalog: true },
+    { migrations: { [filename]: localSql }, remoteRows: [{ ...original, checksum: "0".repeat(64) }], mockTeacherPlannedCatalog: true },
+    { migrations: { [filename]: localSql }, remoteRows: [{ ...original, name: "altered" }], mockTeacherPlannedCatalog: true },
+    { migrations: { [filename]: localSql }, remoteRows: [{ ...original, version: "20261111015224" }], mockTeacherPlannedCatalog: true },
+  ];
+
+  for (const scenario of scenarios) {
+    const result = runDriftCheck(scenario);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
   }
 });
