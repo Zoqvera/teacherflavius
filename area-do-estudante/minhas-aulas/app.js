@@ -721,7 +721,13 @@
     const elements = getReplacementConfirmationElements();
     if (!elements.modal || elements.modal.hidden) return;
 
-    if (recipientEmail && elements.email) elements.email.textContent = recipientEmail;
+    if (elements.email) {
+      if (recipientEmail) {
+        elements.email.textContent = recipientEmail;
+      } else if (status === "unknown") {
+        elements.email.textContent = "Endereço de destino indisponível no momento.";
+      }
+    }
 
     if (!elements.message) return;
     if (status === "sent") {
