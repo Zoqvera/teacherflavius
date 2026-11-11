@@ -758,9 +758,26 @@ VERIFIED_MIGRATION_ALIASES
         fi
       done < "${local_only_file}"
     else
-      echo "::error::supabase/migrations contains versions that are missing from production migration history:"
-      sed 's/^/  - /' "${local_only_file}"
-      drift_found=true
+      # On main/scheduled audits, only known immutable historical migrations
+      # whose live objects were independently attested may remain unrecorded.
+      # Every unrecognized, modified, or partially deployed version still
+      # fails. Never write to the production migration ledger here.
+      local unverified_local_file="${TEMP_DIR}/unverified_local_versions"
+      : > "${unverified_local_file}"
+
+      while IFS= read -r new_version; do
+        if attest_unrecorded_active_november_migration "${new_version}"; then
+          echo "::notice::Immutable November migration ${new_version}: pinned Git blob and live catalog attested on main; ledger unchanged."
+        else
+          printf '%s\n' "${new_version}" >> "${unverified_local_file}"
+        fi
+      done < "${local_only_file}"
+
+      if [[ -s "${unverified_local_file}" ]]; then
+        echo "::error::supabase/migrations contains versions that are missing from production migration history:"
+        sed 's/^/  - /' "${unverified_local_file}"
+        drift_found=true
+      fi
     fi
   fi
 
