@@ -111,7 +111,7 @@ test("FLEXIVEL late cancellation informs that no credit will be returned", async
   };
   vm.runInNewContext(fs.readFileSync(path.join(root,"area-do-estudante/minhas-aulas/app.js"),"utf8"), {
     Auth: auth, window: { Auth: auth, SUPABASE_CONFIG: {}, setTimeout },
-    document: { getElementById: id => id === "myClassesContent" ? content : {},
+    document: { getElementById: id => id === "myClassesContent" ? content : null,
       body: { classList: { remove() {} } } }, console,
   });
   await new Promise(resolve => setTimeout(resolve, 0));
