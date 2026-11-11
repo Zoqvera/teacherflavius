@@ -345,6 +345,97 @@
     }
   }
 
+  const CAMPAIGN_REPORT_RPC = "get_teacher_campaign_report";
+  const CAMPAIGN_COUNT_FORMAT = new Intl.NumberFormat("pt-BR");
+  const CAMPAIGN_UNAVAILABLE = "—";
+
+  function campaignMoney(value, currencyCode) {
+    if (value == null || !currencyCode) return CAMPAIGN_UNAVAILABLE;
+    return Number(value).toLocaleString("pt-BR", { style: "currency", currency: currencyCode });
+  }
+
+  function campaignCount(value) {
+    return value == null ? CAMPAIGN_UNAVAILABLE : CAMPAIGN_COUNT_FORMAT.format(value);
+  }
+
+  function campaignLabel(campaign) {
+    if (campaign.alias === "anuncio_2026_09_29") return "Anúncio de 29/09/2026";
+    if (campaign.alias) return campaign.alias;
+    return campaign.meta_name + " · " + campaign.meta_campaign_id;
+  }
+
+  function renderCampaignRows(bodyId, rows, getCells) {
+    const body = document.getElementById(bodyId);
+    body.replaceChildren(...rows.map(function (row) {
+      const tr = document.createElement("tr");
+      for (const value of getCells(row)) {
+        tr.insertCell().textContent = value;
+      }
+      return tr;
+    }));
+  }
+
+  async function loadCampaignDetails() {
+    const select = document.getElementById("campaignFilter");
+    const campaignKey = select.value;
+    const studentsPanel = document.getElementById("campaignStudents");
+    const daysPanel = document.getElementById("campaignDays");
+    studentsPanel.hidden = true;
+    daysPanel.hidden = true;
+    setText("campaignDetailsStatus", "Carregando dados da campanha...");
+
+    try {
+      const report = await callRpc(CAMPAIGN_REPORT_RPC, { p_campaign_key: campaignKey });
+      if (select.value !== campaignKey) return;
+      renderCampaignRows("campaignStudentsBody", report.students, student => [
+        student.student_name, formatDate(student.enrollment_date) || CAMPAIGN_UNAVAILABLE,
+        student.active ? "Ativo" : "Inativo"
+      ]);
+      renderCampaignRows("campaignDaysBody", report.days, day => [
+        formatDate(day.report_date), campaignMoney(day.spend, day.currency),
+        campaignCount(day.impressions), campaignCount(day.clicks),
+        campaignCount(day.messaging_conversations_started)
+      ]);
+      studentsPanel.hidden = report.students.length === 0;
+      daysPanel.hidden = report.days.length === 0;
+      const studentsStatus = studentsPanel.hidden ? "Nenhum aluno vinculado." : "";
+      const daysStatus = daysPanel.hidden ? "Nenhum dado diário da Meta associado à campanha." : "";
+      setText("campaignDetailsStatus", [studentsStatus, daysStatus].filter(Boolean).join(" "));
+    } catch (error) {
+      if (select.value === campaignKey) setText("campaignDetailsStatus", friendlyError(error));
+    }
+  }
+
+  async function loadCampaignOverview() {
+    const select = document.getElementById("campaignFilter");
+    const summary = document.getElementById("campaignSummary");
+    const details = document.getElementById("campaignDetails");
+    try {
+      const campaigns = await callRpc(CAMPAIGN_REPORT_RPC);
+      renderCampaignRows("campaignSummaryBody", campaigns, campaign => [
+        campaignLabel(campaign), campaignMoney(campaign.spend, campaign.currency),
+        campaignCount(campaign.conversations),
+        campaignMoney(campaign.cost_per_conversation, campaign.currency),
+        campaignCount(campaign.linked_students), campaignCount(campaign.active_students),
+        campaignCount(campaign.paying_students),
+        campaignMoney(campaign.cost_per_paying_student, campaign.currency),
+        campaignMoney(campaign.received_revenue, "BRL")
+      ]);
+      const selectedKey = select.value;
+      select.replaceChildren(...campaigns.map(campaign => new Option(campaignLabel(campaign), campaign.campaign_key)));
+      if (campaigns.some(campaign => campaign.campaign_key === selectedKey)) select.value = selectedKey;
+      summary.hidden = campaigns.length === 0;
+      details.hidden = summary.hidden;
+      const latestImport = campaigns.reduce((latest, campaign) =>
+        campaign.imported_at > latest ? campaign.imported_at : latest, "");
+      const importStatus = latestImport ? "Última importação da Meta em " + formatDateTime(latestImport) + "." : "";
+      setText("campaignStatus", summary.hidden ? "Nenhuma campanha registrada." : importStatus);
+      if (!summary.hidden) await loadCampaignDetails();
+    } catch (error) {
+      setText("campaignStatus", friendlyError(error));
+    }
+  }
+
   async function loadReport() {
     var button = document.getElementById("refreshAcquisition");
     var status = document.getElementById("acquisitionStatus");
@@ -433,10 +524,12 @@
     var refresh = document.getElementById("refreshAcquisition");
     var period = document.getElementById("periodFilter");
     var recentBody = document.getElementById("recentLeadsTableBody");
-    if (refresh) refresh.addEventListener("click", loadReport);
+    const campaignFilter = document.getElementById("campaignFilter");
+    if (campaignFilter) campaignFilter.addEventListener("change", loadCampaignDetails);
+    if (refresh) refresh.addEventListener("click", () => Promise.all([loadReport(), loadCampaignOverview()]));
     if (period) period.addEventListener("change", loadReport);
     if (recentBody) recentBody.addEventListener("click", handleLeadAction);
-    await loadReport();
+    await Promise.all([loadReport(), loadCampaignOverview()]);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize, { once: true });
