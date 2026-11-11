@@ -44,6 +44,7 @@ jobs:
           node --test tests/lesson_credits_contract.test.js
           node --test tests/student_cancellation_seven_day_policy_contract.test.js
           node --test tests/replacement_one_available_seat_contract.test.js
+          node --test tests/makeup_operational_occupancy_contract.test.js
           node --test tests/regular_cancellation_delivery_e2e_mock.test.js
           node --test tests/teacher_makeup_notification_contract.test.js
           node --test tests/manual_lesson_credit_grants_contract.test.js
