@@ -17,8 +17,10 @@ export function flexibleBookingEmail({ studentName, className, classDate, schedu
   if (links.some(([, url]) => !/^https:\/\//i.test(String(url || "")))) {
     throw new Error("Os links da reserva FLEXIVEL estão incompletos.");
   }
-  const policy = "Esta reserva é definitiva: não permite cancelamento ou alteração pelo aluno. "
-    + "A ausência consome o crédito e não gera reposição.";
+  const policy = "Você pode cancelar a reserva até o início da aula. "
+    + "Se cancelar com pelo menos 12 horas de antecedência, o crédito utilizado "
+    + "volta ao saldo FLEXÍVEL, dentro da validade da mensalidade. "
+    + "Cancelamentos tardios e faltas não devolvem crédito.";
   return {
     from: FROM,
     subject: `Reserva FLEXIVEL confirmada — ${classDate}, ${schedule}`,
