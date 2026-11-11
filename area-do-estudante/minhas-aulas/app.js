@@ -4,6 +4,8 @@
   const SAO_PAULO_TIME_ZONE = "America/Sao_Paulo";
   const MAX_CANCELLATION_LEAD_MS = 7 * 24 * 60 * 60 * 1000;
   const LOGIN_PATH = "/login/?next=" + encodeURIComponent("/area-do-estudante/minhas-aulas/");
+  const REPLACEMENT_EMAIL_CHECK_ATTEMPTS = 7;
+  const REPLACEMENT_EMAIL_CHECK_INTERVAL_MS = 1200;
 
   let overview = null;
   let flexibleState = null;
@@ -13,6 +15,8 @@
   let replacementOptions = [];
   let pendingLateCancellationButton = null;
   let authenticatedStudentId = null;
+  let replacementConfirmationRequest = 0;
+  let replacementConfirmationReturnFocus = null;
 
   function sleep(milliseconds) {
     return new Promise(function (resolve) {
@@ -683,22 +687,165 @@
     }
   }
 
+
+  function getReplacementConfirmationElements() {
+    return {
+      modal: document.getElementById("replacementConfirmationModal"),
+      closeButton: document.getElementById("replacementConfirmationClose"),
+      doneButton: document.getElementById("replacementConfirmationDone"),
+      email: document.getElementById("replacementConfirmationEmail"),
+      message: document.getElementById("replacementConfirmationMessage")
+    };
+  }
+
+  function closeReplacementConfirmation() {
+    const elements = getReplacementConfirmationElements();
+    if (!elements.modal || elements.modal.hidden) return;
+
+    replacementConfirmationRequest += 1;
+    elements.modal.hidden = true;
+    document.body.classList.remove("replacement-confirmation-open");
+
+    const returnFocus = replacementConfirmationReturnFocus;
+    replacementConfirmationReturnFocus = null;
+    if (returnFocus && document.contains(returnFocus)) {
+      returnFocus.focus();
+    } else {
+      const safeFocusTarget = document.querySelector(".top-link");
+      if (safeFocusTarget) safeFocusTarget.focus();
+    }
+  }
+
+  function updateReplacementConfirmation(status, recipientEmail, requestId) {
+    if (requestId !== replacementConfirmationRequest) return;
+    const elements = getReplacementConfirmationElements();
+    if (!elements.modal || elements.modal.hidden) return;
+
+    if (elements.email) {
+      if (recipientEmail) {
+        elements.email.textContent = recipientEmail;
+      } else if (status === "unknown") {
+        elements.email.textContent = "Endereço de destino indisponível no momento.";
+      }
+    }
+
+    if (!elements.message) return;
+    if (status === "sent") {
+      elements.message.textContent = "O link da sua aula foi enviado para o e-mail abaixo.";
+    } else if (status === "failed") {
+      elements.message.textContent = "A reposição está confirmada, mas o envio do e-mail falhou. O link da aula continua disponível em Minhas Aulas.";
+    } else if (status === "pending") {
+      elements.message.textContent = "Reposição confirmada. O e-mail com o link da aula ainda está sendo processado.";
+    } else {
+      elements.message.textContent = "Reposição confirmada. Não foi possível verificar o envio do e-mail no momento. O link da aula está disponível em Minhas Aulas.";
+    }
+  }
+
+  async function monitorReplacementConfirmation(bookingId, requestId) {
+    for (let attempt = 0; attempt < REPLACEMENT_EMAIL_CHECK_ATTEMPTS; attempt += 1) {
+      if (requestId !== replacementConfirmationRequest) return;
+
+      let confirmation;
+      try {
+        confirmation = await rpc("get_my_replacement_booking_email_status", {
+          target_booking_id: bookingId
+        });
+      } catch (error) {
+        console.warn("Não foi possível verificar o e-mail de confirmação da reposição.", error);
+        updateReplacementConfirmation("unknown", "", requestId);
+        return;
+      }
+
+      if (requestId !== replacementConfirmationRequest) return;
+      const status = confirmation && confirmation.status;
+      const recipientEmail = confirmation && confirmation.recipient_email;
+      updateReplacementConfirmation(status === "sent" || status === "failed" ? status : "pending", recipientEmail, requestId);
+      if (status === "sent" || status === "failed") return;
+
+      if (attempt < REPLACEMENT_EMAIL_CHECK_ATTEMPTS - 1) {
+        await sleep(REPLACEMENT_EMAIL_CHECK_INTERVAL_MS);
+      }
+    }
+  }
+
+  function openReplacementConfirmation(bookingId, returnFocus) {
+    const elements = getReplacementConfirmationElements();
+    if (!elements.modal || !elements.doneButton) return;
+
+    replacementConfirmationRequest += 1;
+    replacementConfirmationReturnFocus = returnFocus;
+    const requestId = replacementConfirmationRequest;
+
+    if (elements.email) elements.email.textContent = "Consultando e-mail de destino...";
+    if (elements.message) {
+      elements.message.textContent = "Reposição confirmada. Verificando o envio do link da aula.";
+    }
+    elements.modal.hidden = false;
+    document.body.classList.add("replacement-confirmation-open");
+    elements.doneButton.focus();
+
+    if (bookingId) {
+      void monitorReplacementConfirmation(bookingId, requestId);
+    } else {
+      updateReplacementConfirmation("unknown", "", requestId);
+    }
+  }
+
+  function initializeReplacementConfirmationModal() {
+    const elements = getReplacementConfirmationElements();
+    if (!elements.modal || !elements.doneButton) return;
+
+    [elements.closeButton, elements.doneButton].forEach(function (button) {
+      if (button) button.addEventListener("click", closeReplacementConfirmation);
+    });
+
+    elements.modal.addEventListener("click", function (event) {
+      if (event.target === elements.modal) closeReplacementConfirmation();
+    });
+
+    elements.modal.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeReplacementConfirmation();
+      }
+      if (event.key !== "Tab") return;
+      const firstButton = elements.closeButton;
+      const lastButton = elements.doneButton;
+      if (event.shiftKey && document.activeElement === firstButton) {
+        event.preventDefault();
+        lastButton.focus();
+      } else if (!event.shiftKey && document.activeElement === lastButton) {
+        event.preventDefault();
+        firstButton.focus();
+      }
+    });
+  }
+
   async function bookReplacement(button) {
     const confirmed = window.confirm("Usar um crédito para marcar esta reposição?");
     if (!confirmed) return;
 
     setButtonBusy(button, "MARCANDO...");
     setPageMessage("", "");
+    let booking;
     try {
-      await rpc("book_my_lesson_replacement", {
+      booking = await rpc("book_my_lesson_replacement", {
         target_credit_id: button.dataset.creditId,
         target_class_number: Number(button.dataset.classNumber),
         target_starts_at: button.dataset.startsAt
       });
-      await refreshAfterAction("Reposição marcada com sucesso.");
     } catch (error) {
       setPageMessage(error.message || "Não foi possível marcar a reposição.", "error");
       restoreButton(button);
+      return;
+    }
+
+    openReplacementConfirmation(booking && booking.booking_id, button);
+    try {
+      await refreshAfterAction("Reposição marcada com sucesso.");
+    } catch (error) {
+      console.warn("Não foi possível atualizar os cartões após o agendamento.", error);
+      setPageMessage("Reposição confirmada. Atualize a página para visualizar a aula.", "success");
     }
   }
 
@@ -776,6 +923,7 @@
 
   async function initialize() {
     initializeLateCancellationModal();
+    initializeReplacementConfirmationModal();
     const loginStatus = document.getElementById("loginStatus");
     const ready = await waitForAuth();
     if (!ready) {
