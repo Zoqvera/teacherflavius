@@ -9,7 +9,7 @@ const migration = fs.readFileSync(
   path.join(
     __dirname,
     "..",
-    "supabase/migrations/20261111152400_fix_enrollment_notification_implicit_activation.sql"
+    "supabase/migrations/20261111152717_fix_enrollment_notification_implicit_activation.sql"
   ),
   "utf8"
 );
