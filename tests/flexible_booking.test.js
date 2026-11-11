@@ -6,7 +6,7 @@ const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const root = path.resolve(__dirname, "..");
 
-test("FLEXIVEL email includes the three resource links, definitive policy and dedicated sender", async () => {
+test("FLEXIVEL email includes resource links, 12-hour cancellation policy and dedicated sender", async () => {
   const { flexibleBookingEmail } = await import(pathToFileURL(path.join(root,
     "supabase/functions/_shared/flexible_booking_email.mjs")));
   const input = { studentName: '<script>alert("x")</script>', className: "Turma 1",
@@ -19,18 +19,22 @@ test("FLEXIVEL email includes the three resource links, definitive policy and de
     assert.ok(email.text.includes(url));
     assert.ok(email.html.includes(url));
   }
-  assert.match(email.text, /não permite cancelamento/);
-  assert.match(email.text, /ausência consome o crédito/);
+  assert.match(email.text, /pelo menos 12 horas de antecedência/);
+  assert.match(email.text, /volta ao saldo FLEXÍVEL/);
+  assert.match(email.text, /faltas não devolvem crédito/);
   assert.doesNotMatch(email.html, /<script>/);
   assert.throws(() => flexibleBookingEmail({ ...input, materialUrl: "javascript:alert(1)" }));
 });
 
-test("FLEXIVEL page displays vacancies and confirmed resources without cancellation or replacement actions", async () => {
+test("FLEXIVEL page displays vacancies, resources and eligible cancellation without fixed-student actions", async () => {
   const content = { innerHTML: "", querySelectorAll: () => [] };
   const elements = { myClassesContent: content, loginStatus: {}, pageMessage: {} };
+  const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const creditDeadline = new Date(Date.parse(startsAt) - 12 * 60 * 60 * 1000).toISOString();
   const state = { booking_mode: "FLEXIVEL", options: [{ class_number: 7,
     class_name: "Turma <7>", starts_at: "2026-11-09T21:00:00Z", available_spots: 1, can_book: true }],
-  bookings: [{ class_name: "Turma 1", starts_at: "2026-11-06T21:00:00Z",
+  bookings: [{ booking_id: "booking-id", class_name: "Turma 1", starts_at: startsAt,
+    credit_deadline: creditDeadline, can_cancel: true, credit_if_cancelled: true,
     meeting_url: "https://meet.google.com/test", material_url: "https://docs.google.com/test",
     recorded_lessons_url: "https://drive.google.com/test", email_status: "failed" }] };
   const calls = [];
@@ -47,5 +51,8 @@ test("FLEXIVEL page displays vacancies and confirmed resources without cancellat
   assert.match(content.innerHTML, /Turma &lt;7&gt;/);
   assert.match(content.innerHTML, /MATERIAL DIDÁTICO/);
   assert.match(content.innerHTML, /envio.*pendente/);
+  assert.match(content.innerHTML, /flexible-cancel-button/);
+  assert.match(content.innerHTML, /CANCELAR RESERVA/);
+  assert.match(content.innerHTML, /recuperar seu crédito de aula/);
   assert.doesNotMatch(content.innerHTML, /regular-cancel-button|replacement-book-button|enrollment-cancel-button/);
 });
