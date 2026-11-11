@@ -30,6 +30,8 @@ function runDriftScript({
   mockPresentationCatalog = false,
   mockResendCatalog = false,
   mockTeacherPlannedCatalog = false,
+  mockNovemberCatalog = false,
+  mockNovemberLedgerCount = "0",
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-drift-"),
@@ -58,6 +60,14 @@ if [[ "$*" == *"resend_delivery_catalog_attestation.sql"* ]]; then
 fi
 if [[ "$*" == *"teacher_planned_lesson_catalog_attestation.sql"* ]]; then
   echo "${mockTeacherPlannedCatalog ? "t" : "f"}"
+  exit 0
+fi
+if [[ "$*" == *"untracked_202611_feature_catalog_attestation.sql"* ]]; then
+  echo "${mockNovemberCatalog ? "t" : "f"}"
+  exit 0
+fi
+if [[ "$*" == *"select count(*) from supabase_migrations.schema_migrations"* ]]; then
+  echo "${mockNovemberLedgerCount}"
   exit 0
 fi
 cat <<'REMOTE_ROWS'
@@ -95,6 +105,8 @@ function runDriftCheck({
   mockPresentationCatalog = false,
   mockResendCatalog = false,
   mockTeacherPlannedCatalog = false,
+  mockNovemberCatalog = false,
+  mockNovemberLedgerCount = "0",
 }) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "teacherflavius-migration-files-"),
@@ -113,6 +125,8 @@ function runDriftCheck({
       mockPresentationCatalog,
       mockResendCatalog,
       mockTeacherPlannedCatalog,
+      mockNovemberCatalog,
+      mockNovemberLedgerCount,
     });
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -795,5 +809,38 @@ test("teacher-planned lesson alias fails closed on modified SQL, mismatched iden
   for (const scenario of scenarios) {
     const result = runDriftCheck(scenario);
     assert.equal(result.status, 1, result.stdout + result.stderr);
+  }
+});
+
+
+test("main accepts only immutable, independently attested November ledger omissions", () => {
+  const filename = "20261106125500_national_holidays_no_lessons_no_replacement.sql";
+  const sql = read("supabase/migrations/" + filename);
+  const existingFile = "20261007060003_existing.sql";
+  const existingSql = "select 1;\\n";
+  const migrations = { [existingFile]: existingSql, [filename]: sql };
+  const remoteRows = [{
+    version: "20261007060003",
+    name: "existing",
+    checksum: canonicalChecksum(existingSql),
+  }];
+
+  const approved = runDriftCheck({
+    migrations,
+    remoteRows,
+    mockNovemberCatalog: true,
+  });
+  assert.equal(approved.status, 0, approved.stdout + "\\n" + approved.stderr);
+  assert.match(approved.stdout, /pinned Git blob and live catalog attested on main/i);
+
+  for (const overrides of [
+    { mockNovemberCatalog: false },
+    { mockNovemberCatalog: true, mockNovemberLedgerCount: "1" },
+    { mockNovemberCatalog: true, migrations: { ...migrations, [filename]: sql + "\\nselect 999;\\n" } },
+    { mockNovemberCatalog: true, migrations: { ...migrations, "20261111195555_unverified.sql": "select 1;\\n" } },
+  ]) {
+    const rejected = runDriftCheck({ migrations, remoteRows, ...overrides });
+    assert.equal(rejected.status, 1, rejected.stdout + "\\n" + rejected.stderr);
+    assert.match(rejected.stdout, /missing from production migration history/i);
   }
 });
