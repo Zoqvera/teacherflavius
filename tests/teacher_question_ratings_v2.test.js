@@ -80,7 +80,7 @@ test("previous class questions are rateable today but not again in the same occu
   assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, []), true);
   assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, [{
     question_id: QUESTION_ID, rating: "medium", is_current: false
-  }]), true);
+  }]), false);
   assert.equal(ratings.canRate(prior, DATE, QUESTION_ID, [{
     question_id: QUESTION_ID, rating: "good", is_current: true
   }]), false);
@@ -91,6 +91,37 @@ test("previous class questions are rateable today but not again in the same occu
   assert.equal(ratings.canRate(
     student({ ...prior, attendance_status: "cancelled" }), DATE, QUESTION_ID, []
   ), false);
+});
+
+test("a previously studied question without any rating is eligible even outside recent cycles", () => {
+  const pending = student({
+    today_questions: [],
+    previous_class_questions: [],
+    review_questions: [],
+    new_questions: [{ id: QUESTION_ID }]
+  });
+  assert.equal(ratings.canRate(pending, DATE, QUESTION_ID, []), true);
+  assert.equal(ratings.canRate(pending, DATE, QUESTION_ID, [{
+    question_id: QUESTION_ID, rating: "good", is_current: false
+  }]), false);
+  assert.equal(ratings.canRate(
+    student({ ...pending, attendance_status: "cancelled" }), DATE, QUESTION_ID, []
+  ), false);
+  assert.equal(ratings.canRate(pending, DATE, STUDENT_ID, []), false);
+});
+
+test("previously graded questions require an explicitly due review", () => {
+  const past = [{ question_id: QUESTION_ID, rating: "good", is_current: false }];
+  const reviewedToday = student({ review_questions: [], new_questions: [] });
+  assert.equal(ratings.canRate(reviewedToday, DATE, QUESTION_ID, past), false);
+  assert.equal(ratings.canRate(student({
+    today_questions: [], review_questions: [{ id: QUESTION_ID }]
+  }), DATE, QUESTION_ID, past), true);
+  assert.equal(ratings.canRate(student({
+    today_questions: [], review_questions: [{ id: QUESTION_ID }]
+  }), DATE, QUESTION_ID, [{
+    question_id: QUESTION_ID, rating: "good", is_current: true
+  }]), false);
 });
 
 test("successful evaluation calls v2 RPC and requires confirmed attendance", async () => {
@@ -220,8 +251,9 @@ test("v2 teacher ratings enabled while existing route remains untouched", () => 
   assert.match(APP, /rateQuestion\(item, question, rating, control\)/);
   assert.match(APP, /"TODAS AS PERGUNTAS ESTUDADAS"/);
   assert.match(APP, /"PERGUNTAS A SEREM REVISADAS"/);
+  assert.match(APP, /"PERGUNTAS PENDENTES DE AVALIAÇÃO"/);
   assert.match(APP, /"PERGUNTAS ESTUDADAS PARA HOJE"/);
-  assert.match(PAGE, /question_ratings\.js\?v=20261104-previous-grading-1/);
+  assert.match(PAGE, /question_ratings\.js\?v=20261112-pending-ratings-1/);
   assert.match(PAGE, /<meta name="robots" content="noindex, nofollow">/);
   assert.match(OLD_PAGE, /src="\/roteiro-da-aula\/app\.js/);
   assert.doesNotMatch(OLD_PAGE, /roteiro-da-aula-v2/);

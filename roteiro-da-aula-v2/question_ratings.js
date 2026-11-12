@@ -37,13 +37,22 @@
     return values.year + "-" + values.month + "-" + values.day;
   }
 
-  function studiedForClass(item, questionId) {
-    return ["today_questions", "review_questions", "previous_class_questions"]
-      .some(function (section) {
-      return Array.isArray(item[section]) && item[section].some(function (question) {
-        return String(question.id).toLowerCase() === questionId;
-      });
+  function listedIn(item, section, questionId) {
+    return Array.isArray(item[section]) && item[section].some(function (question) {
+      return String(question && question.id || "").toLowerCase() === questionId;
     });
+  }
+
+  function studiedForClass(item, questionId, evaluations) {
+    if (listedIn(item, "review_questions", questionId)) return true;
+
+    // Previously rated questions must wait for their next scheduled review.
+    if (latestRating(evaluations, questionId)) return false;
+
+    return ["new_questions", "today_questions", "previous_class_questions"]
+      .some(function (section) {
+        return listedIn(item, section, questionId);
+      });
   }
 
   function currentRating(evaluations, questionId) {
@@ -70,7 +79,7 @@
         !UUID.test(String(item.student_id || "")) ||
         !UUID.test(String(questionId || "")) ||
         BLOCKED_ATTENDANCE.includes(item.attendance_status) ||
-        !studiedForClass(item, String(questionId).toLowerCase())) return false;
+        !studiedForClass(item, String(questionId).toLowerCase(), evaluations)) return false;
 
     return !currentRating(evaluations, questionId);
   }
