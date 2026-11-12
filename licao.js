@@ -142,6 +142,42 @@
     });
   }
 
+  function setupExampleAudio(page) {
+    const controls = document.getElementById("lessonAudioControls");
+    if (!controls || Number(page.roadmap_lesson_number) !== 1) return;
+    const button = document.getElementById("lessonAudioButton");
+    const speed = document.getElementById("lessonAudioSpeed");
+    const audio = document.getElementById("lessonAudio");
+    const status = document.getElementById("lessonAudioStatus");
+    controls.hidden = false;
+    speed.addEventListener("change", function () { audio.playbackRate = Number(speed.value); });
+    audio.addEventListener("pause", function () { button.textContent = "OUVIR EXEMPLO"; });
+    audio.addEventListener("play", function () { button.textContent = "PAUSAR ÁUDIO"; });
+    button.addEventListener("click", async function () {
+      if (!audio.paused) { audio.pause(); return; }
+      button.disabled = true;
+      status.textContent = "Carregando áudio...";
+      try {
+        if (!audio.src) {
+          const bytes = new TextEncoder().encode(page.example);
+          const digest = await crypto.subtle.digest("SHA-256", bytes);
+          const textHash = Array.from(new Uint8Array(digest), function (byte) {
+            return byte.toString(16).padStart(2, "0");
+          }).join("");
+          const result = await window.Auth.getClient().functions.invoke("lesson-example-audio", { body: { textHash: textHash } });
+          if (result.error || !result.data || !result.data.url) throw new Error("Áudio indisponível");
+          audio.src = result.data.url;
+        }
+        audio.playbackRate = Number(speed.value);
+        await audio.play();
+        status.textContent = "";
+      } catch (error) {
+        audio.removeAttribute("src");
+        status.textContent = "Não foi possível reproduzir o áudio. Tente novamente em instantes.";
+      } finally { button.disabled = false; }
+    });
+  }
+
   function renderDynamicPage(page) {
     document.getElementById("lessonDisplayNumber").textContent = formatPresentationDisplayText(page.lesson_number_label);
     document.getElementById("lessonPageTitle").textContent = formatPresentationDisplayText(page.title);
@@ -151,6 +187,7 @@
     document.getElementById("lessonPracticalExercise").textContent = page.practical_exercise;
     document.getElementById("lessonUsefulVocabulary").textContent = page.useful_vocabulary;
 
+    setupExampleAudio(page);
     showDynamicSections(true);
     document.getElementById("legacyLessonMaterial").hidden = true;
     document.title = formatPresentationDisplayText(page.title) + " - Teacher Flávio";
