@@ -146,6 +146,16 @@
     return button;
   }
 
+  function stop() {
+    requestSequence += 1;
+    if (current) setButtonState(current.button, "ready");
+    current = null;
+    if (player) {
+      player.pause();
+      player.removeAttribute("src");
+    }
+  }
+
   function createSpeedControl() {
     const label = document.createElement("label");
     label.className = "conversation-card-speed-control";
@@ -171,6 +181,7 @@
 
   window.ConversationQuestionAudio = Object.freeze({
     createButton: createButton,
-    createSpeedControl: createSpeedControl
+    createSpeedControl: createSpeedControl,
+    stop: stop
   });
 })();
