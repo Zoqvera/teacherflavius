@@ -54,6 +54,9 @@ async function mount(options = {}) {
     "listeningApp"
   ];
   ids.forEach(id => { elements[id] = createElement(); });
+  elements.listeningApp.hidden = true;
+  elements.listeningCopySelected.hidden = true;
+  elements.listeningProfessorBack.hidden = true;
   const signCalls = [];
   const copies = [];
   const history = [];
@@ -131,7 +134,8 @@ test("only confirmed teachers see copy links, and links point to exact players",
   const { elements, copies, history, signCalls } = result;
   assert.equal(elements.listeningTrackGrid.children[0].children.length, 2);
   assert.equal(elements.listeningCopySelected.hidden, false);
-  await elements.listeningTrackGrid.children[24].children[1].listeners.click();
+  elements.listeningTrackGrid.children[24].children[1].listeners.click();
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(copies[0], "https://teacherflavius.com/listening-tracks/?track=25");
 
   elements.listeningTrackGrid.children[89].children[0].listeners.click();
@@ -143,5 +147,5 @@ test("only confirmed teachers see copy links, and links point to exact players",
 test("does not initialize the player without an authorized session", async () => {
   const result = await mount({ user: false });
   assert.equal(result.signCalls.length, 0);
-  assert.equal(result.elements.listeningApp.hidden, false === true);
+  assert.equal(result.elements.listeningApp.hidden, true);
 });
