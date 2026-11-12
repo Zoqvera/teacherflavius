@@ -6,7 +6,7 @@ const vm = require("node:vm");
 const { webcrypto } = require("node:crypto");
 
 const QUESTION_ID = "a1234567-1234-4234-8234-123456789abc";
-const VOICE = "AaOhDHYJ1XLZk74lXhdE";
+const VOICE = "bIHbv24MWmeRgasZH58o";
 const MODEL = "eleven_multilingual_v2";
 const source = readFileSync("supabase/functions/lesson-example-audio/index.ts", "utf8")
   .replace(/^import .*;\s*$/gm, "");
@@ -189,6 +189,10 @@ test("enforces daily generation limits and avoids persisting failed provider res
     questionId: QUESTION_ID, part: "question", textHash: await hash(failed.questionText)
   })).status, 502);
   assert.equal(failed.calls.uploaded.length, 0);
+  const backend = readFileSync("supabase/functions/lesson-example-audio/index.ts", "utf8");
+  assert.match(backend, /elevenlabs_rejected/);
+  assert.match(backend, /http_status: audioResponse.status/);
+  assert.doesNotMatch(backend, /console\\.error\\([^\\n]*elevenKey/);
 });
 
 test("every page with question cards loads the reusable audio module and SVG control styles", () => {
