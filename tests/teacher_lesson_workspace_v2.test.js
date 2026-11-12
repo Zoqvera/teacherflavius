@@ -75,6 +75,52 @@ test("studied-history section combines prior questions with today's questions", 
   assert.equal(model.normalizeNumbers([2, 1, 2, 0, -1]).join(","), "1,2");
 });
 
+test("unrated questions from older study cycles remain available exactly once", () => {
+  const previouslyStudied = [16, 17, 18, 19, 20];
+  const catalog = vm.runInContext("new Map()", context);
+  previouslyStudied.forEach((number) => {
+    catalog.set(number, { id: "q" + number, display_order: number });
+  });
+  const questions = model.questionsForStudent({
+    previously_studied_numbers: previouslyStudied,
+    today_questions: [{ id: "q20", display_order: 20 }],
+    previous_class_questions: [{ id: "q17", display_order: 17 }],
+    review_questions: [{ id: "q18", display_order: 18 }],
+    new_questions: previouslyStudied.map((number) => ({
+      id: "q" + number, display_order: number
+    })).concat([{ id: "future-study", display_order: 254 }])
+  }, catalog);
+
+  assert.equal(questions.pending.map((question) => question.display_order).join(","), "16,19");
+  assert.equal(questions.previous.map((question) => question.display_order).join(","), "17");
+  assert.equal(questions.review.map((question) => question.display_order).join(","), "18");
+  assert.equal(questions.today.map((question) => question.display_order).join(","), "20");
+  const actionable = [
+    ...questions.today, ...questions.previous, ...questions.review, ...questions.pending
+  ];
+  assert.equal(new Set(actionable.map((question) => question.id)).size, actionable.length);
+  assert.equal(questions.all.map((question) => question.display_order).join(","), "16,17,18,19,20");
+});
+
+test("pending questions are restricted to the study history at the lesson date", () => {
+  const catalog = vm.runInContext("new Map()", context);
+  const questions = model.questionsForStudent({
+    previously_studied_numbers: [1, 2],
+    today_questions: [],
+    previous_class_questions: [],
+    review_questions: [],
+    new_questions: [
+      { id: "q1", display_order: 1 },
+      { id: "q2", display_order: 2 },
+      { id: "q3-future", display_order: 3 }
+    ]
+  }, catalog);
+  assert.equal(questions.pending.map((question) => question.id).join(","), "q1,q2");
+  assert.doesNotMatch(questions.pending.map((question) => question.id).join(","),
+    /future/);
+  assert.match(app, /"PERGUNTAS PENDENTES DE AVALIAÇÃO", questions\\.pending/);
+});
+
 test("previous class studies keep their actual date and exact question cards", () => {
   const records = [
     { entry_id: "membership-1", previous_starts_at: "2026-10-28T13:00:00Z",
@@ -112,7 +158,7 @@ test("previous class questions remain eligible for the current class's rating co
   assert.equal(model.withPreviousClassQuestions(current, new Map())[0]
     .previous_class_questions.length, 0);
   assert.match(app,
-    /previous\.questions, item, true, !MODEL\.isCancelled\(item\), history/);
+    /questions\\.previous, item, true, !MODEL\\.isCancelled\\(item\\), history/);
   assert.match(app, /MODEL\.withPreviousClassQuestions\(items, previousStudies\)/);
 });
 
@@ -127,7 +173,7 @@ test("previous class questions use restricted history and do not change ratings"
   assert.match(migration, /study\.studied_at < cycle\.previous_starts_at/);
   assert.match(app, /client\.rpc\("get_teacher_previous_class_studies"/);
   assert.match(app, /PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR/);
-  assert.match(app, /previous\.questions, item, true, !MODEL\.isCancelled\(item\), history/);
-  assert.match(currentPage, /20261104-previous-grading-1/);
-  assert.match(page, /20261104-previous-grading-1/);
+  assert.match(app, /questions\\.previous, item, true, !MODEL\\.isCancelled\\(item\\), history/);
+  assert.match(currentPage, /20261112-pending-ratings-1/);
+  assert.match(page, /20261112-pending-ratings-1/);
 });
