@@ -359,6 +359,7 @@
   }
 
   function campaignLabel(campaign) {
+    if (campaign.display_name) return campaign.display_name;
     if (campaign.alias === "anuncio_2026_09_29") return "Anúncio de 29/09/2026";
     if (campaign.alias) return campaign.alias;
     return campaign.meta_name + " · " + campaign.meta_campaign_id;
