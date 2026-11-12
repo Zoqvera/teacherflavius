@@ -7,6 +7,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 const { webcrypto } = require("node:crypto");
 const { stripTypeScriptTypes } = require("node:module");
+const { evaluateEnrollmentCheckout } = require("../supabase/functions/_shared/enrollment_checkout_policy.mjs");
 
 const root = path.resolve(__dirname, "..");
 const sql = fs.readFileSync(
@@ -56,16 +57,22 @@ function createFixture(options = {}) {
         finishes.push(params);
         return { data: true, error: null };
       }
+      if (name === "get_enrollment_checkout_policy_context") {
+        return options.policyError ? { data: null, error: new Error("unavailable") }
+          : { data: options.manualFirstPayment ? { enabled: true, items: [{
+            tuitionId: params.target_tuition_ids[0], enrolledAt: "2026-11-12T14:00:00Z",
+            rolloutAt: "2026-11-12T13:00:00Z", billingStartMonth: "2026-11-01",
+            invoiceMonth: "2026-11-01", firstPaymentDate: null
+          }] } : { enabled: false, items: [] }, error: null };
+      }
       throw new Error("Unexpected RPC " + name);
     },
   };
-  const source = stripTypeScriptTypes(edge.replace(
-    /^import \{ createClient \} from "https:\/\/esm\.sh\/@supabase\/supabase-js@[^"]+";\r?\n/,
-    "",
-  ));
+  const source = stripTypeScriptTypes(edge.replace(/^import .*;\r?\n/gm, ""));
   vm.runInNewContext(source, {
     Deno: { env: { get: (key) => env[key] || null }, serve: (fn) => { handler = fn; } },
     createClient: () => client,
+    evaluateEnrollmentCheckout,
     fetch: async (url, init) => {
       assert.equal(url, "https://api.resend.com/emails");
       const body = JSON.parse(init.body);
@@ -154,6 +161,21 @@ test("sends three distinct messages from financial sender with payment link", as
   assert.match(fixture.sent[0].body.subject, /vence em 2 dias/);
   assert.match(fixture.sent[1].body.subject, /vence hoje/);
   assert.match(fixture.sent[2].body.subject, /vencida há 2 dias/);
+});
+
+test("first manual tuition reminder directs the student to the professor's Pix message", async () => {
+  const fixture = createFixture({ manualFirstPayment: true });
+  assert.equal((await fixture.request()).status, 200);
+  assert.equal(fixture.sent.length, 1);
+  assert.match(fixture.sent[0].body.text, /WhatsApp.*chave Pix/);
+  assert.doesNotMatch(fixture.sent[0].body.text, /teacherflavius\.com\/pagamento/);
+});
+
+test("policy lookup failure does not send misleading instructions", async () => {
+  const fixture = createFixture({ policyError: true });
+  assert.equal((await fixture.request()).status, 200);
+  assert.equal(fixture.sent.length, 0);
+  assert.equal(fixture.finishes[0].target_outcome, "failed");
 });
 
 test("unauthorized requests never claim or send", async () => {

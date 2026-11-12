@@ -32,9 +32,9 @@ jobs:
         with:
           node-version: '22'
       - name: Test checkout eligibility at time boundaries
-        run: node --test tests/enrollment_checkout_policy.test.mjs
+        run: node --test tests/enrollment_checkout_policy.test.mjs tests/tuition_email_reminders_contract.test.js
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
       - name: Check payment function types and shared imports
-        run: deno check supabase/functions/create-mercado-pago-payment/index.ts supabase/functions/create-mercado-pago-subscription/index.ts
+        run: deno check supabase/functions/create-mercado-pago-payment/index.ts supabase/functions/create-mercado-pago-subscription/index.ts supabase/functions/notify-tuition-email-reminders/index.ts
