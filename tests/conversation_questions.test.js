@@ -80,11 +80,13 @@ test("students can read only their own completion rows while teachers can manage
   assert.match(app, /listStudentCompletions\(state\.session\.user\.id\)/);
 });
 
-test("teacher can add and reorder question cards without the student checklist", function () {
-  assert.match(page, /id="conversationQuestionForm"/);
+test("teacher retains reordering but no longer renders the add-question panel", function () {
+  assert.doesNotMatch(page, /id="teacherConversationTools"|id="conversationQuestionForm"|Adicionar pergunta/);
+  assert.doesNotMatch(app, /handleAddQuestion|renderAnswerExampleFields|state\.service\.addQuestion/);
+  assert.match(page, /id="conversationQuestionList"/);
   assert.match(page, /Cada card apresenta a pergunta e seus exemplos de resposta\./);
-  assert.match(app, /state\.service\.addQuestion\(questionCard, maxOrder \+ 1\)/);
   assert.match(app, /state\.service\.moveQuestion\(questionId, direction\)/);
+  assert.match(app, /conversation-order-button/);
   assert.match(app, /Cada card reúne a pergunta, a tradução e cinco exemplos de resposta\./);
   assert.match(migration, /security invoker/i);
   assert.match(migration, /grant execute on function public\.move_conversation_question\(uuid, text\) to authenticated/i);
