@@ -5,10 +5,9 @@
   const FUNCTION_NAME = "lesson-example-audio";
   const PLAY_PATH = "M8 5v14l11-7z";
   const PAUSE_PATH = "M7 5h3v14H7zM14 5h3v14h-3z";
-  const SPEEDS = [0.5, 0.75, 1, 1.25];
+  const FIXED_PLAYBACK_SPEED = 0.75;
   let current = null;
   let player = null;
-  let playbackSpeed = 0.75;
   let requestSequence = 0;
 
   function labelFor(part, index) {
@@ -44,7 +43,7 @@
     if (player) return player;
     player = document.createElement("audio");
     player.preload = "none";
-    player.playbackRate = playbackSpeed;
+    player.playbackRate = FIXED_PLAYBACK_SPEED;
     player.addEventListener("play", function () {
       if (current) setButtonState(current.button, "playing");
     });
@@ -119,7 +118,7 @@
       const url = await fetchAudioUrl(segment);
       if (!current || current.sequence !== sequence) return;
       audio.src = url;
-      audio.playbackRate = playbackSpeed;
+      audio.playbackRate = FIXED_PLAYBACK_SPEED;
       await audio.play();
     } catch (error) {
       if (current && current.sequence === sequence) {
