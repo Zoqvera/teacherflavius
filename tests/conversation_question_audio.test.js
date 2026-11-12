@@ -112,6 +112,11 @@ test("generates an authorized question in the male American voice", async () => 
   assert.equal(f.calls.queries[0], "conversation_questions");
   assert.equal(f.calls.folders[0], "question-" + QUESTION_ID);
   assert.equal(f.calls.generated.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(f.calls.rpc.find(({ body }) => body.target_bucket_key === "lesson-audio:daily").body)), {
+    target_bucket_key: "lesson-audio:daily",
+    target_window_seconds: 86400,
+    target_max_requests: 200
+  });
   assert.ok(f.calls.generated[0].url.endsWith("/" + VOICE));
   assert.equal(f.calls.generated[0].body.text, f.questionText);
   assert.equal(f.calls.generated[0].body.model_id, MODEL);
