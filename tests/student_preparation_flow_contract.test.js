@@ -50,7 +50,9 @@ test("welcome respects the exact copy and next-lesson resolution", () => {
 
 test("lesson preserves the student's preparation registration and offers a gated continuation", () => {
   assert.match(lessonPage, /id="lessonPreparedButton"[^>]*>ESTOU PREPARADO/);
-  assert.match(lessonPage, /id="lessonNextPartLink"[^>]*hidden>PRÓXIMA PARTE/);
+  assert.match(lessonPage, /id="lessonNextPartLink"[^>]*hidden>/);
+  assert.match(lessonPage, /id="lessonNextPartLabel">CONTINUAR PARA AS PERGUNTAS/);
+  assert.match(lessonPage, /id="lessonNextPartStatus"[^>]*role="status"/);
   assert.match(lessonApp, /currentLesson !== lessonNumber/);
   assert.match(lessonApp, /window\.StudentPreparationFlow\.enabled === true/);
   assert.match(lessonApp, /markLessonPrepared\(lessonNumber\)/);

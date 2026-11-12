@@ -181,16 +181,19 @@
 
   function bindNextPartRegistration(link, lessonNumber) {
     let registering = false;
+    const label = document.getElementById("lessonNextPartLabel");
+    const status = document.getElementById("lessonNextPartStatus");
 
     link.addEventListener("click", async function (event) {
       event.preventDefault();
       if (registering) return;
 
       registering = true;
-      const previousLabel = link.textContent;
+      const previousLabel = label.textContent;
       link.setAttribute("aria-disabled", "true");
-      link.textContent = "REGISTRANDO...";
-      setStatus("Registrando sua preparação...");
+      label.textContent = "REGISTRANDO...";
+      status.dataset.tone = "loading";
+      status.textContent = "Registrando sua preparação...";
 
       try {
         await academicService.markLessonPrepared(lessonNumber);
@@ -198,11 +201,9 @@
         window.location.href = window.StudentPreparationFlow.secondPartUrl;
       } catch (error) {
         console.error("Falha ao registrar preparação:", error);
-        setStatus(
-          error && error.message ? error.message : "Não foi possível registrar sua preparação. Tente novamente.",
-          true
-        );
-        link.textContent = previousLabel;
+        status.dataset.tone = "error";
+        status.textContent = "Não foi possível registrar sua preparação. Toque no botão para tentar novamente.";
+        label.textContent = previousLabel;
         link.removeAttribute("aria-disabled");
         registering = false;
       }
@@ -213,10 +214,14 @@
     const section = document.getElementById("lessonPreparationSection");
     const nextPartLink = document.getElementById("lessonNextPartLink");
     const progress = document.getElementById("lessonFlowProgress");
+    const hint = document.getElementById("lessonFlowHint");
+    const prompt = document.getElementById("lessonNextPartPrompt");
     const currentLessonStatus = document.getElementById("lessonCurrentLessonStatus");
     const currentLessonLink = document.getElementById("lessonCurrentLessonLink");
     if (nextPartLink) nextPartLink.hidden = true;
     if (progress) progress.hidden = true;
+    if (hint) hint.hidden = true;
+    if (prompt) prompt.hidden = true;
     if (currentLessonStatus) currentLessonStatus.hidden = true;
     if (currentLessonLink) currentLessonLink.hidden = true;
     if (!lessonNumber || !canPrepareLesson) {
@@ -257,6 +262,8 @@
       if (legacyContent) legacyContent.hidden = isNewFlowEnabled();
       if (isNewFlowEnabled()) {
         if (progress) progress.hidden = false;
+        if (hint) hint.hidden = false;
+        if (prompt) prompt.hidden = false;
         if (nextPartLink) {
           nextPartLink.hidden = false;
           bindNextPartRegistration(nextPartLink, lessonNumber);
