@@ -345,9 +345,9 @@
   gap: 10px;
   min-height: 46px;
   padding: 0 17px 0 11px;
-  border: 1px solid rgba(147, 197, 253, 0.35);
+  border: 1px solid #4ade80;
   border-radius: 12px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: #15803d;
   color: #fff;
   font: inherit;
   font-size: 12px;
@@ -370,13 +370,19 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 5h3v14H7zm7 0h3v14h-3z'/%3E%3C/svg%3E");
 }
 
-.lesson-audio-button:hover:not(:disabled) {
-  border-color: rgba(191, 219, 254, 0.85);
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+.lesson-audio-button:hover:not(:disabled),
+.lesson-audio-button[aria-pressed="true"] {
+  border-color: #86efac;
+  background: #16a34a;
 }
 
 .lesson-audio-button:disabled { opacity: 0.7; cursor: wait; }
-.lesson-audio-button:focus-visible, .lesson-audio-speed:focus-visible {
+.lesson-audio-button:focus-visible {
+  outline: 2px solid #86efac;
+  outline-offset: 3px;
+}
+
+.lesson-audio-speed:focus-visible {
   outline: 2px solid #bfdbfe;
   outline-offset: 3px;
 }
