@@ -192,7 +192,7 @@ test("enforces daily generation limits and avoids persisting failed provider res
   const backend = readFileSync("supabase/functions/lesson-example-audio/index.ts", "utf8");
   assert.match(backend, /elevenlabs_rejected/);
   assert.match(backend, /http_status: audioResponse.status/);
-  assert.doesNotMatch(backend, /console\\.error\\([^\\n]*elevenKey/);
+  assert.doesNotMatch(backend, /console\.error\([^\n]*elevenKey/);
 });
 
 test("every page with question cards loads the reusable audio module and SVG control styles", () => {
