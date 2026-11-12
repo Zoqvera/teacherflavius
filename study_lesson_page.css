@@ -400,6 +400,8 @@
   cursor: pointer;
 }
 
+#lessonAudioStatus:empty { display: none; }
+
 #lessonAudioStatus:not(:empty) {
   flex-basis: 100%;
   margin: 0;
