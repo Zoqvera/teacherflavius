@@ -400,6 +400,8 @@
   cursor: pointer;
 }
 
+#lessonAudioStatus:empty { display: none; }
+
 #lessonAudioStatus:not(:empty) {
   flex-basis: 100%;
   margin: 0;
@@ -407,8 +409,27 @@
   font-size: 13px;
 }
 
-@media (max-width: 380px) {
-  .lesson-audio-button { flex: 1 1 100%; }
-  .lesson-audio-speed-label { margin-left: 0; }
-  .lesson-audio-speed { margin-left: auto; }
+@media (max-width: 480px) {
+  .lesson-audio-player:not([hidden]) { gap: 8px; padding: 9px; }
+  .lesson-audio-button {
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 6px;
+    padding: 0 8px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .lesson-audio-button::before { width: 24px; height: 24px; flex-basis: 24px; }
+  .lesson-audio-speed-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  .lesson-audio-speed { flex: 0 0 auto; }
 }
