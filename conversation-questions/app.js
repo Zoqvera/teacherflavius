@@ -31,6 +31,7 @@
     ui.modeLabel = document.getElementById("conversationModeLabel");
     ui.professorLink = document.getElementById("conversationProfessorLink");
     ui.questionCount = document.getElementById("conversationQuestionCount");
+    ui.count = document.getElementById("conversationCount");
     ui.listHelp = document.getElementById("conversationListHelp");
   }
 
@@ -345,6 +346,7 @@
     if (window.ConversationQuestionAudio) window.ConversationQuestionAudio.stop();
     ui.questionList.textContent = "";
     ui.questionCount.textContent = String(state.questions.length);
+    ui.count.hidden = false;
 
     if (!state.questions.length) {
       const empty = document.createElement("p");
