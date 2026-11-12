@@ -7,6 +7,7 @@ const presentationVoice = "hpp4J3VqNfWAUOO0d1Us";
 // Will is a premade American-English male voice; unlike a library voice, it does not require adding a voice to the workspace.
 const conversationVoice = "bIHbv24MWmeRgasZH58o";
 const model = "eleven_multilingual_v2";
+const dailyAudioGenerationLimit = 200;
 
 function key(name: string, fallback: string): string {
   const value = Deno.env.get(name);
@@ -128,7 +129,7 @@ Deno.serve(async (request: Request) => {
       if (error) throw error;
       if (!allowed) return respond({ error: "O áudio está sendo preparado. Tente novamente em instantes." }, 429);
       const daily = await admin.rpc("consume_api_rate_limit", {
-        target_bucket_key: "lesson-audio:daily", target_window_seconds: 86400, target_max_requests: 50,
+        target_bucket_key: "lesson-audio:daily", target_window_seconds: 86400, target_max_requests: dailyAudioGenerationLimit,
       });
       if (daily.error) throw daily.error;
       if (!daily.data) return respond({ error: "Limite diário de geração atingido." }, 429);
