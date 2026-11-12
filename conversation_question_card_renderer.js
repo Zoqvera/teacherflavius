@@ -28,11 +28,11 @@
     const english = document.createElement("span");
     english.className = "conversation-card-question-english";
     english.textContent = question.text;
-    title.appendChild(english);
     if (window.ConversationQuestionAudio) {
       const audioButton = window.ConversationQuestionAudio.createButton(question, "question");
       if (audioButton) title.appendChild(audioButton);
     }
+    title.appendChild(english);
 
     if (question.translation) {
       const translation = document.createElement("span");
@@ -51,11 +51,11 @@
     const answer = document.createElement("span");
     answer.className = "conversation-card-example-answer";
     answer.textContent = "“" + example.answer + "”";
-    item.appendChild(answer);
     if (window.ConversationQuestionAudio) {
       const audioButton = window.ConversationQuestionAudio.createButton(question, "example", index);
       if (audioButton) item.appendChild(audioButton);
     }
+    item.appendChild(answer);
 
     if (example.translation) {
       const translation = document.createElement("span");

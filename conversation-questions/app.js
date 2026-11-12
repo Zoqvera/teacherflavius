@@ -32,7 +32,6 @@
     ui.professorLink = document.getElementById("conversationProfessorLink");
     ui.questionCount = document.getElementById("conversationQuestionCount");
     ui.listHelp = document.getElementById("conversationListHelp");
-    ui.audioSpeedControl = document.getElementById("conversationAudioSpeedControl");
   }
 
   function showStatus(message, tone) {
@@ -478,9 +477,6 @@
   async function initialize() {
     cacheUi();
     renderAnswerExampleFields();
-    if (ui.audioSpeedControl && window.ConversationQuestionAudio) {
-      ui.audioSpeedControl.appendChild(window.ConversationQuestionAudio.createSpeedControl());
-    }
     ui.questionForm.addEventListener("submit", handleAddQuestion);
     showStatus("Carregando Conversation Questions...", "neutral");
 

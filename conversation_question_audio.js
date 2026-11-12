@@ -8,7 +8,7 @@
   const SPEEDS = [0.5, 0.75, 1, 1.25];
   let current = null;
   let player = null;
-  let playbackSpeed = 1;
+  let playbackSpeed = 0.75;
   let requestSequence = 0;
 
   function labelFor(part, index) {
@@ -167,32 +167,8 @@
     }
   }
 
-  function createSpeedControl() {
-    const label = document.createElement("label");
-    label.className = "conversation-card-speed-control";
-    label.textContent = "Velocidade";
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", "Velocidade dos áudios das perguntas");
-    SPEEDS.forEach(function (speed) {
-      const option = document.createElement("option");
-      option.value = String(speed);
-      option.textContent = String(speed).replace(".", ",") + "×";
-      option.selected = speed === playbackSpeed;
-      select.appendChild(option);
-    });
-    select.addEventListener("change", function () {
-      const selected = Number(select.value);
-      if (!SPEEDS.includes(selected)) return;
-      playbackSpeed = selected;
-      if (player) player.playbackRate = selected;
-    });
-    label.appendChild(select);
-    return label;
-  }
-
   window.ConversationQuestionAudio = Object.freeze({
     createButton: createButton,
-    createSpeedControl: createSpeedControl,
     stop: stop
   });
 })();

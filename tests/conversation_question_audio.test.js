@@ -213,9 +213,139 @@ test("every page with question cards loads the reusable audio module and SVG con
   for (const path of pages) {
     const html = readFileSync(path, "utf8");
     assert.match(html, /conversation_question_audio\.js\?v=/);
-    assert.match(html, /conversation_question_cards\.css\?v=20261112-audio-1/);
+    assert.match(html, /conversation_question_cards\.css\?v=20261112-leading-green-075-1/);
   }
   const renderer = readFileSync("conversation_question_card_renderer.js", "utf8");
   assert.match(renderer, /createButton\(question, "question"\)/);
   assert.match(renderer, /createButton\(question, "example", index\)/);
+});
+
+
+test("renders the green play buttons before English questions and each answer", () => {
+  function element(tag) {
+    return {
+      tagName: tag,
+      className: "",
+      children: [],
+      _text: "",
+      appendChild(child) { this.children.push(child); return child; },
+      set textContent(value) { this._text = String(value); },
+      get textContent() { return this._text; }
+    };
+  }
+  const document = { createElement: element };
+  const window = {
+    ConversationQuestionAudio: {
+      createButton(_question, part) {
+        const button = element("button");
+        button.part = part;
+        return button;
+      }
+    }
+  };
+  vm.runInNewContext(readFileSync("conversation_question_card_renderer.js", "utf8"), { window, document });
+  const card = window.ConversationQuestionCardRenderer.create({
+    id: QUESTION_ID,
+    text: "How are you?",
+    translation: "Como você está?",
+    answer_examples: Array.from({ length: 5 }, (_, i) => ({
+      answer: "I am fine " + i,
+      translation: "Estou bem",
+      note: "Nota"
+    }))
+  }, { number: 1 });
+
+  const title = card.children[0].children[1];
+  assert.equal(title.children[0].part, "question");
+  assert.equal(title.children[1].className, "conversation-card-question-english");
+  assert.equal(title.children[2].className, "conversation-card-question-translation");
+
+  const examples = card.children[2].children;
+  assert.equal(examples.length, 5);
+  examples.forEach((item) => {
+    assert.equal(item.children[0].part, "example");
+    assert.equal(item.children[1].className, "conversation-card-example-answer");
+    assert.equal(item.children[2].className, "conversation-card-example-translation");
+  });
+
+  const css = readFileSync("conversation_question_cards.css", "utf8");
+  assert.match(css, /\.conversation-card-audio-button\s*\{[\s\S]*?background:\s*#15803d;/);
+  assert.match(css, /\.conversation-card-audio-button\s*\{[\s\S]*?margin-right:\s*9px;/);
+});
+
+test("locks conversation audio to 0.75x and provides no manual speed control", () => {
+  let audio;
+  function element(tag) {
+    if (tag === "audio") {
+      audio = {
+        preload: "",
+        playbackRate: 1,
+        paused: true,
+        src: "",
+        addEventListener() {},
+        pause() { this.paused = true; },
+        removeAttribute() { this.src = ""; },
+        async play() { this.paused = false; }
+      };
+      return audio;
+    }
+    return {
+      tagName: tag,
+      children: [],
+      dataset: {},
+      attributes: {},
+      handlers: {},
+      appendChild(child) { this.children.push(child); return child; },
+      setAttribute(key, value) { this.attributes[key] = value; },
+      addEventListener(key, handler) { this.handlers[key] = handler; },
+      querySelector(selector) {
+        if (selector === "path") return this.children[0].children[0];
+        return null;
+      }
+    };
+  }
+  const document = {
+    createElement: element,
+    createElementNS: (_namespace, tag) => element(tag),
+    getElementById: () => null,
+    body: { appendChild() {} }
+  };
+  const window = {
+    Auth: {
+      getClient: () => ({
+        functions: { invoke: async () => ({ data: { url: "https://example.test/signed" } }) }
+      })
+    }
+  };
+  vm.runInNewContext(readFileSync("conversation_question_audio.js", "utf8"), {
+    window, document, crypto: webcrypto, TextEncoder, Uint8Array, Array, Number, Object
+  });
+  assert.equal(window.ConversationQuestionAudio.createSpeedControl, undefined);
+  const button = window.ConversationQuestionAudio.createButton({
+    id: QUESTION_ID, text: "How are you?", examples: []
+  }, "question");
+  button.handlers.click();
+  assert.equal(audio.playbackRate, 0.75);
+
+  const pages = [
+    "conversation-questions/index.html",
+    "conversation-questions/estudadas/index.html",
+    "roteiro-da-aula/index.html",
+    "roteiro-da-aula-v2/index.html",
+    "roteiro-da-aula-legado/index.html",
+    "o-que-fazer/index.html",
+    "o-que-fazer/segunda-parte/index.html"
+  ];
+  pages.forEach((path) => {
+    const html = readFileSync(path, "utf8");
+    assert.match(html, /conversation_question_card_renderer\.js\?v=20261112-leading-green-075-1/);
+    assert.match(html, /conversation_question_audio\.js\?v=20261112-leading-green-075-1/);
+    assert.match(html, /conversation_question_cards\.css\?v=20261112-leading-green-075-1/);
+    assert.doesNotMatch(html, /conversationAudioSpeedControl/);
+    if (path === "conversation-questions/index.html") {
+      assert.match(html, /conversation-questions\/app\.js\?v=20261112-leading-green-075-1/);
+    }
+  });
+  const app = readFileSync("conversation-questions/app.js", "utf8");
+  assert.doesNotMatch(app, /createSpeedControl|audioSpeedControl/);
 });
