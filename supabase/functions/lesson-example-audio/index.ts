@@ -4,8 +4,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.3";
 const allowedOrigins = new Set(["https://teacherflavius.com", "https://localhost"]);
 const bucket = "lesson-example-audio";
 const presentationVoice = "hpp4J3VqNfWAUOO0d1Us";
-// Caleb is a friendly, male American-English voice in the ElevenLabs catalog.
-const conversationVoice = "AaOhDHYJ1XLZk74lXhdE";
+// Will is a premade American-English male voice; unlike a library voice, it does not require adding a voice to the workspace.
+const conversationVoice = "bIHbv24MWmeRgasZH58o";
 const model = "eleven_multilingual_v2";
 
 function key(name: string, fallback: string): string {
@@ -136,7 +136,23 @@ Deno.serve(async (request: Request) => {
         method: "POST", headers: { "xi-api-key": elevenKey, "Content-Type": "application/json", "Accept": "audio/mpeg" },
         body: JSON.stringify({ text: audioText, model_id: model }),
       });
-      if (!audioResponse.ok) return respond({ error: "Não foi possível preparar o áudio agora." }, 502);
+      if (!audioResponse.ok) {
+        // Log only a sanitized provider code and status. Never log credentials, URLs or user text.
+        const payload = await audioResponse.json().catch(() => null);
+        const code = payload?.detail?.status;
+        const diagnosticCode = typeof code === "string" && /^[a-z_]{1,48}$/.test(code)
+          ? code : "unclassified";
+        console.error("lesson-example-audio: elevenlabs_rejected", {
+          http_status: audioResponse.status,
+          code: diagnosticCode,
+          audio_type: voice === conversationVoice ? "question" : "presentation",
+        });
+        return respond({
+          error: audioResponse.status === 429
+            ? "O serviço de voz está temporariamente limitado. Tente novamente mais tarde."
+            : "A geração de áudio falhou no serviço de voz. Tente novamente.",
+        }, 502);
+      }
       const audio = await audioResponse.arrayBuffer();
       if (!audio.byteLength || audio.byteLength > 5 * 1024 * 1024) throw new Error("Invalid audio size");
       const upload = await admin.storage.from(bucket).upload(path, audio, { contentType: "audio/mpeg", upsert: false });
