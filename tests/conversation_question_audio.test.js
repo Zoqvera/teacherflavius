@@ -274,6 +274,9 @@ test("renders the green play buttons before English questions and each answer", 
 });
 
 test("locks conversation audio to 0.75x and provides no manual speed control", () => {
+  const audioCode = readFileSync("conversation_question_audio.js", "utf8");
+  assert.match(audioCode, /const FIXED_PLAYBACK_SPEED = 0\.75;/);
+  assert.doesNotMatch(audioCode, /SPEEDS|let playbackSpeed|createSpeedControl/);
   let audio;
   function element(tag) {
     if (tag === "audio") {
