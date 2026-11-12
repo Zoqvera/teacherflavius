@@ -75,8 +75,17 @@
     const client = window.Auth && window.Auth.getClient && window.Auth.getClient();
     if (!client) throw new Error("Sessão indisponível.");
     const result = await client.functions.invoke(FUNCTION_NAME, { body: body });
-    if (result.error || !result.data || !result.data.url) {
-      throw new Error("Não foi possível preparar o áudio.");
+    if (result.error) {
+      const response = result.error.context;
+      const payload = response && typeof response.json === "function"
+        ? await response.json().catch(() => null)
+        : null;
+      throw new Error(payload && typeof payload.error === "string"
+        ? payload.error
+        : "Não foi possível preparar o áudio.");
+    }
+    if (!result.data || !result.data.url) {
+      throw new Error("A resposta do serviço não contém um áudio válido.");
     }
     return result.data.url;
   }
@@ -112,10 +121,12 @@
       audio.src = url;
       audio.playbackRate = playbackSpeed;
       await audio.play();
-    } catch {
+    } catch (error) {
       if (current && current.sequence === sequence) {
         setButtonState(button, "ready");
-        reportError("Áudio indisponível no momento. Tente novamente.");
+        const message = error instanceof Error && error.message
+          ? error.message : "Áudio indisponível no momento. Tente novamente.";
+        reportError(message);
       }
     }
   }
