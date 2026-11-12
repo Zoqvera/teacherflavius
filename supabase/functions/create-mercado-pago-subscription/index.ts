@@ -205,7 +205,7 @@ function publicSubscription(subscription: ExistingSubscription, reused = false):
 }
 
 async function loadCurrentSubscription(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: ReturnType<typeof createClient<any>>,
   studentId: string,
 ): Promise<ExistingSubscription | null> {
   const { data, error } = await supabaseAdmin

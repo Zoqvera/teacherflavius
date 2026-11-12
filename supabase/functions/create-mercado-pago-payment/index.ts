@@ -313,7 +313,7 @@ async function isDebitCardPaymentMethod(
 }
 
 async function synchronizePayment(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: ReturnType<typeof createClient<any>>,
   attemptId: string,
   payment: MercadoPagoPayment,
 ): Promise<void> {
@@ -627,7 +627,7 @@ Deno.serve(async (request: Request) => {
         amount: chargeAmount,
         status: "created",
       })
-      .select("id, tuition_id, student_id, provider_payment_id, status, created_at")
+      .select("id, tuition_id, student_id, amount, provider_payment_id, status, created_at")
       .single();
 
     if (insertError || !insertedAttempt) {
