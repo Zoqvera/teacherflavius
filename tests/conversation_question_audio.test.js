@@ -213,7 +213,7 @@ test("every page with question cards loads the reusable audio module and SVG con
   for (const path of pages) {
     const html = readFileSync(path, "utf8");
     assert.match(html, /conversation_question_audio\.js\?v=/);
-    assert.match(html, /conversation_question_cards\.css\?v=20261112-audio-1/);
+    assert.match(html, /conversation_question_cards\.css\?v=20261112-leading-green-075-1/);
   }
   const renderer = readFileSync("conversation_question_card_renderer.js", "utf8");
   assert.match(renderer, /createButton\(question, "question"\)/);
