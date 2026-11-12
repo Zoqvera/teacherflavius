@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; script-src-attr 'none'">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Listening Tracks | Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260430-3"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20260730-1"></script>
+  <link rel="stylesheet" href="/listening_tracks.css?v=20261112-1">
+</head>
+<body class="listening-page">
+  <p id="listeningAuthStatus" class="listening-auth-status" role="status" aria-live="polite">Verificando acesso aos áudios...</p>
+
+  <main id="listeningApp" class="listening-layout" hidden>
+    <nav class="listening-navigation" aria-label="Navegação">
+      <a href="/area-do-estudante/">ÁREA DO ESTUDANTE</a>
+      <a id="listeningProfessorBack" href="/professor/" hidden>ÁREA DO PROFESSOR</a>
+    </nav>
+    <header class="listening-header">
+      <span class="listening-eyebrow">TEACHER FLÁVIO · LISTENING</span>
+      <h1>Listening Tracks</h1>
+      <p>Ouça as faixas de áudio e pratique sua compreensão auditiva. Escolha uma faixa abaixo para começar.</p>
+    </header>
+
+    <section id="listeningPlayerSection" class="listening-player" aria-labelledby="listeningPlayerTitle">
+      <div class="listening-player-heading">
+        <span class="listening-player-symbol" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="9" width="3" height="6" rx="1"/><rect x="9" y="4" width="3" height="16" rx="1"/><rect x="15" y="7" width="3" height="10" rx="1"/><path d="M21 10v4"/>
+          </svg>
+        </span>
+        <div>
+          <span class="listening-subtitle">FAIXA SELECIONADA</span>
+          <h2 id="listeningPlayerTitle">Listening Track 1</h2>
+        </div>
+      </div>
+      <audio id="listeningAudio" controls preload="none" controlslist="nodownload" aria-label="Reprodutor de áudio" disabled></audio>
+      <div class="listening-player-actions">
+        <label for="listeningSpeed">Velocidade</label>
+        <select id="listeningSpeed">
+          <option value="0.75">0,75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1,25×</option>
+          <option value="1.5">1,5×</option>
+          <option value="2">2×</option>
+        </select>
+        <button id="listeningPrevious" type="button">ANTERIOR</button>
+        <button id="listeningNext" type="button">PRÓXIMA</button>
+        <button id="listeningCopySelected" type="button" hidden>COPIAR LINK DESTA FAIXA</button>
+      </div>
+      <p id="listeningPlayerStatus" class="listening-status" role="status" aria-live="polite">Preparando a faixa...</p>
+    </section>
+
+    <section class="listening-library" aria-labelledby="listeningCatalogTitle">
+      <div class="listening-catalog-heading">
+        <div>
+          <h2 id="listeningCatalogTitle">Biblioteca de áudios</h2>
+          <p>90 faixas disponíveis</p>
+        </div>
+        <label class="listening-search">
+          <span>Buscar faixa</span>
+          <input id="listeningSearch" type="search" inputmode="numeric" placeholder="Ex.: 19" aria-label="Buscar faixa pelo número">
+        </label>
+      </div>
+      <div id="listeningTrackGrid" class="listening-grid" aria-label="Lista de faixas"></div>
+      <p id="listeningEmpty" class="listening-empty" hidden>Nenhuma faixa encontrada.</p>
+    </section>
+  </main>
+  <script src="/resource_waiter.js?v=20260902-2"></script>
+  <script src="/listening_tracks.js?v=20261112-1"></script>
+</body>
+</html>
