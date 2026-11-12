@@ -1,0 +1,35 @@
+name: Manual first payment rehearsal
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20261112140000_prepare_manual_first_tuition_policy.sql'
+      - 'tests/sql/manual_first_payment_rehearsal.sql'
+      - '.github/workflows/manual-first-payment-rehearsal.yml'
+permissions:
+  contents: read
+jobs:
+  disposable-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: rehearsal
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run migration with synthetic data
+        env:
+          PGPASSWORD: rehearsal
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/sql/manual_first_payment_rehearsal.sql
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Test checkout eligibility at time boundaries
+        run: node --test tests/enrollment_checkout_policy.test.mjs

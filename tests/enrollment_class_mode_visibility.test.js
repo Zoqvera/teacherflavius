@@ -24,7 +24,7 @@ function createNode() {
   };
 }
 
-function renderForm(mode) {
+function renderForm(mode, manualPayment = false) {
   const nodes = new Map();
   const document = {
     getElementById: function (id) {
@@ -39,6 +39,7 @@ function renderForm(mode) {
   const context = {
     document: document,
     authorizedInviteMode: mode,
+    manualFirstPayment: manualPayment,
     EXISTING_PROFILE_MODE: "existing_student_profile_completion",
     updateSubmitButton: function () {}
   };
@@ -54,6 +55,12 @@ function renderForm(mode) {
   );
   return nodes;
 }
+
+test("manual first-payment enrollment tells the student to expect the Pix key", function () {
+  const nodes = renderForm("group", true);
+  assert.match(nodes.get("onboardingIntro").textContent, /WhatsApp.*chave Pix/);
+  assert.doesNotMatch(nodes.get("onboardingIntro").textContent, /encaminhado diretamente para o pagamento/);
+});
 
 test("the invitation form starts with the type-of-class question hidden", function () {
   assert.match(page, /<div id="classModeField" class="field full" hidden>/);

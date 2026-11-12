@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
+import { evaluateEnrollmentCheckout } from "../_shared/enrollment_checkout_policy.mjs";
 
 type JsonRecord = Record<string, unknown>;
 type SubscriptionStatus = "draft" | "pending" | "authorized" | "paused" | "cancelled";
@@ -357,6 +358,26 @@ Deno.serve(async (request: Request) => {
 
   if (action !== "create") {
     return jsonResponse(request, { error: "Ação inválida." }, 400);
+  }
+
+  const { data: policyContext, error: policyError } = await supabaseAdmin.rpc(
+    "get_enrollment_subscription_policy_context",
+    { target_student_id: user.id },
+  );
+  if (policyError || !policyContext || typeof policyContext.enabled !== "boolean") {
+    return jsonResponse(request, { error: "Não foi possível validar as condições de pagamento." }, 503);
+  }
+  if (policyContext.enabled) {
+    if (!policyContext.item) {
+      return jsonResponse(request, { error: "Não foi possível validar a matrícula." }, 503);
+    }
+    const eligibility = evaluateEnrollmentCheckout(policyContext.item);
+    if (!eligibility.allowed) {
+      return jsonResponse(request, {
+        error: "A assinatura ainda não está disponível. Entre em contato com o professor para orientações.",
+        code: eligibility.reason,
+      }, 409);
+    }
   }
 
   if (!subscriptionsEnabled()) {
