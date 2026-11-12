@@ -143,3 +143,65 @@
     animation: none;
   }
 }
+
+/* Clear continuation for the current presentation. */
+.lesson-flow-hint {
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+.lesson-flow-hint[hidden],
+.lesson-next-part-prompt[hidden] {
+  display: none;
+}
+
+.lesson-next-part-prompt h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.lesson-next-part-prompt > p:not(.lesson-next-part-status) {
+  margin: 0;
+  color: #e2e8f0;
+  line-height: 1.55;
+}
+
+.academic-button.primary.lesson-next-part-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 14px 20px;
+  background: #4338ca;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.3;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+}
+
+.lesson-next-part-button svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.lesson-next-part-button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.lesson-next-part-status {
+  margin: 12px 0 0;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+.lesson-next-part-status[data-tone="error"] {
+  color: #fecaca;
+}
+
+.lesson-next-part-status:empty {
+  display: none;
+}
