@@ -342,6 +342,9 @@ test("locks conversation audio to 0.75x and provides no manual speed control", (
     assert.match(html, /conversation_question_audio\.js\?v=20261112-leading-green-075-1/);
     assert.match(html, /conversation_question_cards\.css\?v=20261112-leading-green-075-1/);
     assert.doesNotMatch(html, /conversationAudioSpeedControl/);
+    if (path === "conversation-questions/index.html") {
+      assert.match(html, /conversation-questions\/app\.js\?v=20261112-leading-green-075-1/);
+    }
   });
   const app = readFileSync("conversation-questions/app.js", "utf8");
   assert.doesNotMatch(app, /createSpeedControl|audioSpeedControl/);
