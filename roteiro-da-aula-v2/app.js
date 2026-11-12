@@ -620,9 +620,13 @@
       card.appendChild(questionSection(
         "PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR · " +
           classDate(previous.previousStartsAt),
-        previous.questions, item, true, !MODEL.isCancelled(item), history
+        questions.previous, item, true, !MODEL.isCancelled(item), history
       ));
     }
+    card.appendChild(questionSection(
+      "PERGUNTAS PENDENTES DE AVALIAÇÃO", questions.pending, item, true,
+      !MODEL.isCancelled(item), history
+    ));
     card.appendChild(questionSection(
       "PERGUNTAS A SEREM REVISADAS", questions.review, item, false,
       !MODEL.isCancelled(item), history
