@@ -92,7 +92,7 @@ test('player loads audio once and supports pause and speed', async () => {
   const snippet = app.slice(app.indexOf('  function setupExampleAudio(page)'), app.indexOf('  function renderDynamicPage(page)'));
   const elements = {};
   for (const id of ['lessonAudioControls', 'lessonAudioButton', 'lessonAudioSpeed', 'lessonAudio', 'lessonAudioStatus']) {
-    elements[id] = { hidden: true, value: '1', textContent: '', listeners: {}, addEventListener(type, fn) { this.listeners[type] = fn; } };
+    elements[id] = { hidden: true, value: '1', textContent: '', listeners: {}, setAttribute(name, value) { this[name] = value; }, addEventListener(type, fn) { this.listeners[type] = fn; } };
   }
   const audio = elements.lessonAudio;
   audio.paused = true;
@@ -106,8 +106,10 @@ test('player loads audio once and supports pause and speed', async () => {
   assert.equal(elements.lessonAudioControls.hidden, false);
   await elements.lessonAudioButton.listeners.click();
   assert.equal(elements.lessonAudioButton.textContent, 'PAUSAR ÁUDIO');
+  assert.equal(elements.lessonAudioButton['aria-pressed'], 'true');
   await elements.lessonAudioButton.listeners.click();
   assert.equal(elements.lessonAudioButton.textContent, 'OUVIR EXEMPLO');
+  assert.equal(elements.lessonAudioButton['aria-pressed'], 'false');
   elements.lessonAudioSpeed.value = '0.75';
   elements.lessonAudioSpeed.listeners.change();
   assert.equal(audio.playbackRate, 0.75);

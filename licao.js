@@ -151,8 +151,14 @@
     const status = document.getElementById("lessonAudioStatus");
     controls.hidden = false;
     speed.addEventListener("change", function () { audio.playbackRate = Number(speed.value); });
-    audio.addEventListener("pause", function () { button.textContent = "OUVIR EXEMPLO"; });
-    audio.addEventListener("play", function () { button.textContent = "PAUSAR ÁUDIO"; });
+    audio.addEventListener("pause", function () {
+      button.textContent = "OUVIR EXEMPLO";
+      button.setAttribute("aria-pressed", "false");
+    });
+    audio.addEventListener("play", function () {
+      button.textContent = "PAUSAR ÁUDIO";
+      button.setAttribute("aria-pressed", "true");
+    });
     button.addEventListener("click", async function () {
       if (!audio.paused) { audio.pause(); return; }
       button.disabled = true;

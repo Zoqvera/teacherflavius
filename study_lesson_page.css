@@ -324,3 +324,91 @@
     filter: grayscale(100%) !important;
   }
 }
+
+/* Compact listening controls for the example text. */
+.lesson-audio-player:not([hidden]) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px solid rgba(147, 197, 253, 0.2);
+  border-radius: 16px;
+  background: rgba(7, 26, 57, 0.64);
+}
+
+.lesson-audio-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 17px 0 11px;
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.lesson-audio-button::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M8 5.7v12.6c0 .6.65.98 1.18.66l9.8-6.3a.78.78 0 0 0 0-1.32l-9.8-6.3A.78.78 0 0 0 8 5.7Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+}
+
+.lesson-audio-button[aria-pressed="true"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 5h3v14H7zm7 0h3v14h-3z'/%3E%3C/svg%3E");
+}
+
+.lesson-audio-button:hover:not(:disabled) {
+  border-color: rgba(191, 219, 254, 0.85);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.lesson-audio-button:disabled { opacity: 0.7; cursor: wait; }
+.lesson-audio-button:focus-visible, .lesson-audio-speed:focus-visible {
+  outline: 2px solid #bfdbfe;
+  outline-offset: 3px;
+}
+
+.lesson-audio-speed-label {
+  margin-left: auto;
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lesson-audio-speed {
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid rgba(147, 197, 253, 0.3);
+  border-radius: 10px;
+  background: #10284b;
+  color: #f8fafc;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+#lessonAudioStatus:not(:empty) {
+  flex-basis: 100%;
+  margin: 0;
+  color: #dbeafe;
+  font-size: 13px;
+}
+
+@media (max-width: 380px) {
+  .lesson-audio-button { flex: 1 1 100%; }
+  .lesson-audio-speed-label { margin-left: 0; }
+  .lesson-audio-speed { margin-left: auto; }
+}
