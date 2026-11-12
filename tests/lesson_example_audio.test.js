@@ -137,3 +137,30 @@ test('player loads audio once and supports pause and speed', async () => {
   await elements.lessonAudioButton.listeners.click();
   assert.equal(requests, 1);
 });
+
+test('all presentation audio buttons match the green conversation theme', () => {
+  const lessonCss = readFileSync('study_lesson_page.css', 'utf8');
+  const conversationCss = readFileSync('conversation_question_cards.css', 'utf8');
+  const lessonHtml = readFileSync('licao/index.html', 'utf8');
+  const lessonJs = readFileSync('licao.js', 'utf8');
+
+  const lessonButton = lessonCss.match(/\.lesson-audio-button\s*\{([^}]+)\}/)?.[1];
+  const questionButton = conversationCss.match(/\.conversation-card-audio-button\s*\{([^}]+)\}/)?.[1];
+  assert.ok(lessonButton, 'Presentation audio button style must exist');
+  assert.ok(questionButton, 'Conversation audio button style must exist');
+  for (const declaration of ['border: 1px solid #4ade80;', 'background: #15803d;', 'color: #fff;']) {
+    assert.ok(lessonButton.includes(declaration), declaration);
+    assert.ok(questionButton.includes(declaration), declaration);
+  }
+
+  const activeStyle = lessonCss.match(/\.lesson-audio-button:hover:not\(:disabled\),\s*\.lesson-audio-button\[aria-pressed="true"\]\s*\{([^}]+)\}/)?.[1];
+  assert.ok(activeStyle, 'Hover and active playback must share the green state');
+  assert.match(activeStyle, /border-color:\s*#86efac;/);
+  assert.match(activeStyle, /background:\s*#16a34a;/);
+  assert.match(lessonCss, /\.lesson-audio-button:focus-visible\s*\{\s*outline:\s*2px solid #86efac;/);
+
+  assert.match(lessonHtml, /study_lesson_page\.css\?v=20261112-presentation-green-1/);
+  assert.match(lessonHtml, /class="lesson-audio-button" id="lessonAudioButton"/);
+  assert.match(lessonHtml, /class="lesson-audio-speed" id="lessonAudioSpeed"/);
+  assert.match(lessonJs, /setupExampleAudio\(page\);/);
+});

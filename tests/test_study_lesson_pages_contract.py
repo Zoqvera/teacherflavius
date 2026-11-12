@@ -92,7 +92,7 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("#tf-mobile-top-menu-overlay", styles)
         self.assertIn("#globalLogoutButton", styles)
         self.assertIn(".lesson-page-container .tf-mobile-nav-source-active", styles)
-        self.assertIn("study_lesson_page.css?v=20261112-audio-mobile-2", lesson)
+        self.assertIn("study_lesson_page.css?v=20261112-presentation-green-1", lesson)
 
     def test_every_lesson_shows_a_centered_all_lessons_button_under_the_title(self) -> None:
         lesson = self.read("licao/index.html")
