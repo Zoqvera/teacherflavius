@@ -74,7 +74,7 @@ test.afterAll(async () => {
   if (server) await new Promise((resolve) => server.close(resolve));
 });
 
-async function openPreview(page, role = "teacher", activeClass = false, withPresentation = false) {
+async function openPreview(page, role = "teacher", activeClass = false, withPresentation = false, withHistoricalUnrated = false) {
   await page.route("https://cdn.jsdelivr.net/**", (route) => {
     // Supabase SDK is replaced by an isolated fake before any page script runs.
     return route.fulfill({
@@ -84,10 +84,11 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
     });
   });
 
-  await page.addInitScript(({ userRole, isActiveClass, includePresentation }) => {
+  await page.addInitScript(({ userRole, isActiveClass, includePresentation, hasHistoricalUnrated }) => {
     const teacherId = "98000000-0000-4000-8000-000000000001";
     const studentId = "99000000-0000-4000-8000-000000000006";
     const questionId = "97000000-0000-4000-8000-000000000016";
+    const olderUnratedQuestionId = "97000000-0000-4000-8000-000000000022";
     const entryId = "97000000-0000-4000-8000-000000000017";
 
     window.__teacherV2Calls = JSON.parse(
@@ -178,7 +179,7 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
               async in() {
                 return {
                   data: [{
-                    id: questionId,
+                    id: hasHistoricalUnrated ? olderUnratedQuestionId : questionId,
                     display_order: 2,
                     question_text: "How are you?",
                     question_translation: "Como você está?",
@@ -225,6 +226,12 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
               translation: "Qual é o seu nome?"
             }],
             review_questions: [],
+            new_questions: hasHistoricalUnrated ? [{
+              id: olderUnratedQuestionId,
+              display_order: 2,
+              text: "How are you?",
+              translation: "Como você está?"
+            }] : [],
             previously_studied_numbers: [2]
           };
           return [lesson, {
@@ -257,7 +264,12 @@ async function openPreview(page, role = "teacher", activeClass = false, withPres
         return item;
       }
     };
-  }, { userRole: role, isActiveClass: activeClass, includePresentation: withPresentation });
+  }, {
+    userRole: role,
+    isActiveClass: activeClass,
+    includePresentation: withPresentation,
+    hasHistoricalUnrated: withHistoricalUnrated
+  });
 
   await page.goto(baseUrl + PREVIEW_PATH);
 }
@@ -402,6 +414,32 @@ test("presentation actions stay side by side and cancellation appears after regi
     content: document.documentElement.scrollWidth
   }));
   expect(width.content).toBeLessThanOrEqual(width.viewport + 1);
+});
+
+test("teacher can rate an older studied question that has never been graded", async ({ page }) => {
+  await openPreview(page, "teacher", true, false, true);
+  await expect(page.locator("#workspaceStatus")).toHaveAttribute("data-tone", "success");
+  await enterFictionalClass(page, "PERGUNTAS");
+
+  const student = page.locator(".workspace-student").filter({
+    has: page.getByRole("heading", { name: "ALUNO FICTÍCIO" })
+  });
+  const pending = student.locator(".workspace-question-section").filter({
+    has: page.getByText("PERGUNTAS PENDENTES DE AVALIAÇÃO (1)")
+  });
+  await expect(pending.getByText("How are you?")).toBeVisible();
+  await expect(pending.getByRole("button", { name: "BOM" })).toBeEnabled();
+  await expect(pending.getByRole("button", { name: "MÉDIO" })).toBeEnabled();
+  await expect(pending.getByRole("button", { name: "MELHORAR" })).toBeEnabled();
+
+  await pending.getByRole("button", { name: "MELHORAR" }).click();
+  await expect(page.locator("#workspaceStatus")).toContainText("Pergunta avaliada como MELHORAR");
+  await expect(pending.getByText("AVALIADA NESTA AULA: MELHORAR")).toBeVisible();
+  await expect(pending.getByRole("button", { name: "MELHORAR" })).toHaveCount(0);
+  const writes = await page.evaluate(() => window.__teacherV2Calls.filter(
+    (name) => name === "rate_teacher_conversation_question_v2"
+  ));
+  expect(writes).toHaveLength(1);
 });
 
 test("teacher can evaluate questions studied for the preceding class", async ({ page }) => {
