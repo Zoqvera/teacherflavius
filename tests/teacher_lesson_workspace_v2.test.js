@@ -118,7 +118,7 @@ test("pending questions are restricted to the study history at the lesson date",
   assert.equal(questions.pending.map((question) => question.id).join(","), "q1,q2");
   assert.doesNotMatch(questions.pending.map((question) => question.id).join(","),
     /future/);
-  assert.match(app, /"PERGUNTAS PENDENTES DE AVALIAÇÃO", questions\\.pending/);
+  assert.match(app, /"PERGUNTAS PENDENTES DE AVALIAÇÃO", questions\.pending/);
 });
 
 test("previous class studies keep their actual date and exact question cards", () => {
@@ -158,7 +158,7 @@ test("previous class questions remain eligible for the current class's rating co
   assert.equal(model.withPreviousClassQuestions(current, new Map())[0]
     .previous_class_questions.length, 0);
   assert.match(app,
-    /questions\\.previous, item, true, !MODEL\\.isCancelled\\(item\\), history/);
+    /questions\.previous, item, true, !MODEL\.isCancelled\(item\), history/);
   assert.match(app, /MODEL\.withPreviousClassQuestions\(items, previousStudies\)/);
 });
 
@@ -173,7 +173,7 @@ test("previous class questions use restricted history and do not change ratings"
   assert.match(migration, /study\.studied_at < cycle\.previous_starts_at/);
   assert.match(app, /client\.rpc\("get_teacher_previous_class_studies"/);
   assert.match(app, /PERGUNTAS ESTUDADAS PARA A AULA ANTERIOR/);
-  assert.match(app, /questions\\.previous, item, true, !MODEL\\.isCancelled\\(item\\), history/);
+  assert.match(app, /questions\.previous, item, true, !MODEL\.isCancelled\(item\), history/);
   assert.match(currentPage, /20261112-pending-ratings-1/);
   assert.match(page, /20261112-pending-ratings-1/);
 });
