@@ -80,21 +80,52 @@
 
   function questionsForStudent(item, catalog) {
     const questionCatalog = catalog instanceof Map ? catalog : new Map();
-    const today = Array.isArray(item.today_questions) ? item.today_questions : [];
-    const review = Array.isArray(item.review_questions) ? item.review_questions : [];
-    const byNumber = new Map();
+    const todayQuestions = Array.isArray(item.today_questions) ? item.today_questions : [];
+    const previousQuestions = Array.isArray(item.previous_class_questions)
+      ? item.previous_class_questions : [];
+    const reviewQuestions = Array.isArray(item.review_questions) ? item.review_questions : [];
+    const newQuestions = Array.isArray(item.new_questions) ? item.new_questions : [];
+    const seen = new Set();
 
+    function uniqueQuestions(questions) {
+      return questions.filter(function (question) {
+        const id = String(question && question.id || "").toLowerCase();
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    }
+
+    // The teacher plan can contain studies made after a historical lesson date.
+    // Restrict pending actions to questions confirmed by the dated study history.
+    const studiedNumbersForDate = new Set(normalizeNumbers(
+      normalizeNumbers(item.previously_studied_numbers).concat(
+        todayQuestions.map(function (question) { return question.display_order; })
+      )
+    ));
+
+    const today = uniqueQuestions(todayQuestions);
+    const previous = uniqueQuestions(previousQuestions);
+    const review = uniqueQuestions(reviewQuestions);
+    const pending = uniqueQuestions(newQuestions.filter(function (question) {
+      return studiedNumbersForDate.has(Number(question.display_order));
+    }));
+
+    const byNumber = new Map();
     normalizeNumbers(item.previously_studied_numbers).forEach(function (number) {
       const question = questionCatalog.get(number);
       if (question) byNumber.set(number, question);
     });
-    today.forEach(function (question) {
+    todayQuestions.forEach(function (question) {
       const number = Number(question.display_order);
       if (Number.isSafeInteger(number) && number > 0) byNumber.set(number, question);
     });
+
     return {
       today: today,
+      previous: previous,
       review: review,
+      pending: pending,
       all: Array.from(byNumber.values()).sort(function (a, b) {
         return Number(a.display_order) - Number(b.display_order);
       })
