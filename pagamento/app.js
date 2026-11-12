@@ -2,6 +2,7 @@ let paymentSession = null;
 let pendingTuitions = [];
 let selectedTuition = null;
 let firstPaymentWindow = { tuition_id: null, closed: false };
+let enrollmentCheckoutPolicy = { applies: false };
 let mercadoPago = null;
 let bricksBuilder = null;
 let paymentBrickController = null;
@@ -215,8 +216,28 @@ async function loadFirstPaymentWindow() {
   };
 }
 
+async function loadEnrollmentCheckoutPolicy() {
+  const response = await Auth.getClient().rpc("get_my_enrollment_checkout_policy");
+  if (response.error || !response.data || typeof response.data.applies !== "boolean") {
+    throw new Error("Não foi possível consultar as condições de pagamento.");
+  }
+  enrollmentCheckoutPolicy = response.data;
+}
+
+function enrollmentCheckoutBlock(tuition) {
+  if (!enrollmentCheckoutPolicy.applies || !tuition) return "";
+  const firstMonth = enrollmentCheckoutPolicy.billing_start_month;
+  if (!firstMonth || !tuition.reference_month) return "Não foi possível verificar a mensalidade. Entre em contato com o professor.";
+  if (tuition.reference_month <= firstMonth) return "O professor enviará pelo WhatsApp a chave Pix para a primeira mensalidade.";
+  if (!enrollmentCheckoutPolicy.first_paid) return "O primeiro pagamento precisa ser registrado antes de liberar o Mercado Pago.";
+  const availableAt = Date.parse(enrollmentCheckoutPolicy.checkout_available_at);
+  if (!Number.isFinite(availableAt)) return "Não foi possível verificar o prazo. Entre em contato com o professor.";
+  if (Date.now() < availableAt) return "O Mercado Pago estará disponível após dez dias da matrícula.";
+  return "";
+}
+
 function isClosedFirstTuition(tuition) {
-  return firstPaymentWindow.closed &&
+  return !enrollmentCheckoutPolicy.applies && firstPaymentWindow.closed &&
     tuition && String(tuition.tuition_id) === String(firstPaymentWindow.tuition_id);
 }
 
@@ -245,7 +266,9 @@ function renderTuitionList() {
     const selected = selectedTuition && selectedTuition.tuition_id === tuition.tuition_id;
     const overdue = tuition.payment_status === "overdue";
     const closed = isClosedFirstTuition(tuition);
-    const statusLabel = closed
+    const statusLabel = enrollmentCheckoutBlock(tuition)
+      ? "Pagamento indisponível"
+      : closed
       ? "Prazo encerrado"
       : tuition.attempt_status === "pending"
         ? "Pagamento pendente"
@@ -293,6 +316,15 @@ async function renderPaymentBrick() {
   if (!selectedTuition || !bricksBuilder) return;
   stopPaymentPolling();
   await destroyBricks();
+  const blocked = enrollmentCheckoutBlock(selectedTuition);
+  if (blocked) {
+    document.getElementById("checkoutTitle").textContent = "Pagamento indisponível";
+    document.getElementById("checkoutDescription").textContent = blocked;
+    document.getElementById("paymentBrickLoading").hidden = true;
+    document.getElementById("retryPaymentButton").hidden = true;
+    setPageMessage(blocked, "warning");
+    return;
+  }
   currentIdempotencyKey = loadPaymentAttemptKey(selectedTuition.tuition_id);
   document.getElementById("retryPaymentButton").hidden = true;
   document.getElementById("paymentBrickLoading").hidden = false;
@@ -411,6 +443,7 @@ async function refreshAfterPayment(paidTuitionId) {
   await reconcilePendingPayments(paidTuitionId);
   await loadPendingTuitions();
   await loadFirstPaymentWindow();
+  await loadEnrollmentCheckoutPolicy();
   const stillPending = pendingTuitions.some(function (tuition) {
     return String(tuition.tuition_id) === String(paidTuitionId);
   });
@@ -481,6 +514,7 @@ async function initializePage() {
   try {
     await loadPendingTuitions();
     await loadFirstPaymentWindow();
+    await loadEnrollmentCheckoutPolicy();
     if (pendingTuitions.some(function (tuition) { return !!tuition.provider_payment_id; })) {
       try {
         await reconcilePendingPayments();
@@ -491,7 +525,11 @@ async function initializePage() {
     }
     if (!pendingTuitions.length) {
       const coverage = await getMyFinancialCoverage();
-      showAllPaid(coverage
+      const policyWaiting = enrollmentCheckoutPolicy.applies && enrollmentCheckoutPolicy.first_paid &&
+        Date.now() < Date.parse(enrollmentCheckoutPolicy.checkout_available_at);
+      showAllPaid(policyWaiting
+        ? "A primeira mensalidade foi registrada. O Mercado Pago ficará disponível após dez dias da matrícula."
+        : coverage
         ? "Suas mensalidades são cobertas pelo responsável financeiro " +
           (coverage.payer_name || "indicado pelo professor") + ". Você não precisa efetuar um pagamento separado."
         : undefined, Boolean(coverage));

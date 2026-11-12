@@ -141,7 +141,12 @@
           return null;
         }
         if (requiresActiveStudent && await isPromotionFirstPaymentPending(profile)) {
-          window.location.replace("/pagamento/?matricula80=1");
+          const policy = await settings.getClient().rpc("get_my_enrollment_checkout_policy");
+          if (policy.error) throw policy.error;
+          if (!policy.data || typeof policy.data.applies !== "boolean") {
+            throw new Error("Não foi possível verificar as condições de pagamento.");
+          }
+          window.location.replace(policy.data.applies ? "/matricula-concluida/" : "/pagamento/?matricula80=1");
           return null;
         }
       } catch (error) {

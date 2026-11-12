@@ -1004,6 +1004,26 @@ jobs:
           SQL
           echo 'SPONSORSHIP_SANDBOX_WEBHOOK_DATABASE_ATTESTED'
 
+      - name: Validate manual first payment migration on complete restored schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "${DB_CONTAINER}"
+          docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            < supabase/migrations/20261112145000_prepare_manual_first_tuition_policy.sql
+          docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          do $$
+          begin
+            if (select rollout_at is not null from private.enrollment_checkout_policy_settings where singleton) then
+              raise exception 'Manual first payment rollout must start disabled';
+            end if;
+            if has_function_privilege('authenticated', 'public.get_enrollment_checkout_policy_context(uuid[])', 'execute') then
+              raise exception 'Checkout context must remain service-only';
+            end if;
+          end $$;
+          SQL
+
       - name: Stop disposable Supabase stack
         if: always()
         run: supabase stop --no-backup

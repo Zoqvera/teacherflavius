@@ -172,6 +172,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     const FIRST_TUITION_PAYMENT_PATH = "/pagamento/";
+    let manualFirstPayment = false;
+
+    async function refreshEnrollmentPaymentPolicy() {
+      const response = await Auth.getClient().rpc("get_my_enrollment_checkout_policy");
+      if (response.error) throw response.error;
+      if (!response.data || typeof response.data.enabled_for_new_enrollments !== "boolean") {
+        throw new Error("Não foi possível consultar as condições de pagamento da matrícula.");
+      }
+      return response.data;
+    }
 
     function getNextPath() {
       const params = new URLSearchParams(window.location.search);
@@ -179,7 +189,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     function getPostEnrollmentPath() {
-      return FIRST_TUITION_PAYMENT_PATH;
+      return manualFirstPayment ? "/matricula-concluida/" : FIRST_TUITION_PAYMENT_PATH;
     }
 
     const NEW_ENROLLMENT_MODE = "new_enrollment";
@@ -219,7 +229,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const button = document.getElementById("submitButton");
       button.textContent = state && state.mode === EXISTING_PROFILE_MODE
         ? "SALVAR DADOS E ACESSAR"
-        : "CONCLUIR MATRÍCULA E PAGAR";
+        : (manualFirstPayment ? "CONCLUIR MATRÍCULA" : "CONCLUIR MATRÍCULA E PAGAR");
     }
 
     function configureFormForState(state) {
@@ -253,8 +263,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         accountNote.textContent = "Este é apenas um complemento de cadastro. Mensalidade, quantidade de aulas, tipo de aula e vencimento já registrados não serão alterados.";
         personalDataDescription.textContent = "Preencha os dados pessoais que ainda faltam para concluir seu cadastro.";
       } else {
-        intro.textContent = "Preencha seus dados para concluir a matrícula. Ao finalizar, sua primeira mensalidade ficará disponível e você será encaminhado diretamente para o pagamento.";
-        accountNote.textContent = "Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. O vencimento da primeira mensalidade será definido automaticamente para o dia em que você concluir a matrícula. Você será encaminhado ao pagamento, que deve ser iniciado até 23h59 desse dia (horário de Brasília).";
+        intro.textContent = manualFirstPayment
+          ? "Preencha seus dados para concluir a matrícula. O professor enviará pelo WhatsApp a chave Pix para a primeira mensalidade."
+          : "Preencha seus dados para concluir a matrícula. Ao finalizar, sua primeira mensalidade ficará disponível e você será encaminhado diretamente para o pagamento.";
+        accountNote.textContent = manualFirstPayment
+          ? "Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. O vencimento da primeira mensalidade será definido automaticamente para o dia em que você concluir a matrícula."
+          : "Você não precisa criar uma senha. Os dados pessoais exibidos nesta matrícula são obrigatórios. O vencimento da primeira mensalidade será definido automaticamente para o dia em que você concluir a matrícula. Você será encaminhado ao pagamento, que deve ser iniciado até 23h59 desse dia (horário de Brasília).";
         personalDataDescription.textContent = "Todos os campos abaixo são obrigatórios para concluir a matrícula.";
       }
 
@@ -324,7 +338,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       document.getElementById("onboardingIntro").textContent =
         "Convite confirmado. Não é necessário informar código de matrícula. " +
-        "Preencha seus dados para concluir sua matrícula e seguir para o pagamento.";
+        (manualFirstPayment
+          ? "Preencha seus dados para concluir sua matrícula. O professor enviará a chave Pix pelo WhatsApp."
+          : "Preencha seus dados para concluir sua matrícula e seguir para o pagamento.");
     }
 
     async function initialize() {
@@ -332,6 +348,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (!user) return;
 
       const profile = await Auth.ensureProfileForUser(user);
+      manualFirstPayment = (await refreshEnrollmentPaymentPolicy()).enabled_for_new_enrollments;
       let state = await refreshOnboardingState();
       state = await applyInvitation(state);
 
@@ -452,6 +469,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           cpf: document.getElementById("cpf").value.trim(),
           whatsapp: document.getElementById("whatsapp").value.trim()
         });
+
+        if (state.mode === NEW_ENROLLMENT_MODE) {
+          manualFirstPayment = (await refreshEnrollmentPaymentPolicy()).applies === true;
+        }
 
         window.location.replace(
           state.mode === NEW_ENROLLMENT_MODE

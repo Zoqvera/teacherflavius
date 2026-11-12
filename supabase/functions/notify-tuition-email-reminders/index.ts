@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
+import { evaluateEnrollmentCheckout } from "../_shared/enrollment_checkout_policy.mjs";
 
 type ReminderKind = "before_due" | "due_today" | "after_due";
 type Reminder = {
@@ -54,7 +55,7 @@ function formatDueDate(value: string): string {
   return day + "/" + month + "/" + year;
 }
 
-function buildMessage(kind: ReminderKind, dueDate: string): Message {
+function buildMessage(kind: ReminderKind, dueDate: string, manualFirstPayment = false): Message {
   const date = formatDueDate(dueDate);
   const subjects: Record<ReminderKind, string> = {
     before_due: "Lembrete: sua mensalidade vence em 2 dias",
@@ -72,8 +73,9 @@ function buildMessage(kind: ReminderKind, dueDate: string): Message {
     "Olá!",
     "",
     description,
-    "Para consultar a mensalidade e realizar o pagamento, acesse:",
-    PAYMENT_URL,
+    ...(manualFirstPayment
+      ? ["O professor enviará pelo WhatsApp a chave Pix para o pagamento desta primeira mensalidade."]
+      : ["Para consultar a mensalidade e realizar o pagamento, acesse:", PAYMENT_URL]),
     "",
     "Se você já efetuou o pagamento, considere o tempo necessário para a confirmação no sistema.",
     "",
@@ -84,9 +86,11 @@ function buildMessage(kind: ReminderKind, dueDate: string): Message {
     '<h2 style="color:#123d6a">Teacher Flávio — Financeiro</h2>',
     '<p>Olá!</p>',
     '<p>' + description + '</p>',
-    '<p>Para consultar sua mensalidade e realizar o pagamento, utilize o link:</p>',
-    '<p><a href="' + PAYMENT_URL + '" style="background:#123d6a;color:#fff;padding:12px 18px;border-radius:6px;text-decoration:none;display:inline-block">Acessar pagamento da mensalidade</a></p>',
-    '<p><a href="' + PAYMENT_URL + '">' + PAYMENT_URL + '</a></p>',
+    ...(manualFirstPayment
+      ? ['<p>O professor enviará pelo WhatsApp a chave Pix para o pagamento desta primeira mensalidade.</p>']
+      : ['<p>Para consultar sua mensalidade e realizar o pagamento, utilize o link:</p>',
+        '<p><a href="' + PAYMENT_URL + '" style="background:#123d6a;color:#fff;padding:12px 18px;border-radius:6px;text-decoration:none;display:inline-block">Acessar pagamento da mensalidade</a></p>',
+        '<p><a href="' + PAYMENT_URL + '">' + PAYMENT_URL + '</a></p>']),
     '<p style="font-size:13px;color:#556070">Se você já efetuou o pagamento, considere o tempo necessário para a confirmação no sistema.</p>',
     '</div>',
   ].join("");
@@ -94,7 +98,7 @@ function buildMessage(kind: ReminderKind, dueDate: string): Message {
 }
 
 async function finish(
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient<any>>,
   reminderId: string,
   outcome: Outcome,
   providerMessageId?: string | null,
@@ -110,7 +114,7 @@ async function finish(
 }
 
 async function sendReminder(
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient<any>>,
   resendApiKey: string,
   reminder: Reminder,
 ): Promise<Outcome> {
@@ -156,7 +160,26 @@ async function sendReminder(
     return outcome;
   }
 
-  const message = buildMessage(reminder.reminder_kind, reminder.due_date);
+  const { data: policy, error: policyError } = await supabase.rpc(
+    "get_enrollment_checkout_policy_context", { target_tuition_ids: [reminder.tuition_id] },
+  );
+  if (policyError || !policy || typeof policy.enabled !== "boolean" ||
+      (policy.enabled && (!Array.isArray(policy.items) || policy.items.length !== 1 ||
+       policy.items[0].tuitionId !== reminder.tuition_id))) {
+    if (!await finish(supabase, reminder.reminder_id, "failed", null, "payment_policy_unavailable")) {
+      throw new Error("Unable to persist payment policy failure");
+    }
+    return "failed";
+  }
+  const eligibility = policy.enabled ? evaluateEnrollmentCheckout(policy.items[0]) : null;
+  if (eligibility?.reason === "policy_data_unavailable") {
+    if (!await finish(supabase, reminder.reminder_id, "failed", null, "payment_policy_unavailable")) {
+      throw new Error("Unable to persist invalid payment policy");
+    }
+    return "failed";
+  }
+  const manualFirstPayment = eligibility?.reason === "first_tuition_manual";
+  const message = buildMessage(reminder.reminder_kind, reminder.due_date, manualFirstPayment);
   let accepted: Response;
   try {
     accepted = await fetch(RESEND_ENDPOINT, {

@@ -5,6 +5,7 @@
   const OFFER_MONTHLY_FEE = 80;
   const OFFER_CLASSES_PER_MONTH = 4;
   const MIN_BIRTH_YEAR = 1900;
+  let manualFirstPayment = false;
 
   const elements = {
     status: document.getElementById("pageStatus"),
@@ -147,6 +148,15 @@
     }
   }
 
+  async function loadPaymentPolicy() {
+    const response = await window.Auth.getClient().rpc("get_my_enrollment_checkout_policy");
+    if (response.error) throw response.error;
+    if (!response.data || typeof response.data.enabled_for_new_enrollments !== "boolean") {
+      throw new Error("Não foi possível consultar as condições de pagamento.");
+    }
+    return response.data;
+  }
+
   async function canResumeFirstPayment(profile) {
     if (profile.archived === true) return false;
     const client = window.Auth.getClient();
@@ -183,8 +193,18 @@
 
     const profile = await window.Auth.ensureProfileForUser(session.user);
     if (!profile) throw new Error("Não foi possível localizar seu cadastro.");
+    const policy = await loadPaymentPolicy();
+    manualFirstPayment = policy.enabled_for_new_enrollments;
+    document.getElementById("paymentTerms").textContent = manualFirstPayment
+      ? "O professor enviará pelo WhatsApp a chave Pix para a primeira mensalidade. As próximas mensalidades vencem no mesmo dia dos meses seguintes; em meses mais curtos, no último dia."
+      : "O primeiro pagamento é feito via Pix pelo Mercado Pago. As próximas mensalidades vencem no mesmo dia dos meses seguintes; em meses mais curtos, no último dia.";
+    elements.submit.textContent = manualFirstPayment ? "CONCLUIR MATRÍCULA" : "CONTINUAR PARA PAGAMENTO PIX";
 
     if (profile.enrolled === true || profile.profile_completed === true || profile.archived === true) {
+      if (policy.applies && !policy.first_paid && profile.archived !== true) {
+        window.location.replace("/matricula-concluida/");
+        return;
+      }
       showStep(await canResumeFirstPayment(profile) ? elements.resume : elements.existing);
       setStatus("");
       return;
@@ -250,8 +270,9 @@
     try {
       const values = validateForm();
       await completeEnrollment(values);
-      setStatus("Cadastro concluído. Abrindo o pagamento Pix...", "success");
-      window.location.replace(PAYMENT_PATH);
+      const policy = await loadPaymentPolicy();
+      setStatus("Cadastro concluído.", "success");
+      window.location.replace(policy.applies ? "/matricula-concluida/" : PAYMENT_PATH);
     } catch (error) {
       setStatus(error.message || "Não foi possível concluir a matrícula.", "error");
       elements.submit.disabled = false;

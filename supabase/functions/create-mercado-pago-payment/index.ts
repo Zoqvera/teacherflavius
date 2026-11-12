@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.3";
+import { evaluateCombinedCheckout } from "../_shared/enrollment_checkout_policy.mjs";
 
 type JsonRecord = Record<string, unknown>;
 type SupportedPaymentMethod = "pix" | "card";
@@ -312,7 +313,7 @@ async function isDebitCardPaymentMethod(
 }
 
 async function synchronizePayment(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: ReturnType<typeof createClient<any>>,
   attemptId: string,
   payment: MercadoPagoPayment,
 ): Promise<void> {
@@ -488,6 +489,34 @@ Deno.serve(async (request: Request) => {
     }, 409);
   }
 
+  const quoteItems = Array.isArray(financialQuote.items) ? financialQuote.items : [];
+  const policyTuitionIds = quoteItems.map((item: JsonRecord) => item.tuition_id);
+  if (!policyTuitionIds.length || policyTuitionIds.some((id: unknown) => typeof id !== "string" || !isUuid(id))) {
+    return jsonResponse(request, { error: "Não foi possível validar as mensalidades da cobrança." }, 503);
+  }
+  const { data: policyContext, error: policyError } = await supabaseAdmin.rpc(
+    "get_enrollment_checkout_policy_context",
+    { target_tuition_ids: policyTuitionIds },
+  );
+  if (policyError || !policyContext || typeof policyContext.enabled !== "boolean") {
+    return jsonResponse(request, { error: "Não foi possível validar as condições de pagamento." }, 503);
+  }
+  if (policyContext.enabled) {
+    const policyItems = policyContext.items;
+    if (!Array.isArray(policyItems) || policyItems.length !== policyTuitionIds.length ||
+        new Set(policyItems.map((item: JsonRecord) => item.tuitionId)).size !== policyTuitionIds.length ||
+        policyTuitionIds.some((id: string) => !policyItems.some((item: JsonRecord) => item.tuitionId === id))) {
+      return jsonResponse(request, { error: "Não foi possível validar todas as mensalidades." }, 503);
+    }
+    const eligibility = evaluateCombinedCheckout(policyItems);
+    if (!eligibility.allowed) {
+      return jsonResponse(request, {
+        error: "Esta cobrança ainda não está disponível no Mercado Pago. Entre em contato com o professor para orientações.",
+        code: eligibility.reason,
+      }, 409);
+    }
+  }
+
   const sponsoredPayment = financialQuote.sponsored === true;
   const chargeAmount = Number(financialQuote.total);
   if (!Number.isFinite(chargeAmount) || chargeAmount <= 0 ||
@@ -598,7 +627,7 @@ Deno.serve(async (request: Request) => {
         amount: chargeAmount,
         status: "created",
       })
-      .select("id, tuition_id, student_id, provider_payment_id, status, created_at")
+      .select("id, tuition_id, student_id, amount, provider_payment_id, status, created_at")
       .single();
 
     if (insertError || !insertedAttempt) {
