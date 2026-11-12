@@ -66,6 +66,29 @@ test("allows active enrolled students", async function () {
   assert.equal(loaded.location.replacedWith, "");
 });
 
+for (const scenario of [
+  { applies: true, destination: "/matricula-concluida/" },
+  { applies: false, destination: "/pagamento/?matricula80=1" }
+]) {
+  test("pending promotion uses the correct first-payment destination: " + scenario.applies, async function () {
+    const loaded = loadService("/atividade/");
+    const service = loaded.module.create(createOptions({
+      ensureProfileForUser: async function () {
+        return { profile_completed: true, enrolled: true, archived: false,
+          first_payment_same_day_required: true, enrolled_at: "2026-11-12T14:00:00Z" };
+      },
+      getClient: function () {
+        return { rpc: async function (name) {
+          return { data: name === "get_my_matricula80_payment_gate"
+            ? { payment_required: true } : { applies: scenario.applies }, error: null };
+        } };
+      }
+    }));
+    assert.equal(await service.requireAuth(), null);
+    assert.equal(loaded.location.replacedWith, scenario.destination);
+  });
+}
+
 test("blocks completed profiles without active enrollment", async function () {
   const loaded = loadService("/atividade/");
   const service = loaded.module.create(createOptions({
