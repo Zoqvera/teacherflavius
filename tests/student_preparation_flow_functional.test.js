@@ -433,6 +433,10 @@ async function runLessonScenario({
     "lessonPageContent",
     "lessonPreparationSection",
     "lessonNextPartLink",
+    "lessonNextPartLabel",
+    "lessonNextPartStatus",
+    "lessonNextPartPrompt",
+    "lessonFlowHint",
     "lessonCurrentLessonStatus",
     "lessonCurrentLessonLink",
     "lessonNextLessonLink",
@@ -440,7 +444,7 @@ async function runLessonScenario({
     "lessonFlowProgress",
     "legacyLessonMaterial"
   ]);
-  document.getElementById("lessonNextPartLink").textContent = "PRÓXIMA PARTE";
+  document.getElementById("lessonNextPartLabel").textContent = "CONTINUAR PARA AS PERGUNTAS";
   const calls = { prepared: [], plans: 0 };
   const pageId = "11111111-1111-4111-8111-111111111111";
   const nextPageId = "22222222-2222-4222-8222-222222222222";
@@ -550,9 +554,9 @@ test("failed preparation blocks navigation and restores the next-part link", asy
   });
   await state.node("lessonNextPartLink").handlers.click({ preventDefault() {} });
   assert.equal(state.window.location.href, "");
-  assert.equal(state.node("lessonNextPartLink").textContent, "PRÓXIMA PARTE");
+  assert.equal(state.node("lessonNextPartLabel").textContent, "CONTINUAR PARA AS PERGUNTAS");
   assert.equal(state.node("lessonNextPartLink").attributes["aria-disabled"], undefined);
-  assert.match(state.node("lessonPageStatus").textContent, /Synthetic RPC failure/);
+  assert.match(state.node("lessonNextPartStatus").textContent, /tentar novamente/);
 });
 
 test("already prepared lessons continue without exposing the legacy preparation button", async () => {
