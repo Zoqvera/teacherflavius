@@ -45,14 +45,20 @@ async function startPage({
   progress = [],
   teacher = false,
   planError = null,
-  writeError = null
+  writeError = null,
+  questionsRequest = null,
+  waitForLoad = true
 } = {}) {
   const nodes = new Map();
   const document = {
     readyState: "complete",
     body: { classList: { remove() {} } },
     getElementById(id) {
-      if (!nodes.has(id)) nodes.set(id, element());
+      if (!nodes.has(id)) {
+        const node = element();
+        if (id === "conversationCount") node.hidden = true;
+        nodes.set(id, node);
+      }
       return nodes.get(id);
     },
     createElement: element,
@@ -64,7 +70,7 @@ async function startPage({
     async getStudentProfile() {
       return { enrolled: true, archived: false };
     },
-    async listQuestions() { return questions; },
+    async listQuestions() { return questionsRequest || questions; },
     async listStudentCompletions() { return []; },
     async moveQuestion() {},
     async addQuestion() { throw new Error("Should not add questions"); }
@@ -107,7 +113,7 @@ async function startPage({
   vm.runInNewContext(controller, { window, document, console: { error() {} } }, {
     filename: "conversation-questions/app.js"
   });
-  await flush();
+  if (waitForLoad) await flush();
 
   return {
     studied,
@@ -122,6 +128,33 @@ test("the student catalog loads the same academic study service as the second pa
   assert.match(page, /academic_workflow_service\.js\?v=/);
   assert.match(page, /conversation-questions\/app\.js\?v=/);
   assert.match(page, /<meta name="robots" content="noindex, nofollow">/);
+});
+
+test("question count is hidden until the live catalog loads", async () => {
+  assert.match(
+    page,
+    /<div id="conversationCount" class="conversation-count" aria-label="Total de perguntas" hidden>/
+  );
+  assert.match(page, /<strong id="conversationQuestionCount"><\/strong>/);
+
+  let resolveQuestions;
+  const questionsRequest = new Promise((resolve) => {
+    resolveQuestions = resolve;
+  });
+  const state = await startPage({
+    teacher: true,
+    questionsRequest,
+    waitForLoad: false
+  });
+
+  assert.equal(state.node("conversationCount").hidden, true);
+  assert.equal(state.node("conversationQuestionCount").textContent, "");
+
+  resolveQuestions([{ id: "q1" }, { id: "q2" }, { id: "q3" }]);
+  await flush();
+
+  assert.equal(state.node("conversationQuestionCount").textContent, "3");
+  assert.equal(state.node("conversationCount").hidden, false);
 });
 
 test("student catalog shows available, studied and worked questions distinctly", async () => {
