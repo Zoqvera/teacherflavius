@@ -14,7 +14,7 @@ create table public.monthly_tuition (
   due_date date, created_at timestamptz, payment_date date
 );
 
-\ir ../../supabase/migrations/20261112140000_prepare_manual_first_tuition_policy.sql
+\ir ../../supabase/migrations/20261112145000_prepare_manual_first_tuition_policy.sql
 
 insert into public.profiles values
   ('00000000-0000-4000-8000-000000000001', now() - interval '60 days'),

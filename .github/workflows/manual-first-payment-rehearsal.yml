@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'supabase/migrations/20261112140000_prepare_manual_first_tuition_policy.sql'
+      - 'supabase/migrations/20261112145000_prepare_manual_first_tuition_policy.sql'
       - 'tests/sql/manual_first_payment_rehearsal.sql'
       - '.github/workflows/manual-first-payment-rehearsal.yml'
 permissions:

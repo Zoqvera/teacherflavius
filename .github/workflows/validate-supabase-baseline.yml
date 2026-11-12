@@ -1011,7 +1011,7 @@ jobs:
           DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
           test -n "${DB_CONTAINER}"
           docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            < supabase/migrations/20261112140000_prepare_manual_first_tuition_policy.sql
+            < supabase/migrations/20261112145000_prepare_manual_first_tuition_policy.sql
           docker exec -i "${DB_CONTAINER}" psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
           do $$
           begin
