@@ -29,6 +29,10 @@
     english.className = "conversation-card-question-english";
     english.textContent = question.text;
     title.appendChild(english);
+    if (window.ConversationQuestionAudio) {
+      const audioButton = window.ConversationQuestionAudio.createButton(question, "question");
+      if (audioButton) title.appendChild(audioButton);
+    }
 
     if (question.translation) {
       const translation = document.createElement("span");
@@ -40,7 +44,7 @@
     return title;
   }
 
-  function createExample(example) {
+  function createExample(example, question, index) {
     const item = document.createElement("li");
     item.className = "conversation-card-example";
 
@@ -48,6 +52,10 @@
     answer.className = "conversation-card-example-answer";
     answer.textContent = "“" + example.answer + "”";
     item.appendChild(answer);
+    if (window.ConversationQuestionAudio) {
+      const audioButton = window.ConversationQuestionAudio.createButton(question, "example", index);
+      if (audioButton) item.appendChild(audioButton);
+    }
 
     if (example.translation) {
       const translation = document.createElement("span");
@@ -97,8 +105,8 @@
 
     const examples = document.createElement("ul");
     examples.className = "conversation-card-examples";
-    question.examples.forEach(function (example) {
-      examples.appendChild(createExample(example));
+    question.examples.forEach(function (example, index) {
+      examples.appendChild(createExample(example, question, index));
     });
     card.appendChild(examples);
 

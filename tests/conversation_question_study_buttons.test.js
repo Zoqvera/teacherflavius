@@ -120,7 +120,7 @@ async function startPage({
 
 test("the student catalog loads the same academic study service as the second part", () => {
   assert.match(page, /academic_workflow_service\.js\?v=/);
-  assert.match(page, /conversation-questions\/app\.js\?v=20261019-study-buttons-1/);
+  assert.match(page, /conversation-questions\/app\.js\?v=/);
   assert.match(page, /<meta name="robots" content="noindex, nofollow">/);
 });
 

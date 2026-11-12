@@ -3,7 +3,9 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.3";
 
 const allowedOrigins = new Set(["https://teacherflavius.com", "https://localhost"]);
 const bucket = "lesson-example-audio";
-const voice = "hpp4J3VqNfWAUOO0d1Us";
+const presentationVoice = "hpp4J3VqNfWAUOO0d1Us";
+// Caleb is a friendly, male American-English voice in the ElevenLabs catalog.
+const conversationVoice = "AaOhDHYJ1XLZk74lXhdE";
 const model = "eleven_multilingual_v2";
 
 function key(name: string, fallback: string): string {
@@ -42,24 +44,72 @@ Deno.serve(async (request: Request) => {
     const { data: user, error: userError } = await userClient.auth.getUser();
     if (userError || !user.user) return respond({ error: "Sessão inválida." }, 401);
     const body = await request.json().catch(() => ({}));
-    const pageId = body.pageId;
     const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (pageId !== undefined && (typeof pageId !== "string" || !uuid.test(pageId))) {
-      return respond({ error: "Apresentação inválida." }, 400);
+    let audioText: string;
+    let voice = presentationVoice;
+    let folder: string;
+
+    if (body.questionId !== undefined) {
+      if (body.pageId !== undefined || typeof body.questionId !== "string" || !uuid.test(body.questionId)) {
+        return respond({ error: "Pergunta inválida." }, 400);
+      }
+      const part = body.part;
+      if (part !== "question" && part !== "example") {
+        return respond({ error: "Trecho de áudio inválido." }, 400);
+      }
+      if (part === "question" && body.exampleIndex !== undefined) {
+        return respond({ error: "Índice de exemplo inválido." }, 400);
+      }
+      if (part === "example" && (!Number.isInteger(body.exampleIndex) || body.exampleIndex < 0 || body.exampleIndex > 4)) {
+        return respond({ error: "Índice de exemplo inválido." }, 400);
+      }
+
+      // Query using the user's JWT, so existing RLS determines which questions are visible.
+      const { data: question, error: questionError } = await userClient
+        .from("conversation_questions")
+        .select("id,question_text,answer_examples")
+        .eq("id", body.questionId)
+        .maybeSingle();
+      if (questionError || !question) return respond({ error: "Pergunta indisponível." }, 404);
+      const answer = part === "example" && Array.isArray(question.answer_examples)
+        ? question.answer_examples[body.exampleIndex]?.answer
+        : null;
+      const chosenText = part === "question" ? question.question_text : answer;
+      if (typeof chosenText !== "string" || !chosenText.trim() || chosenText.length > 500) {
+        return respond({ error: "Trecho indisponível." }, 404);
+      }
+      audioText = chosenText.trim();
+      voice = conversationVoice;
+      folder = `question-${question.id}`;
+    } else {
+      if (body.part !== undefined || body.exampleIndex !== undefined) {
+        return respond({ error: "Trecho de áudio inválido." }, 400);
+      }
+      const pageId = body.pageId;
+      if (pageId !== undefined && (typeof pageId !== "string" || !uuid.test(pageId))) {
+        return respond({ error: "Apresentação inválida." }, 400);
+      }
+      const query = userClient.from("study_lesson_pages").select("id,example,roadmap_lesson_number");
+      // Older app versions requested the first presentation without its ID.
+      const { data: page, error: pageError } = await (pageId
+        ? query.eq("id", pageId)
+        : query.eq("roadmap_lesson_number", 1)).maybeSingle();
+      if (pageError || !page || !page.example || page.example.length > 1000) {
+        return respond({ error: "Apresentação indisponível." }, 404);
+      }
+      audioText = page.example;
+      folder = page.roadmap_lesson_number === 1 ? "presentation-1" : `presentation-${page.id}`;
     }
-    const query = userClient.from("study_lesson_pages").select("id,example,roadmap_lesson_number");
-    // Older app versions requested the first presentation without its ID.
-    const { data: page, error: pageError } = await (pageId
-      ? query.eq("id", pageId)
-      : query.eq("roadmap_lesson_number", 1)).maybeSingle();
-    if (pageError || !page || !page.example || page.example.length > 1000) return respond({ error: "Apresentação indisponível." }, 404);
-    const textHashBytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(page.example));
+
+    // A stale page cannot generate or serve a cached audio for a different revision.
+    const textHashBytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(audioText));
     const textHash = Array.from(new Uint8Array(textHashBytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
-    if (body.textHash !== textHash) return respond({ error: "A apresentação mudou. Atualize a página." }, 409);
-    const bytes = new TextEncoder().encode(`${voice}:${model}:${page.example}`);
+    if (body.textHash !== textHash) {
+      return respond({ error: "O texto mudou. Atualize a página." }, 409);
+    }
+    const bytes = new TextEncoder().encode(`${voice}:${model}:${audioText}`);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
     const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-    const folder = page.roadmap_lesson_number === 1 ? "presentation-1" : `presentation-${page.id}`;
     const path = `${folder}/${hash}.mp3`;
     const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: bucketInfo } = await admin.storage.getBucket(bucket);
@@ -84,7 +134,7 @@ Deno.serve(async (request: Request) => {
       if (!daily.data) return respond({ error: "Limite diário de geração atingido." }, 429);
       const audioResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
         method: "POST", headers: { "xi-api-key": elevenKey, "Content-Type": "application/json", "Accept": "audio/mpeg" },
-        body: JSON.stringify({ text: page.example, model_id: model }),
+        body: JSON.stringify({ text: audioText, model_id: model }),
       });
       if (!audioResponse.ok) return respond({ error: "Não foi possível preparar o áudio agora." }, 502);
       const audio = await audioResponse.arrayBuffer();
