@@ -8,7 +8,7 @@
   const SPEEDS = [0.5, 0.75, 1, 1.25];
   let current = null;
   let player = null;
-  let playbackSpeed = 1;
+  let playbackSpeed = 0.75;
   let requestSequence = 0;
 
   function labelFor(part, index) {
