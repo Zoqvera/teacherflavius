@@ -32,7 +32,7 @@
   <script src="/module_loader.js?v=20260902-2"></script>
   <script src="/auth.js?v=20260912-1"></script>
   <link rel="stylesheet" href="/aula_template.css?v=20260428-2">
-  <link rel="stylesheet" href="/study_lesson_page.css?v=20261016-all-lessons-compact-1">
+  <link rel="stylesheet" href="/study_lesson_page.css?v=20261112-audio-player-1">
   <link rel="stylesheet" href="/academic_workflow.css?v=20261004-1">
   <link rel="stylesheet" href="/student_preparation_flow.css?v=20261112-continuacao-1">
   <link rel="stylesheet" href="/lesson_presentation_editor.css?v=20261017-stage2-1">
@@ -81,10 +81,10 @@
       <section class="lesson-content-card lesson-example-card dynamic-lesson-section">
         <p class="lesson-section-kicker">LEIA O EXEMPLO ABAIXO:</p>
         <p id="lessonExample" class="lesson-rich-text"></p>
-        <div id="lessonAudioControls" hidden>
-          <button type="button" class="academic-button" id="lessonAudioButton">OUVIR EXEMPLO</button>
-          <label for="lessonAudioSpeed">Velocidade</label>
-          <select id="lessonAudioSpeed"><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option></select>
+        <div id="lessonAudioControls" class="lesson-audio-player" hidden>
+          <button type="button" class="lesson-audio-button" id="lessonAudioButton" aria-pressed="false">OUVIR EXEMPLO</button>
+          <label class="lesson-audio-speed-label" for="lessonAudioSpeed">Velocidade</label>
+          <select class="lesson-audio-speed" id="lessonAudioSpeed"><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option></select>
           <audio id="lessonAudio" preload="none"></audio>
           <p id="lessonAudioStatus" role="status" aria-live="polite"></p>
         </div>
@@ -177,7 +177,7 @@
   <script src="/academic_workflow_service.js?v=20261022-apresentacoes-1"></script>
   <script src="/student_preparation_flow.js?v=20261016-general-release-1"></script>
   <script src="/lesson_presentation_editor.js?v=20261022-apresentacoes-1"></script>
-  <script src="/licao.js?v=20261112-audio-1"></script>
+  <script src="/licao.js?v=20261112-audio-player-1"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>
