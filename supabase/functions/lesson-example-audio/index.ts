@@ -41,17 +41,26 @@ Deno.serve(async (request: Request) => {
     const userClient = createClient(url, publicKey, { global: { headers: { Authorization: auth } }, auth: { persistSession: false } });
     const { data: user, error: userError } = await userClient.auth.getUser();
     if (userError || !user.user) return respond({ error: "Sessão inválida." }, 401);
-    const { data: page, error: pageError } = await userClient.from("study_lesson_pages")
-      .select("id,example,roadmap_lesson_number").eq("roadmap_lesson_number", 1).maybeSingle();
-    if (pageError || !page || !page.example || page.example.length > 1000) return respond({ error: "Apresentação indisponível." }, 404);
     const body = await request.json().catch(() => ({}));
+    const pageId = body.pageId;
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (pageId !== undefined && (typeof pageId !== "string" || !uuid.test(pageId))) {
+      return respond({ error: "Apresentação inválida." }, 400);
+    }
+    const query = userClient.from("study_lesson_pages").select("id,example,roadmap_lesson_number");
+    // Older app versions requested the first presentation without its ID.
+    const { data: page, error: pageError } = await (pageId
+      ? query.eq("id", pageId)
+      : query.eq("roadmap_lesson_number", 1)).maybeSingle();
+    if (pageError || !page || !page.example || page.example.length > 1000) return respond({ error: "Apresentação indisponível." }, 404);
     const textHashBytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(page.example));
     const textHash = Array.from(new Uint8Array(textHashBytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
     if (body.textHash !== textHash) return respond({ error: "A apresentação mudou. Atualize a página." }, 409);
     const bytes = new TextEncoder().encode(`${voice}:${model}:${page.example}`);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
     const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-    const path = `presentation-1/${hash}.mp3`;
+    const folder = page.roadmap_lesson_number === 1 ? "presentation-1" : `presentation-${page.id}`;
+    const path = `${folder}/${hash}.mp3`;
     const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: bucketInfo } = await admin.storage.getBucket(bucket);
     if (!bucketInfo) {
@@ -59,7 +68,7 @@ Deno.serve(async (request: Request) => {
       if (error && !/already exists|duplicate/i.test(error.message)) throw error;
     }
     const signed = () => admin.storage.from(bucket).createSignedUrl(path, 3600);
-    const existing = await admin.storage.from(bucket).list("presentation-1", { search: `${hash}.mp3`, limit: 100 });
+    const existing = await admin.storage.from(bucket).list(folder, { search: `${hash}.mp3`, limit: 100 });
     if (existing.error) throw existing.error;
     const exists = existing.data.some((item) => item.name === `${hash}.mp3`);
     if (!exists) {
@@ -69,7 +78,7 @@ Deno.serve(async (request: Request) => {
       if (error) throw error;
       if (!allowed) return respond({ error: "O áudio está sendo preparado. Tente novamente em instantes." }, 429);
       const daily = await admin.rpc("consume_api_rate_limit", {
-        target_bucket_key: "lesson-audio:daily", target_window_seconds: 86400, target_max_requests: 20,
+        target_bucket_key: "lesson-audio:daily", target_window_seconds: 86400, target_max_requests: 50,
       });
       if (daily.error) throw daily.error;
       if (!daily.data) return respond({ error: "Limite diário de geração atingido." }, 429);

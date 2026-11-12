@@ -144,7 +144,7 @@
 
   function setupExampleAudio(page) {
     const controls = document.getElementById("lessonAudioControls");
-    if (!controls || Number(page.roadmap_lesson_number) !== 1) return;
+    if (!controls || !page.id || !page.example) return;
     const button = document.getElementById("lessonAudioButton");
     const speed = document.getElementById("lessonAudioSpeed");
     const audio = document.getElementById("lessonAudio");
@@ -170,7 +170,7 @@
           const textHash = Array.from(new Uint8Array(digest), function (byte) {
             return byte.toString(16).padStart(2, "0");
           }).join("");
-          const result = await window.Auth.getClient().functions.invoke("lesson-example-audio", { body: { textHash: textHash } });
+          const result = await window.Auth.getClient().functions.invoke("lesson-example-audio", { body: { pageId: page.id, textHash: textHash } });
           if (result.error || !result.data || !result.data.url) throw new Error("Áudio indisponível");
           audio.src = result.data.url;
         }
