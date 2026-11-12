@@ -4,27 +4,28 @@ const { readFileSync } = require('node:fs');
 const { stripTypeScriptTypes } = require('node:module');
 const vm = require('node:vm');
 const { webcrypto } = require('node:crypto');
+const PAGE_ID = 'a1234567-1234-4234-8234-123456789abc';
 
 const source = readFileSync('supabase/functions/lesson-example-audio/index.ts', 'utf8')
   .replace(/^import .*;\s*$/gm, '');
 
 function fixture(options = {}) {
   const text = options.text || 'Hello, students.';
-  const calls = { tts: 0, uploads: 0, signed: 0 };
+  const calls = { tts: 0, uploads: 0, signed: 0, query: null, folder: null };
   let handler;
   let cached = Boolean(options.cached);
   let limited = Boolean(options.limited);
   const storage = {
     getBucket: async () => ({ data: { id: 'lesson-example-audio' } }),
     from: () => ({
-      list: async () => ({ data: cached ? [{ name: `${options.audioHash}.mp3` }] : [], error: null }),
+      list: async (folder) => (calls.folder = folder, { data: cached ? [{ name: `${options.audioHash}.mp3` }] : [], error: null }),
       upload: async () => { calls.uploads++; cached = true; return { error: null }; },
       createSignedUrl: async () => { calls.signed++; return { data: { signedUrl: 'https://example.test/audio' } }; }
     })
   };
   const user = {
     auth: { getUser: async () => options.unauthorized ? { error: {}, data: {} } : { data: { user: { id: 'user' } } } },
-    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: options.noAccess ? null : { example: text }, error: null }) }) }) })
+    from: () => ({ select: () => ({ eq: (field, value) => (calls.query = { field, value }, { maybeSingle: async () => ({ data: options.noAccess ? null : { id: PAGE_ID, roadmap_lesson_number: options.lessonNumber || 1, example: text }, error: null }) }) }) })
   };
   const admin = { storage, rpc: async () => ({ data: !limited, error: null }) };
   const env = { SUPABASE_URL: 'https://example.test', SUPABASE_ANON_KEY: 'public', SUPABASE_SERVICE_ROLE_KEY: 'secret', ELEVENLABS_API_KEY: 'private' };
@@ -42,8 +43,8 @@ async function hash(value) {
   const bytes = await webcrypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
   return Buffer.from(bytes).toString('hex');
 }
-async function request(handler, textHash, origin = 'https://teacherflavius.com') {
-  return handler(new Request('https://example.test', { method: 'POST', headers: { origin, authorization: 'Bearer token', 'content-type': 'application/json' }, body: JSON.stringify({ textHash }) }));
+async function request(handler, textHash, origin = 'https://teacherflavius.com', pageId = PAGE_ID) {
+  return handler(new Request('https://example.test', { method: 'POST', headers: { origin, authorization: 'Bearer token', 'content-type': 'application/json' }, body: JSON.stringify({ textHash, pageId }) }));
 }
 
 test('generates only the authorized presentation and stores audio', async () => {
@@ -52,7 +53,27 @@ test('generates only the authorized presentation and stores audio', async () => 
   assert.equal(response.status, 200);
   assert.equal(f.calls.tts, 1);
   assert.equal(f.calls.uploads, 1);
+  assert.equal(f.calls.query.field, 'id');
+  assert.equal(f.calls.query.value, PAGE_ID);
+  assert.equal(f.calls.folder, 'presentation-1');
   assert.equal((await response.json()).url, 'https://example.test/audio');
+});
+
+test('uses the requested page and a separate storage folder', async () => {
+  const f = fixture({ lessonNumber: 2 });
+  const response = await request(f.handler, await hash(f.text));
+  assert.equal(response.status, 200);
+  assert.equal(f.calls.folder, `presentation-${PAGE_ID}`);
+  assert.equal(f.calls.query.value, PAGE_ID);
+});
+
+test('supports older clients and rejects invalid page IDs', async () => {
+  const f = fixture();
+  const old = new Request('https://example.test', { method: 'POST', headers: { origin: 'https://teacherflavius.com', authorization: 'Bearer token', 'content-type': 'application/json' }, body: JSON.stringify({ textHash: await hash(f.text) }) });
+  assert.equal((await f.handler(old)).status, 200);
+  assert.equal(f.calls.query.field, 'roadmap_lesson_number');
+  assert.equal(f.calls.query.value, 1);
+  assert.equal((await request(f.handler, await hash(f.text), 'https://teacherflavius.com', 'invalid')).status, 400);
 });
 
 test('reuses cached audio without calling ElevenLabs', async () => {
@@ -101,8 +122,8 @@ test('player loads audio once and supports pause and speed', async () => {
   audio.pause = () => { audio.paused = true; audio.listeners.pause(); };
   audio.removeAttribute = () => { audio.src = ''; };
   let requests = 0;
-  const ctx = { document: { getElementById: (id) => elements[id] }, window: { Auth: { getClient: () => ({ functions: { invoke: async (_name, params) => { requests++; assert.equal(params.body.textHash, await hash('Example')); return { data: { url: 'https://example.test/audio' } }; } } }) } }, crypto: webcrypto, TextEncoder, Uint8Array, Array, Number, Error };
-  vm.runInNewContext(`${snippet}\nsetupExampleAudio({ roadmap_lesson_number: 1, example: 'Example' });`, ctx);
+  const ctx = { document: { getElementById: (id) => elements[id] }, window: { Auth: { getClient: () => ({ functions: { invoke: async (_name, params) => { requests++; assert.equal(params.body.textHash, await hash('Example')); assert.equal(params.body.pageId, PAGE_ID); return { data: { url: 'https://example.test/audio' } }; } } }) } }, crypto: webcrypto, TextEncoder, Uint8Array, Array, Number, Error };
+  vm.runInNewContext(`${snippet}\nsetupExampleAudio({ id: '${PAGE_ID}', roadmap_lesson_number: 2, example: 'Example' });`, ctx);
   assert.equal(elements.lessonAudioControls.hidden, false);
   await elements.lessonAudioButton.listeners.click();
   assert.equal(elements.lessonAudioButton.textContent, 'PAUSAR ÁUDIO');
