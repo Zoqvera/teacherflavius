@@ -1,9 +1,28 @@
 (function () {
   "use strict";
 
-  const PAYMENT_PATH = "/pagamento/?matricula80=1";
-  const OFFER_MONTHLY_FEE = 80;
-  const OFFER_CLASSES_PER_MONTH = 4;
+  // Server-side invitations remain authoritative; these values only verify RPC responses.
+  const isFiftyOffer = /^\/matricula50(?:\/|\/index\.html)?$/.test(window.location.pathname);
+  const OFFER = Object.freeze(isFiftyOffer ? {
+    authorizeRpc: "authorize_my_matricula50",
+    monthlyFee: 50,
+    classesPerMonth: 4,
+    origin: "instagram",
+    campaignAlias: "anuncio50",
+    paymentPath: "/matricula-concluida/",
+    requiresManualFirstPayment: true
+  } : {
+    authorizeRpc: "authorize_my_matricula80",
+    monthlyFee: 80,
+    classesPerMonth: 4,
+    origin: "anúncio80",
+    campaignAlias: null,
+    paymentPath: "/pagamento/?matricula80=1",
+    requiresManualFirstPayment: false
+  });
+  const PAYMENT_PATH = OFFER.paymentPath;
+  const OFFER_MONTHLY_FEE = OFFER.monthlyFee;
+  const OFFER_CLASSES_PER_MONTH = OFFER.classesPerMonth;
   const MIN_BIRTH_YEAR = 1900;
   let manualFirstPayment = false;
 
@@ -135,7 +154,7 @@
   }
 
   async function authorizePromotion() {
-    const response = await window.Auth.getClient().rpc("authorize_my_matricula80");
+    const response = await window.Auth.getClient().rpc(OFFER.authorizeRpc);
     if (response.error) throw response.error;
 
     const offer = response.data || {};
@@ -143,7 +162,8 @@
         offer.class_mode !== "group" ||
         Number(offer.monthly_fee) !== OFFER_MONTHLY_FEE ||
         Number(offer.classes_per_month) !== OFFER_CLASSES_PER_MONTH ||
-        offer.origin !== "anúncio80") {
+        offer.origin !== OFFER.origin ||
+        (OFFER.campaignAlias && offer.campaign_alias !== OFFER.campaignAlias)) {
       throw new Error(offer.error || "Não foi possível validar a oferta de matrícula.");
     }
   }
@@ -161,7 +181,7 @@
     if (profile.archived === true) return false;
     const client = window.Auth.getClient();
     const origin = await client.rpc("get_my_student_acquisition");
-    if (origin.error || !origin.data || origin.data.source !== "anúncio80") return false;
+    if (origin.error || !origin.data || origin.data.source !== OFFER.origin) return false;
 
     const pending = await client.rpc("get_my_pending_tuitions");
     if (pending.error || !Array.isArray(pending.data)) return false;
@@ -194,7 +214,10 @@
     const profile = await window.Auth.ensureProfileForUser(session.user);
     if (!profile) throw new Error("Não foi possível localizar seu cadastro.");
     const policy = await loadPaymentPolicy();
-    manualFirstPayment = policy.enabled_for_new_enrollments;
+    if (OFFER.requiresManualFirstPayment && !policy.enabled_for_new_enrollments) {
+      throw new Error("Esta oferta está temporariamente indisponível para matrícula.");
+    }
+    manualFirstPayment = OFFER.requiresManualFirstPayment || policy.enabled_for_new_enrollments;
     document.getElementById("paymentTerms").textContent = manualFirstPayment
       ? "O professor enviará pelo WhatsApp a chave Pix para a primeira mensalidade. As próximas mensalidades vencem no mesmo dia dos meses seguintes; em meses mais curtos, no último dia."
       : "O primeiro pagamento é feito via Pix pelo Mercado Pago. As próximas mensalidades vencem no mesmo dia dos meses seguintes; em meses mais curtos, no último dia.";
@@ -271,6 +294,9 @@
       const values = validateForm();
       await completeEnrollment(values);
       const policy = await loadPaymentPolicy();
+      if (OFFER.requiresManualFirstPayment && !policy.applies) {
+        throw new Error("Não foi possível confirmar a orientação de pagamento. Consulte o professor.");
+      }
       setStatus("Cadastro concluído.", "success");
       window.location.replace(policy.applies ? "/matricula-concluida/" : PAYMENT_PATH);
     } catch (error) {
