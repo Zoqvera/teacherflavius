@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate link placements, conversion CTAs and SEO isolation
         run: python3 -m unittest discover -s tests -p 'test_methodology_funnel_ctas.py'
       - name: Validate responsive CTA stylesheet exists
