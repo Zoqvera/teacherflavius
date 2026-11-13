@@ -159,7 +159,7 @@ test('all presentation audio buttons match the green conversation theme', () => 
   assert.match(activeStyle, /background:\s*#16a34a;/);
   assert.match(lessonCss, /\.lesson-audio-button:focus-visible\s*\{\s*outline:\s*2px solid #86efac;/);
 
-  assert.match(lessonHtml, /study_lesson_page\.css\?v=20261112-presentation-green-1/);
+  assert.match(lessonHtml, /study_lesson_page\.css\?v=20261113-writing-language-red-1/);
   assert.match(lessonHtml, /class="lesson-audio-button" id="lessonAudioButton"/);
   assert.match(lessonHtml, /class="lesson-audio-speed" id="lessonAudioSpeed"/);
   assert.match(lessonJs, /setupExampleAudio\(page\);/);
