@@ -64,10 +64,9 @@ class StudyLessonPagesContractTests(unittest.TestCase):
         self.assertIn("study_lesson_service.js?v=20261022-apresentacoes-1", lesson)
         self.assertIn('src="/licao.js?v=', lesson)
 
-    def test_lesson_page_contains_required_support_cards(self) -> None:
+    def test_lesson_page_keeps_pronunciation_support_without_external_translator(self) -> None:
         lesson = self.read("licao/index.html")
-        self.assertIn("TRADUTOR", lesson)
-        self.assertIn("https://translate.google.com/", lesson)
+        self.assertNotIn("https://translate.google.com/", lesson)
         self.assertIn("APRENDA A PRONUNCIAR", lesson)
         self.assertIn("https://www.quickpronounce.site/", lesson)
 
