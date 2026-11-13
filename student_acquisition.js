@@ -7,16 +7,19 @@
     { value: "chatgpt", label: "ChatGPT" },
     { value: "google", label: "Google" },
     { value: "referral", label: "Indicação de amigo ou familiar" },
-    { value: "facebook", label: "Facebook" },
     { value: "getninjas", label: "GetNinjas" },
     { value: "other", label: "Outras fontes" },
     { value: "unknown", label: "Não me lembro" }
   ]);
   const LABELS = Object.freeze(Object.fromEntries(SOURCES.map(item => [item.value, item.label])));
 
+  function normalizeLegacySource(source) {
+    return source === "facebook" ? "instagram" : source;
+  }
+
   function label(source, detail) {
     if (source === "other" && detail) return "Outro: " + detail;
-    return LABELS[source] || "Não informado";
+    return LABELS[normalizeLegacySource(source)] || "Não informado";
   }
 
   function setup(selectId, detailId, initialSource, initialDetail) {
@@ -25,7 +28,8 @@
     if (!select || !detail) return;
     select.replaceChildren(new Option("Selecione uma opção", ""));
     SOURCES.forEach(item => select.add(new Option(item.label, item.value)));
-    select.value = LABELS[initialSource] ? initialSource : "";
+    const normalizedSource = normalizeLegacySource(initialSource);
+    select.value = LABELS[normalizedSource] ? normalizedSource : "";
     detail.value = initialDetail || "";
     const parent = detail.closest("[data-acquisition-detail]");
     function sync() {

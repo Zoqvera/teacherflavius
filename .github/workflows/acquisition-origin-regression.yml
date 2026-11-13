@@ -1,0 +1,53 @@
+name: Acquisition origin regression
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "student_acquisition.js"
+      - "supabase/migrations/**"
+      - "tests/acquisition_campaign_origin_contract.test.js"
+      - "tests/student_acquisition_*.test.js"
+      - "tests/matricula50_contract.test.js"
+      - "editar_aluno.html"
+      - "area_do_estudante.html"
+      - "aulas-experimentais/index.html"
+      - "reservas-de-vagas/index.html"
+      - "perfil_dos_alunos.html"
+      - "complete-cadastro.html"
+      - ".github/workflows/acquisition-origin-regression.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "student_acquisition.js"
+      - "supabase/migrations/**"
+      - "tests/acquisition_campaign_origin_contract.test.js"
+      - ".github/workflows/acquisition-origin-regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  origin-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Verify acquisition origin contracts
+        run: |
+          node --test \
+            tests/acquisition_campaign_origin_contract.test.js \
+            tests/student_acquisition_contract.test.js \
+            tests/student_acquisition_anuncio80.test.js \
+            tests/student_acquisition_prompt.test.js \
+            tests/matricula50_contract.test.js

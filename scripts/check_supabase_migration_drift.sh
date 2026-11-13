@@ -726,6 +726,29 @@ VERIFIED_MIGRATION_ALIASES
     fi
   fi
 
+  # The immutable matrícula50 SQL differs in comments, case and equivalent
+  # search_path syntax. Accept only these two exact digests, and only when
+  # the independently checked deployed functions and permissions are correct.
+  local expected_matricula50_line matricula50_attested
+  printf -v expected_matricula50_line '%s\t%s\t%s\t%s\t%s' \
+    '20261113113321' 'remove_matricula50_automatic_campaign_attribution' \
+    'remove_matricula50_automatic_campaign_attribution' \
+    '50b5bc4e035b9833951d80e82bccd4426049f08e79fe5552b659b9cb7ac17bfb' \
+    '803efe11d73499f2dd1e8d6262bb4ae557d1ec36824451bfefbc0e4ed685e688'
+  if grep -Fqx "${expected_matricula50_line}" "${mismatch_file}"; then
+    matricula50_attested="$(psql "${SUPABASE_DB_URL}" -AtX -v ON_ERROR_STOP=1 \
+      --file "${ROOT_DIR}/scripts/sql/matricula50_origin_catalog_attestation.sql")" || exit 1
+    if [[ "${matricula50_attested}" == 't' ]]; then
+      grep -Fvx "${expected_matricula50_line}" "${mismatch_file}" \
+        > "${TEMP_DIR}/matricula50_identity_remainder" || true
+      mv "${TEMP_DIR}/matricula50_identity_remainder" "${mismatch_file}"
+      echo '::notice::Pinned matrícula R$50 migration variants and live origin/ACL catalog verified.'
+    else
+      echo '::error::Matrícula R$50 origin catalog attestation failed.'
+      exit 1
+    fi
+  fi
+
   if [[ -s "${remote_only_file}" ]]; then
     echo "::error::Production contains migration versions that are missing from supabase/migrations:"
     sed 's/^/  - /' "${remote_only_file}"
