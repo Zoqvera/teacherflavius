@@ -88,7 +88,7 @@ async function loadBirthdayAlert(students, isAdmin, pathname) {
   const client = {
     rpc: async function (name) {
       assert.equal(name, "is_teacher_admin");
-      return { data: isAdmin, error: null };
+      return { data: isAdmin !== false, error: null };
     },
     from: function (table) {
       assert.equal(table, "profiles");
