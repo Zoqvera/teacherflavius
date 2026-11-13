@@ -13,6 +13,7 @@ const STRICT_EVENT_HANDLER_PAGES = Object.freeze([
   "complete-cadastro.html",
   "professor.html",
   "matricula80/index.html",
+  "matricula50/index.html",
   "pagamento/index.html",
   "area_do_estudante.html",
   "mensalidades.html",
@@ -47,7 +48,8 @@ function assertEnforcedMeta(relativePath, expectedDirectives) {
   const meta = metaTags[0];
   assert.ok(meta.index > head, `${relativePath}: CSP must be inside the head`);
   assert.ok(firstScript < 0 || meta.index < firstScript, `${relativePath}: CSP must precede scripts`);
-  if (relativePath === "matricula80/index.html") {
+  if (relativePath === "matricula80/index.html" ||
+      relativePath === "matricula50/index.html") {
     assert.ok(
       meta[1].startsWith(expectedDirectives + "; script-src 'self' "),
       "The enrollment pilot must enforce a restrictive script-src policy"

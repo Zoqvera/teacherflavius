@@ -291,7 +291,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           if (destination === "/complete-cadastro/" ||
               destination.startsWith("/complete-cadastro/?") ||
               destination === "/matricula80/" ||
-              destination.startsWith("/matricula80/?")) {
+              destination.startsWith("/matricula80/?") ||
+              destination === "/matricula50/" ||
+              destination.startsWith("/matricula50/?")) {
             window.location.replace(destination);
           } else {
             window.location.replace("/complete-cadastro/?next=" + encodeURIComponent(destination));

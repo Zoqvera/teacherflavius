@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; script-src-attr 'none'; script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://accounts.google.com https://apis.google.com https://www.gstatic.com https://bzrcdn.openai.com https://static.cloudflareinsights.com https://connect.facebook.net 'sha256-5YTBxX73vkpah363BIOPaJluFZW7EJtvbQZ8AaZd0X8=' 'sha256-JgWc9aFzQy2IJxEtEKVGaQT0AIhFH5pEcFlleCUait4='">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#02102B">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Matrícula em turma de inglês por R$ 50 | Teacher Flávio</title>
+  <meta name="description" content="Matrícula para aulas de inglês em turmas de até cinco alunos. Mensalidade de R$ 50.">
+  <link rel="canonical" href="https://teacherflavius.com/matricula50/">
+  <meta property="og:title" content="Matrícula em turma de inglês | Teacher Flávio">
+  <meta property="og:description" content="Aulas em turma de até cinco alunos por R$ 50 mensais.">
+  <meta property="og:url" content="https://teacherflavius.com/matricula50/">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/matricula80/style.css?v=20261109-1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="/supabase_config.js?v=20260429-9"></script>
+  <script src="/module_loader.js?v=20260902-2"></script>
+  <script src="/auth.js?v=20261109-matricula80-1"></script>
+  <script src="/student_profile_optional.js?v=20261110-profile-permissions-1"></script>
+  <script src="/matricula80/app.js?v=20261113-shared-promotions-1" defer></script>
+</head>
+<body>
+  <main class="enrollment-shell">
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="Página inicial do Teacher Flávio">TEACHER FLÁVIO</a>
+      <span class="site-header__label">MATRÍCULA</span>
+    </header>
+
+    <section class="enrollment-card" aria-labelledby="pageTitle">
+      <div class="offer-label">AULAS DE INGLÊS EM GRUPO</div>
+      <h1 id="pageTitle">Comece a aprender inglês</h1>
+      <p class="introduction">Turmas de até cinco alunos, com quatro aulas por mês.</p>
+      <div class="price-block">
+        <strong>R$ 50<span>,00</span></strong>
+        <span>por mês</span>
+      </div>
+      <div class="payment-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>
+        <p id="paymentTerms">O professor enviará pelo WhatsApp a chave Pix para o pagamento da primeira mensalidade. As próximas mensalidades vencem no mesmo dia dos meses seguintes; em meses mais curtos, no último dia.</p>
+      </div>
+
+      <p id="pageStatus" role="status" aria-live="polite">Verificando sua conta...</p>
+
+      <section id="googleStep" hidden aria-labelledby="googleTitle">
+        <h2 id="googleTitle">1. Entre com sua conta Google</h2>
+        <p>Não é necessário criar uma senha.</p>
+        <a class="primary-button" id="googleSignIn" href="/login/?next=%2Fmatricula50%2F">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.2a4.5 4.5 0 0 1-1.9 2.9v2.5h3.1c1.9-1.8 2.9-4.3 2.9-7.2Z" fill="#4285F4"/><path d="M12 21.6c2.6 0 4.8-.9 6.4-2.2l-3.1-2.5a5.7 5.7 0 0 1-8.5-3H3.5v2.6A9.7 9.7 0 0 0 12 21.6Z" fill="#34A853"/><path d="M6.8 13.9a5.9 5.9 0 0 1 0-3.8V7.5H3.5a9.7 9.7 0 0 0 0 9l3.3-2.6Z" fill="#FBBC05"/><path d="M12 6.4c1.4 0 2.7.5 3.7 1.4L18.5 5A9.2 9.2 0 0 0 12 2.4a9.7 9.7 0 0 0-8.5 5.1l3.3 2.6c.8-2.2 2.8-3.7 5.2-3.7Z" fill="#EA4335"/></svg>
+          CONTINUAR COM GOOGLE
+        </a>
+      </section>
+
+      <section id="detailsStep" hidden aria-labelledby="detailsTitle">
+        <h2 id="detailsTitle">2. Confirme seus dados</h2>
+        <p class="signed-in">Conta Google: <strong id="signedInEmail"></strong></p>
+        <form id="enrollmentForm">
+          <label for="fullName">Nome completo
+            <input id="fullName" name="fullName" autocomplete="name" maxlength="160" required>
+          </label>
+          <label for="cpf">CPF
+            <input id="cpf" name="cpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" required>
+          </label>
+          <label for="birthDate">Data de nascimento
+            <input id="birthDate" name="birthDate" type="date" autocomplete="bday" required>
+          </label>
+          <label for="whatsapp">Número de WhatsApp com DDD
+            <input id="whatsapp" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="(34) 99999-9999" required>
+          </label>
+          <button class="primary-button" id="submitEnrollment" type="submit">CONCLUIR MATRÍCULA</button>
+        </form>
+      </section>
+
+      <section id="existingEnrollmentStep" hidden aria-labelledby="existingTitle">
+        <h2 id="existingTitle">Sua conta já possui matrícula</h2>
+        <p>Este link é exclusivo para novos alunos e não altera planos já contratados.</p>
+        <a class="primary-button" href="/area-do-estudante/">ACESSAR MINHA CONTA</a>
+      </section>
+
+      <section id="resumePaymentStep" hidden aria-labelledby="resumeTitle">
+        <h2 id="resumeTitle">Consulte as instruções de pagamento</h2>
+        <p>Seu cadastro já foi enviado. O professor informará a chave Pix pelo WhatsApp para o pagamento da primeira mensalidade.</p>
+        <a class="primary-button" href="/matricula-concluida/">VER INSTRUÇÕES DE PAGAMENTO</a>
+      </section>
+
+      <p class="legal-note">Seus dados são usados para matrícula, cobrança e comunicação sobre as aulas. Consulte a <a href="/privacidade/">Política de Privacidade</a> e os <a href="/termos/">Termos de Uso</a>.</p>
+    </section>
+  </main>
+  <script src="/site_privacy_analytics.js?v=20260902-1"></script>
+  <script src="/site_asset_loader.js?v=20260902-1"></script>
+  <script src="/site_runtime_config.js?v=20260903-1"></script>
+  <script src="/site_page_runtime.js?v=20260903-1"></script>
+</body>
+</html>
