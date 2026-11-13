@@ -177,16 +177,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           return;
         }
 
-        const upcoming = students
+        const today = saoPauloTodayParts();
+        const orderedBirthdays = students
           .map(function(student){
-            return { student: student, next: nextBirthday(student.date_of_birth, saoPauloTodayParts()) };
+            return { student: student, next: nextBirthday(student.date_of_birth, today) };
           })
           .filter(function(item){ return !!item.next; })
           .sort(function(a, b){
             if (a.next.daysUntil !== b.next.daysUntil) return a.next.daysUntil - b.next.daysUntil;
             return String(a.student.name || a.student.email || "").localeCompare(String(b.student.name || b.student.email || ""), "pt-BR");
-          })
-          .slice(0, 5);
+          });
+
+        // Aniversariantes de hoje não devem ocupar as vagas dos próximos aniversários.
+        const birthdaysToday = orderedBirthdays.filter(function(item){ return item.next.daysUntil === 0; });
+        const nextBirthdays = orderedBirthdays.filter(function(item){ return item.next.daysUntil > 0; }).slice(0, 5);
+        const upcoming = birthdaysToday.concat(nextBirthdays);
 
         if (!upcoming.length) {
           status.textContent = "Nenhuma data de aniversário válida encontrada.";
@@ -220,7 +225,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           list.appendChild(li);
         });
 
-        status.textContent = "Os 5 aniversários mais próximos entre os alunos ativos.";
+        status.textContent = "Aniversariantes hoje: " + birthdaysToday.length +
+          " · Próximos aniversários: " + nextBirthdays.length + ".";
         list.hidden = false;
       }
 
