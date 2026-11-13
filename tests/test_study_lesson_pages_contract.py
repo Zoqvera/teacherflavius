@@ -67,6 +67,9 @@ class StudyLessonPagesContractTests(unittest.TestCase):
     def test_lesson_page_keeps_pronunciation_support_without_external_translator(self) -> None:
         lesson = self.read("licao/index.html")
         self.assertNotIn("https://translate.google.com/", lesson)
+        self.assertIn('id="translationAssistant" hidden', lesson)
+        self.assertLess(lesson.index('id="translationAssistant"'), lesson.index('https://www.quickpronounce.site/'))
+        self.assertLess(lesson.index('id="translationAssistant"'), lesson.index('id="lessonPresentationSection"'))
         self.assertIn("APRENDA A PRONUNCIAR", lesson)
         self.assertIn("https://www.quickpronounce.site/", lesson)
 

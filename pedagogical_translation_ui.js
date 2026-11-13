@@ -3,6 +3,7 @@
 
   function mount(context) {
     const get = function (id) { return document.getElementById(id); };
+    const assistant = get("translationAssistant");
     const source = get("translationSource");
     const level = get("translationLevel");
     const button = get("translationButton");
@@ -13,7 +14,7 @@
     const comparisons = get("translationComparisons");
     const practice = get("translationPractice");
     const copy = get("translationCopy");
-    if (!source || !level || !button || !status || !result || !translation || !expressions || !comparisons || !practice || !copy) return;
+    if (!assistant || !source || !level || !button || !status || !result || !translation || !expressions || !comparisons || !practice || !copy) return;
     let requestVersion = 0;
     let busy = false;
 
@@ -83,6 +84,7 @@
       }
     }
 
+    assistant.hidden = false;
     source.addEventListener("input", clearResult);
     level.addEventListener("change", clearResult);
     button.addEventListener("click", function () { void translate(); });

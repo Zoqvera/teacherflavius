@@ -13,7 +13,7 @@ function element() {
     fire(event) { return this.listeners[event](); } };
 }
 function fixture(invoke) {
-  const ids = ["translationSource", "translationLevel", "translationButton", "translationStatus", "translationResult", "translationText", "translationExpressions", "translationComparisons", "translationPractice", "translationCopy"];
+  const ids = ["translationAssistant", "translationSource", "translationLevel", "translationButton", "translationStatus", "translationResult", "translationText", "translationExpressions", "translationComparisons", "translationPractice", "translationCopy"];
   const elements = Object.fromEntries(ids.map(id => [id, element()]));
   const window = {};
   const document = { getElementById(id) { return elements[id]; }, createElement() { return element(); } };
@@ -28,6 +28,7 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 test("traduz e oferece prática e cópia sem alterar apresentação", async () => {
   let sent;
   const { elements: e, copied } = fixture(async (_name, options) => { sent = options.body; return { data: result }; });
+  assert.equal(e.translationAssistant.hidden, false);
   e.translationSource.value = "Eu estudo inglês.";
   e.translationLevel.value = "A1";
   e.translationButton.fire("click");
