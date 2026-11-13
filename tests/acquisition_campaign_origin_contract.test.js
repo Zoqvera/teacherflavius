@@ -139,3 +139,17 @@ test("the R$50 enrollment offer never assigns marketing attribution automaticall
     /private\.save_student_acquisition|marketing_campaign_confirmed_students|anuncio50/
   );
 });
+
+test("historical R$50 migration mismatch requires pinned hashes and a live catalog attestation", () => {
+  const checker = read("scripts/check_supabase_migration_drift.sh");
+  const attestation = read("scripts/sql/matricula50_origin_catalog_attestation.sql");
+
+  assert.match(checker, /20261113113321/);
+  assert.match(checker, /50b5bc4e035b9833951d80e82bccd4426049f08e79fe5552b659b9cb7ac17bfb/);
+  assert.match(checker, /803efe11d73499f2dd1e8d6262bb4ae557d1ec36824451bfefbc0e4ed685e688/);
+  assert.match(checker, /matricula50_origin_catalog_attestation\.sql/);
+  assert.match(attestation, /authorize_my_enrollment_link/);
+  assert.match(attestation, /strpos\(auth_ddl, 'marketing_campaign_confirmed_students'\) = 0/);
+  assert.match(attestation, /NOT has_function_privilege\('anon'/);
+  assert.match(attestation, /has_function_privilege\('authenticated'/);
+});
