@@ -35,7 +35,7 @@ test("Google sign-in preserves the R$50 enrollment destination", () => {
 });
 
 test("R$50 promotional offer is server-authenticated and linked to Instagram", () => {
-  const sql = read("supabase/migrations/20261113111242_matricula50_manual_pix_offer_and_campaign.sql");
+  const sql = read("supabase/migrations/20261113111331_matricula50_manual_pix_offer_and_campaign.sql");
   assert.match(sql, /'matricula50'[\s\S]*?50\.00, 4, 'group', true/);
   assert.match(sql, /authorize_my_enrollment_link\(promotion\.token\)/);
   assert.match(sql, /'instagram'/);
