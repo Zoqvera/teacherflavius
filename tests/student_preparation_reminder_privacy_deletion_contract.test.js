@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, "..");
 const migration = fs.readFileSync(
   path.join(
     root,
-    "supabase/migrations/20261113043000_cascade_student_preparation_reminders_on_privacy_deletion.sql",
+    "supabase/migrations/20261113043140_cascade_student_preparation_reminders_on_privacy_deletion.sql",
   ),
   "utf8",
 );
