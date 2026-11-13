@@ -34,15 +34,19 @@ test("Google sign-in preserves the R$50 enrollment destination", () => {
   assert.match(login, /destination\.startsWith\("\/matricula50\/\?"\)/);
 });
 
-test("R$50 promotional offer is server-authenticated and linked to Instagram", () => {
-  const sql = read("supabase/migrations/20261113111331_matricula50_manual_pix_offer_and_campaign.sql");
-  assert.match(sql, /'matricula50'[\s\S]*?50\.00, 4, 'group', true/);
-  assert.match(sql, /authorize_my_enrollment_link\(promotion\.token\)/);
-  assert.match(sql, /'instagram'/);
-  assert.match(sql, /marketing_campaign_confirmed_students/);
-  assert.match(sql, /'anuncio50'/);
-  assert.match(sql, /grant execute on function public\.authorize_my_matricula50\(\) to authenticated/);
-  assert.match(sql, /settings\.monthly_fee = 50\.00/);
+test("R$50 promotion authorizes the offered rate without assigning origin or campaign", () => {
+  const sql = read("supabase/migrations/20261113113321_remove_matricula50_automatic_campaign_attribution.sql");
+  const authorize = sql.split("-- The first monthly tuition remains gated")[0];
+  const gate = sql.split("-- The first monthly tuition remains gated")[1];
+  assert.match(authorize, /authorize_my_matricula50/);
+  assert.match(authorize, /authorize_my_enrollment_link\(promotion\.token\)/);
+  assert.match(authorize, /promotion\.monthly_fee/);
+  assert.match(authorize, /promotion\.classes_per_month/);
+  assert.doesNotMatch(authorize, /save_student_acquisition|marketing_campaign_confirmed_students|instagram|anuncio50|campaign_alias/);
+  assert.match(gate, /invite\.seed_key = 'matricula50'/);
+  assert.match(gate, /access\.monthly_fee = 50\.00/);
+  assert.match(gate, /acquisition\.declared_source = 'anúncio80'/);
+  assert.doesNotMatch(gate, /campaign_alias|anuncio50/);
 });
 
 test("R$50 enrollment registers a group student and displays manual Pix instructions, never payment checkout", async () => {
@@ -70,7 +74,7 @@ test("R$50 enrollment registers a group student and displays manual Pix instruct
       if (name === "authorize_my_matricula50") {
         return { data: {
           ok: true, class_mode: "group", monthly_fee: 50,
-          classes_per_month: 4, origin: "instagram", campaign_alias: "anuncio50"
+          classes_per_month: 4
         }, error: null };
       }
       if (name === "get_my_enrollment_checkout_policy") {
@@ -146,5 +150,6 @@ test("R$50 enrollment registers a group student and displays manual Pix instruct
   assert.ok(calls.includes("authorize_my_matricula50"));
   assert.ok(calls.includes("set_my_enrollment_billing_terms"));
   assert.ok(!calls.includes("authorize_my_matricula80"));
+  assert.ok(!calls.includes("get_my_student_acquisition"));
   assert.match(nodes.paymentTerms.textContent, /professor enviará pelo WhatsApp a chave Pix/);
 });

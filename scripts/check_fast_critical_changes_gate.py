@@ -40,6 +40,7 @@ AUTH_PATTERNS = (
     "student_data_utils.js", "perfil/**", "acessos_dos_alunos.*",
     "tests/auth*.test.js", "tests/admin_step_up_security_contract.test.js",
     "tests/student_enrollment_service.test.js",
+    "tests/matricula50_contract.test.js",
     "tests/account_deletion_security_contracts.test.js",
     ".github/workflows/authentication-contracts.yml",
 )

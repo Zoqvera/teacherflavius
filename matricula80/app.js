@@ -7,8 +7,7 @@
     authorizeRpc: "authorize_my_matricula50",
     monthlyFee: 50,
     classesPerMonth: 4,
-    origin: "instagram",
-    campaignAlias: "anuncio50",
+    origin: null,
     paymentPath: "/matricula-concluida/",
     requiresManualFirstPayment: true
   } : {
@@ -16,7 +15,6 @@
     monthlyFee: 80,
     classesPerMonth: 4,
     origin: "anúncio80",
-    campaignAlias: null,
     paymentPath: "/pagamento/?matricula80=1",
     requiresManualFirstPayment: false
   });
@@ -162,8 +160,7 @@
         offer.class_mode !== "group" ||
         Number(offer.monthly_fee) !== OFFER_MONTHLY_FEE ||
         Number(offer.classes_per_month) !== OFFER_CLASSES_PER_MONTH ||
-        offer.origin !== OFFER.origin ||
-        (OFFER.campaignAlias && offer.campaign_alias !== OFFER.campaignAlias)) {
+        (OFFER.origin !== null && offer.origin !== OFFER.origin)) {
       throw new Error(offer.error || "Não foi possível validar a oferta de matrícula.");
     }
   }
@@ -178,7 +175,7 @@
   }
 
   async function canResumeFirstPayment(profile) {
-    if (profile.archived === true) return false;
+    if (profile.archived === true || OFFER.origin === null) return false;
     const client = window.Auth.getClient();
     const origin = await client.rpc("get_my_student_acquisition");
     if (origin.error || !origin.data || origin.data.source !== OFFER.origin) return false;
