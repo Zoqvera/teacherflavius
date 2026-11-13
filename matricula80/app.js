@@ -2,7 +2,7 @@
   "use strict";
 
   // Server-side invitations remain authoritative; these values only verify RPC responses.
-  const isFiftyOffer = /^\/matricula50(?:\/|\/index\.html)?$/.test(window.location.pathname);
+  const isFiftyOffer = window.location.pathname === "/matricula50/";
   const OFFER = Object.freeze(isFiftyOffer ? {
     authorizeRpc: "authorize_my_matricula50",
     monthlyFee: 50,
