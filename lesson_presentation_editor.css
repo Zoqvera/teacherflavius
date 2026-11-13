@@ -103,7 +103,8 @@
 }
 
 @media print {
-  #lessonPresentationSection {
+  #lessonPresentationSection,
+  #translationAssistant {
     display: none !important;
   }
 }
