@@ -153,3 +153,61 @@ test("historical R$50 migration mismatch requires pinned hashes and a live catal
   assert.match(attestation, /NOT has_function_privilege\('anon'/);
   assert.match(attestation, /has_function_privilege\('authenticated'/);
 });
+
+
+const reconciliation = read(
+  "supabase/migrations/20261113155607_reconcile_confirmed_meta_student_origin_fallback.sql"
+);
+
+test("explicit Meta attribution only fills missing sources when declaration agrees with Instagram", () => {
+  assert.match(reconciliation, /CREATE OR REPLACE FUNCTION public\.sync_student_origin_attribution/);
+  const tagPosition = reconciliation.indexOf("from public.student_tags st");
+  const leadPosition = reconciliation.indexOf("from public.marketing_commercial_leads ml");
+  const metaPosition = reconciliation.indexOf("from private.marketing_campaign_confirmed_students link");
+  assert.ok(tagPosition >= 0 && tagPosition < leadPosition && leadPosition < metaPosition);
+  assert.match(reconciliation, /if v_source_record_id is null then\s+select link\.student_id/);
+  assert.match(reconciliation, /campaign\.meta_campaign_id is not null\s+and acquisition\.declared_source = 'instagram'/);
+  assert.match(reconciliation, /v_recorded_via := 'meta_campaign'/);
+  assert.match(reconciliation, /v_source := 'Instagram'/);
+});
+
+test("reconciliation backfill never replaces a student's conflicting source or tag", () => {
+  const backfill = reconciliation.split("DO $backfill$")[1]?.split("$backfill$;")[0];
+  assert.ok(backfill, "backfill transaction must be present");
+  assert.match(backfill, /acquisition\.declared_source = 'instagram'/);
+  assert.match(backfill, /NOT EXISTS \(\s+SELECT 1 FROM public\.student_origin_attributions canonical/);
+  assert.match(backfill, /NOT EXISTS \(\s+SELECT 1 FROM public\.student_tags tag/);
+  assert.match(backfill, /NOT EXISTS \(\s+SELECT 1 FROM public\.marketing_commercial_leads lead/);
+  assert.match(backfill, /PERFORM public\.sync_student_origin_attribution/);
+  assert.doesNotMatch(backfill, /UPDATE\s+private\.student_acquisition|UPDATE\s+private\.marketing_campaign_confirmed_students/i);
+});
+
+test("canonical attribution appends a historical row and retains legacy tag and lead sources", () => {
+  assert.match(reconciliation, /recorded_via IN \('student_tag', 'marketing_lead', 'meta_campaign'\)/);
+  assert.match(reconciliation, /update public\.student_origin_attributions\s+set is_current = false/i);
+  assert.match(reconciliation, /insert into public\.student_origin_attributions \(/i);
+  assert.match(reconciliation, /v_current\.recorded_via = v_recorded_via/);
+  assert.match(reconciliation, /v_current\.source_record_id = v_source_record_id/);
+  assert.match(reconciliation, /v_current\.source_label = v_source_label/);
+});
+
+test("new, changed and deleted campaign links keep the fallback synchronized", () => {
+  assert.match(reconciliation, /CREATE TRIGGER sync_origin_after_meta_campaign_link/);
+  assert.match(reconciliation, /AFTER INSERT OR UPDATE OF campaign_alias OR DELETE/);
+  assert.match(reconciliation, /PERFORM public\.sync_student_origin_attribution\(OLD\.student_id\)/);
+  assert.match(reconciliation, /PERFORM public\.sync_student_origin_attribution\(NEW\.student_id\)/);
+  assert.match(reconciliation, /CREATE TRIGGER sync_origin_after_acquisition_change/);
+  assert.match(reconciliation, /AFTER INSERT OR UPDATE OF declared_source/);
+});
+
+test("inconsistency review queue is private and preserves source conflicts", () => {
+  assert.match(reconciliation, /CREATE OR REPLACE VIEW private\.marketing_campaign_origin_reconciliation/);
+  assert.match(reconciliation, /WITH \(security_invoker = true\)/);
+  assert.match(reconciliation, /THEN 'canonical_conflict'/);
+  assert.match(reconciliation, /THEN 'declared_conflict'/);
+  assert.match(reconciliation, /THEN 'missing_declared'/);
+  assert.match(reconciliation, /THEN 'missing_canonical'/);
+  assert.match(reconciliation, /GRANT SELECT ON private\.marketing_campaign_origin_reconciliation TO service_role/);
+  assert.match(reconciliation, /REVOKE ALL ON private\.marketing_campaign_origin_reconciliation FROM PUBLIC, anon, authenticated/);
+  assert.doesNotMatch(reconciliation, /CREATE OR REPLACE VIEW public\.marketing_campaign_origin_reconciliation/);
+});
