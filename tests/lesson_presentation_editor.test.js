@@ -102,6 +102,18 @@ test("presentation pages explain that students must write their text in English"
   assert.match(pageSource, /placeholder="Digite ou cole sua apresentação em inglês aqui\."/);
 });
 
+test("legacy presentations show the English writing reminder above the embedded material", () => {
+  const legacySection = pageSource.split(
+    '<section id="legacyLessonMaterial" class="lesson-content-card" hidden>', 2
+  )[1].split("</section>", 1)[0];
+
+  assert.match(legacySection, /AGORA É A SUA VEZ/);
+  assert.match(legacySection, /Seu texto deve ser escrito em inglês\./);
+  assert.ok(legacySection.indexOf("Seu texto deve ser escrito em inglês.") < legacySection.indexOf("<iframe"));
+  assert.doesNotMatch(legacySection, /dynamic-lesson-section/);
+  assert.match(lessonSource, /function renderLegacyLesson\(lessonNumber\) \{[\s\S]*?showDynamicSections\(false\)/);
+});
+
 test("navigation resolves one identity for linked and direct numbered lessons", () => {
   const instance = editor();
   assert.equal(instance.lessonIdentity(12, PAGE).key, "lesson:12");
