@@ -64,6 +64,7 @@ AUTH_TESTS = (
     "tests/admin_step_up_security_contract.test.js",
     "tests/student_enrollment_service.test.js",
     "tests/account_deletion_security_contracts.test.js",
+    "tests/matricula50_contract.test.js",
 )
 PAYMENT_TESTS = (
     "tests/payment_idempotency.test.js",
