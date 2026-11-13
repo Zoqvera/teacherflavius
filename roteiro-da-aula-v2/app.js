@@ -170,6 +170,7 @@
   async function markParticipation(item, control) {
     const date = document.getElementById("workspaceDate").value;
     if (!SESSION_LIFECYCLE_ENABLED || state.loadedDate !== date) return;
+    const originalLabel = control.textContent;
     control.disabled = true;
     control.textContent = "SALVANDO...";
     try {
@@ -181,17 +182,23 @@
       status(error && error.message
         ? error.message : "Não foi possível registrar a participação.", "error");
       control.disabled = false;
-      control.textContent = "REGISTRAR PARTICIPAÇÃO";
+      control.textContent = originalLabel;
     }
   }
 
-  function participationAction(item) {
+  function participationAction(item, label) {
+    const actionLabel = label || "REGISTRAR PARTICIPAÇÃO";
     if (!SESSION_LIFECYCLE_ENABLED) {
-      return readonlyAction("REGISTRAR PARTICIPAÇÃO");
+      return readonlyAction(actionLabel);
     }
-    const control = button("REGISTRAR PARTICIPAÇÃO", function () {
+    const control = button(actionLabel, function () {
       markParticipation(item, control);
     }, "academic-button workspace-participation-action");
+    if (item.attendance_status === "present" || item.attendance_status === "absent") {
+      control.disabled = true;
+      control.title = item.attendance_status === "present"
+        ? "Presença já registrada." : "Use a correção de frequência para alterar a ausência.";
+    }
     return control;
   }
 
@@ -316,6 +323,7 @@
 
     if (!presentation) {
       card.appendChild(muted("APRESENTAÇÃO NÃO ENVIADA"));
+      card.appendChild(participationAction(item, "REGISTRAR PRESENÇA"));
     } else {
       card.appendChild(node("p", "workspace-presentation-text", presentation.body));
       card.appendChild(muted("Versão " + presentation.revision_number));
