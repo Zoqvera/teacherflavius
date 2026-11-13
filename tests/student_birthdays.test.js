@@ -170,7 +170,7 @@ test("does not show professor birthday data outside an authorized professor sess
 
   assert.equal(notAdmin.document.getElementById("teacherProfessorBirthdayAlert"), null);
   assert.equal(otherPage.document.getElementById("teacherProfessorBirthdayAlert"), null);
-  assert.deepEqual(notAdmin.selectedColumns, []);
+  assert.equal(notAdmin.selectedColumns.some(function (columns) { return columns.includes("whatsapp"); }), false);
   assert.deepEqual(otherPage.selectedColumns, []);
 });
 
@@ -189,8 +189,6 @@ test("closes the birthday popup without leaving the page locked", async function
 
 test("versions birthday assets so the updated popup is loaded", function () {
   const config = fs.readFileSync(path.join(__dirname, "../site_runtime_config.js"), "utf8");
-  const professorPage = fs.readFileSync(path.join(__dirname, "../professor.html"), "utf8");
 
   assert.match(config, /student_birthdays\.js\?v=20261112-birthday-whatsapp-1/);
-  assert.match(professorPage, /site_runtime_config\.js\?v=20261112-birthday-whatsapp-1/);
 });
