@@ -128,6 +128,11 @@
   text-transform: uppercase;
 }
 
+.lesson-writing-language-note {
+  color: #f87171;
+  font-weight: 700;
+}
+
 .lesson-tools {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
