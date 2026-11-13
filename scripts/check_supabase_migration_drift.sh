@@ -742,9 +742,9 @@ VERIFIED_MIGRATION_ALIASES
       grep -Fvx "${expected_matricula50_line}" "${mismatch_file}" \
         > "${TEMP_DIR}/matricula50_identity_remainder" || true
       mv "${TEMP_DIR}/matricula50_identity_remainder" "${mismatch_file}"
-      echo "::notice::Pinned matrícula R$50 migration variants and live origin/ACL catalog verified."
+      echo '::notice::Pinned matrícula R$50 migration variants and live origin/ACL catalog verified.'
     else
-      echo "::error::Matrícula R$50 origin catalog attestation failed."
+      echo '::error::Matrícula R$50 origin catalog attestation failed.'
       exit 1
     fi
   fi
