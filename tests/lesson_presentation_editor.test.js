@@ -11,6 +11,7 @@ const editorSource = fs.readFileSync(path.join(ROOT, "lesson_presentation_editor
 const pageSource = fs.readFileSync(path.join(ROOT, "licao/index.html"), "utf8");
 const lessonSource = fs.readFileSync(path.join(ROOT, "licao.js"), "utf8");
 const cssSource = fs.readFileSync(path.join(ROOT, "lesson_presentation_editor.css"), "utf8");
+const lessonStyles = fs.readFileSync(path.join(ROOT, "study_lesson_page.css"), "utf8");
 const AUTHOR = "11111111-1111-4111-8111-111111111111";
 const PAGE = "44444444-4444-4444-8444-444444444444";
 
@@ -112,6 +113,17 @@ test("legacy presentations show the English writing reminder above the embedded 
   assert.ok(legacySection.indexOf("Seu texto deve ser escrito em inglês.") < legacySection.indexOf("<iframe"));
   assert.doesNotMatch(legacySection, /dynamic-lesson-section/);
   assert.match(lessonSource, /function renderLegacyLesson\(lessonNumber\) \{[\s\S]*?showDynamicSections\(false\)/);
+});
+
+test("English writing reminders are red in dynamic and legacy presentations", () => {
+  const reminders = pageSource.match(
+    /<p class="lesson-rich-text lesson-writing-language-note">Seu texto deve ser escrito em inglês\.<\/p>/g
+  ) || [];
+
+  assert.equal(reminders.length, 2);
+  assert.match(lessonStyles, /\.lesson-writing-language-note\s*\{[^}]*color:\s*#f87171;/);
+  assert.match(pageSource, /study_lesson_page\.css\?v=20261113-writing-language-red-1/);
+  assert.match(lessonStyles, /@media print[\s\S]*\.lesson-page-container \*/);
 });
 
 test("navigation resolves one identity for linked and direct numbered lessons", () => {
