@@ -108,10 +108,11 @@
   }
 }
 
-.translation-assistant { margin: 1.25rem 0; padding: 1rem; border: 1px solid #bbd8c7; border-radius: 12px; background: #f5fbf7; }
+.translation-assistant { margin: 1.25rem 0; padding: 1rem; border: 1px solid #bbd8c7; border-radius: 12px; background: #f5fbf7; color: #183426; color-scheme: light; }
 .translation-assistant > summary { cursor: pointer; color: #145a32; font-weight: 700; }
 .translation-assistant label { display: block; font-weight: 700; margin: 1rem 0 .4rem; }
-.translation-assistant textarea, .translation-assistant select { box-sizing: border-box; width: 100%; padding: .7rem; border: 1px solid #a8b8ac; border-radius: 6px; font: inherit; }
+.translation-assistant textarea, .translation-assistant select { box-sizing: border-box; width: 100%; padding: .7rem; border: 1px solid #829a8a; border-radius: 6px; background: #fff; color: #183426; font: inherit; }
+.translation-assistant textarea::placeholder { color: #52685a; opacity: 1; }
 .translation-assistant button { margin: .75rem 0; padding: .65rem 1rem; border: 0; border-radius: 6px; background: #177044; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 .translation-assistant button:disabled { opacity: .6; cursor: wait; }
 .translation-assistant h3 { margin-top: 1.25rem; }
