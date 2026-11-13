@@ -119,12 +119,14 @@
   async function setupLessonPresentation(studentId, lessonNumber, pageId) {
     const editor = window.LessonPresentationEditor;
     if (!editor || editor.enabled !== true) return;
-    await editor.mount({
+    const context = {
       studentId: studentId,
       lessonNumber: lessonNumber,
       pageId: pageId,
       getClient: function () { return window.Auth.getClient(); }
-    });
+    };
+    const mounted = await editor.mount(context);
+    if (mounted && window.PedagogicalTranslation) window.PedagogicalTranslation.mount(context);
   }
 
   function showDynamicSections(visible) {

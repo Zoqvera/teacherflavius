@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="/study_lesson_page.css?v=20261113-writing-language-red-1">
   <link rel="stylesheet" href="/academic_workflow.css?v=20261004-1">
   <link rel="stylesheet" href="/student_preparation_flow.css?v=20261112-continuacao-1">
-  <link rel="stylesheet" href="/lesson_presentation_editor.css?v=20261017-stage2-1">
+  <link rel="stylesheet" href="/lesson_presentation_editor.css?v=20261113-tradutor-1">
 </head>
 <body class="auth-checking">
   <!-- Google Tag Manager (noscript) -->
@@ -141,6 +141,25 @@
       <section id="lessonPresentationSection" class="lesson-content-card lesson-presentation-card" aria-labelledby="lessonPresentationTitle" hidden>
         <h2 id="lessonPresentationTitle" class="lesson-presentation-title">MINHA APRESENTAÇÃO</h2>
         <p class="lesson-presentation-description">Escreva ou cole, em inglês, o texto que você apresentará na aula. Você poderá editá-lo depois de enviar.</p>
+        <details class="translation-assistant" id="translationAssistant">
+          <summary>ASSISTENTE DE TRADUÇÃO E ESTUDO</summary>
+          <p>Escreva em português para receber uma tradução e atividades para compreendê-la.</p>
+          <p>Ao solicitar a tradução, seu texto será enviado à OpenAI para processamento. Evite incluir dados pessoais sensíveis.</p>
+          <label for="translationLevel">Seu nível de inglês</label>
+          <select id="translationLevel"><option value="A1">A1 — Iniciante</option><option value="A2">A2 — Básico</option><option value="B1">B1 — Intermediário</option><option value="B2">B2 — Intermediário avançado</option></select>
+          <label for="translationSource">Seu texto em português</label>
+          <textarea id="translationSource" rows="6" maxlength="3000" placeholder="Escreva suas ideias em português."></textarea>
+          <button id="translationButton" type="button">TRADUZIR E ESTUDAR</button>
+          <p id="translationStatus" role="status" aria-live="polite"></p>
+          <div id="translationResult" hidden>
+            <h3>Tradução em inglês</h3><p id="translationText" class="translation-output"></p>
+            <button id="translationCopy" type="button">COPIAR TRADUÇÃO</button>
+            <h3>Expressões importantes</h3><ul id="translationExpressions"></ul>
+            <h3>Compare as estruturas</h3><div id="translationComparisons"></div>
+            <h3>Pratique antes de enviar</h3><div id="translationPractice"></div>
+            <p>Leia a tradução, copie e cole no campo abaixo. Você poderá revisá-la antes de enviar.</p>
+          </div>
+        </details>
         <form id="lessonPresentationForm" class="lesson-presentation-form">
           <label for="lessonPresentationBody" class="lesson-presentation-label">TEXTO DA APRESENTAÇÃO</label>
           <textarea id="lessonPresentationBody" class="lesson-presentation-textarea" name="presentation" maxlength="15000" rows="8" aria-describedby="lessonPresentationCount lessonPresentationStatus" placeholder="Digite ou cole sua apresentação em inglês aqui." required></textarea>
@@ -181,8 +200,9 @@
   <script src="/study_lesson_service.js?v=20261022-apresentacoes-1"></script>
   <script src="/academic_workflow_service.js?v=20261022-apresentacoes-1"></script>
   <script src="/student_preparation_flow.js?v=20261016-general-release-1"></script>
+  <script src="/pedagogical_translation_ui.js?v=20261113-1"></script>
   <script src="/lesson_presentation_editor.js?v=20261022-apresentacoes-1"></script>
-  <script src="/licao.js?v=20261112-audio-todas-1"></script>
+  <script src="/licao.js?v=20261113-tradutor-1"></script>
   <script src="/animated_cards.js?v=20260428-2"></script>
   <script src="/site_privacy_analytics.js?v=20260902-1"></script>
   <script src="/site_asset_loader.js?v=20260902-1"></script>

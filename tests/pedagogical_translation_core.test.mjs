@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MAX_SOURCE_CHARACTERS, validateRequest, validateResult } from "../pedagogical_translation/core.mjs";
+import { MAX_SOURCE_CHARACTERS, validateRequest, validateResult } from "../supabase/functions/_shared/pedagogical_translation_core.mjs";
 
 test("valida texto e nível antes de solicitar a tradução", () => {
   assert.deepEqual(validateRequest("  Eu estudo inglês.  ", "A1"), { text: "Eu estudo inglês.", level: "A1" });
