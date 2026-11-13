@@ -91,6 +91,17 @@ test("release uses source control, validates context and rejects browser-side ov
   assert.match(pageSource, /id="lessonPresentationSection"[^>]*hidden>/);
 });
 
+test("presentation pages explain that students must write their text in English", () => {
+  const exerciseSection = pageSource.split(
+    '<section class="lesson-section lesson-exercise-section dynamic-lesson-section">', 2
+  )[1].split("</section>", 1)[0];
+
+  assert.match(exerciseSection, /AGORA É A SUA VEZ/);
+  assert.match(exerciseSection, /Seu texto deve ser escrito em inglês\./);
+  assert.match(pageSource, /Escreva ou cole, em inglês, o texto que você apresentará na aula\./);
+  assert.match(pageSource, /placeholder="Digite ou cole sua apresentação em inglês aqui\."/);
+});
+
 test("navigation resolves one identity for linked and direct numbered lessons", () => {
   const instance = editor();
   assert.equal(instance.lessonIdentity(12, PAGE).key, "lesson:12");
