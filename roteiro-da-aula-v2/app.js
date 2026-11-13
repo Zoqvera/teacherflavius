@@ -29,6 +29,8 @@
     groups: [],
     catalog: new Map(),
     presentations: new Map(),
+    contactNumbers: new Map(),
+    contactsAvailable: true,
     view: "home",
     selectedClass: null,
     requestId: 0
@@ -228,6 +230,7 @@
   function closedStudent(item) {
     const card = node("article", "academic-student-card workspace-student");
     card.appendChild(studentHeading(item));
+    if (state.view === "presentations") card.appendChild(studentWhatsappAction(item));
     card.appendChild(muted("Registro preservado no encerramento da aula."));
     if (window.TeacherPresentationCancellation.canCancel(item)) {
       card.appendChild(presentationCancellationAction(item));
@@ -275,6 +278,13 @@
     return heading;
   }
 
+  function studentWhatsappAction(item) {
+    const id = String(item.student_id || "").toLowerCase();
+    return window.TeacherStudentWhatsapp.createButton(
+      item.student_name, state.contactNumbers.get(id), state.contactsAvailable
+    );
+  }
+
   function presentationFor(item) {
     const key = window.TeacherLessonPresentations.rosterKey(
       item.student_id, item.lesson_number
@@ -285,6 +295,7 @@
   function renderPresentation(item) {
     const card = node("article", "academic-student-card workspace-student");
     card.appendChild(studentHeading(item));
+    card.appendChild(studentWhatsappAction(item));
     if (MODEL.isCancelled(item)) {
       card.appendChild(muted("Aula cancelada. Nenhum registro de apresentação nesta prévia."));
       return card;
@@ -701,6 +712,18 @@
     return MODEL.indexPreviousStudies(result.data);
   }
 
+  async function loadStudentContacts(client, items) {
+    try {
+      return {
+        numbers: await window.TeacherStudentWhatsapp.load(client, items),
+        available: true
+      };
+    } catch (error) {
+      console.error("Falha ao carregar contatos de WhatsApp dos alunos:", error);
+      return { numbers: new Map(), available: false };
+    }
+  }
+
   async function loadPlan(successMessage) {
     const requestId = ++state.requestId;
     const date = document.getElementById("workspaceDate").value;
@@ -708,14 +731,15 @@
     try {
       const client = window.Auth.getClient();
       const items = await state.service.getTeacherLessonPlan(date);
-      const [catalog, bundle, questionHistory, closedSessions, previousStudies] = await Promise.all([
+      const [catalog, bundle, questionHistory, closedSessions, previousStudies, contacts] = await Promise.all([
         loadQuestionCatalog(client, items),
         window.TeacherLessonPresentations.loadPlan(
           items, function () { return client; }, state.teacherId
         ),
         state.questionRatings.getHistory(date),
         state.lifecycle.getClosedSessions(date),
-        loadPreviousClassStudies(client, date)
+        loadPreviousClassStudies(client, date),
+        loadStudentContacts(client, items)
       ]);
       if (requestId !== state.requestId) return;
       const ratedItems = MODEL.withPreviousClassQuestions(items, previousStudies);
@@ -729,6 +753,8 @@
       state.loadedDate = date;
       state.catalog = catalog;
       state.presentations = bundle ? bundle.records : new Map();
+      state.contactNumbers = contacts.numbers;
+      state.contactsAvailable = contacts.available;
       state.ratingHistoryAvailable = questionHistory.available;
       state.questionHistory = questionHistory.byOccurrence;
       state.previousStudies = previousStudies;
@@ -752,6 +778,7 @@
       return Boolean(window.Auth && window.Auth.isConfigured() &&
         window.AcademicWorkflowService &&
         window.TeacherLessonPresentations &&
+        window.TeacherStudentWhatsapp &&
         window.ConversationQuestionCardRenderer &&
         window.TeacherPresentationRegistration &&
         window.TeacherPresentationCancellation &&

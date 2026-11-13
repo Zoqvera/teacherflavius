@@ -9,6 +9,7 @@ module.exports = [
       "roteiro-da-aula/app.js",
       "roteiro-da-aula-v2/app.js",
       "roteiro-da-aula-v2/model.js",
+      "roteiro-da-aula-v2/student_whatsapp.js",
       "roteiro-da-aula-v2/presentation_registration.js",
       "roteiro-da-aula-v2/question_ratings.js",
       "roteiro-da-aula-v2/session_lifecycle.js",
