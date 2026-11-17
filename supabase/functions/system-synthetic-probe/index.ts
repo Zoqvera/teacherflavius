@@ -10,6 +10,7 @@ type ProbeTarget = {
 
 const encoder = new TextEncoder();
 const REQUEST_TIMEOUT_MS = 8_000;
+const RETRYABLE_PROBE_ERRORS = new Set(["timeout", "network_error"]);
 
 const TARGETS: ProbeTarget[] = [
   { key: "home", url: "https://teacherflavius.com/" },
@@ -62,7 +63,7 @@ async function secretsMatch(received: string, expected: string): Promise<boolean
   return difference === 0;
 }
 
-async function probe(target: ProbeTarget): Promise<JsonRecord> {
+async function probeOnce(target: ProbeTarget): Promise<JsonRecord> {
   const started = performance.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -103,6 +104,22 @@ async function probe(target: ProbeTarget): Promise<JsonRecord> {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function probe(target: ProbeTarget): Promise<JsonRecord> {
+  const started = performance.now();
+  let result = await probeOnce(target);
+
+  // Recheck transient transport failures before reporting an outage.
+  if (result.ok === false && RETRYABLE_PROBE_ERRORS.has(String(result.error_code))) {
+    result = await probeOnce(target);
+  }
+
+  return {
+    ...result,
+    latency_ms: Math.max(0, Math.round(performance.now() - started)),
+    checked_at: new Date().toISOString(),
+  };
 }
 
 Deno.serve(async (request: Request) => {
