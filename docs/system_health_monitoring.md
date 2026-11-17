@@ -13,7 +13,7 @@ A partir da etapa de qualidade de dados, o painel também recebe um bloco indepe
 O ciclo interno é executado a cada 5 minutos:
 
 1. `private.dispatch_system_synthetic_probe()` chama a Edge Function `system-synthetic-probe` usando um segredo armazenado no Vault.
-2. A Edge Function faz somente requisições GET às rotas públicas críticas, com timeout de 8 segundos.
+2. A Edge Function faz somente requisições GET às rotas públicas críticas, com timeout de 8 segundos por tentativa. Para timeout ou erro de rede, executa uma única tentativa de confirmação antes de registrar falha; códigos HTTP inválidos não são repetidos.
 3. Cada resultado é persistido em `private.system_synthetic_probe_results`.
 4. A função executa `run_system_health_check_internal(true)`.
 5. O scanner cruza probes, erros da aplicação, HTTP 5xx, autenticação, CSP e jobs agendados.
