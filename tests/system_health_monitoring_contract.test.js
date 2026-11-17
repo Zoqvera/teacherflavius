@@ -45,6 +45,14 @@ test("synthetic probe is read only against production routes", function () {
   assert.match(syntheticProbe, /run_system_health_check_internal/);
 });
 
+test("transient transport errors receive one confirmation probe before alerting", function () {
+  assert.match(syntheticProbe, /RETRYABLE_PROBE_ERRORS = new Set\(\["timeout", "network_error"\]\)/);
+  assert.match(syntheticProbe, /async function probeOnce\(target: ProbeTarget\)/);
+  assert.match(syntheticProbe, /if \(result\.ok === false && RETRYABLE_PROBE_ERRORS\.has\(String\(result\.error_code\)\)\)/);
+  assert.match(syntheticProbe, /result = await probeOnce\(target\);/);
+  assert.match(syntheticProbe, /const results = await Promise\.all\(TARGETS\.map\(probe\)\)/);
+});
+
 test("dashboard access requires JWT and teacher admin authorization", function () {
   assert.match(dashboardFunction, /Authorization/);
   assert.match(dashboardFunction, /auth\.getUser/);
