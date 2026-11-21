@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Autorizar aplicativo | Teacher Flávio</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script defer src="/supabase_config.js?v=20260429-4"></script>
+  <script defer src="/module_loader.js?v=20260902-2"></script>
+  <script defer src="/auth.js?v=20260912-1"></script>
+  <script defer src="/oauth_consent.js"></script>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#0f172a;color:#f1f5f9;margin:0;padding:32px 16px}
+    main{max-width:560px;margin:auto;background:#1e293b;border-radius:16px;padding:28px}
+    p,dd{line-height:1.6} dt{font-weight:700;margin-top:16px} dd{margin:4px 0;overflow-wrap:anywhere;color:#cbd5e1}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px} button{padding:12px 18px;border-radius:8px;border:0;font:inherit;cursor:pointer}
+    #approve{background:#818cf8;color:#0f172a} #deny{background:#cbd5e1;color:#0f172a} button:disabled{opacity:.55;cursor:not-allowed}
+  </style>
+</head>
+<body>
+  <main>
+    <p>TEACHER FLÁVIO</p>
+    <h1>Autorizar aplicativo</h1>
+    <p id="status" role="status" aria-live="polite">Verificando a solicitação...</p>
+    <section id="details" hidden>
+      <p>Confira o aplicativo e as permissões solicitadas antes de decidir.</p>
+      <dl>
+        <dt>Aplicativo</dt><dd id="client-name"></dd>
+        <dt>Identificador</dt><dd id="client-id"></dd>
+        <dt>Site informado pelo aplicativo</dt><dd id="client-uri"></dd>
+        <dt>Permissões solicitadas</dt><dd id="scopes"></dd>
+        <dt>Destino após a decisão</dt><dd id="redirect-uri"></dd>
+      </dl>
+      <p>A integração financeira pode registrar pagamentos de mensalidades em seu nome.</p>
+      <div class="actions"><button id="approve" type="button">Autorizar</button><button id="deny" type="button">Recusar</button></div>
+    </section>
+  </main>
+</body>
+</html>
